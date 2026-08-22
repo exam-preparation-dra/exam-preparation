@@ -52,13 +52,14 @@ export async function findActiveAttempt(studentId) {
 }
 
 // ---------- Session: which student is currently "logged in" (no auth, just selection) ----------
-export function setActiveStudent(student) {
-  localStorage.setItem("activeStudent", JSON.stringify(student));
+export async function getActiveStudents() {
+  // ডাটাবেস থেকে আগে সবাইকে আনছি, তারপর জাভাস্ক্রিপ্ট দিয়ে ফিল্টার করছি (ইনডেক্স লাগবে না!)
+  const q = query(collection(db, "students"), orderBy("sequenceNumber"));
+  const snap = await getDocs(q);
+  const allStudents = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+  return allStudents.filter(s => s.isActive === true);
 }
-export function getActiveStudent() {
-  const raw = localStorage.getItem("activeStudent");
-  return raw ? JSON.parse(raw) : null;
-}
+
 export function clearActiveStudent() {
   localStorage.removeItem("activeStudent");
 }
