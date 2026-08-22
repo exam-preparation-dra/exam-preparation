@@ -9,9 +9,11 @@ import {
 
 // ---------- List active students for the homepage selector ----------
 export async function getActiveStudents() {
-  const q = query(collection(db, "students"), where("isActive", "==", true), orderBy("sequenceNumber"));
+  // ডাটাবেস থেকে আগে সবাইকে আনছি, তারপর জাভাস্ক্রিপ্ট দিয়ে ফিল্টার করছি (ইনডেক্স লাগবে না!)
+  const q = query(collection(db, "students"), orderBy("sequenceNumber"));
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+  const allStudents = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+  return allStudents.filter(s => s.isActive === true);
 }
 
 // ---------- Generate permanent Student ID (requirement #7) ----------
@@ -52,14 +54,13 @@ export async function findActiveAttempt(studentId) {
 }
 
 // ---------- Session: which student is currently "logged in" (no auth, just selection) ----------
-export async function getActiveStudents() {
-  // ডাটাবেস থেকে আগে সবাইকে আনছি, তারপর জাভাস্ক্রিপ্ট দিয়ে ফিল্টার করছি (ইনডেক্স লাগবে না!)
-  const q = query(collection(db, "students"), orderBy("sequenceNumber"));
-  const snap = await getDocs(q);
-  const allStudents = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
-  return allStudents.filter(s => s.isActive === true);
+export function setActiveStudent(student) {
+  localStorage.setItem("activeStudent", JSON.stringify(student));
 }
-
+export function getActiveStudent() {
+  const raw = localStorage.getItem("activeStudent");
+  return raw ? JSON.parse(raw) : null;
+}
 export function clearActiveStudent() {
   localStorage.removeItem("activeStudent");
 }
