@@ -6,7 +6,7 @@
 import { db } from "../firebase/firebase-config.js";
 import {
   collection, doc, addDoc, updateDoc, deleteDoc, getDoc, getDocs, setDoc,
-  query, where, orderBy, serverTimestamp, Timestamp
+  query, where, orderBy, serverTimestamp, Timestamp, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { getQuestionsByIds } from "./question-utils.js";
 
@@ -56,6 +56,29 @@ export async function deleteDraftExam(examId) {
     throw new Error("শুধুমাত্র খসড়া (draft) পরীক্ষা মুছে ফেলা যায়। প্রকাশিত পরীক্ষা archive করুন।");
   }
   return deleteDoc(doc(db, "exams", examId));
+}
+
+// ---------- Permanently delete ANY exam (draft, published, completed — any status),
+// along with every record tied to it: the frozen question snapshot, every
+// student's attempt, and every student's result for this exam. This is the
+// admin's explicit "delete this exam and wipe its history" action — unlike
+// deleteDraftExam above, it does NOT preserve historical integrity, by design.
+// There is no undo once this runs. ----------
+export async function deleteExamPermanently(examId) {
+  const exam = await getExamById(examId);
+  if (!exam) return;
+
+  const [attemptsSnap, resultsSnap] = await Promise.all([
+    getDocs(query(collection(db, "attempts"), where("examId", "==", examId))),
+    getDocs(query(collection(db, "results"), where("examId", "==", examId)))
+  ]);
+
+  const batch = writeBatch(db);
+  attemptsSnap.docs.forEach(d => batch.delete(d.ref));
+  resultsSnap.docs.forEach(d => batch.delete(d.ref));
+  batch.delete(doc(db, "examSnapshots", examId));
+  batch.delete(doc(db, "exams", examId));
+  await batch.commit();
 }
 
 export async function archiveExam(examId) {
