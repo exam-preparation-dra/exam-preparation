@@ -14,7 +14,7 @@
 <script type="module">
 import { initTheme, toggleTheme, icons, renderState, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
-import { getAllExams, publishExam, duplicateExam, archiveExam, deleteDraftExam } from "../js/utils/exam-utils.js";
+import { getAllExams, publishExam, duplicateExam, archiveExam, deleteDraftExam, deleteExamPermanently } from "../js/utils/exam-utils.js";
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -94,6 +94,7 @@ function render() {
         ` : ""}
         <button class="btn btn-secondary btn-sm dup-btn" data-id="${exam.id}">ডুপ্লিকেট</button>
         ${["published", "completed"].includes(exam.status) ? `<button class="btn btn-secondary btn-sm archive-btn" data-id="${exam.id}">সংরক্ষণাগারে পাঠান</button>` : ""}
+        ${exam.status !== "draft" ? `<button class="btn btn-danger btn-sm perm-delete-btn" data-id="${exam.id}" data-name="${exam.name}">স্থায়ীভাবে মুছুন</button>` : ""}
       </div>
     </div>
   `;
@@ -103,6 +104,7 @@ function render() {
   el.querySelectorAll(".dup-btn").forEach(b => b.addEventListener("click", () => handleDuplicate(b.dataset.id)));
   el.querySelectorAll(".archive-btn").forEach(b => b.addEventListener("click", () => handleArchive(b.dataset.id)));
   el.querySelectorAll(".delete-btn").forEach(b => b.addEventListener("click", () => handleDelete(b.dataset.id)));
+  el.querySelectorAll(".perm-delete-btn").forEach(b => b.addEventListener("click", () => handlePermanentDelete(b.dataset.id, b.dataset.name)));
 }
 
 async function handlePublish(id) {
@@ -139,6 +141,16 @@ async function handleDelete(id) {
   try {
     await deleteDraftExam(id);
     showToast("মুছে ফেলা হয়েছে।", "success");
+    load();
+  } catch (err) { showToast(err.message || friendlyError(err), "error"); }
+}
+
+async function handlePermanentDelete(id, name) {
+  if (!confirm(`"${name}" পরীক্ষাটি এবং এর সাথে জড়িত সব শিক্ষার্থীর attempt ও ফলাফল স্থায়ীভাবে মুছে ফেলবেন? এটি আর ফেরত আনা যাবে না।`)) return;
+  if (!confirm("নিশ্চিত? এই পরীক্ষার সব রেকর্ড চিরতরে হারিয়ে যাবে।")) return;
+  try {
+    await deleteExamPermanently(id);
+    showToast("পরীক্ষা ও এর সব রেকর্ড মুছে ফেলা হয়েছে।", "success");
     load();
   } catch (err) { showToast(err.message || friendlyError(err), "error"); }
 }
