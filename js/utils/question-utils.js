@@ -5,7 +5,7 @@
 import { db } from "../firebase/firebase-config.js";
 import {
   collection, doc, addDoc, updateDoc, deleteDoc, getDoc, getDocs,
-  query, where, orderBy, limit, startAfter, serverTimestamp
+  query, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 const PAGE_SIZE = 20;
@@ -61,19 +61,29 @@ export async function getQuestionById(id) {
 // Firestore has no native full-text search, so free-text search is applied client-side
 // on the currently loaded page — documented here rather than pretending it's
 // server-side full-text search. Subject/chapter/topic filters ARE server-side (indexed).
-export async function getQuestionsPage({ subjectId, chapterId, topicId, activeOnly = true, cursor = null } = {}) {
+//
+// IMPORTANT: this query intentionally has NO Firestore orderBy(). Combining an
+// equality filter (isActive/subjectId/etc) with orderBy() on a different field
+// (createdAt) needs a composite index manually created in the Firebase console —
+// if that index is missing, Firestore returns zero results with no visible error,
+// which is exactly the "question bank shows empty" bug. Pure equality filters are
+// covered by Firestore's automatic indexes, so we fetch with filters only and sort
+// + paginate here instead. No console index setup ever required.
+export async function getQuestionsPage({ subjectId, chapterId, topicId, activeOnly = true, cursor = 0 } = {}) {
   const clauses = [];
   if (activeOnly) clauses.push(where("isActive", "==", true));
   if (subjectId) clauses.push(where("subjectId", "==", subjectId));
   if (chapterId) clauses.push(where("chapterId", "==", chapterId));
   if (topicId) clauses.push(where("topicId", "==", topicId));
-  clauses.push(orderBy("createdAt", "desc"));
-  clauses.push(limit(PAGE_SIZE));
-  if (cursor) clauses.push(startAfter(cursor));
 
   const snap = await getDocs(query(collection(db, "questions"), ...clauses));
-  const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  const nextCursor = snap.docs.length === PAGE_SIZE ? snap.docs[snap.docs.length - 1] : null;
+  const all = snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
+
+  const start = cursor || 0;
+  const items = all.slice(start, start + PAGE_SIZE);
+  const nextCursor = start + PAGE_SIZE < all.length ? start + PAGE_SIZE : null;
   return { items, nextCursor };
 }
 
