@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>বিশ্লেষণ — পরীক্ষা প্রস্তুতি</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app-shell" id="shell">
+  <div class="state-block"><div class="spinner"></div></div>
+</div>
+
+<script type="module">
+import { initTheme, toggleTheme, icons, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
+import { getActiveStudent } from "../js/utils/student-utils.js";
+import { getApprovedResults } from "../js/utils/results-utils.js";
+import { getSubjects, getChapters, getTopics, buildNameMap } from "../js/utils/syllabus-utils.js";
+import { computeOverallStats, computeSubjectStats, computeChapterStats, computeTopicStats } from "../js/utils/analytics-utils.js";
+
+initTheme();
+const shell = document.getElementById("shell");
+const student = getActiveStudent();
+
+if (!student) {
+  window.location.href = "../index.html";
+} else {
+  render();
+}
+
+async function render() {
+  shell.innerHTML = `
+    ${renderStudentHeader(student, "dashboard")}
+    <p class="eyebrow">বিস্তারিত বিশ্লেষণ</p>
+    <div id="body" class="mt-3"><div class="glass card skeleton" style="height:200px;"></div></div>
+  `;
+  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+  load();
+}
+
+async function load() {
+  const body = document.getElementById("body");
+  try {
+    const results = await getApprovedResults(student.studentId);
+    const overall = computeOverallStats(results);
+
+    if (!overall) {
+      renderState(body, "empty", "বিশ্লেষণের জন্য পর্যাপ্ত তথ্য নেই। পরীক্ষা অনুমোদনের পর এখানে দেখা যাবে।");
+      return;
+    }
+
+    const [subjects, chapters, topics] = await Promise.all([getSubjects(), getChapters(), getTopics()]);
+    const subjectStats = computeSubjectStats(results, buildNameMap(subjects));
+    const chapterStats = computeChapterStats(results, buildNameMap(chapters));
+    const topicStats = computeTopicStats(results, buildNameMap(topics))
+      .sort((a, b) => (a.accuracy ?? 100) - (b.accuracy ?? 100));
+
+    body.innerHTML = `
+      <div class="glass card">
+        <p class="eyebrow">সার্বিক ধারা</p>
+        ${overall.trend ? `
+          <div class="flex items-end gap-2 mt-3" style="height:70px;">
+            ${overall.trend.map(t => `<div style="flex:1;background:linear-gradient(180deg,var(--color-accent),#ff8a3d);border-radius:6px 6px 0 0;height:${Math.max(6, (t.value || 0))}%;" title="${t.value ?? '—'}%"></div>`).join("")}
+          </div>
+          <p class="text-xs text-muted mt-2">সর্বশেষ ${overall.trend.length} টি পরীক্ষার শতাংশ, পুরনো থেকে নতুন</p>
+        ` : `<p class="text-xs text-muted mt-2">ধারা দেখতে আরও পরীক্ষার ফলাফল প্রয়োজন।</p>`}
+      </div>
+
+      <p class="eyebrow mt-5">বিষয়ভিত্তিক বিশ্লেষণ</p>
+      ${subjectStats.length === 0 ? `<p class="text-xs text-muted mt-2">তথ্য নেই।</p>` : subjectStats.map(s => `
+        <div class="glass card mt-2">
+          <div class="flex justify-between items-center">
+            <p style="font-weight:700;">${s.name}</p>
+            <p style="font-weight:800;color:var(--color-accent);">${s.accuracy ?? "—"}%</p>
+          </div>
+          <div class="progress-track mt-2"><div class="progress-fill" style="width:${s.accuracy ?? 0}%;"></div></div>
+          <p class="text-xs text-muted mt-2">সঠিক ${s.correct} • ভুল ${s.wrong} • ${s.attempts} বার পরীক্ষায় এসেছে</p>
+        </div>
+      `).join("")}
+
+      <p class="eyebrow mt-5">অধ্যায়ভিত্তিক বিশ্লেষণ</p>
+      ${chapterStats.length === 0 ? `<p class="text-xs text-muted mt-2">তথ্য নেই।</p>` : chapterStats.map(c => `
+        <div class="glass card mt-2 flex justify-between items-center">
+          <p style="font-weight:600;">${c.name}</p>
+          <p style="font-weight:700;color:var(--color-accent);">${c.accuracy ?? "—"}%</p>
+        </div>
+      `).join("")}
+
+      <p class="eyebrow mt-5">টপিকভিত্তিক বিশ্লেষণ (দুর্বল থেকে ভালো)</p>
+      ${topicStats.length === 0 ? `<p class="text-xs text-muted mt-2">তথ্য নেই।</p>` : topicStats.map(t => `
+        <div class="glass card mt-2">
+          <div class="flex justify-between items-center">
+            <p style="font-weight:600;">${t.name}${t.isWeak ? ` <span class="badge badge-pending">দুর্বল</span>` : ""}</p>
+            <p style="font-weight:700;color:${t.isWeak ? "var(--color-danger)" : "var(--color-accent)"};">${t.accuracy ?? "—"}%</p>
+          </div>
+          <p class="text-xs text-muted mt-1">${t.hasEnoughData ? `${t.attempts} বার পরীক্ষা হয়েছে` : "পর্যাপ্ত তথ্য নেই (কমপক্ষে ৩ বার প্রয়োজন)"}</p>
+        </div>
+      `).join("")}
+    `;
+  } catch (err) {
+    console.error(err);
+    renderState(body, "error", "বিশ্লেষণ লোড করা যায়নি।");
+  }
+}
+</script>
+</body>
+</html>

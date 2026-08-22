@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>তুলনা — পরীক্ষা প্রস্তুতি</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app-shell" id="shell">
+  <div class="state-block"><div class="spinner"></div></div>
+</div>
+
+<script type="module">
+import { initTheme, toggleTheme, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
+import { getActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
+import { getApprovedResults } from "../js/utils/results-utils.js";
+import { getSubjects, getChapters, getTopics, buildNameMap } from "../js/utils/syllabus-utils.js";
+import { computeStudentSummary, mergeStatsForDisplay } from "../js/utils/comparison-utils.js";
+
+initTheme();
+const shell = document.getElementById("shell");
+const student = getActiveStudent();
+
+if (!student) {
+  window.location.href = "../index.html";
+} else {
+  render();
+}
+
+const COLORS = ["var(--color-accent)", "var(--color-info)", "#a855f7", "#2dd4bf", "#f43f5e"];
+
+async function render() {
+  shell.innerHTML = `
+    ${renderStudentHeader(student, "dashboard")}
+    <p class="eyebrow">সকল শিক্ষার্থীর তুলনা</p>
+    <div id="body" class="mt-3"><div class="glass card skeleton" style="height:200px;"></div></div>
+  `;
+  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+
+  const body = document.getElementById("body");
+  try {
+    const students = await getActiveStudents();
+    if (students.length < 2) {
+      renderState(body, "empty", "তুলনার জন্য অন্তত দুইজন সক্রিয় শিক্ষার্থী প্রয়োজন।");
+      return;
+    }
+    const [subjects, chapters, topics] = await Promise.all([getSubjects(), getChapters(), getTopics()]);
+    const subjectMap = buildNameMap(subjects), chapterMap = buildNameMap(chapters), topicMap = buildNameMap(topics);
+
+    const summaries = await Promise.all(students.map(async s => {
+      const results = await getApprovedResults(s.studentId);
+      return computeStudentSummary(s, results, subjectMap, chapterMap, topicMap);
+    }));
+
+    if (summaries.every(s => !s.hasData)) {
+      renderState(body, "empty", "তুলনার জন্য এখনো পর্যাপ্ত অনুমোদিত ফলাফল নেই।");
+      return;
+    }
+
+    renderComparison(body, summaries);
+  } catch (err) {
+    console.error(err);
+    renderState(body, "error", "তুলনা লোড করা যায়নি।");
+  }
+}
+
+function bar(value, color) {
+  return `<div class="progress-track mt-1"><div class="progress-fill" style="width:${value ?? 0}%;background:${color};"></div></div>`;
+}
+
+function renderComparison(body, summaries) {
+  body.innerHTML = `
+    <div class="glass card">
+      <p class="eyebrow">সার্বিক পারফরম্যান্স</p>
+      ${summaries.map((s, i) => `
+        <div class="mt-3">
+          <div class="flex justify-between items-center">
+            <p style="font-weight:700;">${s.name}${s.studentId === student.studentId ? " (আপনি)" : ""}</p>
+            <p style="font-weight:800;color:${COLORS[i % COLORS.length]};">${s.hasData ? (s.avgPercentage ?? "—") + "%" : "তথ্য নেই"}</p>
+          </div>
+          ${s.hasData ? bar(s.avgPercentage, COLORS[i % COLORS.length]) : ""}
+          ${s.hasData ? `<p class="text-xs text-muted mt-1">${s.examsTaken} টি পরীক্ষা • সঠিকতা ${s.avgAccuracy ?? "—"}% • সেরা ${s.bestExam?.percentage ?? "—"}% • সর্বনিম্ন ${s.lowestExam?.percentage ?? "—"}%</p>` : ""}
+        </div>
+      `).join("")}
+    </div>
+
+    <div class="glass card mt-4">
+      <p class="eyebrow">স্থিতিশীলতা ও উন্নতি</p>
+      ${summaries.filter(s => s.hasData).map(s => `
+        <div class="flex justify-between items-center mt-2">
+          <p class="text-sm">${s.name}</p>
+          <p class="text-xs text-muted">স্থিতিশীলতা (কম ভালো): ${s.consistencyStdDev} • উন্নতি: ${s.improvementRate !== null ? (s.improvementRate > 0 ? "+" : "") + s.improvementRate + "%" : "পর্যাপ্ত তথ্য নেই"}</p>
+        </div>
+      `).join("")}
+    </div>
+
+    <p class="eyebrow mt-5">বিষয়ভিত্তিক তুলনা</p>
+    ${renderMergedTable(mergeStatsForDisplay(summaries, "subjectStats", "subjectId"), summaries)}
+
+    <p class="eyebrow mt-5">অধ্যায়ভিত্তিক তুলনা</p>
+    ${renderMergedTable(mergeStatsForDisplay(summaries, "chapterStats", "chapterId"), summaries)}
+  `;
+}
+
+function renderMergedTable(rows, summaries) {
+  if (rows.length === 0) return `<p class="text-xs text-muted mt-2">তথ্য নেই।</p>`;
+  return rows.map(row => `
+    <div class="glass card mt-2">
+      <p style="font-weight:600;">${row.name}</p>
+      ${summaries.filter(s => s.hasData).map((s, i) => `
+        <div class="flex justify-between items-center mt-2">
+          <p class="text-xs text-muted">${s.name}</p>
+          <p class="text-xs" style="font-weight:700;color:${COLORS[i % COLORS.length]};">${row[s.studentId] ?? "—"}${row[s.studentId] !== null && row[s.studentId] !== undefined ? "%" : ""}</p>
+        </div>
+        ${row[s.studentId] !== null && row[s.studentId] !== undefined ? bar(row[s.studentId], COLORS[i % COLORS.length]) : ""}
+      `).join("")}
+    </div>
+  `).join("");
+}
+</script>
+</body>
+</html>

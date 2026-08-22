@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>ড্যাশবোর্ড — পরীক্ষা প্রস্তুতি</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app-shell" id="shell">
+  <div class="state-block"><div class="spinner"></div></div>
+</div>
+
+<script type="module">
+import { initTheme, toggleTheme, icons, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
+import { getActiveStudent } from "../js/utils/student-utils.js";
+import { getUpcomingExams, getApprovedResults } from "../js/utils/results-utils.js";
+import { getSubjects, getChapters, buildNameMap } from "../js/utils/syllabus-utils.js";
+import { computeOverallStats, computeSubjectStats, computeTopicStats } from "../js/utils/analytics-utils.js";
+
+initTheme();
+const shell = document.getElementById("shell");
+const student = getActiveStudent();
+
+if (!student) {
+  window.location.href = "../index.html";
+} else {
+  render();
+}
+
+async function render() {
+  shell.innerHTML = `
+    ${renderStudentHeader(student, "dashboard")}
+    <div id="upcomingSection" class="mt-4"></div>
+    <div id="statsSection" class="mt-5"></div>
+    <div id="subjectSection" class="mt-5"></div>
+    <div id="weakTopicSection" class="mt-5"></div>
+    <div class="mt-5 flex gap-2">
+      <a href="../student/analytics.html" class="btn btn-secondary">বিস্তারিত বিশ্লেষণ</a>
+      <a href="../student/comparison.html" class="btn btn-secondary">তুলনা দেখুন</a>
+    </div>
+  `;
+  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+
+  loadUpcoming();
+  loadPerformance();
+}
+
+// ---------- Upcoming exams ----------
+async function loadUpcoming() {
+  const el = document.getElementById("upcomingSection");
+  el.innerHTML = `<p class="eyebrow mb-2">আসন্ন পরীক্ষা</p><div class="glass card skeleton" style="height:90px;margin-top:8px;"></div>`;
+  try {
+    const [exams, subjects, chapters] = await Promise.all([getUpcomingExams(), getSubjects(), getChapters()]);
+    const subjectMap = buildNameMap(subjects);
+    const chapterMap = buildNameMap(chapters);
+
+    if (exams.length === 0) {
+      el.innerHTML = `<p class="eyebrow">আসন্ন পরীক্ষা</p>`;
+      const box = document.createElement("div");
+      box.className = "mt-2";
+      renderState(box, "empty", "এখন কোনো পরীক্ষা নির্ধারিত নেই।");
+      el.appendChild(box);
+      return;
+    }
+
+    el.innerHTML = `<p class="eyebrow">আসন্ন পরীক্ষা</p>` + exams.map(exam => {
+      const dateStr = exam.examDate?.toDate ? exam.examDate.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" }) : "";
+      const subjNames = (exam.subjectIds || []).map(id => subjectMap[id]).filter(Boolean).join(", ");
+      const chapNames = (exam.chapterIds || []).map(id => chapterMap[id]).filter(Boolean).join(", ");
+      return `
+        <div class="glass card mt-2">
+          <div class="flex justify-between items-center">
+            <h3>${exam.name}</h3>
+            <span class="badge badge-upcoming">${exam.status === "published" ? "প্রকাশিত" : "আসন্ন"}</span>
+          </div>
+          <div class="grid-2 mt-3">
+            <div><p class="text-xs text-muted">তারিখ</p><p class="text-sm" style="font-weight:600;">${dateStr || "—"}</p></div>
+            <div><p class="text-xs text-muted">সময়</p><p class="text-sm" style="font-weight:600;">${exam.informationalTime || "—"}</p></div>
+            <div><p class="text-xs text-muted">সময়কাল</p><p class="text-sm" style="font-weight:600;">${exam.durationMinutes ? exam.durationMinutes + " মিনিট" : "—"}</p></div>
+            <div><p class="text-xs text-muted">মোট নম্বর</p><p class="text-sm" style="font-weight:600;">${exam.totalMarks ?? "—"}</p></div>
+          </div>
+          ${subjNames ? `<p class="text-xs text-muted mt-3">বিষয়: <span style="color:var(--text-secondary);">${subjNames}</span></p>` : ""}
+          ${chapNames ? `<p class="text-xs text-muted mt-2">অধ্যায়: <span style="color:var(--text-secondary);">${chapNames}</span></p>` : ""}
+          ${exam.status === "published" ? `<a href="../student/exam.html?examId=${exam.id}" class="btn btn-primary mt-3">পরীক্ষা শুরু করুন</a>` : ""}
+        </div>
+      `;
+    }).join("");
+  } catch (err) {
+    console.error(err);
+    renderState(el, "error", "আসন্ন পরীক্ষা লোড করা যায়নি।");
+  }
+}
+
+// ---------- Performance summary + subject breakdown + weak topics ----------
+async function loadPerformance() {
+  const statsEl = document.getElementById("statsSection");
+  const subjEl = document.getElementById("subjectSection");
+  const weakEl = document.getElementById("weakTopicSection");
+  statsEl.innerHTML = `<p class="eyebrow">পারফরম্যান্স সারাংশ</p><div class="glass card skeleton mt-2" style="height:120px;"></div>`;
+
+  try {
+    const results = await getApprovedResults(student.studentId);
+    const overall = computeOverallStats(results);
+
+    if (!overall) {
+      statsEl.innerHTML = `<p class="eyebrow">পারফরম্যান্স সারাংশ</p>`;
+      const box = document.createElement("div");
+      box.className = "mt-2";
+      renderState(box, "empty", "এখনো কোনো অনুমোদিত ফলাফল নেই। প্রথম পরীক্ষার পর এখানে পারফরম্যান্স দেখা যাবে।");
+      statsEl.appendChild(box);
+      subjEl.innerHTML = ""; weakEl.innerHTML = "";
+      return;
+    }
+
+    statsEl.innerHTML = `
+      <p class="eyebrow">পারফরম্যান্স সারাংশ</p>
+      <div class="grid-2 mt-2">
+        <div class="glass card"><p class="text-xs text-muted">মোট পরীক্ষা</p><p style="font-size:1.5rem;font-weight:800;">${overall.examsTaken}</p></div>
+        <div class="glass card"><p class="text-xs text-muted">গড় শতাংশ</p><p style="font-size:1.5rem;font-weight:800;">${overall.avgPercentage ?? "—"}%</p></div>
+        <div class="glass card"><p class="text-xs text-muted">গড় সঠিকতা</p><p style="font-size:1.5rem;font-weight:800;">${overall.avgAccuracy ?? "—"}%</p></div>
+        <div class="glass card"><p class="text-xs text-muted">সঠিক / ভুল / অনুত্তরিত</p><p style="font-size:1.1rem;font-weight:700;">${overall.totalCorrect} / ${overall.totalWrong} / ${overall.totalUnanswered}</p></div>
+      </div>
+      ${overall.mostRecent ? `
+        <div class="glass card mt-3">
+          <p class="eyebrow">সাম্প্রতিক ফলাফল</p>
+          <div class="flex justify-between items-center mt-2">
+            <div>
+              <p style="font-weight:700;">${overall.mostRecent.examName || "পরীক্ষা"}</p>
+              <p class="text-xs text-muted">${overall.mostRecent.percentage ?? "—"}% • সঠিকতা ${overall.mostRecent.accuracy ?? "—"}%</p>
+            </div>
+            <a href="../student/result.html?resultId=${overall.mostRecent.id}" class="icon-btn">${icons.arrowRight}</a>
+          </div>
+        </div>` : ""}
+      ${overall.trend ? `
+        <div class="glass card mt-3">
+          <p class="eyebrow">সার্বিক ধারা</p>
+          <div class="flex items-end gap-2 mt-3" style="height:60px;">
+            ${overall.trend.map(t => `<div style="flex:1;background:linear-gradient(180deg,var(--color-accent),#ff8a3d);border-radius:6px 6px 0 0;height:${Math.max(6, (t.value || 0))}%;" title="${t.value ?? '—'}%"></div>`).join("")}
+          </div>
+        </div>` : `<p class="text-xs text-muted mt-3">ধারা দেখতে আরও পরীক্ষার ফলাফল প্রয়োজন।</p>`}
+    `;
+
+    // Subject breakdown
+    const subjects = await getSubjects();
+    const subjectMap = buildNameMap(subjects);
+    const subjectStats = computeSubjectStats(results, subjectMap);
+    subjEl.innerHTML = `<p class="eyebrow">বিষয়ভিত্তিক পারফরম্যান্স</p>` + (subjectStats.length === 0
+      ? `<p class="text-xs text-muted mt-2">তথ্য নেই।</p>`
+      : subjectStats.map(s => `
+        <div class="glass card mt-2">
+          <div class="flex justify-between items-center">
+            <p style="font-weight:700;">${s.name}</p>
+            <p class="text-sm" style="font-weight:700;color:var(--color-accent);">${s.accuracy ?? "—"}%</p>
+          </div>
+          <div class="progress-track mt-2"><div class="progress-fill" style="width:${s.accuracy ?? 0}%;"></div></div>
+          <p class="text-xs text-muted mt-2">সঠিক ${s.correct} • ভুল ${s.wrong} • মোট নম্বর ${s.marks}</p>
+        </div>
+      `).join(""));
+
+    // Weak topics
+    const { getTopics } = await import("../js/utils/syllabus-utils.js");
+    const topics = await getTopics();
+    const topicMap = buildNameMap(topics);
+    const topicStats = computeTopicStats(results, topicMap);
+    const weakTopics = topicStats.filter(t => t.isWeak);
+
+    weakEl.innerHTML = `<p class="eyebrow">দুর্বল টপিক নির্দেশক</p>` + (weakTopics.length === 0
+      ? `<p class="text-xs text-muted mt-2">${topicStats.length === 0 ? "পর্যাপ্ত তথ্য নেই।" : "কোনো ধারাবাহিক দুর্বল টপিক পাওয়া যায়নি।"}</p>`
+      : weakTopics.map(t => `
+        <div class="glass card mt-2" style="border-color:var(--color-danger)55;">
+          <div class="flex items-center gap-3">
+            <span class="icon-btn" style="color:var(--color-danger);">${icons.alert}</span>
+            <div>
+              <p style="font-weight:700;">${t.name}</p>
+              <p class="text-xs text-muted">সাম্প্রতিক পরীক্ষাগুলোতে ধারাবাহিকভাবে কম সঠিকতা (${t.accuracy}%)</p>
+            </div>
+          </div>
+        </div>
+      `).join(""));
+
+  } catch (err) {
+    console.error(err);
+    renderState(statsEl, "error", "পারফরম্যান্স তথ্য লোড করা যায়নি।");
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>প্রোফাইল — পরীক্ষা প্রস্তুতি</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app-shell" id="shell">
+  <div class="state-block"><div class="spinner"></div></div>
+</div>
+
+<script type="module">
+import { initTheme, toggleTheme, icons, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
+import { getActiveStudent } from "../js/utils/student-utils.js";
+import { getApprovedResults } from "../js/utils/results-utils.js";
+import { getSubjects, getChapters, buildNameMap } from "../js/utils/syllabus-utils.js";
+import { computeOverallStats, computeSubjectStats, computeChapterStats } from "../js/utils/analytics-utils.js";
+import { getChapterExamFrequencyMap } from "../js/utils/results-utils.js";
+import { db } from "../js/firebase/firebase-config.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+initTheme();
+const shell = document.getElementById("shell");
+const student = getActiveStudent();
+
+if (!student) {
+  window.location.href = "../index.html";
+} else {
+  render();
+}
+
+async function render() {
+  shell.innerHTML = `
+    ${renderStudentHeader(student, "profile")}
+    <div id="identityCard" class="mt-4"></div>
+    <div id="statsCards" class="mt-5"></div>
+    <div id="subjectCard" class="mt-5"></div>
+    <div id="chapterCard" class="mt-5"></div>
+  `;
+  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+  loadIdentity();
+  loadStats();
+}
+
+async function loadIdentity() {
+  const el = document.getElementById("identityCard");
+  el.innerHTML = `<div class="glass card skeleton" style="height:100px;"></div>`;
+  try {
+    const snap = await getDoc(doc(db, "students", student.docId));
+    const data = snap.exists() ? snap.data() : {};
+    const created = data.createdAt?.toDate ? data.createdAt.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" }) : null;
+
+    el.innerHTML = `
+      <div class="glass card">
+        <div class="flex items-center gap-3">
+          <span class="icon-btn" style="width:52px;height:52px;">${icons.user}</span>
+          <div>
+            <p style="font-weight:800;font-size:1.15rem;">${student.name}</p>
+            <p class="text-xs text-muted">স্থায়ী শিক্ষার্থী আইডি: <span style="color:var(--text-secondary);font-weight:600;">${student.studentId}</span></p>
+          </div>
+        </div>
+        ${created ? `<p class="text-xs text-muted mt-3">যোগদানের তারিখ: ${created}</p>` : ""}
+      </div>
+    `;
+  } catch (err) {
+    console.error(err);
+    renderState(el, "error", "প্রোফাইল তথ্য লোড করা যায়নি।");
+  }
+}
+
+async function loadStats() {
+  const statsEl = document.getElementById("statsCards");
+  const subjEl = document.getElementById("subjectCard");
+  const chapEl = document.getElementById("chapterCard");
+  statsEl.innerHTML = `<div class="glass card skeleton" style="height:100px;"></div>`;
+
+  try {
+    const results = await getApprovedResults(student.studentId);
+    const overall = computeOverallStats(results);
+
+    if (!overall) {
+      renderState(statsEl, "empty", "এখনো কোনো পরিসংখ্যান নেই — পরীক্ষা অনুমোদনের পর এখানে দেখা যাবে।");
+      subjEl.innerHTML = ""; chapEl.innerHTML = "";
+      return;
+    }
+
+    statsEl.innerHTML = `
+      <p class="eyebrow">সার্বিক পরিসংখ্যান</p>
+      <div class="grid-2 mt-2">
+        <div class="glass card"><p class="text-xs text-muted">মোট পরীক্ষা</p><p style="font-size:1.5rem;font-weight:800;">${overall.examsTaken}</p></div>
+        <div class="glass card"><p class="text-xs text-muted">গড় শতাংশ</p><p style="font-size:1.5rem;font-weight:800;">${overall.avgPercentage ?? "—"}%</p></div>
+        <div class="glass card"><p class="text-xs text-muted">গড় সঠিকতা</p><p style="font-size:1.5rem;font-weight:800;">${overall.avgAccuracy ?? "—"}%</p></div>
+        <div class="glass card"><p class="text-xs text-muted">সাম্প্রতিক ফলাফল</p><p style="font-size:1.5rem;font-weight:800;">${overall.mostRecent?.percentage ?? "—"}%</p></div>
+      </div>
+    `;
+
+    const [subjects, chapters] = await Promise.all([getSubjects(), getChapters()]);
+    const subjectMap = buildNameMap(subjects);
+    const chapterMap = buildNameMap(chapters);
+    const subjectStats = computeSubjectStats(results, subjectMap);
+    const chapterPerf = computeChapterStats(results, chapterMap);
+    const chapterPerfMap = {};
+    chapterPerf.forEach(c => { chapterPerfMap[c.chapterId] = c; });
+
+    subjEl.innerHTML = `<p class="eyebrow">বিষয়ভিত্তিক পরিসংখ্যান</p>` + (subjectStats.length === 0
+      ? `<p class="text-xs text-muted mt-2">তথ্য নেই।</p>`
+      : subjectStats.map(s => `
+        <div class="glass card mt-2 flex justify-between items-center">
+          <p style="font-weight:600;">${s.name}</p>
+          <p class="text-sm" style="font-weight:700;color:var(--color-accent);">${s.accuracy ?? "—"}%</p>
+        </div>
+      `).join(""));
+
+    // Full syllabus progress — every chapter, tested or not (requirement E)
+    if (chapters.length === 0) {
+      chapEl.innerHTML = `<p class="eyebrow">সিলেবাস অগ্রগতি</p><p class="text-xs text-muted mt-2">এখনো কোনো অধ্যায় যোগ করা হয়নি।</p>`;
+    } else {
+      const freqMap = await getChapterExamFrequencyMap(chapters.map(c => c.id));
+      chapEl.innerHTML = `<p class="eyebrow">সিলেবাস অগ্রগতি</p>` + chapters.map(c => {
+        const perf = chapterPerfMap[c.id];
+        const examCount = freqMap[c.id] || 0;
+        return `
+          <div class="glass card mt-2">
+            <div class="flex justify-between items-center">
+              <div>
+                <p style="font-weight:700;">${c.name_bn}</p>
+                <p class="text-xs text-muted">${subjectMap[c.subjectId] || ""}</p>
+              </div>
+              ${perf ? `<p class="text-sm" style="font-weight:700;color:var(--color-accent);">${perf.accuracy ?? "—"}%</p>`
+                     : `<span class="badge badge-draft">এখনো পরীক্ষা হয়নি</span>`}
+            </div>
+            <div class="grid-2 mt-3">
+              <div><p class="text-xs text-muted">পরীক্ষায় এসেছে</p><p class="text-sm" style="font-weight:600;">${examCount} বার</p></div>
+              ${perf ? `
+                <div><p class="text-xs text-muted">সঠিক / ভুল</p><p class="text-sm" style="font-weight:600;">${perf.correct} / ${perf.wrong}</p></div>
+              ` : `<div><p class="text-xs text-muted">সঠিক / ভুল</p><p class="text-sm" style="font-weight:600;">—</p></div>`}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+  } catch (err) {
+    console.error(err);
+    renderState(statsEl, "error", "পরিসংখ্যান লোড করা যায়নি।");
+  }
+}
+</script>
+</body>
+</html>

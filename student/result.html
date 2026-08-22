@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ফলাফল — পরীক্ষা প্রস্তুতি</title>
+<link rel="stylesheet" href="../css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+<div class="app-shell" id="shell">
+  <div class="state-block"><div class="spinner"></div></div>
+</div>
+
+<!-- Hidden render target for PDF export (image-based, so Bengali glyphs render
+     correctly without embedding a custom font into jsPDF — see README). -->
+<div id="pdfArea" style="position:fixed;left:-9999px;top:0;width:380px;background:#ffffff;color:#111;padding:20px;font-family:'Noto Sans Bengali',sans-serif;"></div>
+
+<script type="module">
+import { initTheme, toggleTheme, icons, renderState, showToast } from "../js/utils/ui-utils.js";
+import { getActiveStudent } from "../js/utils/student-utils.js";
+import { getResultById, getExamSnapshot } from "../js/utils/results-utils.js";
+import { getSubjects, getChapters, getTopics, buildNameMap } from "../js/utils/syllabus-utils.js";
+import { buildQuestionReview, formatSeconds } from "../js/utils/grading-utils.js";
+
+initTheme();
+const shell = document.getElementById("shell");
+const params = new URLSearchParams(window.location.search);
+const resultId = params.get("resultId");
+const justSubmitted = params.get("justSubmitted") === "1";
+const student = getActiveStudent();
+
+let result = null;
+let subjectMap = {}, chapterMap = {}, topicMap = {};
+
+if (!student) {
+  window.location.href = "../index.html";
+} else if (!resultId) {
+  renderState(shell, "error", "ফলাফল শনাক্ত করা যায়নি।");
+} else {
+  load();
+}
+
+function fmtDate(ts) { return ts?.toDate ? ts.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" }) : "—"; }
+function fmtTime(ts) { return ts?.toDate ? ts.toDate().toLocaleTimeString("bn-BD", { hour: "2-digit", minute: "2-digit" }) : "—"; }
+
+async function load() {
+  try {
+    result = await getResultById(resultId);
+    if (!result || result.studentId !== student.studentId) {
+      renderState(shell, "error", "এই ফলাফলটি পাওয়া যায়নি অথবা অ্যাক্সেসযোগ্য নয়।");
+      return;
+    }
+    const [subjects, chapters, topics] = await Promise.all([getSubjects(), getChapters(), getTopics()]);
+    subjectMap = buildNameMap(subjects); chapterMap = buildNameMap(chapters); topicMap = buildNameMap(topics);
+
+    if (result.status === "pending") {
+      renderPending();
+    } else {
+      await renderApproved();
+    }
+  } catch (err) {
+    console.error(err);
+    renderState(shell, "error", "ফলাফল লোড করা যায়নি।");
+  }
+}
+
+function renderPending() {
+  shell.innerHTML = `
+    <div class="topbar">
+      <a href="../student/dashboard.html" class="icon-btn">${icons.arrowLeft}</a>
+      <h2 style="font-size:1.05rem;">ফলাফল</h2>
+      <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-thumb"></span></button>
+    </div>
+    <div class="glass card text-center" style="padding:32px 20px;">
+      <span class="icon-btn" style="width:56px;height:56px;margin:0 auto;color:var(--color-accent);">${icons.clock}</span>
+      <p class="mt-3" style="font-weight:700;font-size:1.1rem;">${justSubmitted ? "পরীক্ষা সফলভাবে জমা হয়েছে।" : result.examName || "পরীক্ষা"}</p>
+      <p class="text-sm text-muted mt-2">অ্যাডমিন অনুমোদনের অপেক্ষায় আছে। অনুমোদনের পর সম্পূর্ণ ফলাফল এখানে দেখা যাবে।</p>
+      <span class="badge badge-pending mt-3">অনুমোদনের অপেক্ষায়</span>
+    </div>
+  `;
+  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+}
+
+async function renderApproved() {
+  const snapshot = await getExamSnapshot(result.examId);
+  const review = snapshot ? buildQuestionReview(snapshot.questions, result.answers || {}) : [];
+
+  shell.innerHTML = `
+    <div class="topbar">
+      <a href="../student/dashboard.html" class="icon-btn">${icons.arrowLeft}</a>
+      <h2 style="font-size:1.05rem;">ফলাফল</h2>
+      <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-thumb"></span></button>
+    </div>
+
+    <div class="glass card">
+      <p class="eyebrow">${result.examName || "পরীক্ষা"}</p>
+      <div class="flex items-end gap-2 mt-2">
+        <p style="font-size:2rem;font-weight:800;">${result.percentage ?? "—"}%</p>
+        <p class="text-sm text-muted mb-1">(${result.obtainedMarks ?? "—"} / ${result.totalMarks ?? "—"} নম্বর)</p>
+      </div>
+      <span class="badge badge-completed mt-2">অনুমোদিত</span>
+    </div>
+
+    <div class="grid-2 mt-4">
+      <div class="glass card"><p class="text-xs text-muted">সঠিক</p><p style="font-size:1.3rem;font-weight:800;color:var(--color-success);">${result.correctCount ?? 0}</p></div>
+      <div class="glass card"><p class="text-xs text-muted">ভুল</p><p style="font-size:1.3rem;font-weight:800;color:var(--color-danger);">${result.wrongCount ?? 0}</p></div>
+      <div class="glass card"><p class="text-xs text-muted">অনুত্তরিত</p><p style="font-size:1.3rem;font-weight:800;">${result.unansweredCount ?? 0}</p></div>
+      <div class="glass card"><p class="text-xs text-muted">সঠিকতা</p><p style="font-size:1.3rem;font-weight:800;">${result.accuracy ?? "—"}%</p></div>
+    </div>
+
+    <div class="glass card mt-4">
+      <p class="eyebrow">সময়</p>
+      <div class="grid-2 mt-2">
+        <div><p class="text-xs text-muted">জমাদানের তারিখ</p><p class="text-sm" style="font-weight:600;">${fmtDate(result.submittedAt)}</p></div>
+        <div><p class="text-xs text-muted">জমাদানের সময়</p><p class="text-sm" style="font-weight:600;">${fmtTime(result.submittedAt)}</p></div>
+        <div><p class="text-xs text-muted">মোট ব্যয়িত সময়</p><p class="text-sm" style="font-weight:600;">${formatSeconds(result.timeTakenSeconds)}</p></div>
+        <div><p class="text-xs text-muted">প্রশ্নপ্রতি গড় সময়</p><p class="text-sm" style="font-weight:600;">${result.avgTimePerQuestionSeconds ?? "—"} সেকেন্ড</p></div>
+      </div>
+    </div>
+
+    ${result.subjectBreakdown?.length ? `
+    <div class="glass card mt-4">
+      <p class="eyebrow">বিষয়ভিত্তিক ফলাফল</p>
+      ${result.subjectBreakdown.map(s => `
+        <div class="flex justify-between items-center mt-2">
+          <p class="text-sm">${subjectMap[s.subjectId] || "—"}</p>
+          <p class="text-sm" style="font-weight:700;">${s.correct}/${s.correct + s.wrong + s.unanswered} সঠিক</p>
+        </div>
+      `).join("")}
+    </div>` : ""}
+
+    <div class="flex gap-2 mt-4">
+      <button class="btn btn-secondary" id="pdfBtn">ফলাফল PDF ডাউনলোড</button>
+      <button class="btn btn-secondary" id="shareBtn">PDF শেয়ার করুন</button>
+    </div>
+
+    <p class="eyebrow mt-5">প্রশ্নভিত্তিক পর্যালোচনা</p>
+    <div id="reviewList" class="mt-2"></div>
+  `;
+
+  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+  document.getElementById("pdfBtn").addEventListener("click", () => generatePdf(false));
+  document.getElementById("shareBtn").addEventListener("click", () => generatePdf(true));
+
+  const reviewEl = document.getElementById("reviewList");
+  if (review.length === 0) {
+    reviewEl.innerHTML = `<p class="text-xs text-muted">প্রশ্নের বিস্তারিত পাওয়া যায়নি।</p>`;
+  } else {
+    reviewEl.innerHTML = review.map((q, i) => `
+      <div class="glass card mt-2" style="${q.status === "wrong" ? "border-color:var(--color-danger)66;" : q.status === "correct" ? "border-color:var(--color-success)66;" : ""}">
+        <div class="flex justify-between items-center">
+          <p class="text-xs text-muted">প্রশ্ন ${i + 1} • ${subjectMap[q.subjectId] || ""} / ${chapterMap[q.chapterId] || ""}</p>
+          <span class="badge ${q.status === "correct" ? "badge-completed" : q.status === "wrong" ? "badge-pending" : "badge-draft"}">
+            ${q.status === "correct" ? "সঠিক" : q.status === "wrong" ? "ভুল" : "অনুত্তরিত"}
+          </span>
+        </div>
+        <p class="mt-2" style="font-weight:600;">${q.question_bn}</p>
+        <p class="text-xs text-muted lang-en">${q.question_en}</p>
+        ${q.imageUrl ? `<img src="${q.imageUrl}" style="max-height:120px;border-radius:8px;margin-top:8px;">` : ""}
+        <div class="grid-2 mt-2">
+          <p class="text-xs">আপনার উত্তর: <span style="font-weight:700;">${q.studentAnswer || "দেননি"}</span></p>
+          <p class="text-xs">সঠিক উত্তর: <span style="font-weight:700;color:var(--color-success);">${q.correctAnswer}</span></p>
+        </div>
+        ${q.explanation_bn ? `<p class="text-xs text-muted mt-2">ব্যাখ্যা: ${q.explanation_bn}</p>` : ""}
+      </div>
+    `).join("");
+  }
+}
+
+function buildPdfHtml() {
+  const subjRows = (result.subjectBreakdown || []).map(s => `
+    <tr><td style="padding:4px 8px;">${subjectMap[s.subjectId] || "—"}</td><td style="padding:4px 8px;text-align:center;">${s.correct}</td><td style="padding:4px 8px;text-align:center;">${s.wrong}</td><td style="padding:4px 8px;text-align:center;">${s.marks}/${s.totalMarks}</td></tr>
+  `).join("");
+  const chapRows = (result.chapterBreakdown || []).map(c => `
+    <tr><td style="padding:4px 8px;">${chapterMap[c.chapterId] || "—"}</td><td style="padding:4px 8px;text-align:center;">${c.correct}</td><td style="padding:4px 8px;text-align:center;">${c.wrong}</td><td style="padding:4px 8px;text-align:center;">${c.marks}/${c.totalMarks}</td></tr>
+  `).join("");
+
+  return `
+    <h2 style="margin:0 0 4px;">${result.examName || "পরীক্ষা"}</h2>
+    <p style="margin:0 0 12px;color:#555;font-size:13px;">${student.name} • ${student.studentId}</p>
+    <p style="font-size:28px;font-weight:800;margin:8px 0;">${result.percentage ?? "—"}% <span style="font-size:14px;font-weight:400;color:#555;">(${result.obtainedMarks}/${result.totalMarks} নম্বর)</span></p>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;">
+      <tr><td style="padding:4px 8px;color:#555;">সঠিক</td><td style="padding:4px 8px;">${result.correctCount}</td>
+          <td style="padding:4px 8px;color:#555;">ভুল</td><td style="padding:4px 8px;">${result.wrongCount}</td></tr>
+      <tr><td style="padding:4px 8px;color:#555;">অনুত্তরিত</td><td style="padding:4px 8px;">${result.unansweredCount}</td>
+          <td style="padding:4px 8px;color:#555;">সঠিকতা</td><td style="padding:4px 8px;">${result.accuracy ?? "—"}%</td></tr>
+      <tr><td style="padding:4px 8px;color:#555;">সময়</td><td style="padding:4px 8px;" colspan="3">${formatSeconds(result.timeTakenSeconds)}</td></tr>
+    </table>
+    ${subjRows ? `<h3 style="margin:16px 0 4px;font-size:14px;">বিষয়ভিত্তিক</h3>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <tr style="color:#555;"><td style="padding:4px 8px;">বিষয়</td><td style="padding:4px 8px;">সঠিক</td><td style="padding:4px 8px;">ভুল</td><td style="padding:4px 8px;">নম্বর</td></tr>
+      ${subjRows}
+    </table>` : ""}
+    ${chapRows ? `<h3 style="margin:16px 0 4px;font-size:14px;">অধ্যায়ভিত্তিক</h3>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <tr style="color:#555;"><td style="padding:4px 8px;">অধ্যায়</td><td style="padding:4px 8px;">সঠিক</td><td style="padding:4px 8px;">ভুল</td><td style="padding:4px 8px;">নম্বর</td></tr>
+      ${chapRows}
+    </table>` : ""}
+  `;
+}
+
+async function generatePdf(shareInstead) {
+  const btn = shareInstead ? document.getElementById("shareBtn") : document.getElementById("pdfBtn");
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "প্রস্তুত করা হচ্ছে...";
+
+  try {
+    const area = document.getElementById("pdfArea");
+    area.innerHTML = buildPdfHtml();
+    const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
+    const imgData = canvas.toDataURL("image/png");
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: "px", format: [canvas.width / 2, canvas.height / 2] });
+    pdf.addImage(imgData, "PNG", 0, 0, canvas.width / 2, canvas.height / 2);
+    const fileName = `${result.examName || "result"}_${student.studentId}.pdf`;
+
+    if (shareInstead && navigator.canShare) {
+      const blob = pdf.output("blob");
+      const file = new File([blob], fileName, { type: "application/pdf" });
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: fileName });
+        return;
+      }
+    }
+    pdf.save(fileName);
+  } catch (err) {
+    console.error(err);
+    showToast("PDF তৈরি করা যায়নি।", "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+}
+</script>
+</body>
+</html>

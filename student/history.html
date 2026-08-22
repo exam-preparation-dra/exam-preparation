@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>পরীক্ষার ইতিহাস — পরীক্ষা প্রস্তুতি</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app-shell" id="shell">
+  <div class="state-block"><div class="spinner"></div></div>
+</div>
+
+<script type="module">
+import { initTheme, toggleTheme, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
+import { getActiveStudent } from "../js/utils/student-utils.js";
+import { getApprovedResults } from "../js/utils/results-utils.js";
+
+initTheme();
+const shell = document.getElementById("shell");
+const student = getActiveStudent();
+
+if (!student) {
+  window.location.href = "../index.html";
+} else {
+  render();
+}
+
+function fmtDate(ts) {
+  return ts?.toDate ? ts.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" }) : "—";
+}
+
+async function render() {
+  shell.innerHTML = `
+    ${renderStudentHeader(student, "history")}
+    <p class="eyebrow mb-2">আমার পরীক্ষার ইতিহাস</p>
+    <div id="listBody" class="mt-2"><div class="glass card skeleton" style="height:90px;"></div></div>
+  `;
+  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+
+  const listBody = document.getElementById("listBody");
+  try {
+    const results = await getApprovedResults(student.studentId);
+    if (results.length === 0) {
+      renderState(listBody, "empty", "এখনো কোনো অনুমোদিত পরীক্ষার ফলাফল নেই।");
+      return;
+    }
+    listBody.innerHTML = results.map(r => `
+      <a href="../student/result.html?resultId=${r.id}" class="glass card card--tap mt-2" style="display:block;">
+        <div class="flex justify-between items-center">
+          <div>
+            <p style="font-weight:700;">${r.examName || "পরীক্ষা"}</p>
+            <p class="text-xs text-muted">${fmtDate(r.submittedAt)}</p>
+          </div>
+          <div style="text-align:left;">
+            <p style="font-weight:800;color:var(--color-accent);">${r.percentage ?? "—"}%</p>
+            <p class="text-xs text-muted">সঠিকতা ${r.accuracy ?? "—"}%</p>
+          </div>
+        </div>
+      </a>
+    `).join("");
+  } catch (err) {
+    console.error(err);
+    renderState(listBody, "error", "ইতিহাস লোড করা যায়নি।");
+  }
+}
+</script>
+</body>
+</html>
