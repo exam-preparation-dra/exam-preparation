@@ -46,8 +46,9 @@ function template() {
 
     <div class="glass card">
       <div class="flex justify-between items-center">
-        <p class="eyebrow">প্রম্পট তৈরির সহায়ক</p>
+        <p class="eyebrow">বিষয় / অধ্যায় / টপিক নির্বাচন করুন</p>
       </div>
+      <p class="text-xs text-muted mt-1">নিচে যা কিছু পেস্ট করবে, সব প্রশ্ন এই selected চ্যাপ্টার-টপিকেই যোগ হবে — পেস্ট করা টেক্সটে Subject/Chapter/Topic লেখা থাকলেও সেটা চেক করা হয় না, শুধু এখান থেকেই নেওয়া হয়।</p>
       <div class="grid-2 mt-2" style="grid-template-columns:1fr 1fr 1fr;">
         <select class="select" id="promptSubject"></select>
         <select class="select" id="promptChapter"></select>
@@ -102,9 +103,14 @@ async function init() {
   tree = await getFullSyllabusTree();
   const subjSel = document.getElementById("promptSubject");
   subjSel.innerHTML = tree.map(s => `<option value="${s.id}">${s.name_bn}</option>`).join("");
-  subjSel.addEventListener("change", updatePromptChapters);
-  document.getElementById("promptChapter").addEventListener("change", updatePromptTopics);
+  subjSel.addEventListener("change", () => { updatePromptChapters(); reparseIfNeeded(); });
+  document.getElementById("promptChapter").addEventListener("change", () => { updatePromptTopics(); reparseIfNeeded(); });
+  document.getElementById("promptTopic").addEventListener("change", reparseIfNeeded);
   if (tree[0]) updatePromptChapters();
+}
+
+function reparseIfNeeded() {
+  if (parsedResults.length > 0) handleParse();
 }
 
 function updatePromptChapters() {
@@ -134,10 +140,25 @@ function handleCopyPrompt() {
     .catch(() => showToast("কপি করা যায়নি। ম্যানুয়ালি সিলেক্ট করে কপি করুন।", "error"));
 }
 
+function currentTarget() {
+  return {
+    subjectId: document.getElementById("promptSubject").value || null,
+    chapterId: document.getElementById("promptChapter").value || null,
+    topicId: document.getElementById("promptTopic").value || null
+  };
+}
+
+function targetLabel() {
+  const subject = tree.find(s => s.id === document.getElementById("promptSubject").value);
+  const chapter = subject?.chapters.find(c => c.id === document.getElementById("promptChapter").value);
+  const topic = chapter?.topics.find(t => t.id === document.getElementById("promptTopic").value);
+  return [subject?.name_bn, chapter?.name_bn, topic?.name_bn].filter(Boolean).join(" / ") || "—";
+}
+
 function handleParse() {
   const raw = document.getElementById("pasteArea").value;
   if (!raw.trim()) { showToast("প্রথমে টেক্সট পেস্ট করুন।", "error"); return; }
-  parsedResults = parseAiImportText(raw, tree);
+  parsedResults = parseAiImportText(raw, currentTarget());
   renderPreview();
 }
 
@@ -171,7 +192,7 @@ function renderPreview() {
           <p class="text-xs">C: ${r.question.options_bn.C || "—"}</p>
           <p class="text-xs">D: ${r.question.options_bn.D || "—"}</p>
         </div>
-        <p class="text-xs mt-2">সঠিক: ${r.question.correctAnswer || "—"} • নম্বর: ${r.question.marks} • ${r.question.subjectRaw} / ${r.question.chapterRaw} / ${r.question.topicRaw}</p>
+        <p class="text-xs mt-2">সঠিক: ${r.question.correctAnswer || "—"} • নম্বর: ${r.question.marks} • ${targetLabel()}</p>
       </div>
     `).join("")}
   `;
