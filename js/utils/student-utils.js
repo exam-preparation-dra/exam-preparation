@@ -9,16 +9,13 @@ import {
 
 // ---------- List active students for the homepage selector ----------
 export async function getActiveStudents() {
-  // ডাটাবেস থেকে আগে সবাইকে আনছি, তারপর জাভাস্ক্রিপ্ট দিয়ে ফিল্টার করছি (ইনডেক্স লাগবে না!)
   const q = query(collection(db, "students"), orderBy("sequenceNumber"));
   const snap = await getDocs(q);
   const allStudents = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
   return allStudents.filter(s => s.isActive === true);
 }
 
-// ---------- Generate permanent Student ID (requirement #7) ----------
-// Uses a counter document + transaction so IDs never collide, even with
-// concurrent admin sessions, and are never manually editable afterward.
+// ---------- Generate permanent Student ID ----------
 export async function createStudent(name) {
   const counterRef = doc(db, "counters", "studentCounter");
   const newSequence = await runTransaction(db, async (tx) => {
@@ -40,7 +37,7 @@ export async function createStudent(name) {
   return { docId: docRef.id, studentId, name };
 }
 
-// ---------- Check for an in-progress attempt so the student can resume (#18) ----------
+// ---------- Check for an in-progress attempt ----------
 export async function findActiveAttempt(studentId) {
   const q = query(
     collection(db, "attempts"),
@@ -53,7 +50,7 @@ export async function findActiveAttempt(studentId) {
   return { id: d.id, ...d.data() };
 }
 
-// ---------- Session: which student is currently "logged in" (no auth, just selection) ----------
+// ---------- Session Management ----------
 export function setActiveStudent(student) {
   localStorage.setItem("activeStudent", JSON.stringify(student));
 }
