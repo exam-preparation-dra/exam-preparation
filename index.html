@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>বাংলা MCQ পরীক্ষা প্ল্যাটফর্ম</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">প</div>
+      <div>
+        <h1 style="font-size:1.05rem;">পরীক্ষা প্রস্তুতি</h1>
+        <p class="text-xs text-muted" style="margin:0;">প্রিপারেশন প্ল্যাটফর্ম</p>
+      </div>
+    </div>
+    <button class="theme-toggle" id="themeToggle" aria-label="থিম পরিবর্তন করুন">
+      <span class="theme-toggle-thumb"></span>
+    </button>
+  </div>
+
+  <div class="glass card">
+    <p class="eyebrow">শুরু করুন</p>
+    <h2 style="margin-top:6px;">শিক্ষার্থী নির্বাচন করুন</h2>
+    <p class="text-sm mt-2">আপনার নাম বেছে নিন — নিজের ড্যাশবোর্ড খুলবে।</p>
+  </div>
+
+  <div id="studentList" class="mt-4">
+    <div class="glass card skeleton" style="height:76px;"></div>
+    <div class="glass card skeleton" style="height:76px;"></div>
+  </div>
+
+  <div class="mt-5 text-center">
+    <a href="admin/index.html" class="text-xs text-muted">অ্যাডমিন প্যানেল</a>
+  </div>
+
+</div>
+
+<script type="module">
+import { initTheme, toggleTheme, icons, renderState } from "./js/utils/ui-utils.js";
+import { getActiveStudents, setActiveStudent, findActiveAttempt } from "./js/utils/student-utils.js";
+
+initTheme();
+document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+
+const listEl = document.getElementById("studentList");
+
+async function loadStudents() {
+  try {
+    const students = await getActiveStudents();
+    if (students.length === 0) {
+      renderState(listEl, "empty", "এখনো কোনো শিক্ষার্থী যোগ করা হয়নি। অ্যাডমিন প্যানেল থেকে শিক্ষার্থী তৈরি করুন।");
+      return;
+    }
+    listEl.innerHTML = students.map(s => `
+      <button class="glass card card--tap" data-doc="${s.docId}" data-sid="${s.studentId}" data-name="${s.name}"
+        style="display:flex;align-items:center;justify-content:space-between;width:100%;border:none;text-align:right;">
+        <span style="display:flex;align-items:center;gap:12px;">
+          <span class="icon-btn">${icons.user}</span>
+          <span style="text-align:left;">
+            <span style="display:block;font-weight:700;">${s.name}</span>
+            <span class="text-xs text-muted">${s.studentId}</span>
+          </span>
+        </span>
+        <span class="icon-btn" style="width:32px;height:32px;">${icons.arrowRight}</span>
+      </button>
+    `).join("");
+
+    listEl.querySelectorAll("[data-doc]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const student = { docId: btn.dataset.doc, studentId: btn.dataset.sid, name: btn.dataset.name };
+        setActiveStudent(student);
+        // Check for a resumable in-progress exam (requirement #18)
+        const active = await findActiveAttempt(student.studentId);
+        if (active) {
+          window.location.href = `student/exam.html?examId=${active.examId}&resume=1`;
+        } else {
+          window.location.href = "student/dashboard.html";
+        }
+      });
+    });
+  } catch (err) {
+    console.error(err);
+    renderState(listEl, "error", "শিক্ষার্থীদের তালিকা লোড করা যায়নি। আবার চেষ্টা করুন।");
+  }
+}
+
+loadStudents();
+</script>
+</body>
+</html>

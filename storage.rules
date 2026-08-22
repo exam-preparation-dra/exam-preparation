@@ -1,0 +1,22 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Question images: students must be able to see them during an exam
+    // and in result review, but only an authenticated admin may upload or
+    // replace one. Mirrors the same read-public/write-admin pattern used
+    // for exam-related data in firestore.rules.
+    match /question-images/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    // Everything else is denied by default.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

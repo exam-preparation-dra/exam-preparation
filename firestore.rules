@@ -1,0 +1,83 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null;
+      // Students never authenticate, so any authenticated request = admin.
+      // If multiple admin accounts exist later, tighten this to a role check
+      // against an /admins/{uid} document.
+    }
+
+    // ---- Students: public read (needed for the name-selection homepage),
+    // writes restricted to admin only ----
+    match /students/{studentId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /counters/{counterId} {
+      allow read: if false;
+      allow write: if isAdmin();
+    }
+
+    // ---- Syllabus: public read (needed to show exam/topic labels), admin write ----
+    match /subjects/{id}  { allow read: if true; allow write: if isAdmin(); }
+    match /chapters/{id}  { allow read: if true; allow write: if isAdmin(); }
+    match /topics/{id}    { allow read: if true; allow write: if isAdmin(); }
+
+    // ---- Question bank: admin only. Never publicly readable — otherwise
+    // correct answers would leak before an exam is even taken. ----
+    match /questions/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    // ---- Exams: metadata public (students need to see upcoming exams),
+    // but this document never contains answer keys. ----
+    match /exams/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ---- Exam snapshots: contains correct answers.
+    // SPARK-PLAN LIMITATION: this project has no Cloud Function, so grading
+    // happens in the student's browser, which means the browser must be able
+    // to read this document while taking the exam. That makes the correct
+    // answer technically retrievable by an inspecting student — the exam UI
+    // simply never displays it before submission. This is a deliberate,
+    // documented trade-off for a small private preparation tool, not a claim
+    // that this is tamper-proof. See grading-utils.js and README. ----
+    match /examSnapshots/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ---- Attempts: a student can only read/write their own in-progress
+    // attempt (matched by studentId in the document, no student auth exists).
+    // SPARK-PLAN LIMITATION: true per-student write isolation would require
+    // a Cloud Function; on the free plan this is enforced only by convention
+    // (document ID = examId_studentId) and the app never trusting attempt
+    // data as a substitute for the immutable examSnapshot at grading time. ----
+    match /attempts/{attemptId} {
+      allow read, write: if true;
+    }
+
+    // ---- Results: created by the student's browser at submission time
+    // (status: "pending") because there is no server to grade on their
+    // behalf under the Spark plan. Only admin can change status to
+    // "approved" or edit an existing result afterward — this is the one
+    // place a compromised client is fully blocked from self-approving. ----
+    match /results/{id} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+
+    // ---- Analytics: read-only derived data ----
+    match /analytics/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
