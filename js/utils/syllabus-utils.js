@@ -9,13 +9,17 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 // ---------- Subjects ----------
+// NOTE: no Firestore orderBy() when activeOnly filter is used — an equality
+// filter (isActive) combined with orderBy() on a different field (order)
+// needs a manually-created composite index, and a missing index makes the
+// query fail silently from the caller's point of view (see results-utils.js
+// fix). Sorting client-side avoids needing any index here, ever.
 export async function getSubjects(activeOnly = false) {
   const base = collection(db, "subjects");
-  const q = activeOnly
-    ? query(base, where("isActive", "==", true), orderBy("order"))
-    : query(base, orderBy("order"));
+  const q = activeOnly ? query(base, where("isActive", "==", true)) : query(base, orderBy("order"));
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return activeOnly ? items.sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) : items;
 }
 
 export async function addSubject({ name_en, name_bn, order }) {
@@ -33,14 +37,18 @@ export async function setSubjectActive(id, isActive) {
 }
 
 // ---------- Chapters ----------
+// Same reasoning as getSubjects() above: no Firestore orderBy() combined
+// with the equality filters (subjectId/isActive) — sort client-side instead
+// so no composite index is ever required.
 export async function getChapters(subjectId = null, activeOnly = false) {
   const base = collection(db, "chapters");
   const clauses = [];
   if (subjectId) clauses.push(where("subjectId", "==", subjectId));
   if (activeOnly) clauses.push(where("isActive", "==", true));
-  clauses.push(orderBy("order"));
   const snap = await getDocs(query(base, ...clauses));
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
 
 export async function addChapter({ subjectId, name_en, name_bn, order }) {
@@ -103,3 +111,4 @@ export function buildNameMap(items) {
   items.forEach(i => { map[i.id] = i.name_bn; });
   return map;
 }
+   
