@@ -107,11 +107,17 @@ export async function getExamById(examId) {
 }
 
 export async function getAllExams({ status = null } = {}) {
+  // NOTE: no Firestore orderBy() when a status filter is applied — equality
+  // filter + orderBy on a different field needs a composite index that
+  // doesn't exist here, and a missing index makes the query fail instead of
+  // just returning results (see results-utils.js / syllabus-utils.js for the
+  // same fix). Sort client-side so no index is ever required.
   const clauses = [];
   if (status) clauses.push(where("status", "==", status));
-  clauses.push(orderBy("createdAt", "desc"));
+  if (!status) clauses.push(orderBy("createdAt", "desc"));
   const snap = await getDocs(query(collection(db, "exams"), ...clauses));
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return status ? items.sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0)) : items;
 }
 
 // ---------- PUBLISH: freeze an immutable question snapshot, then flip status.
@@ -160,3 +166,4 @@ export async function publishExam(examId) {
 export function calculateTotalMarks(questionCount, marksPerQuestion) {
   return (questionCount || 0) * (marksPerQuestion || 0);
 }
+   
