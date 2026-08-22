@@ -6,30 +6,37 @@
    ========================================================= */
 import { db } from "../firebase/firebase-config.js";
 import {
-  collection, doc, getDoc, getDocs, query, where, orderBy
+  collection, doc, getDoc, getDocs, query, where
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 // ---------- Upcoming exams (dashboard card) ----------
+// NOTE: no Firestore orderBy() here — combining an "in" filter (status) with
+// orderBy() on a different field (examDate) needs a manually-created
+// composite index in the Firebase console. If that index is missing,
+// Firestore throws instead of returning results, and this whole card fails
+// with "লোড করা যায়নি" — exactly the bug this fixes. Sort client-side instead.
 export async function getUpcomingExams() {
-  const q = query(
-    collection(db, "exams"),
-    where("status", "in", ["upcoming", "published"]),
-    orderBy("examDate", "asc")
-  );
+  const q = query(collection(db, "exams"), where("status", "in", ["upcoming", "published"]));
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (a.examDate?.toMillis?.() ?? 0) - (b.examDate?.toMillis?.() ?? 0));
 }
 
 // ---------- All approved results for a student, newest first ----------
+// Same reasoning as above: two equality filters (studentId, status) PLUS
+// orderBy(submittedAt) needs a composite index. Fetch with filters only,
+// sort here.
 export async function getApprovedResults(studentId) {
   const q = query(
     collection(db, "results"),
     where("studentId", "==", studentId),
-    where("status", "==", "approved"),
-    orderBy("submittedAt", "desc")
+    where("status", "==", "approved")
   );
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (b.submittedAt?.toMillis?.() ?? 0) - (a.submittedAt?.toMillis?.() ?? 0));
 }
 
 // ---------- Single result detail (history drill-down) ----------
