@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>বাংলা MCQ পরীক্ষা প্ল্যাটফর্ম</title>
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
 
@@ -35,7 +35,7 @@
   </div>
 
   <div class="mt-5 text-center">
-    <a href="admin/index.html" class="text-xs text-muted">অ্যাডমিন প্যানেল</a>
+    <a href="./admin/index.html" class="text-xs text-muted">অ্যাডমিন প্যানেল</a>
   </div>
 
 </div>
@@ -74,12 +74,11 @@ async function loadStudents() {
       btn.addEventListener("click", async () => {
         const student = { docId: btn.dataset.doc, studentId: btn.dataset.sid, name: btn.dataset.name };
         setActiveStudent(student);
-        // Check for a resumable in-progress exam (requirement #18)
         const active = await findActiveAttempt(student.studentId);
         if (active) {
-          window.location.href = `student/exam.html?examId=${active.examId}&resume=1`;
+          window.location.href = `./student/exam.html?examId=${active.examId}&resume=1`;
         } else {
-          window.location.href = "student/dashboard.html";
+          window.location.href = "./student/dashboard.html";
         }
       });
     });
