@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>শিক্ষার্থী ব্যবস্থাপনা — অ্যাডমিন</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app-shell app-shell--wide" id="shell">
+  <div class="state-block"><div class="spinner"></div></div>
+</div>
+
+<script type="module">
+import { initTheme, toggleTheme, icons, renderState, showToast, friendlyError } from "../js/utils/ui-utils.js";
+import { requireAdmin, adminLogout } from "../js/utils/auth.js";
+import { getActiveStudents, createStudent } from "../js/utils/student-utils.js";
+import { db } from "../js/firebase/firebase-config.js";
+import { collection, getDocs, orderBy, query, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+initTheme();
+const shell = document.getElementById("shell");
+
+requireAdmin(() => {
+  shell.innerHTML = `
+    <div class="topbar">
+      <a href="../admin/dashboard.html" class="icon-btn">${icons.arrowLeft}</a>
+      <h2 style="font-size:1.05rem;">শিক্ষার্থী ব্যবস্থাপনা</h2>
+      <div class="flex gap-2">
+        <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-thumb"></span></button>
+        <button class="icon-btn" id="logoutBtn">${icons.arrowRight}</button>
+      </div>
+    </div>
+
+    <form id="addForm" class="glass card">
+      <p class="eyebrow mb-2">নতুন শিক্ষার্থী যোগ করুন</p>
+      <div class="field mt-3">
+        <label for="newName">শিক্ষার্থীর নাম</label>
+        <input class="input" id="newName" required placeholder="যেমন: রহিম উদ্দিন">
+      </div>
+      <button type="submit" class="btn btn-primary" id="addBtn">
+        <span style="width:18px;height:18px;">${icons.plus}</span> যোগ করুন
+      </button>
+    </form>
+
+    <p class="eyebrow mt-5 mb-2">সব শিক্ষার্থী</p>
+    <div id="studentList"><div class="glass card skeleton" style="height:70px;"></div></div>
+  `;
+
+  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+  document.getElementById("logoutBtn").addEventListener("click", adminLogout);
+  document.getElementById("addForm").addEventListener("submit", handleAdd);
+  loadStudents();
+});
+
+async function loadAllStudents() {
+  const snap = await getDocs(query(collection(db, "students"), orderBy("sequenceNumber")));
+  return snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+}
+
+async function loadStudents() {
+  const listEl = document.getElementById("studentList");
+  try {
+    const students = await loadAllStudents();
+    if (students.length === 0) {
+      renderState(listEl, "empty", "এখনো কোনো শিক্ষার্থী যোগ করা হয়নি।");
+      return;
+    }
+    listEl.innerHTML = students.map(s => `
+      <div class="glass card mt-2" data-id="${s.docId}">
+        <div class="flex justify-between items-center">
+          <div>
+            <p style="font-weight:700;">
+              <span class="student-name">${s.name}</span>
+            </p>
+            <p class="text-xs text-muted">${s.studentId}${s.isActive ? "" : " • নিষ্ক্রিয়"}</p>
+          </div>
+          <div class="flex gap-2">
+            <button class="icon-btn edit-btn" title="নাম সম্পাদনা">${icons.edit}</button>
+            <button class="icon-btn toggle-btn" title="সক্রিয়/নিষ্ক্রিয়">${icons.toggle}</button>
+          </div>
+        </div>
+      </div>
+    `).join("");
+
+    listEl.querySelectorAll("[data-id]").forEach(card => {
+      const docId = card.dataset.id;
+      const student = students.find(s => s.docId === docId);
+
+      card.querySelector(".edit-btn").addEventListener("click", async () => {
+        const nameEl = card.querySelector(".student-name");
+        const newName = prompt("নতুন নাম লিখুন:", student.name);
+        if (newName === null) return;
+        const trimmed = newName.trim();
+        if (!trimmed) return;
+        try {
+          await updateDoc(doc(db, "students", docId), { name: trimmed });
+          nameEl.textContent = trimmed;
+          showToast("নাম আপডেট করা হয়েছে।", "success");
+        } catch (err) {
+          showToast(friendlyError(err), "error");
+        }
+      });
+
+      card.querySelector(".toggle-btn").addEventListener("click", async () => {
+        const willActivate = !student.isActive;
+        const confirmMsg = willActivate
+          ? `${student.name} কে আবার সক্রিয় করবেন?`
+          : `${student.name} কে নিষ্ক্রিয় করবেন? সে আর হোমপেজে দেখা যাবে না।`;
+        if (!confirm(confirmMsg)) return;
+        try {
+          await updateDoc(doc(db, "students", docId), { isActive: willActivate });
+          showToast(willActivate ? "সক্রিয় করা হয়েছে।" : "নিষ্ক্রিয় করা হয়েছে।", "success");
+          loadStudents();
+        } catch (err) {
+          showToast(friendlyError(err), "error");
+        }
+      });
+    });
+
+  } catch (err) {
+    console.error(err);
+    renderState(listEl, "error", "শিক্ষার্থীদের তালিকা লোড করা যায়নি।");
+  }
+}
+
+async function handleAdd(e) {
+  e.preventDefault();
+  const input = document.getElementById("newName");
+  const btn = document.getElementById("addBtn");
+  const name = input.value.trim();
+  if (!name) return;
+
+  btn.disabled = true;
+  btn.textContent = "যোগ করা হচ্ছে...";
+  try {
+    await createStudent(name);
+    input.value = "";
+    showToast("শিক্ষার্থী সফলভাবে যোগ করা হয়েছে।", "success");
+    loadStudents();
+  } catch (err) {
+    console.error(err);
+    showToast(friendlyError(err), "error");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<span style="width:18px;height:18px;">${icons.plus}</span> যোগ করুন`;
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>প্রশ্ন ব্যাংক — অ্যাডমিন</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app-shell app-shell--wide" id="shell">
+  <div class="state-block"><div class="spinner"></div></div>
+</div>
+
+<script type="module">
+import { initTheme, toggleTheme, icons, renderState, showToast, friendlyError } from "../js/utils/ui-utils.js";
+import { requireAdmin, adminLogout } from "../js/utils/auth.js";
+import { getFullSyllabusTree } from "../js/utils/syllabus-utils.js";
+import {
+  addQuestion, updateQuestion, setQuestionActive, deleteQuestion, duplicateQuestion,
+  getQuestionsPage, filterByText
+} from "../js/utils/question-utils.js";
+import { uploadQuestionImage } from "../js/utils/storage-utils.js";
+import { attachVoiceInput, isVoiceInputSupported } from "../js/utils/voice-input.js";
+
+initTheme();
+const shell = document.getElementById("shell");
+let tree = [];
+let allQuestions = [];       // currently loaded page(s)
+let nextCursor = null;
+let editingId = null;        // null = add mode
+let selectedIds = new Set(JSON.parse(localStorage.getItem("examBuilderSelection") || "[]"));
+
+const filterState = { subjectId: "", chapterId: "", topicId: "", text: "" };
+
+requireAdmin(() => {
+  shell.innerHTML = shellTemplate();
+  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+  document.getElementById("logoutBtn").addEventListener("click", adminLogout);
+  document.getElementById("showAddForm").addEventListener("click", () => openForm(null));
+  document.getElementById("cancelForm").addEventListener("click", closeForm);
+  document.getElementById("questionForm").addEventListener("submit", handleSubmit);
+  document.getElementById("searchInput").addEventListener("input", debounce(handleSearchInput, 250));
+  document.getElementById("subjectFilter").addEventListener("change", handleSubjectFilterChange);
+  document.getElementById("chapterFilter").addEventListener("change", handleChapterFilterChange);
+  document.getElementById("topicFilter").addEventListener("change", () => { filterState.topicId = document.getElementById("topicFilter").value; reloadList(); });
+  document.getElementById("loadMoreBtn").addEventListener("click", loadMore);
+  document.getElementById("goToExamBuilder").addEventListener("click", () => {
+    localStorage.setItem("examBuilderSelection", JSON.stringify([...selectedIds]));
+    // If we arrived here from an in-progress exam edit, return to that same
+    // exam instead of always landing on "create new" (see exam-create.html).
+    const params = new URLSearchParams(window.location.search);
+    const returnTo = params.get("returnTo");
+    window.location.href = returnTo ? decodeURIComponent(returnTo) : "../admin/exam-create.html";
+  });
+
+  setupImagePreview();
+  setupVoiceButton();
+  init();
+});
+
+function shellTemplate() {
+  return `
+    <div class="topbar">
+      <a href="../admin/dashboard.html" class="icon-btn">${icons.arrowLeft}</a>
+      <h2 style="font-size:1.05rem;">প্রশ্ন ব্যাংক</h2>
+      <div class="flex gap-2">
+        <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-thumb"></span></button>
+        <button class="icon-btn" id="logoutBtn">${icons.arrowRight}</button>
+      </div>
+    </div>
+
+    <div class="glass card">
+      <div class="flex justify-between items-center">
+        <p class="eyebrow">ফিল্টার ও অনুসন্ধান</p>
+        <a href="../admin/question-import.html" class="btn btn-secondary btn-sm">AI দিয়ে বাল্ক ইম্পোর্ট</a>
+      </div>
+      <div class="field mt-3">
+        <input class="input" id="searchInput" placeholder="প্রশ্ন খুঁজুন...">
+      </div>
+      <div class="grid-2 mt-2" style="grid-template-columns:1fr 1fr 1fr;gap:8px;">
+        <select class="select" id="subjectFilter"><option value="">সব বিষয়</option></select>
+        <select class="select" id="chapterFilter"><option value="">সব অধ্যায়</option></select>
+        <select class="select" id="topicFilter"><option value="">সব টপিক</option></select>
+      </div>
+    </div>
+
+    <div class="flex justify-between items-center mt-4">
+      <p class="eyebrow" id="selectionCount">${selectedIds.size} টি নির্বাচিত</p>
+      <div class="flex gap-2">
+        <button class="btn btn-secondary btn-sm" id="goToExamBuilder">পরীক্ষায় যোগ করুন</button>
+        <button class="btn btn-primary btn-sm" id="showAddForm">${icons.plus} নতুন প্রশ্ন</button>
+      </div>
+    </div>
+
+    <form id="questionForm" class="glass card mt-3 hidden">
+      <p class="eyebrow" id="formTitle">নতুন প্রশ্ন যোগ করুন</p>
+
+      <div class="field mt-3">
+        <label>ইংরেজি প্রশ্ন</label>
+        <textarea class="textarea" id="qEn" required></textarea>
+      </div>
+      <div class="field">
+        <label>বাংলা প্রশ্ন <button type="button" class="icon-btn" id="voiceBtn" style="width:32px;height:32px;display:inline-flex;vertical-align:middle;margin-right:6px;" title="ভয়েস ইনপুট"></button></label>
+        <textarea class="textarea" id="qBn" required></textarea>
+      </div>
+
+      <div class="grid-2 mt-2">
+        <div class="field"><label>অপশন A</label><input class="input" id="optA" required></div>
+        <div class="field"><label>অপশন B</label><input class="input" id="optB" required></div>
+        <div class="field"><label>অপশন C</label><input class="input" id="optC" required></div>
+        <div class="field"><label>অপশন D</label><input class="input" id="optD" required></div>
+      </div>
+
+      <div class="grid-2 mt-2" style="grid-template-columns:1fr 1fr;">
+        <div class="field">
+          <label>সঠিক উত্তর</label>
+          <select class="select" id="correctAnswer" required>
+            <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
+          </select>
+        </div>
+        <div class="field"><label>নম্বর</label><input class="input" type="number" min="1" step="1" id="marksInput" value="1" required></div>
+      </div>
+
+      <div class="grid-2 mt-2" style="grid-template-columns:1fr 1fr 1fr;">
+        <div class="field"><label>বিষয়</label><select class="select" id="formSubject" required></select></div>
+        <div class="field"><label>অধ্যায়</label><select class="select" id="formChapter" required></select></div>
+        <div class="field"><label>টপিক</label><select class="select" id="formTopic" required></select></div>
+      </div>
+
+      <div class="field">
+        <label>ছবি (ঐচ্ছিক)</label>
+        <input class="input" type="file" id="imageInput" accept="image/*" style="padding:10px;">
+        <img id="imagePreview" class="hidden mt-2" style="max-height:140px;border-radius:var(--radius-sm);">
+      </div>
+
+      <div class="field">
+        <label>ব্যাখ্যা (ঐচ্ছিক)</label>
+        <textarea class="textarea" id="explanationInput"></textarea>
+      </div>
+
+      <p id="formError" class="text-sm hidden" style="color:var(--color-danger);"></p>
+
+      <div class="flex gap-2 mt-2">
+        <button type="button" class="btn btn-secondary" id="cancelForm">বাতিল</button>
+        <button type="submit" class="btn btn-primary" id="submitBtn">সংরক্ষণ করুন</button>
+      </div>
+    </form>
+
+    <div id="questionList" class="mt-4"></div>
+    <div class="mt-4 text-center">
+      <button class="btn btn-secondary hidden" id="loadMoreBtn">আরও দেখুন</button>
+    </div>
+  `;
+}
+
+function debounce(fn, ms) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+async function init() {
+  tree = await getFullSyllabusTree();
+  populateSubjectSelects();
+  await reloadList();
+}
+
+function populateSubjectSelects() {
+  const subjectFilter = document.getElementById("subjectFilter");
+  const formSubject = document.getElementById("formSubject");
+  tree.forEach(s => {
+    subjectFilter.innerHTML += `<option value="${s.id}">${s.name_bn}</option>`;
+    formSubject.innerHTML += `<option value="${s.id}">${s.name_bn}</option>`;
+  });
+  formSubject.addEventListener("change", () => populateFormChapters(formSubject.value));
+  if (tree[0]) populateFormChapters(tree[0].id);
+}
+
+function populateFormChapters(subjectId) {
+  const subject = tree.find(s => s.id === subjectId);
+  const formChapter = document.getElementById("formChapter");
+  formChapter.innerHTML = (subject?.chapters || []).map(c => `<option value="${c.id}">${c.name_bn}</option>`).join("");
+  if (subject?.chapters?.[0]) populateFormTopics(subject.chapters[0].id, subjectId);
+  formChapter.onchange = () => populateFormTopics(formChapter.value, subjectId);
+}
+
+function populateFormTopics(chapterId, subjectId) {
+  const subject = tree.find(s => s.id === subjectId);
+  const chapter = subject?.chapters.find(c => c.id === chapterId);
+  const formTopic = document.getElementById("formTopic");
+  formTopic.innerHTML = (chapter?.topics || []).map(t => `<option value="${t.id}">${t.name_bn}</option>`).join("");
+}
+
+function handleSubjectFilterChange() {
+  const subjectId = document.getElementById("subjectFilter").value;
+  filterState.subjectId = subjectId;
+  filterState.chapterId = ""; filterState.topicId = "";
+  const chapterFilter = document.getElementById("chapterFilter");
+  const topicFilter = document.getElementById("topicFilter");
+  const subject = tree.find(s => s.id === subjectId);
+  chapterFilter.innerHTML = `<option value="">সব অধ্যায়</option>` + (subject?.chapters || []).map(c => `<option value="${c.id}">${c.name_bn}</option>`).join("");
+  topicFilter.innerHTML = `<option value="">সব টপিক</option>`;
+  reloadList();
+}
+
+function handleChapterFilterChange() {
+  const chapterId = document.getElementById("chapterFilter").value;
+  filterState.chapterId = chapterId;
+  filterState.topicId = "";
+  const topicFilter = document.getElementById("topicFilter");
+  const subject = tree.find(s => s.id === filterState.subjectId);
+  const chapter = subject?.chapters.find(c => c.id === chapterId);
+  topicFilter.innerHTML = `<option value="">সব টপিক</option>` + (chapter?.topics || []).map(t => `<option value="${t.id}">${t.name_bn}</option>`).join("");
+  reloadList();
+}
+
+function handleSearchInput() {
+  filterState.text = document.getElementById("searchInput").value;
+  renderQuestionList(); // text filter is client-side over loaded page(s)
+}
+
+async function reloadList() {
+  allQuestions = [];
+  nextCursor = null;
+  await loadMore(true);
+}
+
+async function loadMore(isReload = false) {
+  const listEl = document.getElementById("questionList");
+  if (isReload) listEl.innerHTML = `<div class="glass card skeleton" style="height:80px;"></div>`;
+  try {
+    const { items, nextCursor: cursor } = await getQuestionsPage({
+      subjectId: filterState.subjectId || null,
+      chapterId: filterState.chapterId || null,
+      topicId: filterState.topicId || null,
+      cursor: isReload ? null : nextCursor
+    });
+    allQuestions = isReload ? items : [...allQuestions, ...items];
+    nextCursor = cursor;
+    document.getElementById("loadMoreBtn").classList.toggle("hidden", !nextCursor);
+    renderQuestionList();
+  } catch (err) {
+    console.error(err);
+    renderState(listEl, "error", "প্রশ্ন তালিকা লোড করা যায়নি।");
+  }
+}
+
+function nameFor(id, kind) {
+  for (const s of tree) {
+    if (kind === "subject" && s.id === id) return s.name_bn;
+    for (const c of s.chapters) {
+      if (kind === "chapter" && c.id === id) return c.name_bn;
+      for (const t of c.topics) if (kind === "topic" && t.id === id) return t.name_bn;
+    }
+  }
+  return "—";
+}
+
+function renderQuestionList() {
+  const listEl = document.getElementById("questionList");
+  const filtered = filterByText(allQuestions, filterState.text);
+  if (filtered.length === 0) {
+    renderState(listEl, "empty", "কোনো প্রশ্ন পাওয়া যায়নি।");
+    return;
+  }
+  listEl.innerHTML = filtered.map(q => `
+    <div class="glass card mt-2" data-id="${q.id}">
+      <div class="flex justify-between" style="gap:10px;">
+        <div style="flex:1;">
+          <label class="flex items-center gap-2" style="cursor:pointer;">
+            <input type="checkbox" class="select-checkbox" data-id="${q.id}" ${selectedIds.has(q.id) ? "checked" : ""}>
+            <span class="text-xs text-muted">${q.isActive ? "" : "(নিষ্ক্রিয়) "}${nameFor(q.subjectId, "subject")} • ${nameFor(q.chapterId, "chapter")} • ${nameFor(q.topicId, "topic")}</span>
+          </label>
+          <p class="mt-2" style="font-weight:600;">${q.question_bn}</p>
+          <p class="text-xs text-muted lang-en mt-1">${q.question_en}</p>
+          ${q.imageUrl ? `<img src="${q.imageUrl}" style="max-height:100px;border-radius:8px;margin-top:8px;">` : ""}
+          <p class="text-xs mt-2">সঠিক উত্তর: <span style="font-weight:700;color:var(--color-success);">${q.correctAnswer}</span> • নম্বর: ${q.marks}</p>
+        </div>
+        <div class="flex flex-col gap-2">
+          <button class="icon-btn edit-btn" data-id="${q.id}" title="সম্পাদনা">${icons.edit}</button>
+          <button class="icon-btn dup-btn" data-id="${q.id}" title="ডুপ্লিকেট">${icons.plus}</button>
+          <button class="icon-btn toggle-btn" data-id="${q.id}" title="সক্রিয়/নিষ্ক্রিয়">${icons.toggle}</button>
+        </div>
+      </div>
+    </div>
+  `).join("");
+
+  listEl.querySelectorAll(".select-checkbox").forEach(cb => cb.addEventListener("change", () => {
+    if (cb.checked) selectedIds.add(cb.dataset.id); else selectedIds.delete(cb.dataset.id);
+    localStorage.setItem("examBuilderSelection", JSON.stringify([...selectedIds]));
+    document.getElementById("selectionCount").textContent = `${selectedIds.size} টি নির্বাচিত`;
+  }));
+  listEl.querySelectorAll(".edit-btn").forEach(b => b.addEventListener("click", () => openForm(b.dataset.id)));
+  listEl.querySelectorAll(".dup-btn").forEach(b => b.addEventListener("click", () => handleDuplicate(b.dataset.id)));
+  listEl.querySelectorAll(".toggle-btn").forEach(b => b.addEventListener("click", () => handleToggleActive(b.dataset.id)));
+}
+
+function openForm(id) {
+  editingId = id;
+  const form = document.getElementById("questionForm");
+  form.classList.remove("hidden");
+  document.getElementById("formError").classList.add("hidden");
+
+  if (!id) {
+    document.getElementById("formTitle").textContent = "নতুন প্রশ্ন যোগ করুন";
+    form.reset();
+    document.getElementById("imagePreview").classList.add("hidden");
+    document.getElementById("marksInput").value = 1;
+  } else {
+    const q = allQuestions.find(x => x.id === id);
+    if (!q) return;
+    document.getElementById("formTitle").textContent = "প্রশ্ন সম্পাদনা করুন";
+    document.getElementById("qEn").value = q.question_en;
+    document.getElementById("qBn").value = q.question_bn;
+    document.getElementById("optA").value = q.options_bn.A;
+    document.getElementById("optB").value = q.options_bn.B;
+    document.getElementById("optC").value = q.options_bn.C;
+    document.getElementById("optD").value = q.options_bn.D;
+    document.getElementById("correctAnswer").value = q.correctAnswer;
+    document.getElementById("marksInput").value = q.marks;
+    document.getElementById("explanationInput").value = q.explanation_bn || "";
+    document.getElementById("formSubject").value = q.subjectId;
+    populateFormChapters(q.subjectId);
+    document.getElementById("formChapter").value = q.chapterId;
+    populateFormTopics(q.chapterId, q.subjectId);
+    document.getElementById("formTopic").value = q.topicId;
+    const preview = document.getElementById("imagePreview");
+    if (q.imageUrl) { preview.src = q.imageUrl; preview.classList.remove("hidden"); }
+    else preview.classList.add("hidden");
+  }
+  form.scrollIntoView({ behavior: "smooth" });
+}
+
+function closeForm() {
+  editingId = null;
+  document.getElementById("questionForm").classList.add("hidden");
+}
+
+function setupImagePreview() {
+  document.getElementById("imageInput").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    const preview = document.getElementById("imagePreview");
+    if (!file) { preview.classList.add("hidden"); return; }
+    preview.src = URL.createObjectURL(file);
+    preview.classList.remove("hidden");
+  });
+}
+
+function setupVoiceButton() {
+  const btn = document.getElementById("voiceBtn");
+  btn.innerHTML = icons.book; // placeholder mic-like icon container; real mic svg below
+  btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/></svg>`;
+  const target = document.getElementById("qBn");
+  attachVoiceInput(btn, target, {
+    onStart: () => btn.style.color = "var(--color-danger)",
+    onEnd: () => btn.style.color = "",
+    onError: () => showToast("ভয়েস ইনপুট ব্যর্থ হয়েছে।", "error")
+  });
+  if (!isVoiceInputSupported()) {
+    btn.title = "এই ব্রাউজার ভয়েস ইনপুট সমর্থন করে না।";
+  }
+}
+
+async function handleSubmit(e) {
+  e.preventDefault();
+  const submitBtn = document.getElementById("submitBtn");
+  const errorEl = document.getElementById("formError");
+  errorEl.classList.add("hidden");
+  submitBtn.disabled = true;
+  submitBtn.textContent = "সংরক্ষণ করা হচ্ছে...";
+
+  try {
+    const payload = {
+      question_en: document.getElementById("qEn").value.trim(),
+      question_bn: document.getElementById("qBn").value.trim(),
+      options_bn: {
+        A: document.getElementById("optA").value.trim(),
+        B: document.getElementById("optB").value.trim(),
+        C: document.getElementById("optC").value.trim(),
+        D: document.getElementById("optD").value.trim(),
+      },
+      correctAnswer: document.getElementById("correctAnswer").value,
+      marks: Number(document.getElementById("marksInput").value),
+      subjectId: document.getElementById("formSubject").value,
+      chapterId: document.getElementById("formChapter").value,
+      topicId: document.getElementById("formTopic").value,
+      explanation_bn: document.getElementById("explanationInput").value.trim() || null,
+    };
+
+    if (!payload.subjectId || !payload.chapterId || !payload.topicId) {
+      throw new Error("বিষয়, অধ্যায় ও টপিক অবশ্যই নির্বাচন করতে হবে। আগে সিলেবাস ব্যবস্থাপনা থেকে এগুলো যোগ করুন।");
+    }
+
+    const imageFile = document.getElementById("imageInput").files[0];
+    if (imageFile) {
+      payload.imageUrl = await uploadQuestionImage(imageFile, editingId || "new");
+    }
+
+    if (editingId) {
+      await updateQuestion(editingId, payload);
+      showToast("প্রশ্ন আপডেট করা হয়েছে।", "success");
+    } else {
+      await addQuestion(payload);
+      showToast("প্রশ্ন যোগ করা হয়েছে।", "success");
+    }
+    closeForm();
+    reloadList();
+  } catch (err) {
+    console.error(err);
+    errorEl.textContent = err.message || friendlyError(err);
+    errorEl.classList.remove("hidden");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "সংরক্ষণ করুন";
+  }
+}
+
+async function handleDuplicate(id) {
+  const q = allQuestions.find(x => x.id === id);
+  if (!q || !confirm("এই প্রশ্নটি ডুপ্লিকেট করবেন?")) return;
+  try {
+    await duplicateQuestion(q);
+    showToast("প্রশ্ন ডুপ্লিকেট করা হয়েছে।", "success");
+    reloadList();
+  } catch (err) { showToast(friendlyError(err), "error"); }
+}
+
+async function handleToggleActive(id) {
+  const q = allQuestions.find(x => x.id === id);
+  if (!q) return;
+  const willActivate = !q.isActive;
+  if (!confirm(willActivate ? "এই প্রশ্নটি আবার সক্রিয় করবেন?" : "এই প্রশ্নটি নিষ্ক্রিয় করবেন? এটি নতুন পরীক্ষায় দেখা যাবে না, তবে পুরনো ফলাফলে অপরিবর্তিত থাকবে।")) return;
+  try {
+    await setQuestionActive(id, willActivate);
+    showToast("আপডেট করা হয়েছে।", "success");
+    reloadList();
+  } catch (err) { showToast(friendlyError(err), "error"); }
+}
+</script>
+</body>
+</html>

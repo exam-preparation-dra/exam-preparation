@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ড্যাশবোর্ড — অ্যাডমিন</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app-shell app-shell--wide">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">প</div>
+      <div>
+        <h1 style="font-size:1.05rem;">অ্যাডমিন ড্যাশবোর্ড</h1>
+        <p class="text-xs text-muted" style="margin:0;" id="adminEmail"></p>
+      </div>
+    </div>
+    <div class="flex gap-2 items-center">
+      <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-thumb"></span></button>
+      <button class="icon-btn" id="logoutBtn" title="লগআউট">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="statsGrid" class="grid-2 mt-4" style="grid-template-columns:repeat(2,1fr);">
+    <!-- filled by JS -->
+  </div>
+
+  <h3 class="mt-5" style="margin-bottom:var(--space-3);">ব্যবস্থাপনা</h3>
+  <div class="grid-2">
+    <a href="../admin/students.html" class="glass card card--tap">শিক্ষার্থী ব্যবস্থাপনা</a>
+    <a href="../admin/syllabus.html" class="glass card card--tap">সিলেবাস ব্যবস্থাপনা</a>
+    <a href="../admin/questions.html" class="glass card card--tap">প্রশ্ন ব্যাংক</a>
+    <a href="../admin/question-import.html" class="glass card card--tap">AI প্রশ্ন ইম্পোর্ট</a>
+    <a href="../admin/exams.html" class="glass card card--tap">পরীক্ষা ব্যবস্থাপনা</a>
+    <a href="../admin/results.html" class="glass card card--tap">ফলাফল অনুমোদন</a>
+    <a href="../admin/comparison.html" class="glass card card--tap">শিক্ষার্থী তুলনা</a>
+  </div>
+
+</div>
+
+<script type="module">
+import { initTheme, toggleTheme } from "../js/utils/ui-utils.js";
+import { requireAdmin, adminLogout } from "../js/utils/auth.js";
+import { db } from "../js/firebase/firebase-config.js";
+import { collection, getCountFromServer, query, where } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+initTheme();
+document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+document.getElementById("logoutBtn").addEventListener("click", adminLogout);
+
+requireAdmin(async (user) => {
+  document.getElementById("adminEmail").textContent = user.email;
+  await loadStats();
+});
+
+async function safeCount(colName, ...whereClauses) {
+  try {
+    const base = collection(db, colName);
+    const q = whereClauses.length ? query(base, ...whereClauses) : base;
+    const snap = await getCountFromServer(q);
+    return snap.data().count;
+  } catch {
+    return "—"; // collection may not exist yet — first-run state, not an error
+  }
+}
+
+async function loadStats() {
+  const grid = document.getElementById("statsGrid");
+  const [
+    activeStudents, subjects, chapters, topics, questions,
+    upcomingExams, completedExams, activeAttempts, pendingResults, approvedResults
+  ] = await Promise.all([
+    safeCount("students", where("isActive", "==", true)),
+    safeCount("subjects"),
+    safeCount("chapters"),
+    safeCount("topics"),
+    safeCount("questions"),
+    safeCount("exams", where("status", "in", ["upcoming", "published"])),
+    safeCount("exams", where("status", "in", ["completed", "archived"])),
+    safeCount("attempts", where("status", "==", "in-progress")),
+    safeCount("results", where("status", "==", "pending")),
+    safeCount("results", where("status", "==", "approved")),
+  ]);
+
+  const cards = [
+    ["সক্রিয় শিক্ষার্থী", activeStudents],
+    ["মোট বিষয়", subjects],
+    ["মোট অধ্যায়", chapters],
+    ["মোট টপিক", topics],
+    ["মোট প্রশ্ন", questions],
+    ["আসন্ন পরীক্ষা", upcomingExams],
+    ["সম্পন্ন পরীক্ষা", completedExams],
+    ["সক্রিয় পরীক্ষা (চলমান)", activeAttempts],
+    ["অনুমোদনের অপেক্ষায়", pendingResults],
+    ["অনুমোদিত ফলাফল", approvedResults],
+  ];
+
+  grid.innerHTML = cards.map(([label, value]) => `
+    <div class="glass card">
+      <p class="eyebrow">${label}</p>
+      <p style="font-size:1.8rem;font-weight:800;margin-top:6px;">${value}</p>
+    </div>
+  `).join("");
+}
+</script>
+</body>
+</html>

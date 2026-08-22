@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ফলাফল অনুমোদন — অ্যাডমিন</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app-shell app-shell--wide" id="shell">
+  <div class="state-block"><div class="spinner"></div></div>
+</div>
+
+<script type="module">
+import { initTheme, toggleTheme, icons, renderState, showToast, friendlyError } from "../js/utils/ui-utils.js";
+import { requireAdmin, adminLogout } from "../js/utils/auth.js";
+import { db } from "../js/firebase/firebase-config.js";
+import { collection, doc, getDocs, getDoc, query, where, orderBy, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { getSubjects, getChapters, buildNameMap } from "../js/utils/syllabus-utils.js";
+import { getExamSnapshot } from "../js/utils/results-utils.js";
+import { buildQuestionReview, formatSeconds } from "../js/utils/grading-utils.js";
+
+initTheme();
+const shell = document.getElementById("shell");
+let activeTab = "pending";
+let subjectMap = {}, chapterMap = {};
+
+requireAdmin(async () => {
+  shell.innerHTML = `
+    <div class="topbar">
+      <a href="../admin/dashboard.html" class="icon-btn">${icons.arrowLeft}</a>
+      <h2 style="font-size:1.05rem;">ফলাফল অনুমোদন</h2>
+      <div class="flex gap-2">
+        <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-thumb"></span></button>
+        <button class="icon-btn" id="logoutBtn">${icons.arrowRight}</button>
+      </div>
+    </div>
+
+    <div class="flex gap-2">
+      <button class="btn btn-primary btn-sm" id="tabPending">অনুমোদনের অপেক্ষায়</button>
+      <button class="btn btn-secondary btn-sm" id="tabApproved">অনুমোদিত</button>
+    </div>
+
+    <div id="listBody" class="mt-4"></div>
+    <div id="detailOverlay" class="hidden" style="position:fixed;inset:0;background:rgba(10,14,26,0.6);z-index:300;overflow-y:auto;padding:20px;"></div>
+  `;
+  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+  document.getElementById("logoutBtn").addEventListener("click", adminLogout);
+  document.getElementById("tabPending").addEventListener("click", () => { activeTab = "pending"; refreshTabs(); load(); });
+  document.getElementById("tabApproved").addEventListener("click", () => { activeTab = "approved"; refreshTabs(); load(); });
+
+  const [subjects, chapters] = await Promise.all([getSubjects(), getChapters()]);
+  subjectMap = buildNameMap(subjects); chapterMap = buildNameMap(chapters);
+  load();
+});
+
+function refreshTabs() {
+  document.getElementById("tabPending").className = `btn ${activeTab === "pending" ? "btn-primary" : "btn-secondary"} btn-sm`;
+  document.getElementById("tabApproved").className = `btn ${activeTab === "approved" ? "btn-primary" : "btn-secondary"} btn-sm`;
+}
+
+function fmtDate(ts) { return ts?.toDate ? ts.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" }) : "—"; }
+function fmtTime(ts) { return ts?.toDate ? ts.toDate().toLocaleTimeString("bn-BD", { hour: "2-digit", minute: "2-digit" }) : "—"; }
+
+async function load() {
+  const el = document.getElementById("listBody");
+  el.innerHTML = `<div class="glass card skeleton" style="height:90px;"></div>`;
+  try {
+    const q = query(collection(db, "results"), where("status", "==", activeTab), orderBy("submittedAt", "desc"));
+    const snap = await getDocs(q);
+    const results = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (results.length === 0) {
+      renderState(el, "empty", activeTab === "pending" ? "অনুমোদনের অপেক্ষায় কোনো ফলাফল নেই।" : "এখনো কোনো ফলাফল অনুমোদিত হয়নি।");
+      return;
+    }
+    el.innerHTML = results.map(r => `
+      <div class="glass card mt-2">
+        <div class="flex justify-between items-center">
+          <div>
+            <p style="font-weight:700;">${r.examName || "পরীক্ষা"}</p>
+            <p class="text-xs text-muted">শিক্ষার্থী: ${r.studentId} • ${fmtDate(r.submittedAt)} ${fmtTime(r.submittedAt)}</p>
+          </div>
+          <p style="font-weight:800;color:var(--color-accent);">${r.percentage ?? "—"}%</p>
+        </div>
+        <div class="flex gap-2 mt-3">
+          <button class="btn btn-secondary btn-sm view-btn" data-id="${r.id}">বিস্তারিত দেখুন</button>
+          ${activeTab === "pending" ? `<button class="btn btn-primary btn-sm approve-btn" data-id="${r.id}">ফলাফল অনুমোদন করুন</button>` : ""}
+        </div>
+      </div>
+    `).join("");
+
+    el.querySelectorAll(".view-btn").forEach(b => b.addEventListener("click", () => openDetail(b.dataset.id)));
+    el.querySelectorAll(".approve-btn").forEach(b => b.addEventListener("click", () => handleApprove(b.dataset.id)));
+  } catch (err) {
+    console.error(err);
+    renderState(el, "error", "ফলাফল লোড করা যায়নি।");
+  }
+}
+
+async function handleApprove(id) {
+  if (!confirm("এই ফলাফলটি অনুমোদন করবেন? অনুমোদনের পর এটি শিক্ষার্থীর স্থায়ী ইতিহাসে যুক্ত হবে।")) return;
+  try {
+    await updateDoc(doc(db, "results", id), { status: "approved", approvedAt: serverTimestamp() });
+    showToast("ফলাফল অনুমোদন করা হয়েছে।", "success");
+    load();
+  } catch (err) {
+    showToast(friendlyError(err), "error");
+  }
+}
+
+async function openDetail(id) {
+  const overlay = document.getElementById("detailOverlay");
+  overlay.classList.remove("hidden");
+  overlay.innerHTML = `<div class="state-block"><div class="spinner"></div></div>`;
+  try {
+    const snap = await getDoc(doc(db, "results", id));
+    if (!snap.exists()) { overlay.innerHTML = `<div class="glass card">ফলাফল পাওয়া যায়নি।</div>`; return; }
+    const r = { id: snap.id, ...snap.data() };
+    const examSnapshot = await getExamSnapshot(r.examId);
+    const review = examSnapshot ? buildQuestionReview(examSnapshot.questions, r.answers || {}) : [];
+
+    overlay.innerHTML = `
+      <div class="app-shell" style="max-width:600px;">
+        <div class="flex justify-between items-center">
+          <h3>${r.examName || "পরীক্ষা"}</h3>
+          <button class="icon-btn" id="closeDetailBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+        <div class="glass card mt-3">
+          <p class="text-sm">শিক্ষার্থী: <span style="font-weight:700;">${r.studentId}</span></p>
+          <div class="grid-2 mt-3">
+            <div><p class="text-xs text-muted">নম্বর</p><p style="font-weight:700;">${r.obtainedMarks}/${r.totalMarks}</p></div>
+            <div><p class="text-xs text-muted">শতাংশ</p><p style="font-weight:700;">${r.percentage}%</p></div>
+            <div><p class="text-xs text-muted">সঠিকতা</p><p style="font-weight:700;">${r.accuracy ?? "—"}%</p></div>
+            <div><p class="text-xs text-muted">সময়</p><p style="font-weight:700;">${formatSeconds(r.timeTakenSeconds)}</p></div>
+          </div>
+          <p class="text-xs text-muted mt-3">সঠিক ${r.correctCount} • ভুল ${r.wrongCount} • অনুত্তরিত ${r.unansweredCount}</p>
+        </div>
+        <p class="eyebrow mt-4">প্রশ্নভিত্তিক বিস্তারিত</p>
+        ${review.map((q, i) => `
+          <div class="glass card mt-2">
+            <p class="text-xs text-muted">প্রশ্ন ${i + 1} • ${subjectMap[q.subjectId] || ""} / ${chapterMap[q.chapterId] || ""}</p>
+            <p class="mt-1" style="font-weight:600;">${q.question_bn}</p>
+            <p class="text-xs mt-2">উত্তর: ${q.studentAnswer || "দেননি"} • সঠিক: ${q.correctAnswer} • <span style="font-weight:700;color:${q.status === "correct" ? "var(--color-success)" : q.status === "wrong" ? "var(--color-danger)" : "var(--text-muted)"};">${q.status === "correct" ? "সঠিক" : q.status === "wrong" ? "ভুল" : "অনুত্তরিত"}</span></p>
+          </div>
+        `).join("")}
+      </div>
+    `;
+    document.getElementById("closeDetailBtn").addEventListener("click", () => overlay.classList.add("hidden"));
+  } catch (err) {
+    console.error(err);
+    overlay.innerHTML = `<div class="glass card">বিস্তারিত লোড করা যায়নি।</div>`;
+  }
+}
+</script>
+</body>
+</html>

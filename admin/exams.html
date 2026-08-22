@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>পরীক্ষা ব্যবস্থাপনা — অ্যাডমিন</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app-shell app-shell--wide" id="shell">
+  <div class="state-block"><div class="spinner"></div></div>
+</div>
+
+<script type="module">
+import { initTheme, toggleTheme, icons, renderState, showToast, friendlyError } from "../js/utils/ui-utils.js";
+import { requireAdmin, adminLogout } from "../js/utils/auth.js";
+import { getAllExams, publishExam, duplicateExam, archiveExam, deleteDraftExam } from "../js/utils/exam-utils.js";
+
+initTheme();
+const shell = document.getElementById("shell");
+let exams = [];
+let statusFilter = "";
+
+const STATUS_LABEL = {
+  draft: "খসড়া", upcoming: "আসন্ন", published: "প্রকাশিত",
+  active: "চলমান", completed: "সম্পন্ন", archived: "সংরক্ষণাগারে"
+};
+const STATUS_BADGE = {
+  draft: "badge-draft", upcoming: "badge-upcoming", published: "badge-active",
+  active: "badge-active", completed: "badge-completed", archived: "badge-draft"
+};
+
+requireAdmin(() => {
+  shell.innerHTML = `
+    <div class="topbar">
+      <a href="../admin/dashboard.html" class="icon-btn">${icons.arrowLeft}</a>
+      <h2 style="font-size:1.05rem;">পরীক্ষা ব্যবস্থাপনা</h2>
+      <div class="flex gap-2">
+        <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-thumb"></span></button>
+        <button class="icon-btn" id="logoutBtn">${icons.arrowRight}</button>
+      </div>
+    </div>
+
+    <div class="flex justify-between items-center">
+      <select class="select" id="statusFilter" style="max-width:180px;">
+        <option value="">সব স্ট্যাটাস</option>
+        ${Object.entries(STATUS_LABEL).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}
+      </select>
+      <a href="../admin/exam-create.html" class="btn btn-primary btn-sm">${icons.plus} নতুন পরীক্ষা</a>
+    </div>
+
+    <div id="examList" class="mt-4"></div>
+  `;
+  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+  document.getElementById("logoutBtn").addEventListener("click", adminLogout);
+  document.getElementById("statusFilter").addEventListener("change", (e) => { statusFilter = e.target.value; load(); });
+  load();
+});
+
+async function load() {
+  const el = document.getElementById("examList");
+  el.innerHTML = `<div class="glass card skeleton" style="height:90px;"></div>`;
+  try {
+    exams = await getAllExams({ status: statusFilter || null });
+    render();
+  } catch (err) {
+    console.error(err);
+    renderState(el, "error", "পরীক্ষার তালিকা লোড করা যায়নি।");
+  }
+}
+
+function render() {
+  const el = document.getElementById("examList");
+  if (exams.length === 0) {
+    renderState(el, "empty", "এখনো কোনো পরীক্ষা তৈরি হয়নি।");
+    return;
+  }
+  el.innerHTML = exams.map(exam => {
+    const dateStr = exam.examDate?.toDate ? exam.examDate.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" }) : "—";
+    return `
+    <div class="glass card mt-2" data-id="${exam.id}">
+      <div class="flex justify-between items-center">
+        <div>
+          <p style="font-weight:700;">${exam.name}</p>
+          <p class="text-xs text-muted">${dateStr} • ${exam.durationMinutes || "—"} মিনিট • মোট ${exam.totalMarks ?? 0} নম্বর • ${(exam.questionIds || []).length} টি প্রশ্ন</p>
+        </div>
+        <span class="badge ${STATUS_BADGE[exam.status] || "badge-draft"}">${STATUS_LABEL[exam.status] || exam.status}</span>
+      </div>
+      <div class="flex gap-2 mt-3" style="flex-wrap:wrap;">
+        ${exam.status === "draft" ? `
+          <a href="../admin/exam-create.html?id=${exam.id}" class="btn btn-secondary btn-sm">সম্পাদনা</a>
+          <button class="btn btn-primary btn-sm publish-btn" data-id="${exam.id}">প্রকাশ করুন</button>
+          <button class="btn btn-danger btn-sm delete-btn" data-id="${exam.id}">মুছুন</button>
+        ` : ""}
+        <button class="btn btn-secondary btn-sm dup-btn" data-id="${exam.id}">ডুপ্লিকেট</button>
+        ${["published", "completed"].includes(exam.status) ? `<button class="btn btn-secondary btn-sm archive-btn" data-id="${exam.id}">সংরক্ষণাগারে পাঠান</button>` : ""}
+      </div>
+    </div>
+  `;
+  }).join("");
+
+  el.querySelectorAll(".publish-btn").forEach(b => b.addEventListener("click", () => handlePublish(b.dataset.id)));
+  el.querySelectorAll(".dup-btn").forEach(b => b.addEventListener("click", () => handleDuplicate(b.dataset.id)));
+  el.querySelectorAll(".archive-btn").forEach(b => b.addEventListener("click", () => handleArchive(b.dataset.id)));
+  el.querySelectorAll(".delete-btn").forEach(b => b.addEventListener("click", () => handleDelete(b.dataset.id)));
+}
+
+async function handlePublish(id) {
+  if (!confirm("পরীক্ষা প্রকাশ করলে প্রশ্নগুলো স্থায়ীভাবে লক হয়ে যাবে এবং পরবর্তীতে প্রশ্ন ব্যাংকে পরিবর্তন করলেও এই পরীক্ষা প্রভাবিত হবে না। এগিয়ে যাবেন?")) return;
+  try {
+    await publishExam(id);
+    showToast("পরীক্ষা প্রকাশ করা হয়েছে।", "success");
+    load();
+  } catch (err) {
+    showToast(err.message || friendlyError(err), "error");
+  }
+}
+
+async function handleDuplicate(id) {
+  if (!confirm("এই পরীক্ষাটি ডুপ্লিকেট করবেন?")) return;
+  try {
+    await duplicateExam(id);
+    showToast("পরীক্ষা ডুপ্লিকেট করা হয়েছে (খসড়া হিসেবে)।", "success");
+    load();
+  } catch (err) { showToast(err.message || friendlyError(err), "error"); }
+}
+
+async function handleArchive(id) {
+  if (!confirm("এই পরীক্ষাটি সংরক্ষণাগারে পাঠাবেন?")) return;
+  try {
+    await archiveExam(id);
+    showToast("সংরক্ষণাগারে পাঠানো হয়েছে।", "success");
+    load();
+  } catch (err) { showToast(friendlyError(err), "error"); }
+}
+
+async function handleDelete(id) {
+  if (!confirm("এই খসড়া পরীক্ষাটি স্থায়ীভাবে মুছে ফেলবেন?")) return;
+  try {
+    await deleteDraftExam(id);
+    showToast("মুছে ফেলা হয়েছে।", "success");
+    load();
+  } catch (err) { showToast(err.message || friendlyError(err), "error"); }
+}
+</script>
+</body>
+</html>

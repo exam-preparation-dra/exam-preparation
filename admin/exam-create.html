@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>পরীক্ষা তৈরি — অ্যাডমিন</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app-shell app-shell--wide" id="shell">
+  <div class="state-block"><div class="spinner"></div></div>
+</div>
+
+<script type="module">
+import { initTheme, toggleTheme, icons, showToast, friendlyError } from "../js/utils/ui-utils.js";
+import { requireAdmin, adminLogout } from "../js/utils/auth.js";
+import { getFullSyllabusTree, buildNameMap } from "../js/utils/syllabus-utils.js";
+import { getQuestionsByIds, addQuestion } from "../js/utils/question-utils.js";
+import { createExam, updateExam, getExamById, calculateTotalMarks } from "../js/utils/exam-utils.js";
+
+initTheme();
+const shell = document.getElementById("shell");
+const params = new URLSearchParams(window.location.search);
+const editId = params.get("id");
+
+let tree = [];
+let selectedQuestions = []; // ordered array of full question objects
+let existingExam = null;
+
+requireAdmin(async () => {
+  shell.innerHTML = template();
+  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+  document.getElementById("logoutBtn").addEventListener("click", adminLogout);
+  document.getElementById("examForm").addEventListener("submit", handleSubmit);
+  document.getElementById("marksPerQuestion").addEventListener("input", updateTotalMarks);
+  document.getElementById("goToBank").addEventListener("click", () => {
+    // Preserve edit context — otherwise adding more questions mid-edit would
+    // silently create a duplicate exam instead of continuing this one.
+    const returnUrl = editId ? `../admin/exam-create.html?id=${encodeURIComponent(editId)}` : "../admin/exam-create.html";
+    window.location.href = `../admin/questions.html?returnTo=${encodeURIComponent(returnUrl)}`;
+  });
+  document.getElementById("quickAddForm").addEventListener("submit", handleQuickAdd);
+
+  tree = await getFullSyllabusTree();
+  populateQuickAddSyllabus();
+
+  if (editId) {
+    existingExam = await getExamById(editId);
+    if (!existingExam) { showToast("পরীক্ষা পাওয়া যায়নি।", "error"); return; }
+    if (existingExam.status !== "draft") {
+      showToast("শুধুমাত্র খসড়া পরীক্ষা সম্পাদনা করা যায়।", "error");
+    }
+    fillFormFromExisting();
+    selectedQuestions = await getQuestionsByIds(existingExam.questionIds || []);
+  } else {
+    const cartIds = JSON.parse(localStorage.getItem("examBuilderSelection") || "[]");
+    selectedQuestions = await getQuestionsByIds(cartIds);
+  }
+  renderSelectedList();
+  updateTotalMarks();
+});
+
+function template() {
+  return `
+    <div class="topbar">
+      <a href="../admin/exams.html" class="icon-btn">${icons.arrowLeft}</a>
+      <h2 style="font-size:1.05rem;">${editId ? "পরীক্ষা সম্পাদনা" : "নতুন পরীক্ষা তৈরি"}</h2>
+      <div class="flex gap-2">
+        <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-thumb"></span></button>
+        <button class="icon-btn" id="logoutBtn">${icons.arrowRight}</button>
+      </div>
+    </div>
+
+    <form id="examForm" class="glass card">
+      <p class="eyebrow">পরীক্ষার তথ্য</p>
+      <div class="field mt-3"><label>পরীক্ষার নাম</label><input class="input" id="examName" required></div>
+      <div class="field"><label>বিবরণ / নির্দেশনা</label><textarea class="textarea" id="examDesc"></textarea></div>
+      <div class="grid-2 mt-2">
+        <div class="field"><label>পরীক্ষার তারিখ</label><input class="input" type="date" id="examDate" required></div>
+        <div class="field"><label>তথ্যগত সময়</label><input class="input" id="examTime" placeholder="যেমন: সকাল ১০:০০"></div>
+        <div class="field"><label>সময়কাল (মিনিট)</label><input class="input" type="number" min="1" id="examDuration" required></div>
+        <div class="field"><label>প্রতি প্রশ্নে নম্বর</label><input class="input" type="number" min="1" id="marksPerQuestion" value="1" required></div>
+      </div>
+      <p class="text-sm mt-2">মোট নম্বর: <span id="totalMarksDisplay" style="font-weight:800;color:var(--color-accent);">0</span></p>
+      <p id="formError" class="text-sm hidden mt-2" style="color:var(--color-danger);"></p>
+      <button type="submit" class="btn btn-primary mt-3" id="submitBtn">খসড়া হিসেবে সংরক্ষণ করুন</button>
+    </form>
+
+    <div class="glass card mt-4">
+      <div class="flex justify-between items-center">
+        <p class="eyebrow">নির্বাচিত প্রশ্ন (<span id="selCount">0</span>)</p>
+        <button type="button" class="btn btn-secondary btn-sm" id="goToBank">প্রশ্ন ব্যাংক থেকে যোগ করুন</button>
+      </div>
+      <div id="selectedList" class="mt-2"></div>
+    </div>
+
+    <div class="glass card mt-4">
+      <p class="eyebrow">দ্রুত নতুন প্রশ্ন যোগ করুন</p>
+      <form id="quickAddForm" class="mt-2">
+        <div class="field"><label>ইংরেজি প্রশ্ন</label><input class="input" id="qaEn" required></div>
+        <div class="field"><label>বাংলা প্রশ্ন</label><input class="input" id="qaBn" required></div>
+        <div class="grid-2 mt-2">
+          <input class="input" id="qaA" placeholder="অপশন A" required>
+          <input class="input" id="qaB" placeholder="অপশন B" required>
+          <input class="input" id="qaC" placeholder="অপশন C" required>
+          <input class="input" id="qaD" placeholder="অপশন D" required>
+        </div>
+        <div class="grid-2 mt-2" style="grid-template-columns:1fr 1fr 1fr 1fr;">
+          <select class="select" id="qaCorrect"><option>A</option><option>B</option><option>C</option><option>D</option></select>
+          <select class="select" id="qaSubject"></select>
+          <select class="select" id="qaChapter"></select>
+          <select class="select" id="qaTopic"></select>
+        </div>
+        <button type="submit" class="btn btn-secondary mt-2">যোগ করে তালিকায় যুক্ত করুন</button>
+      </form>
+    </div>
+  `;
+}
+
+function fillFormFromExisting() {
+  document.getElementById("examName").value = existingExam.name || "";
+  document.getElementById("examDesc").value = existingExam.description || "";
+  if (existingExam.examDate?.toDate) {
+    document.getElementById("examDate").value = existingExam.examDate.toDate().toISOString().slice(0, 10);
+  }
+  document.getElementById("examTime").value = existingExam.informationalTime || "";
+  document.getElementById("examDuration").value = existingExam.durationMinutes || "";
+  document.getElementById("marksPerQuestion").value = existingExam.marksPerQuestion || 1;
+}
+
+function populateQuickAddSyllabus() {
+  const subjSel = document.getElementById("qaSubject");
+  subjSel.innerHTML = tree.map(s => `<option value="${s.id}">${s.name_bn}</option>`).join("");
+  subjSel.addEventListener("change", updateQaChapters);
+  document.getElementById("qaChapter").addEventListener("change", updateQaTopics);
+  if (tree[0]) updateQaChapters();
+}
+function updateQaChapters() {
+  const subject = tree.find(s => s.id === document.getElementById("qaSubject").value);
+  document.getElementById("qaChapter").innerHTML = (subject?.chapters || []).map(c => `<option value="${c.id}">${c.name_bn}</option>`).join("");
+  updateQaTopics();
+}
+function updateQaTopics() {
+  const subject = tree.find(s => s.id === document.getElementById("qaSubject").value);
+  const chapter = subject?.chapters.find(c => c.id === document.getElementById("qaChapter").value);
+  document.getElementById("qaTopic").innerHTML = (chapter?.topics || []).map(t => `<option value="${t.id}">${t.name_bn}</option>`).join("");
+}
+
+function nameFor(id, kind) {
+  for (const s of tree) {
+    if (kind === "subject" && s.id === id) return s.name_bn;
+    for (const c of s.chapters) {
+      if (kind === "chapter" && c.id === id) return c.name_bn;
+      for (const t of c.topics) if (kind === "topic" && t.id === id) return t.name_bn;
+    }
+  }
+  return "—";
+}
+
+function renderSelectedList() {
+  const el = document.getElementById("selectedList");
+  document.getElementById("selCount").textContent = selectedQuestions.length;
+  if (selectedQuestions.length === 0) {
+    el.innerHTML = `<p class="text-xs text-muted mt-2">এখনো কোনো প্রশ্ন নির্বাচিত হয়নি। প্রশ্ন ব্যাংক থেকে যোগ করুন অথবা নিচে দ্রুত নতুন প্রশ্ন তৈরি করুন।</p>`;
+    return;
+  }
+  el.innerHTML = selectedQuestions.map((q, idx) => `
+    <div class="glass card mt-2" style="padding:12px;">
+      <div class="flex justify-between items-center" style="gap:8px;">
+        <div style="flex:1;">
+          <p class="text-xs text-muted">#${idx + 1} • ${nameFor(q.subjectId, "subject")} / ${nameFor(q.chapterId, "chapter")}</p>
+          <p class="text-sm" style="font-weight:600;">${q.question_bn}</p>
+        </div>
+        <div class="flex gap-1">
+          <button class="icon-btn up-btn" data-idx="${idx}" style="width:32px;height:32px;" ${idx === 0 ? "disabled" : ""}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          </button>
+          <button class="icon-btn down-btn" data-idx="${idx}" style="width:32px;height:32px;" ${idx === selectedQuestions.length - 1 ? "disabled" : ""}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+          </button>
+          <button class="icon-btn remove-btn" data-idx="${idx}" style="width:32px;height:32px;color:var(--color-danger);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join("");
+
+  el.querySelectorAll(".up-btn").forEach(b => b.addEventListener("click", () => {
+    const i = Number(b.dataset.idx);
+    [selectedQuestions[i - 1], selectedQuestions[i]] = [selectedQuestions[i], selectedQuestions[i - 1]];
+    persistCart(); renderSelectedList(); updateTotalMarks();
+  }));
+  el.querySelectorAll(".down-btn").forEach(b => b.addEventListener("click", () => {
+    const i = Number(b.dataset.idx);
+    [selectedQuestions[i + 1], selectedQuestions[i]] = [selectedQuestions[i], selectedQuestions[i + 1]];
+    persistCart(); renderSelectedList(); updateTotalMarks();
+  }));
+  el.querySelectorAll(".remove-btn").forEach(b => b.addEventListener("click", () => {
+    const i = Number(b.dataset.idx);
+    selectedQuestions.splice(i, 1);
+    persistCart(); renderSelectedList(); updateTotalMarks();
+  }));
+}
+
+function persistCart() {
+  localStorage.setItem("examBuilderSelection", JSON.stringify(selectedQuestions.map(q => q.id)));
+}
+
+function updateTotalMarks() {
+  const marksPerQ = Number(document.getElementById("marksPerQuestion").value) || 0;
+  document.getElementById("totalMarksDisplay").textContent = calculateTotalMarks(selectedQuestions.length, marksPerQ);
+}
+
+async function handleQuickAdd(e) {
+  e.preventDefault();
+  const payload = {
+    question_en: document.getElementById("qaEn").value.trim(),
+    question_bn: document.getElementById("qaBn").value.trim(),
+    options_bn: {
+      A: document.getElementById("qaA").value.trim(),
+      B: document.getElementById("qaB").value.trim(),
+      C: document.getElementById("qaC").value.trim(),
+      D: document.getElementById("qaD").value.trim(),
+    },
+    correctAnswer: document.getElementById("qaCorrect").value,
+    marks: Number(document.getElementById("marksPerQuestion").value) || 1,
+    subjectId: document.getElementById("qaSubject").value,
+    chapterId: document.getElementById("qaChapter").value,
+    topicId: document.getElementById("qaTopic").value,
+  };
+  if (!payload.subjectId || !payload.chapterId || !payload.topicId) {
+    showToast("বিষয়/অধ্যায়/টপিক নির্বাচন করুন।", "error");
+    return;
+  }
+  try {
+    const ref = await addQuestion(payload);
+    selectedQuestions.push({ id: ref.id, ...payload });
+    persistCart();
+    renderSelectedList();
+    updateTotalMarks();
+    e.target.reset();
+    showToast("প্রশ্ন তৈরি হয়ে তালিকায় যুক্ত হয়েছে।", "success");
+  } catch (err) {
+    showToast(friendlyError(err), "error");
+  }
+}
+
+async function handleSubmit(e) {
+  e.preventDefault();
+  const errorEl = document.getElementById("formError");
+  errorEl.classList.add("hidden");
+  const submitBtn = document.getElementById("submitBtn");
+
+  if (selectedQuestions.length === 0) {
+    errorEl.textContent = "অন্তত একটি প্রশ্ন নির্বাচন করুন।";
+    errorEl.classList.remove("hidden");
+    return;
+  }
+
+  const subjectIds = [...new Set(selectedQuestions.map(q => q.subjectId))];
+  const chapterIds = [...new Set(selectedQuestions.map(q => q.chapterId))];
+
+  const data = {
+    name: document.getElementById("examName").value.trim(),
+    description: document.getElementById("examDesc").value.trim(),
+    examDate: document.getElementById("examDate").value,
+    informationalTime: document.getElementById("examTime").value.trim(),
+    durationMinutes: Number(document.getElementById("examDuration").value),
+    marksPerQuestion: Number(document.getElementById("marksPerQuestion").value),
+    subjectIds, chapterIds,
+    questionIds: selectedQuestions.map(q => q.id)
+  };
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = "সংরক্ষণ করা হচ্ছে...";
+  try {
+    if (editId) {
+      await updateExam(editId, data);
+      showToast("পরীক্ষা আপডেট করা হয়েছে।", "success");
+    } else {
+      await createExam(data);
+      showToast("খসড়া পরীক্ষা তৈরি করা হয়েছে।", "success");
+    }
+    localStorage.removeItem("examBuilderSelection");
+    window.location.href = "../admin/exams.html";
+  } catch (err) {
+    console.error(err);
+    errorEl.textContent = err.message || friendlyError(err);
+    errorEl.classList.remove("hidden");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "খসড়া হিসেবে সংরক্ষণ করুন";
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI প্রশ্ন ইম্পোর্ট — অ্যাডমিন</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app-shell app-shell--wide" id="shell">
+  <div class="state-block"><div class="spinner"></div></div>
+</div>
+
+<script type="module">
+import { initTheme, toggleTheme, icons, showToast, friendlyError } from "../js/utils/ui-utils.js";
+import { requireAdmin, adminLogout } from "../js/utils/auth.js";
+import { getFullSyllabusTree } from "../js/utils/syllabus-utils.js";
+import { parseAiImportText, buildAiPromptTemplate } from "../js/utils/ai-import-utils.js";
+import { addQuestion } from "../js/utils/question-utils.js";
+
+initTheme();
+const shell = document.getElementById("shell");
+let tree = [];
+let parsedResults = [];
+
+requireAdmin(() => {
+  shell.innerHTML = template();
+  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+  document.getElementById("logoutBtn").addEventListener("click", adminLogout);
+  document.getElementById("parseBtn").addEventListener("click", handleParse);
+  document.getElementById("copyPromptBtn").addEventListener("click", handleCopyPrompt);
+  document.getElementById("importAllBtn").addEventListener("click", handleImportAll);
+  init();
+});
+
+function template() {
+  return `
+    <div class="topbar">
+      <a href="../admin/questions.html" class="icon-btn">${icons.arrowLeft}</a>
+      <h2 style="font-size:1.05rem;">AI প্রশ্ন ইম্পোর্ট</h2>
+      <div class="flex gap-2">
+        <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-thumb"></span></button>
+        <button class="icon-btn" id="logoutBtn">${icons.arrowRight}</button>
+      </div>
+    </div>
+
+    <div class="glass card">
+      <div class="flex justify-between items-center">
+        <p class="eyebrow">প্রম্পট তৈরির সহায়ক</p>
+      </div>
+      <div class="grid-2 mt-2" style="grid-template-columns:1fr 1fr 1fr;">
+        <select class="select" id="promptSubject"></select>
+        <select class="select" id="promptChapter"></select>
+        <select class="select" id="promptTopic"></select>
+      </div>
+      <div class="field mt-2">
+        <input class="input" type="number" min="1" id="promptCount" value="10" placeholder="কতটি প্রশ্ন">
+      </div>
+      <button class="btn btn-secondary mt-2" id="copyPromptBtn">প্রম্পট কপি করুন</button>
+    </div>
+
+    <div class="glass card mt-4">
+      <p class="eyebrow">প্রশ্ন পেস্ট করুন</p>
+      <p class="text-xs text-muted mt-1">Claude/Gemini থেকে পাওয়া নির্দিষ্ট ফরম্যাটের টেক্সট এখানে পেস্ট করুন — একাধিক প্রশ্ন একসাথে পেস্ট করা যাবে।</p>
+      <textarea class="textarea mt-3" id="pasteArea" style="min-height:220px;" placeholder="Question:
+...
+
+বাংলা প্রশ্ন:
+...
+
+A:
+...
+B:
+...
+C:
+...
+D:
+...
+
+Correct Answer:
+B
+
+Subject:
+Physics
+
+Chapter:
+Motion
+
+Topic:
+Velocity
+
+Marks:
+1"></textarea>
+      <button class="btn btn-primary mt-3" id="parseBtn">প্রিভিউ দেখুন</button>
+    </div>
+
+    <div id="previewSection" class="mt-5"></div>
+  `;
+}
+
+async function init() {
+  tree = await getFullSyllabusTree();
+  const subjSel = document.getElementById("promptSubject");
+  subjSel.innerHTML = tree.map(s => `<option value="${s.id}">${s.name_bn}</option>`).join("");
+  subjSel.addEventListener("change", updatePromptChapters);
+  document.getElementById("promptChapter").addEventListener("change", updatePromptTopics);
+  if (tree[0]) updatePromptChapters();
+}
+
+function updatePromptChapters() {
+  const subject = tree.find(s => s.id === document.getElementById("promptSubject").value);
+  const chapSel = document.getElementById("promptChapter");
+  chapSel.innerHTML = (subject?.chapters || []).map(c => `<option value="${c.id}">${c.name_bn}</option>`).join("");
+  updatePromptTopics();
+}
+
+function updatePromptTopics() {
+  const subject = tree.find(s => s.id === document.getElementById("promptSubject").value);
+  const chapter = subject?.chapters.find(c => c.id === document.getElementById("promptChapter").value);
+  document.getElementById("promptTopic").innerHTML = (chapter?.topics || []).map(t => `<option value="${t.id}">${t.name_bn}</option>`).join("");
+}
+
+function handleCopyPrompt() {
+  const subject = tree.find(s => s.id === document.getElementById("promptSubject").value);
+  const chapter = subject?.chapters.find(c => c.id === document.getElementById("promptChapter").value);
+  const topic = chapter?.topics.find(t => t.id === document.getElementById("promptTopic").value);
+  const count = document.getElementById("promptCount").value;
+
+  const text = buildAiPromptTemplate({
+    subjectName: subject?.name_en, chapterName: chapter?.name_en, topicName: topic?.name_en, count
+  });
+  navigator.clipboard.writeText(text)
+    .then(() => showToast("প্রম্পট কপি করা হয়েছে।", "success"))
+    .catch(() => showToast("কপি করা যায়নি। ম্যানুয়ালি সিলেক্ট করে কপি করুন।", "error"));
+}
+
+function handleParse() {
+  const raw = document.getElementById("pasteArea").value;
+  if (!raw.trim()) { showToast("প্রথমে টেক্সট পেস্ট করুন।", "error"); return; }
+  parsedResults = parseAiImportText(raw, tree);
+  renderPreview();
+}
+
+function renderPreview() {
+  const section = document.getElementById("previewSection");
+  if (parsedResults.length === 0) {
+    section.innerHTML = `<p class="text-sm text-muted">কোনো প্রশ্ন শনাক্ত করা যায়নি। ফরম্যাট যাচাই করুন।</p>`;
+    return;
+  }
+  const validCount = parsedResults.filter(r => r.valid).length;
+
+  section.innerHTML = `
+    <div class="flex justify-between items-center">
+      <p class="eyebrow">প্রিভিউ (${parsedResults.length} টি শনাক্ত, ${validCount} টি বৈধ)</p>
+      <button class="btn btn-primary btn-sm" id="importAllBtn">বৈধ প্রশ্নগুলো ইম্পোর্ট করুন</button>
+    </div>
+    ${parsedResults.map(r => `
+      <div class="glass card mt-3" style="${r.valid ? "" : "border-color:var(--color-danger)66;"}" data-index="${r.index}">
+        <div class="flex justify-between items-center">
+          <span class="badge ${r.valid ? "badge-completed" : "badge-pending"}">${r.valid ? "বৈধ" : "সমস্যা আছে"}</span>
+          <button class="icon-btn remove-btn" data-index="${r.index}" title="বাদ দিন">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+        ${!r.valid ? `<ul class="text-xs mt-2" style="color:var(--color-danger);padding-right:16px;">${r.errors.map(e => `<li>${e}</li>`).join("")}</ul>` : ""}
+        <p class="mt-2" style="font-weight:600;">${r.question.question_bn || "(বাংলা প্রশ্ন অনুপস্থিত)"}</p>
+        <p class="text-xs text-muted lang-en">${r.question.question_en || "(English question missing)"}</p>
+        <div class="grid-2 mt-2">
+          <p class="text-xs">A: ${r.question.options_bn.A || "—"}</p>
+          <p class="text-xs">B: ${r.question.options_bn.B || "—"}</p>
+          <p class="text-xs">C: ${r.question.options_bn.C || "—"}</p>
+          <p class="text-xs">D: ${r.question.options_bn.D || "—"}</p>
+        </div>
+        <p class="text-xs mt-2">সঠিক: ${r.question.correctAnswer || "—"} • নম্বর: ${r.question.marks} • ${r.question.subjectRaw} / ${r.question.chapterRaw} / ${r.question.topicRaw}</p>
+      </div>
+    `).join("")}
+  `;
+
+  document.getElementById("importAllBtn").addEventListener("click", handleImportAll);
+  section.querySelectorAll(".remove-btn").forEach(b => b.addEventListener("click", () => {
+    const idx = Number(b.dataset.index);
+    parsedResults = parsedResults.filter(r => r.index !== idx);
+    renderPreview();
+  }));
+}
+
+async function handleImportAll() {
+  const validOnes = parsedResults.filter(r => r.valid);
+  if (validOnes.length === 0) { showToast("ইম্পোর্ট করার মতো কোনো বৈধ প্রশ্ন নেই।", "error"); return; }
+  const btn = document.getElementById("importAllBtn");
+  btn.disabled = true;
+  btn.textContent = "ইম্পোর্ট করা হচ্ছে...";
+  try {
+    for (const r of validOnes) {
+      await addQuestion({
+        question_en: r.question.question_en,
+        question_bn: r.question.question_bn,
+        options_bn: r.question.options_bn,
+        correctAnswer: r.question.correctAnswer,
+        marks: r.question.marks,
+        subjectId: r.question.subjectId,
+        chapterId: r.question.chapterId,
+        topicId: r.question.topicId
+      });
+    }
+    showToast(`${validOnes.length} টি প্রশ্ন প্রশ্ন ব্যাংকে যোগ করা হয়েছে।`, "success");
+    parsedResults = [];
+    document.getElementById("pasteArea").value = "";
+    document.getElementById("previewSection").innerHTML = "";
+  } catch (err) {
+    console.error(err);
+    showToast(friendlyError(err), "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "বৈধ প্রশ্নগুলো ইম্পোর্ট করুন";
+  }
+}
+</script>
+</body>
+</html>

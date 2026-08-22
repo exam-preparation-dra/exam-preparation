@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>সিলেবাস ব্যবস্থাপনা — অ্যাডমিন</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app-shell app-shell--wide" id="shell">
+  <div class="state-block"><div class="spinner"></div></div>
+</div>
+
+<script type="module">
+import { initTheme, toggleTheme, icons, renderState, showToast, friendlyError } from "../js/utils/ui-utils.js";
+import { requireAdmin, adminLogout } from "../js/utils/auth.js";
+import {
+  getFullSyllabusTree, addSubject, updateSubject, setSubjectActive,
+  addChapter, updateChapter, setChapterActive,
+  addTopic, updateTopic, setTopicActive
+} from "../js/utils/syllabus-utils.js";
+
+initTheme();
+const shell = document.getElementById("shell");
+let tree = [];
+let openSubjectId = null;
+let openChapterId = null;
+
+requireAdmin(() => {
+  shell.innerHTML = `
+    <div class="topbar">
+      <a href="../admin/dashboard.html" class="icon-btn">${icons.arrowLeft}</a>
+      <h2 style="font-size:1.05rem;">সিলেবাস ব্যবস্থাপনা</h2>
+      <div class="flex gap-2">
+        <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-thumb"></span></button>
+        <button class="icon-btn" id="logoutBtn">${icons.arrowRight}</button>
+      </div>
+    </div>
+
+    <form id="addSubjectForm" class="glass card">
+      <p class="eyebrow mb-2">নতুন বিষয় যোগ করুন</p>
+      <div class="flex gap-2 mt-2">
+        <input class="input" id="newSubjectBn" placeholder="বাংলা নাম (যেমন: পদার্থবিজ্ঞান)" required>
+        <button type="submit" class="btn btn-primary btn-sm">${icons.plus}</button>
+      </div>
+      <input class="input mt-2" id="newSubjectEn" placeholder="English name (e.g. Physics)" required>
+    </form>
+
+    <div id="tree" class="mt-4"></div>
+  `;
+  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+  document.getElementById("logoutBtn").addEventListener("click", adminLogout);
+  document.getElementById("addSubjectForm").addEventListener("submit", handleAddSubject);
+  loadTree();
+});
+
+async function loadTree() {
+  const el = document.getElementById("tree");
+  try {
+    tree = await getFullSyllabusTree();
+    renderTree();
+  } catch (err) {
+    console.error(err);
+    renderState(el, "error", "সিলেবাস লোড করা যায়নি।");
+  }
+}
+
+function renderTree() {
+  const el = document.getElementById("tree");
+  if (tree.length === 0) {
+    renderState(el, "empty", "এখনো কোনো বিষয় যোগ করা হয়নি।");
+    return;
+  }
+
+  el.innerHTML = tree.map(subject => `
+    <div class="glass card mt-2">
+      <div class="flex justify-between items-center subject-header" data-id="${subject.id}" style="cursor:pointer;">
+        <div class="flex items-center gap-2">
+          <span class="icon-btn" style="width:32px;height:32px;">${icons.layers}</span>
+          <div>
+            <p style="font-weight:700;">${subject.name_bn}${subject.isActive ? "" : " (নিষ্ক্রিয়)"}</p>
+            <p class="text-xs text-muted">${subject.chapters.length} টি অধ্যায়</p>
+          </div>
+        </div>
+        <div class="flex gap-1 items-center">
+          <button class="icon-btn edit-subject" data-id="${subject.id}" title="সম্পাদনা">${icons.edit}</button>
+          <button class="icon-btn toggle-subject" data-id="${subject.id}" title="সক্রিয়/নিষ্ক্রিয়">${icons.toggle}</button>
+          <span style="width:18px;height:18px;">${openSubjectId === subject.id ? icons.chevronDown : icons.arrowRight}</span>
+        </div>
+      </div>
+
+      ${openSubjectId === subject.id ? `
+        <div class="mt-3" style="border-top:1px solid var(--surface-border);padding-top:12px;">
+          <form class="add-chapter-form flex gap-2" data-subject="${subject.id}">
+            <input class="input" name="bn" placeholder="অধ্যায়ের বাংলা নাম" required>
+            <input class="input" name="en" placeholder="English name" required style="max-width:140px;">
+            <button type="submit" class="btn btn-primary btn-sm">${icons.plus}</button>
+          </form>
+
+          ${subject.chapters.map(chapter => `
+            <div class="mt-3" style="background:var(--surface-solid);border-radius:var(--radius-sm);padding:12px;">
+              <div class="flex justify-between items-center chapter-header" data-id="${chapter.id}" style="cursor:pointer;">
+                <div>
+                  <p style="font-weight:600;font-size:0.9rem;">${chapter.name_bn}${chapter.isActive ? "" : " (নিষ্ক্রিয়)"}</p>
+                  <p class="text-xs text-muted">${chapter.topics.length} টি টপিক</p>
+                </div>
+                <div class="flex gap-1 items-center">
+                  <button class="icon-btn btn-sm edit-chapter" data-id="${chapter.id}" title="সম্পাদনা" style="width:34px;height:34px;">${icons.edit}</button>
+                  <button class="icon-btn btn-sm toggle-chapter" data-id="${chapter.id}" title="সক্রিয়/নিষ্ক্রিয়" style="width:34px;height:34px;">${icons.toggle}</button>
+                  <span style="width:16px;height:16px;">${openChapterId === chapter.id ? icons.chevronDown : icons.arrowRight}</span>
+                </div>
+              </div>
+
+              ${openChapterId === chapter.id ? `
+                <div class="mt-2" style="border-top:1px solid var(--surface-border);padding-top:10px;">
+                  <form class="add-topic-form flex gap-2" data-chapter="${chapter.id}" data-subject="${subject.id}">
+                    <input class="input" name="bn" placeholder="টপিকের বাংলা নাম" required>
+                    <input class="input" name="en" placeholder="English name" required style="max-width:130px;">
+                    <button type="submit" class="btn btn-primary btn-sm">${icons.plus}</button>
+                  </form>
+                  ${chapter.topics.map(topic => `
+                    <div class="flex justify-between items-center mt-2" data-id="${topic.id}">
+                      <p class="text-sm">${topic.name_bn}${topic.isActive ? "" : " (নিষ্ক্রিয়)"}</p>
+                      <div class="flex gap-1">
+                        <button class="icon-btn edit-topic" data-id="${topic.id}" style="width:30px;height:30px;">${icons.edit}</button>
+                        <button class="icon-btn toggle-topic" data-id="${topic.id}" style="width:30px;height:30px;">${icons.toggle}</button>
+                      </div>
+                    </div>
+                  `).join("") || `<p class="text-xs text-muted mt-2">কোনো টপিক নেই।</p>`}
+                </div>
+              ` : ""}
+            </div>
+          `).join("") || `<p class="text-xs text-muted mt-2">কোনো অধ্যায় নেই।</p>`}
+        </div>
+      ` : ""}
+    </div>
+  `).join("");
+
+  attachTreeEvents();
+}
+
+function attachTreeEvents() {
+  document.querySelectorAll(".subject-header").forEach(h => h.addEventListener("click", (e) => {
+    if (e.target.closest("button")) return;
+    const id = h.dataset.id;
+    openSubjectId = openSubjectId === id ? null : id;
+    openChapterId = null;
+    renderTree();
+  }));
+  document.querySelectorAll(".chapter-header").forEach(h => h.addEventListener("click", (e) => {
+    if (e.target.closest("button")) return;
+    const id = h.dataset.id;
+    openChapterId = openChapterId === id ? null : id;
+    renderTree();
+  }));
+
+  document.querySelectorAll(".edit-subject").forEach(b => b.addEventListener("click", async () => {
+    const s = findSubject(b.dataset.id);
+    const name = prompt("বাংলা নাম:", s.name_bn);
+    if (name === null || !name.trim()) return;
+    try { await updateSubject(s.id, { name_bn: name.trim() }); showToast("আপডেট হয়েছে।", "success"); loadTree(); }
+    catch (err) { showToast(friendlyError(err), "error"); }
+  }));
+  document.querySelectorAll(".toggle-subject").forEach(b => b.addEventListener("click", async () => {
+    const s = findSubject(b.dataset.id);
+    if (!confirm(`${s.name_bn} ${s.isActive ? "নিষ্ক্রিয়" : "সক্রিয়"} করবেন?`)) return;
+    try { await setSubjectActive(s.id, !s.isActive); showToast("আপডেট হয়েছে।", "success"); loadTree(); }
+    catch (err) { showToast(friendlyError(err), "error"); }
+  }));
+
+  document.querySelectorAll(".edit-chapter").forEach(b => b.addEventListener("click", async () => {
+    const c = findChapter(b.dataset.id);
+    const name = prompt("বাংলা নাম:", c.name_bn);
+    if (name === null || !name.trim()) return;
+    try { await updateChapter(c.id, { name_bn: name.trim() }); showToast("আপডেট হয়েছে।", "success"); loadTree(); }
+    catch (err) { showToast(friendlyError(err), "error"); }
+  }));
+  document.querySelectorAll(".toggle-chapter").forEach(b => b.addEventListener("click", async () => {
+    const c = findChapter(b.dataset.id);
+    if (!confirm(`${c.name_bn} ${c.isActive ? "নিষ্ক্রিয়" : "সক্রিয়"} করবেন?`)) return;
+    try { await setChapterActive(c.id, !c.isActive); showToast("আপডেট হয়েছে।", "success"); loadTree(); }
+    catch (err) { showToast(friendlyError(err), "error"); }
+  }));
+
+  document.querySelectorAll(".edit-topic").forEach(b => b.addEventListener("click", async () => {
+    const t = findTopic(b.dataset.id);
+    const name = prompt("বাংলা নাম:", t.name_bn);
+    if (name === null || !name.trim()) return;
+    try { await updateTopic(t.id, { name_bn: name.trim() }); showToast("আপডেট হয়েছে।", "success"); loadTree(); }
+    catch (err) { showToast(friendlyError(err), "error"); }
+  }));
+  document.querySelectorAll(".toggle-topic").forEach(b => b.addEventListener("click", async () => {
+    const t = findTopic(b.dataset.id);
+    if (!confirm(`${t.name_bn} ${t.isActive ? "নিষ্ক্রিয়" : "সক্রিয়"} করবেন?`)) return;
+    try { await setTopicActive(t.id, !t.isActive); showToast("আপডেট হয়েছে।", "success"); loadTree(); }
+    catch (err) { showToast(friendlyError(err), "error"); }
+  }));
+
+  document.querySelectorAll(".add-chapter-form").forEach(f => f.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const subjectId = f.dataset.subject;
+    const bn = f.bn.value.trim(), en = f.en.value.trim();
+    if (!bn || !en) return;
+    try {
+      await addChapter({ subjectId, name_bn: bn, name_en: en });
+      showToast("অধ্যায় যোগ হয়েছে।", "success");
+      openSubjectId = subjectId;
+      loadTree();
+    } catch (err) { showToast(friendlyError(err), "error"); }
+  }));
+
+  document.querySelectorAll(".add-topic-form").forEach(f => f.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const chapterId = f.dataset.chapter, subjectId = f.dataset.subject;
+    const bn = f.bn.value.trim(), en = f.en.value.trim();
+    if (!bn || !en) return;
+    try {
+      await addTopic({ chapterId, subjectId, name_bn: bn, name_en: en });
+      showToast("টপিক যোগ হয়েছে।", "success");
+      openSubjectId = subjectId; openChapterId = chapterId;
+      loadTree();
+    } catch (err) { showToast(friendlyError(err), "error"); }
+  }));
+}
+
+function findSubject(id) { return tree.find(s => s.id === id); }
+function findChapter(id) { for (const s of tree) { const c = s.chapters.find(c => c.id === id); if (c) return c; } }
+function findTopic(id) { for (const s of tree) for (const c of s.chapters) { const t = c.topics.find(t => t.id === id); if (t) return t; } }
+
+async function handleAddSubject(e) {
+  e.preventDefault();
+  const bnInput = document.getElementById("newSubjectBn");
+  const enInput = document.getElementById("newSubjectEn");
+  const bn = bnInput.value.trim(), en = enInput.value.trim();
+  if (!bn || !en) return;
+  try {
+    await addSubject({ name_bn: bn, name_en: en, order: tree.length });
+    bnInput.value = ""; enInput.value = "";
+    showToast("বিষয় যোগ হয়েছে।", "success");
+    loadTree();
+  } catch (err) {
+    showToast(friendlyError(err), "error");
+  }
+}
+</script>
+</body>
+</html>

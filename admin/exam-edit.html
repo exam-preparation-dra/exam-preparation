@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>পরীক্ষা সম্পাদনা — অ্যাডমিন</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app-shell">
+  <div class="state-block"><div class="spinner"></div><p class="text-sm text-muted">পরীক্ষা সম্পাদনার পাতায় নিয়ে যাওয়া হচ্ছে...</p></div>
+</div>
+<script type="module">
+  // Draft editing uses the exact same form/logic as creation (admin/exam-create.html),
+  // just pre-filled from an existing exam ID — see requireAdmin/getExamById flow there.
+  // This avoids maintaining two copies of the same builder.
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
+  if (!id) {
+    window.location.href = "../admin/exams.html";
+  } else {
+    window.location.href = `../admin/exam-create.html?id=${encodeURIComponent(id)}`;
+  }
+</script>
+</body>
+</html>

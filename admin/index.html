@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>অ্যাডমিন লগইন — পরীক্ষা প্রস্তুতি</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app-shell" style="display:flex;flex-direction:column;justify-content:center;min-height:100vh;">
+
+  <div class="topbar" style="justify-content:center;margin-bottom:var(--space-6);">
+    <div class="brand">
+      <div class="brand-mark">প</div>
+      <div>
+        <h1 style="font-size:1.05rem;">অ্যাডমিন প্যানেল</h1>
+        <p class="text-xs text-muted" style="margin:0;">নিয়ন্ত্রণ কেন্দ্র</p>
+      </div>
+    </div>
+  </div>
+
+  <form id="loginForm" class="glass card">
+    <div class="field">
+      <label for="email">ইমেইল</label>
+      <input class="input" type="email" id="email" required autocomplete="username">
+    </div>
+    <div class="field">
+      <label for="password">পাসওয়ার্ড</label>
+      <input class="input" type="password" id="password" required autocomplete="current-password">
+    </div>
+    <p id="errorMsg" class="text-sm hidden" style="color:var(--color-danger);margin-bottom:var(--space-3);"></p>
+    <button type="submit" class="btn btn-primary" id="loginBtn">প্রবেশ করুন</button>
+  </form>
+
+  <div class="mt-5 text-center">
+    <a href="../index.html" class="text-xs text-muted">শিক্ষার্থী পাতায় ফিরে যান</a>
+  </div>
+
+</div>
+
+<script type="module">
+import { initTheme } from "../js/utils/ui-utils.js";
+import { adminLogin, redirectIfLoggedIn } from "../js/utils/auth.js";
+import { friendlyError } from "../js/utils/ui-utils.js";
+
+initTheme();
+redirectIfLoggedIn();
+
+const form = document.getElementById("loginForm");
+const btn = document.getElementById("loginBtn");
+const errorMsg = document.getElementById("errorMsg");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  errorMsg.classList.add("hidden");
+  btn.disabled = true;
+  btn.textContent = "যাচাই করা হচ্ছে...";
+  try {
+    await adminLogin(
+      document.getElementById("email").value.trim(),
+      document.getElementById("password").value
+    );
+    window.location.href = "../admin/dashboard.html";
+  } catch (err) {
+    errorMsg.textContent = friendlyError(err);
+    errorMsg.classList.remove("hidden");
+    btn.disabled = false;
+    btn.textContent = "প্রবেশ করুন";
+  }
+});
+</script>
+</body>
+</html>
