@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>প্রশ্ন ব্যাংক — অ্যাডমিন</title>
 <link rel="stylesheet" href="../css/style.css">
+<link rel="manifest" href="../admin/manifest.json">
+<meta name="theme-color" content="#ff6a2b">
 </head>
 <body>
 <div class="app-shell app-shell--wide" id="shell">
@@ -14,6 +16,7 @@
 <script type="module">
 import { initTheme, toggleTheme, icons, renderState, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
+import { initAdminPwaInstall } from "../js/utils/pwa-install.js";
 import { getFullSyllabusTree } from "../js/utils/syllabus-utils.js";
 import {
   addQuestion, updateQuestion, setQuestionActive, deleteQuestion, duplicateQuestion,
@@ -36,6 +39,7 @@ requireAdmin(() => {
   shell.innerHTML = shellTemplate();
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
   document.getElementById("logoutBtn").addEventListener("click", adminLogout);
+  initAdminPwaInstall("installBtn");
   document.getElementById("showAddForm").addEventListener("click", () => openForm(null));
   document.getElementById("cancelForm").addEventListener("click", closeForm);
   document.getElementById("questionForm").addEventListener("submit", handleSubmit);
@@ -43,7 +47,7 @@ requireAdmin(() => {
   document.getElementById("subjectFilter").addEventListener("change", handleSubjectFilterChange);
   document.getElementById("chapterFilter").addEventListener("change", handleChapterFilterChange);
   document.getElementById("topicFilter").addEventListener("change", () => { filterState.topicId = document.getElementById("topicFilter").value; reloadList(); });
-  document.getElementById("loadMoreBtn").addEventListener("click", loadMore);
+  document.getElementById("loadMoreBtn").addEventListener("click", () => loadMore());
   document.getElementById("goToExamBuilder").addEventListener("click", () => {
     localStorage.setItem("examBuilderSelection", JSON.stringify([...selectedIds]));
     // If we arrived here from an in-progress exam edit, return to that same
@@ -65,6 +69,7 @@ function shellTemplate() {
       <h2 style="font-size:1.05rem;">প্রশ্ন ব্যাংক</h2>
       <div class="flex gap-2">
         <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-thumb"></span></button>
+        <button class="icon-btn hidden" id="installBtn" title="অ্যাপ ইনস্টল করুন"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v13m0 0l-4-4m4 4l4-4M5 21h14"/></svg></button>
         <button class="icon-btn" id="logoutBtn">${icons.arrowRight}</button>
       </div>
     </div>
@@ -280,6 +285,9 @@ function renderQuestionList() {
           <button class="icon-btn edit-btn" data-id="${q.id}" title="সম্পাদনা">${icons.edit}</button>
           <button class="icon-btn dup-btn" data-id="${q.id}" title="ডুপ্লিকেট">${icons.plus}</button>
           <button class="icon-btn toggle-btn" data-id="${q.id}" title="সক্রিয়/নিষ্ক্রিয়">${icons.toggle}</button>
+          <button class="icon-btn delete-btn" data-id="${q.id}" title="মুছে ফেলুন" style="color:var(--color-danger);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
+          </button>
         </div>
       </div>
     </div>
@@ -293,6 +301,7 @@ function renderQuestionList() {
   listEl.querySelectorAll(".edit-btn").forEach(b => b.addEventListener("click", () => openForm(b.dataset.id)));
   listEl.querySelectorAll(".dup-btn").forEach(b => b.addEventListener("click", () => handleDuplicate(b.dataset.id)));
   listEl.querySelectorAll(".toggle-btn").forEach(b => b.addEventListener("click", () => handleToggleActive(b.dataset.id)));
+  listEl.querySelectorAll(".delete-btn").forEach(b => b.addEventListener("click", () => handleDelete(b.dataset.id)));
 }
 
 function openForm(id) {
@@ -415,6 +424,7 @@ async function handleSubmit(e) {
   }
 }
 
+
 async function handleDuplicate(id) {
   const q = allQuestions.find(x => x.id === id);
   if (!q || !confirm("এই প্রশ্নটি ডুপ্লিকেট করবেন?")) return;
@@ -433,6 +443,15 @@ async function handleToggleActive(id) {
   try {
     await setQuestionActive(id, willActivate);
     showToast("আপডেট করা হয়েছে।", "success");
+    reloadList();
+  } catch (err) { showToast(friendlyError(err), "error"); }
+}
+
+async function handleDelete(id) {
+  if (!confirm("এই প্রশ্নটি স্থায়ীভাবে মুছে ফেলবেন? যেসব পরীক্ষা ইতিমধ্যে প্রকাশিত হয়ে গেছে সেখানে এই প্রশ্নের একটি ফ্রোজেন কপি থেকে যাবে (তাই পুরনো ফলাফল অপরিবর্তিত থাকবে), কিন্তু এটি আর কোনো নতুন পরীক্ষায় যোগ করা যাবে না।")) return;
+  try {
+    await deleteQuestion(id);
+    showToast("প্রশ্ন মুছে ফেলা হয়েছে।", "success");
     reloadList();
   } catch (err) { showToast(friendlyError(err), "error"); }
 }
