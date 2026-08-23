@@ -10,7 +10,9 @@ let deferredPrompt = null;
 
 export function initAdminPwaInstall(buttonId = "installBtn") {
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("../admin/sw.js", { scope: "../admin/" }).catch(() => {});
+    // Resolved relative to THIS file's own location (repo root), not the
+    // page that imported it — so "./sw.js" = /sw.js and "./admin/" = /admin/.
+    navigator.serviceWorker.register("./sw.js", { scope: "./admin/" }).catch(() => {});
   }
 
   const btn = document.getElementById(buttonId);
