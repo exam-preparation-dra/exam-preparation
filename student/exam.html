@@ -65,6 +65,7 @@
   }
   .conn-online { background: var(--color-success)22; color: var(--color-success); }
   .conn-offline { background: var(--color-danger)22; color: var(--color-danger); }
+  .img-broken { border: 1.5px dashed var(--color-danger); min-height: 60px; opacity: 0.6; }
 </style>
 </head>
 <body>
@@ -255,6 +256,10 @@ function renderExamShell() {
         </div>
       </div>
     </div>
+
+    <div id="figurePreviewModal" class="hidden" style="position:fixed;inset:0;background:rgba(10,14,26,0.9);align-items:center;justify-content:center;z-index:400;padding:20px;cursor:zoom-out;">
+      <img id="figurePreviewImg" style="max-width:100%;max-height:100%;border-radius:var(--radius-sm);">
+    </div>
   `;
 
   document.getElementById("prevBtn").addEventListener("click", () => navigate(-1));
@@ -264,6 +269,7 @@ function renderExamShell() {
   document.getElementById("submitBtn").addEventListener("click", () => document.getElementById("submitModal").classList.remove("hidden"));
   document.getElementById("cancelSubmitBtn").addEventListener("click", () => document.getElementById("submitModal").classList.add("hidden"));
   document.getElementById("confirmSubmitBtn").addEventListener("click", () => doSubmit(false));
+  document.getElementById("figurePreviewModal").addEventListener("click", closeFigurePreview);
 
   window.addEventListener("online", updateConnBadge);
   window.addEventListener("offline", updateConnBadge);
@@ -306,7 +312,7 @@ function renderQuestion() {
   body.innerHTML = `
     <p class="lang-en" style="font-weight:600;">${q.question_en}</p>
     <p class="mt-2" style="font-weight:700;font-size:1.02rem;">${q.question_bn}</p>
-    ${q.imageUrl ? `<img src="${q.imageUrl}" style="max-width:100%;border-radius:var(--radius-sm);margin-top:12px;">` : ""}
+    ${q.imageUrl ? `<img src="${q.imageUrl}" class="q-figure" style="max-width:100%;max-height:220px;display:block;margin:12px auto 0;border-radius:var(--radius-sm);cursor:zoom-in;" onerror="this.classList.add('img-broken');this.alt='ছবি লোড করা যায়নি';">` : ""}
     <div class="mt-4">
       ${["A", "B", "C", "D"].map(letter => `
         <button class="option-card ${selected === letter ? "selected" : ""}" data-letter="${letter}">
@@ -324,6 +330,23 @@ function renderQuestion() {
     btn.addEventListener("click", () => selectAnswer(q.questionId, btn.dataset.letter));
   });
   document.getElementById("markReviewBtn").addEventListener("click", () => toggleMarkForReview(q.questionId));
+
+  const figure = body.querySelector(".q-figure");
+  if (figure) figure.addEventListener("click", () => openFigurePreview(q.imageUrl));
+}
+
+function openFigurePreview(url) {
+  const modal = document.getElementById("figurePreviewModal");
+  const modalImg = document.getElementById("figurePreviewImg");
+  modalImg.src = url;
+  modal.style.display = "flex";
+  modal.classList.remove("hidden");
+}
+function closeFigurePreview() {
+  const modal = document.getElementById("figurePreviewModal");
+  modal.classList.add("hidden");
+  modal.style.display = "none";
+  document.getElementById("figurePreviewImg").src = "";
 }
 
 function toggleMarkForReview(questionId) {
