@@ -7,6 +7,15 @@
 <link rel="stylesheet" href="../css/style.css">
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#ff6a2b">
+<style>
+  .img-broken { border: 1.5px dashed var(--color-danger); opacity: 0.6; }
+  .img-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 0.68rem; padding: 2px 8px; border-radius: 999px;
+    background: var(--color-accent-soft); color: var(--color-accent);
+    font-weight: 600;
+  }
+</style>
 </head>
 <body>
 <div class="app-shell app-shell--wide" id="shell">
@@ -31,6 +40,7 @@ let tree = [];
 let allQuestions = [];       // currently loaded page(s)
 let nextCursor = null;
 let editingId = null;        // null = add mode
+let quickImgTargetId = null; // id of question being quick-edited via the image-only modal
 let selectedIds = new Set(JSON.parse(localStorage.getItem("examBuilderSelection") || "[]"));
 
 const filterState = { subjectId: "", chapterId: "", topicId: "", text: "" };
@@ -59,6 +69,19 @@ requireAdmin(() => {
 
   setupImagePreview();
   setupVoiceButton();
+  document.getElementById("imagePreviewModal").addEventListener("click", closeImagePreview);
+  document.getElementById("quickImgCancelBtn").addEventListener("click", closeQuickImageModal);
+  document.getElementById("quickImgSaveBtn").addEventListener("click", saveQuickImage);
+  document.getElementById("quickImageModal").addEventListener("click", (e) => {
+    if (e.target.id === "quickImageModal") closeQuickImageModal();
+  });
+  document.getElementById("quickImgInput").addEventListener("input", debounce((e) => {
+    const preview = document.getElementById("quickImgPreview");
+    const url = toDirectImageUrl(e.target.value);
+    if (!url) { preview.classList.add("hidden"); return; }
+    preview.src = url;
+    preview.classList.remove("hidden");
+  }, 400));
   init();
 });
 
@@ -155,6 +178,26 @@ function shellTemplate() {
     <div id="questionList" class="mt-4"></div>
     <div class="mt-4 text-center">
       <button class="btn btn-secondary hidden" id="loadMoreBtn">আরও দেখুন</button>
+    </div>
+
+    <div id="imagePreviewModal" class="hidden" style="position:fixed;inset:0;background:rgba(10,14,26,0.85);align-items:center;justify-content:center;z-index:400;padding:20px;cursor:zoom-out;">
+      <img id="imagePreviewModalImg" style="max-width:100%;max-height:100%;border-radius:var(--radius-sm);">
+    </div>
+
+    <div id="quickImageModal" class="hidden" style="position:fixed;inset:0;background:rgba(10,14,26,0.65);align-items:center;justify-content:center;z-index:410;padding:20px;">
+      <div class="glass card" style="max-width:420px;width:100%;">
+        <p class="eyebrow">ছবি যোগ/পরিবর্তন করুন</p>
+        <div class="field mt-3">
+          <input class="input" type="url" id="quickImgInput" placeholder="Google Drive শেয়ার লিংক বা সরাসরি ছবির লিংক পেস্ট করুন">
+          <p class="text-xs text-muted mt-1">Google Drive লিংক দিলে ফাইলের শেয়ারিং অবশ্যই "যেকোনো লিংক থাকলে দেখতে পারবে" করে দিতে হবে। খালি রেখে সংরক্ষণ করলে ছবি সরে যাবে।</p>
+          <img id="quickImgPreview" class="hidden mt-2" style="max-height:160px;border-radius:var(--radius-sm);">
+        </div>
+        <p id="quickImgError" class="text-sm hidden" style="color:var(--color-danger);"></p>
+        <div class="flex gap-2 mt-3">
+          <button type="button" class="btn btn-secondary" id="quickImgCancelBtn">বাতিল</button>
+          <button type="button" class="btn btn-primary" id="quickImgSaveBtn">সংরক্ষণ করুন</button>
+        </div>
+      </div>
     </div>
   `;
 }
@@ -275,14 +318,18 @@ function renderQuestionList() {
           <label class="flex items-center gap-2" style="cursor:pointer;">
             <input type="checkbox" class="select-checkbox" data-id="${q.id}" ${selectedIds.has(q.id) ? "checked" : ""}>
             <span class="text-xs text-muted">${q.isActive ? "" : "(নিষ্ক্রিয়) "}${nameFor(q.subjectId, "subject")} • ${nameFor(q.chapterId, "chapter")} • ${nameFor(q.topicId, "topic")}</span>
+            ${q.imageUrl ? `<span class="img-badge" title="এই প্রশ্নে ছবি যুক্ত আছে"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> ছবি</span>` : ""}
           </label>
           <p class="mt-2" style="font-weight:600;">${q.question_bn}</p>
           <p class="text-xs text-muted lang-en mt-1">${q.question_en}</p>
-          ${q.imageUrl ? `<img src="${q.imageUrl}" style="max-height:100px;border-radius:8px;margin-top:8px;">` : ""}
+          ${q.imageUrl ? `<img src="${q.imageUrl}" class="thumb-preview" data-full="${q.imageUrl}" style="max-height:100px;border-radius:8px;margin-top:8px;cursor:zoom-in;" onerror="this.classList.add('img-broken');this.title='ছবি লোড করা যায়নি — লিংকটি পাবলিক কিনা যাচাই করুন';">` : ""}
           <p class="text-xs mt-2">সঠিক উত্তর: <span style="font-weight:700;color:var(--color-success);">${q.correctAnswer}</span> • নম্বর: ${q.marks}</p>
         </div>
         <div class="flex flex-col gap-2">
           <button class="icon-btn edit-btn" data-id="${q.id}" title="সম্পাদনা">${icons.edit}</button>
+          <button class="icon-btn quick-img-btn" data-id="${q.id}" title="${q.imageUrl ? "ছবি পরিবর্তন করুন" : "ছবি যোগ করুন"}">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          </button>
           <button class="icon-btn dup-btn" data-id="${q.id}" title="ডুপ্লিকেট">${icons.plus}</button>
           <button class="icon-btn toggle-btn" data-id="${q.id}" title="সক্রিয়/নিষ্ক্রিয়">${icons.toggle}</button>
           <button class="icon-btn delete-btn" data-id="${q.id}" title="মুছে ফেলুন" style="color:var(--color-danger);">
@@ -302,6 +349,71 @@ function renderQuestionList() {
   listEl.querySelectorAll(".dup-btn").forEach(b => b.addEventListener("click", () => handleDuplicate(b.dataset.id)));
   listEl.querySelectorAll(".toggle-btn").forEach(b => b.addEventListener("click", () => handleToggleActive(b.dataset.id)));
   listEl.querySelectorAll(".delete-btn").forEach(b => b.addEventListener("click", () => handleDelete(b.dataset.id)));
+  listEl.querySelectorAll(".thumb-preview").forEach(img => img.addEventListener("click", () => openImagePreview(img.dataset.full)));
+  listEl.querySelectorAll(".quick-img-btn").forEach(b => b.addEventListener("click", () => openQuickImageModal(b.dataset.id)));
+}
+
+function openQuickImageModal(id) {
+  const q = allQuestions.find(x => x.id === id);
+  if (!q) return;
+  quickImgTargetId = id;
+  const input = document.getElementById("quickImgInput");
+  const preview = document.getElementById("quickImgPreview");
+  input.value = q.imageUrl || "";
+  if (q.imageUrl) { preview.src = q.imageUrl; preview.classList.remove("hidden"); }
+  else preview.classList.add("hidden");
+  document.getElementById("quickImgError").classList.add("hidden");
+  const modal = document.getElementById("quickImageModal");
+  modal.style.display = "flex";
+  modal.classList.remove("hidden");
+  input.focus();
+}
+
+function closeQuickImageModal() {
+  const modal = document.getElementById("quickImageModal");
+  modal.classList.add("hidden");
+  modal.style.display = "none";
+  quickImgTargetId = null;
+}
+
+async function saveQuickImage() {
+  if (!quickImgTargetId) return;
+  const raw = document.getElementById("quickImgInput").value.trim();
+  const errEl = document.getElementById("quickImgError");
+  const btn = document.getElementById("quickImgSaveBtn");
+  errEl.classList.add("hidden");
+  btn.disabled = true;
+  btn.textContent = "সংরক্ষণ হচ্ছে...";
+  try {
+    const finalUrl = raw ? toDirectImageUrl(raw) : null;
+    await updateQuestion(quickImgTargetId, { imageUrl: finalUrl });
+    const idx = allQuestions.findIndex(x => x.id === quickImgTargetId);
+    if (idx !== -1) allQuestions[idx].imageUrl = finalUrl;
+    showToast(finalUrl ? "ছবি যুক্ত হয়েছে।" : "ছবি সরানো হয়েছে।", "success");
+    closeQuickImageModal();
+    renderQuestionList();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = friendlyError ? friendlyError(err) : "সংরক্ষণ করা যায়নি।";
+    errEl.classList.remove("hidden");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "সংরক্ষণ করুন";
+  }
+}
+
+function openImagePreview(url) {
+  const modal = document.getElementById("imagePreviewModal");
+  const modalImg = document.getElementById("imagePreviewModalImg");
+  modalImg.src = url;
+  modal.style.display = "flex";
+  modal.classList.remove("hidden");
+}
+function closeImagePreview() {
+  const modal = document.getElementById("imagePreviewModal");
+  modal.classList.add("hidden");
+  modal.style.display = "none";
+  document.getElementById("imagePreviewModalImg").src = "";
 }
 
 function openForm(id) {
@@ -340,9 +452,8 @@ function openForm(id) {
     else preview.classList.add("hidden");
   }
   form.scrollIntoView({ behavior: "smooth" });
-}
-
-function closeForm() {
+  }
+  function closeForm() {
   editingId = null;
   document.getElementById("questionForm").classList.add("hidden");
 }
@@ -432,9 +543,9 @@ async function handleDuplicate(id) {
     showToast("প্রশ্ন ডুপ্লিকেট করা হয়েছে।", "success");
     reloadList();
   } catch (err) { showToast(friendlyError(err), "error"); }
-}
+      }
 
-async function handleToggleActive(id) {
+  async function handleToggleActive(id) {
   const q = allQuestions.find(x => x.id === id);
   if (!q) return;
   const willActivate = !q.isActive;
