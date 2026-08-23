@@ -119,6 +119,197 @@ export function computeTopicStats(results, topicNameMap) {
   });
 }
 
+// ---------- Per-question record builder ----------
+// Combines each approved result with its (already-fetched) exam snapshot to
+// produce one row per question actually seen by the student. This is the
+// foundation for every analysis below that the aggregated *Breakdown arrays
+// can't answer on their own (they only carry subject/chapter/topic totals,
+// not per-question selected-option, timing, or marked-for-review).
+// snapshotsByExamId: result of getExamSnapshotsMap() in results-utils.js.
+export function buildQuestionRecords(results, snapshotsByExamId) {
+  const records = [];
+  results.forEach(r => {
+    const snapshot = snapshotsByExamId[r.examId];
+    if (!snapshot) return; // snapshot missing (e.g. exam later deleted) — skip, never fabricate
+    const questionTimes = r.questionTimes || {};
+    const markedForReview = r.markedForReview || {};
+    const answers = r.answers || {};
+    (snapshot.questions || []).forEach(q => {
+      const selected = answers[q.questionId] || null;
+      records.push({
+        examId: r.examId,
+        examName: r.examName || "",
+        submittedAt: r.submittedAt,
+        questionId: q.questionId,
+        question_bn: q.question_bn || "",
+        subjectId: q.subjectId || null,
+        chapterId: q.chapterId || null,
+        topicId: q.topicId || null,
+        selected,
+        correctAnswer: q.correctAnswer,
+        isAnswered: !!selected,
+        isCorrect: selected ? selected === q.correctAnswer : null,
+        timeSeconds: questionTimes[q.questionId] ?? null,
+        isMarked: !!markedForReview[q.questionId]
+      });
+    });
+  });
+  return records;
+}
+
+const MIN_RECORDS_FOR_TIME_STATS = 5;
+
+// ---------- Time-management analysis ----------
+// Where time is going (by subject/topic) and whether answering fast
+// correlates with getting it wrong (a "rushing" signal), never claimed
+// from too few timed questions.
+export function computeTimeManagementStats(records, subjectNameMap, topicNameMap) {
+  const timed = records.filter(r => r.timeSeconds !== null && r.timeSeconds > 0);
+  if (timed.length < MIN_RECORDS_FOR_TIME_STATS) return null;
+
+  function bucketBy(idKey, nameMap) {
+    const bucket = {};
+    timed.forEach(r => {
+      const id = r[idKey];
+      if (!id) return;
+      if (!bucket[id]) bucket[id] = { id, name: nameMap[id] || "—", totalTime: 0, count: 0 };
+      bucket[id].totalTime += r.timeSeconds;
+      bucket[id].count += 1;
+    });
+    return Object.values(bucket)
+      .map(b => ({ ...b, avgSeconds: Math.round(b.totalTime / b.count) }))
+      .sort((a, b) => b.avgSeconds - a.avgSeconds);
+  }
+
+  const bySubject = bucketBy("subjectId", subjectNameMap);
+  const byTopic = bucketBy("topicId", topicNameMap);
+
+  // Speed vs accuracy: split answered, timed questions at the median time;
+  // compare the wrong-rate of the faster half against the slower half.
+  const answered = timed.filter(r => r.isAnswered);
+  let speedAccuracy = null;
+  if (answered.length >= MIN_RECORDS_FOR_TIME_STATS) {
+    const sorted = [...answered].sort((a, b) => a.timeSeconds - b.timeSeconds);
+    const mid = Math.floor(sorted.length / 2);
+    const faster = sorted.slice(0, mid);
+    const slower = sorted.slice(mid);
+    const wrongRate = arr => {
+      if (arr.length === 0) return null;
+      const wrong = arr.filter(r => r.isCorrect === false).length;
+      return Math.round((wrong / arr.length) * 1000) / 10;
+    };
+    const fasterWrongRate = wrongRate(faster);
+    const slowerWrongRate = wrongRate(slower);
+    speedAccuracy = {
+      medianSeconds: sorted[mid]?.timeSeconds ?? null,
+      fasterWrongRate, slowerWrongRate,
+      rushingLikely: fasterWrongRate !== null && slowerWrongRate !== null && fasterWrongRate > slowerWrongRate
+    };
+  }
+
+  return { bySubject, byTopic, speedAccuracy };
+}
+
+const MIN_REPEATS_FOR_MISCONCEPTION = 2;
+
+// ---------- Wrong-option pattern detection ----------
+// Flags questions where the SAME wrong option keeps getting picked across
+// attempts (the question must have appeared in more than one exam for this
+// to be possible) — a signal of a specific misconception rather than a
+// random slip. Requires at least MIN_REPEATS_FOR_MISCONCEPTION identical
+// wrong picks before flagging, never from a single wrong answer.
+export function computeWrongOptionPatterns(records) {
+  const bucket = {};
+  records.forEach(r => {
+    if (!r.selected || r.isCorrect !== false) return;
+    if (!bucket[r.questionId]) {
+      bucket[r.questionId] = {
+        questionId: r.questionId, question_bn: r.question_bn,
+        subjectId: r.subjectId, chapterId: r.chapterId, topicId: r.topicId,
+        correctAnswer: r.correctAnswer, optionCounts: {}
+      };
+    }
+    const b = bucket[r.questionId];
+    b.optionCounts[r.selected] = (b.optionCounts[r.selected] || 0) + 1;
+  });
+
+  return Object.values(bucket)
+    .map(b => {
+      const top = Object.entries(b.optionCounts).sort((x, y) => y[1] - x[1])[0];
+      return { ...b, repeatedOption: top[0], repeatedCount: top[1] };
+    })
+    .filter(b => b.repeatedCount >= MIN_REPEATS_FOR_MISCONCEPTION)
+    .sort((a, b) => b.repeatedCount - a.repeatedCount);
+}
+
+// ---------- Marked-for-review accuracy ----------
+// Compares accuracy on self-flagged "uncertain" questions against everything
+// else — lets a student see whether their own uncertainty judgment tracks
+// their actual performance.
+export function computeMarkedForReviewStats(records) {
+  const markedAnswered = records.filter(r => r.isMarked && r.isAnswered);
+  if (markedAnswered.length === 0) return null;
+
+  const correct = markedAnswered.filter(r => r.isCorrect).length;
+  const wrong = markedAnswered.length - correct;
+  const accuracy = Math.round((correct / markedAnswered.length) * 1000) / 10;
+
+  const unmarkedAnswered = records.filter(r => !r.isMarked && r.isAnswered);
+  const unmarkedCorrect = unmarkedAnswered.filter(r => r.isCorrect).length;
+  const unmarkedAccuracy = unmarkedAnswered.length
+    ? Math.round((unmarkedCorrect / unmarkedAnswered.length) * 1000) / 10
+    : null;
+
+  return { markedCount: markedAnswered.length, correct, wrong, accuracy, unmarkedAccuracy };
+}
+
+const MIN_ATTEMPTS_FOR_TOPIC_TREND = 3;
+const TREND_FLAT_THRESHOLD = 5; // percentage points — smaller moves read as "flat", not noise-driven up/down
+
+// ---------- Per-topic trend direction (rising / falling / flat) ----------
+// Compares the average of the earliest half of a topic's per-exam accuracy
+// readings against the most recent half — same minimum-data discipline as
+// the rest of this file (never declared from too few attempts).
+export function computeTopicTrends(results, topicNameMap) {
+  const chronological = [...results].reverse(); // oldest -> newest
+  const bucket = {};
+  chronological.forEach(r => {
+    (r.topicBreakdown || []).forEach(t => {
+      const denom = (t.correct || 0) + (t.wrong || 0);
+      if (denom === 0) return;
+      if (!bucket[t.topicId]) bucket[t.topicId] = { topicId: t.topicId, name: topicNameMap[t.topicId] || "—", series: [] };
+      bucket[t.topicId].series.push(Math.round((t.correct / denom) * 100));
+    });
+  });
+
+  return Object.values(bucket).map(t => {
+    if (t.series.length < MIN_ATTEMPTS_FOR_TOPIC_TREND) {
+      return { ...t, direction: "unknown", diff: null };
+    }
+    const half = Math.floor(t.series.length / 2);
+    const earlyAvg = t.series.slice(0, half).reduce((a, b) => a + b, 0) / half;
+    const recentAvg = t.series.slice(-half).reduce((a, b) => a + b, 0) / half;
+    const diff = Math.round((recentAvg - earlyAvg) * 10) / 10;
+    let direction = "flat";
+    if (diff >= TREND_FLAT_THRESHOLD) direction = "up";
+    else if (diff <= -TREND_FLAT_THRESHOLD) direction = "down";
+    return { ...t, direction, diff };
+  });
+}
+
+// ---------- Exam history timeline ----------
+// Results are already fetched newest-first; this just picks the fields the
+// timeline needs so the page doesn't reach into raw result docs directly.
+export function buildExamHistoryTimeline(results) {
+  return results.map(r => ({
+    examId: r.examId,
+    examName: r.examName || "—",
+    submittedAt: r.submittedAt,
+    percentage: r.percentage,
+    accuracy: r.accuracy
+  }));
+}
+
 // ---------- Tiered Bengali performance labels (Part 18) ----------
 // Distinct from the boolean isWeak flag above (kept for backward compatibility
 // with existing dashboard code) — this gives a 5-tier label for richer display
