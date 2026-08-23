@@ -14,7 +14,7 @@
 <script type="module">
 import { initTheme, toggleTheme, icons, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
 import { getActiveStudent } from "../js/utils/student-utils.js";
-import { getUpcomingExams, getApprovedResults } from "../js/utils/results-utils.js";
+import { getUpcomingExams, getApprovedResults, getStudentResultStatusMap } from "../js/utils/results-utils.js";
 import { getSubjects, getChapters, buildNameMap } from "../js/utils/syllabus-utils.js";
 import { computeOverallStats, computeSubjectStats, computeTopicStats } from "../js/utils/analytics-utils.js";
 
@@ -51,7 +51,9 @@ async function loadUpcoming() {
   const el = document.getElementById("upcomingSection");
   el.innerHTML = `<p class="eyebrow mb-2">আসন্ন পরীক্ষা</p><div class="glass card skeleton" style="height:90px;margin-top:8px;"></div>`;
   try {
-    const [exams, subjects, chapters] = await Promise.all([getUpcomingExams(), getSubjects(), getChapters()]);
+    const [exams, subjects, chapters, resultMap] = await Promise.all([
+      getUpcomingExams(), getSubjects(), getChapters(), getStudentResultStatusMap(student.studentId)
+    ]);
     const subjectMap = buildNameMap(subjects);
     const chapterMap = buildNameMap(chapters);
 
@@ -68,6 +70,15 @@ async function loadUpcoming() {
       const dateStr = exam.examDate?.toDate ? exam.examDate.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" }) : "";
       const subjNames = (exam.subjectIds || []).map(id => subjectMap[id]).filter(Boolean).join(", ");
       const chapNames = (exam.chapterIds || []).map(id => chapterMap[id]).filter(Boolean).join(", ");
+      const own = resultMap[exam.id];
+      let actionHtml = "";
+      if (own?.status === "approved") {
+        actionHtml = `<a href="../student/result.html?resultId=${own.resultId}" class="btn btn-secondary mt-3">ফলাফল দেখুন</a>`;
+      } else if (own?.status === "pending") {
+        actionHtml = `<p class="text-xs text-muted mt-3">জমা দেওয়া হয়েছে — অনুমোদনের অপেক্ষায়।</p>`;
+      } else if (exam.status === "published") {
+        actionHtml = `<a href="../student/exam.html?examId=${exam.id}" class="btn btn-primary mt-3">পরীক্ষা শুরু করুন</a>`;
+      }
       return `
         <div class="glass card mt-2">
           <div class="flex justify-between items-center">
@@ -82,7 +93,7 @@ async function loadUpcoming() {
           </div>
           ${subjNames ? `<p class="text-xs text-muted mt-3">বিষয়: <span style="color:var(--text-secondary);">${subjNames}</span></p>` : ""}
           ${chapNames ? `<p class="text-xs text-muted mt-2">অধ্যায়: <span style="color:var(--text-secondary);">${chapNames}</span></p>` : ""}
-          ${exam.status === "published" ? `<a href="../student/exam.html?examId=${exam.id}" class="btn btn-primary mt-3">পরীক্ষা শুরু করুন</a>` : ""}
+          ${actionHtml}
         </div>
       `;
     }).join("");
