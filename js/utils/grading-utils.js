@@ -79,7 +79,7 @@ export function gradeAttempt({ snapshotQuestions, answers, startedAtMillis, subm
 // Combines the immutable snapshot with the student's stored answers —
 // never stored duplicated in the result document itself (Part 28: avoid
 // duplicating large question data; the snapshot is re-fetched instead).
-export function buildQuestionReview(snapshotQuestions, answers) {
+export function buildQuestionReview(snapshotQuestions, answers, questionTimes = {}) {
   return snapshotQuestions.map(q => {
     const studentAnswer = answers[q.questionId] || null;
     let status = "unanswered";
@@ -93,9 +93,18 @@ export function buildQuestionReview(snapshotQuestions, answers) {
       explanation_bn: q.explanation_bn || null,
       studentAnswer, correctAnswer: q.correctAnswer, status,
       marks: q.marks || 1,
+      timeSeconds: questionTimes[q.questionId] ?? null,
       subjectId: q.subjectId, chapterId: q.chapterId, topicId: q.topicId
     };
   });
+}
+
+// ---------- Top N slowest-answered questions (per-question time analysis) ----------
+export function getSlowestQuestions(review, limit = 3) {
+  return review
+    .filter(q => q.timeSeconds !== null && q.timeSeconds > 0)
+    .sort((a, b) => b.timeSeconds - a.timeSeconds)
+    .slice(0, limit);
 }
 
 // ---------- Formatting helpers shared by result/history/PDF pages ----------
