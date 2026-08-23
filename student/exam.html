@@ -37,7 +37,23 @@
     background: var(--surface-solid); color: var(--text-secondary);
   }
   .palette-cell.answered { background: var(--color-success); color: #072925; border-color: var(--color-success); }
+  .palette-cell.marked { border-color: #f2a93b; box-shadow: inset 0 0 0 1.5px #f2a93b; }
+  .palette-cell.marked.answered { background: var(--color-success); box-shadow: inset 0 0 0 2px #f2a93b; }
   .palette-cell.current { border-color: var(--color-accent); box-shadow: 0 0 0 2px var(--color-accent-soft); }
+
+  #timerDisplay.timer-warning { color: #f2a93b; }
+  #timerDisplay.timer-critical { color: var(--color-danger); animation: timerPulse 1s infinite; }
+  @keyframes timerPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.45; } }
+
+  .exam-progress-track { height: 6px; border-radius: 999px; background: var(--surface-border); overflow: hidden; }
+  .exam-progress-fill { height: 100%; background: var(--color-accent); transition: width 200ms; }
+
+  .review-toggle {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem;
+    padding: 6px 12px; border-radius: 999px; border: 1.5px solid var(--surface-border);
+    background: var(--surface-solid); color: var(--text-secondary); margin-top: 12px;
+  }
+  .review-toggle.active { border-color: #f2a93b; color: #f2a93b; background: #f2a93b22; }
 
   .modal-overlay {
     position: fixed; inset: 0; background: rgba(10,14,26,0.55);
@@ -77,6 +93,9 @@ let exam = null;
 let snapshot = null;
 let attemptState = null;
 let timerHandle = null;
+let questionStartMillis = null;
+let warned5min = false, warned1min = false;
+let examInProgress = false;
 
 if (!student) {
   window.location.href = "../index.html";
@@ -114,6 +133,8 @@ async function boot() {
     const resumable = await peekInProgressAttempt(examId, student.studentId);
     if (resumable) {
       attemptState = resumable;
+      attemptState.questionTimes = attemptState.questionTimes || {};
+      attemptState.markedForReview = attemptState.markedForReview || {};
       renderExamShell();
       startTimer();
       return;
@@ -175,6 +196,8 @@ async function renderIntro() {
     btn.disabled = true;
     btn.textContent = "শুরু করা হচ্ছে...";
     attemptState = await getOrStartAttempt(examId, student.studentId, exam.durationMinutes);
+    attemptState.questionTimes = attemptState.questionTimes || {};
+    attemptState.markedForReview = attemptState.markedForReview || {};
     renderExamShell();
     startTimer();
   });
@@ -194,12 +217,14 @@ function renderExamShell() {
         <p class="eyebrow" id="qCounter">প্রশ্ন ১ / ${snapshot.questions.length}</p>
         <button class="icon-btn" id="paletteBtn">${icons.layers}</button>
       </div>
+      <div class="exam-progress-track mt-2"><div class="exam-progress-fill" id="progressFill" style="width:0%;"></div></div>
+      <p class="text-xs text-muted mt-1" id="progressLabel"></p>
       <div id="questionBody" class="mt-3"></div>
     </div>
 
     <div class="flex gap-2 mt-4">
-      <button class="btn btn-secondary" id="prevBtn">${icons.arrowLeft} পূর্ববর্তী</button>
-      <button class="btn btn-primary" id="nextBtn">পরবর্তী ${icons.arrowRight}</button>
+      <button class="btn btn-secondary" id="prevBtn">${icons.arrowRight} পূর্ববর্তী</button>
+      <button class="btn btn-primary" id="nextBtn">পরবর্তী ${icons.arrowLeft}</button>
     </div>
 
     <button class="btn btn-danger mt-4" id="submitBtn">পরীক্ষা জমা দিন</button>
@@ -213,9 +238,10 @@ function renderExamShell() {
           </button>
         </div>
         <div class="palette-grid mt-3" id="paletteGrid"></div>
-        <div class="flex gap-3 mt-3 text-xs text-muted">
+        <div class="flex gap-3 mt-3 text-xs text-muted" style="flex-wrap:wrap;">
           <span><span class="palette-cell answered" style="display:inline-flex;width:16px;height:16px;vertical-align:middle;"></span> উত্তরিত</span>
           <span><span class="palette-cell" style="display:inline-flex;width:16px;height:16px;vertical-align:middle;"></span> অনুত্তরিত</span>
+          <span><span class="palette-cell marked" style="display:inline-flex;width:16px;height:16px;vertical-align:middle;"></span> চিহ্নিত</span>
         </div>
       </div>
     </div>
@@ -241,8 +267,19 @@ function renderExamShell() {
 
   window.addEventListener("online", updateConnBadge);
   window.addEventListener("offline", updateConnBadge);
+  if (!examInProgress) {
+    examInProgress = true;
+    window.addEventListener("beforeunload", leaveGuard);
+  }
+  questionStartMillis = Date.now();
 
   renderQuestion();
+}
+
+function leaveGuard(e) {
+  if (!examInProgress) return;
+  e.preventDefault();
+  e.returnValue = "";
 }
 
 function updateConnBadge() {
@@ -259,7 +296,12 @@ function renderQuestion() {
   document.getElementById("prevBtn").disabled = idx === 0;
   document.getElementById("nextBtn").disabled = idx === snapshot.questions.length - 1;
 
+  const answeredCount = Object.keys(attemptState.answers).length;
+  document.getElementById("progressFill").style.width = `${Math.round((answeredCount / snapshot.questions.length) * 100)}%`;
+  document.getElementById("progressLabel").textContent = `${answeredCount} / ${snapshot.questions.length} টি প্রশ্নের উত্তর দেওয়া হয়েছে`;
+
   const selected = attemptState.answers[q.questionId];
+  const isMarked = !!attemptState.markedForReview[q.questionId];
   const body = document.getElementById("questionBody");
   body.innerHTML = `
     <p class="lang-en" style="font-weight:600;">${q.question_en}</p>
@@ -273,11 +315,21 @@ function renderQuestion() {
         </button>
       `).join("")}
     </div>
+    <button type="button" class="review-toggle ${isMarked ? "active" : ""}" id="markReviewBtn">
+      ${isMarked ? "★ পর্যালোচনার জন্য চিহ্নিত" : "☆ পর্যালোচনার জন্য চিহ্নিত করুন"}
+    </button>
   `;
 
   body.querySelectorAll(".option-card").forEach(btn => {
     btn.addEventListener("click", () => selectAnswer(q.questionId, btn.dataset.letter));
   });
+  document.getElementById("markReviewBtn").addEventListener("click", () => toggleMarkForReview(q.questionId));
+}
+
+function toggleMarkForReview(questionId) {
+  attemptState.markedForReview[questionId] = !attemptState.markedForReview[questionId];
+  persistState();
+  renderQuestion();
 }
 
 function selectAnswer(questionId, letter) {
@@ -289,16 +341,29 @@ function selectAnswer(questionId, letter) {
 function navigate(delta) {
   const next = attemptState.currentIndex + delta;
   if (next < 0 || next >= snapshot.questions.length) return;
+  recordElapsed();
   attemptState.currentIndex = next;
   persistState();
   renderQuestion();
+}
+
+function recordElapsed() {
+  if (questionStartMillis == null) return;
+  const q = snapshot.questions[attemptState.currentIndex];
+  const elapsed = Math.round((Date.now() - questionStartMillis) / 1000);
+  if (elapsed > 0 && q) {
+    attemptState.questionTimes[q.questionId] = (attemptState.questionTimes[q.questionId] || 0) + elapsed;
+  }
+  questionStartMillis = Date.now();
 }
 
 function persistState() {
   saveLocalAttempt(examId, student.studentId, attemptState);
   syncToFirestoreDebounced(examId, student.studentId, {
     answers: attemptState.answers,
-    currentIndex: attemptState.currentIndex
+    currentIndex: attemptState.currentIndex,
+    questionTimes: attemptState.questionTimes,
+    markedForReview: attemptState.markedForReview
   });
 }
 
@@ -306,10 +371,12 @@ function openPalette() {
   const grid = document.getElementById("paletteGrid");
   grid.innerHTML = snapshot.questions.map((q, i) => {
     const answered = !!attemptState.answers[q.questionId];
+    const marked = !!attemptState.markedForReview[q.questionId];
     const isCurrent = i === attemptState.currentIndex;
-    return `<button class="palette-cell ${answered ? "answered" : ""} ${isCurrent ? "current" : ""}" data-idx="${i}">${i + 1}</button>`;
+    return `<button class="palette-cell ${answered ? "answered" : ""} ${marked ? "marked" : ""} ${isCurrent ? "current" : ""}" data-idx="${i}">${i + 1}</button>`;
   }).join("");
   grid.querySelectorAll("[data-idx]").forEach(btn => btn.addEventListener("click", () => {
+    recordElapsed();
     attemptState.currentIndex = Number(btn.dataset.idx);
     persistState();
     renderQuestion();
@@ -329,7 +396,19 @@ function startTimer() {
 function tick() {
   const remaining = attemptState.endAtMillis - Date.now();
   const display = document.getElementById("timerDisplay");
-  if (display) display.textContent = formatHms(remaining);
+  if (display) {
+    display.textContent = formatHms(remaining);
+    display.classList.toggle("timer-critical", remaining <= 60 * 1000 && remaining > 0);
+    display.classList.toggle("timer-warning", remaining <= 5 * 60 * 1000 && remaining > 60 * 1000);
+  }
+  if (remaining <= 5 * 60 * 1000 && remaining > 4 * 60 * 1000 && !warned5min) {
+    warned5min = true;
+    showToast("আর মাত্র ৫ মিনিট বাকি আছে।", "error");
+  }
+  if (remaining <= 60 * 1000 && remaining > 0 && !warned1min) {
+    warned1min = true;
+    showToast("আর মাত্র ১ মিনিট বাকি — পরীক্ষা স্বয়ংক্রিয়ভাবে জমা হবে।", "error");
+  }
   if (remaining <= 0) {
     clearInterval(timerHandle);
     doSubmit(true);
@@ -341,6 +420,7 @@ async function doSubmit(isAutoSubmit) {
   if (submitting) return;
   submitting = true;
   clearInterval(timerHandle);
+  recordElapsed();
 
   const modal = document.getElementById("submitModal");
   if (modal) modal.classList.add("hidden");
@@ -351,8 +431,11 @@ async function doSubmit(isAutoSubmit) {
       examId, studentId: student.studentId, examName: exam.name,
       snapshotQuestions: snapshot.questions,
       answers: attemptState.answers,
+      questionTimes: attemptState.questionTimes,
       startedAtMillis: attemptState.startedAtMillis
     });
+    examInProgress = false;
+    window.removeEventListener("beforeunload", leaveGuard);
     window.location.href = `../student/result.html?resultId=${result.resultId}&justSubmitted=1`;
   } catch (err) {
     console.error(err);
