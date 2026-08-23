@@ -64,6 +64,8 @@ export async function peekInProgressAttempt(examId, studentId) {
         examId, studentId,
         answers: data.answers || {},
         currentIndex: data.currentIndex || 0,
+        questionTimes: data.questionTimes || {},
+        markedForReview: data.markedForReview || {},
         startedAtMillis: data.startedAtMillis,
         endAtMillis: data.endAtMillis,
         status: "in-progress"
@@ -86,14 +88,14 @@ export async function getOrStartAttempt(examId, studentId, durationMinutes) {
 
   const startedAtMillis = Date.now();
   const endAtMillis = startedAtMillis + durationMinutes * 60 * 1000;
-  const fresh = { examId, studentId, answers: {}, currentIndex: 0, startedAtMillis, endAtMillis, status: "in-progress" };
+  const fresh = { examId, studentId, answers: {}, currentIndex: 0, questionTimes: {}, markedForReview: {}, startedAtMillis, endAtMillis, status: "in-progress" };
   saveLocalAttempt(examId, studentId, fresh);
 
   try {
     await setDoc(doc(db, "attempts", attemptDocId(examId, studentId)), {
       examId, studentId, durationMinutes,
       startedAtMillis, endAtMillis,
-      answers: {}, currentIndex: 0,
+      answers: {}, currentIndex: 0, questionTimes: {}, markedForReview: {},
       status: "in-progress",
       lastSyncedAt: serverTimestamp()
     });
@@ -121,7 +123,7 @@ export function syncToFirestoreDebounced(examId, studentId, partialData, delayMs
 }
 
 // ---------- Final submission: grade, write pending result, lock the attempt ----------
-export async function submitAttempt({ examId, studentId, examName, snapshotQuestions, answers, startedAtMillis }) {
+export async function submitAttempt({ examId, studentId, examName, snapshotQuestions, answers, startedAtMillis, questionTimes }) {
   const submittedAtMillis = Date.now();
   const grade = gradeAttempt({ snapshotQuestions, answers, startedAtMillis, submittedAtMillis });
   const id = attemptDocId(examId, studentId);
@@ -144,6 +146,7 @@ export async function submitAttempt({ examId, studentId, examName, snapshotQuest
     chapterBreakdown: grade.chapterBreakdown,
     topicBreakdown: grade.topicBreakdown,
     answers,
+    questionTimes: questionTimes || {},
     status: "pending",
     approvedAt: null
   });
