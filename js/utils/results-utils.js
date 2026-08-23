@@ -27,6 +27,16 @@ export async function getUpcomingExams() {
 // Same reasoning as above: two equality filters (studentId, status) PLUS
 // orderBy(submittedAt) needs a composite index. Fetch with filters only,
 // sort here.
+// ---------- ALL approved results across every student (admin class-wide analytics) ----------
+// Same no-orderBy reasoning as everywhere else in this file — sort client-side.
+export async function getAllApprovedResults() {
+  const q = query(collection(db, "results"), where("status", "==", "approved"));
+  const snap = await getDocs(q);
+  return snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (b.submittedAt?.toMillis?.() ?? 0) - (a.submittedAt?.toMillis?.() ?? 0));
+}
+
 export async function getApprovedResults(studentId) {
   const q = query(
     collection(db, "results"),
@@ -86,4 +96,5 @@ export async function getChapterExamFrequencyMap(chapterIds) {
     });
   }
   return freq;
-}
+                     }
+       
