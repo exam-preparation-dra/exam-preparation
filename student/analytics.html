@@ -38,6 +38,33 @@ async function render() {
   load();
 }
 
+// ---------- Trend line chart: percentage across the last N exams, oldest → newest.
+// Plain SVG (no chart library) — a polyline with a point + native <title>
+// tooltip per exam so the student can see which exam each point belongs to. ----------
+function buildTrendSvg(trend) {
+  const w = 320, h = 90, pad = 10;
+  const values = trend.map(t => t.value ?? 0);
+  const step = trend.length > 1 ? (w - pad * 2) / (trend.length - 1) : 0;
+  const points = values.map((v, i) => {
+    const x = pad + step * i;
+    const y = h - pad - (v / 100) * (h - pad * 2);
+    return { x, y, v, label: trend[i].label };
+  });
+  const pathD = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+
+  return `
+    <svg viewBox="0 0 ${w} ${h}" style="width:100%;height:90px;margin-top:8px;">
+      <path d="${pathD}" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      ${points.map(p => `
+        <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4" fill="var(--color-accent)">
+          <title>${p.label || "পরীক্ষা"}: ${p.v}%</title>
+        </circle>
+      `).join("")}
+    </svg>
+    <p class="text-xs text-muted mt-1">সর্বশেষ ${trend.length} টি পরীক্ষার শতাংশ, পুরনো থেকে নতুন — বিন্দুতে ট্যাপ/হোভার করে পরীক্ষার নাম দেখুন</p>
+  `;
+}
+
 async function load() {
   const body = document.getElementById("body");
   try {
@@ -58,12 +85,7 @@ async function load() {
     body.innerHTML = `
       <div class="glass card">
         <p class="eyebrow">সার্বিক ধারা</p>
-        ${overall.trend ? `
-          <div class="flex items-end gap-2 mt-3" style="height:70px;">
-            ${overall.trend.map(t => `<div style="flex:1;background:linear-gradient(180deg,var(--color-accent),#ff8a3d);border-radius:6px 6px 0 0;height:${Math.max(6, (t.value || 0))}%;" title="${t.value ?? '—'}%"></div>`).join("")}
-          </div>
-          <p class="text-xs text-muted mt-2">সর্বশেষ ${overall.trend.length} টি পরীক্ষার শতাংশ, পুরনো থেকে নতুন</p>
-        ` : `<p class="text-xs text-muted mt-2">ধারা দেখতে আরও পরীক্ষার ফলাফল প্রয়োজন।</p>`}
+        ${overall.trend ? buildTrendSvg(overall.trend) : `<p class="text-xs text-muted mt-2">ধারা দেখতে আরও পরীক্ষার ফলাফল প্রয়োজন।</p>`}
       </div>
 
       <p class="eyebrow mt-5">বিষয়ভিত্তিক বিশ্লেষণ</p>
