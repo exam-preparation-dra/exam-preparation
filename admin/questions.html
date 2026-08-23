@@ -19,7 +19,7 @@ import {
   addQuestion, updateQuestion, setQuestionActive, deleteQuestion, duplicateQuestion,
   getQuestionsPage, filterByText
 } from "../js/utils/question-utils.js";
-import { uploadQuestionImage } from "../js/utils/storage-utils.js";
+import { toDirectImageUrl } from "../js/utils/image-utils.js";
 import { attachVoiceInput, isVoiceInputSupported } from "../js/utils/voice-input.js";
 
 initTheme();
@@ -128,8 +128,9 @@ function shellTemplate() {
       </div>
 
       <div class="field">
-        <label>ছবি (ঐচ্ছিক)</label>
-        <input class="input" type="file" id="imageInput" accept="image/*" style="padding:10px;">
+        <label>ছবির লিংক (ঐচ্ছিক)</label>
+        <input class="input" type="url" id="imageUrlInput" placeholder="Google Drive শেয়ার লিংক বা সরাসরি ছবির লিংক পেস্ট করুন">
+        <p class="text-xs text-muted mt-1">Google Drive লিংক দিলে ফাইলের শেয়ারিং অবশ্যই "যেকোনো লিংক থাকলে দেখতে পারবে" করে দিতে হবে।</p>
         <img id="imagePreview" class="hidden mt-2" style="max-height:140px;border-radius:var(--radius-sm);">
       </div>
 
@@ -303,6 +304,7 @@ function openForm(id) {
   if (!id) {
     document.getElementById("formTitle").textContent = "নতুন প্রশ্ন যোগ করুন";
     form.reset();
+    document.getElementById("imageUrlInput").value = "";
     document.getElementById("imagePreview").classList.add("hidden");
     document.getElementById("marksInput").value = 1;
   } else {
@@ -323,6 +325,7 @@ function openForm(id) {
     document.getElementById("formChapter").value = q.chapterId;
     populateFormTopics(q.chapterId, q.subjectId);
     document.getElementById("formTopic").value = q.topicId;
+    document.getElementById("imageUrlInput").value = q.imageUrl || "";
     const preview = document.getElementById("imagePreview");
     if (q.imageUrl) { preview.src = q.imageUrl; preview.classList.remove("hidden"); }
     else preview.classList.add("hidden");
@@ -336,13 +339,13 @@ function closeForm() {
 }
 
 function setupImagePreview() {
-  document.getElementById("imageInput").addEventListener("change", (e) => {
-    const file = e.target.files[0];
+  document.getElementById("imageUrlInput").addEventListener("input", debounce((e) => {
     const preview = document.getElementById("imagePreview");
-    if (!file) { preview.classList.add("hidden"); return; }
-    preview.src = URL.createObjectURL(file);
+    const url = toDirectImageUrl(e.target.value);
+    if (!url) { preview.classList.add("hidden"); return; }
+    preview.src = url;
     preview.classList.remove("hidden");
-  });
+  }, 400));
 }
 
 function setupVoiceButton() {
@@ -390,10 +393,8 @@ async function handleSubmit(e) {
       throw new Error("বিষয়, অধ্যায় ও টপিক অবশ্যই নির্বাচন করতে হবে। আগে সিলেবাস ব্যবস্থাপনা থেকে এগুলো যোগ করুন।");
     }
 
-    const imageFile = document.getElementById("imageInput").files[0];
-    if (imageFile) {
-      payload.imageUrl = await uploadQuestionImage(imageFile, editingId || "new");
-    }
+    const imageUrlRaw = document.getElementById("imageUrlInput").value.trim();
+    payload.imageUrl = imageUrlRaw ? toDirectImageUrl(imageUrlRaw) : null;
 
     if (editingId) {
       await updateQuestion(editingId, payload);
