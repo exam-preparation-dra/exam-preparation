@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ক্লাস বিশ্লেষণ — অ্যাডমিন</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="app-shell app-shell--wide" id="shell">
+  <div class="state-block"><div class="spinner"></div></div>
+</div>
+
+<script type="module">
+import { initTheme, toggleTheme, icons, renderState, showToast } from "../js/utils/ui-utils.js";
+import { requireAdmin, adminLogout } from "../js/utils/auth.js";
+import { getAllApprovedResults } from "../js/utils/results-utils.js";
+import { getSubjects, getChapters, getTopics, buildNameMap } from "../js/utils/syllabus-utils.js";
+import {
+  computeOverallStats, computeSubjectStats, computeChapterStats,
+  computeTopicStats, computeStudentLeaderboard
+} from "../js/utils/analytics-utils.js";
+import { db } from "../js/firebase/firebase-config.js";
+import { collection, getDocs, orderBy, query } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+initTheme();
+const shell = document.getElementById("shell");
+
+requireAdmin(() => {
+  shell.innerHTML = `
+    <div class="topbar">
+      <a href="../admin/dashboard.html" class="icon-btn">${icons.arrowLeft}</a>
+      <h2 style="font-size:1.05rem;">ক্লাস বিশ্লেষণ (সব শিক্ষার্থী)</h2>
+      <div class="flex gap-2">
+        <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-thumb"></span></button>
+        <button class="icon-btn" id="logoutBtn">${icons.arrowRight}</button>
+      </div>
+    </div>
+    <div id="body" class="mt-3"><div class="glass card skeleton" style="height:200px;"></div></div>
+  `;
+  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+  document.getElementById("logoutBtn").addEventListener("click", adminLogout);
+  load();
+});
+
+async function loadAllStudents() {
+  const snap = await getDocs(query(collection(db, "students"), orderBy("sequenceNumber")));
+  return snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+}
+
+async function load() {
+  const body = document.getElementById("body");
+  try {
+    const [results, students, subjects, chapters, topics] = await Promise.all([
+      getAllApprovedResults(), loadAllStudents(), getSubjects(), getChapters(), getTopics()
+    ]);
+
+    if (results.length === 0) {
+      renderState(body, "empty", "এখনো কোনো অনুমোদিত ফলাফল নেই। ফলাফল অনুমোদনের পর এখানে ক্লাসের সামগ্রিক বিশ্লেষণ দেখা যাবে।");
+      return;
+    }
+
+    const studentNameMap = {};
+    students.forEach(s => { studentNameMap[s.studentId] = s.name; });
+
+    const overall = computeOverallStats(results);
+    const leaderboard = computeStudentLeaderboard(results, studentNameMap);
+    const subjectStats = computeSubjectStats(results, buildNameMap(subjects));
+    const chapterStats = computeChapterStats(results, buildNameMap(chapters))
+      .sort((a, b) => (a.accuracy ?? 100) - (b.accuracy ?? 100));
+    const topicStats = computeTopicStats(results, buildNameMap(topics))
+      .filter(t => t.hasEnoughData)
+      .sort((a, b) => (a.accuracy ?? 100) - (b.accuracy ?? 100))
+      .slice(0, 8);
+
+    body.innerHTML = `
+      <div class="grid-2">
+        <div class="glass card"><p class="text-xs text-muted">মোট অনুমোদিত ফলাফল</p><p style="font-size:1.4rem;font-weight:800;">${results.length}</p></div>
+        <div class="glass card"><p class="text-xs text-muted">অংশগ্রহণকারী শিক্ষার্থী</p><p style="font-size:1.4rem;font-weight:800;">${leaderboard.length}</p></div>
+        <div class="glass card"><p class="text-xs text-muted">ক্লাস গড় শতাংশ</p><p style="font-size:1.4rem;font-weight:800;color:var(--color-accent);">${overall.avgPercentage ?? "—"}%</p></div>
+        <div class="glass card"><p class="text-xs text-muted">ক্লাস গড় সঠিকতা</p><p style="font-size:1.4rem;font-weight:800;">${overall.avgAccuracy ?? "—"}%</p></div>
+      </div>
+
+      <p class="eyebrow mt-5">লিডারবোর্ড (গড় শতাংশ অনুযায়ী)</p>
+      <div class="glass card mt-2" style="padding:0;overflow:hidden;">
+        ${leaderboard.map((s, i) => `
+          <div class="flex justify-between items-center" style="padding:12px 16px;${i > 0 ? "border-top:1px solid var(--surface-border);" : ""}">
+            <div class="flex items-center gap-3">
+              <span style="width:24px;font-weight:800;color:${i === 0 ? "var(--color-accent)" : "var(--text-secondary)"};">${i + 1}</span>
+              <div>
+                <p style="font-weight:700;">${s.name}</p>
+                <p class="text-xs text-muted">${s.examsTaken} টি পরীক্ষা • সঠিকতা ${s.accuracy ?? "—"}%</p>
+              </div>
+            </div>
+            <p style="font-weight:800;color:var(--color-accent);">${s.avgPercentage ?? "—"}%</p>
+          </div>
+        `).join("")}
+      </div>
+
+      <p class="eyebrow mt-5">বিষয়ভিত্তিক ক্লাস পারফরম্যান্স</p>
+      ${subjectStats.length === 0 ? `<p class="text-xs text-muted mt-2">তথ্য নেই।</p>` : subjectStats.map(s => `
+        <div class="glass card mt-2">
+          <div class="flex justify-between items-center">
+            <p style="font-weight:700;">${s.name}</p>
+            <p style="font-weight:800;color:var(--color-accent);">${s.accuracy ?? "—"}%</p>
+          </div>
+          <div class="progress-track mt-2"><div class="progress-fill" style="width:${s.accuracy ?? 0}%;"></div></div>
+          <p class="text-xs text-muted mt-2">সঠিক ${s.correct} • ভুল ${s.wrong} • মোট ${s.attempts} বার এসেছে (সব শিক্ষার্থী মিলিয়ে)</p>
+        </div>
+      `).join("")}
+
+      <p class="eyebrow mt-5">সবচেয়ে দুর্বল অধ্যায় (ক্লাসভিত্তিক)</p>
+      ${chapterStats.length === 0 ? `<p class="text-xs text-muted mt-2">তথ্য নেই।</p>` : chapterStats.slice(0, 8).map(c => `
+        <div class="glass card mt-2 flex justify-between items-center">
+          <p style="font-weight:600;">${c.name}</p>
+          <p style="font-weight:700;color:${(c.accuracy ?? 100) < 50 ? "var(--color-danger)" : "var(--color-accent)"};">${c.accuracy ?? "—"}%</p>
+        </div>
+      `).join("")}
+
+      <p class="eyebrow mt-5">সবচেয়ে দুর্বল টপিক (ক্লাসভিত্তিক, কমপক্ষে ৩ বার পরীক্ষিত)</p>
+      ${topicStats.length === 0 ? `<p class="text-xs text-muted mt-2">পর্যাপ্ত তথ্য নেই।</p>` : topicStats.map(t => `
+        <div class="glass card mt-2 flex justify-between items-center">
+          <p style="font-weight:600;">${t.name}${t.isWeak ? ` <span class="badge badge-pending">দুর্বল</span>` : ""}</p>
+          <p style="font-weight:700;color:${t.isWeak ? "var(--color-danger)" : "var(--color-accent)"};">${t.accuracy ?? "—"}%</p>
+        </div>
+      `).join("")}
+    `;
+  } catch (err) {
+    console.error(err);
+    renderState(body, "error", "বিশ্লেষণ লোড করা যায়নি।");
+  }
+}
+</script>
+</body>
+</html>
