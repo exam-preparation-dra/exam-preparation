@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI প্রশ্ন ইম্পোর্ট — অ্যাডমিন</title>
 <link rel="stylesheet" href="../css/style.css">
+<link rel="manifest" href="../admin/manifest.json">
+<meta name="theme-color" content="#ff6a2b">
 </head>
 <body>
 <div class="app-shell app-shell--wide" id="shell">
@@ -14,6 +16,7 @@
 <script type="module">
 import { initTheme, toggleTheme, icons, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
+import { initAdminPwaInstall } from "../js/utils/pwa-install.js";
 import { getFullSyllabusTree } from "../js/utils/syllabus-utils.js";
 import { parseAiImportText, buildAiPromptTemplate } from "../js/utils/ai-import-utils.js";
 import { addQuestion } from "../js/utils/question-utils.js";
@@ -27,6 +30,7 @@ requireAdmin(() => {
   shell.innerHTML = template();
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
   document.getElementById("logoutBtn").addEventListener("click", adminLogout);
+  initAdminPwaInstall("installBtn");
   document.getElementById("parseBtn").addEventListener("click", handleParse);
   document.getElementById("copyPromptBtn").addEventListener("click", handleCopyPrompt);
   init();
@@ -39,6 +43,7 @@ function template() {
       <h2 style="font-size:1.05rem;">AI প্রশ্ন ইম্পোর্ট</h2>
       <div class="flex gap-2">
         <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-thumb"></span></button>
+        <button class="icon-btn hidden" id="installBtn" title="অ্যাপ ইনস্টল করুন"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v13m0 0l-4-4m4 4l4-4M5 21h14"/></svg></button>
         <button class="icon-btn" id="logoutBtn">${icons.arrowRight}</button>
       </div>
     </div>
