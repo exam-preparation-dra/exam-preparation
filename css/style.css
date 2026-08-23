@@ -358,3 +358,54 @@ p { color: var(--text-secondary); }
   transition: transform var(--transition);
 }
 [data-theme="dark"] .theme-toggle-thumb { transform: translateX(22px); }
+
+/* =========================================================
+   PRINT / SAVE-AS-PDF FIX
+   Chrome's "Print / Save as PDF" renders on a plain white page and does
+   NOT reliably repaint the app's dark background gradient — but it DOES
+   still apply whatever theme (light/dark) was active on screen. So if a
+   student had dark mode on, --text-primary/--text-muted resolve to
+   near-white values, which then sit on a plain white printed page and
+   become almost invisible (exactly the faded headings in the PDF). This
+   block forces every themed color back to solid, high-contrast, light-mode
+   values specifically for print/PDF output, regardless of which theme was
+   active on screen, and drops screen-only chrome (theme toggle, nav
+   buttons) that makes no sense on paper.
+   ========================================================= */
+@media print {
+  :root, [data-theme="dark"] {
+    --bg-app: #ffffff;
+    --bg-mesh-1: transparent;
+    --bg-mesh-2: transparent;
+    --surface: #ffffff;
+    --surface-solid: #ffffff;
+    --surface-border: #d8dce8;
+    --text-primary: #12172b;
+    --text-secondary: #4a5170;
+    --text-muted: #5b6178;
+    --shadow-soft: none;
+    --shadow-lift: none;
+  }
+
+  body { background: #ffffff !important; }
+
+  .glass, .card {
+    background: #ffffff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+    border: 1px solid #dde1ec !important;
+    break-inside: avoid;
+  }
+
+  /* Screen-only chrome that has no place on a printed page */
+  .theme-toggle, #themeToggle, #logoutBtn, #installBtn,
+  .icon-btn, .btn, a.btn, button {
+    display: none !important;
+  }
+
+  /* Badges keep their color but need a visible border on plain paper,
+     since their soft tinted backgrounds often don't survive printing. */
+  .badge { border: 1px solid currentColor; }
+   }
+   
