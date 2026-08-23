@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI প্রশ্ন ইম্পোর্ট — অ্যাডমিন</title>
 <link rel="stylesheet" href="../css/style.css">
-<link rel="manifest" href="../admin/manifest.json">
+<link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#ff6a2b">
 </head>
 <body>
@@ -16,7 +16,7 @@
 <script type="module">
 import { initTheme, toggleTheme, icons, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
-import { initAdminPwaInstall } from "../js/utils/pwa-install.js";
+import { initAdminPwaInstall } from "../pwa-install.js";
 import { getFullSyllabusTree } from "../js/utils/syllabus-utils.js";
 import { parseAiImportText, buildAiPromptTemplate } from "../js/utils/ai-import-utils.js";
 import { addQuestion } from "../js/utils/question-utils.js";
