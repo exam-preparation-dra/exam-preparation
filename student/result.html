@@ -22,7 +22,7 @@ import { initTheme, toggleTheme, icons, renderState, showToast } from "../js/uti
 import { getActiveStudent } from "../js/utils/student-utils.js";
 import { getResultById, getExamSnapshot } from "../js/utils/results-utils.js";
 import { getSubjects, getChapters, getTopics, buildNameMap } from "../js/utils/syllabus-utils.js";
-import { buildQuestionReview, formatSeconds } from "../js/utils/grading-utils.js";
+import { buildQuestionReview, formatSeconds, getSlowestQuestions } from "../js/utils/grading-utils.js";
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -85,7 +85,8 @@ function renderPending() {
 
 async function renderApproved() {
   const snapshot = await getExamSnapshot(result.examId);
-  const review = snapshot ? buildQuestionReview(snapshot.questions, result.answers || {}) : [];
+  const review = snapshot ? buildQuestionReview(snapshot.questions, result.answers || {}, result.questionTimes || {}) : [];
+  const slowest = getSlowestQuestions(review, 3);
 
   shell.innerHTML = `
     <div class="topbar">
@@ -131,6 +132,17 @@ async function renderApproved() {
       `).join("")}
     </div>` : ""}
 
+    ${slowest.length ? `
+    <div class="glass card mt-4">
+      <p class="eyebrow">সবচেয়ে বেশি সময় নেওয়া প্রশ্ন</p>
+      ${slowest.map((q, i) => `
+        <div class="flex justify-between items-center mt-2">
+          <p class="text-sm" style="flex:1;">${i + 1}. ${q.question_bn.length > 50 ? q.question_bn.slice(0, 50) + "…" : q.question_bn}</p>
+          <p class="text-sm" style="font-weight:700;color:var(--color-accent);white-space:nowrap;margin-right:8px;">${q.timeSeconds} সে.</p>
+        </div>
+      `).join("")}
+    </div>` : ""}
+
     <div class="flex gap-2 mt-4">
       <button class="btn btn-secondary" id="pdfBtn">ফলাফল PDF ডাউনলোড</button>
       <button class="btn btn-secondary" id="shareBtn">PDF শেয়ার করুন</button>
@@ -156,6 +168,7 @@ async function renderApproved() {
             ${q.status === "correct" ? "সঠিক" : q.status === "wrong" ? "ভুল" : "অনুত্তরিত"}
           </span>
         </div>
+        ${q.timeSeconds !== null ? `<p class="text-xs text-muted mt-1">সময় ব্যয়: ${q.timeSeconds} সেকেন্ড</p>` : ""}
         <p class="mt-2" style="font-weight:600;">${q.question_bn}</p>
         <p class="text-xs text-muted lang-en">${q.question_en}</p>
         ${q.imageUrl ? `<img src="${q.imageUrl}" style="max-height:120px;border-radius:8px;margin-top:8px;">` : ""}
