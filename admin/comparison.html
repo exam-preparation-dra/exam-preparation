@@ -17,11 +17,19 @@ import { requireAdmin, adminLogout } from "../js/utils/auth.js";
 import { getActiveStudents } from "../js/utils/student-utils.js";
 import { getApprovedResults } from "../js/utils/results-utils.js";
 import { getSubjects, getChapters, getTopics, buildNameMap } from "../js/utils/syllabus-utils.js";
-import { computeStudentSummary, mergeStatsForDisplay } from "../js/utils/comparison-utils.js";
+import {
+  computeStudentSummary, mergeStatsForDisplay, computeLeaderboard,
+  computeHeadToHead, getCommonExamOptions, computeExamComparison, computeTimeEfficiency
+} from "../js/utils/comparison-utils.js";
+import { formatSeconds } from "../js/utils/grading-utils.js";
 
 initTheme();
 const shell = document.getElementById("shell");
 const COLORS = ["var(--color-accent)", "var(--color-info)", "#a855f7", "#2dd4bf", "#f43f5e"];
+
+let summaries = [];
+let summaryById = {};
+let studentsResults = [];
 
 requireAdmin(() => {
   shell.innerHTML = `
@@ -44,6 +52,15 @@ function bar(value, color) {
   return `<div class="progress-track mt-1"><div class="progress-fill" style="width:${value ?? 0}%;background:${color};"></div></div>`;
 }
 
+function formatDate(ts) {
+  const d = ts?.toDate?.();
+  if (!d) return "—";
+  return d.toLocaleDateString("bn-BD", { year: "numeric", month: "short", day: "numeric" });
+}
+
+const RANK_LABELS = { 1: "১ম", 2: "২য়", 3: "৩য়" };
+function rankLabel(rank) { return RANK_LABELS[rank] || `${rank}তম`; }
+
 async function load() {
   const body = document.getElementById("body");
   try {
@@ -55,15 +72,30 @@ async function load() {
     const [subjects, chapters, topics] = await Promise.all([getSubjects(), getChapters(), getTopics()]);
     const subjectMap = buildNameMap(subjects), chapterMap = buildNameMap(chapters), topicMap = buildNameMap(topics);
 
-    const summaries = await Promise.all(students.map(async s => {
-      const results = await getApprovedResults(s.studentId);
-      return computeStudentSummary(s, results, subjectMap, chapterMap, topicMap);
-    }));
+    studentsResults = await Promise.all(students.map(async s => ({
+      student: s, results: await getApprovedResults(s.studentId)
+    })));
+
+    summaries = studentsResults.map(({ student, results }) =>
+      computeStudentSummary(student, results, subjectMap, chapterMap, topicMap)
+    );
+    summaryById = Object.fromEntries(summaries.map(s => [s.studentId, s]));
 
     if (summaries.every(s => !s.hasData)) {
       renderState(body, "empty", "তুলনার জন্য এখনো পর্যাপ্ত অনুমোদিত ফলাফল নেই।");
       return;
     }
+
+    const leaderboard = computeLeaderboard(summaries);
+    const topicRows = mergeStatsForDisplay(summaries, "topicStats", "topicId");
+    const commonExams = getCommonExamOptions(studentsResults);
+    const timeEfficiency = computeTimeEfficiency(summaries);
+
+    // Head-to-head default pair: top two on the leaderboard (this page has no
+    // single "current student" — it's admin-facing — so we default to the
+    // two most-active/best-ranked students rather than a logged-in student).
+    const defaultA = leaderboard[0]?.studentId ?? summaries[0]?.studentId;
+    const defaultB = leaderboard[1]?.studentId ?? summaries.find(s => s.studentId !== defaultA)?.studentId;
 
     body.innerHTML = `
       <div class="glass card">
@@ -80,24 +112,74 @@ async function load() {
         `).join("")}
       </div>
 
+      <p class="eyebrow mt-5">লিডারবোর্ড</p>
+      <div class="glass card mt-2">
+        ${leaderboard.map(s => `
+          <div class="flex justify-between items-center" style="padding:8px 0;border-bottom:1px solid var(--color-border, rgba(128,128,128,0.15));">
+            <div class="flex items-center gap-2">
+              <span class="badge badge-pending">${rankLabel(s.rank)}</span>
+              <p style="font-weight:600;">${s.name}</p>
+            </div>
+            <p style="font-weight:800;color:var(--color-accent);">${s.avgPercentage}%</p>
+          </div>
+        `).join("")}
+      </div>
+
       <p class="eyebrow mt-5">বিষয়ভিত্তিক তুলনা</p>
       ${renderMergedTable(mergeStatsForDisplay(summaries, "subjectStats", "subjectId"), summaries)}
 
       <p class="eyebrow mt-5">অধ্যায়ভিত্তিক তুলনা</p>
       ${renderMergedTable(mergeStatsForDisplay(summaries, "chapterStats", "chapterId"), summaries)}
+
+      <p class="eyebrow mt-5">টপিকভিত্তিক তুলনা</p>
+      ${renderMergedTable(topicRows, summaries)}
+
+      <p class="eyebrow mt-5">⭐ হেড-টু-হেড তুলনা</p>
+      <div class="glass card mt-2">
+        <div class="flex gap-2 items-center">
+          <select id="h2hSelectA" class="select" style="flex:1;"></select>
+          <span class="text-xs text-muted">বনাম</span>
+          <select id="h2hSelectB" class="select" style="flex:1;"></select>
+        </div>
+      </div>
+      <div id="h2hBody" class="mt-2"></div>
+
+      <p class="eyebrow mt-5">পরীক্ষা-ভিত্তিক তুলনা</p>
+      <div class="glass card mt-2">
+        <select id="examSelect" class="select" style="width:100%;">
+          ${commonExams.length === 0 ? `<option value="">তুলনাযোগ্য পরীক্ষা নেই</option>` : commonExams.map(e => `<option value="${e.examId}">${e.examName} — ${formatDate(e.submittedAt)}</option>`).join("")}
+        </select>
+      </div>
+      <div id="examCompareBody" class="mt-2"></div>
+
+      <p class="eyebrow mt-5">সময়-দক্ষতা তুলনা</p>
+      ${timeEfficiency.length === 0 ? `<p class="text-xs text-muted mt-2">তথ্য নেই।</p>` : `
+        <div class="glass card mt-2">
+          <p class="text-xs text-muted mb-2">কম সময়ে ভালো ফলাফল করছে এমন ক্রম অনুযায়ী</p>
+          ${timeEfficiency.map((s, i) => `
+            <div class="flex justify-between items-center mt-2">
+              <p class="text-xs" style="font-weight:600;">${s.name}</p>
+              <p class="text-xs">গড় সময়/প্রশ্ন ${formatSeconds(s.avgTimePerQuestionSeconds)} • সঠিকতা ${s.avgAccuracy}%</p>
+            </div>
+          `).join("")}
+        </div>
+      `}
     `;
+
+    setupHeadToHead(defaultA, defaultB);
+    setupExamComparison(commonExams);
   } catch (err) {
     console.error(err);
     renderState(body, "error", "তুলনা লোড করা যায়নি।");
   }
 }
 
-function renderMergedTable(rows, summaries) {
+function renderMergedTable(rows, summariesArg) {
   if (rows.length === 0) return `<p class="text-xs text-muted mt-2">তথ্য নেই।</p>`;
   return rows.map(row => `
     <div class="glass card mt-2">
       <p style="font-weight:600;">${row.name}</p>
-      ${summaries.filter(s => s.hasData).map((s, i) => `
+      ${summariesArg.filter(s => s.hasData).map((s, i) => `
         <div class="flex justify-between items-center mt-2">
           <p class="text-xs text-muted">${s.name}</p>
           <p class="text-xs" style="font-weight:700;color:${COLORS[i % COLORS.length]};">${row[s.studentId] ?? "—"}${row[s.studentId] !== null && row[s.studentId] !== undefined ? "%" : ""}</p>
@@ -106,6 +188,106 @@ function renderMergedTable(rows, summaries) {
       `).join("")}
     </div>
   `).join("");
+}
+
+// ---------- Head-to-head: two selectors + side-by-side rows with ahead/behind arrows ----------
+function setupHeadToHead(defaultA, defaultB) {
+  const selA = document.getElementById("h2hSelectA");
+  const selB = document.getElementById("h2hSelectB");
+  const options = summaries.map(s => `<option value="${s.studentId}">${s.name}</option>`).join("");
+  selA.innerHTML = options;
+  selB.innerHTML = options;
+  selA.value = defaultA;
+  selB.value = defaultB;
+
+  const rerender = () => renderHeadToHead(selA.value, selB.value);
+  selA.addEventListener("change", rerender);
+  selB.addEventListener("change", rerender);
+  rerender();
+}
+
+function h2hArrow(ahead, side) {
+  if (!ahead || ahead === "tie") return `<span class="text-xs text-muted">সমান</span>`;
+  if (ahead === side) return `<span class="text-xs" style="color:var(--color-accent);font-weight:700;">▲ এগিয়ে</span>`;
+  return `<span class="text-xs" style="color:var(--color-danger);font-weight:700;">▼ পিছিয়ে</span>`;
+}
+
+function renderH2HRows(rows, title) {
+  const withData = rows.filter(r => r.a !== null || r.b !== null);
+  if (withData.length === 0) return "";
+  return `
+    <p style="font-weight:600;" class="mt-3">${title}</p>
+    ${withData.map(r => `
+      <div class="flex justify-between items-center mt-2">
+        <p class="text-xs" style="flex:1;">${r.name}</p>
+        <p class="text-xs" style="width:52px;text-align:right;">${r.a ?? "—"}${r.a !== null ? "%" : ""}</p>
+        <p class="text-xs" style="width:52px;text-align:right;">${r.b ?? "—"}${r.b !== null ? "%" : ""}</p>
+        <div style="width:70px;text-align:right;">${h2hArrow(r.ahead, "a")}</div>
+      </div>
+    `).join("")}
+  `;
+}
+
+function renderHeadToHead(idA, idB) {
+  const container = document.getElementById("h2hBody");
+  if (idA === idB) {
+    container.innerHTML = `<div class="glass card mt-2"><p class="text-xs text-muted">তুলনার জন্য দুইজন ভিন্ন শিক্ষার্থী নির্বাচন করুন।</p></div>`;
+    return;
+  }
+  const summaryA = summaryById[idA], summaryB = summaryById[idB];
+  const h2h = computeHeadToHead(summaryA, summaryB);
+  if (!h2h) {
+    container.innerHTML = `<div class="glass card mt-2"><p class="text-xs text-muted">একজন বা উভয়ের পর্যাপ্ত অনুমোদিত ফলাফল নেই।</p></div>`;
+    return;
+  }
+
+  const gapCard = (gaps, name) => gaps.length === 0 ? "" : `
+    <div class="glass card mt-2" style="border-left:3px solid var(--color-danger);">
+      <p class="text-xs" style="font-weight:700;color:var(--color-danger);">${name} এখানে সবচেয়ে বেশি পিছিয়ে</p>
+      ${gaps.map(g => `<p class="text-xs text-muted mt-1">${g.name} — ব্যবধান ${Math.abs(g.gap)}%</p>`).join("")}
+    </div>
+  `;
+
+  container.innerHTML = `
+    <div class="glass card">
+      <div class="flex justify-between items-center">
+        <p style="font-weight:700;">${summaryA.name}</p>
+        <p style="font-weight:800;color:var(--color-accent);">${summaryA.avgPercentage}%</p>
+      </div>
+      <div class="flex justify-between items-center mt-1">
+        <p style="font-weight:700;">${summaryB.name}</p>
+        <p style="font-weight:800;color:var(--color-info);">${summaryB.avgPercentage}%</p>
+      </div>
+      <p class="text-xs text-muted mt-2">সার্বিকভাবে ${h2h.overall.ahead === "tie" ? "দুইজন সমান পর্যায়ে" : (h2h.overall.ahead === "a" ? summaryA.name + " এগিয়ে" : summaryB.name + " এগিয়ে")}</p>
+
+      ${renderH2HRows(h2h.subjectRows, "বিষয়ভিত্তিক")}
+      ${renderH2HRows(h2h.chapterRows, "অধ্যায়ভিত্তিক")}
+      ${renderH2HRows(h2h.topicRows, "টপিকভিত্তিক")}
+    </div>
+    ${gapCard(h2h.biggestGapsForA, summaryA.name)}
+    ${gapCard(h2h.biggestGapsForB, summaryB.name)}
+  `;
+}
+
+// ---------- Exam-by-exam comparison ----------
+function setupExamComparison(commonExams) {
+  const sel = document.getElementById("examSelect");
+  if (commonExams.length === 0) return;
+  const render = () => {
+    const rows = computeExamComparison(studentsResults, sel.value);
+    document.getElementById("examCompareBody").innerHTML = `
+      <div class="glass card">
+        ${rows.map((r, i) => `
+          <div class="flex justify-between items-center mt-2">
+            <p class="text-xs" style="font-weight:600;">${r.name}</p>
+            <p class="text-xs">${r.hasAttempt ? `${r.percentage}% • সঠিকতা ${r.accuracy ?? "—"}%` : "অংশ নেয়নি"}</p>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  };
+  sel.addEventListener("change", render);
+  render();
 }
 </script>
 </body>
