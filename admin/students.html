@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>শিক্ষার্থী ব্যবস্থাপনা — অ্যাডমিন</title>
 <link rel="stylesheet" href="../css/style.css">
+<link rel="manifest" href="../admin/manifest.json">
+<meta name="theme-color" content="#ff6a2b">
 </head>
 <body>
 <div class="app-shell app-shell--wide" id="shell">
@@ -14,6 +16,7 @@
 <script type="module">
 import { initTheme, toggleTheme, icons, renderState, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
+import { initAdminPwaInstall } from "../js/utils/pwa-install.js";
 import { getActiveStudents, createStudent } from "../js/utils/student-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { collection, getDocs, orderBy, query, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
@@ -29,6 +32,7 @@ requireAdmin(() => {
       <div class="flex gap-2">
         <a href="../admin/analytics.html" class="btn btn-secondary btn-sm">ক্লাস বিশ্লেষণ</a>
         <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-thumb"></span></button>
+        <button class="icon-btn hidden" id="installBtn" title="অ্যাপ ইনস্টল করুন"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v13m0 0l-4-4m4 4l4-4M5 21h14"/></svg></button>
         <button class="icon-btn" id="logoutBtn">${icons.arrowRight}</button>
       </div>
     </div>
@@ -50,6 +54,7 @@ requireAdmin(() => {
 
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
   document.getElementById("logoutBtn").addEventListener("click", adminLogout);
+  initAdminPwaInstall("installBtn");
   document.getElementById("addForm").addEventListener("submit", handleAdd);
   loadStudents();
 });
