@@ -9,6 +9,19 @@ import {
   collection, doc, getDoc, getDocs, query, where
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
+// ---------- Which exams has this student already submitted a result for?
+// (dashboard "Enter Exam" gating — once submitted, don't invite re-entry) ----------
+export async function getStudentResultStatusMap(studentId) {
+  const q = query(collection(db, "results"), where("studentId", "==", studentId));
+  const snap = await getDocs(q);
+  const map = {};
+  snap.docs.forEach(d => {
+    const data = d.data();
+    map[data.examId] = { status: data.status, resultId: d.id };
+  });
+  return map;
+}
+
 // ---------- Upcoming exams (dashboard card) ----------
 // NOTE: no Firestore orderBy() here — combining an "in" filter (status) with
 // orderBy() on a different field (examDate) needs a manually-created
@@ -96,5 +109,4 @@ export async function getChapterExamFrequencyMap(chapterIds) {
     });
   }
   return freq;
-                     }
-       
+}
