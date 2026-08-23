@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ফলাফল অনুমোদন — অ্যাডমিন</title>
 <link rel="stylesheet" href="../css/style.css">
-<link rel="manifest" href="../admin/manifest.json">
+<link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#ff6a2b">
 </head>
 <body>
@@ -16,7 +16,7 @@
 <script type="module">
 import { initTheme, toggleTheme, icons, renderState, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
-import { initAdminPwaInstall } from "../js/utils/pwa-install.js";
+import { initAdminPwaInstall } from "../pwa-install.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { collection, doc, getDocs, getDoc, query, where, orderBy, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { getSubjects, getChapters, buildNameMap } from "../js/utils/syllabus-utils.js";
