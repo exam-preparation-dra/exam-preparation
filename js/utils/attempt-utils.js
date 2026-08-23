@@ -123,7 +123,7 @@ export function syncToFirestoreDebounced(examId, studentId, partialData, delayMs
 }
 
 // ---------- Final submission: grade, write pending result, lock the attempt ----------
-export async function submitAttempt({ examId, studentId, examName, snapshotQuestions, answers, startedAtMillis, questionTimes }) {
+export async function submitAttempt({ examId, studentId, examName, snapshotQuestions, answers, startedAtMillis, questionTimes, markedForReview }) {
   const submittedAtMillis = Date.now();
   const grade = gradeAttempt({ snapshotQuestions, answers, startedAtMillis, submittedAtMillis });
   const id = attemptDocId(examId, studentId);
@@ -147,6 +147,9 @@ export async function submitAttempt({ examId, studentId, examName, snapshotQuest
     topicBreakdown: grade.topicBreakdown,
     answers,
     questionTimes: questionTimes || {},
+    // Captured automatically at submission from now on — previously tracked
+    // during the attempt but dropped here, so it never reached `results`.
+    markedForReview: markedForReview || {},
     status: "pending",
     approvedAt: null
   });
