@@ -83,6 +83,20 @@ export async function getExamSnapshot(examId) {
   return snap.exists() ? snap.data() : null;
 }
 
+// ---------- Batch snapshot fetch for a set of results, keyed by examId.
+// Needed for any per-question analysis (time management, wrong-option
+// patterns, marked-for-review accuracy) since results only store the
+// student's answers/times/marks by questionId — subjectId/chapterId/topicId
+// and correctAnswer live only in the frozen snapshot. Missing snapshots
+// (e.g. an exam later deleted) are simply omitted rather than thrown. ----------
+export async function getExamSnapshotsMap(examIds) {
+  const uniqueIds = [...new Set(examIds)];
+  const snaps = await Promise.all(uniqueIds.map(id => getExamSnapshot(id)));
+  const map = {};
+  uniqueIds.forEach((id, i) => { if (snaps[i]) map[id] = snaps[i]; });
+  return map;
+}
+
 // ---------- How many exams (of any status) reference a given chapter ----------
 // Used for syllabus/chapter test-frequency — independent of any one student's results.
 export async function getChapterExamFrequencyMap(chapterIds) {
