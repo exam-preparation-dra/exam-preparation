@@ -7,6 +7,44 @@
 <link rel="stylesheet" href="../css/style.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  .review-option {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%; min-height: 46px; padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--surface-border);
+    background: var(--surface-solid);
+    color: var(--text-primary);
+    font-family: var(--font-bn);
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+  }
+  .review-option .opt-letter {
+    flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+    background: var(--surface-border); display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.78rem;
+  }
+  .review-option .opt-text { flex: 1; }
+  .review-option .opt-tag {
+    flex-shrink: 0; font-size: 0.68rem; font-weight: 700;
+    padding: 3px 8px; border-radius: 999px; white-space: nowrap;
+  }
+  .review-option.correct {
+    border-color: var(--color-success);
+    background: var(--color-success)1a;
+  }
+  .review-option.correct .opt-letter { background: var(--color-success); color: #072925; }
+  .review-option.correct .opt-tag { background: var(--color-success); color: #072925; }
+  .review-option.wrong {
+    border-color: var(--color-danger);
+    background: var(--color-danger)1a;
+  }
+  .review-option.wrong .opt-letter { background: var(--color-danger); color: #fff; }
+  .review-option.wrong .opt-tag { background: var(--color-danger); color: #fff; }
+  .review-unanswered-note {
+    font-size: 0.78rem; color: var(--color-danger); font-weight: 600; margin-top: 8px;
+  }
+</style>
 </head>
 <body>
 <div class="app-shell" id="shell">
@@ -172,9 +210,23 @@ async function renderApproved() {
         <p class="mt-2" style="font-weight:600;">${q.question_bn}</p>
         <p class="text-xs text-muted lang-en">${q.question_en}</p>
         ${q.imageUrl ? `<img src="${q.imageUrl}" style="max-height:120px;border-radius:8px;margin-top:8px;">` : ""}
-        <div class="grid-2 mt-2">
-          <p class="text-xs">আপনার উত্তর: <span style="font-weight:700;">${q.studentAnswer || "দেননি"}</span></p>
-          <p class="text-xs">সঠিক উত্তর: <span style="font-weight:700;color:var(--color-success);">${q.correctAnswer}</span></p>
+        <div class="mt-3">
+          ${["A", "B", "C", "D"].map(letter => {
+            const isCorrect = letter === q.correctAnswer;
+            const isYourPick = letter === q.studentAnswer;
+            const cls = isCorrect ? "correct" : (isYourPick ? "wrong" : "");
+            let tag = "";
+            if (isCorrect && isYourPick) tag = `<span class="opt-tag">✓ আপনার উত্তর • সঠিক</span>`;
+            else if (isCorrect) tag = `<span class="opt-tag">✓ সঠিক উত্তর</span>`;
+            else if (isYourPick) tag = `<span class="opt-tag">✕ আপনার উত্তর</span>`;
+            return `
+              <div class="review-option ${cls}">
+                <span class="opt-letter">${letter}</span>
+                <span class="opt-text">${q.options_bn[letter] ?? ""}</span>
+                ${tag}
+              </div>`;
+          }).join("")}
+          ${!q.studentAnswer ? `<p class="review-unanswered-note">আপনি এই প্রশ্নের উত্তর দেননি।</p>` : ""}
         </div>
         ${q.explanation_bn ? `<p class="text-xs text-muted mt-2">ব্যাখ্যা: ${q.explanation_bn}</p>` : ""}
       </div>
@@ -251,3 +303,4 @@ async function generatePdf(shareInstead) {
 </script>
 </body>
 </html>
+
