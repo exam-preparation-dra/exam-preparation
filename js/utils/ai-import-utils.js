@@ -289,5 +289,4 @@ export function fileToImagePart(file) {
     reader.onerror = () => reject(new Error("ছবি পড়া যায়নি।"));
     reader.readAsDataURL(file);
   });
-     }
-       
+}
