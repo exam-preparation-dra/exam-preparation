@@ -191,3 +191,72 @@ Marks:
 
 এই ফরম্যাটের বাইরে কোনো অতিরিক্ত টেক্সট, নম্বরিং বা ব্যাখ্যা দিও না।`;
 }
+
+/* =========================================================
+   GEMINI (Google AI Studio) IMAGE-BASED QUESTION GENERATION
+   Calls the Gemini API directly from the browser using an
+   admin-supplied API key (stored client-side only — never
+   committed to the repo). Reuses buildAiPromptTemplate() so
+   the output format Gemini is asked to produce is identical
+   to the manual copy-paste flow, meaning parseAiImportText()
+   can parse it without any changes.
+   ========================================================= */
+
+const GEMINI_MODEL = "gemini-2.5-flash";
+const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+
+// imageParts: [{ mimeType, base64 }, ...] — base64 WITHOUT the
+// "data:image/...;base64," prefix (already stripped by the caller).
+export async function generateQuestionsFromImage({ apiKey, imageParts, subjectName, chapterName, topicName, count }) {
+  if (!apiKey) throw new Error("Gemini API key দেওয়া হয়নি।");
+  if (!imageParts || imageParts.length === 0) throw new Error("কমপক্ষে একটি ছবি দিতে হবে।");
+
+  const instructionText = buildAiPromptTemplate({ subjectName, chapterName, topicName, count }) +
+    "\n\nউপরে দেওয়া ছবি(গুলো)র বিষয়বস্তু পড়ে তার ওপর ভিত্তি করে প্রশ্নগুলো তৈরি করো।";
+
+  const body = {
+    contents: [{
+      parts: [
+        { text: instructionText },
+        ...imageParts.map(p => ({ inline_data: { mime_type: p.mimeType, data: p.base64 } }))
+      ]
+    }]
+  };
+
+  const res = await fetch(`${GEMINI_ENDPOINT}?key=${encodeURIComponent(apiKey)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) {
+    let detail = "";
+    try { detail = (await res.json())?.error?.message || ""; } catch { /* ignore */ }
+    if (res.status === 400 && /API key/i.test(detail)) throw new Error("Gemini API key ভুল — সঠিক key দিয়ে আবার চেষ্টা করো।");
+    if (res.status === 429) throw new Error("Gemini free tier এর সীমা শেষ — একটু পরে আবার চেষ্টা করো।");
+    throw new Error(`Gemini API সমস্যা (${res.status}): ${detail || "অজানা সমস্যা"}`);
+  }
+
+  const data = await res.json();
+  const text = (data?.candidates?.[0]?.content?.parts || [])
+    .map(p => p.text || "")
+    .join("\n")
+    .trim();
+
+  if (!text) throw new Error("Gemini থেকে কোনো টেক্সট পাওয়া যায়নি — ছবিটা স্পষ্ট কিনা দেখো।");
+  return text;
+}
+
+// Converts a browser File object into { mimeType, base64 } for the call above.
+export function fileToImagePart(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result || "");
+      const base64 = result.split(",")[1] || "";
+      resolve({ mimeType: file.type || "image/jpeg", base64 });
+    };
+    reader.onerror = () => reject(new Error("ছবি পড়া যায়নি।"));
+    reader.readAsDataURL(file);
+  });
+}
