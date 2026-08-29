@@ -29,17 +29,21 @@
   --bg-mesh-1: #dde3ff;
   --bg-mesh-2: #ffe4d6;
   --bg-mesh-3: #e6ddff;
-  --surface: rgba(255, 255, 255, 0.66);
-  --surface-solid: #ffffff;
-  --surface-border: rgba(255, 255, 255, 0.6);
-  --surface-highlight: rgba(255, 255, 255, 0.9);
+  --surface: rgba(255, 255, 255, 0.52);
+  --surface-solid: rgba(255, 255, 255, 0.74);
+  --surface-border: rgba(255, 255, 255, 0.65);
+  --surface-highlight: rgba(255, 255, 255, 0.95);
+  --surface-edge: rgba(255, 255, 255, 0.35);
   --text-primary: #10142a;
   --text-secondary: #4a5170;
   --text-muted: #8890a8;
   --shadow-soft: 0 8px 30px rgba(20, 30, 60, 0.08);
   --shadow-lift: 0 20px 48px rgba(20, 30, 60, 0.16);
   --shadow-glow: 0 0 0 1px rgba(245, 165, 36, 0.16), 0 12px 32px rgba(245, 165, 36, 0.18);
-  --blur: 20px;
+  --blur: 28px;
+  --blur-sm: 14px;
+  --blur-lg: 40px;
+  --glass-sat: 1.7;
 
   /* ---- Type scale ---- */
   --font-bn: 'Noto Sans Bengali', 'Inter', sans-serif;
@@ -66,10 +70,11 @@
   --bg-mesh-1: #1c2350;
   --bg-mesh-2: #2a1a3d;
   --bg-mesh-3: #16213f;
-  --surface: rgba(24, 28, 54, 0.58);
-  --surface-solid: #161a34;
-  --surface-border: rgba(255, 255, 255, 0.09);
-  --surface-highlight: rgba(255, 255, 255, 0.14);
+  --surface: rgba(24, 28, 54, 0.42);
+  --surface-solid: rgba(22, 26, 52, 0.6);
+  --surface-border: rgba(255, 255, 255, 0.1);
+  --surface-highlight: rgba(255, 255, 255, 0.16);
+  --surface-edge: rgba(255, 255, 255, 0.06);
   --text-primary: #f2f3fb;
   --text-secondary: #b4bad4;
   --text-muted: #767e9e;
@@ -85,9 +90,10 @@ html { -webkit-tap-highlight-color: transparent; }
 body {
   font-family: var(--font-bn);
   background:
-    radial-gradient(circle at 12% -5%, var(--bg-mesh-1) 0%, transparent 42%),
-    radial-gradient(circle at 105% 20%, var(--bg-mesh-2) 0%, transparent 38%),
-    radial-gradient(circle at 30% 110%, var(--bg-mesh-3) 0%, transparent 45%),
+    radial-gradient(circle at 12% -5%, var(--bg-mesh-1) 0%, transparent 48%),
+    radial-gradient(circle at 105% 20%, var(--bg-mesh-2) 0%, transparent 44%),
+    radial-gradient(circle at 30% 110%, var(--bg-mesh-3) 0%, transparent 52%),
+    radial-gradient(circle at 80% 80%, var(--bg-mesh-1) 0%, transparent 40%),
     var(--bg-app);
   background-attachment: fixed;
   color: var(--text-primary);
@@ -131,10 +137,10 @@ a { color: inherit; text-decoration: none; }
   position: relative;
   background: var(--surface);
   border: 1px solid var(--surface-border);
-  backdrop-filter: blur(var(--blur)) saturate(1.4);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.4);
+  backdrop-filter: blur(var(--blur)) saturate(var(--glass-sat));
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(var(--glass-sat));
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-soft);
+  box-shadow: var(--shadow-soft), inset 0 1px 0 var(--surface-edge);
 }
 /* Hairline highlight along the top edge — the thing that reads as
    "glass" rather than "flat card with transparency" at a glance. */
@@ -144,11 +150,48 @@ a { color: inherit; text-decoration: none; }
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(160deg, var(--surface-highlight), transparent 40%);
+  background: linear-gradient(160deg, var(--surface-highlight), transparent 45%, var(--surface-edge) 100%);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
+}
+/* Faint grain — real glass/frosted acrylic never reads as a perfectly flat
+   gradient; a near-invisible noise layer sells the material without
+   looking like a filter was applied. */
+.glass::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='90' height='90'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+/* Deeper, more free-floating variant — heavier blur, more transparent,
+   for surfaces meant to feel like they're hovering over the mesh
+   background rather than sitting on it (modals, featured hero cards). */
+.glass--deep {
+  backdrop-filter: blur(var(--blur-lg)) saturate(var(--glass-sat));
+  -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(var(--glass-sat));
+  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+}
+
+/* Any surface that isn't wrapped in .glass but still uses --surface-solid
+   as its background (inputs, chips, badges of a sort, the toast, icon
+   buttons) — this keeps the whole page reading as one frosted material
+   instead of "glass cards floating over flat UI chrome". */
+.btn-secondary,
+.input, .select, .textarea,
+.icon-btn,
+.theme-toggle,
+.review-item, .review-option, .review-filter-chip,
+.toast {
+  backdrop-filter: blur(var(--blur-sm)) saturate(1.35);
+  -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(1.35);
 }
 
 .card {
@@ -170,6 +213,11 @@ a { color: inherit; text-decoration: none; }
   background:
     linear-gradient(180deg, var(--surface-highlight) 0%, transparent 100%) padding-box,
     var(--surface) padding-box;
+  background:
+    linear-gradient(180deg, var(--surface-highlight) 0%, transparent 100%) padding-box,
+    color-mix(in srgb, var(--surface) 80%, transparent) padding-box;
+  backdrop-filter: blur(var(--blur-lg)) saturate(var(--glass-sat));
+  -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(var(--glass-sat));
   box-shadow: var(--shadow-glow);
 }
 
@@ -635,7 +683,7 @@ p { color: var(--text-secondary); }
   border-radius: var(--radius-sm);
   border: 1px solid var(--surface-border);
   box-shadow: var(--shadow-soft);
-}
+        }
 
 @media print {
   :root, [data-theme="dark"] {
@@ -654,7 +702,8 @@ p { color: var(--text-secondary); }
 
   body { background: #ffffff !important; }
 
-  .glass, .card {
+  .glass, .card, .glass--deep,
+  .input, .select, .textarea, .review-item, .review-option, .review-filter-chip, .toast {
     background: #ffffff !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
@@ -662,6 +711,7 @@ p { color: var(--text-secondary); }
     border: 1px solid #dde1ec !important;
     break-inside: avoid;
   }
+  .glass::before, .glass::after { display: none !important; }
 
   /* Screen-only chrome that has no place on a printed page */
   .theme-toggle, #themeToggle, #logoutBtn, #installBtn,
