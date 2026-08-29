@@ -18,8 +18,10 @@ import { initTheme, toggleTheme, icons, showToast, friendlyError } from "../js/u
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
 import { initAdminPwaInstall } from "../pwa-install.js";
 import { getFullSyllabusTree } from "../js/utils/syllabus-utils.js";
-import { parseAiImportText, buildAiPromptTemplate } from "../js/utils/ai-import-utils.js";
+import { parseAiImportText, buildAiPromptTemplate, generateQuestionsFromImage, fileToImagePart } from "../js/utils/ai-import-utils.js";
 import { addQuestion } from "../js/utils/question-utils.js";
+
+const GEMINI_KEY_STORAGE = "gemini_api_key";
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -33,6 +35,8 @@ requireAdmin(() => {
   initAdminPwaInstall("installBtn");
   document.getElementById("parseBtn").addEventListener("click", handleParse);
   document.getElementById("copyPromptBtn").addEventListener("click", handleCopyPrompt);
+  document.getElementById("generateBtn").addEventListener("click", handleGenerateFromImage);
+  document.getElementById("apiKeyBtn").addEventListener("click", () => promptForApiKey(true));
   init();
 });
 
@@ -52,7 +56,7 @@ function template() {
       <div class="flex justify-between items-center">
         <p class="eyebrow">বিষয় / অধ্যায় / টপিক নির্বাচন করুন</p>
       </div>
-      <p class="text-xs text-muted mt-1">নিচে যা কিছু পেস্ট করবে, সব প্রশ্ন এই selected চ্যাপ্টার-টপিকেই যোগ হবে — পেস্ট করা টেক্সটে Subject/Chapter/Topic লেখা থাকলেও সেটা চেক করা হয় না, শুধু এখান থেকেই নেওয়া হয়।</p>
+      <p class="text-xs text-muted mt-1">নিচে যা কিছু পেস্ট বা জেনারেট করবে, সব প্রশ্ন এই selected চ্যাপ্টার-টপিকেই যোগ হবে।</p>
       <div class="grid-2 mt-2" style="grid-template-columns:1fr 1fr 1fr;">
         <select class="select" id="promptSubject"></select>
         <select class="select" id="promptChapter"></select>
@@ -65,8 +69,20 @@ function template() {
     </div>
 
     <div class="glass card mt-4">
+      <div class="flex justify-between items-center">
+        <p class="eyebrow">ছবি থেকে AI দিয়ে অটো জেনারেট</p>
+        <button class="icon-btn" id="apiKeyBtn" title="Gemini API Key সেট/পরিবর্তন করুন">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 7a4 4 0 100 8 4 4 0 000-8zM3 21l6-6m-2-2l2 2"/></svg>
+        </button>
+      </div>
+      <p class="text-xs text-muted mt-1">চ্যাপ্টারের বই/নোটের পাতার ছবি আপলোড করো — Gemini নিজেই সেখান থেকে প্রশ্ন বানিয়ে নিচে পেস্ট-বক্সে ভরে দেবে। প্রথমবার ব্যবহারে একটা ফ্রি Gemini API key চাইবে (শুধু এই ব্রাউজারে সেভ থাকবে)।</p>
+      <input class="input mt-3" type="file" id="imageInput" accept="image/*" multiple>
+      <button class="btn btn-primary mt-3" id="generateBtn">AI দিয়ে জেনারেট করুন</button>
+    </div>
+
+    <div class="glass card mt-4">
       <p class="eyebrow">প্রশ্ন পেস্ট করুন</p>
-      <p class="text-xs text-muted mt-1">Claude/Gemini থেকে পাওয়া নির্দিষ্ট ফরম্যাটের টেক্সট এখানে পেস্ট করুন — একাধিক প্রশ্ন একসাথে পেস্ট করা যাবে।</p>
+      <p class="text-xs text-muted mt-1">Claude/Gemini থেকে পাওয়া নির্দিষ্ট ফরম্যাটের টেক্সট এখানে পেস্ট করুন (অথবা উপরের বাটনে অটো জেনারেট করুন) — একাধিক প্রশ্ন একসাথে পেস্ট করা যাবে।</p>
       <textarea class="textarea mt-3" id="pasteArea" style="min-height:220px;" placeholder="Question:
 ...
 
@@ -131,9 +147,7 @@ function updatePromptTopics() {
 }
 
 function handleCopyPrompt() {
-  const subject = tree.find(s => s.id === document.getElementById("promptSubject").value);
-  const chapter = subject?.chapters.find(c => c.id === document.getElementById("promptChapter").value);
-  const topic = chapter?.topics.find(t => t.id === document.getElementById("promptTopic").value);
+  const { subject, chapter, topic } = currentSelection();
   const count = document.getElementById("promptCount").value;
 
   const text = buildAiPromptTemplate({
@@ -142,6 +156,13 @@ function handleCopyPrompt() {
   navigator.clipboard.writeText(text)
     .then(() => showToast("প্রম্পট কপি করা হয়েছে।", "success"))
     .catch(() => showToast("কপি করা যায়নি। ম্যানুয়ালি সিলেক্ট করে কপি করুন।", "error"));
+}
+
+function currentSelection() {
+  const subject = tree.find(s => s.id === document.getElementById("promptSubject").value);
+  const chapter = subject?.chapters.find(c => c.id === document.getElementById("promptChapter").value);
+  const topic = chapter?.topics.find(t => t.id === document.getElementById("promptTopic").value);
+  return { subject, chapter, topic };
 }
 
 function currentTarget() {
@@ -153,10 +174,70 @@ function currentTarget() {
 }
 
 function targetLabel() {
-  const subject = tree.find(s => s.id === document.getElementById("promptSubject").value);
-  const chapter = subject?.chapters.find(c => c.id === document.getElementById("promptChapter").value);
-  const topic = chapter?.topics.find(t => t.id === document.getElementById("promptTopic").value);
+  const { subject, chapter, topic } = currentSelection();
   return [subject?.name_bn, chapter?.name_bn, topic?.name_bn].filter(Boolean).join(" / ") || "—";
+}
+
+// ---------- Gemini API key (browser-local only, never sent anywhere but Google) ----------
+function getStoredApiKey() {
+  return localStorage.getItem(GEMINI_KEY_STORAGE) || "";
+}
+
+function promptForApiKey(forceAsk = false) {
+  const existing = getStoredApiKey();
+  if (existing && !forceAsk) return existing;
+  const key = window.prompt(
+    "তোমার Gemini API key দাও (Google AI Studio থেকে ফ্রি নেওয়া যায়) — এটা শুধু এই ব্রাউজারে সেভ থাকবে, সার্ভার/রিপোতে যাবে না:",
+    existing || ""
+  );
+  if (key && key.trim()) {
+    localStorage.setItem(GEMINI_KEY_STORAGE, key.trim());
+    showToast("API key সেভ হয়েছে।", "success");
+    return key.trim();
+  }
+  return existing || null;
+}
+
+// ---------- AI image → questions ----------
+async function handleGenerateFromImage() {
+  const files = document.getElementById("imageInput").files;
+  if (!files || files.length === 0) { showToast("প্রথমে একটি বা একাধিক ছবি সিলেক্ট করো।", "error"); return; }
+
+  const target = currentTarget();
+  if (!target.subjectId || !target.chapterId || !target.topicId) {
+    showToast("প্রথমে উপরে থেকে বিষয়/অধ্যায়/টপিক নির্বাচন করো।", "error");
+    return;
+  }
+
+  const apiKey = promptForApiKey(false);
+  if (!apiKey) { showToast("API key ছাড়া জেনারেট করা যাবে না।", "error"); return; }
+
+  const { subject, chapter, topic } = currentSelection();
+  const count = document.getElementById("promptCount").value;
+  const btn = document.getElementById("generateBtn");
+  btn.disabled = true;
+  btn.textContent = "জেনারেট করা হচ্ছে...";
+
+  try {
+    const imageParts = await Promise.all(Array.from(files).map(fileToImagePart));
+    const text = await generateQuestionsFromImage({
+      apiKey,
+      imageParts,
+      subjectName: subject?.name_en,
+      chapterName: chapter?.name_en,
+      topicName: topic?.name_en,
+      count
+    });
+    document.getElementById("pasteArea").value = text;
+    handleParse();
+    showToast("AI থেকে প্রশ্ন তৈরি হয়েছে — নিচে প্রিভিউ দেখে ইম্পোর্ট করো।", "success");
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || friendlyError(err), "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "AI দিয়ে জেনারেট করুন";
+  }
 }
 
 function handleParse() {
@@ -242,4 +323,5 @@ async function handleImportAll() {
 }
 </script>
 </body>
+</html>
 </html>
