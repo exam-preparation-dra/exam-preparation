@@ -77,6 +77,7 @@ function template() {
       </div>
       <p class="text-xs text-muted mt-1">চ্যাপ্টারের বই/নোটের পাতার ছবি আপলোড করো — Gemini নিজেই সেখান থেকে প্রশ্ন বানিয়ে নিচে পেস্ট-বক্সে ভরে দেবে। প্রথমবার ব্যবহারে একটা ফ্রি Gemini API key চাইবে (শুধু এই ব্রাউজারে সেভ থাকবে)।</p>
       <input class="input mt-3" type="file" id="imageInput" accept="image/*" multiple>
+      <textarea class="textarea mt-3" id="extraInstructions" style="min-height:70px;" placeholder="অতিরিক্ত নির্দেশনা (ঐচ্ছিক) — যেমন: ছবির লেভেল থেকে একটু কঠিন করো, প্রতিটির মার্কস ২ রাখো ইত্যাদি"></textarea>
       <button class="btn btn-primary mt-3" id="generateBtn">AI দিয়ে জেনারেট করুন</button>
     </div>
 
@@ -214,6 +215,7 @@ async function handleGenerateFromImage() {
 
   const { subject, chapter, topic } = currentSelection();
   const count = document.getElementById("promptCount").value;
+  const extraInstructions = document.getElementById("extraInstructions").value;
   const btn = document.getElementById("generateBtn");
   btn.disabled = true;
   btn.textContent = "জেনারেট করা হচ্ছে...";
@@ -226,7 +228,8 @@ async function handleGenerateFromImage() {
       subjectName: subject?.name_en,
       chapterName: chapter?.name_en,
       topicName: topic?.name_en,
-      count
+      count,
+      extraInstructions
     });
     document.getElementById("pasteArea").value = text;
     handleParse();
