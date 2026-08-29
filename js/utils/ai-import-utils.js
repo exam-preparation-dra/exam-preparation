@@ -202,17 +202,31 @@ Marks:
    can parse it without any changes.
    ========================================================= */
 
-const GEMINI_MODEL = "gemini-2.5-flash";
-const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+// Google renames/retires Gemini models every few months (2.0 -> 2.5 -> 3 ->
+// 3.6 ...). Rather than hardcoding one model id that breaks the whole
+// feature on the next rename, we try a short list in order and fall back
+// to "gemini-flash-latest" (an alias Google keeps pointed at whichever
+// Flash model is current) if all named versions fail with a 404.
+const GEMINI_MODEL_CANDIDATES = ["gemini-3.6-flash", "gemini-2.5-flash", "gemini-flash-latest"];
+
+function geminiEndpoint(model) {
+  return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+}
 
 // imageParts: [{ mimeType, base64 }, ...] — base64 WITHOUT the
 // "data:image/...;base64," prefix (already stripped by the caller).
-export async function generateQuestionsFromImage({ apiKey, imageParts, subjectName, chapterName, topicName, count }) {
+// extraInstructions: free-text from the admin — e.g. desired difficulty
+// level relative to the photo, or a different marks scheme — appended to
+// the standard prompt so one call covers count + difficulty + marks + images.
+export async function generateQuestionsFromImage({ apiKey, imageParts, subjectName, chapterName, topicName, count, extraInstructions }) {
   if (!apiKey) throw new Error("Gemini API key দেওয়া হয়নি।");
   if (!imageParts || imageParts.length === 0) throw new Error("কমপক্ষে একটি ছবি দিতে হবে।");
 
-  const instructionText = buildAiPromptTemplate({ subjectName, chapterName, topicName, count }) +
+  let instructionText = buildAiPromptTemplate({ subjectName, chapterName, topicName, count }) +
     "\n\nউপরে দেওয়া ছবি(গুলো)র বিষয়বস্তু পড়ে তার ওপর ভিত্তি করে প্রশ্নগুলো তৈরি করো।";
+  if (extraInstructions && extraInstructions.trim()) {
+    instructionText += `\n\nঅতিরিক্ত নির্দেশনা (মানো): ${extraInstructions.trim()}`;
+  }
 
   const body = {
     contents: [{
@@ -223,28 +237,44 @@ export async function generateQuestionsFromImage({ apiKey, imageParts, subjectNa
     }]
   };
 
-  const res = await fetch(`${GEMINI_ENDPOINT}?key=${encodeURIComponent(apiKey)}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
+  let lastError = null;
+  for (const model of GEMINI_MODEL_CANDIDATES) {
+    let res;
+    try {
+      res = await fetch(`${geminiEndpoint(model)}?key=${encodeURIComponent(apiKey)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+    } catch (networkErr) {
+      lastError = new Error("Gemini এ পৌঁছানো যায়নি — ইন্টারনেট চেক করো।");
+      continue;
+    }
 
-  if (!res.ok) {
+    if (res.ok) {
+      const data = await res.json();
+      const text = (data?.candidates?.[0]?.content?.parts || [])
+        .map(p => p.text || "")
+        .join("\n")
+        .trim();
+      if (!text) { lastError = new Error("Gemini থেকে কোনো টেক্সট পাওয়া যায়নি — ছবিটা স্পষ্ট কিনা দেখো।"); continue; }
+      return text;
+    }
+
     let detail = "";
     try { detail = (await res.json())?.error?.message || ""; } catch { /* ignore */ }
+
+    // Model retired/renamed — try the next candidate instead of failing outright.
+    if (res.status === 404 || /no longer available|not found/i.test(detail)) {
+      lastError = new Error(`মডেল "${model}" আর নেই — পরবর্তী মডেল চেষ্টা করা হচ্ছে...`);
+      continue;
+    }
     if (res.status === 400 && /API key/i.test(detail)) throw new Error("Gemini API key ভুল — সঠিক key দিয়ে আবার চেষ্টা করো।");
     if (res.status === 429) throw new Error("Gemini free tier এর সীমা শেষ — একটু পরে আবার চেষ্টা করো।");
     throw new Error(`Gemini API সমস্যা (${res.status}): ${detail || "অজানা সমস্যা"}`);
   }
 
-  const data = await res.json();
-  const text = (data?.candidates?.[0]?.content?.parts || [])
-    .map(p => p.text || "")
-    .join("\n")
-    .trim();
-
-  if (!text) throw new Error("Gemini থেকে কোনো টেক্সট পাওয়া যায়নি — ছবিটা স্পষ্ট কিনা দেখো।");
-  return text;
+  throw lastError || new Error("কোনো Gemini মডেল দিয়েই কাজ করা গেল না।");
 }
 
 // Converts a browser File object into { mimeType, base64 } for the call above.
@@ -259,4 +289,5 @@ export function fileToImagePart(file) {
     reader.onerror = () => reject(new Error("ছবি পড়া যায়নি।"));
     reader.readAsDataURL(file);
   });
-}
+     }
+       
