@@ -37,6 +37,7 @@ requireAdmin(() => {
   document.getElementById("copyPromptBtn").addEventListener("click", handleCopyPrompt);
   document.getElementById("generateBtn").addEventListener("click", handleGenerateFromImage);
   document.getElementById("apiKeyBtn").addEventListener("click", () => promptForApiKey(true));
+  document.getElementById("imageInput").addEventListener("change", renderImagePreview);
   init();
 });
 
@@ -77,8 +78,18 @@ function template() {
       </div>
       <p class="text-xs text-muted mt-1">চ্যাপ্টারের বই/নোটের পাতার ছবি আপলোড করো — Gemini নিজেই সেখান থেকে প্রশ্ন বানিয়ে নিচে পেস্ট-বক্সে ভরে দেবে। প্রথমবার ব্যবহারে একটা ফ্রি Gemini API key চাইবে (শুধু এই ব্রাউজারে সেভ থাকবে)।</p>
       <input class="input mt-3" type="file" id="imageInput" accept="image/*" multiple>
+      <div id="imagePreview" class="flex gap-2 mt-2" style="flex-wrap:wrap;"></div>
       <textarea class="textarea mt-3" id="extraInstructions" style="min-height:70px;" placeholder="অতিরিক্ত নির্দেশনা (ঐচ্ছিক) — যেমন: ছবির লেভেল থেকে একটু কঠিন করো, প্রতিটির মার্কস ২ রাখো ইত্যাদি"></textarea>
       <button class="btn btn-primary mt-3" id="generateBtn">AI দিয়ে জেনারেট করুন</button>
+      <div class="mt-3 hidden" id="generateProgress">
+        <div class="flex items-center gap-2">
+          <div class="spinner" style="width:18px;height:18px;"></div>
+          <span class="text-xs" id="generateProgressText">শুরু হচ্ছে...</span>
+        </div>
+        <div style="height:6px;border-radius:99px;background:var(--color-surface-2,#0003);overflow:hidden;margin-top:8px;">
+          <div id="generateProgressBar" style="height:100%;width:6%;border-radius:99px;background:linear-gradient(90deg,#ff6a2b,#ff8a4c);transition:width .4s linear;"></div>
+        </div>
+      </div>
     </div>
 
     <div class="glass card mt-4">
@@ -200,6 +211,56 @@ function promptForApiKey(forceAsk = false) {
 }
 
 // ---------- AI image → questions ----------
+// ---------- Image preview (confirms the right pages were picked before sending) ----------
+function renderImagePreview() {
+  const files = document.getElementById("imageInput").files;
+  const box = document.getElementById("imagePreview");
+  box.innerHTML = "";
+  Array.from(files || []).forEach(file => {
+    const url = URL.createObjectURL(file);
+    const img = document.createElement("img");
+    img.src = url;
+    img.style.cssText = "width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--color-border,#ffffff22);";
+    img.onload = () => URL.revokeObjectURL(url);
+    box.appendChild(img);
+  });
+}
+
+// ---------- Generation progress (real elapsed time — Gemini takes ~8-30s depending on image count) ----------
+let progressTimer = null;
+let progressStartedAt = null;
+
+function startProgress(imageCount) {
+  const box = document.getElementById("generateProgress");
+  const bar = document.getElementById("generateProgressBar");
+  box.classList.remove("hidden");
+  bar.style.width = "6%";
+  progressStartedAt = Date.now();
+  updateProgressText(imageCount);
+  progressTimer = setInterval(() => updateProgressText(imageCount), 1000);
+}
+
+function updateProgressText(imageCount) {
+  const secs = Math.floor((Date.now() - progressStartedAt) / 1000);
+  let stage;
+  if (secs < 2) stage = `${imageCount} টি ছবি পড়া হচ্ছে...`;
+  else if (secs < 5) stage = "Gemini-কে পাঠানো হয়েছে...";
+  else if (secs < 20) stage = "Gemini প্রশ্ন তৈরি করছে...";
+  else stage = "প্রায় শেষ — একটু ধৈর্য ধরো...";
+  document.getElementById("generateProgressText").textContent = `${stage} (${secs}s)`;
+  // Not a real countdown (Gemini's response time varies) — this fills toward
+  // ~95% over ~25s as a visual cue, then holds until the actual response lands.
+  const pct = Math.min(95, 6 + secs * 4);
+  document.getElementById("generateProgressBar").style.width = pct + "%";
+}
+
+function stopProgress(success) {
+  clearInterval(progressTimer);
+  progressTimer = null;
+  if (success) document.getElementById("generateProgressBar").style.width = "100%";
+  setTimeout(() => document.getElementById("generateProgress").classList.add("hidden"), success ? 400 : 0);
+}
+
 async function handleGenerateFromImage() {
   const files = document.getElementById("imageInput").files;
   if (!files || files.length === 0) { showToast("প্রথমে একটি বা একাধিক ছবি সিলেক্ট করো।", "error"); return; }
@@ -219,9 +280,15 @@ async function handleGenerateFromImage() {
   const btn = document.getElementById("generateBtn");
   btn.disabled = true;
   btn.textContent = "জেনারেট করা হচ্ছে...";
+  startProgress(files.length);
 
   try {
     const imageParts = await Promise.all(Array.from(files).map(fileToImagePart));
+    // Sanity check: confirm every selected file actually produced image data
+    // before spending an API call on it.
+    const emptyCount = imageParts.filter(p => !p.base64).length;
+    if (emptyCount > 0) throw new Error(`${emptyCount} টি ছবি ঠিকমতো পড়া যায়নি — আবার সিলেক্ট করে দেখো।`);
+
     const text = await generateQuestionsFromImage({
       apiKey,
       imageParts,
@@ -233,9 +300,11 @@ async function handleGenerateFromImage() {
     });
     document.getElementById("pasteArea").value = text;
     handleParse();
-    showToast("AI থেকে প্রশ্ন তৈরি হয়েছে — নিচে প্রিভিউ দেখে ইম্পোর্ট করো।", "success");
+    stopProgress(true);
+    showToast(`${imageParts.length} টি ছবি বিশ্লেষণ করে প্রশ্ন তৈরি হয়েছে — নিচে প্রিভিউ দেখে ইম্পোর্ট করো।`, "success");
   } catch (err) {
     console.error(err);
+    stopProgress(false);
     showToast(err.message || friendlyError(err), "error");
   } finally {
     btn.disabled = false;
@@ -326,5 +395,4 @@ async function handleImportAll() {
 }
 </script>
 </body>
-</html>
 </html>
