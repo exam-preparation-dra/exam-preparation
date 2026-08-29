@@ -570,6 +570,73 @@ p { color: var(--text-secondary); }
    active on screen, and drops screen-only chrome (theme toggle, nav
    buttons) that makes no sense on paper.
    ========================================================= */
+/* =========================================================
+   AI GENERATION PROGRESS (question-import.html — ছবি থেকে অটো জেনারেট)
+   Pulsing "thinking" icon + shimmer sweep over the standard
+   progress-fill gradient, so the bar reads as actively working
+   rather than stalled even while its % only creeps upward
+   (Gemini's real response time isn't predictable, so this is a
+   visual cue, not a literal countdown).
+   ========================================================= */
+.ai-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.ai-progress-icon {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-2));
+  animation: aiPulse 1.6s ease-in-out infinite;
+}
+.ai-progress-icon svg { width: 17px; height: 17px; stroke: #1a1204; }
+@keyframes aiPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(245,165,36,0.45); transform: scale(1); }
+  70%  { box-shadow: 0 0 0 12px rgba(245,165,36,0); transform: scale(1.06); }
+  100% { box-shadow: 0 0 0 0 rgba(245,165,36,0); transform: scale(1); }
+}
+
+.ai-progress-body { flex: 1; min-width: 0; }
+.ai-progress-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.ai-progress-text .num { color: var(--text-muted); font-weight: 500; }
+/* Retriggered from JS (class removed + re-added) only when the stage
+   label actually changes, so it crossfades between stages instead of
+   jittering every second alongside the elapsed-time digits. */
+.ai-progress-text.stage-in { animation: aiStageFade 320ms ease both; }
+@keyframes aiStageFade {
+  from { opacity: 0; transform: translateY(3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.progress-fill--ai { position: relative; overflow: hidden; }
+.progress-fill--ai::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 20%, rgba(255,255,255,0.55) 50%, transparent 80%);
+  background-size: 200% 100%;
+  animation: aiShimmerSweep 1.3s linear infinite;
+}
+@keyframes aiShimmerSweep {
+  from { background-position: 200% 0; }
+  to   { background-position: -50% 0; }
+}
+
+/* Image preview thumbnails (question-import.html) */
+.ai-thumb {
+  width: 60px; height: 60px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--surface-border);
+  box-shadow: var(--shadow-soft);
+}
+
 @media print {
   :root, [data-theme="dark"] {
     --bg-app: #ffffff;
