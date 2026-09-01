@@ -18,6 +18,7 @@
     font-family: var(--font-bn);
     font-size: 0.9rem;
     margin-bottom: 8px;
+    transition: transform 150ms ease;
   }
   .review-option .opt-letter {
     flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
@@ -44,6 +45,56 @@
   .review-unanswered-note {
     font-size: 0.78rem; color: var(--color-danger); font-weight: 600; margin-top: 8px;
   }
+
+  /* ===== Card + stat entrance ===== */
+  .glass.card { animation: cardRise 420ms cubic-bezier(.22,.9,.3,1) both; }
+  @keyframes cardRise { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; } }
+
+  /* ===== Score hero: circular ring around the percentage ===== */
+  .score-hero { display: flex; align-items: center; gap: 20px; }
+  .score-ring-wrap { position: relative; width: 108px; height: 108px; flex-shrink: 0; }
+  .score-ring-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .score-ring-track { fill: none; stroke: var(--surface-border); stroke-width: 8; }
+  .score-ring-fill {
+    fill: none; stroke-width: 8; stroke-linecap: round;
+    stroke-dasharray: 301.6; stroke-dashoffset: 301.6;
+    transition: stroke-dashoffset 1200ms cubic-bezier(.22,.9,.3,1);
+  }
+  .score-ring-center {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .score-ring-pct {
+    font-family: var(--font-num); font-variant-numeric: tabular-nums;
+    font-weight: 800; font-size: 1.5rem; line-height: 1;
+  }
+  .score-ring-pct::after { content: "%"; font-size: 0.95rem; }
+
+  /* ===== Stat cards stagger ===== */
+  .grid-2 .glass.card:nth-child(1) { animation-delay: 60ms; }
+  .grid-2 .glass.card:nth-child(2) { animation-delay: 110ms; }
+  .grid-2 .glass.card:nth-child(3) { animation-delay: 160ms; }
+  .grid-2 .glass.card:nth-child(4) { animation-delay: 210ms; }
+  .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+
+  /* ===== Subject / slowest-question mini bars ===== */
+  .mini-bar-row { margin-top: 10px; }
+  .mini-bar-track { height: 8px; border-radius: 999px; background: var(--surface-border); overflow: hidden; margin-top: 5px; }
+  .mini-bar-fill {
+    height: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, var(--color-accent), var(--color-accent-2));
+    width: 0%;
+    transition: width 900ms cubic-bezier(.22,.9,.3,1);
+  }
+  .mini-bar-fill.fill-success { background: linear-gradient(90deg, var(--color-success), #5eead4); }
+
+  /* ===== Review list stagger ===== */
+  #reviewList .glass.card { animation: reviewRise 380ms cubic-bezier(.22,.9,.3,1) both; }
+  @keyframes reviewRise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .btn { transition: transform 140ms ease, filter 180ms ease; }
+  .btn:active:not(:disabled) { transform: scale(0.97); }
 </style>
 </head>
 <body>
@@ -82,6 +133,23 @@ if (!student) {
 
 function fmtDate(ts) { return ts?.toDate ? ts.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" }) : "—"; }
 function fmtTime(ts) { return ts?.toDate ? ts.toDate().toLocaleTimeString("bn-BD", { hour: "2-digit", minute: "2-digit" }) : "—"; }
+
+// Animate a number counting up from 0 to `target` inside `el`, over `duration` ms.
+// Respects prefers-reduced-motion by jumping straight to the target.
+function animateCountUp(el, target, duration = 900, suffix = "") {
+  if (!el || typeof target !== "number" || isNaN(target)) return;
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce) { el.textContent = `${target}${suffix}`; return; }
+  const start = performance.now();
+  function frame(now) {
+    const t = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - t, 3);
+    const value = Math.round(target * eased);
+    el.textContent = `${value}${suffix}`;
+    if (t < 1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
 
 async function load() {
   try {
@@ -125,6 +193,8 @@ async function renderApproved() {
   const snapshot = await getExamSnapshot(result.examId);
   const review = snapshot ? buildQuestionReview(snapshot.questions, result.answers || {}, result.questionTimes || {}) : [];
   const slowest = getSlowestQuestions(review, 3);
+  const pctVal = Number(result.percentage) || 0;
+  const scoreColor = pctVal >= 75 ? "var(--color-success)" : pctVal >= 40 ? "var(--color-accent)" : "var(--color-danger)";
 
   shell.innerHTML = `
     <div class="topbar">
@@ -135,18 +205,30 @@ async function renderApproved() {
 
     <div class="glass card">
       <p class="eyebrow">${result.examName || "পরীক্ষা"}</p>
-      <div class="flex items-end gap-2 mt-2">
-        <p style="font-size:2rem;font-weight:800;">${result.percentage ?? "—"}%</p>
-        <p class="text-sm text-muted mb-1">(${result.obtainedMarks ?? "—"} / ${result.totalMarks ?? "—"} নম্বর)</p>
+      <div class="score-hero mt-3">
+        <div class="score-ring-wrap">
+          <svg viewBox="0 0 108 108">
+            <circle class="score-ring-track" cx="54" cy="54" r="48"></circle>
+            <circle class="score-ring-fill" id="scoreRingFill" cx="54" cy="54" r="48"
+              stroke="${scoreColor}"></circle>
+          </svg>
+          <div class="score-ring-center">
+            <span class="score-ring-pct" id="scorePct">0</span>
+          </div>
+        </div>
+        <div>
+          <p class="text-sm text-muted">প্রাপ্ত নম্বর</p>
+          <p style="font-size:1.3rem;font-weight:800;"><span class="num" id="marksObtained">0</span><span class="text-sm text-muted"> / ${result.totalMarks ?? "—"}</span></p>
+          <span class="badge badge-completed mt-2">অনুমোদিত</span>
+        </div>
       </div>
-      <span class="badge badge-completed mt-2">অনুমোদিত</span>
     </div>
 
     <div class="grid-2 mt-4">
-      <div class="glass card"><p class="text-xs text-muted">সঠিক</p><p style="font-size:1.3rem;font-weight:800;color:var(--color-success);">${result.correctCount ?? 0}</p></div>
-      <div class="glass card"><p class="text-xs text-muted">ভুল</p><p style="font-size:1.3rem;font-weight:800;color:var(--color-danger);">${result.wrongCount ?? 0}</p></div>
-      <div class="glass card"><p class="text-xs text-muted">অনুত্তরিত</p><p style="font-size:1.3rem;font-weight:800;">${result.unansweredCount ?? 0}</p></div>
-      <div class="glass card"><p class="text-xs text-muted">সঠিকতা</p><p style="font-size:1.3rem;font-weight:800;">${result.accuracy ?? "—"}%</p></div>
+      <div class="glass card"><p class="text-xs text-muted">সঠিক</p><p style="font-size:1.3rem;font-weight:800;color:var(--color-success);"><span class="num" id="statCorrect">0</span></p></div>
+      <div class="glass card"><p class="text-xs text-muted">ভুল</p><p style="font-size:1.3rem;font-weight:800;color:var(--color-danger);"><span class="num" id="statWrong">0</span></p></div>
+      <div class="glass card"><p class="text-xs text-muted">অনুত্তরিত</p><p style="font-size:1.3rem;font-weight:800;"><span class="num" id="statUnanswered">0</span></p></div>
+      <div class="glass card"><p class="text-xs text-muted">সঠিকতা</p><p style="font-size:1.3rem;font-weight:800;"><span class="num" id="statAccuracy">0</span>%</p></div>
     </div>
 
     <div class="glass card mt-4">
@@ -162,23 +244,34 @@ async function renderApproved() {
     ${result.subjectBreakdown?.length ? `
     <div class="glass card mt-4">
       <p class="eyebrow">বিষয়ভিত্তিক ফলাফল</p>
-      ${result.subjectBreakdown.map(s => `
-        <div class="flex justify-between items-center mt-2">
-          <p class="text-sm">${subjectMap[s.subjectId] || "—"}</p>
-          <p class="text-sm" style="font-weight:700;">${s.correct}/${s.correct + s.wrong + s.unanswered} সঠিক</p>
-        </div>
-      `).join("")}
+      ${result.subjectBreakdown.map((s, i) => {
+        const totalQ = s.correct + s.wrong + s.unanswered;
+        const pct = totalQ ? Math.round((s.correct / totalQ) * 100) : 0;
+        return `
+        <div class="mini-bar-row" ${i === 0 ? "" : "mt-2"}>
+          <div class="flex justify-between items-center">
+            <p class="text-sm">${subjectMap[s.subjectId] || "—"}</p>
+            <p class="text-sm num" style="font-weight:700;">${s.correct}/${totalQ} সঠিক</p>
+          </div>
+          <div class="mini-bar-track"><div class="mini-bar-fill fill-success subj-bar" data-pct="${pct}"></div></div>
+        </div>`;
+      }).join("")}
     </div>` : ""}
 
     ${slowest.length ? `
     <div class="glass card mt-4">
       <p class="eyebrow">সবচেয়ে বেশি সময় নেওয়া প্রশ্ন</p>
-      ${slowest.map((q, i) => `
-        <div class="flex justify-between items-center mt-2">
-          <p class="text-sm" style="flex:1;">${i + 1}. ${q.question_bn.length > 50 ? q.question_bn.slice(0, 50) + "…" : q.question_bn}</p>
-          <p class="text-sm" style="font-weight:700;color:var(--color-accent);white-space:nowrap;margin-right:8px;">${q.timeSeconds} সে.</p>
-        </div>
-      `).join("")}
+      ${(() => {
+        const maxTime = Math.max(...slowest.map(q => q.timeSeconds || 0), 1);
+        return slowest.map((q, i) => `
+        <div class="mini-bar-row" ${i === 0 ? "" : "mt-2"}>
+          <div class="flex justify-between items-center">
+            <p class="text-sm" style="flex:1;">${i + 1}. ${q.question_bn.length > 50 ? q.question_bn.slice(0, 50) + "…" : q.question_bn}</p>
+            <p class="text-sm num" style="font-weight:700;color:var(--color-accent);white-space:nowrap;margin-right:8px;">${q.timeSeconds} সে.</p>
+          </div>
+          <div class="mini-bar-track"><div class="mini-bar-fill slow-bar" data-pct="${Math.round((q.timeSeconds || 0) / maxTime * 100)}"></div></div>
+        </div>`).join("");
+      })()}
     </div>` : ""}
 
     <div class="flex gap-2 mt-4">
@@ -194,12 +287,32 @@ async function renderApproved() {
   document.getElementById("pdfBtn").addEventListener("click", () => generatePdf(false));
   document.getElementById("shareBtn").addEventListener("click", () => generatePdf(true));
 
+  // Kick off the reveal animations: ring sweep, count-up numbers, mini-bar fills.
+  requestAnimationFrame(() => {
+    const ringFill = document.getElementById("scoreRingFill");
+    if (ringFill) {
+      const circumference = 301.6;
+      const offset = circumference * (1 - pctVal / 100);
+      requestAnimationFrame(() => { ringFill.style.strokeDashoffset = String(offset); });
+    }
+    animateCountUp(document.getElementById("scorePct"), pctVal, 1100);
+    animateCountUp(document.getElementById("marksObtained"), Number(result.obtainedMarks) || 0, 900);
+    animateCountUp(document.getElementById("statCorrect"), Number(result.correctCount) || 0, 800);
+    animateCountUp(document.getElementById("statWrong"), Number(result.wrongCount) || 0, 800);
+    animateCountUp(document.getElementById("statUnanswered"), Number(result.unansweredCount) || 0, 800);
+    animateCountUp(document.getElementById("statAccuracy"), Number(result.accuracy) || 0, 800);
+    document.querySelectorAll(".subj-bar, .slow-bar").forEach(bar => {
+      const pct = bar.dataset.pct || 0;
+      requestAnimationFrame(() => { bar.style.width = `${pct}%`; });
+    });
+  });
+
   const reviewEl = document.getElementById("reviewList");
   if (review.length === 0) {
     reviewEl.innerHTML = `<p class="text-xs text-muted">প্রশ্নের বিস্তারিত পাওয়া যায়নি।</p>`;
   } else {
     reviewEl.innerHTML = review.map((q, i) => `
-      <div class="glass card mt-2" style="${q.status === "wrong" ? "border-color:var(--color-danger)66;" : q.status === "correct" ? "border-color:var(--color-success)66;" : ""}">
+      <div class="glass card mt-2" style="animation-delay:${Math.min(i * 45, 400)}ms;${q.status === "wrong" ? "border-color:var(--color-danger)66;" : q.status === "correct" ? "border-color:var(--color-success)66;" : ""}">
         <div class="flex justify-between items-center">
           <p class="text-xs text-muted">প্রশ্ন ${i + 1} • ${subjectMap[q.subjectId] || ""} / ${chapterMap[q.chapterId] || ""}</p>
           <span class="badge ${q.status === "correct" ? "badge-completed" : q.status === "wrong" ? "badge-pending" : "badge-draft"}">
