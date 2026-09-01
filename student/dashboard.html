@@ -5,6 +5,52 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>ড্যাশবোর্ড — পরীক্ষা প্রস্তুতি</title>
 <link rel="stylesheet" href="../css/style.css">
+<style>
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; } }
+
+  /* ===== Section + card entrance ===== */
+  .glass.card {
+    animation: cardRise 420ms cubic-bezier(.22,.9,.3,1) both;
+    transition: transform var(--transition-lift, 220ms ease), box-shadow var(--transition-lift, 220ms ease);
+  }
+  @keyframes cardRise { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  @media (hover: hover) {
+    #upcomingSection .glass.card:hover,
+    #subjectSection .glass.card:hover { box-shadow: var(--shadow-lift); transform: translateY(-3px); }
+  }
+  .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+
+  /* Stagger the 4 summary stat cards and subject cards without inline delays scattered everywhere */
+  #statsSection .grid-2 .glass.card:nth-child(1) { animation-delay: 40ms; }
+  #statsSection .grid-2 .glass.card:nth-child(2) { animation-delay: 90ms; }
+  #statsSection .grid-2 .glass.card:nth-child(3) { animation-delay: 140ms; }
+  #statsSection .grid-2 .glass.card:nth-child(4) { animation-delay: 190ms; }
+
+  /* ===== Trend bars: grow-in from 0, gradient shimmer, tap-friendly tooltip stays native title ===== */
+  .trend-bar {
+    flex: 1; border-radius: 6px 6px 0 0;
+    background: linear-gradient(180deg, var(--color-accent), var(--color-accent-2));
+    background-size: 100% 200%;
+    height: 0%;
+    transition: height 700ms cubic-bezier(.22,.9,.3,1);
+    animation: trendShimmer 2.6s linear infinite;
+  }
+  @keyframes trendShimmer { 0% { background-position: 0 0%; } 100% { background-position: 0 100%; } }
+
+  /* ===== Subject progress bars: animate width grow-in from 0 ===== */
+  .progress-track { overflow: hidden; }
+  .progress-fill {
+    width: 0% !important;
+    transition: width 900ms cubic-bezier(.22,.9,.3,1);
+  }
+
+  /* ===== Weak topic alert icon: gentle pulse to draw the eye without being alarming ===== */
+  .weak-alert-icon { animation: weakPulse 2.2s ease-in-out infinite; }
+  @keyframes weakPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+  .btn { transition: transform 140ms ease, filter 180ms ease; }
+  .btn:active { transform: scale(0.97); }
+</style>
 </head>
 <body>
 <div class="app-shell" id="shell">
@@ -26,6 +72,22 @@ if (!student) {
   window.location.href = "../index.html";
 } else {
   render();
+}
+
+// Count a number up from 0 to `target` inside `el`. Jumps straight to the
+// value when the user prefers reduced motion.
+function animateCountUp(el, target, duration = 800, suffix = "") {
+  if (!el || typeof target !== "number" || isNaN(target)) return;
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce) { el.textContent = `${target}${suffix}`; return; }
+  const start = performance.now();
+  function frame(now) {
+    const t = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - t, 3);
+    el.textContent = `${Math.round(target * eased)}${suffix}`;
+    if (t < 1) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
 }
 
 async function render() {
@@ -127,10 +189,10 @@ async function loadPerformance() {
     statsEl.innerHTML = `
       <p class="eyebrow">পারফরম্যান্স সারাংশ</p>
       <div class="grid-2 mt-2">
-        <div class="glass card"><p class="text-xs text-muted">মোট পরীক্ষা</p><p style="font-size:1.5rem;font-weight:800;">${overall.examsTaken}</p></div>
-        <div class="glass card"><p class="text-xs text-muted">গড় শতাংশ</p><p style="font-size:1.5rem;font-weight:800;">${overall.avgPercentage ?? "—"}%</p></div>
-        <div class="glass card"><p class="text-xs text-muted">গড় সঠিকতা</p><p style="font-size:1.5rem;font-weight:800;">${overall.avgAccuracy ?? "—"}%</p></div>
-        <div class="glass card"><p class="text-xs text-muted">সঠিক / ভুল / অনুত্তরিত</p><p style="font-size:1.1rem;font-weight:700;">${overall.totalCorrect} / ${overall.totalWrong} / ${overall.totalUnanswered}</p></div>
+        <div class="glass card"><p class="text-xs text-muted">মোট পরীক্ষা</p><p style="font-size:1.5rem;font-weight:800;"><span class="num" id="statExams">0</span></p></div>
+        <div class="glass card"><p class="text-xs text-muted">গড় শতাংশ</p><p style="font-size:1.5rem;font-weight:800;"><span class="num" id="statAvgPct">0</span>%</p></div>
+        <div class="glass card"><p class="text-xs text-muted">গড় সঠিকতা</p><p style="font-size:1.5rem;font-weight:800;"><span class="num" id="statAvgAcc">0</span>%</p></div>
+        <div class="glass card"><p class="text-xs text-muted">সঠিক / ভুল / অনুত্তরিত</p><p style="font-size:1.1rem;font-weight:700;" class="num">${overall.totalCorrect} / ${overall.totalWrong} / ${overall.totalUnanswered}</p></div>
       </div>
       ${overall.mostRecent ? `
         <div class="glass card mt-3">
@@ -138,7 +200,7 @@ async function loadPerformance() {
           <div class="flex justify-between items-center mt-2">
             <div>
               <p style="font-weight:700;">${overall.mostRecent.examName || "পরীক্ষা"}</p>
-              <p class="text-xs text-muted">${overall.mostRecent.percentage ?? "—"}% • সঠিকতা ${overall.mostRecent.accuracy ?? "—"}%</p>
+              <p class="text-xs text-muted num">${overall.mostRecent.percentage ?? "—"}% • সঠিকতা ${overall.mostRecent.accuracy ?? "—"}%</p>
             </div>
             <a href="../student/result.html?resultId=${overall.mostRecent.id}" class="icon-btn">${icons.arrowRight}</a>
           </div>
@@ -147,10 +209,20 @@ async function loadPerformance() {
         <div class="glass card mt-3">
           <p class="eyebrow">সার্বিক ধারা</p>
           <div class="flex items-end gap-2 mt-3" style="height:60px;">
-            ${overall.trend.map(t => `<div style="flex:1;background:linear-gradient(180deg,var(--color-accent),#ff8a3d);border-radius:6px 6px 0 0;height:${Math.max(6, (t.value || 0))}%;" title="${t.value ?? '—'}%"></div>`).join("")}
+            ${overall.trend.map(t => `<div class="trend-bar" data-h="${Math.max(6, (t.value || 0))}" title="${t.value ?? '—'}%"></div>`).join("")}
           </div>
         </div>` : `<p class="text-xs text-muted mt-3">ধারা দেখতে আরও পরীক্ষার ফলাফল প্রয়োজন।</p>`}
     `;
+
+    requestAnimationFrame(() => {
+      animateCountUp(document.getElementById("statExams"), Number(overall.examsTaken) || 0, 700);
+      if (overall.avgPercentage != null) animateCountUp(document.getElementById("statAvgPct"), Number(overall.avgPercentage) || 0, 800);
+      if (overall.avgAccuracy != null) animateCountUp(document.getElementById("statAvgAcc"), Number(overall.avgAccuracy) || 0, 800);
+      document.querySelectorAll(".trend-bar").forEach(bar => {
+        const h = bar.dataset.h || 6;
+        requestAnimationFrame(() => { bar.style.height = `${h}%`; });
+      });
+    });
 
     // Subject breakdown
     const subjects = await getSubjects();
@@ -162,12 +234,18 @@ async function loadPerformance() {
         <div class="glass card mt-2">
           <div class="flex justify-between items-center">
             <p style="font-weight:700;">${s.name}</p>
-            <p class="text-sm" style="font-weight:700;color:var(--color-accent);">${s.accuracy ?? "—"}%</p>
+            <p class="text-sm num" style="font-weight:700;color:var(--color-accent);">${s.accuracy ?? "—"}%</p>
           </div>
-          <div class="progress-track mt-2"><div class="progress-fill" style="width:${s.accuracy ?? 0}%;"></div></div>
-          <p class="text-xs text-muted mt-2">সঠিক ${s.correct} • ভুল ${s.wrong} • মোট নম্বর ${s.marks}</p>
+          <div class="progress-track mt-2"><div class="progress-fill subj-progress" data-w="${s.accuracy ?? 0}"></div></div>
+          <p class="text-xs text-muted mt-2 num">সঠিক ${s.correct} • ভুল ${s.wrong} • মোট নম্বর ${s.marks}</p>
         </div>
       `).join(""));
+    requestAnimationFrame(() => {
+      document.querySelectorAll(".subj-progress").forEach(bar => {
+        const w = bar.dataset.w || 0;
+        requestAnimationFrame(() => { bar.style.width = `${w}%`; });
+      });
+    });
 
     // Weak topics
     const { getTopics } = await import("../js/utils/syllabus-utils.js");
@@ -181,7 +259,7 @@ async function loadPerformance() {
       : weakTopics.map(t => `
         <div class="glass card mt-2" style="border-color:var(--color-danger)55;">
           <div class="flex items-center gap-3">
-            <span class="icon-btn" style="color:var(--color-danger);">${icons.alert}</span>
+            <span class="icon-btn weak-alert-icon" style="color:var(--color-danger);">${icons.alert}</span>
             <div>
               <p style="font-weight:700;">${t.name}</p>
               <p class="text-xs text-muted">সাম্প্রতিক পরীক্ষাগুলোতে ধারাবাহিকভাবে কম সঠিকতা (${t.accuracy}%)</p>
