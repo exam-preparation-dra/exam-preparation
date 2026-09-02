@@ -51,25 +51,57 @@
   @keyframes cardRise { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; } }
 
-  /* ===== Score hero: circular ring around the percentage ===== */
-  .score-hero { display: flex; align-items: center; gap: 20px; }
-  .score-ring-wrap { position: relative; width: 108px; height: 108px; flex-shrink: 0; }
-  .score-ring-wrap svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-  .score-ring-track { fill: none; stroke: var(--surface-border); stroke-width: 8; }
-  .score-ring-fill {
-    fill: none; stroke-width: 8; stroke-linecap: round;
-    stroke-dasharray: 301.6; stroke-dashoffset: 301.6;
-    transition: stroke-dashoffset 1200ms cubic-bezier(.22,.9,.3,1);
+  /* ===== Suspense reveal: shown first, builds anticipation before the
+     score exists on screen at all ===== */
+  .suspense-stage {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; padding: 30px 10px 18px;
   }
-  .score-ring-center {
-    position: absolute; inset: 0; display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
+  .suspense-pulse {
+    position: relative; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;
+    color: var(--color-accent);
   }
-  .score-ring-pct {
+  .suspense-pulse::before {
+    content: ""; position: absolute; inset: 0; border-radius: 50%;
+    background: radial-gradient(circle, var(--color-accent) 0%, transparent 72%);
+    animation: suspensePulse 1.15s ease-in-out infinite;
+  }
+  .suspense-pulse svg { width: 26px; height: 26px; position: relative; z-index: 1; }
+  @keyframes suspensePulse { 0%,100% { transform: scale(.8); opacity: .5; } 50% { transform: scale(1.25); opacity: 1; } }
+  .suspense-stage p { font-size: 0.9rem; color: var(--text-secondary); font-weight: 600; }
+  @keyframes dotBlink { 0%,100% { opacity: .25; } 50% { opacity: 1; } }
+  .suspense-stage .dot { animation: dotBlink 1.2s ease-in-out infinite; }
+  .suspense-stage .dot:nth-child(2) { animation-delay: 0.15s; }
+  .suspense-stage .dot:nth-child(3) { animation-delay: 0.3s; }
+
+  /* ===== Score hero: the number itself is the whole show — no ring/bar,
+     just a large glowing figure that lands with a satisfying pop + a
+     one-shot radial burst behind it, colored by the grade band ===== */
+  .score-hero-box { display: flex; align-items: center; gap: 18px; }
+  .score-mega-wrap { position: relative; flex-shrink: 0; }
+  .score-burst {
+    position: absolute; inset: -34px; border-radius: 50%;
+    background: radial-gradient(circle, var(--score-color, var(--color-accent)) 0%, transparent 70%);
+    opacity: 0; transform: scale(.4); pointer-events: none; z-index: 0;
+  }
+  .score-hero-box.landed .score-burst { animation: scoreBurst 750ms cubic-bezier(.22,.9,.3,1) both; }
+  @keyframes scoreBurst { 0% { opacity: 0; transform: scale(.4); } 42% { opacity: .5; transform: scale(1.2); } 100% { opacity: 0; transform: scale(1.7); } }
+  .score-mega {
+    position: relative; z-index: 1;
     font-family: var(--font-num); font-variant-numeric: tabular-nums;
-    font-weight: 800; font-size: 1.5rem; line-height: 1;
+    font-weight: 800; font-size: 3.1rem; line-height: 1;
+    color: var(--text-primary); transition: color 320ms ease;
   }
-  .score-ring-pct::after { content: "%"; font-size: 0.95rem; }
+  .score-hero-box.landed .score-mega { color: var(--score-color, var(--color-accent)); animation: scoreSettle 420ms cubic-bezier(.34,1.56,.64,1); }
+  @keyframes scoreSettle { 0% { transform: scale(1); } 45% { transform: scale(1.1); } 100% { transform: scale(1); } }
+  @media (prefers-reduced-motion: reduce) {
+    .suspense-pulse::before, .score-hero-box.landed .score-mega, .score-hero-box.landed .score-burst, .suspense-stage .dot { animation: none !important; }
+  }
+
+  /* ===== Everything below the score card stays hidden/settled until the
+     reveal lands, then rises in together — the "curtain up" moment ===== */
+  #revealArea { transition: opacity 550ms ease, transform 550ms ease; }
+  #revealArea.pre-reveal { opacity: 0; transform: translateY(16px); pointer-events: none; }
 
   /* ===== Stat cards stagger ===== */
   .grid-2 .glass.card:nth-child(1) { animation-delay: 60ms; }
@@ -133,6 +165,42 @@ if (!student) {
 
 function fmtDate(ts) { return ts?.toDate ? ts.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" }) : "—"; }
 function fmtTime(ts) { return ts?.toDate ? ts.toDate().toLocaleTimeString("bn-BD", { hour: "2-digit", minute: "2-digit" }) : "—"; }
+
+// Suspense "lottery reveal": scrambles random digits fast, then converges
+// on the real value with decelerating jitter, locking exactly on target at
+// the end. Feels like a slot machine settling rather than a plain count-up.
+// Respects prefers-reduced-motion by jumping straight to the target.
+function suspenseReveal(el, target, opts = {}) {
+  const { totalMs = 2300, scrambleMs = 600, suffix = "" } = opts;
+  if (!el || typeof target !== "number" || isNaN(target)) return Promise.resolve();
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce) { el.textContent = `${target}${suffix}`; return Promise.resolve(); }
+  const digits = Math.max(2, String(Math.round(Math.abs(target))).length);
+  const maxRand = Math.pow(10, digits) - 1;
+  const start = performance.now();
+  return new Promise(resolve => {
+    function frame(now) {
+      const elapsed = now - start;
+      if (elapsed < scrambleMs) {
+        el.textContent = `${Math.floor(Math.random() * maxRand)}${suffix}`;
+        requestAnimationFrame(frame);
+        return;
+      }
+      const t = Math.min(1, (elapsed - scrambleMs) / (totalMs - scrambleMs));
+      const eased = 1 - Math.pow(1 - t, 4);
+      if (t < 1) {
+        const jitter = Math.round((1 - eased) * digits * 3 * (Math.random() - 0.5));
+        const val = Math.max(0, Math.round(target * eased) + jitter);
+        el.textContent = `${val}${suffix}`;
+        requestAnimationFrame(frame);
+      } else {
+        el.textContent = `${target}${suffix}`;
+        resolve();
+      }
+    }
+    requestAnimationFrame(frame);
+  });
+}
 
 // Animate a number counting up from 0 to `target` inside `el`, over `duration` ms.
 // Respects prefers-reduced-motion by jumping straight to the target.
@@ -205,16 +273,16 @@ async function renderApproved() {
 
     <div class="glass card">
       <p class="eyebrow">${result.examName || "পরীক্ষা"}</p>
-      <div class="score-hero mt-3">
-        <div class="score-ring-wrap">
-          <svg viewBox="0 0 108 108">
-            <circle class="score-ring-track" cx="54" cy="54" r="48"></circle>
-            <circle class="score-ring-fill" id="scoreRingFill" cx="54" cy="54" r="48"
-              stroke="${scoreColor}"></circle>
-          </svg>
-          <div class="score-ring-center">
-            <span class="score-ring-pct" id="scorePct">0</span>
-          </div>
+
+      <div class="suspense-stage" id="suspenseStage">
+        <div class="suspense-pulse">${icons.clock}</div>
+        <p>ফলাফল গণনা করা হচ্ছে<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></p>
+      </div>
+
+      <div class="score-hero-box hidden mt-3" id="scoreHeroBox">
+        <div class="score-mega-wrap">
+          <div class="score-burst"></div>
+          <span class="score-mega" id="scorePct">0%</span>
         </div>
         <div>
           <p class="text-sm text-muted">প্রাপ্ত নম্বর</p>
@@ -224,6 +292,7 @@ async function renderApproved() {
       </div>
     </div>
 
+    <div id="revealArea" class="pre-reveal">
     <div class="grid-2 mt-4">
       <div class="glass card"><p class="text-xs text-muted">সঠিক</p><p style="font-size:1.3rem;font-weight:800;color:var(--color-success);"><span class="num" id="statCorrect">0</span></p></div>
       <div class="glass card"><p class="text-xs text-muted">ভুল</p><p style="font-size:1.3rem;font-weight:800;color:var(--color-danger);"><span class="num" id="statWrong">0</span></p></div>
@@ -281,22 +350,37 @@ async function renderApproved() {
 
     <p class="eyebrow mt-5">প্রশ্নভিত্তিক পর্যালোচনা</p>
     <div id="reviewList" class="mt-2"></div>
+    </div>
   `;
 
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
   document.getElementById("pdfBtn").addEventListener("click", () => generatePdf(false));
   document.getElementById("shareBtn").addEventListener("click", () => generatePdf(true));
 
-  // Kick off the reveal animations: ring sweep, count-up numbers, mini-bar fills.
-  requestAnimationFrame(() => {
-    const ringFill = document.getElementById("scoreRingFill");
-    if (ringFill) {
-      const circumference = 301.6;
-      const offset = circumference * (1 - pctVal / 100);
-      requestAnimationFrame(() => { ringFill.style.strokeDashoffset = String(offset); });
-    }
-    animateCountUp(document.getElementById("scorePct"), pctVal, 1100);
-    animateCountUp(document.getElementById("marksObtained"), Number(result.obtainedMarks) || 0, 900);
+  // ---- Suspense reveal orchestration ----
+  // 1) sit on the "গণনা করা হচ্ছে..." pulse for a beat (builds anticipation)
+  // 2) roll the score + marks like a lottery reveal, landing exactly on the
+  //    real values with a colored pop + one-shot glow burst
+  // 3) only then let the rest of the page (stats, breakdowns, review) rise in
+  const heroBox = document.getElementById("scoreHeroBox");
+  heroBox.style.setProperty("--score-color", scoreColor);
+  runSuspenseReveal();
+
+  async function runSuspenseReveal() {
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    await new Promise(r => setTimeout(r, reduce ? 50 : 950));
+    document.getElementById("suspenseStage").classList.add("hidden");
+    heroBox.classList.remove("hidden");
+
+    await Promise.all([
+      suspenseReveal(document.getElementById("scorePct"), pctVal, { suffix: "%", totalMs: 2300 }),
+      suspenseReveal(document.getElementById("marksObtained"), Number(result.obtainedMarks) || 0, { totalMs: 2500 })
+    ]);
+    heroBox.classList.add("landed");
+
+    await new Promise(r => setTimeout(r, reduce ? 0 : 250));
+    document.getElementById("revealArea").classList.remove("pre-reveal");
+
     animateCountUp(document.getElementById("statCorrect"), Number(result.correctCount) || 0, 800);
     animateCountUp(document.getElementById("statWrong"), Number(result.wrongCount) || 0, 800);
     animateCountUp(document.getElementById("statUnanswered"), Number(result.unansweredCount) || 0, 800);
@@ -305,7 +389,7 @@ async function renderApproved() {
       const pct = bar.dataset.pct || 0;
       requestAnimationFrame(() => { bar.style.width = `${pct}%`; });
     });
-  });
+  }
 
   const reviewEl = document.getElementById("reviewList");
   if (review.length === 0) {
