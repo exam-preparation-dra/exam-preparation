@@ -89,32 +89,17 @@
   }
   @keyframes currentPulse { 0%,100% { box-shadow: 0 0 0 3px var(--color-accent-soft); } 50% { box-shadow: 0 0 0 6px transparent; } }
 
-  /* ===== Circular timer ring — bigger "HUD" style: glow ring, ticking
-     glow pulse on the second-change, bolder digits. ===== */
-  .timer-ring-wrap { position: relative; width: 76px; height: 76px; display: flex; align-items: center; justify-content: center; }
-  .timer-ring-wrap svg { position: absolute; inset: 0; transform: rotate(-90deg); filter: drop-shadow(0 0 6px rgba(201,151,63,0.35)); }
-  .timer-ring-track { fill: none; stroke: var(--surface-border); stroke-width: 5; }
-  .timer-ring-fill {
-    fill: none; stroke: url(#timerGradient); stroke-width: 5; stroke-linecap: round;
-    transition: stroke-dashoffset 950ms linear;
-  }
+  /* ===== Timer — plain compact text, no ring/circle, minimal footprint ===== */
   #timerDisplay {
     font-family: var(--font-num);
     font-variant-numeric: tabular-nums;
-    font-weight: 800; font-size: 0.66rem; letter-spacing: -0.04em; white-space: nowrap;
-    position: relative; z-index: 1; color: var(--color-accent); transition: color 250ms ease;
-    animation: tickGlow 1s steps(1) infinite;
+    font-weight: 800; font-size: 0.95rem; letter-spacing: -0.02em; white-space: nowrap;
+    padding: 5px 12px; border-radius: 999px;
+    background: var(--surface-solid); border: 1px solid var(--surface-border);
+    color: var(--color-accent); transition: color 250ms ease, border-color 250ms ease;
   }
-  @keyframes tickGlow {
-    0%   { text-shadow: 0 0 8px rgba(201,151,63,0.6); }
-    50%  { text-shadow: 0 0 2px rgba(201,151,63,0.15); }
-    100% { text-shadow: 0 0 8px rgba(201,151,63,0.6); }
-  }
-  .timer-ring-wrap.timer-warning .timer-ring-fill { stroke: #f2a93b; }
-  .timer-ring-wrap.timer-warning #timerDisplay { color: #f2a93b; }
-  .timer-ring-wrap.timer-critical .timer-ring-fill { stroke: var(--color-danger); }
-  .timer-ring-wrap.timer-critical #timerDisplay { color: var(--color-danger); }
-  .timer-ring-wrap.timer-critical { animation: timerPulse 1s infinite; }
+  #timerDisplay.timer-warning { color: #f2a93b; border-color: #f2a93b66; }
+  #timerDisplay.timer-critical { color: var(--color-danger); border-color: var(--color-danger); animation: timerPulse 1s infinite; }
   @keyframes timerPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
   @media (prefers-reduced-motion: reduce) { #timerDisplay { animation: none !important; } }
 
@@ -157,14 +142,6 @@
   @keyframes overlayFade { from { opacity: 0; } to { opacity: 1; } }
   @keyframes modalRise { from { opacity: 0; transform: translateY(16px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
-  .conn-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: 0.72rem; padding: 4px 10px; border-radius: 999px;
-    transition: background 250ms ease, color 250ms ease;
-  }
-  .conn-online { background: var(--color-success)22; color: var(--color-success); }
-  .conn-offline { background: var(--color-danger)22; color: var(--color-danger); animation: connBlink 1.4s ease-in-out infinite; }
-  @keyframes connBlink { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
   .img-broken { border: 1.5px dashed var(--color-danger); min-height: 60px; opacity: 0.6; }
 
   .q-figure { transition: transform 200ms ease; }
@@ -330,24 +307,8 @@ async function renderIntro() {
 
 function renderExamShell() {
   shell.innerHTML = `
-    <div class="topbar">
-      <span class="conn-badge ${navigator.onLine ? "conn-online" : "conn-offline"}" id="connBadge">
-        ${navigator.onLine ? "অনলাইনে সংযুক্ত" : "অফলাইন — উত্তর ডিভাইসে সংরক্ষিত হচ্ছে"}
-      </span>
-      <div class="timer-ring-wrap" id="timerRingWrap">
-        <svg viewBox="0 0 52 52">
-          <defs>
-            <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:var(--color-accent)"></stop>
-              <stop offset="100%" style="stop-color:var(--color-accent-2)"></stop>
-            </linearGradient>
-          </defs>
-          <circle class="timer-ring-track" cx="26" cy="26" r="22"></circle>
-          <circle class="timer-ring-fill" id="timerRingFill" cx="26" cy="26" r="22"
-            stroke-dasharray="138.2" stroke-dashoffset="0"></circle>
-        </svg>
-        <span id="timerDisplay">--:--</span>
-      </div>
+    <div class="topbar" style="justify-content:flex-end;">
+      <span id="timerDisplay">--:--</span>
     </div>
 
     <div class="glass card">
@@ -394,7 +355,7 @@ function renderExamShell() {
       </div>
     </div>
 
-       <div id="figurePreviewModal" class="hidden" style="position:fixed;inset:0;background:rgba(10,14,26,0.9);align-items:center;justify-content:center;z-index:400;padding:20px;cursor:zoom-out;">
+    <div id="figurePreviewModal" class="hidden" style="position:fixed;inset:0;background:rgba(10,14,26,0.9);align-items:center;justify-content:center;z-index:400;padding:20px;cursor:zoom-out;">
       <img id="figurePreviewImg" style="max-width:100%;max-height:100%;border-radius:var(--radius-sm);">
     </div>
   `;
@@ -408,8 +369,8 @@ function renderExamShell() {
   document.getElementById("confirmSubmitBtn").addEventListener("click", () => doSubmit(false));
   document.getElementById("figurePreviewModal").addEventListener("click", closeFigurePreview);
 
-  window.addEventListener("online", updateConnBadge);
-  window.addEventListener("offline", updateConnBadge);
+  window.addEventListener("online", handleConnChange);
+  window.addEventListener("offline", handleConnChange);
   if (!examInProgress) {
     examInProgress = true;
     window.addEventListener("beforeunload", leaveGuard);
@@ -425,13 +386,16 @@ function leaveGuard(e) {
   e.returnValue = "";
 }
 
-function updateConnBadge() {
-  const badge = document.getElementById("connBadge");
-  if (!badge) return;
-  badge.className = `conn-badge ${navigator.onLine ? "conn-online" : "conn-offline"}`;
-  badge.textContent = navigator.onLine ? "অনলাইনে সংযুক্ত" : "অফলাইন — উত্তর ডিভাইসে সংরক্ষিত হচ্ছে";
+// No persistent badge anymore (it was eating topbar space) — just a
+// quick toast so the student still knows their answers are being saved
+// on-device when the connection drops.
+function handleConnChange() {
+  if (navigator.onLine) {
+    showToast("অনলাইনে সংযুক্ত হয়েছে।", "error");
+  } else {
+    showToast("অফলাইন — উত্তর ডিভাইসে সংরক্ষিত হচ্ছে।", "error");
+  }
 }
-
 function renderQuestion() {
   const idx = attemptState.currentIndex;
   const q = snapshot.questions[idx];
@@ -559,20 +523,10 @@ function startTimer() {
 function tick() {
   const remaining = attemptState.endAtMillis - Date.now();
   const display = document.getElementById("timerDisplay");
-  const ringWrap = document.getElementById("timerRingWrap");
-  const ringFill = document.getElementById("timerRingFill");
   if (display) {
     display.textContent = formatHms(remaining);
-  }
-  if (ringWrap) {
-    ringWrap.classList.toggle("timer-critical", remaining <= 60 * 1000 && remaining > 0);
-    ringWrap.classList.toggle("timer-warning", remaining <= 5 * 60 * 1000 && remaining > 60 * 1000);
-  }
-  if (ringFill) {
-    const total = attemptState.endAtMillis - (attemptState.startedAtMillis || (attemptState.endAtMillis - 1));
-    const frac = Math.max(0, Math.min(1, remaining / total));
-    const circumference = 138.2;
-    ringFill.style.strokeDashoffset = String(circumference * (1 - frac));
+    display.classList.toggle("timer-critical", remaining <= 60 * 1000 && remaining > 0);
+    display.classList.toggle("timer-warning", remaining <= 5 * 60 * 1000 && remaining > 60 * 1000);
   }
   if (remaining <= 5 * 60 * 1000 && remaining > 4 * 60 * 1000 && !warned5min) {
     warned5min = true;
@@ -635,4 +589,4 @@ async function doSubmit(isAutoSubmit) {
 </html>
 
 
- 
+
