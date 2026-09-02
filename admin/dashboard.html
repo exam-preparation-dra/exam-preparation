@@ -5,6 +5,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ড্যাশবোর্ড — অ্যাডমিন</title>
 <link rel="stylesheet" href="../css/style.css">
+<style>
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; } }
+  .glass.card { animation: cardRise 420ms cubic-bezier(.22,.9,.3,1) both; }
+  @keyframes cardRise { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  @media (hover: hover) {
+    #statsGrid .glass.card:hover, .card--tap:hover { box-shadow: var(--shadow-lift); transform: translateY(-3px); }
+  }
+  #statsGrid .glass.card:nth-child(1) { animation-delay: 20ms; }
+  #statsGrid .glass.card:nth-child(2) { animation-delay: 50ms; }
+  #statsGrid .glass.card:nth-child(3) { animation-delay: 80ms; }
+  #statsGrid .glass.card:nth-child(4) { animation-delay: 110ms; }
+  #statsGrid .glass.card:nth-child(5) { animation-delay: 140ms; }
+  #statsGrid .glass.card:nth-child(6) { animation-delay: 170ms; }
+  #statsGrid .glass.card:nth-child(7) { animation-delay: 200ms; }
+  #statsGrid .glass.card:nth-child(8) { animation-delay: 230ms; }
+  #statsGrid .glass.card:nth-child(9) { animation-delay: 260ms; }
+  #statsGrid .glass.card:nth-child(10) { animation-delay: 290ms; }
+  .card--tap { transition: transform 150ms ease, box-shadow 180ms ease; }
+  .card--tap:active { transform: scale(0.97); }
+</style>
 </head>
 <body>
 <div class="app-shell app-shell--wide">
@@ -102,7 +122,7 @@ async function loadStats() {
   grid.innerHTML = cards.map(([label, value]) => `
     <div class="glass card">
       <p class="eyebrow">${label}</p>
-      <p style="font-size:1.8rem;font-weight:800;margin-top:6px;">${value}</p>
+      <p class="stat-pct stat-pct--lg num" style="margin-top:6px;">${value}</p>
     </div>
   `).join("");
 }
