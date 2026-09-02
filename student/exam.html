@@ -173,6 +173,20 @@
   .btn { transition: transform 140ms ease, box-shadow 180ms ease, filter 180ms ease; }
   .btn:active:not(:disabled) { transform: scale(0.97); }
   .btn-primary:not(:disabled):hover { filter: brightness(1.06); }
+
+  /* ===== Sticky topbar — the timer must always stay visible while a
+     student scrolls through a long question, never require scrolling
+     back up to check remaining time. Scoped to this page only. ===== */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    margin: calc(var(--space-5) * -1) calc(var(--space-4) * -1) var(--space-4);
+    padding: var(--space-4) var(--space-4) var(--space-3);
+    background: var(--bg-app);
+    border-bottom: 1px solid var(--surface-border);
+  }
+  @media (min-width: 900px) {
+    .topbar { margin: calc(var(--space-7) * -1) calc(var(--space-6) * -1) var(--space-4); padding: var(--space-4) var(--space-6) var(--space-3); }
+  }
 </style>
 </head>
 <body>
@@ -203,6 +217,7 @@ let attemptState = null;
 let timerHandle = null;
 let questionStartMillis = null;
 let warned5min = false, warned1min = false;
+let lastWarnedInterval = 0; // tracks which 30-min mark we've already toasted
 let examInProgress = false;
 
 if (!student) {
@@ -382,7 +397,7 @@ function renderExamShell() {
     </div>
   `;
 
-  document.getElementById("prevBtn").addEventListener("click", () => navigate(-1));
+    document.getElementById("prevBtn").addEventListener("click", () => navigate(-1));
   document.getElementById("nextBtn").addEventListener("click", () => navigate(1));
   document.getElementById("paletteBtn").addEventListener("click", openPalette);
   document.getElementById("closePaletteBtn").addEventListener("click", closePalette);
@@ -564,6 +579,17 @@ function tick() {
   if (remaining <= 60 * 1000 && remaining > 0 && !warned1min) {
     warned1min = true;
     showToast("আর মাত্র ১ মিনিট বাকি — পরীক্ষা স্বয়ংক্রিয়ভাবে জমা হবে।", "error");
+  }
+  // Every 30 minutes elapsed, remind the student how much time is left.
+  // Skipped once we're inside the final-5-minute stretch — the dedicated
+  // 5-min/1-min warnings above already cover that window.
+  if (attemptState.startedAtMillis && remaining > 5 * 60 * 1000) {
+    const elapsedMinutes = (Date.now() - attemptState.startedAtMillis) / 60000;
+    const currentInterval = Math.floor(elapsedMinutes / 30);
+    if (currentInterval > lastWarnedInterval && currentInterval >= 1) {
+      lastWarnedInterval = currentInterval;
+      showToast(`৩০ মিনিট পার হয়ে গেছে — বাকি সময়: ${formatHms(remaining)}`, "error");
+    }
   }
   if (remaining <= 0) {
     clearInterval(timerHandle);
