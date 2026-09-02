@@ -37,10 +37,13 @@
   }
   @keyframes trendShimmer { 0% { background-position: 0 0%; } 100% { background-position: 0 100%; } }
 
-  /* ===== Subject progress bars: animate width grow-in from 0 ===== */
+  /* ===== Subject progress bars: animate width grow-in from 0 =====
+     (No !important here — that was overriding the JS-set inline width
+     forever, which is why the bars always looked like an empty white
+     track. Plain 0% only applies before JS sets the real width.) */
   .progress-track { overflow: hidden; }
   .progress-fill {
-    width: 0% !important;
+    width: 0%;
     transition: width 900ms cubic-bezier(.22,.9,.3,1);
   }
 
@@ -190,8 +193,8 @@ async function loadPerformance() {
       <p class="eyebrow">পারফরম্যান্স সারাংশ</p>
       <div class="grid-2 mt-2">
         <div class="glass card"><p class="text-xs text-muted">মোট পরীক্ষা</p><p style="font-size:1.5rem;font-weight:800;"><span class="num" id="statExams">0</span></p></div>
-        <div class="glass card"><p class="text-xs text-muted">গড় শতাংশ</p><p style="font-size:1.5rem;font-weight:800;"><span class="num" id="statAvgPct">0</span>%</p></div>
-        <div class="glass card"><p class="text-xs text-muted">গড় সঠিকতা</p><p style="font-size:1.5rem;font-weight:800;"><span class="num" id="statAvgAcc">0</span>%</p></div>
+        <div class="glass card"><p class="text-xs text-muted">গড় শতাংশ</p><p class="stat-pct stat-pct--lg num" id="statAvgPct">0%</p></div>
+        <div class="glass card"><p class="text-xs text-muted">গড় সঠিকতা</p><p class="stat-pct stat-pct--lg num" id="statAvgAcc">0%</p></div>
         <div class="glass card"><p class="text-xs text-muted">সঠিক / ভুল / অনুত্তরিত</p><p style="font-size:1.1rem;font-weight:700;" class="num">${overall.totalCorrect} / ${overall.totalWrong} / ${overall.totalUnanswered}</p></div>
       </div>
       ${overall.mostRecent ? `
@@ -216,8 +219,8 @@ async function loadPerformance() {
 
     requestAnimationFrame(() => {
       animateCountUp(document.getElementById("statExams"), Number(overall.examsTaken) || 0, 700);
-      if (overall.avgPercentage != null) animateCountUp(document.getElementById("statAvgPct"), Number(overall.avgPercentage) || 0, 800);
-      if (overall.avgAccuracy != null) animateCountUp(document.getElementById("statAvgAcc"), Number(overall.avgAccuracy) || 0, 800);
+      if (overall.avgPercentage != null) animateCountUp(document.getElementById("statAvgPct"), Number(overall.avgPercentage) || 0, 800, "%");
+      if (overall.avgAccuracy != null) animateCountUp(document.getElementById("statAvgAcc"), Number(overall.avgAccuracy) || 0, 800, "%");
       document.querySelectorAll(".trend-bar").forEach(bar => {
         const h = bar.dataset.h || 6;
         requestAnimationFrame(() => { bar.style.height = `${h}%`; });
@@ -234,7 +237,7 @@ async function loadPerformance() {
         <div class="glass card mt-2">
           <div class="flex justify-between items-center">
             <p style="font-weight:700;">${s.name}</p>
-            <p class="text-sm num" style="font-weight:700;color:var(--color-accent);">${s.accuracy ?? "—"}%</p>
+            <p class="stat-pct">${s.accuracy ?? "—"}%</p>
           </div>
           <div class="progress-track mt-2"><div class="progress-fill subj-progress" data-w="${s.accuracy ?? 0}"></div></div>
           <p class="text-xs text-muted mt-2 num">সঠিক ${s.correct} • ভুল ${s.wrong} • মোট নম্বর ${s.marks}</p>
