@@ -89,19 +89,26 @@
   }
   @keyframes currentPulse { 0%,100% { box-shadow: 0 0 0 3px var(--color-accent-soft); } 50% { box-shadow: 0 0 0 6px transparent; } }
 
-  /* ===== Circular timer ring — accent gradient stroke, Space Grotesk digits ===== */
-  .timer-ring-wrap { position: relative; width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; }
-  .timer-ring-wrap svg { position: absolute; inset: 0; transform: rotate(-90deg); }
-  .timer-ring-track { fill: none; stroke: var(--surface-border); stroke-width: 4; }
+  /* ===== Circular timer ring — bigger "HUD" style: glow ring, ticking
+     glow pulse on the second-change, bolder digits. ===== */
+  .timer-ring-wrap { position: relative; width: 68px; height: 68px; display: flex; align-items: center; justify-content: center; }
+  .timer-ring-wrap svg { position: absolute; inset: 0; transform: rotate(-90deg); filter: drop-shadow(0 0 6px rgba(201,151,63,0.35)); }
+  .timer-ring-track { fill: none; stroke: var(--surface-border); stroke-width: 5; }
   .timer-ring-fill {
-    fill: none; stroke: url(#timerGradient); stroke-width: 4; stroke-linecap: round;
+    fill: none; stroke: url(#timerGradient); stroke-width: 5; stroke-linecap: round;
     transition: stroke-dashoffset 950ms linear;
   }
   #timerDisplay {
     font-family: var(--font-num);
     font-variant-numeric: tabular-nums;
-    font-weight: 700; font-size: 0.68rem; letter-spacing: -0.01em;
+    font-weight: 800; font-size: 0.86rem; letter-spacing: -0.01em;
     position: relative; z-index: 1; color: var(--color-accent); transition: color 250ms ease;
+    animation: tickGlow 1s steps(1) infinite;
+  }
+  @keyframes tickGlow {
+    0%   { text-shadow: 0 0 8px rgba(201,151,63,0.6); }
+    50%  { text-shadow: 0 0 2px rgba(201,151,63,0.15); }
+    100% { text-shadow: 0 0 8px rgba(201,151,63,0.6); }
   }
   .timer-ring-wrap.timer-warning .timer-ring-fill { stroke: #f2a93b; }
   .timer-ring-wrap.timer-warning #timerDisplay { color: #f2a93b; }
@@ -109,18 +116,26 @@
   .timer-ring-wrap.timer-critical #timerDisplay { color: var(--color-danger); }
   .timer-ring-wrap.timer-critical { animation: timerPulse 1s infinite; }
   @keyframes timerPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+  @media (prefers-reduced-motion: reduce) { #timerDisplay { animation: none !important; } }
 
-  /* ===== Animated progress bar — ember gradient, matches .review-filter-chip.is-active ===== */
-  .exam-progress-track { height: 6px; border-radius: 999px; background: var(--surface-border); overflow: hidden; }
+  /* ===== Animated progress bar — moving stripe so it reads as "live" while answering ===== */
+  .exam-progress-track { height: 8px; border-radius: 999px; background: var(--surface-border); box-shadow: inset 0 1px 3px rgba(0,0,0,0.12); overflow: hidden; }
   .exam-progress-fill {
-    height: 100%; border-radius: 999px;
+    position: relative; height: 100%; border-radius: 999px;
     background: linear-gradient(90deg, var(--color-accent), var(--color-accent-2));
-    background-size: 200% 100%;
+    box-shadow: 0 0 12px rgba(201,151,63,0.5);
     transition: width 420ms cubic-bezier(.22,.9,.3,1);
-    animation: fillShimmer 2.4s linear infinite;
+    overflow: hidden;
   }
-  @keyframes fillShimmer { 0% { background-position: 0% 0; } 100% { background-position: 200% 0; } }
-  #progressLabel { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+  .exam-progress-fill::after {
+    content: ""; position: absolute; inset: 0;
+    background: repeating-linear-gradient(115deg, rgba(255,255,255,0.32) 0px, rgba(255,255,255,0.32) 8px, transparent 8px, transparent 18px);
+    background-size: 200% 100%;
+    animation: fillShimmer 1.4s linear infinite;
+  }
+  @keyframes fillShimmer { from { background-position: 0 0; } to { background-position: -36px 0; } }
+  @media (prefers-reduced-motion: reduce) { .exam-progress-fill::after { animation: none; } }
+  #progressLabel { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-weight: 700; font-size: 0.82rem; color: var(--text-secondary); }
   #qCounter .num-part { font-family: var(--font-num); }
 
   .review-toggle {
@@ -590,5 +605,6 @@ async function doSubmit(isAutoSubmit) {
 </script>
 </body>
 </html>
+
 
  
