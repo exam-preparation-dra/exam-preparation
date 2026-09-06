@@ -121,4 +121,4 @@ export function renderStudentHeader(student, activeKey) {
       `).join("")}
     </div>
   `;
-     }
+}
