@@ -56,15 +56,15 @@ async function loadIdentity() {
     const created = data.createdAt?.toDate ? data.createdAt.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" }) : null;
 
     el.innerHTML = `
-      <div class="glass card">
-        <div class="flex items-center gap-3">
-          <span class="icon-btn" style="width:52px;height:52px;">${icons.user}</span>
-          <div>
-            <p style="font-weight:800;font-size:1.15rem;">${student.name}</p>
-            <p class="text-xs text-muted">স্থায়ী শিক্ষার্থী আইডি: <span style="color:var(--text-secondary);font-weight:600;">${student.studentId}</span></p>
-          </div>
-        </div>
-        ${created ? `<p class="text-xs text-muted mt-3">যোগদানের তারিখ: ${created}</p>` : ""}
+      <div class="glass card" style="text-align:center;padding:32px 20px;">
+        ${data.photoURL
+          ? `<img src="${data.photoURL}" alt="" draggable="false" oncontextmenu="return false"
+               style="width:128px;height:128px;border-radius:50%;object-fit:cover;margin:0 auto;display:block;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;pointer-events:none;box-shadow:0 6px 20px rgba(0,0,0,0.18);"
+               onerror="var d=document.createElement('div');d.className='brand-mark';d.textContent='${student.name.charAt(0)}';d.style.cssText='width:128px;height:128px;font-size:2.6rem;margin:0 auto;';this.replaceWith(d);">`
+          : `<div class="brand-mark" style="width:128px;height:128px;font-size:2.6rem;margin:0 auto;">${student.name.charAt(0)}</div>`}
+        <p style="font-weight:800;font-size:1.3rem;margin-top:16px;">${student.name}</p>
+        <p class="text-xs text-muted mt-1">স্থায়ী শিক্ষার্থী আইডি: <span style="color:var(--text-secondary);font-weight:600;">${student.studentId}</span></p>
+        ${created ? `<p class="text-xs text-muted mt-2">যোগদানের তারিখ: ${created}</p>` : ""}
       </div>
     `;
   } catch (err) {
