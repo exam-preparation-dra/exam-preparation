@@ -18,7 +18,7 @@ import { initTheme, toggleTheme, icons, renderState, showToast, friendlyError } 
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
 import { initAdminPwaInstall } from "../pwa-install.js";
 import { getActiveStudents, createStudent, updateStudentPhoto } from "../js/utils/student-utils.js";
-import { toDirectImageUrl } from "../js/utils/image-utils.js";
+import { toDirectImageUrl, uploadImageToImgbb, getImgbbApiKey, setImgbbApiKey } from "../js/utils/image-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { collection, getDocs, orderBy, query, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
@@ -74,9 +74,18 @@ function askForPhotoLink(currentUrl) {
     overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;";
     overlay.innerHTML = `
       <div class="glass card" style="max-width:480px;width:100%;">
-        <p style="font-weight:700;margin-bottom:8px;">ছবির লিংক দিন</p>
-        <p class="text-xs text-muted mb-2">Google Drive শেয়ার লিংক ("Anyone with the link" করা থাকতে হবে) অথবা সরাসরি ছবির URL। খালি রেখে সেভ করলে ছবি মুছে যাবে।</p>
-        <textarea id="photoLinkInput" rows="4" style="width:100%;resize:vertical;padding:10px;border-radius:8px;font-family:inherit;font-size:14px;box-sizing:border-box;"></textarea>
+        <p style="font-weight:700;margin-bottom:8px;">ছবি দিন</p>
+
+        <p class="text-xs text-muted mb-2">ফোন থেকে সরাসরি ছবি আপলোড করুন:</p>
+        <input type="file" id="photoFileInput" accept="image/*" style="width:100%;font-size:13px;">
+        <p id="photoUploadStatus" class="text-xs mt-2" style="min-height:16px;"></p>
+
+        <div class="mt-3" style="border-top:1px solid var(--border-color,#e5ddc8);padding-top:12px;">
+          <p class="text-xs text-muted mb-2">— অথবা — লিংক পেস্ট করুন (Google Drive শেয়ার লিংক, "Anyone with the link" করা থাকতে হবে, বা সরাসরি ছবির URL):</p>
+          <textarea id="photoLinkInput" rows="3" style="width:100%;resize:vertical;padding:10px;border-radius:8px;font-family:inherit;font-size:14px;box-sizing:border-box;"></textarea>
+        </div>
+
+        <p class="text-xs text-muted mt-2">খালি রেখে সেভ করলে ছবি মুছে যাবে।</p>
         <div class="flex gap-2 mt-3" style="justify-content:flex-end;">
           <button type="button" class="btn btn-secondary" id="photoLinkCancel">বাতিল</button>
           <button type="button" class="btn btn-primary" id="photoLinkSave">সেভ করুন</button>
@@ -85,8 +94,32 @@ function askForPhotoLink(currentUrl) {
     `;
     document.body.appendChild(overlay);
     const textarea = overlay.querySelector("#photoLinkInput");
+    const fileInput = overlay.querySelector("#photoFileInput");
+    const statusEl = overlay.querySelector("#photoUploadStatus");
     textarea.value = currentUrl || "";
     textarea.focus();
+
+    fileInput.addEventListener("change", async () => {
+      const file = fileInput.files?.[0];
+      if (!file) return;
+      let apiKey = getImgbbApiKey();
+      if (!apiKey) {
+        apiKey = (prompt("প্রথমবার ImgBB API key দিন (একবারই লাগবে, https://api.imgbb.com/ থেকে ফ্রি নিতে পারেন):", "") || "").trim();
+        if (!apiKey) { fileInput.value = ""; return; }
+        setImgbbApiKey(apiKey);
+      }
+      statusEl.textContent = "আপলোড হচ্ছে...";
+      statusEl.style.color = "var(--text-muted)";
+      try {
+        const url = await uploadImageToImgbb(file, apiKey);
+        textarea.value = url;
+        statusEl.textContent = "আপলোড সম্পন্ন — নিচে \"সেভ করুন\" চাপুন।";
+        statusEl.style.color = "var(--color-success, green)";
+      } catch (err) {
+        statusEl.textContent = err.message || "আপলোড ব্যর্থ হয়েছে।";
+        statusEl.style.color = "var(--color-error, crimson)";
+      }
+    });
 
     function cleanup(result) { overlay.remove(); resolve(result); }
     overlay.querySelector("#photoLinkCancel").addEventListener("click", () => cleanup(null));
