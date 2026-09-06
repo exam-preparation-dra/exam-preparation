@@ -65,6 +65,36 @@ async function loadAllStudents() {
   return snap.docs.map(d => ({ docId: d.id, ...d.data() }));
 }
 
+// Custom modal (replaces prompt()) — some mobile browsers truncate or
+// mishandle long pasted text inside a native prompt() box. A plain
+// <textarea> has no such limit, so long Google Drive links are never cut off.
+function askForPhotoLink(currentUrl) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;";
+    overlay.innerHTML = `
+      <div class="glass card" style="max-width:480px;width:100%;">
+        <p style="font-weight:700;margin-bottom:8px;">ছবির লিংক দিন</p>
+        <p class="text-xs text-muted mb-2">Google Drive শেয়ার লিংক ("Anyone with the link" করা থাকতে হবে) অথবা সরাসরি ছবির URL। খালি রেখে সেভ করলে ছবি মুছে যাবে।</p>
+        <textarea id="photoLinkInput" rows="4" style="width:100%;resize:vertical;padding:10px;border-radius:8px;font-family:inherit;font-size:14px;box-sizing:border-box;"></textarea>
+        <div class="flex gap-2 mt-3" style="justify-content:flex-end;">
+          <button type="button" class="btn btn-secondary" id="photoLinkCancel">বাতিল</button>
+          <button type="button" class="btn btn-primary" id="photoLinkSave">সেভ করুন</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    const textarea = overlay.querySelector("#photoLinkInput");
+    textarea.value = currentUrl || "";
+    textarea.focus();
+
+    function cleanup(result) { overlay.remove(); resolve(result); }
+    overlay.querySelector("#photoLinkCancel").addEventListener("click", () => cleanup(null));
+    overlay.querySelector("#photoLinkSave").addEventListener("click", () => cleanup(textarea.value));
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) cleanup(null); });
+  });
+}
+
 async function loadStudents() {
   const listEl = document.getElementById("studentList");
   try {
@@ -78,7 +108,7 @@ async function loadStudents() {
         <div class="flex justify-between items-center">
           <div class="flex items-center gap-3">
             ${s.photoURL
-              ? `<img src="${s.photoURL}" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'">`
+              ? `<img src="${s.photoURL}" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'brand-mark',textContent:'${s.name.charAt(0)}'}))">`
               : `<div class="brand-mark" style="flex-shrink:0;">${s.name.charAt(0)}</div>`}
             <div>
               <p style="font-weight:700;">
@@ -102,10 +132,7 @@ async function loadStudents() {
 
       card.querySelector(".photo-btn").addEventListener("click", async () => {
         const currentUrl = student.photoURL || "";
-        const input = prompt(
-          "ছবির লিংক দিন — Google Drive শেয়ার লিংক (\"Anyone with the link\" করা থাকতে হবে) অথবা সরাসরি ছবির URL।\nখালি রেখে OK দিলে ছবি মুছে যাবে:",
-          currentUrl
-        );
+        const input = await askForPhotoLink(currentUrl);
         if (input === null) return; // cancelled
         const trimmed = input.trim();
         try {
