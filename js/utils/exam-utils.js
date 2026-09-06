@@ -6,7 +6,7 @@
 import { db } from "../firebase/firebase-config.js";
 import {
   collection, doc, addDoc, updateDoc, deleteDoc, getDoc, getDocs, setDoc,
-  query, where, orderBy, serverTimestamp, Timestamp, writeBatch
+  query, where, orderBy, serverTimestamp, Timestamp, writeBatch, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { getQuestionsByIds } from "./question-utils.js";
 
@@ -118,6 +118,58 @@ export async function getAllExams({ status = null } = {}) {
   const snap = await getDocs(query(collection(db, "exams"), ...clauses));
   const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   return status ? items.sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0)) : items;
+}
+
+// ---------- LIVE SYNC: real-time listener for the exam list (fixes the
+// "student has to refresh to see a newly-created exam" issue). Call this
+// from the student-side page instead of getAllExams() when the list needs
+// to stay live. It fires immediately with the current data, then again
+// every time an exam is added/edited/removed/status-changed on the server —
+// no page refresh needed.
+//
+// Usage (in the student page that lists exams):
+//   const unsubscribe = subscribeToExams({ status: "published" }, (exams) => {
+//     renderExamList(exams);
+//   });
+//   // call unsubscribe() when leaving the page (optional, but tidy)
+//
+// Returns an `unsubscribe` function.
+export function subscribeToExams({ status = null } = {}, onChange, onError) {
+  const clauses = [];
+  if (status) clauses.push(where("status", "==", status));
+  if (!status) clauses.push(orderBy("createdAt", "desc"));
+
+  const q = query(collection(db, "exams"), ...clauses);
+
+  return onSnapshot(
+    q,
+    (snap) => {
+      let items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (status) {
+        // Same client-side sort as getAllExams() — no composite index needed.
+        items = items.sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
+      }
+      onChange(items);
+    },
+    (err) => {
+      console.error("subscribeToExams error:", err);
+      if (onError) onError(err);
+    }
+  );
+}
+
+// ---------- LIVE SYNC: real-time listener for a single exam document.
+// Useful on the admin's exams.html list / exam-edit.html so a status change
+// (e.g. published -> active) reflects instantly without a manual reload. ----------
+export function subscribeToExamById(examId, onChange, onError) {
+  return onSnapshot(
+    doc(db, "exams", examId),
+    (snap) => onChange(snap.exists() ? { id: snap.id, ...snap.data() } : null),
+    (err) => {
+      console.error("subscribeToExamById error:", err);
+      if (onError) onError(err);
+    }
+  );
 }
 
 // ---------- PUBLISH: freeze an immutable question snapshot, then flip status.

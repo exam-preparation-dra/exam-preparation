@@ -4,7 +4,7 @@
 import { db } from "../firebase/firebase-config.js";
 import {
   collection, doc, getDocs, getDoc, query, where, orderBy,
-  runTransaction, addDoc, serverTimestamp
+  runTransaction, addDoc, serverTimestamp, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 // ---------- Generate permanent Student ID (requirement #7) ----------
@@ -29,6 +29,16 @@ export async function createStudent(name) {
     createdAt: serverTimestamp()
   });
   return { docId: docRef.id, studentId, name };
+}
+
+// ---------- Set/replace a student's profile photo (feature #2) ----------
+// Link-based, same no-Storage approach as question images: the admin pastes
+// a direct image URL or a Google Drive share link (normalized by
+// toDirectImageUrl() in image-utils.js before this is called). Storing just
+// the URL avoids Firebase Storage entirely — no Blaze plan needed.
+// Pass an empty/null url to remove the photo.
+export async function updateStudentPhoto(docId, photoUrl) {
+  return updateDoc(doc(db, "students", docId), { photoURL: photoUrl || null });
 }
 
 // ---------- Check for an in-progress attempt so the student can resume (#18) ----------

@@ -6,7 +6,7 @@
    ========================================================= */
 import { db } from "../firebase/firebase-config.js";
 import {
-  collection, doc, getDoc, getDocs, query, where
+  collection, doc, getDoc, getDocs, query, where, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 // ---------- Which exams has this student already submitted a result for?
@@ -34,6 +34,32 @@ export async function getUpcomingExams() {
   return snap.docs
     .map(d => ({ id: d.id, ...d.data() }))
     .sort((a, b) => (a.examDate?.toMillis?.() ?? 0) - (b.examDate?.toMillis?.() ?? 0));
+}
+
+// ---------- LIVE SYNC version of getUpcomingExams() above — same exact
+// filter ("upcoming"/"published" status) and same client-side sort by
+// examDate, just delivered via onSnapshot instead of a one-time getDocs().
+// This fixes: admin publishes/creates an exam -> student dashboard updates
+// instantly, no manual refresh needed.
+//
+// Usage (dashboard.html):
+//   const unsubscribe = subscribeToUpcomingExams((exams) => { ...render... });
+//   // optionally call unsubscribe() when leaving the page
+export function subscribeToUpcomingExams(onChange, onError) {
+  const q = query(collection(db, "exams"), where("status", "in", ["upcoming", "published"]));
+  return onSnapshot(
+    q,
+    (snap) => {
+      const exams = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (a.examDate?.toMillis?.() ?? 0) - (b.examDate?.toMillis?.() ?? 0));
+      onChange(exams);
+    },
+    (err) => {
+      console.error("subscribeToUpcomingExams error:", err);
+      if (onError) onError(err);
+    }
+  );
 }
 
 // ---------- All approved results for a student, newest first ----------

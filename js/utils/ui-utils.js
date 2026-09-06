@@ -85,6 +85,7 @@ export const icons = {
   chevronDown: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9l6 6 6-6"/></svg>`,
   layers: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2l9 5-9 5-9-5 9-5z"/><path d="M3 12l9 5 9-5"/><path d="M3 17l9 5 9-5"/></svg>`,
   alert: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>`,
+  camera: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="4"/></svg>`,
 };
 
 // ---------- Shared header for student-facing pages (dashboard/profile/history) ----------
@@ -97,7 +98,9 @@ export function renderStudentHeader(student, activeKey) {
   return `
     <div class="topbar">
       <div class="brand">
-        <div class="brand-mark">${student.name.charAt(0)}</div>
+        ${student.photoURL
+          ? `<img src="${student.photoURL}" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'brand-mark',textContent:'${student.name.charAt(0)}'}))">`
+          : `<div class="brand-mark">${student.name.charAt(0)}</div>`}
         <div>
           <h1 style="font-size:1.05rem;">${student.name}</h1>
           <p class="text-xs text-muted" style="margin:0;">${student.studentId}</p>
