@@ -17,7 +17,8 @@
 import { initTheme, toggleTheme, icons, renderState, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
 import { initAdminPwaInstall } from "../pwa-install.js";
-import { getActiveStudents, createStudent } from "../js/utils/student-utils.js";
+import { getActiveStudents, createStudent, updateStudentPhoto } from "../js/utils/student-utils.js";
+import { toDirectImageUrl } from "../js/utils/image-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { collection, getDocs, orderBy, query, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
@@ -75,13 +76,19 @@ async function loadStudents() {
     listEl.innerHTML = students.map(s => `
       <div class="glass card mt-2" data-id="${s.docId}">
         <div class="flex justify-between items-center">
-          <div>
-            <p style="font-weight:700;">
-              <span class="student-name">${s.name}</span>
-            </p>
-            <p class="text-xs text-muted">${s.studentId}${s.isActive ? "" : " • নিষ্ক্রিয়"}</p>
+          <div class="flex items-center gap-3">
+            ${s.photoURL
+              ? `<img src="${s.photoURL}" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'">`
+              : `<div class="brand-mark" style="flex-shrink:0;">${s.name.charAt(0)}</div>`}
+            <div>
+              <p style="font-weight:700;">
+                <span class="student-name">${s.name}</span>
+              </p>
+              <p class="text-xs text-muted">${s.studentId}${s.isActive ? "" : " • নিষ্ক্রিয়"}</p>
+            </div>
           </div>
           <div class="flex gap-2">
+            <button class="icon-btn photo-btn" title="ছবি পরিবর্তন">${icons.camera}</button>
             <button class="icon-btn edit-btn" title="নাম সম্পাদনা">${icons.edit}</button>
             <button class="icon-btn toggle-btn" title="সক্রিয়/নিষ্ক্রিয়">${icons.toggle}</button>
           </div>
@@ -92,6 +99,24 @@ async function loadStudents() {
     listEl.querySelectorAll("[data-id]").forEach(card => {
       const docId = card.dataset.id;
       const student = students.find(s => s.docId === docId);
+
+      card.querySelector(".photo-btn").addEventListener("click", async () => {
+        const currentUrl = student.photoURL || "";
+        const input = prompt(
+          "ছবির লিংক দিন — Google Drive শেয়ার লিংক (\"Anyone with the link\" করা থাকতে হবে) অথবা সরাসরি ছবির URL।\nখালি রেখে OK দিলে ছবি মুছে যাবে:",
+          currentUrl
+        );
+        if (input === null) return; // cancelled
+        const trimmed = input.trim();
+        try {
+          const finalUrl = trimmed ? toDirectImageUrl(trimmed) : null;
+          await updateStudentPhoto(docId, finalUrl);
+          showToast(finalUrl ? "ছবি আপডেট করা হয়েছে।" : "ছবি মুছে ফেলা হয়েছে।", "success");
+          loadStudents();
+        } catch (err) {
+          showToast(friendlyError(err), "error");
+        }
+      });
 
       card.querySelector(".edit-btn").addEventListener("click", async () => {
         const nameEl = card.querySelector(".student-name");
