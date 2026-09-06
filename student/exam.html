@@ -191,7 +191,7 @@
 
 <script type="module">
 import { initTheme, icons, renderState, showToast } from "../js/utils/ui-utils.js";
-import { getActiveStudent } from "../js/utils/student-utils.js";
+import { getActiveStudent, refreshActiveStudent } from "../js/utils/student-utils.js";
 import { getExamById, getExamSnapshot } from "../js/utils/results-utils.js";
 import { getSubjects, getChapters, buildNameMap } from "../js/utils/syllabus-utils.js";
 import {
@@ -220,7 +220,10 @@ if (!student) {
 } else if (!examId) {
   shell.innerHTML = `<div class="state-block"><p class="text-sm">পরীক্ষা শনাক্ত করা যায়নি।</p></div>`;
 } else {
-  boot();
+  refreshActiveStudent(student.docId).then(fresh => {
+    if (fresh) Object.assign(student, fresh); // keep the same object reference `student` everywhere below
+    boot();
+  });
 }
 
 async function boot() {
@@ -324,7 +327,14 @@ async function renderIntro() {
 function renderExamShell() {
   shell.innerHTML = `
     <div class="topbar" style="justify-content:space-between;align-items:center;gap:8px;">
-      <span class="text-sm" style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${student.name}</span>
+      <span class="flex items-center gap-2" style="min-width:0;overflow:hidden;">
+        ${student.photoURL
+          ? `<img src="${student.photoURL}" alt="" draggable="false" oncontextmenu="return false"
+               style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;pointer-events:none;"
+               onerror="var d=document.createElement('div');d.className='brand-mark';d.textContent='${student.name.charAt(0)}';d.style.cssText='width:32px;height:32px;font-size:0.9rem;flex-shrink:0;';this.replaceWith(d);">`
+          : `<div class="brand-mark" style="width:32px;height:32px;font-size:0.9rem;flex-shrink:0;">${student.name.charAt(0)}</div>`}
+        <span class="text-sm" style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${student.name}</span>
+      </span>
       <span class="flex items-center gap-2" style="flex-shrink:0;">
         <span class="text-xs text-muted" style="white-space:nowrap;">বাকি সময়</span>
         <span id="timerDisplay">--:--</span>
