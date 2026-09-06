@@ -211,7 +211,7 @@ let snapshot = null;
 let attemptState = null;
 let timerHandle = null;
 let questionStartMillis = null;
-let warned5min = false, warned1min = false;
+let warned20min = false, warned5min = false, warned1min = false;
 let lastWarnedInterval = 0; // tracks which 30-min mark we've already toasted
 let examInProgress = false;
 
@@ -396,16 +396,13 @@ function renderExamShell() {
     window.addEventListener("beforeunload", leaveGuard);
   }
   questionStartMillis = Date.now();
-
   renderQuestion();
 }
-
 function leaveGuard(e) {
   if (!examInProgress) return;
   e.preventDefault();
   e.returnValue = "";
 }
-
 // No persistent badge anymore (it was eating topbar space) — just a
 // quick toast so the student still knows their answers are being saved
 // on-device when the connection drops.
@@ -416,18 +413,15 @@ function handleConnChange() {
     showToast("অফলাইন — উত্তর ডিভাইসে সংরক্ষিত হচ্ছে।", "error");
   }
 }
-
 function renderQuestion() {
   const idx = attemptState.currentIndex;
   const q = snapshot.questions[idx];
   document.getElementById("qCounter").textContent = `প্রশ্ন ${idx + 1} / ${snapshot.questions.length}`;
   document.getElementById("prevBtn").disabled = idx === 0;
   document.getElementById("nextBtn").disabled = idx === snapshot.questions.length - 1;
-
   const answeredCount = Object.keys(attemptState.answers).length;
   document.getElementById("progressFill").style.width = `${Math.round((answeredCount / snapshot.questions.length) * 100)}%`;
   document.getElementById("progressLabel").textContent = `${answeredCount} / ${snapshot.questions.length} টি প্রশ্নের উত্তর দেওয়া হয়েছে`;
-
   const selected = attemptState.answers[q.questionId];
   const isMarked = !!attemptState.markedForReview[q.questionId];
   const body = document.getElementById("questionBody");
@@ -450,16 +444,13 @@ function renderQuestion() {
       ${isMarked ? "★ পর্যালোচনার জন্য চিহ্নিত" : "☆ পর্যালোচনার জন্য চিহ্নিত করুন"}
     </button>
   `;
-
   body.querySelectorAll(".option-card").forEach(btn => {
     btn.addEventListener("click", () => selectAnswer(q.questionId, btn.dataset.letter));
   });
   document.getElementById("markReviewBtn").addEventListener("click", () => toggleMarkForReview(q.questionId));
-
   const figure = body.querySelector(".q-figure");
   if (figure) figure.addEventListener("click", () => openFigurePreview(q.imageUrl));
 }
-
 function openFigurePreview(url) {
   const modal = document.getElementById("figurePreviewModal");
   const modalImg = document.getElementById("figurePreviewImg");
@@ -473,19 +464,16 @@ function closeFigurePreview() {
   modal.style.display = "none";
   document.getElementById("figurePreviewImg").src = "";
 }
-
 function toggleMarkForReview(questionId) {
   attemptState.markedForReview[questionId] = !attemptState.markedForReview[questionId];
   persistState();
   renderQuestion();
 }
-
 function selectAnswer(questionId, letter) {
   attemptState.answers[questionId] = letter;
   persistState();
   renderQuestion();
 }
-
 function navigate(delta) {
   const next = attemptState.currentIndex + delta;
   if (next < 0 || next >= snapshot.questions.length) return;
@@ -494,7 +482,6 @@ function navigate(delta) {
   persistState();
   renderQuestion();
 }
-
 function recordElapsed() {
   if (questionStartMillis == null) return;
   const q = snapshot.questions[attemptState.currentIndex];
@@ -504,7 +491,6 @@ function recordElapsed() {
   }
   questionStartMillis = Date.now();
 }
-
 function persistState() {
   saveLocalAttempt(examId, student.studentId, attemptState);
   syncToFirestoreDebounced(examId, student.studentId, {
@@ -514,7 +500,6 @@ function persistState() {
     markedForReview: attemptState.markedForReview
   });
 }
-
 function openPalette() {
   const grid = document.getElementById("paletteGrid");
   grid.innerHTML = snapshot.questions.map((q, i) => {
@@ -535,7 +520,31 @@ function openPalette() {
 function closePalette() {
   document.getElementById("paletteOverlay").classList.add("hidden");
 }
-
+// ===== Voice reminders (Web Speech API) — speaks a Bengali announcement
+// on top of the existing toast, for the "20 min left" / "5 min left"
+// countdown checkpoints. Silently does nothing if the browser/device
+// doesn't support speech synthesis (feature-detected, never throws). =====
+// Two-part speech: the student's name is very likely written in Bengali
+// script (e.g. "রহিম উদ্দিন") — an English-only voice would mangle it. So
+// the name is spoken with a Bengali voice, then the reminder message with
+// an English voice, queued back-to-back (speechSynthesis plays queued
+// utterances in order, even across different languages).
+function speak(name, message) {
+  if (!("speechSynthesis" in window)) return;
+  try {
+    window.speechSynthesis.cancel(); // clear anything pending before queuing fresh ones
+    if (name) {
+      const nameUtter = new SpeechSynthesisUtterance(name);
+      nameUtter.lang = "bn-BD";
+      nameUtter.rate = 0.95;
+      window.speechSynthesis.speak(nameUtter);
+    }
+    const msgUtter = new SpeechSynthesisUtterance(message);
+    msgUtter.lang = "en-US";
+    msgUtter.rate = 0.95;
+    window.speechSynthesis.speak(msgUtter);
+  } catch (e) { /* voice is a nice-to-have, never let it break the exam flow */ }
+}
 function startTimer() {
   clearInterval(timerHandle);
   tick();
@@ -549,9 +558,15 @@ function tick() {
     display.classList.toggle("timer-critical", remaining <= 60 * 1000 && remaining > 0);
     display.classList.toggle("timer-warning", remaining <= 5 * 60 * 1000 && remaining > 60 * 1000);
   }
+  if (remaining <= 20 * 60 * 1000 && remaining > 19 * 60 * 1000 && !warned20min) {
+    warned20min = true;
+    showToast("আর মাত্র ২০ মিনিট বাকি আছে।", "error");
+    speak(student.name, "you have 20 minutes remaining.");
+  }
   if (remaining <= 5 * 60 * 1000 && remaining > 4 * 60 * 1000 && !warned5min) {
     warned5min = true;
     showToast("আর মাত্র ৫ মিনিট বাকি আছে।", "error");
+    speak(student.name, "you have 5 minutes remaining.");
   }
   if (remaining <= 60 * 1000 && remaining > 0 && !warned1min) {
     warned1min = true;
