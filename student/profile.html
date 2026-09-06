@@ -13,7 +13,7 @@
 
 <script type="module">
 import { initTheme, toggleTheme, icons, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
-import { getActiveStudent } from "../js/utils/student-utils.js";
+import { getActiveStudent, refreshActiveStudent } from "../js/utils/student-utils.js";
 import { getApprovedResults } from "../js/utils/results-utils.js";
 import { getSubjects, getChapters, buildNameMap } from "../js/utils/syllabus-utils.js";
 import { computeOverallStats, computeSubjectStats, computeChapterStats } from "../js/utils/analytics-utils.js";
@@ -23,12 +23,15 @@ import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase
 
 initTheme();
 const shell = document.getElementById("shell");
-const student = getActiveStudent();
+let student = getActiveStudent();
 
 if (!student) {
   window.location.href = "../index.html";
 } else {
-  render();
+  refreshActiveStudent(student.docId).then(fresh => {
+    if (fresh) student = fresh;
+    render();
+  });
 }
 
 async function render() {
