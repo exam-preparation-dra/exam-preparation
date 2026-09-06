@@ -323,9 +323,12 @@ async function renderIntro() {
 
 function renderExamShell() {
   shell.innerHTML = `
-    <div class="topbar" style="justify-content:flex-end;gap:8px;">
-      <span class="text-xs text-muted" style="white-space:nowrap;">বাকি সময়</span>
-      <span id="timerDisplay">--:--</span>
+    <div class="topbar" style="justify-content:space-between;align-items:center;gap:8px;">
+      <span class="text-sm" style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${student.name}</span>
+      <span class="flex items-center gap-2" style="flex-shrink:0;">
+        <span class="text-xs text-muted" style="white-space:nowrap;">বাকি সময়</span>
+        <span id="timerDisplay">--:--</span>
+      </span>
     </div>
 
     <div class="glass card">
