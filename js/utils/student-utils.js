@@ -82,6 +82,28 @@ export function setActiveStudent(student) {
   localStorage.setItem("activeStudent", JSON.stringify(student));
 }
 
+// ---------- Refresh the cached activeStudent from Firestore ----------
+// getActiveStudent() only ever reads the localStorage snapshot taken once
+// at student-selection time — it never updates itself. So when the admin
+// later changes a student's name/photo, the student's browser keeps
+// showing the OLD cached copy forever, even though Firestore has the new
+// data. Student-facing pages call this once on load (see dashboard.html)
+// to silently pull the latest doc and refresh the cache. Returns the fresh
+// student object, or null on any failure (caller just keeps using the old
+// cached data in that case — never breaks the page).
+export async function refreshActiveStudent(docId) {
+  if (!docId) return null;
+  try {
+    const snap = await getDoc(doc(db, "students", docId));
+    if (!snap.exists()) return null;
+    const fresh = { docId: snap.id, ...snap.data() };
+    setActiveStudent(fresh);
+    return fresh;
+  } catch {
+    return null;
+  }
+}
+
 export function clearActiveStudent() {
   localStorage.removeItem("activeStudent");
 }
