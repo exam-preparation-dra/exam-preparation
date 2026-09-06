@@ -99,10 +99,10 @@ export function renderStudentHeader(student, activeKey) {
     <div class="topbar">
       <div class="brand">
         ${student.photoURL
-          ? `<img src="${student.photoURL}" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'brand-mark',textContent:'${student.name.charAt(0)}'}))">`
-          : `<div class="brand-mark">${student.name.charAt(0)}</div>`}
+          ? `<img src="${student.photoURL}" alt="" draggable="false" oncontextmenu="return false" style="width:64px;height:64px;border-radius:50%;object-fit:cover;flex-shrink:0;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;pointer-events:none;" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'brand-mark',textContent:'${student.name.charAt(0)}'}))">`
+          : `<div class="brand-mark" style="width:64px;height:64px;font-size:1.6rem;">${student.name.charAt(0)}</div>`}
         <div>
-          <h1 style="font-size:1.05rem;">${student.name}</h1>
+          <h1 style="font-size:1.3rem;">${student.name}</h1>
           <p class="text-xs text-muted" style="margin:0;">${student.studentId}</p>
         </div>
       </div>
@@ -121,4 +121,4 @@ export function renderStudentHeader(student, activeKey) {
       `).join("")}
     </div>
   `;
-}
+     }
