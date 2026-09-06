@@ -18,7 +18,8 @@ import { initTheme, toggleTheme, icons, renderState, showToast, friendlyError } 
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
 import { initAdminPwaInstall } from "../pwa-install.js";
 import { getActiveStudents, createStudent, updateStudentPhoto } from "../js/utils/student-utils.js";
-import { toDirectImageUrl, uploadImageToImgbb, getImgbbApiKey, setImgbbApiKey } from "../js/utils/image-utils.js";
+import { toDirectImageUrl } from "../js/utils/image-utils.js";
+import { uploadStudentPhoto, deleteStudentPhoto } from "../js/utils/storage-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { collection, getDocs, orderBy, query, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
@@ -68,7 +69,7 @@ async function loadAllStudents() {
 // Custom modal (replaces prompt()) — some mobile browsers truncate or
 // mishandle long pasted text inside a native prompt() box. A plain
 // <textarea> has no such limit, so long Google Drive links are never cut off.
-function askForPhotoLink(currentUrl) {
+function askForPhotoLink(currentUrl, studentIdHint) {
   return new Promise((resolve) => {
     const overlay = document.createElement("div");
     overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;";
@@ -102,21 +103,15 @@ function askForPhotoLink(currentUrl) {
     fileInput.addEventListener("change", async () => {
       const file = fileInput.files?.[0];
       if (!file) return;
-      let apiKey = getImgbbApiKey();
-      if (!apiKey) {
-        apiKey = (prompt("প্রথমবার ImgBB API key দিন (একবারই লাগবে, https://api.imgbb.com/ থেকে ফ্রি নিতে পারেন):", "") || "").trim();
-        if (!apiKey) { fileInput.value = ""; return; }
-        setImgbbApiKey(apiKey);
-      }
       statusEl.textContent = "আপলোড হচ্ছে...";
       statusEl.style.color = "var(--text-muted)";
       try {
-        const url = await uploadImageToImgbb(file, apiKey);
+        const url = await uploadStudentPhoto(file, studentIdHint);
         textarea.value = url;
         statusEl.textContent = "আপলোড সম্পন্ন — নিচে \"সেভ করুন\" চাপুন।";
         statusEl.style.color = "var(--color-success, green)";
       } catch (err) {
-        statusEl.textContent = err.message || "আপলোড ব্যর্থ হয়েছে।";
+        statusEl.textContent = friendlyError(err);
         statusEl.style.color = "var(--color-error, crimson)";
       }
     });
@@ -165,12 +160,15 @@ async function loadStudents() {
 
       card.querySelector(".photo-btn").addEventListener("click", async () => {
         const currentUrl = student.photoURL || "";
-        const input = await askForPhotoLink(currentUrl);
+        const input = await askForPhotoLink(currentUrl, docId);
         if (input === null) return; // cancelled
         const trimmed = input.trim();
         try {
           const finalUrl = trimmed ? toDirectImageUrl(trimmed) : null;
           await updateStudentPhoto(docId, finalUrl);
+          // Old photo is being replaced/removed — clean up the old Storage
+          // file so it doesn't sit around unused (best-effort, won't block).
+          if (currentUrl && currentUrl !== finalUrl) deleteStudentPhoto(currentUrl);
           showToast(finalUrl ? "ছবি আপডেট করা হয়েছে।" : "ছবি মুছে ফেলা হয়েছে।", "success");
           loadStudents();
         } catch (err) {
