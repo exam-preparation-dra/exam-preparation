@@ -62,19 +62,25 @@
 
 <script type="module">
 import { initTheme, toggleTheme, icons, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
-import { getActiveStudent } from "../js/utils/student-utils.js";
+import { getActiveStudent, refreshActiveStudent } from "../js/utils/student-utils.js";
 import { subscribeToUpcomingExams, getApprovedResults, getStudentResultStatusMap } from "../js/utils/results-utils.js";
 import { getSubjects, getChapters, buildNameMap } from "../js/utils/syllabus-utils.js";
 import { computeOverallStats, computeSubjectStats, computeTopicStats } from "../js/utils/analytics-utils.js";
 
 initTheme();
 const shell = document.getElementById("shell");
-const student = getActiveStudent();
+let student = getActiveStudent();
 
 if (!student) {
   window.location.href = "../index.html";
 } else {
-  render();
+  // Pull the latest name/photo/status from Firestore before rendering —
+  // fixes the "admin changed my photo but I still see the old one" bug,
+  // since getActiveStudent() alone only ever returns a stale local snapshot.
+  refreshActiveStudent(student.docId).then(fresh => {
+    if (fresh) student = fresh;
+    render();
+  });
 }
 
 // Count a number up from 0 to `target` inside `el`. Jumps straight to the
