@@ -38,6 +38,7 @@ requireAdmin(() => {
   document.getElementById("generateBtn").addEventListener("click", handleGenerateFromImage);
   document.getElementById("apiKeyBtn").addEventListener("click", () => promptForApiKey(true));
   document.getElementById("imageInput").addEventListener("change", renderImagePreview);
+  setupDropzone();
   init();
 });
 
@@ -71,15 +72,30 @@ function template() {
 
     <div class="glass card mt-4">
       <div class="flex justify-between items-center">
-        <p class="eyebrow">ছবি থেকে AI দিয়ে অটো জেনারেট</p>
+        <p class="eyebrow">AI দিয়ে অটো জেনারেট</p>
         <button class="icon-btn" id="apiKeyBtn" title="Gemini API Key সেট/পরিবর্তন করুন">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 7a4 4 0 100 8 4 4 0 000-8zM3 21l6-6m-2-2l2 2"/></svg>
         </button>
       </div>
-      <p class="text-xs text-muted mt-1">চ্যাপ্টারের বই/নোটের পাতার ছবি আপলোড করো — Gemini নিজেই সেখান থেকে প্রশ্ন বানিয়ে নিচে পেস্ট-বক্সে ভরে দেবে। প্রথমবার ব্যবহারে একটা ফ্রি Gemini API key চাইবে (শুধু এই ব্রাউজারে সেভ থাকবে)।</p>
-      <input class="input mt-3" type="file" id="imageInput" accept="image/*" multiple>
+      <p class="text-xs text-muted mt-1">চ্যাপ্টারের বই/নোটের পাতার ছবি দাও অথবা নিচে সরাসরি টপিক লিখে দাও — Gemini প্রশ্ন বানিয়ে নিচে পেস্ট-বক্সে ভরে দেবে। প্রথমবার ব্যবহারে একটা ফ্রি Gemini API key চাইবে (শুধু এই ব্রাউজারে সেভ থাকবে)।</p>
+
+      <p class="text-xs mt-4" style="font-weight:700;color:var(--text-secondary);">ছবি (ঐচ্ছিক)</p>
+      <label for="imageInput" id="imageDropzone" style="display:flex;align-items:center;gap:10px;margin-top:8px;padding:14px 16px;border:1.5px dashed var(--surface-border);border-radius:var(--radius-sm);cursor:pointer;background:var(--color-surface-2,transparent);transition:border-color 150ms ease,background 150ms ease;">
+        <span class="icon-btn" style="pointer-events:none;flex-shrink:0;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="4"/></svg>
+        </span>
+        <span class="text-sm" style="font-weight:600;">ছবি বাছাই করো (একাধিক নেওয়া যাবে)</span>
+      </label>
+      <input type="file" id="imageInput" accept="image/*" multiple style="display:none;">
       <div id="imagePreview" class="flex gap-2 mt-2" style="flex-wrap:wrap;"></div>
-      <textarea class="textarea mt-3" id="extraInstructions" style="min-height:70px;" placeholder="অতিরিক্ত নির্দেশনা (ঐচ্ছিক) — যেমন: ছবির লেভেল থেকে একটু কঠিন করো, প্রতিটির মার্কস ২ রাখো ইত্যাদি"></textarea>
+
+      <div class="flex items-center gap-2 mt-4" style="color:var(--text-muted);">
+        <span style="flex:1;height:1px;background:var(--surface-border);"></span>
+        <span class="text-xs">অথবা শুধু টপিক লেখো</span>
+        <span style="flex:1;height:1px;background:var(--surface-border);"></span>
+      </div>
+      <textarea class="textarea mt-3" id="extraInstructions" style="min-height:70px;" placeholder="যেমন: নিউটনের গতিসূত্র নিয়ে মাঝারি মানের প্রশ্ন, প্রতিটির মার্কস ২ রাখো — ছবি না দিলেও এটা লিখলেই যথেষ্ট"></textarea>
+
       <button class="btn btn-primary mt-3" id="generateBtn">AI দিয়ে জেনারেট করুন</button>
       <div class="mt-3 hidden" id="generateProgress">
         <div class="flex items-center gap-2">
@@ -213,16 +229,55 @@ function promptForApiKey(forceAsk = false) {
 // ---------- AI image → questions ----------
 // ---------- Image preview (confirms the right pages were picked before sending) ----------
 function renderImagePreview() {
-  const files = document.getElementById("imageInput").files;
+  const input = document.getElementById("imageInput");
+  const files = Array.from(input.files || []);
   const box = document.getElementById("imagePreview");
   box.innerHTML = "";
-  Array.from(files || []).forEach(file => {
+  files.forEach((file, i) => {
     const url = URL.createObjectURL(file);
+    const wrap = document.createElement("div");
+    wrap.style.cssText = "position:relative;width:64px;height:64px;flex-shrink:0;";
     const img = document.createElement("img");
     img.src = url;
     img.style.cssText = "width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--color-border,#ffffff22);";
     img.onload = () => URL.revokeObjectURL(url);
-    box.appendChild(img);
+    const rm = document.createElement("button");
+    rm.type = "button";
+    rm.textContent = "×";
+    rm.title = "সরিয়ে দাও";
+    rm.style.cssText = "position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:none;background:var(--color-danger,#e5484d);color:#fff;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;";
+    rm.addEventListener("click", () => {
+      const dt = new DataTransfer();
+      files.filter((_, j) => j !== i).forEach(f => dt.items.add(f));
+      input.files = dt.files;
+      renderImagePreview();
+    });
+    wrap.appendChild(img);
+    wrap.appendChild(rm);
+    box.appendChild(wrap);
+  });
+}
+
+// Dropzone visual feedback + drag-and-drop support
+function setupDropzone() {
+  const dropzone = document.getElementById("imageDropzone");
+  if (!dropzone) return;
+  ["dragover", "dragenter"].forEach(evt => dropzone.addEventListener(evt, (e) => {
+    e.preventDefault();
+    dropzone.style.borderColor = "var(--color-primary, #ff6a2b)";
+    dropzone.style.background = "var(--color-surface-2, rgba(255,106,43,0.06))";
+  }));
+  ["dragleave", "drop"].forEach(evt => dropzone.addEventListener(evt, (e) => {
+    e.preventDefault();
+    dropzone.style.borderColor = "var(--surface-border)";
+    dropzone.style.background = "transparent";
+  }));
+  dropzone.addEventListener("drop", (e) => {
+    const dropped = e.dataTransfer?.files;
+    if (dropped && dropped.length > 0) {
+      document.getElementById("imageInput").files = dropped;
+      renderImagePreview();
+    }
   });
 }
 
@@ -243,7 +298,7 @@ function startProgress(imageCount) {
 function updateProgressText(imageCount) {
   const secs = Math.floor((Date.now() - progressStartedAt) / 1000);
   let stage;
-  if (secs < 2) stage = `${imageCount} টি ছবি পড়া হচ্ছে...`;
+  if (secs < 2) stage = imageCount > 0 ? `${imageCount} টি ছবি পড়া হচ্ছে...` : "টপিক প্রস্তুত করা হচ্ছে...";
   else if (secs < 5) stage = "Gemini-কে পাঠানো হয়েছে...";
   else if (secs < 20) stage = "Gemini প্রশ্ন তৈরি করছে...";
   else stage = "প্রায় শেষ — একটু ধৈর্য ধরো...";
@@ -263,7 +318,11 @@ function stopProgress(success) {
 
 async function handleGenerateFromImage() {
   const files = document.getElementById("imageInput").files;
-  if (!files || files.length === 0) { showToast("প্রথমে একটি বা একাধিক ছবি সিলেক্ট করো।", "error"); return; }
+  const extraInstructions = document.getElementById("extraInstructions").value;
+  if ((!files || files.length === 0) && !extraInstructions.trim()) {
+    showToast("অন্তত একটি ছবি দাও, অথবা নিচে টপিক লিখে দাও।", "error");
+    return;
+  }
 
   const target = currentTarget();
   if (!target.subjectId || !target.chapterId || !target.topicId) {
@@ -276,14 +335,13 @@ async function handleGenerateFromImage() {
 
   const { subject, chapter, topic } = currentSelection();
   const count = document.getElementById("promptCount").value;
-  const extraInstructions = document.getElementById("extraInstructions").value;
   const btn = document.getElementById("generateBtn");
   btn.disabled = true;
   btn.textContent = "জেনারেট করা হচ্ছে...";
-  startProgress(files.length);
+  startProgress(files ? files.length : 0);
 
   try {
-    const imageParts = await Promise.all(Array.from(files).map(fileToImagePart));
+    const imageParts = files && files.length > 0 ? await Promise.all(Array.from(files).map(fileToImagePart)) : [];
     // Sanity check: confirm every selected file actually produced image data
     // before spending an API call on it.
     const emptyCount = imageParts.filter(p => !p.base64).length;
@@ -301,7 +359,7 @@ async function handleGenerateFromImage() {
     document.getElementById("pasteArea").value = text;
     handleParse();
     stopProgress(true);
-    showToast(`${imageParts.length} টি ছবি বিশ্লেষণ করে প্রশ্ন তৈরি হয়েছে — নিচে প্রিভিউ দেখে ইম্পোর্ট করো।`, "success");
+    showToast(imageParts.length > 0 ? `${imageParts.length} টি ছবি বিশ্লেষণ করে প্রশ্ন তৈরি হয়েছে — নিচে প্রিভিউ দেখে ইম্পোর্ট করো।` : "টপিক থেকে প্রশ্ন তৈরি হয়েছে — নিচে প্রিভিউ দেখে ইম্পোর্ট করো।", "success");
   } catch (err) {
     console.error(err);
     stopProgress(false);
