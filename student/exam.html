@@ -57,9 +57,24 @@
     border-color: var(--color-accent);
     background: var(--color-accent-soft);
     box-shadow: 0 0 0 1px var(--color-accent), 0 6px 18px -8px var(--color-accent);
-    animation: optRise 320ms cubic-bezier(.22,.9,.3,1) both, optPop 260ms cubic-bezier(.34,1.56,.64,1);
   }
-  @keyframes optPop { 0% { transform: scale(1); } 40% { transform: scale(1.015); } 100% { transform: scale(1); } }
+  /* One-shot "premium" feedback on the exact option just tapped — a scale
+     pop plus a diagonal color-gradient sweep across the card. Applied only
+     to that one button (see selectAnswer() in the script), never to the
+     whole question, so nothing else on the page shifts or re-animates. */
+  .option-card.option-flash { animation: optPop 260ms cubic-bezier(.34,1.56,.64,1); }
+  .option-card.option-flash::after {
+    content: "";
+    position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(100deg, transparent 20%, var(--color-accent-soft) 45%, var(--color-accent) 50%, var(--color-accent-soft) 55%, transparent 80%);
+    background-size: 250% 100%;
+    animation: optionSweep 650ms cubic-bezier(.22,.9,.3,1);
+  }
+  @keyframes optionSweep {
+    from { background-position: 150% 0; opacity: 0.9; }
+    to   { background-position: -50% 0; opacity: 0; }
+  }
+  @keyframes optPop { 0% { transform: scale(1); } 40% { transform: scale(1.04); } 100% { transform: scale(1); } }
   .option-letter {
     flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%;
     background: var(--surface-border); display: flex; align-items: center; justify-content: center;
@@ -355,6 +370,7 @@ function renderExamShell() {
       <span class="flex items-center gap-2" style="flex-shrink:0;">
         <span class="text-xs text-muted" style="white-space:nowrap;">বাকি সময়</span>
         <span id="timerDisplay">--:--</span>
+        <button class="btn btn-danger btn-sm" id="submitBtn" style="padding:5px 10px;font-size:0.72rem;white-space:nowrap;">জমা দিন</button>
       </span>
     </div>
 
@@ -373,9 +389,7 @@ function renderExamShell() {
       <button class="btn btn-primary" id="nextBtn">পরবর্তী ${icons.arrowRight}</button>
     </div>
 
-    <button class="btn btn-danger mt-4" id="submitBtn">পরীক্ষা জমা দিন</button>
-
-   <div id="paletteOverlay" class="modal-overlay hidden">
+    <div id="paletteOverlay" class="modal-overlay hidden">
       <div class="glass card" style="max-width:360px;width:100%;max-height:80vh;overflow-y:auto;">
         <div class="flex justify-between items-center">
           <p class="eyebrow">প্রশ্ন তালিকা</p>
@@ -506,7 +520,30 @@ function selectAnswer(questionId, letter) {
     attemptState.answers[questionId] = letter;
   }
   persistState();
-  renderQuestion();
+
+  // Deliberately NOT calling renderQuestion() here — a full re-render
+  // recreates every option button, which replays their entrance animation
+  // on every single tap (the "everything wobbles" issue). Instead, just
+  // update the classes on the existing buttons in place, and play the
+  // premium flash animation only on the one option that was tapped.
+  const body = document.getElementById("questionBody");
+  const nowSelected = attemptState.answers[questionId];
+  body.querySelectorAll(".option-card").forEach(btn => {
+    btn.classList.toggle("selected", btn.dataset.letter === nowSelected);
+    btn.classList.remove("option-flash");
+  });
+  if (nowSelected) {
+    const tappedBtn = body.querySelector(`.option-card[data-letter="${nowSelected}"]`);
+    if (tappedBtn) {
+      void tappedBtn.offsetWidth; // restart animation
+      tappedBtn.classList.add("option-flash");
+    }
+  }
+
+  // Progress bar/label (previously only refreshed inside renderQuestion()).
+  const answeredCount = Object.keys(attemptState.answers).length;
+  document.getElementById("progressFill").style.width = `${Math.round((answeredCount / snapshot.questions.length) * 100)}%`;
+  document.getElementById("progressLabel").textContent = `${answeredCount} / ${snapshot.questions.length} টি প্রশ্নের উত্তর দেওয়া হয়েছে`;
 }
 function navigate(delta) {
   const next = attemptState.currentIndex + delta;
@@ -621,9 +658,8 @@ function tick() {
     clearInterval(timerHandle);
     doSubmit(true);
   }
-}
-
-let submitting = false;
+  }
+  let submitting = false;
 async function doSubmit(isAutoSubmit) {
   if (submitting) return;
   submitting = true;
