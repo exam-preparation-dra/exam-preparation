@@ -215,24 +215,36 @@ function geminiEndpoint(model) {
 
 // imageParts: [{ mimeType, base64 }, ...] — base64 WITHOUT the
 // "data:image/...;base64," prefix (already stripped by the caller).
+// Images are OPTIONAL: with none, Gemini generates purely from
+// subject/chapter/topic + extraInstructions (its own knowledge) instead of
+// reading a photo — useful when the admin doesn't have a book-page image
+// and just wants to type a topic.
 // extraInstructions: free-text from the admin — e.g. desired difficulty
-// level relative to the photo, or a different marks scheme — appended to
-// the standard prompt so one call covers count + difficulty + marks + images.
+// level, a topic description, or a different marks scheme — appended to
+// the standard prompt so one call covers count + difficulty + marks + (optional) images.
 export async function generateQuestionsFromImage({ apiKey, imageParts, subjectName, chapterName, topicName, count, extraInstructions }) {
   if (!apiKey) throw new Error("Gemini API key দেওয়া হয়নি।");
-  if (!imageParts || imageParts.length === 0) throw new Error("কমপক্ষে একটি ছবি দিতে হবে।");
+  const hasImages = imageParts && imageParts.length > 0;
+  const hasInstructions = extraInstructions && extraInstructions.trim();
+  if (!hasImages && !hasInstructions) {
+    throw new Error("অন্তত একটি ছবি দাও, অথবা নিচে কী নিয়ে প্রশ্ন চাও তা লিখে দাও।");
+  }
 
-  let instructionText = buildAiPromptTemplate({ subjectName, chapterName, topicName, count }) +
-    "\n\nউপরে দেওয়া ছবি(গুলো)র বিষয়বস্তু পড়ে তার ওপর ভিত্তি করে প্রশ্নগুলো তৈরি করো।";
-  if (extraInstructions && extraInstructions.trim()) {
-    instructionText += `\n\nঅতিরিক্ত নির্দেশনা (মানো): ${extraInstructions.trim()}`;
+  let instructionText = buildAiPromptTemplate({ subjectName, chapterName, topicName, count });
+  if (hasImages) {
+    instructionText += "\n\nউপরে দেওয়া ছবি(গুলো)র বিষয়বস্তু পড়ে তার ওপর ভিত্তি করে প্রশ্নগুলো তৈরি করো।";
+  }
+  if (hasInstructions) {
+    instructionText += hasImages
+      ? `\n\nঅতিরিক্ত নির্দেশনা (মানো): ${extraInstructions.trim()}`
+      : `\n\nকোনো ছবি দেওয়া হয়নি — নিচের বিষয়/নির্দেশনার ওপর ভিত্তি করে তোমার নিজের জ্ঞান থেকেই প্রশ্নগুলো বানাও:\n${extraInstructions.trim()}`;
   }
 
   const body = {
     contents: [{
       parts: [
         { text: instructionText },
-        ...imageParts.map(p => ({ inline_data: { mime_type: p.mimeType, data: p.base64 } }))
+        ...(hasImages ? imageParts.map(p => ({ inline_data: { mime_type: p.mimeType, data: p.base64 } })) : [])
       ]
     }]
   };
