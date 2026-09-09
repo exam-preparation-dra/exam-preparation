@@ -160,6 +160,29 @@ export function parseAiImportText(rawText, target) {
   });
 }
 
+// ---------- Gemini API key (browser-local only, shared across every admin
+// page that needs it — question-import.html and questions.html both read
+// from this same localStorage key, so the admin only has to enter it once). ----------
+const GEMINI_KEY_STORAGE = "gemini_api_key";
+
+export function getStoredApiKey() {
+  return localStorage.getItem(GEMINI_KEY_STORAGE) || "";
+}
+
+export function promptForApiKey(forceAsk = false) {
+  const existing = getStoredApiKey();
+  if (existing && !forceAsk) return existing;
+  const key = window.prompt(
+    "তোমার Gemini API key দাও (Google AI Studio থেকে ফ্রি নেওয়া যায়) — এটা শুধু এই ব্রাউজারে সেভ থাকবে, সার্ভার/রিপোতে যাবে না:",
+    existing || ""
+  );
+  if (key && key.trim()) {
+    localStorage.setItem(GEMINI_KEY_STORAGE, key.trim());
+    return key.trim();
+  }
+  return existing || null;
+}
+
 // ---------- Ready-to-copy AI prompt template (requirement: "Copy AI Prompt" helper) ----------
 // Subject/Chapter/Topic are no longer requested from the AI — the admin
 // selects the target chapter once in the import UI, so the AI only needs
@@ -218,6 +241,50 @@ function geminiEndpoint(model) {
   return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 }
 
+// Shared low-level caller: sends `parts` (text + optional inline_data image
+// parts) to Gemini, trying each model candidate in turn on 404/retired-model
+// errors. Returns the raw text response. Used by both the full
+// image/topic -> many-questions flow and the single-question explanation flow.
+async function callGeminiApi(apiKey, parts) {
+  const body = { contents: [{ parts }] };
+  let lastError = null;
+  for (const model of GEMINI_MODEL_CANDIDATES) {
+    let res;
+    try {
+      res = await fetch(`${geminiEndpoint(model)}?key=${encodeURIComponent(apiKey)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+    } catch (networkErr) {
+      lastError = new Error("Gemini এ পৌঁছানো যায়নি — ইন্টারনেট চেক করো।");
+      continue;
+    }
+
+    if (res.ok) {
+      const data = await res.json();
+      const text = (data?.candidates?.[0]?.content?.parts || [])
+        .map(p => p.text || "")
+        .join("\n")
+        .trim();
+      if (!text) { lastError = new Error("Gemini থেকে কোনো টেক্সট পাওয়া যায়নি।"); continue; }
+      return text;
+    }
+
+    let detail = "";
+    try { detail = (await res.json())?.error?.message || ""; } catch { /* ignore */ }
+
+    if (res.status === 404 || /no longer available|not found/i.test(detail)) {
+      lastError = new Error(`মডেল "${model}" আর নেই — পরবর্তী মডেল চেষ্টা করা হচ্ছে...`);
+      continue;
+    }
+    if (res.status === 400 && /API key/i.test(detail)) throw new Error("Gemini API key ভুল — সঠিক key দিয়ে আবার চেষ্টা করো।");
+    if (res.status === 429) throw new Error("Gemini free tier এর সীমা শেষ — একটু পরে আবার চেষ্টা করো।");
+    throw new Error(`Gemini API সমস্যা (${res.status}): ${detail || "অজানা সমস্যা"}`);
+  }
+  throw lastError || new Error("কোনো Gemini মডেল দিয়েই কাজ করা গেল না।");
+}
+
 // imageParts: [{ mimeType, base64 }, ...] — base64 WITHOUT the
 // "data:image/...;base64," prefix (already stripped by the caller).
 // Images are OPTIONAL: with none, Gemini generates purely from
@@ -245,53 +312,31 @@ export async function generateQuestionsFromImage({ apiKey, imageParts, subjectNa
       : `\n\nকোনো ছবি দেওয়া হয়নি — নিচের বিষয়/নির্দেশনার ওপর ভিত্তি করে তোমার নিজের জ্ঞান থেকেই প্রশ্নগুলো বানাও:\n${extraInstructions.trim()}`;
   }
 
-  const body = {
-    contents: [{
-      parts: [
-        { text: instructionText },
-        ...(hasImages ? imageParts.map(p => ({ inline_data: { mime_type: p.mimeType, data: p.base64 } })) : [])
-      ]
-    }]
-  };
+  const parts = [
+    { text: instructionText },
+    ...(hasImages ? imageParts.map(p => ({ inline_data: { mime_type: p.mimeType, data: p.base64 } })) : [])
+  ];
+  return callGeminiApi(apiKey, parts);
+}
 
-  let lastError = null;
-  for (const model of GEMINI_MODEL_CANDIDATES) {
-    let res;
-    try {
-      res = await fetch(`${geminiEndpoint(model)}?key=${encodeURIComponent(apiKey)}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
-      });
-    } catch (networkErr) {
-      lastError = new Error("Gemini এ পৌঁছানো যায়নি — ইন্টারনেট চেক করো।");
-      continue;
-    }
+// ---------- Single-question explanation generator (used from the question
+// bank page: a "✨ AI দিয়ে ব্যাখ্যা তৈরি করুন" button next to any question
+// that doesn't have one yet). Sends just that one question + its 4 options +
+// correct answer — no image, no bulk formatting — and gets back a short
+// plain-text Bengali explanation, ready to save straight into
+// explanation_bn. ----------
+export async function generateExplanationForQuestion({ apiKey, question_bn, options_bn, correctAnswer }) {
+  if (!apiKey) throw new Error("Gemini API key দেওয়া হয়নি।");
+  const prompt = `নিচের বহুনির্বাচনী প্রশ্নের সঠিক উত্তরটি কেন সঠিক, তার একটি সংক্ষিপ্ত (২-৩ বাক্যের) সহজবোধ্য বাংলা ব্যাখ্যা লেখো। উত্তরে শুধু ব্যাখ্যাটুকুই লিখবে — কোনো ভূমিকা, লেবেল, নম্বরিং বা অতিরিক্ত টেক্সট দেবে না।
 
-    if (res.ok) {
-      const data = await res.json();
-      const text = (data?.candidates?.[0]?.content?.parts || [])
-        .map(p => p.text || "")
-        .join("\n")
-        .trim();
-      if (!text) { lastError = new Error("Gemini থেকে কোনো টেক্সট পাওয়া যায়নি — ছবিটা স্পষ্ট কিনা দেখো।"); continue; }
-      return text;
-    }
+প্রশ্ন: ${question_bn}
+A: ${options_bn.A || ""}
+B: ${options_bn.B || ""}
+C: ${options_bn.C || ""}
+D: ${options_bn.D || ""}
+সঠিক উত্তর: ${correctAnswer}`;
 
-    let detail = "";
-    try { detail = (await res.json())?.error?.message || ""; } catch { /* ignore */ }
-
-    // Model retired/renamed — try the next candidate instead of failing outright.
-    if (res.status === 404 || /no longer available|not found/i.test(detail)) {
-      lastError = new Error(`মডেল "${model}" আর নেই — পরবর্তী মডেল চেষ্টা করা হচ্ছে...`);
-      continue;
-    }
-    if (res.status === 400 && /API key/i.test(detail)) throw new Error("Gemini API key ভুল — সঠিক key দিয়ে আবার চেষ্টা করো।");
-    if (res.status === 429) throw new Error("Gemini free tier এর সীমা শেষ — একটু পরে আবার চেষ্টা করো।");
-    throw new Error(`Gemini API সমস্যা (${res.status}): ${detail || "অজানা সমস্যা"}`);
-  }
-
-  throw lastError || new Error("কোনো Gemini মডেল দিয়েই কাজ করা গেল না।");
+  return callGeminiApi(apiKey, [{ text: prompt }]);
 }
 
 // Converts a browser File object into { mimeType, base64 } for the call above.
@@ -306,4 +351,4 @@ export function fileToImagePart(file) {
     reader.onerror = () => reject(new Error("ছবি পড়া যায়নি।"));
     reader.readAsDataURL(file);
   });
-        }
+}
