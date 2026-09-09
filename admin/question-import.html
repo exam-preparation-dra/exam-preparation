@@ -408,6 +408,7 @@ function renderPreview() {
           <p class="text-xs">D: ${r.question.options_bn.D || "—"}</p>
         </div>
         <p class="text-xs mt-2">সঠিক: ${r.question.correctAnswer || "—"} • নম্বর: ${r.question.marks} • ${targetLabel()}</p>
+        ${r.question.explanation_bn ? `<p class="text-xs text-muted mt-2" style="border-top:1px dashed var(--surface-border);padding-top:8px;">ব্যাখ্যা: ${r.question.explanation_bn}</p>` : `<p class="text-xs mt-2" style="color:var(--color-danger);">⚠ ব্যাখ্যা নেই — এই প্রশ্নে ভুল করলে স্টুডেন্ট ব্যাখ্যা দেখতে পাবে না</p>`}
       </div>
     `).join("")}
   `;
@@ -433,6 +434,7 @@ async function handleImportAll() {
         question_bn: r.question.question_bn,
         options_bn: r.question.options_bn,
         correctAnswer: r.question.correctAnswer,
+        explanation_bn: r.question.explanation_bn,
         marks: r.question.marks,
         subjectId: r.question.subjectId,
         chapterId: r.question.chapterId,
@@ -454,3 +456,5 @@ async function handleImportAll() {
 </script>
 </body>
 </html>
+
+     
