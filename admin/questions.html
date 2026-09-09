@@ -33,6 +33,7 @@ import {
 } from "../js/utils/question-utils.js";
 import { toDirectImageUrl } from "../js/utils/image-utils.js";
 import { attachVoiceInput, isVoiceInputSupported } from "../js/utils/voice-input.js";
+import { generateExplanationForQuestion, promptForApiKey } from "../js/utils/ai-import-utils.js";
 
 const IMGBB_API_KEY = "da5159865f56c01745a35e83e0ed9104";
 
@@ -366,6 +367,9 @@ function renderQuestionList() {
           <p class="text-xs text-muted lang-en mt-1">${q.question_en}</p>
           ${q.imageUrl ? `<img src="${q.imageUrl}" class="thumb-preview" data-full="${q.imageUrl}" style="max-height:100px;border-radius:8px;margin-top:8px;cursor:zoom-in;" onerror="this.classList.add('img-broken');this.title='ছবি লোড করা যায়নি — লিংকটি পাবলিক কিনা যাচাই করুন';">` : ""}
           <p class="text-xs mt-2">সঠিক উত্তর: <span style="font-weight:700;color:var(--color-success);">${q.correctAnswer}</span> • নম্বর: ${q.marks}</p>
+          ${q.explanation_bn
+            ? `<p class="text-xs text-muted mt-2" title="${q.explanation_bn.replace(/"/g, '&quot;')}">📝 ব্যাখ্যা আছে</p>`
+            : `<button class="btn btn-secondary btn-sm ai-explain-btn mt-2" data-id="${q.id}">✨ AI দিয়ে ব্যাখ্যা তৈরি করুন</button>`}
         </div>
         <div class="flex flex-col gap-2">
           <button class="icon-btn edit-btn" data-id="${q.id}" title="সম্পাদনা">${icons.edit}</button>
@@ -393,6 +397,7 @@ function renderQuestionList() {
   listEl.querySelectorAll(".delete-btn").forEach(b => b.addEventListener("click", () => handleDelete(b.dataset.id)));
   listEl.querySelectorAll(".thumb-preview").forEach(img => img.addEventListener("click", () => openImagePreview(img.dataset.full)));
   listEl.querySelectorAll(".quick-img-btn").forEach(b => b.addEventListener("click", () => openQuickImageModal(b.dataset.id)));
+  listEl.querySelectorAll(".ai-explain-btn").forEach(b => b.addEventListener("click", () => handleGenerateExplanation(b.dataset.id, b)));
 }
 
 function openQuickImageModal(id) {
@@ -599,6 +604,33 @@ async function handleSubmit(e) {
   } finally {
     submitBtn.disabled = false;
     submitBtn.textContent = "সংরক্ষণ করুন";
+  }
+}
+
+async function handleGenerateExplanation(id, btn) {
+  const q = allQuestions.find(x => x.id === id);
+  if (!q) return;
+  const apiKey = promptForApiKey(false);
+  if (!apiKey) { showToast("API key ছাড়া ব্যাখ্যা তৈরি করা যাবে না।", "error"); return; }
+
+  btn.disabled = true;
+  btn.textContent = "তৈরি হচ্ছে...";
+  try {
+    const explanation = await generateExplanationForQuestion({
+      apiKey,
+      question_bn: q.question_bn,
+      options_bn: q.options_bn,
+      correctAnswer: q.correctAnswer
+    });
+    await updateQuestion(id, { explanation_bn: explanation });
+    q.explanation_bn = explanation; // keep the in-memory list in sync so the re-render below reflects it immediately
+    showToast("ব্যাখ্যা তৈরি ও সংরক্ষণ করা হয়েছে।", "success");
+    renderQuestionList(); // button permanently replaced by the 📝 indicator now that explanation_bn is set
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || friendlyError(err), "error");
+    btn.disabled = false;
+    btn.textContent = "✨ AI দিয়ে ব্যাখ্যা তৈরি করুন";
   }
 }
 
