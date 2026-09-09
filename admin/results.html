@@ -179,12 +179,14 @@ function fmtCardDate(ts) {
 }
 
 // ---------- Builds the modern gradient result-card HTML (rendered off-
-// screen, then captured to PNG by html2canvas). Pulls together: the
-// student's name/photo, this exam's %, the student's overall exam count +
-// average % across all their approved results, and how this exam's %
-// compares to the class average for that SAME exam ("competitor" gap). ----------
+// screen, then captured to PNG by html2canvas). No photo — this card gets
+// shared outside the app, so only the student's name/scores go on it, never
+// their picture. Pulls together: name, this exam's %, correct/wrong/accuracy
+// for this exam, the student's overall exam count + average % across all
+// their approved results, their class rank for this exam, and how this
+// exam's % compares to the class average ("competitor" gap). ----------
 async function buildResultCardHtml(r) {
-  const [allStudents, myResults, allForExam, exam] = await Promise.all([
+  const [allStudents, myResults, allApproved, exam] = await Promise.all([
     getActiveStudents(),
     getApprovedResults(r.studentId),
     getAllApprovedResults(),
@@ -193,52 +195,91 @@ async function buildResultCardHtml(r) {
 
   const student = allStudents.find(s => s.studentId === r.studentId);
   const studentName = student?.name || r.studentId;
-  const photoURL = student?.photoURL || null;
 
   const overallAvg = myResults.length
     ? Math.round((myResults.reduce((sum, x) => sum + (Number(x.percentage) || 0), 0) / myResults.length) * 10) / 10
     : Number(r.percentage) || 0;
 
-  const sameExam = allForExam.filter(x => x.examId === r.examId);
+  // Everyone (including this student) who has an approved result for this
+  // exact exam — used for both the rank and the class-average comparison.
+  // r itself might not be in allApproved yet if it's still pending, so make
+  // sure it's included either way.
+  let sameExam = allApproved.filter(x => x.examId === r.examId);
+  if (!sameExam.some(x => x.id === r.id)) sameExam = [...sameExam, r];
+
   const classAvg = sameExam.length
     ? sameExam.reduce((sum, x) => sum + (Number(x.percentage) || 0), 0) / sameExam.length
     : null;
   const diff = classAvg !== null ? (Number(r.percentage) || 0) - classAvg : null;
 
+  const ranked = [...sameExam].sort((a, b) => (Number(b.percentage) || 0) - (Number(a.percentage) || 0));
+  const rank = ranked.findIndex(x => x.id === r.id) + 1;
+
   const examDate = fmtCardDate(exam?.examDate) || fmtCardDate(r.submittedAt);
 
+  // Performance badge — a quick, friendly read on the number before anyone
+  // even looks at the breakdown below.
+  const pct = Number(r.percentage) || 0;
+  let badgeEmoji = "💪", badgeText = "আরও চেষ্টা দরকার", badgeColor = "#f87171";
+  if (pct >= 80) { badgeEmoji = "🏆"; badgeText = "অসাধারণ ফলাফল"; badgeColor = "#4ade80"; }
+  else if (pct >= 60) { badgeEmoji = "👍"; badgeText = "ভালো ফলাফল"; badgeColor = "#60a5fa"; }
+  else if (pct >= 40) { badgeEmoji = "🙂"; badgeText = "মোটামুটি ফলাফল"; badgeColor = "#fbbf24"; }
+
   return `
-    <div id="cardInner" style="width:380px;font-family:'Noto Sans Bengali',sans-serif;background:linear-gradient(160deg,#0b0f1a 0%,#1a1024 55%,#2b1608 100%);color:#fff;border-radius:22px;overflow:hidden;">
-      <div style="padding:30px 26px 20px;text-align:center;">
-        <p style="margin:0;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#ffb38a;font-weight:700;">পরীক্ষা প্রস্তুতি</p>
-        ${photoURL
-          ? `<img src="${photoURL}" crossorigin="anonymous" style="width:88px;height:88px;border-radius:50%;object-fit:cover;margin:16px auto 10px;display:block;border:3px solid #ff6a2b;">`
-          : `<div style="width:88px;height:88px;border-radius:50%;margin:16px auto 10px;background:#ff6a2b;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:800;">${(studentName || "?").charAt(0)}</div>`}
-        <h1 style="margin:0;font-size:26px;font-weight:800;">${studentName}</h1>
-        <p style="margin:4px 0 0;font-size:13px;color:#cbd5e1;">${r.studentId}</p>
-      </div>
-
-      <div style="margin:0 18px;background:rgba(255,255,255,0.07);border-radius:16px;padding:22px;text-align:center;border:1px solid rgba(255,255,255,0.12);">
-        <p style="margin:0;font-size:13px;color:#e2e8f0;font-weight:600;">${r.examName || "পরীক্ষা"}</p>
-        ${examDate ? `<p style="margin:2px 0 14px;font-size:11px;color:#94a3b8;">${examDate}</p>` : `<div style="margin-bottom:14px;"></div>`}
-        <p style="margin:0;font-size:56px;font-weight:800;line-height:1;background:linear-gradient(90deg,#ff6a2b,#ffb02e);-webkit-background-clip:text;background-clip:text;color:transparent;">${r.percentage ?? "—"}%</p>
-        <p style="margin:8px 0 0;font-size:12px;color:#cbd5e1;">${r.obtainedMarks}/${r.totalMarks} নম্বর</p>
-      </div>
-
-      <div style="display:flex;gap:10px;margin:16px 18px 0;">
-        <div style="flex:1;background:rgba(255,255,255,0.07);border-radius:14px;padding:14px;text-align:center;">
-          <p style="margin:0;font-size:20px;font-weight:800;">${myResults.length}</p>
-          <p style="margin:2px 0 0;font-size:10px;color:#94a3b8;">মোট পরীক্ষা</p>
-        </div>
-        <div style="flex:1;background:rgba(255,255,255,0.07);border-radius:14px;padding:14px;text-align:center;">
-          <p style="margin:0;font-size:20px;font-weight:800;">${overallAvg}%</p>
-          <p style="margin:2px 0 0;font-size:10px;color:#94a3b8;">ওভারঅল গড়</p>
+    <div id="cardInner" style="width:400px;font-family:'Noto Sans Bengali',sans-serif;background:linear-gradient(160deg,#0b0f1a 0%,#1a1024 55%,#2b1608 100%);color:#ffffff;border-radius:26px;overflow:hidden;">
+      <div style="padding:34px 28px 22px;text-align:center;">
+        <p style="margin:0;font-size:12px;text-transform:uppercase;color:#ffb38a;font-weight:700;">পরীক্ষা প্রস্তুতি</p>
+        <div style="width:80px;height:80px;border-radius:50%;margin:18px auto 16px;background:rgba(255,106,43,0.15);border:2px solid #ff6a2b;display:flex;align-items:center;justify-content:center;font-size:38px;">${badgeEmoji}</div>
+        <h1 style="margin:0;font-size:34px;font-weight:800;color:#ffffff;line-height:1.25;">${studentName}</h1>
+        <span style="display:inline-block;margin-top:8px;padding:3px 12px;border-radius:999px;background:rgba(255,255,255,0.1);color:#94a3b8;font-size:11px;font-weight:600;">${r.studentId}</span>
+        <div style="margin-top:12px;">
+          <span style="display:inline-block;padding:5px 14px;border-radius:999px;background:${badgeColor}26;border:1px solid ${badgeColor};color:${badgeColor};font-size:12px;font-weight:700;">${badgeText}</span>
         </div>
       </div>
 
-      ${diff !== null ? `
-      <div style="margin:14px 18px 0;background:${diff >= 0 ? "rgba(34,197,94,0.16)" : "rgba(239,68,68,0.16)"};border:1px solid ${diff >= 0 ? "#22c55e" : "#ef4444"};border-radius:14px;padding:12px;text-align:center;">
-        <p style="margin:0;font-size:13px;font-weight:700;color:${diff >= 0 ? "#4ade80" : "#f87171"};">
+      <div style="margin:0 20px;background:rgba(255,255,255,0.07);border-radius:18px;padding:24px;text-align:center;border:1px solid rgba(255,255,255,0.12);">
+        <p style="margin:0;font-size:14px;color:#e2e8f0;font-weight:700;">${r.examName || "পরীক্ষা"}</p>
+        ${examDate ? `<p style="margin:3px 0 16px;font-size:11px;color:#94a3b8;">${examDate}</p>` : `<div style="margin-bottom:16px;"></div>`}
+        <p style="margin:0;font-size:60px;font-weight:800;line-height:1;color:#ff8a3d;">${r.percentage ?? "—"}%</p>
+        <p style="margin:10px 0 0;font-size:13px;color:#cbd5e1;">${r.obtainedMarks}/${r.totalMarks} নম্বর</p>
+      </div>
+
+      <div style="display:flex;gap:10px;margin:16px 20px 0;">
+        <div style="flex:1;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:16px;padding:14px;text-align:center;">
+          <p style="margin:0;font-size:20px;font-weight:800;color:#4ade80;">${r.correctCount ?? "—"}</p>
+          <p style="margin:3px 0 0;font-size:10px;color:#94a3b8;">সঠিক</p>
+        </div>
+        <div style="flex:1;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:16px;padding:14px;text-align:center;">
+          <p style="margin:0;font-size:20px;font-weight:800;color:#f87171;">${r.wrongCount ?? "—"}</p>
+          <p style="margin:3px 0 0;font-size:10px;color:#94a3b8;">ভুল</p>
+        </div>
+        <div style="flex:1;background:rgba(255,255,255,0.07);border-radius:16px;padding:14px;text-align:center;">
+          <p style="margin:0;font-size:20px;font-weight:800;color:#ffffff;">${r.accuracy ?? "—"}%</p>
+          <p style="margin:3px 0 0;font-size:10px;color:#94a3b8;">সঠিকতা</p>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin:10px 20px 0;">
+        <div style="flex:1;background:rgba(255,255,255,0.07);border-radius:16px;padding:16px;text-align:center;">
+          <p style="margin:0;font-size:22px;font-weight:800;color:#ffffff;">${myResults.length}</p>
+          <p style="margin:3px 0 0;font-size:11px;color:#94a3b8;">মোট পরীক্ষা</p>
+        </div>
+        <div style="flex:1;background:rgba(255,255,255,0.07);border-radius:16px;padding:16px;text-align:center;">
+          <p style="margin:0;font-size:22px;font-weight:800;color:#ffffff;">${overallAvg}%</p>
+          <p style="margin:3px 0 0;font-size:11px;color:#94a3b8;">ওভারঅল গড়</p>
+        </div>
+      </div>
+
+      ${sameExam.length > 1 ? `
+      <div style="margin:14px 20px 0;background:rgba(255,255,255,0.07);border-radius:16px;padding:14px;text-align:center;">
+        <p style="margin:0;font-size:14px;font-weight:700;color:#ffd08a;">
+          এই পরীক্ষায় ${sameExam.length} জনের মধ্যে অবস্থান: <span style="font-size:16px;">${rank}${rank === 1 ? "ম" : "য়"}</span>
+        </p>
+      </div>` : ""}
+
+      ${diff !== null && sameExam.length > 1 ? `
+      <div style="margin:12px 20px 0;background:${diff >= 0 ? "rgba(34,197,94,0.16)" : "rgba(239,68,68,0.16)"};border:1px solid ${diff >= 0 ? "#22c55e" : "#ef4444"};border-radius:16px;padding:14px;text-align:center;">
+        <p style="margin:0;font-size:14px;font-weight:700;color:${diff >= 0 ? "#4ade80" : "#f87171"};">
           ক্লাসের গড় থেকে ${diff >= 0 ? "↑" : "↓"} ${Math.abs(Math.round(diff * 10) / 10)}% ${diff >= 0 ? "এগিয়ে" : "পিছিয়ে"}
         </p>
       </div>` : ""}
@@ -256,10 +297,6 @@ async function handleResultCard(r) {
   try {
     const area = document.getElementById("cardArea");
     area.innerHTML = await buildResultCardHtml(r);
-    // Let any photo <img> actually finish loading before the snapshot,
-    // otherwise html2canvas can capture it blank.
-    const img = area.querySelector("img");
-    if (img && !img.complete) await new Promise(res => { img.onload = res; img.onerror = res; });
 
     const canvas = await html2canvas(document.getElementById("cardInner"), { scale: 2, backgroundColor: null, useCORS: true });
     const dataUrl = canvas.toDataURL("image/png");
