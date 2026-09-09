@@ -41,6 +41,7 @@ const FIELD_LABELS = {
   C: /^C[:.]\s*(.*)$/,
   D: /^D[:.]\s*(.*)$/,
   correctAnswer: /^Correct Answer:\s*(.*)$/i,
+  explanation: /^ব্যাখ্যা:\s*(.*)$/,
   subject: /^Subject:\s*(.*)$/i,
   chapter: /^Chapter:\s*(.*)$/i,
   topic: /^Topic:\s*(.*)$/i,
@@ -133,6 +134,7 @@ function validateParsed(fields, target) {
       question_bn: fields.question_bn || "",
       options_bn: { A: fields.A || "", B: fields.B || "", C: fields.C || "", D: fields.D || "" },
       correctAnswer: correct,
+      explanation_bn: fields.explanation || "",
       marks: validMarks ? marksNum : 1,
       subjectRaw: fields.subject || "",
       chapterRaw: fields.chapter || "",
@@ -186,10 +188,13 @@ D:
 Correct Answer:
 [A/B/C/D]
 
+ব্যাখ্যা:
+[সঠিক উত্তর কেন সঠিক তার ২-৩ বাক্যের সংক্ষিপ্ত বাংলা ব্যাখ্যা — শিক্ষার্থী রেজাল্টে ভুল উত্তর দিলে এটাই দেখবে]
+
 Marks:
 1
 
-এই ফরম্যাটের বাইরে কোনো অতিরিক্ত টেক্সট, নম্বরিং বা ব্যাখ্যা দিও না।`;
+এই ফরম্যাটের বাইরে কোনো অতিরিক্ত টেক্সট বা নম্বরিং দিও না।`;
 }
 
 /* =========================================================
@@ -301,4 +306,4 @@ export function fileToImagePart(file) {
     reader.onerror = () => reject(new Error("ছবি পড়া যায়নি।"));
     reader.readAsDataURL(file);
   });
-}
+        }
