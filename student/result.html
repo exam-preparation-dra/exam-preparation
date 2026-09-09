@@ -425,7 +425,7 @@ async function renderApproved() {
           }).join("")}
           ${!q.studentAnswer ? `<p class="review-unanswered-note">আপনি এই প্রশ্নের উত্তর দেননি।</p>` : ""}
         </div>
-        ${q.explanation_bn ? `<p class="text-xs text-muted mt-2">ব্যাখ্যা: ${q.explanation_bn}</p>` : ""}
+        ${q.status === "wrong" && q.explanation_bn ? `<p class="text-xs text-muted mt-2">ব্যাখ্যা: ${q.explanation_bn}</p>` : ""}
       </div>
     `).join("");
   }
@@ -500,4 +500,3 @@ async function generatePdf(shareInstead) {
 </script>
 </body>
 </html>
-
