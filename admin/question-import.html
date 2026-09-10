@@ -438,7 +438,8 @@ async function handleImportAll() {
         marks: r.question.marks,
         subjectId: r.question.subjectId,
         chapterId: r.question.chapterId,
-        topicId: r.question.topicId
+        topicId: r.question.topicId,
+        createdByAI: true
       });
     }
     showToast(`${validOnes.length} টি প্রশ্ন প্রশ্ন ব্যাংকে যোগ করা হয়েছে।`, "success");
@@ -456,5 +457,3 @@ async function handleImportAll() {
 </script>
 </body>
 </html>
-
-     
