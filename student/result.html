@@ -518,7 +518,7 @@ function buildQuestionsPdfHtml() {
     ${review.map((q, i) => `
       <div style="margin-bottom:16px;padding-bottom:14px;${i < review.length - 1 ? "border-bottom:1px solid #ddd;" : ""}">
         <p style="margin:0 0 6px;font-weight:700;font-size:14px;">${i + 1}. ${q.question_bn}</p>
-        ${q.imageUrl ? `<img src="${q.imageUrl}" style="max-height:110px;margin:4px 0 8px;display:block;">` : ""}
+        ${q.imageUrl ? `<img src="${q.imageUrl}" crossorigin="anonymous" style="max-height:110px;margin:4px 0 8px;display:block;">` : ""}
         <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:4px;">
           ${["A", "B", "C", "D"].map(letter => {
             const isCorrect = letter === q.correctAnswer;
@@ -544,7 +544,12 @@ async function generateQuestionsPdf(shareInstead) {
     if (!review.length) { showToast("প্রশ্নের বিস্তারিত পাওয়া যায়নি।", "error"); return; }
     const area = document.getElementById("pdfArea");
     area.innerHTML = buildQuestionsPdfHtml();
-    const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
+    // Wait for every question image to actually finish loading first —
+    // otherwise html2canvas can either capture a blank spot or (with a
+    // cross-origin image) throw a "tainted canvas" error when exporting.
+    const imgs = Array.from(area.querySelectorAll("img"));
+    await Promise.all(imgs.map(img => img.complete ? Promise.resolve() : new Promise(res => { img.onload = res; img.onerror = res; })));
+    const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
     const imgData = canvas.toDataURL("image/png");
 
     const { jsPDF } = window.jspdf;
@@ -563,7 +568,7 @@ async function generateQuestionsPdf(shareInstead) {
     pdf.save(fileName);
   } catch (err) {
     console.error(err);
-    showToast("প্রশ্নের PDF তৈরি করা যায়নি।", "error");
+    showToast(err?.message ? `প্রশ্নের PDF তৈরি করা যায়নি: ${err.message}` : "প্রশ্নের PDF তৈরি করা যায়নি।", "error");
   } finally {
     btn.disabled = false;
     btn.textContent = originalText;
