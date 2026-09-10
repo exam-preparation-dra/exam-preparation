@@ -23,6 +23,7 @@ export async function addQuestion(data) {
     topicId: data.topicId,
     imageUrl: data.imageUrl ?? null,
     explanation_bn: data.explanation_bn ?? null,
+    createdByAI: data.createdByAI ?? false,
     isActive: true,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
