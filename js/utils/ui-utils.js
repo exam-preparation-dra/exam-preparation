@@ -65,6 +65,16 @@ export function renderState(container, kind, message) {
 }
 
 // ---------- Simple SVG icon set (project rule: no emoji anywhere) ----------
+// ---------- "Made by AI" badge — admin-only indicator on question cards.
+// Drawn entirely in code (SVG sparkle + gradient pill), never an emoji
+// font, so it renders identically on every device. ----------
+export function aiBadge() {
+  return `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;background:linear-gradient(120deg,#7c3aed,#2563eb);color:#fff;font-size:10px;font-weight:800;letter-spacing:0.2px;line-height:1.4;vertical-align:middle;">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8z"/></svg>
+    AI
+  </span>`;
+}
+
 export const icons = {
   sun: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`,
   moon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg>`,
