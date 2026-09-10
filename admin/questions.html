@@ -23,7 +23,7 @@
 </div>
 
 <script type="module">
-import { initTheme, toggleTheme, icons, renderState, showToast, friendlyError } from "../js/utils/ui-utils.js";
+import { initTheme, toggleTheme, icons, renderState, showToast, friendlyError, aiBadge } from "../js/utils/ui-utils.js";
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
 import { initAdminPwaInstall } from "../pwa-install.js";
 import { getFullSyllabusTree } from "../js/utils/syllabus-utils.js";
@@ -361,6 +361,7 @@ function renderQuestionList() {
           <label class="flex items-center gap-2" style="cursor:pointer;">
             <input type="checkbox" class="select-checkbox" data-id="${q.id}" ${selectedIds.has(q.id) ? "checked" : ""}>
             <span class="text-xs text-muted">${q.isActive ? "" : "(নিষ্ক্রিয়) "}${nameFor(q.subjectId, "subject")} • ${nameFor(q.chapterId, "chapter")} • ${nameFor(q.topicId, "topic")}</span>
+            ${q.createdByAI ? aiBadge() : ""}
             ${q.imageUrl ? `<span class="img-badge" title="এই প্রশ্নে ছবি যুক্ত আছে"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> ছবি</span>` : ""}
           </label>
           <p class="mt-2" style="font-weight:600;">${q.question_bn}</p>
