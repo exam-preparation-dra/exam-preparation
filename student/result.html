@@ -347,6 +347,11 @@ async function renderApproved() {
       <button class="btn btn-secondary" id="pdfBtn">ফলাফল PDF ডাউনলোড</button>
       <button class="btn btn-secondary" id="shareBtn">PDF শেয়ার করুন</button>
     </div>
+    <p class="text-xs text-muted mt-3">পরে আবার অনুশীলনের জন্য — এই পরীক্ষার সব প্রশ্ন, ৪টি অপশন ও সঠিক উত্তর সহ একটা PDF:</p>
+    <div class="flex gap-2 mt-2">
+      <button class="btn btn-secondary" id="practicePdfBtn">প্রশ্নের PDF ডাউনলোড</button>
+      <button class="btn btn-secondary" id="practiceShareBtn">শেয়ার করুন</button>
+    </div>
 
     <p class="eyebrow mt-5">প্রশ্নভিত্তিক পর্যালোচনা</p>
     <div id="reviewList" class="mt-2"></div>
@@ -356,6 +361,8 @@ async function renderApproved() {
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
   document.getElementById("pdfBtn").addEventListener("click", () => generatePdf(false));
   document.getElementById("shareBtn").addEventListener("click", () => generatePdf(true));
+  document.getElementById("practicePdfBtn").addEventListener("click", () => generateQuestionsPdf(false));
+  document.getElementById("practiceShareBtn").addEventListener("click", () => generateQuestionsPdf(true));
 
   // ---- Suspense reveal orchestration ----
   // 1) sit on the "গণনা করা হচ্ছে..." pulse for a beat (builds anticipation)
@@ -497,6 +504,72 @@ async function generatePdf(shareInstead) {
     btn.textContent = originalText;
   }
 }
+
+// ---------- Question-practice PDF (feature: "download question PDF") ----------
+// Plain practice sheet — every question from THIS exam, its 4 options, and
+// the correct answer marked in green. Deliberately does NOT mark the
+// student's own pick as right/wrong (that's what the result-review PDF
+// above is for) — this one is meant to be reusable later as a clean
+// worksheet, e.g. to re-practice the same set of questions.
+function buildQuestionsPdfHtml() {
+  return `
+    <h2 style="margin:0 0 4px;">${result.examName || "পরীক্ষা"} — অনুশীলন শীট</h2>
+    <p style="margin:0 0 18px;color:#555;font-size:12px;">মোট ${review.length} টি প্রশ্ন • প্রতিটির সাথে ৪টি অপশন ও সঠিক উত্তর (সবুজ) দেওয়া আছে</p>
+    ${review.map((q, i) => `
+      <div style="margin-bottom:16px;padding-bottom:14px;${i < review.length - 1 ? "border-bottom:1px solid #ddd;" : ""}">
+        <p style="margin:0 0 6px;font-weight:700;font-size:14px;">${i + 1}. ${q.question_bn}</p>
+        ${q.imageUrl ? `<img src="${q.imageUrl}" style="max-height:110px;margin:4px 0 8px;display:block;">` : ""}
+        <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:4px;">
+          ${["A", "B", "C", "D"].map(letter => {
+            const isCorrect = letter === q.correctAnswer;
+            return `
+            <tr>
+              <td style="padding:2px 8px;width:22px;font-weight:${isCorrect ? "800" : "400"};color:${isCorrect ? "#15803d" : "#333"};">${letter}.</td>
+              <td style="padding:2px 8px;font-weight:${isCorrect ? "700" : "400"};color:${isCorrect ? "#15803d" : "#333"};">${q.options_bn[letter] ?? ""}${isCorrect ? " ✓" : ""}</td>
+            </tr>`;
+          }).join("")}
+        </table>
+      </div>
+    `).join("")}
+  `;
+}
+
+async function generateQuestionsPdf(shareInstead) {
+  const btn = shareInstead ? document.getElementById("practiceShareBtn") : document.getElementById("practicePdfBtn");
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "প্রস্তুত করা হচ্ছে...";
+
+  try {
+    if (!review.length) { showToast("প্রশ্নের বিস্তারিত পাওয়া যায়নি।", "error"); return; }
+    const area = document.getElementById("pdfArea");
+    area.innerHTML = buildQuestionsPdfHtml();
+    const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff" });
+    const imgData = canvas.toDataURL("image/png");
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: "px", format: [canvas.width / 2, canvas.height / 2] });
+    pdf.addImage(imgData, "PNG", 0, 0, canvas.width / 2, canvas.height / 2);
+    const fileName = `${result.examName || "exam"}_প্রশ্ন_অনুশীলন.pdf`;
+
+    if (shareInstead && navigator.canShare) {
+      const blob = pdf.output("blob");
+      const file = new File([blob], fileName, { type: "application/pdf" });
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: fileName });
+        return;
+      }
+    }
+    pdf.save(fileName);
+  } catch (err) {
+    console.error(err);
+    showToast("প্রশ্নের PDF তৈরি করা যায়নি।", "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+}
 </script>
 </body>
 </html>
+
