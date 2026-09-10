@@ -243,7 +243,9 @@ let snapshot = null;
 let attemptState = null;
 let timerHandle = null;
 let questionStartMillis = null;
-let warned20min = false, warned5min = false, warned1min = false;
+let slowQ1Warned = false, slowQ2Warned = false; // per-question "taking a while" nudges — reset every time the question changes
+const firedMinuteCheckpoints = new Set(); // which of the [20,10,5,1]-minute voice checkpoints have already fired
+let motivationGiven = false; // the one mid-exam encouragement nudge — fires at most once
 let lastWarnedInterval = 0; // tracks which 30-min mark we've already toasted
 let examInProgress = false;
 
@@ -561,6 +563,8 @@ function recordElapsed() {
     attemptState.questionTimes[q.questionId] = (attemptState.questionTimes[q.questionId] || 0) + elapsed;
   }
   questionStartMillis = Date.now();
+  slowQ1Warned = false;
+  slowQ2Warned = false;
 }
 function persistState() {
   saveLocalAttempt(examId, student.studentId, attemptState);
@@ -591,29 +595,18 @@ function openPalette() {
 function closePalette() {
   document.getElementById("paletteOverlay").classList.add("hidden");
 }
-// ===== Voice reminders (Web Speech API) — speaks a Bengali announcement
-// on top of the existing toast, for the "20 min left" / "5 min left"
-// countdown checkpoints. Silently does nothing if the browser/device
-// doesn't support speech synthesis (feature-detected, never throws). =====
-// Two-part speech: the student's name is very likely written in Bengali
-// script (e.g. "রহিম উদ্দিন") — an English-only voice would mangle it. So
-// the name is spoken with a Bengali voice, then the reminder message with
-// an English voice, queued back-to-back (speechSynthesis plays queued
-// utterances in order, even across different languages).
+// ===== Voice reminders (Web Speech API) — Bengali, calls the student by
+// name. Silently does nothing if the browser/device doesn't support
+// speech synthesis (feature-detected, never throws). =====
 function speak(name, message) {
   if (!("speechSynthesis" in window)) return;
   try {
-    window.speechSynthesis.cancel(); // clear anything pending before queuing fresh ones
-    if (name) {
-      const nameUtter = new SpeechSynthesisUtterance(name);
-      nameUtter.lang = "bn-BD";
-      nameUtter.rate = 0.95;
-      window.speechSynthesis.speak(nameUtter);
-    }
-    const msgUtter = new SpeechSynthesisUtterance(message);
-    msgUtter.lang = "en-US";
-    msgUtter.rate = 0.95;
-    window.speechSynthesis.speak(msgUtter);
+    window.speechSynthesis.cancel(); // don't stack/overlap with any prior utterance
+    const text = name ? `${name}, ${message}` : message;
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "bn-BD";
+    utter.rate = 0.95;
+    window.speechSynthesis.speak(utter);
   } catch (e) { /* voice is a nice-to-have, never let it break the exam flow */ }
 }
 function startTimer() {
@@ -629,23 +622,63 @@ function tick() {
     display.classList.toggle("timer-critical", remaining <= 60 * 1000 && remaining > 0);
     display.classList.toggle("timer-warning", remaining <= 5 * 60 * 1000 && remaining > 60 * 1000);
   }
-  if (remaining <= 20 * 60 * 1000 && remaining > 19 * 60 * 1000 && !warned20min) {
-    warned20min = true;
-    showToast("আর মাত্র ২০ মিনিট বাকি আছে।", "error");
-    speak(student.name, "you have 20 minutes remaining.");
+  // ---- Countdown voice checkpoints — 20/10/5/1 minutes remaining, but
+  // only the ones that actually fit inside this exam's own duration (a
+  // 15-minute exam should never hear "20 minutes remaining"). ----
+  const totalMinutes = exam?.durationMinutes || 0;
+  const remainingMinutes = remaining / 60000;
+  const MIN_WORDS = { 20: "বিশ", 10: "দশ", 5: "পাঁচ", 1: "এক" };
+  [20, 10, 5, 1].filter(m => m < totalMinutes).forEach(m => {
+    if (remainingMinutes <= m && remainingMinutes > m - 1 && !firedMinuteCheckpoints.has(m)) {
+      firedMinuteCheckpoints.add(m);
+      if (m === 1) {
+        showToast("আর মাত্র ১ মিনিট বাকি — সময় শেষ হলে উত্তর স্বয়ংক্রিয়ভাবে জমা হয়ে যাবে।", "error");
+        speak(student.name, "আর মাত্র এক মিনিট বাকি আছে। সময় শেষ হয়ে গেলে তোমার উত্তরগুলো স্বয়ংক্রিয়ভাবে জমা হয়ে যাবে।");
+      } else {
+        showToast(`আর মাত্র ${m} মিনিট বাকি আছে।`, "error");
+        speak(student.name, `আর মাত্র ${MIN_WORDS[m]} মিনিট বাকি আছে।`);
+      }
+    }
+  });
+
+  // ---- One-time mid-exam encouragement — fires around the halfway point,
+  // only if the student's progress is reasonably close to their time pace
+  // (never tells someone falling behind that things are "going well"). ----
+  if (!motivationGiven && attemptState.startedAtMillis && totalMinutes > 0) {
+    const elapsedMinutes = (Date.now() - attemptState.startedAtMillis) / 60000;
+    if (elapsedMinutes >= totalMinutes / 2) {
+      motivationGiven = true;
+      const answeredCount = Object.keys(attemptState.answers).length;
+      const progressRatio = snapshot.questions.length ? answeredCount / snapshot.questions.length : 0;
+      const paceRatio = Math.min(1, elapsedMinutes / totalMinutes);
+      if (progressRatio >= paceRatio * 0.7) {
+        speak(student.name, "তুমি খুব ভালো করছ, পরীক্ষা সুন্দরভাবে এগিয়ে যাচ্ছে। এভাবেই চালিয়ে যাও।");
+      }
+    }
   }
-  if (remaining <= 5 * 60 * 1000 && remaining > 4 * 60 * 1000 && !warned5min) {
-    warned5min = true;
-    showToast("আর মাত্র ৫ মিনিট বাকি আছে।", "error");
-    speak(student.name, "you have 5 minutes remaining.");
+
+  // ---- Per-question "taking a while" nudges — resets every time the
+  // question changes (see recordElapsed()). Only fires while the current
+  // question is still unanswered. ----
+  if (questionStartMillis != null) {
+    const currentQ = snapshot.questions[attemptState.currentIndex];
+    const alreadyAnswered = currentQ && attemptState.answers[currentQ.questionId];
+    if (currentQ && !alreadyAnswered) {
+      const qElapsedSec = (Date.now() - questionStartMillis) / 1000;
+      if (qElapsedSec >= 60 && !slowQ1Warned) {
+        slowQ1Warned = true;
+        speak(student.name, "এই প্রশ্নে একটু বেশি সময় লাগছে। ভেবে উত্তর দিয়ে দাও, চাইলে পরে আবার ফিরে আসতে পারবে।");
+      }
+      if (qElapsedSec >= 120 && !slowQ2Warned) {
+        slowQ2Warned = true;
+        speak(student.name, "চিন্তা করো না, তুমি ঠিকভাবেই এগিয়ে যাচ্ছ। একটু ভেবে উত্তর দিয়ে সামনে বাড়ো।");
+      }
+    }
   }
-  if (remaining <= 60 * 1000 && remaining > 0 && !warned1min) {
-    warned1min = true;
-    showToast("আর মাত্র ১ মিনিট বাকি — পরীক্ষা স্বয়ংক্রিয়ভাবে জমা হবে।", "error");
-  }
+
   // Every 30 minutes elapsed, remind the student how much time is left.
   // Skipped once we're inside the final-5-minute stretch — the dedicated
-  // 5-min/1-min warnings above already cover that window.
+  // 5-min/1-min checkpoints above already cover that window.
   if (attemptState.startedAtMillis && remaining > 5 * 60 * 1000) {
     const elapsedMinutes = (Date.now() - attemptState.startedAtMillis) / 60000;
     const currentInterval = Math.floor(elapsedMinutes / 30);
@@ -658,8 +691,9 @@ function tick() {
     clearInterval(timerHandle);
     doSubmit(true);
   }
-  }
-  let submitting = false;
+}
+
+let submitting = false;
 async function doSubmit(isAutoSubmit) {
   if (submitting) return;
   submitting = true;
