@@ -154,6 +154,7 @@ const student = getActiveStudent();
 
 let result = null;
 let subjectMap = {}, chapterMap = {}, topicMap = {};
+let review = [];
 
 if (!student) {
   window.location.href = "../index.html";
@@ -259,7 +260,7 @@ function renderPending() {
 
 async function renderApproved() {
   const snapshot = await getExamSnapshot(result.examId);
-  const review = snapshot ? buildQuestionReview(snapshot.questions, result.answers || {}, result.questionTimes || {}) : [];
+  review = snapshot ? buildQuestionReview(snapshot.questions, result.answers || {}, result.questionTimes || {}) : [];
   const slowest = getSlowestQuestions(review, 3);
   const pctVal = Number(result.percentage) || 0;
   const scoreColor = pctVal >= 75 ? "var(--color-success)" : pctVal >= 40 ? "var(--color-accent)" : "var(--color-danger)";
