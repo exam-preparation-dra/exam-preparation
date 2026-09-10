@@ -14,12 +14,13 @@
 </div>
 
 <script type="module">
-import { initTheme, toggleTheme, icons, showToast, friendlyError } from "../js/utils/ui-utils.js";
+import { initTheme, toggleTheme, icons, showToast, friendlyError, aiBadge } from "../js/utils/ui-utils.js";
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
 import { initAdminPwaInstall } from "../pwa-install.js";
 import { getFullSyllabusTree, buildNameMap } from "../js/utils/syllabus-utils.js";
 import { getQuestionsByIds, addQuestion } from "../js/utils/question-utils.js";
 import { createExam, updateExam, getExamById, calculateTotalMarks } from "../js/utils/exam-utils.js";
+import { generateQuestionsFromImage, parseAiImportText, promptForApiKey, fileToImagePart } from "../js/utils/ai-import-utils.js";
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -45,9 +46,12 @@ requireAdmin(async () => {
     window.location.href = `../admin/questions.html?returnTo=${encodeURIComponent(returnUrl)}`;
   });
   document.getElementById("quickAddForm").addEventListener("submit", handleQuickAdd);
+  document.getElementById("addAiRowBtn").addEventListener("click", addAiRow);
+  document.getElementById("aiGenerateBtn").addEventListener("click", handleAiGenerate);
 
   tree = await getFullSyllabusTree();
   populateQuickAddSyllabus();
+  addAiRow();
 
   const cartContext = localStorage.getItem("examBuilderContext");
   const cartIds = JSON.parse(localStorage.getItem("examBuilderSelection") || "[]");
@@ -110,6 +114,24 @@ function template() {
 
     <div class="glass card mt-4">
       <div class="flex justify-between items-center">
+        <p class="eyebrow">✨ AI দিয়ে প্রশ্নপত্র তৈরি করুন</p>
+      </div>
+      <p class="text-xs text-muted mt-1">একাধিক চ্যাপ্টার যোগ করো, প্রতিটার জন্য কতগুলো প্রশ্ন চাও বলে দাও। চাইলে টপিক/নির্দেশনা লিখে দিতে পারো, বা বইয়ের পাতার ছবি দিতে পারো — দিলে AI ঠিক ওই সীমার মধ্যেই থাকবে, আউট-অফ-সিলেবাস হবে না। কিছু না দিলে চ্যাপ্টার/টপিকের নাম অনুযায়ী AI নিজের জ্ঞান থেকে বানাবে। তৈরি হওয়া প্রশ্ন নিজে থেকেই প্রশ্ন ব্যাংকে যুক্ত হয়ে নিচের "নির্বাচিত প্রশ্ন" তালিকায় চলে আসবে — সেভ করার আগে রিভিউ করে নিতে পারবে।</p>
+
+      <div id="aiRowsContainer" class="mt-3"></div>
+      <button type="button" class="btn btn-secondary btn-sm mt-2" id="addAiRowBtn">+ আরেকটা চ্যাপ্টার যোগ করুন</button>
+
+      <div class="mt-3 hidden" id="aiGenerateProgress">
+        <div class="flex items-center gap-2">
+          <div class="spinner" style="width:18px;height:18px;"></div>
+          <span class="text-xs" id="aiGenerateProgressText">শুরু হচ্ছে...</span>
+        </div>
+      </div>
+      <button type="button" class="btn btn-primary mt-3" id="aiGenerateBtn" style="width:100%;">✨ AI দিয়ে প্রশ্নপত্র তৈরি করুন</button>
+    </div>
+
+    <div class="glass card mt-4">
+      <div class="flex justify-between items-center">
         <p class="eyebrow">নির্বাচিত প্রশ্ন (<span id="selCount">0</span>)</p>
         <button type="button" class="btn btn-secondary btn-sm" id="goToBank">প্রশ্ন ব্যাংক থেকে যোগ করুন</button>
       </div>
@@ -168,6 +190,166 @@ function updateQaTopics() {
   document.getElementById("qaTopic").innerHTML = (chapter?.topics || []).map(t => `<option value="${t.id}">${t.name_bn}</option>`).join("");
 }
 
+// =========================================================
+// AI QUESTION PAPER MAKER — one row per chapter. Each row's requested
+// question count is split evenly across all topics under that chapter
+// (the question schema requires a specific topicId per question — see
+// ai-import-utils.js's validateParsed), so a "whole chapter" request still
+// produces topic-tagged questions without asking the admin to pick one.
+// =========================================================
+let aiRowCounter = 0;
+
+function addAiRow() {
+  aiRowCounter++;
+  const rowId = aiRowCounter;
+  document.getElementById("aiRowsContainer").insertAdjacentHTML("beforeend", aiRowHtml(rowId));
+  populateAiRowSyllabus(rowId);
+  const rowEl = document.getElementById(`aiRow-${rowId}`);
+  rowEl.querySelector(".remove-ai-row-btn").addEventListener("click", () => rowEl.remove());
+}
+
+function aiRowHtml(rowId) {
+  return `
+    <div class="glass card mt-2" style="padding:14px;" id="aiRow-${rowId}">
+      <div class="flex justify-between items-center">
+        <p class="text-xs" style="font-weight:700;color:var(--text-secondary);">চ্যাপ্টার #${rowId}</p>
+        <button type="button" class="icon-btn remove-ai-row-btn" style="width:28px;height:28px;color:var(--color-danger);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="grid-2 mt-2">
+        <select class="select ai-row-subject"></select>
+        <select class="select ai-row-chapter"></select>
+      </div>
+      <div class="field mt-2"><label>কতগুলো প্রশ্ন</label><input class="input ai-row-count" type="number" min="1" value="5"></div>
+      <div class="field mt-2"><label>টপিক / নির্দেশনা (ঐচ্ছিক)</label><textarea class="textarea ai-row-instructions" style="min-height:50px;" placeholder="যেমন: শুধু নিউটনের ৩টা সূত্র থেকে, মাঝারি মানের প্রশ্ন"></textarea></div>
+      <div class="field mt-2"><label>বইয়ের পাতার ছবি (ঐচ্ছিক)</label><input class="input ai-row-images" type="file" accept="image/*" multiple></div>
+      <p class="text-xs mt-2" id="aiRowStatus-${rowId}"></p>
+    </div>
+  `;
+}
+
+function populateAiRowSyllabus(rowId) {
+  const rowEl = document.getElementById(`aiRow-${rowId}`);
+  const subjSel = rowEl.querySelector(".ai-row-subject");
+  const chapSel = rowEl.querySelector(".ai-row-chapter");
+  subjSel.innerHTML = tree.map(s => `<option value="${s.id}">${s.name_bn}</option>`).join("");
+  function refreshChapters() {
+    const subject = tree.find(s => s.id === subjSel.value);
+    chapSel.innerHTML = (subject?.chapters || []).map(c => `<option value="${c.id}">${c.name_bn}</option>`).join("");
+  }
+  subjSel.addEventListener("change", refreshChapters);
+  refreshChapters();
+}
+
+// Splits `total` as evenly as possible across `n` buckets (remainder goes
+// to the first buckets) — e.g. splitCount(10, 3) -> [4, 3, 3].
+function splitCount(total, n) {
+  const base = Math.floor(total / n);
+  const extra = total % n;
+  return Array.from({ length: n }, (_, i) => base + (i < extra ? 1 : 0));
+}
+
+async function handleAiGenerate() {
+  const rows = Array.from(document.querySelectorAll("#aiRowsContainer > div"));
+  if (rows.length === 0) { showToast("অন্তত একটা চ্যাপ্টার যোগ করো।", "error"); return; }
+
+  const apiKey = promptForApiKey(false);
+  if (!apiKey) { showToast("API key ছাড়া তৈরি করা যাবে না।", "error"); return; }
+
+  const marksPerQ = Number(document.getElementById("marksPerQuestion").value) || 1;
+  const genBtn = document.getElementById("aiGenerateBtn");
+  const progress = document.getElementById("aiGenerateProgress");
+  const progressText = document.getElementById("aiGenerateProgressText");
+  genBtn.disabled = true;
+  progress.classList.remove("hidden");
+
+  let totalAdded = 0, totalFailed = 0;
+
+  for (const rowEl of rows) {
+    const rowId = rowEl.id.replace("aiRow-", "");
+    const statusEl = document.getElementById(`aiRowStatus-${rowId}`);
+    const subjectId = rowEl.querySelector(".ai-row-subject").value;
+    const chapterId = rowEl.querySelector(".ai-row-chapter").value;
+    const count = Number(rowEl.querySelector(".ai-row-count").value) || 0;
+    const instructions = rowEl.querySelector(".ai-row-instructions").value.trim();
+    const files = rowEl.querySelector(".ai-row-images").files;
+
+    const subject = tree.find(s => s.id === subjectId);
+    const chapter = subject?.chapters.find(c => c.id === chapterId);
+    if (!subject || !chapter || count <= 0) {
+      statusEl.textContent = "⚠ বিষয়/অধ্যায় বা প্রশ্ন সংখ্যা ঠিক নেই — এই চ্যাপ্টার স্কিপ করা হয়েছে।";
+      statusEl.style.color = "var(--color-danger)";
+      continue;
+    }
+    const topics = chapter.topics || [];
+    if (topics.length === 0) {
+      statusEl.textContent = "⚠ এই অধ্যায়ে কোনো টপিক নেই — সিলেবাস ম্যানেজমেন্টে আগে টপিক যোগ করো।";
+      statusEl.style.color = "var(--color-danger)";
+      continue;
+    }
+
+    let imageParts = [];
+    try {
+      imageParts = files && files.length > 0 ? await Promise.all(Array.from(files).map(fileToImagePart)) : [];
+    } catch {
+      statusEl.textContent = "⚠ ছবি পড়া যায়নি — ছবি ছাড়াই এগোনো হচ্ছে।";
+    }
+
+    const counts = splitCount(count, topics.length);
+
+    for (let i = 0; i < topics.length; i++) {
+      const topic = topics[i];
+      const topicCount = counts[i];
+      if (topicCount <= 0) continue;
+
+      progressText.textContent = `${chapter.name_bn} — ${topic.name_bn} (${topicCount} টি) তৈরি হচ্ছে...`;
+      statusEl.textContent = `⏳ ${topic.name_bn}: তৈরি হচ্ছে...`;
+      statusEl.style.color = "var(--text-muted)";
+
+      try {
+        const text = await generateQuestionsFromImage({
+          apiKey,
+          imageParts,
+          subjectName: subject.name_en,
+          chapterName: chapter.name_en,
+          topicName: topic.name_en,
+          count: topicCount,
+          extraInstructions: instructions
+        });
+        const parsed = parseAiImportText(text, { subjectId, chapterId, topicId: topic.id });
+        const validOnes = parsed.filter(p => p.valid);
+        for (const p of validOnes) {
+          const payload = { ...p.question, marks: marksPerQ, createdByAI: true };
+          const ref = await addQuestion(payload);
+          selectedQuestions.push({ id: ref.id, ...payload });
+          totalAdded++;
+        }
+        totalFailed += (parsed.length - validOnes.length);
+        statusEl.textContent = `✓ ${topic.name_bn}: ${validOnes.length} টি প্রশ্ন যুক্ত হয়েছে।`;
+        statusEl.style.color = "var(--color-success)";
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = `✗ ${topic.name_bn}: ${err.message || "ব্যর্থ হয়েছে"}`;
+        statusEl.style.color = "var(--color-danger)";
+        totalFailed++;
+      }
+    }
+  }
+
+  persistCart();
+  renderSelectedList();
+  updateTotalMarks();
+  progress.classList.add("hidden");
+  genBtn.disabled = false;
+
+  if (totalAdded > 0) {
+    showToast(`${totalAdded} টি প্রশ্ন তৈরি হয়ে যোগ হয়েছে${totalFailed > 0 ? ` (${totalFailed} টি ব্যর্থ)` : ""} — নিচে রিভিউ করে সংরক্ষণ করো।`, "success");
+  } else {
+    showToast("কোনো প্রশ্ন তৈরি করা যায়নি।", "error");
+  }
+}
+
 function nameFor(id, kind) {
   for (const s of tree) {
     if (kind === "subject" && s.id === id) return s.name_bn;
@@ -190,7 +372,7 @@ function renderSelectedList() {
     <div class="glass card mt-2" style="padding:12px;">
       <div class="flex justify-between items-center" style="gap:8px;">
         <div style="flex:1;">
-          <p class="text-xs text-muted">#${idx + 1} • ${nameFor(q.subjectId, "subject")} / ${nameFor(q.chapterId, "chapter")}</p>
+          <p class="text-xs text-muted">#${idx + 1} • ${nameFor(q.subjectId, "subject")} / ${nameFor(q.chapterId, "chapter")} ${q.createdByAI ? aiBadge() : ""}</p>
           <p class="text-sm" style="font-weight:600;">${q.question_bn}</p>
         </div>
         <div class="flex gap-1">
