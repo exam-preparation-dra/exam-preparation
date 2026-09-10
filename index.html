@@ -5,16 +5,156 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>বাংলা MCQ পরীক্ষা প্ল্যাটফর্ম</title>
 <link rel="stylesheet" href="./css/style.css">
+<style>
+  body { overflow-x: hidden; }
+
+  /* ===== Living gradient background — three slow-floating blurred blobs.
+     Pure CSS, GPU-friendly (transform only), so it stays smooth and never
+     touches load time. ===== */
+  .bg-scene { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: var(--bg); }
+  .blob { position: absolute; border-radius: 50%; filter: blur(70px); will-change: transform; }
+  .blob-1 { width: 300px; height: 300px; background: #ff6a2b; opacity: 0.32; top: -90px; right: -70px; animation: float1 17s ease-in-out infinite; }
+  .blob-2 { width: 280px; height: 280px; background: #7c3aed; opacity: 0.26; bottom: -100px; left: -70px; animation: float2 21s ease-in-out infinite; }
+  .blob-3 { width: 220px; height: 220px; background: #22d3ee; opacity: 0.16; top: 42%; left: 55%; animation: float3 19s ease-in-out infinite; }
+  @keyframes float1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-26px,34px) scale(1.12); } }
+  @keyframes float2 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(24px,-30px) scale(1.08); } }
+  @keyframes float3 { 0%,100% { transform: translate(-50%,-50%) scale(1); } 50% { transform: translate(-50%,-50%) translate(18px,20px) scale(0.9); } }
+
+  /* ===== Entrance ===== */
+  .app-shell { animation: pageIn 560ms cubic-bezier(.22,.9,.3,1) both; }
+  @keyframes pageIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ===== Glass topbar ===== */
+  .hero-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-radius: 18px;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .brand-mark-wrap { position: relative; width: 44px; height: 44px; flex-shrink: 0; }
+  .brand-mark-wrap::before {
+    content: ""; position: absolute; inset: -3px; border-radius: 14px;
+    background: conic-gradient(from 0deg, #ff6a2b, #7c3aed, #22d3ee, #ff6a2b);
+    animation: spin 5s linear infinite; filter: blur(4px); opacity: 0.75;
+  }
+  .brand-mark { position: relative; z-index: 1; width: 44px; height: 44px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ===== Hero panel ===== */
+  .hero-panel {
+    position: relative; overflow: hidden; border-radius: 24px; padding: 30px 24px 26px; margin-top: 16px;
+    background: linear-gradient(135deg, rgba(255,106,43,0.16), rgba(124,58,237,0.10));
+    border: 1px solid rgba(255,255,255,0.12);
+  }
+  .hero-icon {
+    width: 52px; height: 52px; border-radius: 16px; margin-bottom: 16px;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #ff6a2b, #ffb02e);
+    box-shadow: 0 10px 24px -10px rgba(255,106,43,0.6);
+    animation: iconPulse 3.2s ease-in-out infinite;
+  }
+  @keyframes iconPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+  .eyebrow-glow {
+    display: inline-block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.4px;
+    color: #ffb38a; text-transform: uppercase; margin: 0;
+  }
+  .hero-title {
+    margin: 8px 0 0; font-size: 1.6rem; font-weight: 800; line-height: 1.3;
+    background: linear-gradient(110deg, #ff6a2b 10%, #ffb02e 45%, #7c3aed 90%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero-sub { margin-top: 8px; font-size: 0.88rem; color: var(--text-muted); }
+
+  /* ===== Section label ===== */
+  .section-label {
+    display: flex; align-items: center; gap: 8px; margin: 22px 2px 4px;
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.3px; color: var(--text-muted); text-transform: uppercase;
+  }
+  .section-label::after { content: ""; flex: 1; height: 1px; background: var(--surface-border); }
+
+  /* ===== Student cards ===== */
+  .student-card {
+    position: relative; display: flex; align-items: center; gap: 14px; width: 100%;
+    padding: 15px 17px; margin-top: 12px; border: none; text-align: left; cursor: pointer;
+    border-radius: 20px; overflow: hidden;
+    background: rgba(255,255,255,0.045);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: transform 220ms cubic-bezier(.22,.9,.3,1), box-shadow 220ms ease;
+    animation: cardRise 520ms cubic-bezier(.22,.9,.3,1) both;
+  }
+  .student-card::before {
+    content: ""; position: absolute; inset: 0; border-radius: 20px; padding: 1.5px;
+    background: linear-gradient(120deg, #ff6a2b, #7c3aed);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    opacity: 0; transition: opacity 220ms ease; pointer-events: none;
+  }
+  .student-card:hover::before, .student-card:active::before { opacity: 1; }
+  .student-card:hover { transform: translateY(-3px); box-shadow: 0 16px 32px -18px rgba(255,106,43,0.55); }
+  .student-card:active { transform: scale(0.97) translateY(0); }
+  .student-card.from-cache { animation: none; }
+  @keyframes cardRise { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+  .student-avatar {
+    width: 54px; height: 54px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #ff6a2b, #ffb02e);
+    box-shadow: 0 0 0 3px rgba(255,106,43,0.16);
+  }
+  .student-avatar img { width: 100%; height: 100%; object-fit: cover; -webkit-touch-callout: none; user-select: none; pointer-events: none; }
+  .student-avatar-fallback { color: #fff; font-weight: 800; font-size: 1.25rem; line-height: 1; }
+
+  .student-info { flex: 1; min-width: 0; line-height: 1.3; }
+  .student-name { display: block; font-weight: 700; font-size: 1.02rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .student-id { display: block; font-size: 0.74rem; color: var(--text-muted); margin-top: 3px; }
+
+  .student-arrow { flex-shrink: 0; color: var(--text-muted); transition: transform 220ms ease, color 220ms ease; }
+  .student-card:hover .student-arrow { transform: translateX(4px); color: #ff6a2b; }
+
+  /* ===== Shimmer skeleton ===== */
+  .skeleton-shimmer {
+    height: 80px; border-radius: 20px; margin-top: 12px;
+    background: linear-gradient(100deg, rgba(255,255,255,0.045) 30%, rgba(255,255,255,0.11) 50%, rgba(255,255,255,0.045) 70%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  /* ===== Footer admin link ===== */
+  .admin-link {
+    display: inline-flex; align-items: center; gap: 6px; line-height: 1.4;
+    font-size: 0.75rem; color: var(--text-muted); text-decoration: none;
+    padding: 8px 18px; border-radius: 999px; border: 1px solid var(--surface-border);
+    background: rgba(255,255,255,0.03);
+    transition: border-color 200ms ease, color 200ms ease;
+  }
+  .admin-link:hover { border-color: #ff6a2b; color: #ff6a2b; }
+</style>
 </head>
 <body>
 
+<div class="bg-scene">
+  <span class="blob blob-1"></span>
+  <span class="blob blob-2"></span>
+  <span class="blob blob-3"></span>
+</div>
+
 <div class="app-shell">
 
-  <div class="topbar">
+  <div class="hero-topbar">
     <div class="brand">
-      <div class="brand-mark">প</div>
+      <div class="brand-mark-wrap">
+        <div class="brand-mark" style="border-radius:12px;background:var(--bg);display:flex;align-items:center;justify-content:center;">
+          <span style="font-weight:800;font-size:1.2rem;background:linear-gradient(135deg,#ff6a2b,#ffb02e);-webkit-background-clip:text;background-clip:text;color:transparent;">প</span>
+        </div>
+      </div>
       <div>
-        <h1 style="font-size:1.05rem;">পরীক্ষা প্রস্তুতি</h1>
+        <h1 style="font-size:1.02rem;">পরীক্ষা প্রস্তুতি</h1>
         <p class="text-xs text-muted" style="margin:0;">প্রিপারেশন প্ল্যাটফর্ম</p>
       </div>
     </div>
@@ -23,19 +163,27 @@
     </button>
   </div>
 
-  <div class="glass card">
-    <p class="eyebrow">শুরু করুন</p>
-    <h2 style="margin-top:6px;">শিক্ষার্থী নির্বাচন করুন</h2>
-    <p class="text-sm mt-2">আপনার নাম বেছে নিন — নিজের ড্যাশবোর্ড খুলবে।</p>
+  <div class="hero-panel">
+    <div class="hero-icon">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 10L12 5 2 10l10 5 10-5z"/>
+        <path d="M6 12v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/>
+      </svg>
+    </div>
+    <p class="eyebrow-glow">শুরু করুন</p>
+    <h2 class="hero-title">শিক্ষার্থী নির্বাচন করুন</h2>
+    <p class="hero-sub">আপনার নাম বেছে নিন — নিজের ড্যাশবোর্ড খুলবে।</p>
   </div>
 
-  <div id="studentList" class="mt-4">
-    <div class="glass card skeleton" style="height:76px;"></div>
-    <div class="glass card skeleton" style="height:76px;"></div>
+  <p class="section-label">সব শিক্ষার্থী</p>
+
+  <div id="studentList" class="mt-2">
+    <div class="skeleton-shimmer"></div>
+    <div class="skeleton-shimmer" style="animation-delay:0.15s;"></div>
   </div>
 
-  <div class="mt-5 text-center">
-    <a href="./admin/index.html" class="text-xs text-muted">অ্যাডমিন প্যানেল</a>
+  <div class="mt-6 text-center">
+    <a href="./admin/index.html" class="admin-link">অ্যাডমিন প্যানেল</a>
   </div>
 
 </div>
@@ -48,43 +196,62 @@ initTheme();
 document.getElementById("themeToggle").addEventListener("click", toggleTheme);
 
 const listEl = document.getElementById("studentList");
+const CACHE_KEY = "cachedStudentList";
+let students = [];
+
+function cardHtml(s, i, fromCache) {
+  const avatar = s.photoURL
+    ? `<img src="${s.photoURL}" alt="" draggable="false" oncontextmenu="return false" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'student-avatar-fallback',textContent:'${s.name.charAt(0)}'}))">`
+    : `<span class="student-avatar-fallback">${s.name.charAt(0)}</span>`;
+  return `
+    <button class="student-card${fromCache ? " from-cache" : ""}" data-idx="${i}" style="animation-delay:${fromCache ? 0 : i * 70}ms;">
+      <span class="student-avatar">${avatar}</span>
+      <span class="student-info">
+        <span class="student-name">${s.name}</span>
+        <span class="student-id">${s.studentId}</span>
+      </span>
+      <span class="student-arrow">${icons.arrowRight}</span>
+    </button>
+  `;
+}
+
+function renderList(list, fromCache = false) {
+  students = list;
+  if (list.length === 0) {
+    renderState(listEl, "empty", "এখনো কোনো শিক্ষার্থী যোগ করা হয়নি। অ্যাডমিন প্যানেল থেকে শিক্ষার্থী তৈরি করুন।");
+    return;
+  }
+  listEl.innerHTML = list.map((s, i) => cardHtml(s, i, fromCache)).join("");
+  listEl.querySelectorAll("[data-idx]").forEach(btn => {
+    btn.addEventListener("click", () => selectStudent(students[Number(btn.dataset.idx)]));
+  });
+}
+
+async function selectStudent(student) {
+  setActiveStudent(student); // full student object (name/photoURL/etc.), not just id/name
+  const active = await findActiveAttempt(student.studentId);
+  if (active) {
+    window.location.href = `./student/exam.html?examId=${active.examId}&resume=1`;
+  } else {
+    window.location.href = "./student/dashboard.html";
+  }
+}
+
+// ---- Cache-first paint: show the last-known list instantly (if any),
+// then quietly fetch the live list in the background and swap it in. ----
+try {
+  const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+  if (cached && cached.length) renderList(cached, true);
+} catch { /* corrupted cache — ignore, fresh fetch below will fix it */ }
 
 async function loadStudents() {
   try {
-    const students = await getActiveStudents();
-    if (students.length === 0) {
-      renderState(listEl, "empty", "এখনো কোনো শিক্ষার্থী যোগ করা হয়নি। অ্যাডমিন প্যানেল থেকে শিক্ষার্থী তৈরি করুন।");
-      return;
-    }
-    listEl.innerHTML = students.map(s => `
-      <button class="glass card card--tap" data-doc="${s.docId}" data-sid="${s.studentId}" data-name="${s.name}"
-        style="display:flex;align-items:center;justify-content:space-between;width:100%;border:none;text-align:right;">
-        <span style="display:flex;align-items:center;gap:12px;">
-          <span class="icon-btn">${icons.user}</span>
-          <span style="text-align:left;">
-            <span style="display:block;font-weight:700;">${s.name}</span>
-            <span class="text-xs text-muted">${s.studentId}</span>
-          </span>
-        </span>
-        <span class="icon-btn" style="width:32px;height:32px;">${icons.arrowRight}</span>
-      </button>
-    `).join("");
-
-    listEl.querySelectorAll("[data-doc]").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        const student = { docId: btn.dataset.doc, studentId: btn.dataset.sid, name: btn.dataset.name };
-        setActiveStudent(student);
-        const active = await findActiveAttempt(student.studentId);
-        if (active) {
-          window.location.href = `./student/exam.html?examId=${active.examId}&resume=1`;
-        } else {
-          window.location.href = "./student/dashboard.html";
-        }
-      });
-    });
+    const fresh = await getActiveStudents();
+    renderList(fresh, false);
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify(fresh)); } catch { /* storage full/unavailable — non-fatal */ }
   } catch (err) {
     console.error(err);
-    renderState(listEl, "error", "শিক্ষার্থীদের তালিকা লোড করা যায়নি। আবার চেষ্টা করুন।");
+    if (students.length === 0) renderState(listEl, "error", "শিক্ষার্থীদের তালিকা লোড করা যায়নি। আবার চেষ্টা করুন।");
   }
 }
 
