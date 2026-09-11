@@ -45,6 +45,10 @@ requireAdmin(() => {
         <label for="newName">শিক্ষার্থীর নাম</label>
         <input class="input" id="newName" required placeholder="যেমন: রহিম উদ্দিন">
       </div>
+      <div class="field mt-3">
+        <label for="newClass">ক্লাস</label>
+        <input class="input" id="newClass" required placeholder="যেমন: ৮ম শ্রেণি">
+      </div>
       <button type="submit" class="btn btn-primary" id="addBtn">
         <span style="width:18px;height:18px;">${icons.plus}</span> যোগ করুন
       </button>
@@ -142,12 +146,12 @@ async function loadStudents() {
               <p style="font-weight:700;">
                 <span class="student-name">${s.name}</span>
               </p>
-              <p class="text-xs text-muted">${s.studentId}${s.isActive ? "" : " • নিষ্ক্রিয়"}</p>
+              <p class="text-xs text-muted">${s.studentId}${s.className ? ` • ${s.className}` : ""}${s.isActive ? "" : " • নিষ্ক্রিয়"}</p>
             </div>
           </div>
           <div class="flex gap-2">
             <button class="icon-btn photo-btn" title="ছবি পরিবর্তন">${icons.camera}</button>
-            <button class="icon-btn edit-btn" title="নাম সম্পাদনা">${icons.edit}</button>
+            <button class="icon-btn edit-btn" title="নাম/ক্লাস সম্পাদনা">${icons.edit}</button>
             <button class="icon-btn toggle-btn" title="সক্রিয়/নিষ্ক্রিয়">${icons.toggle}</button>
           </div>
         </div>
@@ -180,12 +184,21 @@ async function loadStudents() {
         const nameEl = card.querySelector(".student-name");
         const newName = prompt("নতুন নাম লিখুন:", student.name);
         if (newName === null) return;
-        const trimmed = newName.trim();
-        if (!trimmed) return;
+        const trimmedName = newName.trim();
+        if (!trimmedName) return;
+
+        const newClass = prompt("ক্লাস লিখুন:", student.className || "");
+        if (newClass === null) return;
+        const trimmedClass = newClass.trim();
+        if (!trimmedClass) { showToast("ক্লাস খালি রাখা যাবে না।", "error"); return; }
+
         try {
-          await updateDoc(doc(db, "students", docId), { name: trimmed });
-          nameEl.textContent = trimmed;
-          showToast("নাম আপডেট করা হয়েছে।", "success");
+          await updateDoc(doc(db, "students", docId), { name: trimmedName, className: trimmedClass });
+          nameEl.textContent = trimmedName;
+          student.name = trimmedName;
+          student.className = trimmedClass;
+          showToast("তথ্য আপডেট করা হয়েছে।", "success");
+          loadStudents();
         } catch (err) {
           showToast(friendlyError(err), "error");
         }
@@ -215,16 +228,19 @@ async function loadStudents() {
 
 async function handleAdd(e) {
   e.preventDefault();
-  const input = document.getElementById("newName");
+  const nameInput = document.getElementById("newName");
+  const classInput = document.getElementById("newClass");
   const btn = document.getElementById("addBtn");
-  const name = input.value.trim();
-  if (!name) return;
+  const name = nameInput.value.trim();
+  const className = classInput.value.trim();
+  if (!name || !className) return;
 
   btn.disabled = true;
   btn.textContent = "যোগ করা হচ্ছে...";
   try {
-    await createStudent(name);
-    input.value = "";
+    await createStudent(name, className);
+    nameInput.value = "";
+    classInput.value = "";
     showToast("শিক্ষার্থী সফলভাবে যোগ করা হয়েছে।", "success");
     loadStudents();
   } catch (err) {
