@@ -10,7 +10,10 @@ import {
 // ---------- Generate permanent Student ID (requirement #7) ----------
 // Uses a counter document + transaction so IDs never collide, even with
 // concurrent admin sessions, and are never manually editable afterward.
-export async function createStudent(name) {
+export async function createStudent(name, className) {
+  const trimmedClass = (className || "").trim();
+  if (!trimmedClass) throw new Error("ক্লাস দেওয়া বাধ্যতামূলক।");
+
   const counterRef = doc(db, "counters", "studentCounter");
   const newSequence = await runTransaction(db, async (tx) => {
     const counterSnap = await tx.get(counterRef);
@@ -24,11 +27,12 @@ export async function createStudent(name) {
   const docRef = await addDoc(collection(db, "students"), {
     studentId,
     name,
+    className: trimmedClass,
     isActive: true,
     sequenceNumber: newSequence,
     createdAt: serverTimestamp()
   });
-  return { docId: docRef.id, studentId, name };
+  return { docId: docRef.id, studentId, name, className: trimmedClass };
 }
 
 // ---------- Set/replace a student's profile photo (feature #2) ----------
