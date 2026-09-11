@@ -33,11 +33,14 @@
     <div class="brand">
       <div class="brand-mark">প</div>
       <div>
-        <h1 style="font-size:1.05rem;">অ্যাডমিন ড্যাশবোর্ড</h1>
+        <h1 style="font-size:1.05rem;" id="platformTitleDisplay">অ্যাডমিন ড্যাশবোর্ড</h1>
         <p class="text-xs text-muted" style="margin:0;" id="adminEmail"></p>
       </div>
     </div>
     <div class="flex gap-2 items-center">
+      <button class="icon-btn" id="editTitleBtn" title="প্ল্যাটফর্মের নাম পরিবর্তন করুন">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      </button>
       <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-thumb"></span></button>
       <button class="icon-btn" id="logoutBtn" title="লগআউট">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
@@ -63,8 +66,9 @@
 </div>
 
 <script type="module">
-import { initTheme, toggleTheme } from "../js/utils/ui-utils.js";
+import { initTheme, toggleTheme, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
+import { getPlatformSettings, canChangeTitle, setPlatformTitle } from "../js/utils/settings-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { collection, getCountFromServer, query, where } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
@@ -75,7 +79,72 @@ document.getElementById("logoutBtn").addEventListener("click", adminLogout);
 requireAdmin(async (user) => {
   document.getElementById("adminEmail").textContent = user.email;
   await loadStats();
+  await loadPlatformTitle();
 });
+
+document.getElementById("editTitleBtn").addEventListener("click", () => openTitleModal(false));
+
+let currentTitleSettings = { platformTitle: null, titleUpdatedAt: null };
+
+async function loadPlatformTitle() {
+  currentTitleSettings = await getPlatformSettings();
+  if (currentTitleSettings.platformTitle) {
+    document.getElementById("platformTitleDisplay").textContent = currentTitleSettings.platformTitle;
+  } else {
+    // No title set yet — this is mandatory, so the popup can't be dismissed
+    // without saving one (no cancel button in this specific case).
+    openTitleModal(true);
+  }
+}
+
+// mandatory: true on first-ever setup (no cancel option); false when the
+// admin deliberately opens it later to change an existing title (cancel
+// allowed, and the once-a-month limit is enforced).
+function openTitleModal(mandatory) {
+  if (!mandatory) {
+    const check = canChangeTitle(currentTitleSettings.titleUpdatedAt);
+    if (!check.allowed) {
+      showToast(`পরবর্তী পরিবর্তনের জন্য আরও ${check.daysRemaining} দিন অপেক্ষা করতে হবে (মাসে ১ বার বদলানো যায়)।`, "error");
+      return;
+    }
+  }
+
+  const overlay = document.createElement("div");
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;";
+  overlay.innerHTML = `
+    <div class="glass card" style="max-width:420px;width:100%;">
+      <p style="font-weight:700;margin-bottom:4px;">${mandatory ? "প্ল্যাটফর্মের নাম দিন" : "প্ল্যাটফর্মের নাম পরিবর্তন করুন"}</p>
+      <p class="text-xs text-muted mb-2">${mandatory ? "এটাই স্টুডেন্টদের হোম পেজে বড় করে হেডিং হিসেবে দেখাবে। এটা যেকোনো সময় দেওয়া যাবে, তবে একবার সেট করার পর মাসে মাত্র একবার বদলানো যাবে — তাই ভেবে দিন।" : "মাসে একবারই বদলানো যায়, তাই ভেবে দিন।"}</p>
+      <input type="text" id="platformTitleInput" class="input" placeholder="যেমন: NMMS PREPARATION EXAMS" value="${(currentTitleSettings.platformTitle || "").replace(/"/g, "&quot;")}" style="width:100%;">
+      <div class="flex gap-2 mt-3" style="justify-content:flex-end;">
+        ${mandatory ? "" : `<button type="button" class="btn btn-secondary" id="titleCancelBtn">বাতিল</button>`}
+        <button type="button" class="btn btn-primary" id="titleSaveBtn">সেভ করুন</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  const input = overlay.querySelector("#platformTitleInput");
+  input.focus();
+
+  if (!mandatory) {
+    overlay.querySelector("#titleCancelBtn").addEventListener("click", () => overlay.remove());
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+  }
+
+  overlay.querySelector("#titleSaveBtn").addEventListener("click", async () => {
+    const value = input.value.trim();
+    if (!value) { showToast("নাম খালি রাখা যাবে না।", "error"); return; }
+    try {
+      await setPlatformTitle(value);
+      currentTitleSettings = { platformTitle: value, titleUpdatedAt: new Date() };
+      document.getElementById("platformTitleDisplay").textContent = value;
+      overlay.remove();
+      showToast("প্ল্যাটফর্মের নাম সংরক্ষণ করা হয়েছে।", "success");
+    } catch (err) {
+      showToast(friendlyError(err), "error");
+    }
+  });
+}
 
 async function safeCount(colName, ...whereClauses) {
   try {
