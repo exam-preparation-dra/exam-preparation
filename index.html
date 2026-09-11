@@ -6,183 +6,152 @@
 <title>বাংলা MCQ পরীক্ষা প্ল্যাটফর্ম</title>
 <link rel="stylesheet" href="./css/style.css">
 <style>
-  body { overflow-x: hidden; }
+  /* =========================================================
+     DESIGN CONCEPT: an exam roll register / admit-card sheet —
+     not a generic app dashboard. Each student is a numbered roll
+     entry on a ledger, torn at perforations, stamped with a roll
+     seal — grounded in the actual subject (an exam-prep roster),
+     not decorative gradients. One calm "printing in" entrance;
+     restrained hover response; no per-card shadow/glow theatrics.
+     ========================================================= */
 
-  /* ===== Living gradient background — three slow-floating blurred blobs.
-     Pure CSS, GPU-friendly (transform only), so it stays smooth and never
-     touches load time. ===== */
-  .bg-scene { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: var(--bg); }
-  .blob { position: absolute; border-radius: 50%; filter: blur(70px); will-change: transform; }
-  .blob-1 { width: 300px; height: 300px; background: #ff6a2b; opacity: 0.32; top: -90px; right: -70px; animation: float1 17s ease-in-out infinite; }
-  .blob-2 { width: 280px; height: 280px; background: #7c3aed; opacity: 0.26; bottom: -100px; left: -70px; animation: float2 21s ease-in-out infinite; }
-  .blob-3 { width: 220px; height: 220px; background: #22d3ee; opacity: 0.16; top: 42%; left: 55%; animation: float3 19s ease-in-out infinite; }
-  @keyframes float1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-26px,34px) scale(1.12); } }
-  @keyframes float2 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(24px,-30px) scale(1.08); } }
-  @keyframes float3 { 0%,100% { transform: translate(-50%,-50%) scale(1); } 50% { transform: translate(-50%,-50%) translate(18px,20px) scale(0.9); } }
-
-  /* ===== Entrance ===== */
-  .app-shell { animation: pageIn 560ms cubic-bezier(.22,.9,.3,1) both; }
-  @keyframes pageIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-  /* ===== Glass topbar ===== */
-  .hero-topbar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 16px; border-radius: 18px;
-    background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(16px) saturate(160%);
-    -webkit-backdrop-filter: blur(16px) saturate(160%);
-    border: 1px solid rgba(255,255,255,0.1);
+  :root {
+    --seal: #ff6a2b;
   }
-  .brand-mark-wrap { position: relative; width: 44px; height: 44px; flex-shrink: 0; }
-  .brand-mark-wrap::before {
-    content: ""; position: absolute; inset: -3px; border-radius: 14px;
-    background: conic-gradient(from 0deg, #ff6a2b, #7c3aed, #22d3ee, #ff6a2b);
-    animation: spin 5s linear infinite; filter: blur(4px); opacity: 0.75;
-  }
-  .brand-mark { position: relative; z-index: 1; width: 44px; height: 44px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ===== Hero panel ===== */
-  .hero-panel {
-    position: relative; overflow: hidden; border-radius: 24px; padding: 30px 24px 26px; margin-top: 16px;
-    background: linear-gradient(135deg, rgba(255,106,43,0.16), rgba(124,58,237,0.10));
-    border: 1px solid rgba(255,255,255,0.12);
+  body { overflow-x: hidden; background: var(--bg); }
+
+  .app-shell { max-width: 460px; }
+
+  /* ---- Faint ruled-ledger texture behind everything — replaces
+     decorative color blobs with something that belongs to the subject. ---- */
+  .ledger-bg {
+    position: fixed; inset: 0; z-index: -1;
+    background-image: repeating-linear-gradient(
+      to bottom, transparent, transparent 37px, var(--surface-border) 38px
+    );
+    opacity: 0.6;
   }
-  .hero-icon {
-    width: 52px; height: 52px; border-radius: 16px; margin-bottom: 16px;
+
+  /* ---- Header: just the seal mark + theme toggle now — the platform
+     name moved down to become the one big heading below. ---- */
+  .masthead { display: flex; align-items: center; justify-content: space-between; padding-top: 6px; }
+  .seal-mark {
+    width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+    border: 1.5px solid var(--seal);
     display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(135deg, #ff6a2b, #ffb02e);
-    box-shadow: 0 10px 24px -10px rgba(255,106,43,0.6);
-    animation: iconPulse 3.2s ease-in-out infinite;
+    color: var(--seal); font-weight: 800; font-size: 1.05rem;
   }
-  @keyframes iconPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
-  .eyebrow-glow {
-    display: inline-block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.4px;
-    color: #ffb38a; text-transform: uppercase; margin: 0;
-  }
-  .hero-title {
-    margin: 8px 0 0; font-size: 1.6rem; font-weight: 800; line-height: 1.3;
-    background: linear-gradient(110deg, #ff6a2b 10%, #ffb02e 45%, #7c3aed 90%);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-  }
-  .hero-sub { margin-top: 8px; font-size: 0.88rem; color: var(--text-muted); }
 
-  /* ===== Section label ===== */
-  .section-label {
-    display: flex; align-items: center; gap: 8px; margin: 22px 2px 4px;
-    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.3px; color: var(--text-muted); text-transform: uppercase;
+  /* ---- Register heading — the platform's own name (admin-set), big and
+     confident. One short line under it, nothing more. ---- */
+  .register-head { margin-top: 28px; }
+  .register-head h1 {
+    font-size: 1.9rem; font-weight: 800; color: var(--text-primary); line-height: 1.25;
+    letter-spacing: -0.01em;
   }
-  .section-label::after { content: ""; flex: 1; height: 1px; background: var(--surface-border); }
+  .register-head p { margin-top: 8px; font-size: 0.86rem; color: var(--text-muted); }
 
-  /* ===== Student cards ===== */
-  .student-card {
-    position: relative; display: flex; align-items: center; gap: 14px; width: 100%;
-    padding: 15px 17px; margin-top: 12px; border: none; text-align: left; cursor: pointer;
-    border-radius: 20px; overflow: hidden;
-    background: rgba(255,255,255,0.045);
-    backdrop-filter: blur(14px) saturate(160%);
-    -webkit-backdrop-filter: blur(14px) saturate(160%);
-    border: 1px solid rgba(255,255,255,0.1);
-    transition: transform 220ms cubic-bezier(.22,.9,.3,1), box-shadow 220ms ease;
-    animation: cardRise 520ms cubic-bezier(.22,.9,.3,1) both;
+  /* ---- The roll sheet: one continuous surface, rows torn apart by
+     a dashed perforation — not a stack of separate floating cards. ---- */
+  .roll-sheet {
+    position: relative;
+    margin-top: 22px; border-radius: 14px; overflow: hidden;
+    border: 1px solid var(--surface-border);
+    background: var(--surface-solid, transparent);
   }
-  .student-card::before {
-    content: ""; position: absolute; inset: 0; border-radius: 20px; padding: 1.5px;
-    background: linear-gradient(120deg, #ff6a2b, #7c3aed);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor; mask-composite: exclude;
-    opacity: 0; transition: opacity 220ms ease; pointer-events: none;
+  .roll-sheet::before, .roll-sheet::after {
+    content: ""; position: absolute; top: 14px; width: 7px; height: 7px;
+    border-radius: 50%; background: var(--bg); border: 1px solid var(--surface-border);
   }
-  .student-card:hover::before, .student-card:active::before { opacity: 1; }
-  .student-card:hover { transform: translateY(-3px); box-shadow: 0 16px 32px -18px rgba(255,106,43,0.55); }
-  .student-card:active { transform: scale(0.97) translateY(0); }
-  .student-card.from-cache { animation: none; }
-  @keyframes cardRise { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .roll-sheet::before { left: -4px; }
+  .roll-sheet::after { right: -4px; }
 
-  .student-avatar {
-    width: 54px; height: 54px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+  .roll-row {
+    position: relative; display: flex; align-items: center; gap: 14px;
+    width: 100%; padding: 16px 16px; border: none; text-align: left; cursor: pointer;
+    background: transparent; color: inherit;
+    clip-path: inset(0 0 0 0);
+    animation: printIn 420ms cubic-bezier(.16,.9,.28,1) both;
+  }
+  .roll-row + .roll-row { border-top: 1px dashed var(--surface-border); }
+  .roll-row.from-cache { animation: none; }
+  @keyframes printIn {
+    from { clip-path: inset(0 100% 0 0); opacity: 0.4; }
+    to   { clip-path: inset(0 0 0 0); opacity: 1; }
+  }
+
+  .roll-no {
+    flex-shrink: 0; width: 34px; height: 34px; border-radius: 8px;
+    border: 1.5px solid rgba(255,106,43,0.4);
     display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(135deg, #ff6a2b, #ffb02e);
-    box-shadow: 0 0 0 3px rgba(255,106,43,0.16);
+    font-weight: 800; font-size: 0.85rem; color: var(--seal);
+    transition: border-color 160ms ease, background 160ms ease;
   }
-  .student-avatar img { width: 100%; height: 100%; object-fit: cover; -webkit-touch-callout: none; user-select: none; pointer-events: none; }
-  .student-avatar-fallback { color: #fff; font-weight: 800; font-size: 1.25rem; line-height: 1; }
+  .roll-row:hover .roll-no, .roll-row:active .roll-no { border-color: var(--seal); background: rgba(255,106,43,0.1); }
 
-  .student-info { flex: 1; min-width: 0; line-height: 1.3; }
-  .student-name { display: block; font-weight: 700; font-size: 1.02rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .student-id { display: block; font-size: 0.74rem; color: var(--text-muted); margin-top: 3px; }
-
-  .student-arrow { flex-shrink: 0; color: var(--text-muted); transition: transform 220ms ease, color 220ms ease; }
-  .student-card:hover .student-arrow { transform: translateX(4px); color: #ff6a2b; }
-
-  /* ===== Shimmer skeleton ===== */
-  .skeleton-shimmer {
-    height: 80px; border-radius: 20px; margin-top: 12px;
-    background: linear-gradient(100deg, rgba(255,255,255,0.045) 30%, rgba(255,255,255,0.11) 50%, rgba(255,255,255,0.045) 70%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s ease-in-out infinite;
-    border: 1px solid rgba(255,255,255,0.08);
+  .roll-avatar {
+    width: 50px; height: 50px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    background: #ff6a2b1a; border: 1px solid rgba(255,106,43,0.35);
   }
-  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  .roll-avatar img { width: 100%; height: 100%; object-fit: cover; -webkit-touch-callout: none; user-select: none; pointer-events: none; }
+  .roll-avatar-fallback { color: var(--seal); font-weight: 800; font-size: 1.2rem; line-height: 1; }
 
-  /* ===== Footer admin link ===== */
-  .admin-link {
-    display: inline-flex; align-items: center; gap: 6px; line-height: 1.4;
-    font-size: 0.75rem; color: var(--text-muted); text-decoration: none;
-    padding: 8px 18px; border-radius: 999px; border: 1px solid var(--surface-border);
-    background: rgba(255,255,255,0.03);
-    transition: border-color 200ms ease, color 200ms ease;
-  }
-  .admin-link:hover { border-color: #ff6a2b; color: #ff6a2b; }
+  .roll-info { flex: 1; min-width: 0; }
+  .roll-name { display: block; font-weight: 800; font-size: 1.18rem; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .roll-id { display: block; font-size: 0.76rem; color: var(--text-muted); margin-top: 3px; }
+
+  .roll-chevron { flex-shrink: 0; color: var(--text-muted); transition: transform 160ms ease, color 160ms ease; }
+  .roll-row:hover .roll-chevron, .roll-row:active .roll-chevron { transform: translateX(3px); color: var(--seal); }
+
+  /* ---- Skeleton: quiet pulse, no shimmer sweep theatrics ---- */
+  .roll-skel { height: 66px; }
+  .roll-skel + .roll-skel { border-top: 1px dashed var(--surface-border); }
+  .roll-skel-bar { height: 100%; margin: 0 16px; display: flex; align-items: center; gap: 14px; }
+  .roll-skel-chip { width: 34px; height: 34px; border-radius: 8px; background: var(--surface-border); animation: pulse 1.6s ease-in-out infinite; }
+  .roll-skel-circle { width: 40px; height: 40px; border-radius: 50%; background: var(--surface-border); animation: pulse 1.6s ease-in-out infinite; }
+  .roll-skel-lines { flex: 1; }
+  .roll-skel-line { height: 10px; border-radius: 4px; background: var(--surface-border); animation: pulse 1.6s ease-in-out infinite; }
+  .roll-skel-line + .roll-skel-line { width: 40%; margin-top: 8px; }
+  @keyframes pulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+  /* ---- Footer ---- */
+  .foot-row { margin-top: 30px; padding-top: 16px; border-top: 1px dashed var(--surface-border); text-align: center; }
+  .admin-link { font-size: 0.76rem; color: var(--text-muted); text-decoration: none; }
+  .admin-link:hover { color: var(--seal); }
 </style>
 </head>
 <body>
 
-<div class="bg-scene">
-  <span class="blob blob-1"></span>
-  <span class="blob blob-2"></span>
-  <span class="blob blob-3"></span>
-</div>
+<div class="ledger-bg"></div>
 
 <div class="app-shell">
 
-  <div class="hero-topbar">
-    <div class="brand">
-      <div class="brand-mark-wrap">
-        <div class="brand-mark" style="border-radius:12px;background:var(--bg);display:flex;align-items:center;justify-content:center;">
-          <span style="font-weight:800;font-size:1.2rem;background:linear-gradient(135deg,#ff6a2b,#ffb02e);-webkit-background-clip:text;background-clip:text;color:transparent;">প</span>
-        </div>
-      </div>
-      <div>
-        <h1 style="font-size:1.02rem;">পরীক্ষা প্রস্তুতি</h1>
-        <p class="text-xs text-muted" style="margin:0;">প্রিপারেশন প্ল্যাটফর্ম</p>
-      </div>
-    </div>
+  <div class="masthead">
+    <div class="seal-mark">প</div>
     <button class="theme-toggle" id="themeToggle" aria-label="থিম পরিবর্তন করুন">
       <span class="theme-toggle-thumb"></span>
     </button>
   </div>
 
-  <div class="hero-panel">
-    <div class="hero-icon">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M22 10L12 5 2 10l10 5 10-5z"/>
-        <path d="M6 12v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/>
-      </svg>
-    </div>
-    <p class="eyebrow-glow">শুরু করুন</p>
-    <h2 class="hero-title">শিক্ষার্থী নির্বাচন করুন</h2>
-    <p class="hero-sub">আপনার নাম বেছে নিন — নিজের ড্যাশবোর্ড খুলবে।</p>
+  <div class="register-head">
+    <h1 id="platformHeading">পরীক্ষা প্রস্তুতি</h1>
+    <p>তালিকা থেকে নিজের নাম বেছে নাও।</p>
   </div>
 
-  <p class="section-label">সব শিক্ষার্থী</p>
-
-  <div id="studentList" class="mt-2">
-    <div class="skeleton-shimmer"></div>
-    <div class="skeleton-shimmer" style="animation-delay:0.15s;"></div>
+  <div class="roll-sheet" id="studentList">
+    <div class="roll-skel"><div class="roll-skel-bar">
+      <div class="roll-skel-chip"></div><div class="roll-skel-circle"></div>
+      <div class="roll-skel-lines"><div class="roll-skel-line"></div><div class="roll-skel-line"></div></div>
+    </div></div>
+    <div class="roll-skel"><div class="roll-skel-bar">
+      <div class="roll-skel-chip"></div><div class="roll-skel-circle"></div>
+      <div class="roll-skel-lines"><div class="roll-skel-line"></div><div class="roll-skel-line"></div></div>
+    </div></div>
   </div>
 
-  <div class="mt-6 text-center">
+  <div class="foot-row">
     <a href="./admin/index.html" class="admin-link">অ্যাডমিন প্যানেল</a>
   </div>
 
@@ -191,26 +160,55 @@
 <script type="module">
 import { initTheme, toggleTheme, icons, renderState } from "./js/utils/ui-utils.js";
 import { getActiveStudents, setActiveStudent, findActiveAttempt } from "./js/utils/student-utils.js";
+import { getPlatformSettings } from "./js/utils/settings-utils.js";
 
 initTheme();
 document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+
+// ---- Platform title: cache-first paint (same fast-loading pattern as the
+// student list below), then quietly refreshed from the admin's setting. ----
+const TITLE_CACHE_KEY = "cachedPlatformTitle";
+const headingEl = document.getElementById("platformHeading");
+try {
+  const cachedTitle = localStorage.getItem(TITLE_CACHE_KEY);
+  if (cachedTitle) headingEl.textContent = cachedTitle;
+} catch { /* non-fatal — falls back to the default heading already in the HTML */ }
+
+async function loadPlatformTitle() {
+  try {
+    const settings = await getPlatformSettings();
+    if (settings.platformTitle) {
+      headingEl.textContent = settings.platformTitle;
+      try { localStorage.setItem(TITLE_CACHE_KEY, settings.platformTitle); } catch { /* storage full/unavailable — non-fatal */ }
+    }
+  } catch (err) {
+    console.error(err); // keep whatever's already showing (cache or default) — never blank the heading
+  }
+}
+loadPlatformTitle();
 
 const listEl = document.getElementById("studentList");
 const CACHE_KEY = "cachedStudentList";
 let students = [];
 
-function cardHtml(s, i, fromCache) {
+const BN_DIGITS = ["০","১","২","৩","৪","৫","৬","৭","৮","৯"];
+function bnRoll(n) {
+  return String(n).padStart(2, "0").split("").map(d => BN_DIGITS[Number(d)]).join("");
+}
+
+function rowHtml(s, i, fromCache) {
   const avatar = s.photoURL
-    ? `<img src="${s.photoURL}" alt="" draggable="false" oncontextmenu="return false" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'student-avatar-fallback',textContent:'${s.name.charAt(0)}'}))">`
-    : `<span class="student-avatar-fallback">${s.name.charAt(0)}</span>`;
+    ? `<img src="${s.photoURL}" alt="" draggable="false" oncontextmenu="return false" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'roll-avatar-fallback',textContent:'${s.name.charAt(0)}'}))">`
+    : `<span class="roll-avatar-fallback">${s.name.charAt(0)}</span>`;
   return `
-    <button class="student-card${fromCache ? " from-cache" : ""}" data-idx="${i}" style="animation-delay:${fromCache ? 0 : i * 70}ms;">
-      <span class="student-avatar">${avatar}</span>
-      <span class="student-info">
-        <span class="student-name">${s.name}</span>
-        <span class="student-id">${s.studentId}</span>
+    <button class="roll-row${fromCache ? " from-cache" : ""}" data-idx="${i}" style="animation-delay:${fromCache ? 0 : i * 65}ms;">
+      <span class="roll-no">${bnRoll(i + 1)}</span>
+      <span class="roll-avatar">${avatar}</span>
+      <span class="roll-info">
+        <span class="roll-name">${s.name}</span>
+        <span class="roll-id">${s.studentId}</span>
       </span>
-      <span class="student-arrow">${icons.arrowRight}</span>
+      <span class="roll-chevron">${icons.arrowRight}</span>
     </button>
   `;
 }
@@ -221,7 +219,7 @@ function renderList(list, fromCache = false) {
     renderState(listEl, "empty", "এখনো কোনো শিক্ষার্থী যোগ করা হয়নি। অ্যাডমিন প্যানেল থেকে শিক্ষার্থী তৈরি করুন।");
     return;
   }
-  listEl.innerHTML = list.map((s, i) => cardHtml(s, i, fromCache)).join("");
+  listEl.innerHTML = list.map((s, i) => rowHtml(s, i, fromCache)).join("");
   listEl.querySelectorAll("[data-idx]").forEach(btn => {
     btn.addEventListener("click", () => selectStudent(students[Number(btn.dataset.idx)]));
   });
@@ -237,8 +235,8 @@ async function selectStudent(student) {
   }
 }
 
-// ---- Cache-first paint: show the last-known list instantly (if any),
-// then quietly fetch the live list in the background and swap it in. ----
+// ---- Cache-first paint: show the last-known roll instantly, then quietly
+// refresh from the live list in the background. ----
 try {
   const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
   if (cached && cached.length) renderList(cached, true);
