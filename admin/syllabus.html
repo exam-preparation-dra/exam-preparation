@@ -238,10 +238,12 @@ function attachTreeEvents() {
 // =========================================================
 let wizardState = null; // { subjectId, chapterBn, chapterEn, topics: [{bn,en}] }
 let wizardStep = "subject"; // "subject" -> "chapter" -> "topics" -> "review"
+let wizardNewSubjectMode = false;
 
 function openWizard() {
   wizardState = { subjectId: "", chapterBn: "", chapterEn: "", topics: [] };
   wizardStep = "subject";
+  wizardNewSubjectMode = false;
   renderWizard();
 }
 
@@ -277,17 +279,66 @@ function renderWizardStep() {
   const body = document.getElementById("wizardBody");
 
   if (wizardStep === "subject") {
+    if (wizardNewSubjectMode) {
+      const translated = wizardState.newSubjectBn && wizardState.newSubjectEn;
+      body.innerHTML = `
+        <p class="text-xs text-muted mb-2">নতুন বিষয়ের নাম লেখো — বাংলা বা ইংরেজি, যেকোনো একটাতেই হবে।</p>
+        ${translated ? `
+          <div class="field"><label>বাংলা নাম</label><input class="input" id="wzNewSubjectBn" value="${wizardState.newSubjectBn}"></div>
+          <div class="field mt-2"><label>English name</label><input class="input" id="wzNewSubjectEn" value="${wizardState.newSubjectEn}"></div>
+        ` : `
+          <input class="input" id="wzNewSubjectRaw" placeholder="যেমন: রসায়ন, অথবা Chemistry">
+        `}
+        <div class="flex gap-2 mt-3">
+          <button type="button" class="btn btn-secondary" id="wzBackToSelectBtn" style="flex:1;">বিষয় বাছাই করবো</button>
+          <button type="button" class="btn btn-primary" id="wzNextBtn" style="flex:1;">${translated ? "তৈরি করে এগিয়ে যাও" : "রূপান্তর করো"}</button>
+        </div>
+      `;
+      document.getElementById("wzBackToSelectBtn").addEventListener("click", () => { wizardNewSubjectMode = false; renderWizardStep(); });
+      document.getElementById("wzNextBtn").addEventListener("click", async () => {
+        if (translated) {
+          const bn = document.getElementById("wzNewSubjectBn").value.trim();
+          const en = document.getElementById("wzNewSubjectEn").value.trim();
+          if (!bn || !en) { showToast("দুটো নামই লাগবে।", "error"); return; }
+          const btn = document.getElementById("wzNextBtn");
+          btn.disabled = true; btn.textContent = "তৈরি হচ্ছে...";
+          try {
+            const ref = await addSubject({ name_bn: bn, name_en: en });
+            tree = await getFullSyllabusTree(); // refresh so the new subject is selectable everywhere else too
+            wizardState.subjectId = ref.id;
+            wizardNewSubjectMode = false;
+            wizardStep = "chapter";
+            renderWizardStep();
+          } catch (err) {
+            showToast(friendlyError(err), "error");
+            btn.disabled = false; btn.textContent = "তৈরি করে এগিয়ে যাও";
+          }
+        } else {
+          const raw = document.getElementById("wzNewSubjectRaw").value.trim();
+          if (!raw) { showToast("বিষয়ের নাম লেখো।", "error"); return; }
+          await runTranslateStep(raw, (result) => {
+            wizardState.newSubjectBn = result.bn;
+            wizardState.newSubjectEn = result.en;
+            renderWizardStep();
+          });
+        }
+      });
+      return;
+    }
+
     body.innerHTML = `
       <p class="text-xs text-muted mb-2">কোন বিষয়ের নিচে এই অধ্যায়টা যোগ হবে?</p>
       <select class="select" id="wzSubject">
         <option value="">বিষয় বাছাই করো</option>
         ${tree.map(s => `<option value="${s.id}" ${wizardState.subjectId === s.id ? "selected" : ""}>${s.name_bn}</option>`).join("")}
       </select>
+      <button type="button" class="btn btn-secondary mt-2" id="wzNewSubjectToggleBtn" style="width:100%;">+ এটা নতুন একটা বিষয়, আগে বানাতে হবে</button>
       <button type="button" class="btn btn-primary mt-3" id="wzNextBtn" style="width:100%;">পরবর্তী</button>
     `;
+    document.getElementById("wzNewSubjectToggleBtn").addEventListener("click", () => { wizardNewSubjectMode = true; renderWizardStep(); });
     document.getElementById("wzNextBtn").addEventListener("click", () => {
       const val = document.getElementById("wzSubject").value;
-      if (!val) { showToast("একটা বিষয় বাছাই করো।", "error"); return; }
+      if (!val) { showToast("একটা বিষয় বাছাই করো, অথবা ওপরের বাটন দিয়ে নতুন বিষয় বানাও।", "error"); return; }
       wizardState.subjectId = val;
       wizardStep = "chapter";
       renderWizardStep();
