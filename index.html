@@ -33,19 +33,9 @@
     opacity: 0.6;
   }
 
-  /* ---- Header: just the seal mark + theme toggle now — the platform
-     name moved down to become the one big heading below. ---- */
-  .masthead { display: flex; align-items: center; justify-content: space-between; padding-top: 6px; }
-  .seal-mark {
-    width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
-    border: 1.5px solid var(--seal);
-    display: flex; align-items: center; justify-content: center;
-    color: var(--seal); font-weight: 800; font-size: 1.05rem;
-  }
-
   /* ---- Register heading — the platform's own name (admin-set), big and
-     confident. One short line under it, nothing more. ---- */
-  .register-head { margin-top: 28px; }
+     confident, right at the very top now. One short line under it. ---- */
+  .register-head { margin-top: 8px; }
   .register-head h1 {
     font-size: 1.9rem; font-weight: 800; color: var(--text-primary); line-height: 1.25;
     letter-spacing: -0.01em;
@@ -128,13 +118,6 @@
 
 <div class="app-shell">
 
-  <div class="masthead">
-    <div class="seal-mark">প</div>
-    <button class="theme-toggle" id="themeToggle" aria-label="থিম পরিবর্তন করুন">
-      <span class="theme-toggle-thumb"></span>
-    </button>
-  </div>
-
   <div class="register-head">
     <h1 id="platformHeading">পরীক্ষা প্রস্তুতি</h1>
     <p>তালিকা থেকে নিজের নাম বেছে নাও।</p>
@@ -152,18 +135,18 @@
   </div>
 
   <div class="foot-row">
-    <a href="./admin/index.html" class="admin-link">অ্যাডমিন প্যানেল</a>
+    <a href="./join.html" class="admin-link" style="font-weight:700;">নতুন শিক্ষার্থী? যুক্ত হওয়ার আবেদন করো →</a>
+    <div class="mt-2"><a href="./admin/index.html" class="admin-link">অ্যাডমিন প্যানেল</a></div>
   </div>
 
 </div>
 
 <script type="module">
-import { initTheme, toggleTheme, icons, renderState } from "./js/utils/ui-utils.js";
+import { initTheme, icons, renderState } from "./js/utils/ui-utils.js";
 import { getActiveStudents, setActiveStudent, findActiveAttempt } from "./js/utils/student-utils.js";
 import { getPlatformSettings } from "./js/utils/settings-utils.js";
 
 initTheme();
-document.getElementById("themeToggle").addEventListener("click", toggleTheme);
 
 // ---- Platform title: cache-first paint (same fast-loading pattern as the
 // student list below), then quietly refreshed from the admin's setting. ----

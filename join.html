@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>যুক্ত হওয়ার আবেদন — পরীক্ষা প্রস্তুতি</title>
+<link rel="stylesheet" href="./css/style.css">
+<style>
+  body { overflow-x: hidden; }
+  .app-shell { max-width: 460px; }
+
+  .masthead { display: flex; align-items: center; justify-content: space-between; padding-top: 6px; }
+  .seal-mark {
+    width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+    border: 1.5px solid #ff6a2b;
+    display: flex; align-items: center; justify-content: center;
+    color: #ff6a2b; font-weight: 800; font-size: 1.05rem;
+    text-decoration: none;
+  }
+
+  .register-head { margin-top: 28px; }
+  .register-head h1 { font-size: 1.5rem; font-weight: 800; color: var(--text-primary); line-height: 1.3; }
+  .register-head p { margin-top: 8px; font-size: 0.86rem; color: var(--text-muted); line-height: 1.55; }
+
+  .join-form { margin-top: 22px; }
+  .join-note {
+    margin-top: 18px; padding: 14px 16px; border-radius: 14px;
+    border: 1px dashed var(--surface-border); font-size: 0.8rem; color: var(--text-muted); line-height: 1.6;
+  }
+
+  .back-link { display: inline-block; margin-top: 20px; font-size: 0.8rem; color: var(--text-muted); text-decoration: none; }
+  .back-link:hover { color: #ff6a2b; }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <div class="masthead">
+    <a href="./index.html" class="seal-mark">প</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="থিম পরিবর্তন করুন">
+      <span class="theme-toggle-thumb"></span>
+    </button>
+  </div>
+
+  <div class="register-head">
+    <h1>যুক্ত হওয়ার আবেদন করো</h1>
+    <p>তোমার নাম আর ক্লাস লিখে দাও — অ্যাডমিন দেখে অনুমোদন দিলেই তুমি তালিকায় যুক্ত হয়ে যাবে।</p>
+  </div>
+
+  <form id="joinForm" class="glass card join-form">
+    <div class="field">
+      <label for="nameInput">তোমার নাম</label>
+      <input class="input" id="nameInput" required placeholder="বাংলা বা ইংরেজি অক্ষরে লিখতে পারো">
+    </div>
+    <div class="field mt-3">
+      <label for="classInput">ক্লাস</label>
+      <input class="input" id="classInput" required placeholder="যেমন: ৮ম শ্রেণি">
+    </div>
+    <button type="submit" class="btn btn-primary mt-4" id="submitBtn" style="width:100%;">আবেদন পাঠাও</button>
+  </form>
+
+  <div class="join-note">
+    আবেদন পাঠানোর পর সাথে সাথেই তালিকায় নাম আসবে না — অ্যাডমিন যতক্ষণ না দেখে অনুমোদন দেবেন, ততক্ষণ অপেক্ষা করতে হবে।
+  </div>
+
+  <a href="./index.html" class="back-link">← তালিকায় ফিরে যাও</a>
+
+</div>
+
+<script type="module">
+import { initTheme, toggleTheme, showToast, friendlyError } from "./js/utils/ui-utils.js";
+import { submitStudentRequest } from "./js/utils/student-requests-utils.js";
+
+initTheme();
+document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+
+document.getElementById("joinForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const nameInput = document.getElementById("nameInput");
+  const classInput = document.getElementById("classInput");
+  const btn = document.getElementById("submitBtn");
+  const name = nameInput.value.trim();
+  const className = classInput.value.trim();
+  if (!name || !className) return;
+
+  btn.disabled = true;
+  btn.textContent = "পাঠানো হচ্ছে...";
+  try {
+    await submitStudentRequest(name, className);
+    document.getElementById("joinForm").innerHTML = `
+      <p style="font-weight:700;">আবেদন পাঠানো হয়েছে ✓</p>
+      <p class="text-sm text-muted mt-2">অ্যাডমিন অনুমোদন দিলেই তালিকায় দেখতে পারবে। এই পেজ বন্ধ করে দিতে পারো।</p>
+    `;
+  } catch (err) {
+    showToast(friendlyError(err), "error");
+    btn.disabled = false;
+    btn.textContent = "আবেদন পাঠাও";
+  }
+});
+</script>
+</body>
+</html>
