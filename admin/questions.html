@@ -31,23 +31,9 @@ import {
   addQuestion, updateQuestion, setQuestionActive, deleteQuestion, duplicateQuestion,
   getQuestionsPage, filterByText
 } from "../js/utils/question-utils.js";
-import { toDirectImageUrl } from "../js/utils/image-utils.js";
+import { toDirectImageUrl, uploadImageWithGuidedFallback } from "../js/utils/image-utils.js";
 import { attachVoiceInput, isVoiceInputSupported } from "../js/utils/voice-input.js";
 import { generateExplanationForQuestion, promptForApiKey } from "../js/utils/ai-import-utils.js";
-
-const IMGBB_API_KEY = "da5159865f56c01745a35e83e0ed9104";
-
-async function uploadToImgbb(file) {
-  const formData = new FormData();
-  formData.append("image", file);
-  const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-    method: "POST",
-    body: formData
-  });
-  const data = await res.json();
-  if (!data.success) throw new Error(data.error?.message || "আপলোড ব্যর্থ হয়েছে।");
-  return data.data.url;
-}
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -103,7 +89,7 @@ requireAdmin(() => {
     const status = document.getElementById("quickImgUploadStatus");
     status.textContent = "আপলোড হচ্ছে...";
     try {
-      const url = await uploadToImgbb(file);
+      const url = await uploadImageWithGuidedFallback(file);
       document.getElementById("quickImgInput").value = url;
       const preview = document.getElementById("quickImgPreview");
       preview.src = url;
@@ -524,7 +510,7 @@ function setupImagePreview() {
     status.textContent = "আপলোড হচ্ছে...";
     status.classList.remove("hidden");
     try {
-      const url = await uploadToImgbb(file);
+      const url = await uploadImageWithGuidedFallback(file);
       document.getElementById("imageUrlInput").value = url;
       const preview = document.getElementById("imagePreview");
       preview.src = url;

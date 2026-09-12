@@ -20,7 +20,7 @@ import { initAdminPwaInstall } from "../pwa-install.js";
 import { getActiveStudents, createStudent, updateStudentPhoto } from "../js/utils/student-utils.js";
 import { getPendingRequests, deleteStudentRequest } from "../js/utils/student-requests-utils.js";
 import { transliterateToBengali, promptForApiKey } from "../js/utils/ai-import-utils.js";
-import { toDirectImageUrl } from "../js/utils/image-utils.js";
+import { toDirectImageUrl, uploadImageWithGuidedFallback } from "../js/utils/image-utils.js";
 import { uploadStudentPhoto, deleteStudentPhoto } from "../js/utils/storage-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { collection, getDocs, orderBy, query, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
@@ -79,6 +79,30 @@ async function loadAllStudents() {
 // Custom modal (replaces prompt()) — some mobile browsers truncate or
 // mishandle long pasted text inside a native prompt() box. A plain
 // <textarea> has no such limit, so long Google Drive links are never cut off.
+async function uploadWithFallback(file, studentIdHint, statusEl) {
+  statusEl.textContent = "আপলোড হচ্ছে...";
+  statusEl.style.color = "var(--text-muted)";
+  try {
+    const url = await uploadStudentPhoto(file, studentIdHint);
+    statusEl.textContent = "আপলোড সম্পন্ন — নিচে \"সেভ করুন\" চাপুন।";
+    statusEl.style.color = "var(--color-success, green)";
+    return url;
+  } catch (err) {
+    console.warn("Firebase Storage upload failed, falling back to ImgBB:", err);
+    statusEl.textContent = "প্রথম পদ্ধতি কাজ করেনি — বিকল্প পদ্ধতিতে চেষ্টা করা হচ্ছে...";
+    try {
+      const url = await uploadImageWithGuidedFallback(file);
+      statusEl.textContent = "আপলোড সম্পন্ন — নিচে \"সেভ করুন\" চাপুন।";
+      statusEl.style.color = "var(--color-success, green)";
+      return url;
+    } catch (fallbackErr) {
+      statusEl.textContent = "আপলোড ব্যর্থ হয়েছে — নিচে লিংক পেস্ট করে দেখুন।";
+      statusEl.style.color = "var(--color-error, crimson)";
+      throw fallbackErr;
+    }
+  }
+}
+
 function askForPhotoLink(currentUrl, studentIdHint) {
   return new Promise((resolve) => {
     const overlay = document.createElement("div");
@@ -113,16 +137,11 @@ function askForPhotoLink(currentUrl, studentIdHint) {
     fileInput.addEventListener("change", async () => {
       const file = fileInput.files?.[0];
       if (!file) return;
-      statusEl.textContent = "আপলোড হচ্ছে...";
-      statusEl.style.color = "var(--text-muted)";
       try {
-        const url = await uploadStudentPhoto(file, studentIdHint);
+        const url = await uploadWithFallback(file, studentIdHint, statusEl);
         textarea.value = url;
-        statusEl.textContent = "আপলোড সম্পন্ন — নিচে \"সেভ করুন\" চাপুন।";
-        statusEl.style.color = "var(--color-success, green)";
-      } catch (err) {
-        statusEl.textContent = friendlyError(err);
-        statusEl.style.color = "var(--color-error, crimson)";
+      } catch {
+        // status message already shown by uploadWithFallback — nothing more to do here
       }
     });
 
