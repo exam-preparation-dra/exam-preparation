@@ -339,7 +339,38 @@ D: ${options_bn.D || ""}
   return callGeminiApi(apiKey, [{ text: prompt }]);
 }
 
-// Converts a browser File object into { mimeType, base64 } for the call above.
+// ---------- Name transliteration (used when admin reviews a student join
+// request typed in English letters — e.g. "Rahim Uddin" -> "রহিম উদ্দিন").
+// Admin can still edit the result before approving, since phonetic
+// transliteration of names is inherently a best-guess. ----------
+export async function transliterateToBengali(apiKey, rawName) {
+  if (!apiKey) throw new Error("Gemini API key দেওয়া হয়নি।");
+  const trimmed = (rawName || "").trim();
+  if (!trimmed) return "";
+  const prompt = `এই নামটা যদি ইংরেজি অক্ষরে লেখা বাংলা নাম হয়, সেটাকে সঠিক বাংলা বানানে লিখে দাও (একটা প্রচলিত বাংলা নাম হিসেবে)। নামটা যদি ইতিমধ্যেই বাংলায় লেখা থাকে, সেটা অপরিবর্তিত রেখে দাও। উত্তরে শুধু নামটাই লিখবে — কোনো ব্যাখ্যা, উপসর্গ, উদ্ধৃতিচিহ্ন বা অতিরিক্ত টেক্সট দেবে না।
+
+নাম: ${trimmed}`;
+
+  return callGeminiApi(apiKey, [{ text: prompt }]);
+}
+
+// ---------- Bengali<->English translation for syllabus terms (chapter/topic
+// names) — auto-detects which language was typed and returns both. Used by
+// the syllabus wizard so the admin only ever has to type a name once, in
+// whichever language is easiest for them. This is TRANSLATION (meaning),
+// not phonetic transliteration — different from transliterateToBengali()
+// above, which is for people's names. ----------
+export async function translateSyllabusTerm(apiKey, text) {
+  if (!apiKey) throw new Error("Gemini API key দেওয়া হয়নি।");
+  const trimmed = (text || "").trim();
+  if (!trimmed) return { bn: "", en: "" };
+  const isBengali = /[\u0980-\u09FF]/.test(trimmed);
+  const prompt = isBengali
+    ? `এটা একটা পাঠ্যবইয়ের অধ্যায়/টপিকের নাম। এর সঠিক, স্বাভাবিক ইংরেজি অনুবাদ দাও। শুধু ইংরেজি অনুবাদটাই লিখবে — কোনো ব্যাখ্যা, উদ্ধৃতিচিহ্ন বা অতিরিক্ত টেক্সট দেবে না।\n\nবাংলা: ${trimmed}`
+    : `This is a textbook chapter/topic name. Give its correct, natural Bengali translation. Return ONLY the Bengali text — no explanation, no quotes, no extra text.\n\nEnglish: ${trimmed}`;
+  const result = (await callGeminiApi(apiKey, [{ text: prompt }])).trim();
+  return isBengali ? { bn: trimmed, en: result } : { bn: result, en: trimmed };
+}
 export function fileToImagePart(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
