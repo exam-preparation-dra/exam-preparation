@@ -44,6 +44,18 @@
 
   /* ---- The roll sheet: one continuous surface, rows torn apart by
      a dashed perforation — not a stack of separate floating cards. ---- */
+  /* ---- Class filter chips — scrolls horizontally if there are many
+     classes; auto-built from whichever classes actually exist among the
+     current students, so a brand-new class shows up on its own. ---- */
+  .class-filter { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 4px; margin-top: 18px; scrollbar-width: none; }
+  .class-filter::-webkit-scrollbar { display: none; }
+  .class-chip {
+    flex-shrink: 0; padding: 6px 14px; border-radius: 999px; font-size: 0.78rem; font-weight: 600;
+    border: 1px solid var(--surface-border); background: transparent; color: var(--text-muted); cursor: pointer;
+    transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+  }
+  .class-chip.active { background: var(--seal); border-color: var(--seal); color: #fff; }
+
   .roll-sheet {
     position: relative;
     margin-top: 22px; border-radius: 14px; overflow: hidden;
@@ -123,6 +135,8 @@
     <p>তালিকা থেকে নিজের নাম বেছে নাও।</p>
   </div>
 
+  <div id="classFilter" class="class-filter hidden"></div>
+
   <div class="roll-sheet" id="studentList">
     <div class="roll-skel"><div class="roll-skel-bar">
       <div class="roll-skel-chip"></div><div class="roll-skel-circle"></div>
@@ -171,8 +185,33 @@ async function loadPlatformTitle() {
 loadPlatformTitle();
 
 const listEl = document.getElementById("studentList");
+const filterEl = document.getElementById("classFilter");
 const CACHE_KEY = "cachedStudentList";
-let students = [];
+let students = [];       // the currently DISPLAYED (possibly filtered) list — what rowHtml/selectStudent index into
+let allStudents = [];    // the full unfiltered list, used to rebuild chips + re-filter
+let activeClassFilter = "all";
+
+function renderClassFilter() {
+  const classes = [...new Set(allStudents.map(s => s.className).filter(Boolean))].sort();
+  if (classes.length === 0) { filterEl.classList.add("hidden"); return; }
+  filterEl.classList.remove("hidden");
+  filterEl.innerHTML = [
+    `<button class="class-chip${activeClassFilter === "all" ? " active" : ""}" data-class="all">সব</button>`,
+    ...classes.map(c => `<button class="class-chip${activeClassFilter === c ? " active" : ""}" data-class="${c}">${c}</button>`)
+  ].join("");
+  filterEl.querySelectorAll(".class-chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      activeClassFilter = chip.dataset.class;
+      applyClassFilter();
+    });
+  });
+}
+
+function applyClassFilter() {
+  renderClassFilter();
+  const filtered = activeClassFilter === "all" ? allStudents : allStudents.filter(s => s.className === activeClassFilter);
+  renderList(filtered, false);
+}
 
 const BN_DIGITS = ["০","১","২","৩","৪","৫","৬","৭","৮","৯"];
 function bnRoll(n) {
@@ -222,13 +261,18 @@ async function selectStudent(student) {
 // refresh from the live list in the background. ----
 try {
   const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
-  if (cached && cached.length) renderList(cached, true);
+  if (cached && cached.length) {
+    allStudents = cached;
+    renderClassFilter();
+    renderList(cached, true);
+  }
 } catch { /* corrupted cache — ignore, fresh fetch below will fix it */ }
 
 async function loadStudents() {
   try {
     const fresh = await getActiveStudents();
-    renderList(fresh, false);
+    allStudents = fresh;
+    applyClassFilter();
     try { localStorage.setItem(CACHE_KEY, JSON.stringify(fresh)); } catch { /* storage full/unavailable — non-fatal */ }
   } catch (err) {
     console.error(err);
