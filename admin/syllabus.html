@@ -19,6 +19,7 @@ import {
   addChapter, updateChapter, setChapterActive,
   addTopic, updateTopic, setTopicActive
 } from "../js/utils/syllabus-utils.js";
+import { translateSyllabusTerm, promptForApiKey } from "../js/utils/ai-import-utils.js";
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -37,8 +38,11 @@ requireAdmin(() => {
       </div>
     </div>
 
-    <form id="addSubjectForm" class="glass card">
+    <button type="button" class="btn btn-primary" id="openWizardBtn" style="width:100%;">✨ নতুন অধ্যায় বানান (সহজ, ধাপে ধাপে)</button>
+
+    <form id="addSubjectForm" class="glass card mt-4">
       <p class="eyebrow mb-2">নতুন বিষয় যোগ করুন</p>
+      <p class="text-xs text-muted mb-2">এটা শুধু একদম নতুন কোনো বিষয় (যেমন: পদার্থবিজ্ঞান) যোগ করার জন্য — সাধারণত খুব কম দরকার হয়। অধ্যায়/টপিক বানাতে ওপরের বাটন ব্যবহার করুন।</p>
       <div class="flex gap-2 mt-2">
         <input class="input" id="newSubjectBn" placeholder="বাংলা নাম (যেমন: পদার্থবিজ্ঞান)" required>
         <button type="submit" class="btn btn-primary btn-sm">${icons.plus}</button>
@@ -51,6 +55,7 @@ requireAdmin(() => {
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
   document.getElementById("logoutBtn").addEventListener("click", adminLogout);
   document.getElementById("addSubjectForm").addEventListener("submit", handleAddSubject);
+  document.getElementById("openWizardBtn").addEventListener("click", openWizard);
   loadTree();
 });
 
@@ -221,6 +226,213 @@ function attachTreeEvents() {
       loadTree();
     } catch (err) { showToast(friendlyError(err), "error"); }
   }));
+}
+
+// =========================================================
+// GUIDED WIZARD — replaces the old "type Bengali AND English into two
+// boxes for subject/chapter/topic all at once" flow, which was confusing.
+// Now: type a chapter name in EITHER language, AI fills in the other one
+// for you to confirm before moving on. Topics are fully optional and
+// repeatable — skip straight to "তৈরি করুন" with zero topics if you just
+// want the chapter for now, or add as many as you like first.
+// =========================================================
+let wizardState = null; // { subjectId, chapterBn, chapterEn, topics: [{bn,en}] }
+let wizardStep = "subject"; // "subject" -> "chapter" -> "topics" -> "review"
+
+function openWizard() {
+  wizardState = { subjectId: "", chapterBn: "", chapterEn: "", topics: [] };
+  wizardStep = "subject";
+  renderWizard();
+}
+
+function closeWizard() {
+  document.getElementById("wizardOverlay")?.remove();
+}
+
+function renderWizard() {
+  let overlay = document.getElementById("wizardOverlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "wizardOverlay";
+    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;";
+    document.body.appendChild(overlay);
+  }
+
+  overlay.innerHTML = `
+    <div class="glass card" style="max-width:460px;width:100%;max-height:85vh;overflow-y:auto;">
+      <div class="flex justify-between items-center">
+        <p class="eyebrow">নতুন অধ্যায় বানান</p>
+        <button class="icon-btn" id="wizardCloseBtn" style="width:30px;height:30px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div id="wizardBody" class="mt-3"></div>
+    </div>
+  `;
+  overlay.querySelector("#wizardCloseBtn").addEventListener("click", closeWizard);
+  renderWizardStep();
+}
+
+function renderWizardStep() {
+  const body = document.getElementById("wizardBody");
+
+  if (wizardStep === "subject") {
+    body.innerHTML = `
+      <p class="text-xs text-muted mb-2">কোন বিষয়ের নিচে এই অধ্যায়টা যোগ হবে?</p>
+      <select class="select" id="wzSubject">
+        <option value="">বিষয় বাছাই করো</option>
+        ${tree.map(s => `<option value="${s.id}" ${wizardState.subjectId === s.id ? "selected" : ""}>${s.name_bn}</option>`).join("")}
+      </select>
+      <button type="button" class="btn btn-primary mt-3" id="wzNextBtn" style="width:100%;">পরবর্তী</button>
+    `;
+    document.getElementById("wzNextBtn").addEventListener("click", () => {
+      const val = document.getElementById("wzSubject").value;
+      if (!val) { showToast("একটা বিষয় বাছাই করো।", "error"); return; }
+      wizardState.subjectId = val;
+      wizardStep = "chapter";
+      renderWizardStep();
+    });
+    return;
+  }
+
+  if (wizardStep === "chapter") {
+    const translated = wizardState.chapterBn && wizardState.chapterEn;
+    body.innerHTML = `
+      <p class="text-xs text-muted mb-2">অধ্যায়ের নাম লেখো — বাংলা বা ইংরেজি, যেকোনো একটাতেই হবে।</p>
+      ${translated ? `
+        <div class="field"><label>বাংলা নাম</label><input class="input" id="wzChapterBn" value="${wizardState.chapterBn}"></div>
+        <div class="field mt-2"><label>English name</label><input class="input" id="wzChapterEn" value="${wizardState.chapterEn}"></div>
+      ` : `
+        <input class="input" id="wzChapterRaw" placeholder="যেমন: আলো, অথবা Light">
+      `}
+      <div class="flex gap-2 mt-3">
+        <button type="button" class="btn btn-secondary" id="wzPrevBtn" style="flex:1;">পূর্ববর্তী</button>
+        <button type="button" class="btn btn-primary" id="wzNextBtn" style="flex:1;">${translated ? "পরবর্তী" : "রূপান্তর করো"}</button>
+      </div>
+    `;
+    document.getElementById("wzPrevBtn").addEventListener("click", () => { wizardStep = "subject"; renderWizardStep(); });
+    document.getElementById("wzNextBtn").addEventListener("click", async () => {
+      if (translated) {
+        wizardState.chapterBn = document.getElementById("wzChapterBn").value.trim();
+        wizardState.chapterEn = document.getElementById("wzChapterEn").value.trim();
+        if (!wizardState.chapterBn || !wizardState.chapterEn) { showToast("দুটো নামই লাগবে।", "error"); return; }
+        wizardStep = "topics";
+        renderWizardStep();
+      } else {
+        const raw = document.getElementById("wzChapterRaw").value.trim();
+        if (!raw) { showToast("অধ্যায়ের নাম লেখো।", "error"); return; }
+        await runTranslateStep(raw, (result) => {
+          wizardState.chapterBn = result.bn;
+          wizardState.chapterEn = result.en;
+          renderWizardStep();
+        });
+      }
+    });
+    return;
+  }
+
+  if (wizardStep === "topics") {
+    body.innerHTML = `
+      <p class="text-xs text-muted mb-2">চাইলে এই অধ্যায়ের টপিক যোগ করো (একদম ঐচ্ছিক — কিছু না দিয়েও এগিয়ে যেতে পারো)।</p>
+      <div id="wzTopicsList">
+        ${wizardState.topics.map((t, i) => `
+          <div class="flex justify-between items-center mt-2" style="background:var(--surface-solid);border-radius:var(--radius-sm);padding:8px 10px;">
+            <p class="text-sm">${t.bn} <span class="text-xs text-muted">(${t.en})</span></p>
+            <button type="button" class="icon-btn wz-remove-topic" data-idx="${i}" style="width:26px;height:26px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+          </div>
+        `).join("")}
+      </div>
+      <input class="input mt-3" id="wzTopicRaw" placeholder="টপিকের নাম (বাংলা/ইংরেজি) — খালি রেখে এড়িয়ে যাও">
+      <button type="button" class="btn btn-secondary mt-2" id="wzAddTopicBtn" style="width:100%;">+ এই টপিকটা যোগ করো</button>
+      <div class="flex gap-2 mt-3">
+        <button type="button" class="btn btn-secondary" id="wzPrevBtn" style="flex:1;">পূর্ববর্তী</button>
+        <button type="button" class="btn btn-primary" id="wzNextBtn" style="flex:1;">পরবর্তী</button>
+      </div>
+    `;
+    document.querySelectorAll(".wz-remove-topic").forEach(b => b.addEventListener("click", () => {
+      wizardState.topics.splice(Number(b.dataset.idx), 1);
+      renderWizardStep();
+    }));
+    document.getElementById("wzAddTopicBtn").addEventListener("click", async () => {
+      const raw = document.getElementById("wzTopicRaw").value.trim();
+      if (!raw) { showToast("টপিকের নাম লেখো, নাহলে সরাসরি \"পরবর্তী\"-তে যাও।", "error"); return; }
+      await runTranslateStep(raw, (result) => {
+        wizardState.topics.push(result);
+        renderWizardStep();
+      });
+    });
+    document.getElementById("wzPrevBtn").addEventListener("click", () => { wizardStep = "chapter"; renderWizardStep(); });
+    document.getElementById("wzNextBtn").addEventListener("click", () => { wizardStep = "review"; renderWizardStep(); });
+    return;
+  }
+
+  if (wizardStep === "review") {
+    const subject = findSubject(wizardState.subjectId);
+    body.innerHTML = `
+      <p class="text-xs text-muted">বিষয়</p>
+      <p style="font-weight:700;">${subject?.name_bn || "—"}</p>
+      <p class="text-xs text-muted mt-3">অধ্যায়</p>
+      <p style="font-weight:700;">${wizardState.chapterBn} <span class="text-xs text-muted">(${wizardState.chapterEn})</span></p>
+      <p class="text-xs text-muted mt-3">টপিক (${wizardState.topics.length})</p>
+      ${wizardState.topics.length
+        ? wizardState.topics.map(t => `<p class="text-sm mt-1">• ${t.bn} <span class="text-xs text-muted">(${t.en})</span></p>`).join("")
+        : `<p class="text-sm text-muted mt-1">কোনো টপিক দেওয়া হয়নি — পরে যোগ করা যাবে।</p>`}
+      <div class="flex gap-2 mt-4">
+        <button type="button" class="btn btn-secondary" id="wzPrevBtn" style="flex:1;">পূর্ববর্তী</button>
+        <button type="button" class="btn btn-primary" id="wzCreateBtn" style="flex:1;">তৈরি করুন</button>
+      </div>
+    `;
+    document.getElementById("wzPrevBtn").addEventListener("click", () => { wizardStep = "topics"; renderWizardStep(); });
+    document.getElementById("wzCreateBtn").addEventListener("click", handleWizardCreate);
+    return;
+  }
+}
+
+async function runTranslateStep(raw, onDone) {
+  const btn = document.getElementById("wzNextBtn") || document.getElementById("wzAddTopicBtn");
+  const apiKey = promptForApiKey(false);
+  if (!apiKey) { showToast("AI রূপান্তরের জন্য একটা Gemini API key লাগবে।", "error"); return; }
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "রূপান্তর হচ্ছে...";
+  try {
+    const result = await translateSyllabusTerm(apiKey, raw);
+    onDone(result);
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || friendlyError(err), "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+}
+
+async function handleWizardCreate() {
+  const btn = document.getElementById("wzCreateBtn");
+  btn.disabled = true;
+  btn.textContent = "তৈরি হচ্ছে...";
+  try {
+    const chapterRef = await addChapter({
+      subjectId: wizardState.subjectId,
+      name_bn: wizardState.chapterBn,
+      name_en: wizardState.chapterEn
+    });
+    const chapterId = chapterRef.id || chapterRef; // tolerate either a DocumentReference or a bare id string
+    for (const topic of wizardState.topics) {
+      await addTopic({ chapterId, subjectId: wizardState.subjectId, name_bn: topic.bn, name_en: topic.en });
+    }
+    showToast(`অধ্যায় তৈরি হয়েছে${wizardState.topics.length ? ` (${wizardState.topics.length} টি টপিকসহ)` : ""}।`, "success");
+    closeWizard();
+    openSubjectId = wizardState.subjectId;
+    loadTree();
+  } catch (err) {
+    console.error(err);
+    showToast(friendlyError(err), "error");
+    btn.disabled = false;
+    btn.textContent = "তৈরি করুন";
+  }
 }
 
 function findSubject(id) { return tree.find(s => s.id === id); }
