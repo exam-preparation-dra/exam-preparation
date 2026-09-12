@@ -94,6 +94,33 @@ export async function getResultById(resultId) {
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
 
+// ---------- This student's rank among every student who has at least one
+// approved result (ranked by each student's own overall average %). Used
+// for the shareable profile card. Returns null if this student has no
+// approved results yet (nothing to rank). ----------
+export async function getStudentRank(studentId) {
+  const all = await getAllApprovedResults();
+  if (all.length === 0) return null;
+
+  const byStudent = {};
+  for (const r of all) {
+    if (!byStudent[r.studentId]) byStudent[r.studentId] = [];
+    byStudent[r.studentId].push(Number(r.percentage) || 0);
+  }
+
+  const averages = Object.entries(byStudent).map(([sid, pcts]) => ({
+    studentId: sid,
+    average: pcts.reduce((sum, p) => sum + p, 0) / pcts.length
+  }));
+
+  if (!averages.some(a => a.studentId === studentId)) return null;
+
+  averages.sort((a, b) => b.average - a.average);
+  const rank = averages.findIndex(a => a.studentId === studentId) + 1;
+  const mine = averages.find(a => a.studentId === studentId);
+  return { rank, totalStudents: averages.length, averagePercentage: Math.round(mine.average * 10) / 10 };
+}
+
 // ---------- Exam metadata lookup (name, date, etc. for a given examId) ----------
 export async function getExamById(examId) {
   const snap = await getDoc(doc(db, "exams", examId));
