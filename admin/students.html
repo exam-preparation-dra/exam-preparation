@@ -18,6 +18,8 @@ import { initTheme, toggleTheme, icons, renderState, showToast, friendlyError } 
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
 import { initAdminPwaInstall } from "../pwa-install.js";
 import { getActiveStudents, createStudent, updateStudentPhoto } from "../js/utils/student-utils.js";
+import { getPendingRequests, deleteStudentRequest } from "../js/utils/student-requests-utils.js";
+import { transliterateToBengali, promptForApiKey } from "../js/utils/ai-import-utils.js";
 import { toDirectImageUrl } from "../js/utils/image-utils.js";
 import { uploadStudentPhoto, deleteStudentPhoto } from "../js/utils/storage-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
@@ -54,6 +56,9 @@ requireAdmin(() => {
       </button>
     </form>
 
+    <p class="eyebrow mt-5 mb-2">যুক্ত হওয়ার অনুরোধ (পেন্ডিং)</p>
+    <div id="requestsList"><div class="glass card skeleton" style="height:70px;"></div></div>
+
     <p class="eyebrow mt-5 mb-2">সব শিক্ষার্থী</p>
     <div id="studentList"><div class="glass card skeleton" style="height:70px;"></div></div>
   `;
@@ -63,6 +68,7 @@ requireAdmin(() => {
   initAdminPwaInstall("installBtn");
   document.getElementById("addForm").addEventListener("submit", handleAdd);
   loadStudents();
+  loadPendingRequests();
 });
 
 async function loadAllStudents() {
@@ -124,6 +130,104 @@ function askForPhotoLink(currentUrl, studentIdHint) {
     overlay.querySelector("#photoLinkCancel").addEventListener("click", () => cleanup(null));
     overlay.querySelector("#photoLinkSave").addEventListener("click", () => cleanup(textarea.value));
     overlay.addEventListener("click", (e) => { if (e.target === overlay) cleanup(null); });
+  });
+}
+
+// =========================================================
+// JOIN REQUESTS — a prospective student submitted name+class from
+// join.html. Each pending card:
+//  1. Auto-fetches an AI-suggested Bengali spelling (admin can freely edit
+//     it — phonetic transliteration of a name is always a best guess).
+//  2. Keeps "অনুমোদন করুন" (Approve) DISABLED until the admin has actually
+//     clicked into that name field at least once — a deliberate speed
+//     bump against rubber-stamping without reading it.
+//  3. Approve and Reject both confirm first, in plain language, so an
+//     accidental tap doesn't silently create or destroy a request — and
+//     the message tells the admin exactly how to recover either way.
+// =========================================================
+async function loadPendingRequests() {
+  const el = document.getElementById("requestsList");
+  try {
+    const requests = await getPendingRequests();
+    if (requests.length === 0) {
+      renderState(el, "empty", "এখন কোনো নতুন আবেদন নেই।");
+      return;
+    }
+    el.innerHTML = requests.map(r => `
+      <div class="glass card mt-2" data-req-id="${r.id}">
+        <p class="text-xs text-muted">শিক্ষার্থী লিখেছে: <span style="font-weight:600;color:var(--text-secondary);">${r.rawName}</span> • ক্লাস: ${r.className}</p>
+        <div class="field mt-2">
+          <label>বাংলা নাম (প্রয়োজনে ঠিক করে নিন)</label>
+          <input class="input req-name-input" value="" placeholder="রূপান্তর হচ্ছে...">
+        </div>
+        <div class="flex gap-2 mt-3">
+          <button class="btn btn-secondary btn-sm req-reject-btn" style="flex:1;">প্রত্যাখ্যান করুন</button>
+          <button class="btn btn-primary btn-sm req-approve-btn" style="flex:1;" disabled>অনুমোদন করুন</button>
+        </div>
+      </div>
+    `).join("");
+
+    requests.forEach(r => wireRequestCard(r));
+  } catch (err) {
+    console.error(err);
+    renderState(el, "error", "আবেদনের তালিকা লোড করা যায়নি।");
+  }
+}
+
+function wireRequestCard(request) {
+  const card = document.querySelector(`[data-req-id="${request.id}"]`);
+  if (!card) return;
+  const nameInput = card.querySelector(".req-name-input");
+  const approveBtn = card.querySelector(".req-approve-btn");
+  const rejectBtn = card.querySelector(".req-reject-btn");
+
+  // Speed bump: Approve stays disabled until the admin actually clicks
+  // into the name field — forces at least a glance before confirming.
+  nameInput.addEventListener("focus", () => { approveBtn.disabled = false; }, { once: true });
+
+  // Auto-suggest the Bengali spelling as soon as the card renders.
+  (async () => {
+    try {
+      const apiKey = promptForApiKey(false);
+      if (!apiKey) { nameInput.placeholder = "নিজে বাংলায় লিখে দিন (AI key নেই)"; return; }
+      const suggestion = await transliterateToBengali(apiKey, request.rawName);
+      nameInput.value = suggestion.trim();
+    } catch (err) {
+      console.error(err);
+      nameInput.placeholder = "AI রূপান্তর ব্যর্থ — নিজে বাংলায় লিখে দিন";
+    }
+  })();
+
+  approveBtn.addEventListener("click", async () => {
+    const finalName = nameInput.value.trim();
+    if (!finalName) { showToast("নাম খালি রাখা যাবে না।", "error"); return; }
+    const sure = confirm(
+      `এই নাম ও ক্লাস দিয়ে একজন শিক্ষার্থী যোগ করা হবে:\n\nনাম: ${finalName}\nক্লাস: ${request.className}\n\nভুল করে অনুমোদন দিলে চিন্তা নেই — পরে "সব শিক্ষার্থী" তালিকা থেকে নাম/ক্লাস এডিট করতে পারবেন, বা নিষ্ক্রিয়/মুছে দিতে পারবেন। এগিয়ে যাবেন?`
+    );
+    if (!sure) return;
+    try {
+      await createStudent(finalName, request.className);
+      await deleteStudentRequest(request.id);
+      showToast("শিক্ষার্থী যোগ করা হয়েছে।", "success");
+      loadPendingRequests();
+      loadStudents();
+    } catch (err) {
+      showToast(friendlyError(err), "error");
+    }
+  });
+
+  rejectBtn.addEventListener("click", async () => {
+    const sure = confirm(
+      `এই আবেদনটা প্রত্যাখ্যান করলে এটা স্থায়ীভাবে মুছে যাবে — শিক্ষার্থী যোগ হবে না। ভুল করে করলে ওই শিক্ষার্থীকে আবার নতুন করে আবেদন করতে বলতে হবে (join.html থেকে)। নিশ্চিত?`
+    );
+    if (!sure) return;
+    try {
+      await deleteStudentRequest(request.id);
+      showToast("আবেদন প্রত্যাখ্যান করা হয়েছে।", "success");
+      loadPendingRequests();
+    } catch (err) {
+      showToast(friendlyError(err), "error");
+    }
   });
 }
 
