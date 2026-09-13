@@ -663,8 +663,6 @@ function render() {
         <div class="live-note">নতুন approved result এলে feed নিজে থেকেই refresh হবে।</div>
       </section>
 
-
-      <div id="incomingChallengesCard"></div>
     </div>
   `;
 
@@ -748,8 +746,7 @@ async function loadEverything() {
     await renderLeaderboardList();
 
     try {
-      await renderIncomingChallenges(students);
-    } catch (err) {
+      } catch (err) {
       console.warn("Incoming challenge render skipped:", err);
     }
 
