@@ -709,6 +709,7 @@ function render() {
       </section>
 
 
+      <div id="incomingChallengesCard"></div>
     </div>
   `;
 
@@ -750,6 +751,8 @@ async function loadEverything() {
 
     renderClassFilterRow();
     await renderLeaderboardList();
+
+    await renderIncomingChallenges(students);
 
     /* Live listener needs the latest friend list. */
     startLiveResultsListener();
@@ -929,6 +932,71 @@ async function renderLeaderboardList() {
   });
 }
 
+/* ---------- Incoming challenges ---------- */
+
+async function renderIncomingChallenges(students) {
+  const card = document.getElementById("incomingChallengesCard");
+  if (!card) return;
+
+  try {
+    const incoming = await getIncomingChallenges(student.studentId);
+    const nameOf = {};
+    students.forEach(s => nameOf[s.studentId] = s.name);
+
+    if (!incoming.length) {
+      card.innerHTML = "";
+      return;
+    }
+
+    card.innerHTML = `
+      <div class="glass-float-card challenge-card">
+        <div class="challenge-kicker">নতুন challenge</div>
+        ${incoming.map(c => `
+          <div class="challenge-row">
+            <div>
+              <div class="challenge-name">${escapeHtml(nameOf[c.fromStudentId] || "বন্ধু")}</div>
+              <div class="challenge-exam">${escapeHtml(c.examName || "পরীক্ষা")}</div>
+            </div>
+            <div class="flex gap-2">
+              <button class="btn-glass text-action chall-reject" data-id="${escapeHtml(c.id)}">বাতিল</button>
+              <button class="btn-glass text-action chall-accept"
+                      data-id="${escapeHtml(c.id)}"
+                      style="color:var(--color-success);border-color:var(--color-success);">
+                গ্রহণ
+              </button>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+
+    card.querySelectorAll(".chall-accept").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        try {
+          await acceptChallenge(btn.dataset.id);
+          showToast("চ্যালেঞ্জ গৃহীত!", "success");
+          await loadEverything();
+        } catch (err) {
+          showToast(friendlyError(err), "error");
+        }
+      });
+    });
+
+    card.querySelectorAll(".chall-reject").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        try {
+          await rejectChallenge(btn.dataset.id);
+          await loadEverything();
+        } catch (err) {
+          showToast(friendlyError(err), "error");
+        }
+      });
+    });
+  } catch (err) {
+    console.error("Incoming challenges failed:", err);
+  }
+}
+
 /* ---------- Challenge modal ---------- */
 
 async function openChallengeModal(friendId) {
@@ -949,21 +1017,23 @@ async function openChallengeModal(friendId) {
       upcomingExamsCache = await getUpcomingExams();
     }
 
-    if (!upcomingExamsCache.length) {
-      body.innerHTML = `
-        <div style="padding:11px;border-radius:11px;background:rgba(239,68,68,.08);color:#ef4444;font-size:.7rem;font-weight:800;line-height:1.5;">
-          বর্তমানে কোনো আসন্ন পরীক্ষা নেই। পরীক্ষা প্রকাশিত হলে challenge করতে পারবে।
-        </div>
-      `;
-      return;
-    }
+    const exams = Array.isArray(upcomingExamsCache) ? upcomingExamsCache : [];
 
+    /*
+       Challenge can be sent even when no exam is published yet.
+       __NEXT_EXAM__ means: attach this challenge automatically to the
+       next eligible exam when one becomes available.
+    */
     body.innerHTML = `
       <select id="challengeExamSelect" class="challenge-select">
-        ${upcomingExamsCache.map(e => `
+        <option value="__NEXT_EXAM__">পরবর্তী পরীক্ষা — Auto Select</option>
+        ${exams.map(e => `
           <option value="${escapeHtml(e.id)}">${escapeHtml(e.name || "পরীক্ষা")}</option>
         `).join("")}
       </select>
+      <div style="margin-top:9px;padding:10px 11px;border-radius:11px;background:rgba(34,197,94,.08);color:var(--color-accent);font-size:.68rem;font-weight:800;line-height:1.5;">
+        এখনো কোনো পরীক্ষা প্রকাশিত না থাকলেও এই challenge পাঠানো যাবে। পরবর্তী eligible পরীক্ষা প্রকাশিত হলে এটি automatically সেই পরীক্ষার সঙ্গে যুক্ত হবে।
+      </div>
     `;
 
     confirmBtn.style.display = "inline-flex";
@@ -1112,29 +1182,29 @@ function renderLiveActivities(list = liveActivities) {
           <span class="live-avatar">${avatar}</span>
 
           <div class="live-copy">
-            <div class="live-name">${escapeHtml(a.name)} 🎉</div>
-            <div class="live-exam">📝 ${escapeHtml(a.examName)} · ${escapeHtml(a.subject)}</div>
+            <div class="live-name">${escapeHtml(a.name)}</div>
+            <div class="live-exam">${escapeHtml(a.examName)} · ${escapeHtml(a.subject)}</div>
           </div>
 
           <div class="live-score">
             <div class="live-score-value">${escapeHtml(pct)}</div>
-            <div class="live-score-label">📊 percentage</div>
+            <div class="live-score-label">percentage</div>
           </div>
         </div>
 
         <div class="live-stats">
           <div class="live-stat">
-            <span class="live-stat-icon">🎯</span>
+            <span class="live-stat-icon" aria-hidden="true"><svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></span>
             <span class="live-stat-value">${escapeHtml(marks)}</span>
             <span class="live-stat-label">Marks</span>
           </div>
           <div class="live-stat">
-            <span class="live-stat-icon">✅</span>
+            <span class="live-stat-icon" aria-hidden="true"><svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg></span>
             <span class="live-stat-value">${a.correctCount}</span>
             <span class="live-stat-label">Correct</span>
           </div>
           <div class="live-stat">
-            <span class="live-stat-icon">❌</span>
+            <span class="live-stat-icon" aria-hidden="true"><svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 6 12 12M18 6 6 18"/></svg></span>
             <span class="live-stat-value">${a.wrongCount}</span>
             <span class="live-stat-label">Wrong</span>
           </div>
