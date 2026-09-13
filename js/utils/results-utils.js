@@ -9,8 +9,6 @@ import {
   collection, doc, getDoc, getDocs, query, where, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-// ---------- Which exams has this student already submitted a result for?
-// (dashboard "Enter Exam" gating — once submitted, don't invite re-entry) ----------
 export async function getStudentResultStatusMap(studentId) {
   const q = query(collection(db, "results"), where("studentId", "==", studentId));
   const snap = await getDocs(q);
@@ -22,12 +20,6 @@ export async function getStudentResultStatusMap(studentId) {
   return map;
 }
 
-// ---------- Upcoming exams (dashboard card) ----------
-// NOTE: no Firestore orderBy() here — combining an "in" filter (status) with
-// orderBy() on a different field (examDate) needs a manually-created
-// composite index in the Firebase console. If that index is missing,
-// Firestore throws instead of returning results, and this whole card fails
-// with "লোড করা যায়নি" — exactly the bug this fixes. Sort client-side instead.
 export async function getUpcomingExams() {
   const q = query(collection(db, "exams"), where("status", "in", ["upcoming", "published"]));
   const snap = await getDocs(q);
@@ -36,15 +28,6 @@ export async function getUpcomingExams() {
     .sort((a, b) => (a.examDate?.toMillis?.() ?? 0) - (b.examDate?.toMillis?.() ?? 0));
 }
 
-// ---------- LIVE SYNC version of getUpcomingExams() above — same exact
-// filter ("upcoming"/"published" status) and same client-side sort by
-// examDate, just delivered via onSnapshot instead of a one-time getDocs().
-// This fixes: admin publishes/creates an exam -> student dashboard updates
-// instantly, no manual refresh needed.
-//
-// Usage (dashboard.html):
-//   const unsubscribe = subscribeToUpcomingExams((exams) => { ...render... });
-//   // optionally call unsubscribe() when leaving the page
 export function subscribeToUpcomingExams(onChange, onError) {
   const q = query(collection(db, "exams"), where("status", "in", ["upcoming", "published"]));
   return onSnapshot(
@@ -62,12 +45,6 @@ export function subscribeToUpcomingExams(onChange, onError) {
   );
 }
 
-// ---------- All approved results for a student, newest first ----------
-// Same reasoning as above: two equality filters (studentId, status) PLUS
-// orderBy(submittedAt) needs a composite index. Fetch with filters only,
-// sort here.
-// ---------- ALL approved results across every student (admin class-wide analytics) ----------
-// Same no-orderBy reasoning as everywhere else in this file — sort client-side.
 export async function getAllApprovedResults() {
   const q = query(collection(db, "results"), where("status", "==", "approved"));
   const snap = await getDocs(q);
@@ -88,28 +65,30 @@ export async function getApprovedResults(studentId) {
     .sort((a, b) => (b.submittedAt?.toMillis?.() ?? 0) - (a.submittedAt?.toMillis?.() ?? 0));
 }
 
-// ---------- Single result detail (history drill-down) ----------
 export async function getResultById(resultId) {
   const snap = await getDoc(doc(db, "results", resultId));
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
 
-// ---------- Full leaderboard: Sorted by POINTS now instead of just average ----------
+// ---------- ADVANCED POINT SYSTEM ----------
+// Points = Sum of % + (Exams * 50) + (Total Correct Answers * 2)
 export async function getLeaderboardData(studentsList) {
   const results = await getAllApprovedResults();
   const byStudent = {};
   for (const r of results) {
-    if (!byStudent[r.studentId]) byStudent[r.studentId] = [];
-    byStudent[r.studentId].push(Number(r.percentage) || 0);
+    if (!byStudent[r.studentId]) byStudent[r.studentId] = { pcts: [], correctCount: 0 };
+    byStudent[r.studentId].pcts.push(Number(r.percentage) || 0);
+    byStudent[r.studentId].correctCount += (Number(r.correctCount) || 0);
   }
   const infoOf = {};
   studentsList.forEach(s => { infoOf[s.studentId] = s; });
 
-  const rows = Object.entries(byStudent).map(([studentId, pcts]) => {
-    const sumPct = pcts.reduce((a, b) => a + b, 0);
-    const avgPercentage = Math.round((sumPct / pcts.length) * 10) / 10;
-    // Point formula: 1 point per 1% scored, plus 50 bonus points per exam taken
-    const totalPoints = Math.round(sumPct + (pcts.length * 50));
+  const rows = Object.entries(byStudent).map(([studentId, data]) => {
+    const sumPct = data.pcts.reduce((a, b) => a + b, 0);
+    const avgPercentage = Math.round((sumPct / data.pcts.length) * 10) / 10;
+    
+    // Dynamic Point Calculation
+    const totalPoints = Math.round(sumPct + (data.pcts.length * 50) + (data.correctCount * 2));
     
     return {
       studentId,
@@ -117,12 +96,11 @@ export async function getLeaderboardData(studentsList) {
       photoURL: infoOf[studentId]?.photoURL || null,
       className: infoOf[studentId]?.className || null,
       avgPercentage,
-      examsTaken: pcts.length,
-      totalPoints
+      examsTaken: data.pcts.length,
+      totalPoints: totalPoints || 0
     };
   });
   
-  // Sort by Points
   rows.sort((a, b) => b.totalPoints - a.totalPoints);
   return rows;
 }
@@ -133,16 +111,17 @@ export async function getStudentRank(studentId, classOf = null) {
 
   const byStudent = {};
   for (const r of all) {
-    if (!byStudent[r.studentId]) byStudent[r.studentId] = [];
-    byStudent[r.studentId].push(Number(r.percentage) || 0);
+    if (!byStudent[r.studentId]) byStudent[r.studentId] = { pcts: [], correctCount: 0 };
+    byStudent[r.studentId].pcts.push(Number(r.percentage) || 0);
+    byStudent[r.studentId].correctCount += (Number(r.correctCount) || 0);
   }
 
-  const stats = Object.entries(byStudent).map(([sid, pcts]) => {
-    const sumPct = pcts.reduce((sum, p) => sum + p, 0);
+  const stats = Object.entries(byStudent).map(([sid, data]) => {
+    const sumPct = data.pcts.reduce((sum, p) => sum + p, 0);
     return {
       studentId: sid,
-      average: sumPct / pcts.length,
-      totalPoints: Math.round(sumPct + (pcts.length * 50))
+      average: sumPct / data.pcts.length,
+      totalPoints: Math.round(sumPct + (data.pcts.length * 50) + (data.correctCount * 2)) || 0
     };
   });
 
@@ -168,27 +147,16 @@ export async function getStudentRank(studentId, classOf = null) {
   return result;
 }
 
-// ---------- Exam metadata lookup (name, date, etc. for a given examId) ----------
 export async function getExamById(examId) {
   const snap = await getDoc(doc(db, "exams", examId));
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
 
-// ---------- Immutable question snapshot for an exam (student-facing, needed to
-// actually render/grade the exam client-side — see Part 10/34 security note in
-// grading-utils.js and firestore.rules for why this must be publicly readable
-// on a Spark-only, no-Cloud-Function architecture). ----------
 export async function getExamSnapshot(examId) {
   const snap = await getDoc(doc(db, "examSnapshots", examId));
   return snap.exists() ? snap.data() : null;
 }
 
-// ---------- Batch snapshot fetch for a set of results, keyed by examId.
-// Needed for any per-question analysis (time management, wrong-option
-// patterns, marked-for-review accuracy) since results only store the
-// student's answers/times/marks by questionId — subjectId/chapterId/topicId
-// and correctAnswer live only in the frozen snapshot. Missing snapshots
-// (e.g. an exam later deleted) are simply omitted rather than thrown. ----------
 export async function getExamSnapshotsMap(examIds) {
   const uniqueIds = [...new Set(examIds)];
   const snaps = await Promise.all(uniqueIds.map(id => getExamSnapshot(id)));
@@ -197,14 +165,11 @@ export async function getExamSnapshotsMap(examIds) {
   return map;
 }
 
-// ---------- How many exams (of any status) reference a given chapter ----------
-// Used for syllabus/chapter test-frequency — independent of any one student's results.
 export async function getChapterExamFrequencyMap(chapterIds) {
   const freq = {};
   chapterIds.forEach(id => { freq[id] = 0; });
   if (chapterIds.length === 0) return freq;
 
-  // Firestore array-contains-any supports up to 10 values per query.
   const chunks = [];
   for (let i = 0; i < chapterIds.length; i += 10) chunks.push(chapterIds.slice(i, i + 10));
 
@@ -213,9 +178,6 @@ export async function getChapterExamFrequencyMap(chapterIds) {
     const snap = await getDocs(q);
     snap.docs.forEach(d => {
       const data = d.data();
-      // Only count exams that were actually delivered (or are on their way to
-      // being delivered) — an unpublished draft sitting in the admin's
-      // workspace hasn't "appeared in an exam" yet.
       if (data.status === "draft") return;
       (data.chapterIds || []).forEach(cid => {
         if (chunk.includes(cid)) freq[cid] = (freq[cid] || 0) + 1;
@@ -223,4 +185,4 @@ export async function getChapterExamFrequencyMap(chapterIds) {
     });
   }
   return freq;
-                                                          }
+     }
