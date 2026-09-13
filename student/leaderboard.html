@@ -465,7 +465,7 @@ import {
 } from "../js/utils/student-utils.js";
 
 import {
-  getLeaderboardData, getUpcomingExams, getAllApprovedResults
+  getLeaderboardData, getUpcomingExams
 } from "../js/utils/results-utils.js";
 
 import {
@@ -476,9 +476,15 @@ import { getSubjects } from "../js/utils/syllabus-utils.js";
 
 import {
   getIncomingChallenges, getOutgoingChallenges,
-  sendChallenge, acceptChallenge, rejectChallenge,
-  resolveCompletedChallenges, CHALLENGE_REWARDS
+  sendChallenge, acceptChallenge, rejectChallenge
 } from "../js/utils/challenge-utils.js";
+
+import {
+  collection, query, where, getDocs, updateDoc, doc, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { db } from "../js/firebase/firebase-config.js";
+
+const CHALLENGE_REWARDS = Object.freeze({ winner: 100, loser: 25, draw: 50 });
 
 initTheme();
 
@@ -599,6 +605,69 @@ function buildActivityFromResult(result, studentMap) {
     percentageGap,
     comparison
   };
+}
+
+
+/* ---------- Self-contained approved-results + challenge bonus layer ---------- */
+async function getApprovedResultsForLeaderboard() {
+  const snap = await getDocs(query(collection(db, "results"), where("status", "==", "approved")));
+  return snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .sort((a,b) => (b.submittedAt?.toMillis?.() ?? 0) - (a.submittedAt?.toMillis?.() ?? 0));
+}
+
+async function resolveCompletedChallengesLocal(approvedResults) {
+  const bonusMap = {};
+  try {
+    const challengeSnap = await getDocs(collection(db, "examChallenges"));
+    const challenges = challengeSnap.docs.map(d => ({ id:d.id, ...d.data() }));
+    const resultMap = new Map();
+    for (const r of approvedResults || []) {
+      if (r.studentId && r.examId) resultMap.set(`${r.examId}__${r.studentId}`, r);
+    }
+
+    for (const c of challenges) {
+      if (c.bonusAwarded === true || c.status === "resolved" || c.status === "completed") {
+        if (c.winnerStudentId) {
+          bonusMap[c.winnerStudentId] = (bonusMap[c.winnerStudentId] || 0) + (Number(c.winnerBonus) || 0);
+          bonusMap[c.loserStudentId] = (bonusMap[c.loserStudentId] || 0) + (Number(c.loserBonus) || 0);
+        } else if (Array.isArray(c.drawStudentIds)) {
+          for (const sid of c.drawStudentIds) bonusMap[sid] = (bonusMap[sid] || 0) + (Number(c.drawBonus) || CHALLENGE_REWARDS.draw);
+        }
+        continue;
+      }
+      if (c.status !== "accepted") continue;
+
+      const a = resultMap.get(`${c.examId}__${c.fromStudentId}`);
+      const b = resultMap.get(`${c.examId}__${c.toStudentId}`);
+      if (!a || !b) continue;
+
+      const pa = Number(a.percentage) || 0, pb = Number(b.percentage) || 0;
+      const ma = Number(a.obtainedMarks) || 0, mb = Number(b.obtainedMarks) || 0;
+      let update;
+      if (pa > pb || (pa === pb && ma > mb)) {
+        update = {status:"resolved", bonusAwarded:true, winnerStudentId:c.fromStudentId, loserStudentId:c.toStudentId,
+          winnerBonus:CHALLENGE_REWARDS.winner, loserBonus:CHALLENGE_REWARDS.loser, drawStudentIds:[], drawBonus:0, resolvedAt:serverTimestamp()};
+      } else if (pb > pa || (pa === pb && mb > ma)) {
+        update = {status:"resolved", bonusAwarded:true, winnerStudentId:c.toStudentId, loserStudentId:c.fromStudentId,
+          winnerBonus:CHALLENGE_REWARDS.winner, loserBonus:CHALLENGE_REWARDS.loser, drawStudentIds:[], drawBonus:0, resolvedAt:serverTimestamp()};
+      } else {
+        update = {status:"resolved", bonusAwarded:true, winnerStudentId:null, loserStudentId:null,
+          winnerBonus:0, loserBonus:0, drawStudentIds:[c.fromStudentId,c.toStudentId], drawBonus:CHALLENGE_REWARDS.draw, resolvedAt:serverTimestamp()};
+      }
+      try { await updateDoc(doc(db,"examChallenges",c.id), update); } catch(e) { console.warn("Challenge save skipped", e); }
+
+      if (update.winnerStudentId) {
+        bonusMap[update.winnerStudentId] = (bonusMap[update.winnerStudentId] || 0) + update.winnerBonus;
+        bonusMap[update.loserStudentId] = (bonusMap[update.loserStudentId] || 0) + update.loserBonus;
+      } else {
+        for (const sid of update.drawStudentIds) bonusMap[sid] = (bonusMap[sid] || 0) + update.drawBonus;
+      }
+    }
+  } catch (e) {
+    console.warn("Challenge bonus layer unavailable", e);
+  }
+  return bonusMap;
 }
 
 /* ---------- Main page ---------- */
@@ -778,7 +847,7 @@ async function loadEverything() {
     const [boardResult, friendsResult, resultsResult] = await Promise.allSettled([
       getLeaderboardData(students),
       getMyFriendIds(student.studentId),
-      getAllApprovedResults()
+      getApprovedResultsForLeaderboard()
     ]);
 
     const board = boardResult.status === "fulfilled" && Array.isArray(boardResult.value)
@@ -798,7 +867,7 @@ async function loadEverything() {
        even if Firestore denies the challenge update/read. */
     let bonusMap = {};
     try {
-      bonusMap = await resolveCompletedChallenges(approvedResults);
+      bonusMap = await resolveCompletedChallengesLocal(approvedResults);
     } catch (err) {
       console.warn("Challenge bonus resolution skipped:", err);
     }
@@ -1158,7 +1227,7 @@ document.getElementById("confirmChallengeBtn").onclick = async () => {
 async function refreshLiveResults() {
   try {
     const [results, students, subjects] = await Promise.all([
-      getAllApprovedResults(),
+      getApprovedResultsForLeaderboard(),
       getActiveStudents(),
       getSubjects(true)
     ]);
@@ -1181,7 +1250,7 @@ async function refreshLiveResults() {
     renderLiveActivities();
 
     const latestBoard = await getLeaderboardData(students);
-    const bonusMap = await resolveCompletedChallenges(results);
+    const bonusMap = await resolveCompletedChallengesLocal(results);
     if (Array.isArray(latestBoard)) {
       allLeaderboard = latestBoard.map(r => ({
         ...r,
