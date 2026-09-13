@@ -49,7 +49,7 @@
     border: 1px solid rgba(234, 179, 8, 0.3);
     border-radius: 20px;
     padding: 24px;
-    color: #713f12; /* Dark Gold/Brown for premium contrast */
+    color: #713f12; 
     display: flex; align-items: center; justify-content: space-between;
     position: relative; overflow: hidden;
     box-shadow: 0 12px 30px -8px rgba(234, 179, 8, 0.3);
@@ -157,13 +157,13 @@ async function render() {
       </a>
     </div>
 
-    <!-- 2. Upcoming Exams (Main Focus) -->
-    <div id="upcomingSection" class="mt-5"></div>
+    <!-- 2. Upcoming Exams (Will be completely hidden if none exist) -->
+    <div id="upcomingSection" class="mt-5" style="display: none;"></div>
     
     <!-- 3. Points Hero Section (Cream Yellow) -->
     <div id="pointsHeroSection" class="mt-5"></div>
     
-    <!-- 4. Motivation Analysis (Floating Glass) -->
+    <!-- 4. Motivation Analysis (Floating Glass without border) -->
     <div id="motivationSection" class="mt-4"></div>
     
     <!-- 5. Top 3 Point Table -->
@@ -188,7 +188,6 @@ async function render() {
 let unsubscribeUpcoming = null;
 async function loadUpcoming() {
   const el = document.getElementById("upcomingSection");
-  el.innerHTML = `<p class="eyebrow mb-2">আসন্ন পরীক্ষা</p><div class="glass-float-card skeleton" style="height:90px;"></div>`;
   try {
     const [subjects, chapters, resultMap] = await Promise.all([
       getSubjects(), getChapters(), getStudentResultStatusMap(student.studentId)
@@ -199,24 +198,22 @@ async function loadUpcoming() {
     if (unsubscribeUpcoming) unsubscribeUpcoming();
     unsubscribeUpcoming = subscribeToUpcomingExams(
       (exams) => renderUpcomingExams(el, exams, subjectMap, chapterMap, resultMap),
-      (err) => { console.error(err); renderState(el, "error", "আসন্ন পরীক্ষা লোড করা যায়নি।"); }
+      (err) => { console.error(err); el.style.display = "none"; }
     );
   } catch (err) {
     console.error(err);
-    renderState(el, "error", "আসন্ন পরীক্ষা লোড করা যায়নি।");
+    el.style.display = "none";
   }
 }
 
 function renderUpcomingExams(el, exams, subjectMap, chapterMap, resultMap) {
   if (exams.length === 0) {
-    el.innerHTML = `<p class="eyebrow">আসন্ন পরীক্ষা</p>`;
-    const box = document.createElement("div");
-    box.className = "mt-2";
-    renderState(box, "empty", "এখন কোনো পরীক্ষা নির্ধারিত নেই।");
-    el.appendChild(box);
+    el.style.display = "none"; // Hide completely if no exams
+    el.innerHTML = "";
     return;
   }
 
+  el.style.display = "block"; // Show if there are exams
   el.innerHTML = `<p class="eyebrow mb-2">আসন্ন পরীক্ষা</p>` + exams.map(exam => {
     const dateStr = exam.examDate?.toDate ? exam.examDate.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" }) : "";
     const own = resultMap[exam.id];
@@ -278,8 +275,8 @@ async function loadMotivation() {
     });
 
     el.innerHTML = `
-      <div class="glass-float-card" style="border-left: 3px solid var(--color-accent);">
-        <p class="text-sm" style="font-weight:700; color: var(--text-primary); margin-bottom:6px;">বিশ্লেষণ ও পরামর্শ</p>
+      <div class="glass-float-card mt-2">
+        <p class="text-sm" style="font-weight:800; color: var(--text-primary); margin-bottom:6px;">বিশ্লেষণ ও পরামর্শ</p>
         <p class="text-sm" style="line-height:1.6; color: var(--text-secondary);">${advice}</p>
       </div>
     `;
@@ -318,7 +315,6 @@ async function loadPerformanceAndLeaderboard() {
       return;
     }
 
-    // 1. Cream Yellow Hero Card
     const topScorer = leaderboard.length > 0 ? leaderboard[0] : null;
     let topScorerText = "";
     if (topScorer) {
@@ -327,7 +323,7 @@ async function loadPerformanceAndLeaderboard() {
     }
 
     const cleanTrophySvg = `
-      <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#854d0e" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#713f12" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
         <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
         <path d="M4 22h16"></path>
@@ -353,7 +349,6 @@ async function loadPerformanceAndLeaderboard() {
       </div>
     `;
 
-    // 2. Point Table (Top 3 Only) with Show More
     const byClass = {};
     leaderboard.forEach(r => {
        const c = r.className || "অনির্ধারিত ক্লাস";
@@ -382,7 +377,6 @@ async function loadPerformanceAndLeaderboard() {
     }
     pointListEl.innerHTML = classListHtml;
 
-    // 3. Detailed Stats Grid (Restored Correct/Wrong/Total Qs)
     statsEl.innerHTML = `
       <p class="eyebrow">বিস্তারিত পরিসংখ্যান</p>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px;">
@@ -420,10 +414,10 @@ async function loadPerformanceAndLeaderboard() {
         </div>` : ""}
     `;
 
-    // 4. Advanced Subject Slider (Horizontal Layout)
     const subjects = await getSubjects();
     const subjectMap = buildNameMap(subjects);
     const subjectStats = computeSubjectStats(results, subjectMap);
+    
     if (subjectStats.length === 0) {
       subjEl.innerHTML = `<p class="eyebrow">বিষয়ভিত্তিক পারফরম্যান্স</p><p class="text-xs text-muted mt-2">তথ্য নেই।</p>`;
     } else {
@@ -453,7 +447,6 @@ async function loadPerformanceAndLeaderboard() {
       `;
     }
 
-    // 5. Weak Topics (Floating Animation)
     const { getTopics } = await import("../js/utils/syllabus-utils.js");
     const topics = await getTopics();
     const topicMap = buildNameMap(topics);
@@ -474,7 +467,6 @@ async function loadPerformanceAndLeaderboard() {
         </div>
       `).join(""));
 
-    // Trigger Animations
     requestAnimationFrame(() => {
       animateCountUp(document.getElementById("heroTotalPoints"), totalPoints, 1200);
       animateCountUp(document.getElementById("statExams"), Number(overall.examsTaken) || 0, 700);
@@ -498,4 +490,3 @@ async function loadPerformanceAndLeaderboard() {
 </script>
 </body>
 </html>
-    
