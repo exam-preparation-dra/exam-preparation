@@ -2,361 +2,1154 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>লিডারবোর্ড — পরীক্ষা প্রস্তুতি</title>
 <link rel="stylesheet" href="../css/style.css">
+
 <style>
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}}
-.num{font-family:var(--font-num);font-variant-numeric:tabular-nums}
-.glass-float-card{background:rgba(128,128,128,.07);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(128,128,128,.15);border-radius:18px;padding:16px;box-shadow:0 12px 35px rgba(0,0,0,.06),inset 0 1px 0 rgba(255,255,255,.04)}
-.lb-icon{width:17px;height:17px;flex-shrink:0}.lb-icon-lg{width:20px;height:20px;flex-shrink:0}
-.btn-glass{background:rgba(128,128,128,.09);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(128,128,128,.19);border-radius:11px;color:var(--text-primary);padding:8px 12px;font-weight:750;font-size:.8rem;display:inline-flex;justify-content:center;align-items:center;gap:6px;cursor:pointer;transition:transform .18s ease,background .18s ease,border-color .18s ease,box-shadow .18s ease;text-decoration:none;white-space:nowrap}
-.btn-glass:hover{background:rgba(128,128,128,.15);border-color:rgba(128,128,128,.28);box-shadow:0 7px 20px rgba(0,0,0,.07)}.btn-glass:active{transform:scale(.96)}
-.lb-intro{position:relative;overflow:hidden;padding:20px;border-radius:20px;margin-top:16px;background:linear-gradient(135deg,rgba(128,128,128,.11),rgba(128,128,128,.035));border:1px solid rgba(128,128,128,.15)}
-.lb-intro::before{content:"";position:absolute;width:160px;height:160px;right:-75px;top:-85px;border-radius:50%;background:var(--color-accent);opacity:.07}.lb-intro::after{content:"";position:absolute;width:110px;height:110px;left:-70px;bottom:-70px;border-radius:50%;background:var(--color-accent);opacity:.045}
-.lb-intro-content{position:relative;z-index:1}.lb-kicker{display:inline-flex;align-items:center;gap:6px;font-size:.7rem;font-weight:850;letter-spacing:.08em;text-transform:uppercase;color:var(--color-accent);margin-bottom:7px}
-.lb-intro h1{margin:0;font-size:clamp(1.3rem,5vw,1.7rem);line-height:1.2;font-weight:900;letter-spacing:-.02em}.lb-intro p{margin:8px 0 0;color:var(--text-secondary);font-size:.83rem;line-height:1.65;max-width:650px}
-.lb-guide{margin-top:12px}.guide-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.guide-item{border:1px solid rgba(128,128,128,.15);background:rgba(128,128,128,.055);color:var(--text-primary);border-radius:13px;padding:12px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:10px;transition:transform .18s ease,background .18s ease,border-color .18s ease}
-.guide-item:hover{background:rgba(128,128,128,.10);transform:translateY(-1px)}.guide-item.active{background:var(--color-accent-soft);border-color:var(--color-accent)}
-.guide-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(128,128,128,.09);color:var(--color-accent);flex-shrink:0}
-.guide-title{font-size:.78rem;font-weight:850;line-height:1.2}.guide-subtitle{font-size:.67rem;color:var(--text-muted);margin-top:3px}.guide-arrow{margin-left:auto;color:var(--text-muted);transition:transform .2s ease}.guide-item.active .guide-arrow{transform:rotate(180deg);color:var(--color-accent)}
-.guide-detail{margin-top:8px;display:none;animation:guideOpen .22s ease}.guide-detail.show{display:block}@keyframes guideOpen{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
-.guide-detail-inner{padding:14px;border-radius:13px;background:rgba(128,128,128,.055);border:1px solid rgba(128,128,128,.12)}.guide-detail-title{font-size:.88rem;font-weight:850;margin-bottom:5px}.guide-detail-text{color:var(--text-secondary);font-size:.77rem;line-height:1.65}
-.lb-section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:11px}.lb-section-title{display:flex;align-items:center;gap:8px}.lb-section-title h2{font-size:1.1rem;font-weight:900;margin:0}.lb-section-badge{font-size:.65rem;font-weight:800;padding:4px 8px;border-radius:99px;background:var(--color-accent-soft);color:var(--color-accent)}
-#classFilterRow{-ms-overflow-style:none;scrollbar-width:none}#classFilterRow::-webkit-scrollbar{display:none}
-.lb-row{display:flex;align-items:center;gap:11px;padding:13px 10px;border-bottom:1px dashed rgba(128,128,128,.15);transition:background .18s ease,transform .18s ease}.lb-row:last-child{border-bottom:none}.lb-row:hover{background:rgba(128,128,128,.035)}
-.lb-row.is-me{background:linear-gradient(135deg,rgba(250,204,21,.16),rgba(250,204,21,.045));border:1px solid rgba(234,179,8,.30);border-radius:13px;padding:13px;margin:4px 0}.lb-row.is-me .lb-name{color:#a16207}.lb-row.is-me .points-pill{background:rgba(161,98,7,.10);color:#a16207}
-.rank-number{width:25px;font-size:.82rem;font-weight:900;color:var(--text-muted);flex-shrink:0;text-align:center}.lb-avatar{width:42px;height:42px;border-radius:50%;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--color-accent-soft);color:var(--color-accent);font-weight:900;border:1px solid rgba(128,128,128,.14)}.lb-avatar img{width:100%;height:100%;object-fit:cover}
-.lb-name{font-weight:850;font-size:.91rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:4px}.points-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:99px;background:rgba(128,128,128,.09);color:var(--text-secondary);font-weight:800;font-size:.69rem;font-family:var(--font-num)}
-.lb-actions{display:flex;align-items:center;gap:5px;flex-shrink:0}.lb-action-btn{min-height:34px}.lb-action-label{display:inline}
-.challenge-banner{position:relative;overflow:hidden;border:1px solid rgba(239,68,68,.22);background:linear-gradient(135deg,rgba(239,68,68,.09),rgba(128,128,128,.035))}.challenge-banner::after{content:"";position:absolute;width:100px;height:100px;right:-45px;top:-45px;border-radius:50%;background:#ef4444;opacity:.055}.challenge-title{color:#ef4444;font-size:.7rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.64);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px}.challenge-modal-card{width:100%;max-width:410px;padding:23px;border-radius:21px;animation:modalIn .22s ease}@keyframes modalIn{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
-.modal-heading{display:flex;align-items:flex-start;gap:11px}.modal-icon{width:40px;height:40px;border-radius:12px;background:rgba(239,68,68,.10);color:#ef4444;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-@media(max-width:520px){.lb-intro{padding:17px;border-radius:17px}.guide-grid{grid-template-columns:1fr 1fr;gap:7px}.guide-item{padding:10px;gap:8px}.guide-icon{width:30px;height:30px;border-radius:9px}.guide-title{font-size:.72rem}.guide-subtitle{font-size:.61rem}.lb-row{gap:8px;padding-left:6px;padding-right:6px}.lb-row.is-me{padding-left:8px;padding-right:8px}.lb-avatar{width:38px;height:38px}.lb-name{font-size:.84rem}.lb-action-btn{padding:7px 8px;min-height:32px}.lb-action-label{display:none}.rank-number{width:21px;font-size:.75rem}}
-@media(max-width:360px){.guide-grid{grid-template-columns:1fr}}
+  @media (prefers-reduced-motion: reduce) {
+    *,*::before,*::after { animation-duration:.001ms!important; transition-duration:.001ms!important; }
+  }
+
+  :root {
+    --lb-glass: rgba(128,128,128,.075);
+    --lb-glass-strong: rgba(128,128,128,.115);
+    --lb-border: rgba(128,128,128,.16);
+    --lb-shadow: 0 18px 55px rgba(0,0,0,.07);
+  }
+
+  .num { font-family:var(--font-num); font-variant-numeric:tabular-nums; }
+
+  .lb-page { padding-bottom:28px; }
+
+  .glass-float-card {
+    background:var(--lb-glass);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+    border:1px solid var(--lb-border);
+    border-radius:18px;
+    box-shadow:var(--lb-shadow);
+  }
+
+  .btn-glass {
+    appearance:none;
+    border:1px solid var(--lb-border);
+    background:var(--lb-glass);
+    color:var(--text-primary);
+    border-radius:11px;
+    min-height:38px;
+    padding:8px 12px;
+    font:inherit;
+    font-size:.76rem;
+    font-weight:800;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    cursor:pointer;
+    transition:transform .18s ease, background .18s ease, border-color .18s ease;
+    text-decoration:none;
+    white-space:nowrap;
+  }
+
+  .btn-glass:hover { background:var(--lb-glass-strong); }
+  .btn-glass:active { transform:scale(.96); }
+  .btn-primary {
+    background:var(--color-accent);
+    color:#fff;
+    border-color:var(--color-accent);
+  }
+  .btn-danger {
+    color:#ef4444;
+    border-color:rgba(239,68,68,.28);
+  }
+
+  .lb-icon { width:17px; height:17px; flex-shrink:0; }
+  .lb-icon-lg { width:19px; height:19px; flex-shrink:0; }
+
+  /* Intro */
+  .lb-hero {
+    position:relative;
+    overflow:hidden;
+    margin-top:16px;
+    padding:22px 20px;
+  }
+  .lb-hero::before {
+    content:"";
+    position:absolute;
+    width:150px;height:150px;
+    right:-55px;top:-75px;
+    border-radius:50%;
+    background:var(--color-accent-soft);
+    opacity:.75;
+  }
+  .lb-kicker {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    color:var(--color-accent);
+    font-size:.7rem;
+    font-weight:900;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+  .lb-hero h1 {
+    position:relative;
+    margin:6px 0 7px;
+    font-size:1.7rem;
+    line-height:1.15;
+    font-weight:950;
+  }
+  .lb-hero p {
+    position:relative;
+    margin:0;
+    color:var(--text-secondary);
+    font-size:.82rem;
+    line-height:1.65;
+  }
+
+  /* Help */
+  .lb-top-tools { display:flex; justify-content:flex-end; margin:9px 0 2px; }
+  .lb-help-btn { width:40px; height:40px; padding:0; border-radius:13px; }
+  .lb-help-panel {
+    display:none;
+    margin-bottom:12px;
+    animation:lbOpen .22s ease;
+  }
+  .lb-help-panel.show { display:block; }
+  @keyframes lbOpen {
+    from { opacity:0; transform:translateY(-5px); }
+    to { opacity:1; transform:translateY(0); }
+  }
+  .lb-help-inner { padding:16px; }
+  .lb-help-title {
+    font-size:.88rem;
+    font-weight:950;
+    margin-bottom:10px;
+  }
+  .lb-help-row {
+    display:flex;
+    align-items:flex-start;
+    gap:9px;
+    color:var(--text-secondary);
+    font-size:.75rem;
+    line-height:1.6;
+    margin-top:8px;
+  }
+  .lb-help-row:first-of-type { margin-top:0; }
+  .lb-dot {
+    width:6px;height:6px;border-radius:50%;
+    background:var(--color-accent);
+    margin-top:7px;flex-shrink:0;
+  }
+
+  /* Points explainer */
+  .points-card { margin-top:10px; padding:15px; }
+  .points-head {
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    margin-bottom:9px;
+  }
+  .points-title { font-size:.83rem; font-weight:950; }
+  .points-formula {
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:7px;
+  }
+  .points-item {
+    border:1px solid var(--lb-border);
+    border-radius:12px;
+    padding:10px 8px;
+    background:rgba(128,128,128,.045);
+    min-width:0;
+  }
+  .points-value { font-size:.95rem; font-weight:950; }
+  .points-label {
+    margin-top:3px;
+    color:var(--text-muted);
+    font-size:.62rem;
+    line-height:1.35;
+  }
+  .points-note {
+    margin-top:9px;
+    color:var(--text-muted);
+    font-size:.65rem;
+    line-height:1.5;
+  }
+
+  /* Live */
+  .live-section { margin-top:14px; }
+  .live-head {
+    display:flex; align-items:center; justify-content:space-between;
+    gap:10px; margin-bottom:9px;
+  }
+  .live-title {
+    display:flex; align-items:center; gap:8px;
+    font-size:.88rem; font-weight:950;
+  }
+  .live-status {
+    display:inline-flex; align-items:center; gap:5px;
+    border-radius:99px;
+    padding:5px 9px;
+    background:rgba(34,197,94,.08);
+    color:#16a34a;
+    font-size:.61rem;
+    font-weight:900;
+  }
+  .live-dot {
+    width:6px;height:6px;border-radius:50%;
+    background:#22c55e;
+    animation:livePulse 1.5s ease-in-out infinite;
+  }
+  @keyframes livePulse {
+    0%,100% { opacity:.45; transform:scale(.82); }
+    50% { opacity:1; transform:scale(1.12); }
+  }
+
+  .live-slider {
+    overflow:hidden;
+    position:relative;
+    min-height:94px;
+    border-radius:17px;
+    border:1px solid var(--lb-border);
+    background:linear-gradient(135deg,rgba(128,128,128,.09),rgba(128,128,128,.025));
+  }
+  .live-track {
+    display:flex;
+    width:100%;
+    transition:transform .45s cubic-bezier(.2,.8,.2,1);
+  }
+  .live-card {
+    min-width:100%;
+    box-sizing:border-box;
+    display:flex;
+    align-items:center;
+    gap:11px;
+    padding:15px 14px 18px;
+  }
+  .live-avatar {
+    width:42px;height:42px;border-radius:13px;
+    overflow:hidden;display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+    background:var(--color-accent-soft);
+    color:var(--color-accent);
+    font-weight:950;
+  }
+  .live-avatar img { width:100%;height:100%;object-fit:cover; }
+  .live-copy { flex:1;min-width:0; }
+  .live-line {
+    font-size:.76rem;line-height:1.5;color:var(--text-primary);
+  }
+  .live-line strong { font-weight:950; }
+  .live-meta {
+    margin-top:3px;color:var(--text-muted);
+    font-size:.62rem;line-height:1.45;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .live-score {
+    flex-shrink:0;
+    border-radius:10px;
+    padding:6px 8px;
+    background:var(--color-accent-soft);
+    color:var(--color-accent);
+    font-size:.67rem;font-weight:950;
+    text-align:center;
+  }
+  .live-controls {
+    position:absolute;left:50%;bottom:6px;
+    transform:translateX(-50%);
+    display:flex;gap:5px;
+  }
+  .live-control {
+    width:6px;height:6px;padding:0;border:0;border-radius:50%;
+    background:rgba(128,128,128,.28);cursor:pointer;
+  }
+  .live-control.active { background:var(--color-accent); transform:scale(1.15); }
+  .live-empty {
+    padding:19px 14px;color:var(--text-muted);
+    font-size:.72rem;line-height:1.6;
+  }
+  .live-note {
+    margin:6px 2px 0;color:var(--text-muted);font-size:.61rem;
+  }
+
+  /* Leaderboard controls */
+  .lb-section { margin-top:17px; }
+  .lb-section-head {
+    display:flex;align-items:center;justify-content:space-between;
+    gap:10px;margin-bottom:9px;
+  }
+  .lb-section-title {
+    display:flex;align-items:center;gap:7px;
+    font-size:.95rem;font-weight:950;
+  }
+  .lb-live-badge {
+    display:inline-flex;align-items:center;gap:5px;
+    color:#16a34a;background:rgba(34,197,94,.08);
+    border-radius:99px;padding:4px 7px;font-size:.59rem;font-weight:900;
+  }
+  .lb-filter-row {
+    display:flex;gap:7px;overflow-x:auto;padding:1px 1px 7px;
+    scrollbar-width:none;
+  }
+  .lb-filter-row::-webkit-scrollbar { display:none; }
+  .filter-btn { min-height:34px;padding:7px 11px;font-size:.7rem;flex-shrink:0; }
+  .filter-btn.active { background:var(--color-accent);color:#fff;border-color:var(--color-accent); }
+
+  /* Rows */
+  .lb-list-card { padding:4px; }
+  .lb-row {
+    display:flex;align-items:center;gap:10px;
+    padding:12px 8px;
+    border-bottom:1px dashed rgba(128,128,128,.15);
+  }
+  .lb-row:last-child { border-bottom:none; }
+  .lb-row.is-me {
+    margin:4px 0;
+    padding:12px 9px;
+    border:1px solid rgba(234,179,8,.28);
+    border-radius:13px;
+    background:linear-gradient(135deg,#fefce8,#fef08a);
+  }
+  .lb-row.is-me .lb-name { color:#713f12; }
+  .lb-row.is-me .points-pill { color:#713f12;background:rgba(113,63,18,.1); }
+
+  .rank-number {
+    width:23px;flex-shrink:0;text-align:center;
+    color:var(--text-muted);font-size:.77rem;font-weight:950;
+  }
+  .lb-avatar {
+    width:41px;height:41px;border-radius:50%;overflow:hidden;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--color-accent-soft);color:var(--color-accent);
+    font-weight:950;
+  }
+  .lb-avatar img { width:100%;height:100%;object-fit:cover; }
+  .lb-main { flex:1;min-width:0; }
+  .lb-name {
+    font-size:.8rem;font-weight:900;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    margin-bottom:4px;
+  }
+  .lb-subline {
+    display:flex;align-items:center;gap:5px;min-width:0;
+  }
+  .points-pill {
+    display:inline-flex;align-items:center;
+    border-radius:99px;padding:3px 8px;
+    background:rgba(128,128,128,.1);
+    color:var(--text-secondary);
+    font-size:.62rem;font-weight:900;
+  }
+  .avg-pill {
+    color:var(--text-muted);font-size:.6rem;font-weight:800;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .lb-actions { display:flex;align-items:center;gap:5px;flex-shrink:0; }
+  .action-btn { width:37px;min-height:37px;padding:0;border-radius:10px; }
+  .text-action { min-height:34px;padding:6px 9px;font-size:.65rem; }
+
+  /* Challenge */
+  .challenge-card { margin-top:12px;padding:14px; }
+  .challenge-kicker {
+    color:#ef4444;font-size:.63rem;font-weight:950;
+    letter-spacing:.05em;margin-bottom:7px;
+  }
+  .challenge-row {
+    display:flex;align-items:center;justify-content:space-between;
+    gap:10px;padding:9px 0;border-bottom:1px dashed var(--lb-border);
+  }
+  .challenge-row:last-child { border-bottom:0;padding-bottom:0; }
+  .challenge-row:first-of-type { padding-top:0; }
+  .challenge-name { font-size:.75rem;font-weight:900; }
+  .challenge-exam { margin-top:3px;font-size:.62rem;color:var(--text-muted); }
+
+  /* Modal */
+  .modal-overlay {
+    position:fixed;inset:0;z-index:9999;
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;
+    background:rgba(0,0,0,.62);
+    backdrop-filter:blur(7px);
+    -webkit-backdrop-filter:blur(7px);
+  }
+  .challenge-modal {
+    width:100%;max-width:410px;
+    padding:20px;
+    background:var(--surface);
+  }
+  .modal-title { font-size:1.05rem;font-weight:950;margin-bottom:5px; }
+  .modal-copy { color:var(--text-muted);font-size:.72rem;line-height:1.55;margin-bottom:13px; }
+  .challenge-select {
+    width:100%;box-sizing:border-box;
+    padding:12px;border-radius:11px;
+    border:1px solid var(--surface-border);
+    background:var(--surface);
+    color:var(--text-primary);
+    font:inherit;font-size:.78rem;font-weight:700;
+    outline:none;
+  }
+
+  @media (max-width:430px) {
+    .points-formula { grid-template-columns:1fr 1fr 1fr; }
+    .lb-actions .compare-label { display:none; }
+    .lb-row { gap:8px; }
+    .lb-avatar { width:39px;height:39px; }
+  }
 </style>
 </head>
-<body>
-<div class="app-shell" id="shell"><div class="state-block"><div class="spinner"></div></div></div>
 
+<body>
+<div class="app-shell" id="shell">
+  <div class="state-block"><div class="spinner"></div></div>
+</div>
+
+<!-- Challenge modal -->
 <div id="challengeModal" class="modal-overlay" style="display:none;">
-  <div class="glass-float-card challenge-modal-card" style="background:var(--surface);">
-    <div class="modal-heading">
-      <div class="modal-icon">
-        <svg class="lb-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/></svg>
-      </div>
-      <div>
-        <h3 style="font-weight:900;margin:0 0 6px;color:var(--text-primary);font-size:1.15rem;">বন্ধুকে চ্যালেঞ্জ করো</h3>
-        <p class="text-sm text-muted" style="line-height:1.6;">একটি আসন্ন পরীক্ষা বেছে নিয়ে বন্ধুকে চ্যালেঞ্জ পাঠাও। জিতলে পাবে <strong style="color:#eab308;">+১০০ পয়েন্ট</strong>।</p>
-      </div>
+  <div class="glass-float-card challenge-modal">
+    <div class="modal-title">বন্ধুকে চ্যালেঞ্জ করো</div>
+    <div class="modal-copy">
+      একটি আসন্ন পরীক্ষা বেছে নিয়ে বন্ধুকে challenge পাঠাও। দুজনের জন্য healthy competition তৈরি হবে।
     </div>
-    <div id="challengeModalBody" style="margin-top:18px;"><div class="spinner"></div></div>
-    <div class="flex gap-2 mt-5">
-      <button class="btn-glass" id="closeChallengeModal" style="flex:1;">
-        <svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg> বাতিল
-      </button>
-      <button class="btn-glass" id="confirmChallengeBtn" style="flex:1;background:var(--color-danger);color:#fff;border:none;display:none;">
-        <svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg> চ্যালেঞ্জ পাঠাও
-      </button>
+    <div id="challengeModalBody"><div class="spinner"></div></div>
+    <div class="flex gap-2 mt-4">
+      <button class="btn-glass" id="closeChallengeModal" style="flex:1;">বাতিল</button>
+      <button class="btn-glass btn-danger" id="confirmChallengeBtn" style="flex:1;display:none;">চ্যালেঞ্জ পাঠাও</button>
     </div>
   </div>
 </div>
 
 <script type="module">
-import {initTheme,toggleTheme,renderState,renderStudentHeader,showToast,friendlyError} from "../js/utils/ui-utils.js";
-import {getActiveStudent,refreshActiveStudent,getActiveStudents} from "../js/utils/student-utils.js";
-import {getLeaderboardData,getUpcomingExams} from "../js/utils/results-utils.js";
-import {getMyFriendIds,getOutgoingRequests,sendFriendRequest} from "../js/utils/friend-utils.js";
-import {getIncomingChallenges,getOutgoingChallenges,sendChallenge,acceptChallenge,rejectChallenge} from "../js/utils/challenge-utils.js";
+import {
+  initTheme, toggleTheme, renderState, renderStudentHeader,
+  showToast, friendlyError
+} from "../js/utils/ui-utils.js";
+
+import {
+  getActiveStudent, refreshActiveStudent, getActiveStudents
+} from "../js/utils/student-utils.js";
+
+import {
+  getLeaderboardData, getUpcomingExams
+} from "../js/utils/results-utils.js";
+
+import {
+  getMyFriendIds, getOutgoingRequests, sendFriendRequest
+} from "../js/utils/friend-utils.js";
+
+import {
+  getIncomingChallenges, getOutgoingChallenges,
+  sendChallenge, acceptChallenge, rejectChallenge
+} from "../js/utils/challenge-utils.js";
+
+import {
+  collection, query, where, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+import { db } from "../js/firebase/firebase-config.js";
 
 initTheme();
-const shell=document.getElementById("shell");
-let student=getActiveStudent();
 
-if(!student){window.location.href="../index.html";}
-else{refreshActiveStudent(student.docId).then(fresh=>{if(fresh)student=fresh;render();});}
+const shell = document.getElementById("shell");
+let student = getActiveStudent();
 
-let allLeaderboard=[];
-let myFriendIds=[];
-let activeClassFilter="all";
-let friendsOnly=false;
-let upcomingExamsCache=null;
-let selectedFriendIdForChallenge=null;
-let liveActivities=[];
-let liveActivityIndex=0;
-let liveActivityTimer=null;
-let liveRefreshTimer=null;
+let allLeaderboard = [];
+let myFriendIds = [];
+let activeClassFilter = "all";
+let friendsOnly = false;
+let upcomingExamsCache = null;
+let selectedFriendIdForChallenge = null;
 
-const guideData={
-purpose:{title:"লিডারবোর্ড কেন আছে?",text:"লিডারবোর্ডের উদ্দেশ্য হলো পরীক্ষার প্রস্তুতিকে আরও নিয়মিত ও motivating করা। এখানে শিক্ষার্থীদের অর্জিত পয়েন্ট অনুযায়ী অবস্থান দেখা যায়। এটি অন্যকে ছোট করার জন্য নয়; নিজের progress বোঝা এবং নিয়মিত পড়াশোনায় উৎসাহ পাওয়ার জন্য তৈরি।"},
-points:{title:"পয়েন্ট কীভাবে কাজ করে?",text:"পরীক্ষা বা নির্ধারিত academic activity থেকে পাওয়া পয়েন্ট এখানে জমা হয়। মোট পয়েন্ট যত বেশি হবে, লিডারবোর্ডে অবস্থান তত উপরে যাবে। তাই শুধু rank নয়, নিজের accumulated points-ও গুরুত্বপূর্ণ।"},
-friends:{title:"বন্ধু ফিল্টার কী করে?",text:"‘সবাই’ থেকে ‘শুধু বন্ধুরা’ নির্বাচন করলে পুরো লিডারবোর্ডের বদলে শুধু তোমার বন্ধুদের এবং তোমার নিজের অবস্থান দেখা যাবে। এতে নিজের কাছের study group-এর progress সহজে দেখা যায়।"},
-compare:{title:"তুলনা অপশনের কাজ কী?",text:"তুলনা অপশন ব্যবহার করে বন্ধুর সঙ্গে academic performance তুলনা করা যায়। এটি কোন জায়গায় তুমি ভালো করছ এবং কোথায় আরও practice দরকার তা বুঝতে সাহায্য করে।"},
-challenge:{title:"চ্যালেঞ্জ অপশনের কাজ কী?",text:"চ্যালেঞ্জের মাধ্যমে কোনো বন্ধুকে একটি আসন্ন পরীক্ষায় প্রতিযোগিতার জন্য আমন্ত্রণ জানানো যায়। দুজন একই পরীক্ষায় অংশ নিয়ে নিজেদের performance অনুযায়ী প্রতিযোগিতা করতে পারে।"}
-};
+let liveActivities = [];
+let liveActivityIndex = 0;
+let liveActivityTimer = null;
+let unsubscribeLiveResults = null;
 
-function createGuideButton(key,title,subtitle,icon){
-return `<button class="guide-item" data-guide="${key}"><span class="guide-icon">${icon}</span><span style="min-width:0;"><span class="guide-title">${title}</span><span class="guide-subtitle">${subtitle}</span></span><span class="guide-arrow"><svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></span></button>`;
+/* ---------- Safety / display helpers ---------- */
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
 }
 
-function render(){
-shell.innerHTML=`
-${renderStudentHeader(student,"leaderboard")}
-<section class="lb-intro"><div class="lb-intro-content">
-<div class="lb-kicker"><svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10"/><path d="M6 4v5a6 6 0 0 0 12 0V4"/><path d="M6 7H3a3 3 0 0 0 3 3"/><path d="M18 7h3a3 3 0 0 1-3 3"/></svg>STUDENT PERFORMANCE</div>
-<h1>লিডারবোর্ড</h1>
-<p>তোমার পরীক্ষার পারফরম্যান্স, পয়েন্ট এবং বন্ধুদের progress এক জায়গায় দেখো। নিচের অপশনগুলোতে tap করে প্রতিটি feature কীভাবে কাজ করে জেনে নাও।</p>
-</div></section>
-
-<div class="lb-top-tools">
-  <button class="btn-glass lb-help-btn" id="leaderboardHelpBtn" title="লিডারবোর্ড সহায়তা" aria-label="লিডারবোর্ড সহায়তা">
-    <svg class="lb-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="9"/>
-      <path d="M9.8 9a2.4 2.4 0 1 1 4.1 1.7c-.9.8-1.9 1.2-1.9 2.8"/>
-      <path d="M12 17h.01"/>
-    </svg>
-  </button>
-</div>
-
-<div id="leaderboardHelpPanel" class="help-panel">
-  <div class="help-panel-inner">
-    <div class="help-panel-title">লিডারবোর্ড কীভাবে ব্যবহার করবে?</div>
-    <div class="help-point"><span class="help-dot"></span><span><strong>র‍্যাঙ্কিং:</strong> পরীক্ষার performance অনুযায়ী শিক্ষার্থীদের অবস্থান দেখায়।</span></div>
-    <div class="help-point"><span class="help-dot"></span><span><strong>বন্ধু:</strong> শুধু নিজের বন্ধুদের progress আলাদা করে দেখা যায়।</span></div>
-    <div class="help-point"><span class="help-dot"></span><span><strong>তুলনা:</strong> বন্ধুর সঙ্গে academic performance compare করার জন্য।</span></div>
-    <div class="help-point"><span class="help-dot"></span><span><strong>চ্যালেঞ্জ:</strong> আসন্ন পরীক্ষায় বন্ধুর সঙ্গে healthy competition শুরু করার জন্য।</span></div>
-    <div class="help-point"><span class="help-dot"></span><span><strong>Live activity:</strong> বন্ধুদের নতুন academic activity বা score update থাকলে উপরের slider-এ দেখা যাবে।</span></div>
-  </div>
-</div>
-
-<section class="lb-guide" style="display:none;"><div class="guide-grid">
-${createGuideButton("purpose","লিডারবোর্ড","কেন ব্যবহার করবে?",`<svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>`)}
-${createGuideButton("points","পয়েন্ট","কীভাবে কাজ করে?",`<svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M17 7.5c0-1.5-2.2-2.5-5-2.5s-5 1-5 2.5 2.2 2.5 5 2.5 5 1 5 2.5-2.2 2.5-5 2.5-5-1-5-2.5"/></svg>`)}
-${createGuideButton("friends","বন্ধু","শুধু বন্ধুদের দেখো?",`<svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6"/><circle cx="17" cy="9" r="2.5"/><path d="M14 20c.4-2.5 2.4-4.5 5-4.5"/></svg>`)}
-${createGuideButton("compare","তুলনা","বন্ধুর performance",`<svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 20V9"/><path d="M12 20V4"/><path d="M18 20v-7"/></svg>`)}
-${createGuideButton("challenge","চ্যালেঞ্জ","বন্ধুর সঙ্গে test",`<svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/></svg>`)}
-</div>
-<div id="guideDetail" class="guide-detail"><div class="guide-detail-inner"><div id="guideDetailTitle" class="guide-detail-title"></div><div id="guideDetailText" class="guide-detail-text"></div></div></div>
-</section>
-
-
-<div class="live-section">
-  <div class="live-head">
-    <div class="live-title">
-      <svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M4 12a8 8 0 0 1 16 0"/>
-        <path d="M7 12a5 5 0 0 1 10 0"/>
-        <path d="M10 12a2 2 0 0 1 4 0"/>
-        <path d="M12 12v.01"/>
-      </svg>
-      বন্ধুদের Live Activity
-    </div>
-    <span class="live-status"><span class="live-status-dot"></span>লাইভ</span>
-  </div>
-
-  <div class="live-slider" id="liveActivitySlider">
-    <div class="live-track" id="liveActivityTrack">
-      <div class="live-empty">বন্ধুদের recent academic update খোঁজা হচ্ছে...</div>
-    </div>
-    <div class="live-controls" id="liveActivityControls"></div>
-  </div>
-
-  <div class="live-note">
-    নতুন update পাওয়া গেলে slider নিজে থেকেই এগিয়ে যাবে।
-  </div>
-</div>
-
-<div id="incomingChallengesCard" class="mt-4" style="display:none;"></div>
-
-<div class="mt-4"><div class="lb-section-head"><div class="lb-section-title">
-<svg class="lb-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10"/><path d="M6 4v5a6 6 0 0 0 12 0V4"/><path d="M6 7H3a3 3 0 0 0 3 3"/><path d="M18 7h3a3 3 0 0 1-3 3"/></svg>
-<h2>র‍্যাঙ্কিং</h2><span class="lb-section-badge">LIVE</span></div>
-<button class="btn-glass" id="friendsToggleBtn"><svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6"/><circle cx="17" cy="9" r="2.5"/><path d="M14 20c.4-2.5 2.4-4.5 5-4.5"/></svg><span id="friendsToggleText">সবাই</span></button></div>
-<div id="classFilterRow" class="flex gap-2 mb-3" style="overflow-x:auto;padding-bottom:4px;"></div>
-<div class="glass-float-card" style="padding:4px;"><div id="leaderboardList"></div></div></div>`;
-
-document.getElementById("themeToggle").addEventListener("click",toggleTheme);
-document.getElementById("friendsToggleBtn").addEventListener("click",()=>{friendsOnly=!friendsOnly;document.getElementById("friendsToggleText").textContent=friendsOnly?"শুধু বন্ধুরা":"সবাই";renderLeaderboardList();});
-document.getElementById("closeChallengeModal").addEventListener("click",()=>{document.getElementById("challengeModal").style.display="none";});
-
-document.querySelectorAll(".guide-item").forEach(button=>button.addEventListener("click",()=>{
-const key=button.dataset.guide,detail=document.getElementById("guideDetail"),title=document.getElementById("guideDetailTitle"),text=document.getElementById("guideDetailText"),wasActive=button.classList.contains("active");
-document.querySelectorAll(".guide-item").forEach(item=>item.classList.remove("active"));
-if(wasActive){detail.classList.remove("show");return}
-button.classList.add("active");title.textContent=guideData[key].title;text.textContent=guideData[key].text;detail.classList.add("show");
-}));
-const helpBtn=document.getElementById("leaderboardHelpBtn");
-const helpPanel=document.getElementById("leaderboardHelpPanel");
-helpBtn.addEventListener("click",()=>{
-  helpPanel.classList.toggle("show");
-  helpBtn.setAttribute("aria-expanded",helpPanel.classList.contains("show")?"true":"false");
-});
-
-loadEverything();
-startLiveActivityRefresh();
+function getMillis(value) {
+  if (!value) return 0;
+  if (typeof value.toMillis === "function") return value.toMillis();
+  if (value instanceof Date) return value.getTime();
+  const n = new Date(value).getTime();
+  return Number.isFinite(n) ? n : 0;
 }
 
+function relativeTime(value) {
+  const ms = getMillis(value);
+  if (!ms) return "এইমাত্র";
 
-/* =========================================================
-   LIVE ACTIVITY
-   =========================================================
-   This UI reads activity-shaped fields when they are available
-   in the student/result objects. It also refreshes the leaderboard
-   automatically so point/rank changes appear without reloading.
-   Supported activity fields include:
-   recentActivity / latestActivity / lastActivity / activity
-   with subject, marks/score, examName/title and timestamp/time.
-   ========================================================= */
+  const diff = Math.max(0, Date.now() - ms);
+  const min = Math.floor(diff / 60000);
 
-function startLiveActivityRefresh(){
-  refreshLiveActivity();
-  if(liveRefreshTimer) clearInterval(liveRefreshTimer);
-  liveRefreshTimer=setInterval(refreshLiveActivity,15000);
+  if (min < 1) return "এইমাত্র";
+  if (min < 60) return `${min} মিনিট আগে`;
+
+  const hour = Math.floor(min / 60);
+  if (hour < 24) return `${hour} ঘণ্টা আগে`;
+
+  const day = Math.floor(hour / 24);
+  if (day < 30) return `${day} দিন আগে`;
+
+  return `${Math.floor(day / 30)} মাস আগে`;
 }
 
-function stopLiveActivityRefresh(){
-  if(liveRefreshTimer) clearInterval(liveRefreshTimer);
-  if(liveActivityTimer) clearInterval(liveActivityTimer);
-  liveRefreshTimer=null;
-  liveActivityTimer=null;
+function getResultSubjectText(result) {
+  if (result.subjectName) return result.subjectName;
+  if (result.subject) return result.subject;
+
+  const list = Array.isArray(result.subjectBreakdown)
+    ? result.subjectBreakdown
+    : [];
+
+  if (list.length === 1 && list[0]?.subjectName) return list[0].subjectName;
+
+  if (list.length > 1) return `${list.length}টি বিষয়`;
+  if (list.length === 1) return "বিষয়ভিত্তিক পরীক্ষা";
+
+  return "পরীক্ষা";
 }
 
-function normalizeActivity(value, studentRecord){
-  if(!value) return null;
+function buildActivityFromResult(result, studentMap) {
+  const s = studentMap[result.studentId];
+  if (!s) return null;
+  if (!myFriendIds.includes(result.studentId)) return null;
 
-  const a=Array.isArray(value)?value[0]:value;
-  if(!a || typeof a!=="object") return null;
-
-  const subject=a.subject || a.subjectName || a.topic || a.chapter || "";
-  const marks=a.marks ?? a.score ?? a.obtainedMarks ?? a.totalScore ?? null;
-  const total=a.total ?? a.totalMarks ?? a.maxMarks ?? null;
-  const exam=a.examName || a.exam || a.testName || a.title || "পরীক্ষা";
-  const timestamp=a.timestamp || a.time || a.createdAt || a.updatedAt || null;
-
-  if(!subject && marks===null) return null;
+  const marks = Number(result.obtainedMarks);
+  const total = Number(result.totalMarks);
+  const pct = Number(result.percentage);
 
   return {
-    studentId:studentRecord.studentId,
-    name:studentRecord.name || "বন্ধু",
-    photoURL:studentRecord.photoURL || "",
-    subject,
-    marks,
-    total,
-    exam,
-    timestamp
+    id: result.id || `${result.examId}_${result.studentId}`,
+    studentId: result.studentId,
+    name: s.name || "বন্ধু",
+    photoURL: s.photoURL || null,
+    subject: getResultSubjectText(result),
+    examName: result.examName || "পরীক্ষা",
+    obtainedMarks: Number.isFinite(marks) ? marks : null,
+    totalMarks: Number.isFinite(total) ? total : null,
+    percentage: Number.isFinite(pct) ? pct : null,
+    correctCount: Number(result.correctCount) || 0,
+    submittedAt: result.submittedAt || result.approvedAt || null
   };
 }
 
-function collectLiveActivities(students){
-  const result=[];
+/* ---------- Main page ---------- */
 
-  students.forEach(s=>{
-    const possible=[
-      s.recentActivity,
-      s.latestActivity,
-      s.lastActivity,
-      s.activity
-    ];
-
-    for(const value of possible){
-      const normalized=normalizeActivity(value,s);
-      if(normalized){
-        result.push(normalized);
-        break;
-      }
-    }
+if (!student) {
+  window.location.href = "../index.html";
+} else {
+  refreshActiveStudent(student.docId).then(fresh => {
+    if (fresh) student = fresh;
+    render();
   });
-
-  return result.filter(a=>myFriendIds.includes(a.studentId));
 }
 
-function formatLiveTime(value){
-  if(!value) return "এইমাত্র";
+function render() {
+  shell.innerHTML = `
+    <div class="lb-page">
+      ${renderStudentHeader(student, "leaderboard")}
 
-  try{
-    let date;
+      <section class="glass-float-card lb-hero">
+        <div class="lb-kicker">
+          <svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 21h8"/><path d="M12 17v4"/>
+            <path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/>
+            <path d="M7 7H4a3 3 0 0 0 3 3"/><path d="M17 7h3a3 3 0 0 1-3 3"/>
+          </svg>
+          Student Performance
+        </div>
+        <h1>লিডারবোর্ড</h1>
+        <p>পরীক্ষার performance, points, rank এবং বন্ধুদের progress এক জায়গায় দেখা যাবে।</p>
+      </section>
 
-    if(typeof value==="object" && typeof value.toDate==="function"){
-      date=value.toDate();
-    }else{
-      date=new Date(value);
-    }
+      <div class="lb-top-tools">
+        <button class="btn-glass lb-help-btn" id="leaderboardHelpBtn"
+          title="লিডারবোর্ড সম্পর্কে জানুন"
+          aria-label="লিডারবোর্ড সম্পর্কে জানুন"
+          aria-expanded="false">
+          <svg class="lb-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M9.7 9a2.4 2.4 0 1 1 4.1 1.7c-.9.8-1.8 1.2-1.8 2.7"/>
+            <path d="M12 17h.01"/>
+          </svg>
+        </button>
+      </div>
 
-    if(Number.isNaN(date.getTime())) return "এইমাত্র";
+      <div class="lb-help-panel" id="leaderboardHelpPanel">
+        <div class="glass-float-card lb-help-inner">
+          <div class="lb-help-title">লিডারবোর্ডের প্রতিটি অংশ</div>
+          <div class="lb-help-row"><span class="lb-dot"></span><span><strong>র‍্যাঙ্কিং:</strong> approved result থেকে মোট points অনুযায়ী rank তৈরি হয়।</span></div>
+          <div class="lb-help-row"><span class="lb-dot"></span><span><strong>সবাই / শুধু বন্ধুরা:</strong> পুরো leaderboard বা নিজের accepted friends-দের আলাদা করে দেখা যায়।</span></div>
+          <div class="lb-help-row"><span class="lb-dot"></span><span><strong>তুলনা:</strong> বন্ধুর সঙ্গে academic performance compare করার shortcut।</span></div>
+          <div class="lb-help-row"><span class="lb-dot"></span><span><strong>চ্যালেঞ্জ:</strong> আসন্ন পরীক্ষায় বন্ধুর সঙ্গে competition শুরু করার option।</span></div>
+          <div class="lb-help-row"><span class="lb-dot"></span><span><strong>Live Activity:</strong> বন্ধুর approved result এলে feed automaticভাবে update হবে এবং slide করবে।</span></div>
+        </div>
+      </div>
 
-    const diff=Math.max(0,Date.now()-date.getTime());
-    const mins=Math.floor(diff/60000);
+      <section class="glass-float-card points-card">
+        <div class="points-head">
+          <div class="points-title">Points কীভাবে তৈরি হচ্ছে?</div>
+          <span class="avg-pill">বর্তমান system</span>
+        </div>
 
-    if(mins<1) return "এইমাত্র";
-    if(mins<60) return `${mins} মিনিট আগে`;
+        <div class="points-formula">
+          <div class="points-item">
+            <div class="points-value">%</div>
+            <div class="points-label">প্রতিটি approved exam-এর percentage যোগ হয়</div>
+          </div>
+          <div class="points-item">
+            <div class="points-value">+৫০</div>
+            <div class="points-label">প্রতিটি approved exam complete করার জন্য</div>
+          </div>
+          <div class="points-item">
+            <div class="points-value">+২</div>
+            <div class="points-label">প্রতিটি correct answer-এর জন্য</div>
+          </div>
+        </div>
 
-    const hours=Math.floor(mins/60);
-    if(hours<24) return `${hours} ঘণ্টা আগে`;
+        <div class="points-note">
+          উদাহরণ: ৮০% + ৫০ exam bonus + ২০টি correct answer × ২ = ১৭০ points।
+          Wrong বা unanswered answer-এর জন্য এই system-এ negative marking নেই।
+        </div>
+      </section>
 
-    return `${Math.floor(hours/24)} দিন আগে`;
-  }catch{
-    return "এইমাত্র";
+      <section class="live-section">
+        <div class="live-head">
+          <div class="live-title">
+            <svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 12a8 8 0 0 1 16 0"/>
+              <path d="M7 12a5 5 0 0 1 10 0"/>
+              <path d="M10 12a2 2 0 0 1 4 0"/>
+              <path d="M12 12v.01"/>
+            </svg>
+            বন্ধুদের Live Activity
+          </div>
+          <span class="live-status"><span class="live-dot"></span>লাইভ</span>
+        </div>
+
+        <div class="live-slider" id="liveActivitySlider">
+          <div class="live-track" id="liveActivityTrack">
+            <div class="live-empty">বন্ধুদের approved result খোঁজা হচ্ছে...</div>
+          </div>
+          <div class="live-controls" id="liveActivityControls"></div>
+        </div>
+
+        <div class="live-note">নতুন approved result এলে feed নিজে থেকেই refresh হবে।</div>
+      </section>
+
+      <div id="incomingChallengesCard"></div>
+
+      <section class="lb-section">
+        <div class="lb-section-head">
+          <div class="lb-section-title">
+            <svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 21h8"/><path d="M12 17v4"/>
+              <path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/>
+              <path d="M7 7H4a3 3 0 0 0 3 3"/><path d="M17 7h3a3 3 0 0 1-3 3"/>
+            </svg>
+            র‍্যাঙ্কিং
+            <span class="lb-live-badge"><span class="live-dot"></span>LIVE</span>
+          </div>
+
+          <button class="btn-glass" id="friendsToggleBtn">সবাই</button>
+        </div>
+
+        <div class="lb-filter-row" id="classFilterRow"></div>
+
+        <div class="glass-float-card lb-list-card">
+          <div id="leaderboardList"></div>
+        </div>
+      </section>
+    </div>
+  `;
+
+  document.getElementById("themeToggle")?.addEventListener("click", toggleTheme);
+
+  const helpBtn = document.getElementById("leaderboardHelpBtn");
+  const helpPanel = document.getElementById("leaderboardHelpPanel");
+
+  helpBtn.addEventListener("click", () => {
+    const open = helpPanel.classList.toggle("show");
+    helpBtn.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+
+  document.getElementById("friendsToggleBtn").addEventListener("click", () => {
+    friendsOnly = !friendsOnly;
+    const btn = document.getElementById("friendsToggleBtn");
+    btn.textContent = friendsOnly ? "শুধু বন্ধুরা" : "সবাই";
+    renderLeaderboardList();
+  });
+
+  document.getElementById("closeChallengeModal").addEventListener("click", closeChallengeModal);
+
+  loadEverything();
+  startLiveResultsListener();
+}
+
+/* ---------- Existing leaderboard data ---------- */
+
+async function loadEverything() {
+  try {
+    const [students, board, friendIds] = await Promise.all([
+      getActiveStudents(),
+      getLeaderboardData(await getActiveStudents()),
+      getMyFriendIds(student.studentId)
+    ]);
+
+    allLeaderboard = Array.isArray(board) ? board : [];
+    myFriendIds = Array.isArray(friendIds) ? friendIds : [];
+
+    renderClassFilterRow();
+    await renderLeaderboardList();
+
+    await renderIncomingChallenges(students);
+
+    /* Live listener needs the latest friend list. */
+    startLiveResultsListener();
+  } catch (err) {
+    console.error(err);
+    showToast(friendlyError(err), "error");
   }
 }
 
-function renderLiveActivities(){
-  const track=document.getElementById("liveActivityTrack");
-  const controls=document.getElementById("liveActivityControls");
+function renderClassFilterRow() {
+  const el = document.getElementById("classFilterRow");
+  if (!el) return;
 
-  if(!track || !controls) return;
+  const classes = [...new Set(
+    allLeaderboard.map(r => r.className).filter(Boolean)
+  )].sort();
 
-  if(!liveActivities.length){
-    track.innerHTML=`
-      <div class="live-empty">
-        তোমার বন্ধুদের নতুন subject/marks update এলে এখানে automaticভাবে দেখাবে।
-      </div>`;
-    controls.innerHTML="";
+  el.innerHTML = [
+    `<button class="btn-glass filter-btn ${activeClassFilter === "all" ? "active" : ""}" data-class="all">সব</button>`,
+    ...classes.map(c => `
+      <button class="btn-glass filter-btn ${activeClassFilter === c ? "active" : ""}" data-class="${escapeHtml(c)}">
+        ${escapeHtml(c)}
+      </button>
+    `)
+  ].join("");
+
+  el.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      activeClassFilter = btn.dataset.class;
+      renderClassFilterRow();
+      renderLeaderboardList();
+    });
+  });
+}
+
+async function renderLeaderboardList() {
+  const el = document.getElementById("leaderboardList");
+  if (!el) return;
+
+  let rows = [...allLeaderboard];
+
+  if (activeClassFilter !== "all") {
+    rows = rows.filter(r => r.className === activeClassFilter);
+  }
+
+  if (friendsOnly) {
+    rows = rows.filter(r =>
+      myFriendIds.includes(r.studentId) || r.studentId === student.studentId
+    );
+  }
+
+  if (!rows.length) {
+    renderState(el, "empty", "এখনো কোনো approved result নেই।");
     return;
   }
 
-  track.innerHTML=liveActivities.map(a=>{
-    const avatar=a.photoURL
-      ? `<img src="${a.photoURL}" alt="">`
-      : (a.name||"ব").charAt(0);
+  let outgoingReqs = [];
+  let outgoingChalls = [];
 
-    const score=a.marks===null || a.marks===undefined
-      ? ""
-      : `${a.marks}${a.total!==null && a.total!==undefined ? `/${a.total}` : ""}`;
+  try {
+    [outgoingReqs, outgoingChalls] = await Promise.all([
+      getOutgoingRequests(student.studentId),
+      getOutgoingChallenges(student.studentId)
+    ]);
+  } catch (err) {
+    console.error("Action state load failed:", err);
+  }
 
-    const action=a.subject
-      ? `${a.subject} করেছে`
-      : "নতুন academic update করেছে";
+  const pendingToIds = new Set(
+    outgoingReqs.map(r => r.toStudentId)
+  );
+
+  const challengedIds = new Set(
+    outgoingChalls
+      .filter(c => c.status === "pending")
+      .map(c => c.toStudentId)
+  );
+
+  el.innerHTML = rows.map((r, i) => {
+    const isMe = r.studentId === student.studentId;
+    const isFriend = myFriendIds.includes(r.studentId);
+
+    let actions = "";
+
+    if (!isMe) {
+      if (isFriend) {
+        const hasChallenged = challengedIds.has(r.studentId);
+
+        actions += `
+          <a href="../student/comparison.html?friendId=${encodeURIComponent(r.studentId)}"
+             class="btn-glass action-btn"
+             title="তুলনা"
+             aria-label="তুলনা">
+            <svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>
+            </svg>
+          </a>
+        `;
+
+        actions += hasChallenged
+          ? `
+            <span class="btn-glass action-btn"
+                  style="color:var(--text-muted);cursor:default;"
+                  title="চ্যালেঞ্জ অপেক্ষমান">
+              <svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
+              </svg>
+            </span>
+          `
+          : `
+            <button class="btn-glass btn-danger action-btn challenge-btn"
+                    data-id="${escapeHtml(r.studentId)}"
+                    title="চ্যালেঞ্জ"
+                    aria-label="চ্যালেঞ্জ">
+              <svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m14.5 17.5-11.5-11.5V3h3l11.5 11.5"/>
+                <path d="m13 19 6-6"/><path d="m16 16 4 4"/><path d="m19 21 2-2"/>
+              </svg>
+            </button>
+          `;
+      } else if (pendingToIds.has(r.studentId)) {
+        actions = `<span class="btn-glass text-action" style="color:var(--text-muted);">পাঠানো</span>`;
+      } else {
+        actions = `
+          <button class="btn-glass text-action add-friend-btn"
+                  data-id="${escapeHtml(r.studentId)}">
+            + বন্ধু
+          </button>
+        `;
+      }
+    }
+
+    const pct = Number(r.avgPercentage);
+    const avgText = Number.isFinite(pct) ? `${pct}% গড়` : "";
+
+    return `
+      <div class="lb-row ${isMe ? "is-me" : ""}">
+        <span class="rank-number">${i + 1}.</span>
+
+        <span class="lb-avatar">
+          ${
+            r.photoURL
+              ? `<img src="${escapeHtml(r.photoURL)}" alt="">`
+              : escapeHtml((r.name || "শ").charAt(0))
+          }
+        </span>
+
+        <div class="lb-main">
+          <p class="lb-name">${escapeHtml(r.name || r.studentId)}${isMe ? " (তুমি)" : ""}</p>
+          <div class="lb-subline">
+            <span class="points-pill">${Number(r.totalPoints) || 0} পয়েন্ট</span>
+            ${avgText ? `<span class="avg-pill">${avgText}</span>` : ""}
+          </div>
+        </div>
+
+        <div class="lb-actions">${actions}</div>
+      </div>
+    `;
+  }).join("");
+
+  el.querySelectorAll(".add-friend-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      try {
+        await sendFriendRequest(student.studentId, btn.dataset.id);
+        showToast("অনুরোধ পাঠানো হয়েছে।", "success");
+        await renderLeaderboardList();
+      } catch (err) {
+        showToast(friendlyError(err), "error");
+        btn.disabled = false;
+      }
+    });
+  });
+
+  el.querySelectorAll(".challenge-btn").forEach(btn => {
+    btn.addEventListener("click", () => openChallengeModal(btn.dataset.id));
+  });
+}
+
+/* ---------- Incoming challenges ---------- */
+
+async function renderIncomingChallenges(students) {
+  const card = document.getElementById("incomingChallengesCard");
+  if (!card) return;
+
+  try {
+    const incoming = await getIncomingChallenges(student.studentId);
+    const nameOf = {};
+    students.forEach(s => nameOf[s.studentId] = s.name);
+
+    if (!incoming.length) {
+      card.innerHTML = "";
+      return;
+    }
+
+    card.innerHTML = `
+      <div class="glass-float-card challenge-card">
+        <div class="challenge-kicker">নতুন challenge</div>
+        ${incoming.map(c => `
+          <div class="challenge-row">
+            <div>
+              <div class="challenge-name">${escapeHtml(nameOf[c.fromStudentId] || "বন্ধু")}</div>
+              <div class="challenge-exam">${escapeHtml(c.examName || "পরীক্ষা")}</div>
+            </div>
+            <div class="flex gap-2">
+              <button class="btn-glass text-action chall-reject" data-id="${escapeHtml(c.id)}">বাতিল</button>
+              <button class="btn-glass text-action chall-accept"
+                      data-id="${escapeHtml(c.id)}"
+                      style="color:var(--color-success);border-color:var(--color-success);">
+                গ্রহণ
+              </button>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+
+    card.querySelectorAll(".chall-accept").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        try {
+          await acceptChallenge(btn.dataset.id);
+          showToast("চ্যালেঞ্জ গৃহীত!", "success");
+          await loadEverything();
+        } catch (err) {
+          showToast(friendlyError(err), "error");
+        }
+      });
+    });
+
+    card.querySelectorAll(".chall-reject").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        try {
+          await rejectChallenge(btn.dataset.id);
+          await loadEverything();
+        } catch (err) {
+          showToast(friendlyError(err), "error");
+        }
+      });
+    });
+  } catch (err) {
+    console.error("Incoming challenges failed:", err);
+  }
+}
+
+/* ---------- Challenge modal ---------- */
+
+async function openChallengeModal(friendId) {
+  selectedFriendIdForChallenge = friendId;
+
+  const modal = document.getElementById("challengeModal");
+  const body = document.getElementById("challengeModalBody");
+  const confirmBtn = document.getElementById("confirmChallengeBtn");
+
+  modal.style.display = "flex";
+  confirmBtn.style.display = "none";
+  confirmBtn.disabled = false;
+  confirmBtn.textContent = "চ্যালেঞ্জ পাঠাও";
+  body.innerHTML = `<div class="spinner"></div>`;
+
+  try {
+    if (!upcomingExamsCache) {
+      upcomingExamsCache = await getUpcomingExams();
+    }
+
+    if (!upcomingExamsCache.length) {
+      body.innerHTML = `
+        <div style="padding:11px;border-radius:11px;background:rgba(239,68,68,.08);color:#ef4444;font-size:.7rem;font-weight:800;line-height:1.5;">
+          বর্তমানে কোনো আসন্ন পরীক্ষা নেই। পরীক্ষা প্রকাশিত হলে challenge করতে পারবে।
+        </div>
+      `;
+      return;
+    }
+
+    body.innerHTML = `
+      <select id="challengeExamSelect" class="challenge-select">
+        ${upcomingExamsCache.map(e => `
+          <option value="${escapeHtml(e.id)}">${escapeHtml(e.name || "পরীক্ষা")}</option>
+        `).join("")}
+      </select>
+    `;
+
+    confirmBtn.style.display = "inline-flex";
+  } catch (err) {
+    body.innerHTML = `<p style="font-size:.72rem;color:#ef4444;">পরীক্ষার তালিকা আনা যায়নি। আবার চেষ্টা করো।</p>`;
+  }
+}
+
+function closeChallengeModal() {
+  document.getElementById("challengeModal").style.display = "none";
+  selectedFriendIdForChallenge = null;
+}
+
+document.getElementById("confirmChallengeBtn").onclick = async () => {
+  const select = document.getElementById("challengeExamSelect");
+  const btn = document.getElementById("confirmChallengeBtn");
+
+  if (!select || !selectedFriendIdForChallenge) return;
+
+  const examId = select.value;
+  const examName = select.options[select.selectedIndex]?.text || "পরীক্ষা";
+
+  try {
+    btn.disabled = true;
+    btn.textContent = "পাঠানো হচ্ছে...";
+
+    await sendChallenge(
+      student.studentId,
+      selectedFriendIdForChallenge,
+      examId,
+      examName
+    );
+
+    showToast("চ্যালেঞ্জ পাঠানো হয়েছে!", "success");
+    closeChallengeModal();
+    await renderLeaderboardList();
+  } catch (err) {
+    showToast(friendlyError(err), "error");
+    btn.disabled = false;
+    btn.textContent = "চ্যালেঞ্জ পাঠাও";
+  }
+};
+
+/* =========================================================
+   REAL-TIME FRIEND RESULT FEED
+   Uses Firestore onSnapshot on approved results.
+   No fake activity is generated.
+   ========================================================= */
+
+function startLiveResultsListener() {
+  if (!student || !myFriendIds.length) {
+    renderLiveActivities([]);
+    return;
+  }
+
+  if (unsubscribeLiveResults) {
+    unsubscribeLiveResults();
+    unsubscribeLiveResults = null;
+  }
+
+  const q = query(
+    collection(db, "results"),
+    where("status", "==", "approved")
+  );
+
+  unsubscribeLiveResults = onSnapshot(
+    q,
+    async snap => {
+      try {
+        const students = await getActiveStudents();
+        const studentMap = {};
+        students.forEach(s => studentMap[s.studentId] = s);
+
+        const activities = snap.docs
+          .map(d => ({ id:d.id, ...d.data() }))
+          .map(r => buildActivityFromResult(r, studentMap))
+          .filter(Boolean)
+          .sort((a,b) => getMillis(b.submittedAt) - getMillis(a.submittedAt))
+          .slice(0, 10);
+
+        liveActivities = activities;
+
+        if (liveActivityIndex >= liveActivities.length) {
+          liveActivityIndex = 0;
+        }
+
+        renderLiveActivities();
+
+        /* Recalculate the existing leaderboard when a result changes. */
+        const latestBoard = await getLeaderboardData(students);
+
+        if (Array.isArray(latestBoard)) {
+          allLeaderboard = latestBoard;
+          renderClassFilterRow();
+          await renderLeaderboardList();
+        }
+      } catch (err) {
+        console.error("Live result processing failed:", err);
+      }
+    },
+    err => {
+      console.error("Live result listener failed:", err);
+      renderLiveActivities([]);
+    }
+  );
+}
+
+function renderLiveActivities(list = liveActivities) {
+  liveActivities = Array.isArray(list) ? list : [];
+  const track = document.getElementById("liveActivityTrack");
+  const controls = document.getElementById("liveActivityControls");
+  if (!track || !controls) return;
+
+  if (!liveActivities.length) {
+    track.innerHTML = `
+      <div class="live-empty">
+        তোমার accepted friend-এর approved result এলে এখানে automaticভাবে দেখা যাবে।
+      </div>`;
+    controls.innerHTML = "";
+    if (liveActivityTimer) clearInterval(liveActivityTimer);
+    liveActivityTimer = null;
+    return;
+  }
+
+  track.innerHTML = liveActivities.map(a => {
+    const avatar = a.photoURL
+      ? `<img src="${escapeHtml(a.photoURL)}" alt="">`
+      : escapeHtml((a.name || "ব").charAt(0));
+
+    const score = a.obtainedMarks !== null && a.totalMarks !== null
+      ? `${a.obtainedMarks}/${a.totalMarks}`
+      : a.percentage !== null
+        ? `${a.percentage}%`
+        : "";
+
+    const subjectText = a.subject && a.subject !== "পরীক্ষা"
+      ? `${escapeHtml(a.subject)}-এ result দিয়েছে`
+      : "নতুন result দিয়েছে";
 
     return `
       <div class="live-card">
         <span class="live-avatar">${avatar}</span>
-
         <div class="live-copy">
-          <div class="live-line">
-            <strong>${a.name}</strong> ${action}
-          </div>
-
-          <div class="live-meta">
-            ${a.exam} · ${formatLiveTime(a.timestamp)}
-          </div>
+          <div class="live-line"><strong>${escapeHtml(a.name)}</strong> ${subjectText}</div>
+          <div class="live-meta">${escapeHtml(a.examName)} · ${relativeTime(a.submittedAt)} · ${a.correctCount}টি correct</div>
         </div>
-
-        ${score ? `<span class="live-score">${score}</span>` : ""}
-      </div>`;
+        ${score ? `<span class="live-score">${escapeHtml(score)}</span>` : ""}
+      </div>
+    `;
   }).join("");
 
-  controls.innerHTML=liveActivities.map((_,i)=>`
-    <button
-      class="live-control ${i===liveActivityIndex?"active":""}"
-      data-live-index="${i}"
-      aria-label="Activity ${i+1}">
-    </button>
+  controls.innerHTML = liveActivities.map((_,i) => `
+    <button class="live-control ${i === liveActivityIndex ? "active" : ""}"
+            data-live-index="${i}" aria-label="Activity ${i+1}"></button>
   `).join("");
 
-  controls.querySelectorAll(".live-control").forEach(btn=>{
-    btn.addEventListener("click",()=>{
-      liveActivityIndex=Number(btn.dataset.liveIndex);
+  controls.querySelectorAll(".live-control").forEach(btn => {
+    btn.addEventListener("click", () => {
+      liveActivityIndex = Number(btn.dataset.liveIndex);
       updateLiveSlider();
       restartLiveSlider();
     });
@@ -366,134 +1159,10 @@ function renderLiveActivities(){
   restartLiveSlider();
 }
 
-function updateLiveSlider(){
-  const track=document.getElementById("liveActivityTrack");
-  const controls=document.getElementById("liveActivityControls");
-
-  if(!track || !liveActivities.length) return;
-
-  track.style.transform=`translateX(-${liveActivityIndex*100}%)`;
-
-  controls?.querySelectorAll(".live-control").forEach((dot,i)=>{
-    dot.classList.toggle("active",i===liveActivityIndex);
-  });
-}
-
-function restartLiveSlider(){
-  if(liveActivityTimer) clearInterval(liveActivityTimer);
-
-  if(liveActivities.length<=1) return;
-
-  liveActivityTimer=setInterval(()=>{
-    liveActivityIndex=(liveActivityIndex+1)%liveActivities.length;
-    updateLiveSlider();
-  },4000);
-}
-
-async function refreshLiveActivity(){
-  try{
-    const students=await getActiveStudents();
-
-    const activities=collectLiveActivities(students);
-
-    if(activities.length){
-      liveActivities=activities.slice(0,10);
-
-      if(liveActivityIndex>=liveActivities.length){
-        liveActivityIndex=0;
-      }
-
-      renderLiveActivities();
-    }else{
-      renderLiveActivities();
-    }
-
-    /* Refresh leaderboard data silently for live point/rank changes. */
-    const latestBoard=await getLeaderboardData(students);
-
-    if(Array.isArray(latestBoard)){
-      allLeaderboard=latestBoard;
-
-      if(document.getElementById("leaderboardList")){
-        renderClassFilterRow();
-        await renderLeaderboardList();
-      }
-    }
-  }catch(err){
-    console.error("Live activity refresh failed:",err);
-  }
-}
-
-async function loadEverything(){
-try{
-const [students,board,friendIds]=await Promise.all([getActiveStudents(),getLeaderboardData(await getActiveStudents()),getMyFriendIds(student.studentId)]);
-allLeaderboard=board;myFriendIds=friendIds;
-const nameOf={};students.forEach(s=>{nameOf[s.studentId]=s.name;});
-const incChallenges=await getIncomingChallenges(student.studentId),incCard=document.getElementById("incomingChallengesCard");
-if(incChallenges.length>0){
-incCard.style.display="block";
-incCard.innerHTML=`<div class="glass-float-card challenge-banner"><div class="challenge-title">নতুন চ্যালেঞ্জ</div>${incChallenges.map(c=>`<div class="flex justify-between items-center mt-3" style="border-bottom:1px dashed var(--surface-border);padding-bottom:10px;"><div style="min-width:0;"><p class="text-sm font-bold">${nameOf[c.fromStudentId]||"বন্ধু"}</p><p class="text-xs text-muted mt-1">পরীক্ষা: <span style="font-weight:700;">${c.examName}</span></p></div><div class="flex gap-2"><button class="btn-glass chall-reject" data-id="${c.id}" style="padding:6px 9px;font-size:.7rem;"><svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>বাতিল</button><button class="btn-glass chall-accept" data-id="${c.id}" style="padding:6px 9px;font-size:.7rem;color:var(--color-success);border-color:var(--color-success);"><svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l4 4L19 6"/></svg>গ্রহণ</button></div></div>`).join("")}</div>`;
-incCard.querySelectorAll(".chall-accept").forEach(b=>b.addEventListener("click",async()=>{try{await acceptChallenge(b.dataset.id);showToast("চ্যালেঞ্জ গৃহীত!","success");loadEverything()}catch(err){console.error(err)}}));
-incCard.querySelectorAll(".chall-reject").forEach(b=>b.addEventListener("click",async()=>{try{await rejectChallenge(b.dataset.id);loadEverything()}catch(err){console.error(err)}}));
-}else incCard.style.display="none";
-renderClassFilterRow();renderLeaderboardList();
-}catch(err){console.error(err);showToast(friendlyError(err),"error");}
-}
-
-function renderClassFilterRow(){
-const el=document.getElementById("classFilterRow"),classes=[...new Set(allLeaderboard.map(r=>r.className).filter(Boolean))].sort();
-el.innerHTML=[`<button class="btn-glass" data-class="all" style="${activeClassFilter==="all"?"background:var(--color-accent);color:#fff;border:none;":""}flex-shrink:0;"><svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg>সব</button>`,...classes.map(c=>`<button class="btn-glass" data-class="${c}" style="${activeClassFilter===c?"background:var(--color-accent);color:#fff;border:none;":""}flex-shrink:0;">${c}</button>`)].join("");
-el.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{activeClassFilter=b.dataset.class;renderClassFilterRow();renderLeaderboardList();}));
-}
-
-async function renderLeaderboardList(){
-const el=document.getElementById("leaderboardList");let rows=allLeaderboard;
-if(activeClassFilter!=="all")rows=rows.filter(r=>r.className===activeClassFilter);
-if(friendsOnly)rows=rows.filter(r=>myFriendIds.includes(r.studentId)||r.studentId===student.studentId);
-if(rows.length===0){renderState(el,"empty","এখনো কোনো রেজাল্ট নেই।");return}
-const [outgoingReqs,outgoingChalls]=await Promise.all([getOutgoingRequests(student.studentId),getOutgoingChallenges(student.studentId)]);
-const pendingToIds=new Set(outgoingReqs.map(r=>r.toStudentId)),challengedIds=new Set(outgoingChalls.filter(c=>c.status==="pending").map(c=>c.toStudentId));
-
-el.innerHTML=rows.map((r,i)=>{
-const isMe=r.studentId===student.studentId,isFriend=myFriendIds.includes(r.studentId);let friendBtn="";
-if(!isMe){
-if(isFriend){
-const hasChallenged=challengedIds.has(r.studentId);
-friendBtn=`<a href="../student/comparison.html?friendId=${r.studentId}" class="btn-glass lb-action-btn" style="padding:7px 10px;" title="তুলনা"><svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 20V9"/><path d="M12 20V4"/><path d="M18 20v-7"/></svg><span class="lb-action-label">তুলনা</span></a>${hasChallenged?`<span class="btn-glass lb-action-btn" style="padding:7px 10px;color:var(--text-muted);cursor:default;" title="চ্যালেঞ্জ অপেক্ষমান"><svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><span class="lb-action-label">অপেক্ষমান</span></span>`:`<button class="btn-glass challenge-btn lb-action-btn" data-id="${r.studentId}" style="padding:7px 10px;color:#ef4444;border-color:rgba(239,68,68,.3);" title="চ্যালেঞ্জ"><svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/></svg><span class="lb-action-label">চ্যালেঞ্জ</span></button>`}`;
-}else if(pendingToIds.has(r.studentId))friendBtn=`<span class="btn-glass lb-action-btn" style="padding:6px 10px;font-size:.7rem;color:var(--text-muted);cursor:default;"><svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l4 4L19 6"/></svg>পাঠানো</span>`;
-else friendBtn=`<button class="btn-glass add-friend-btn lb-action-btn" data-id="${r.studentId}" style="padding:6px 10px;font-size:.72rem;"><svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6"/><path d="M19 8v6"/><path d="M16 11h6"/></svg>+ বন্ধু</button>`;
-}
-return `<div class="lb-row ${isMe?"is-me":""}"><span class="rank-number">${i+1}.</span><span class="lb-avatar">${r.photoURL?`<img src="${r.photoURL}" alt="">`:r.name.charAt(0)}</span><div style="flex:1;min-width:0;"><p class="lb-name">${r.name}${isMe?" (তুমি)":""}</p><span class="points-pill">${r.totalPoints||0} পয়েন্ট</span></div><div class="lb-actions">${friendBtn}</div></div>`;
-}).join("");
-
-el.querySelectorAll(".add-friend-btn").forEach(b=>b.addEventListener("click",async()=>{try{await sendFriendRequest(student.studentId,b.dataset.id);showToast("অনুরোধ পাঠানো হয়েছে।","success");renderLeaderboardList()}catch(err){showToast(friendlyError(err),"error")}}));
-
-el.querySelectorAll(".challenge-btn").forEach(b=>b.addEventListener("click",async()=>{
-selectedFriendIdForChallenge=b.dataset.id;
-const modal=document.getElementById("challengeModal"),body=document.getElementById("challengeModalBody"),confirmBtn=document.getElementById("confirmChallengeBtn");
-modal.style.display="flex";confirmBtn.style.display="none";body.innerHTML='<div class="spinner"></div>';
-try{
-if(!upcomingExamsCache)upcomingExamsCache=await getUpcomingExams();
-if(upcomingExamsCache.length===0)body.innerHTML='<div style="color:#ef4444;font-weight:650;padding:12px;background:rgba(239,68,68,.08);border-radius:10px;font-size:.78rem;line-height:1.6;">বর্তমানে কোনো আসন্ন পরীক্ষা নেই। পরীক্ষা প্রকাশিত হলে চ্যালেঞ্জ করতে পারবে।</div>';
-else{
-body.innerHTML=`<label for="challengeExamSelect" style="display:block;font-size:.72rem;font-weight:800;color:var(--text-muted);margin-bottom:7px;">পরীক্ষা নির্বাচন করুন</label><select id="challengeExamSelect" style="width:100%;padding:12px;border-radius:11px;border:1px solid var(--surface-border);background:rgba(128,128,128,.1);color:var(--text-primary);font-family:inherit;font-size:.88rem;font-weight:650;outline:none;">${upcomingExamsCache.map(e=>`<option value="${e.id}">${e.name}</option>`).join("")}</select>`;
-confirmBtn.style.display="inline-flex";
-}
-}catch(err){console.error(err);body.innerHTML='<div style="color:#ef4444;font-size:.78rem;padding:12px;background:rgba(239,68,68,.08);border-radius:10px;">পরীক্ষার তালিকা লোড করা যায়নি।</div>'}
-}));
-
-document.getElementById("confirmChallengeBtn").onclick=async()=>{
-const examSelect=document.getElementById("challengeExamSelect");if(!examSelect)return;
-const examId=examSelect.value,examName=examSelect.options[examSelect.selectedIndex].text,confirmBtn=document.getElementById("confirmChallengeBtn");
-try{
-confirmBtn.textContent="পাঠানো হচ্ছে...";confirmBtn.disabled=true;
-await sendChallenge(student.studentId,selectedFriendIdForChallenge,examId,examName);
-showToast("চ্যালেঞ্জ পাঠানো হয়েছে!","success");document.getElementById("challengeModal").style.display="none";
-confirmBtn.innerHTML='<svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>চ্যালেঞ্জ পাঠাও>';confirmBtn.disabled=false;loadEverything();
-}catch(err){console.error(err);showToast(friendlyError(err),"error");confirmBtn.innerHTML='<svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>চ্যালেঞ্জ পাঠাও>';confirmBtn.disabled=false}
-};
-}
-window.addEventListener("beforeunload",stopLiveActivityRefresh);
+window.addEventListener("beforeunload", () => {
+  if (unsubscribeLiveResults) unsubscribeLiveResults();
+  if (liveActivityTimer) clearInterval(liveActivityTimer);
+});
 </script>
 </body>
 </html>
