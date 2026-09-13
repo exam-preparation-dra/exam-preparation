@@ -31,20 +31,31 @@ if (!student) {
 const COLORS = ["var(--color-accent)", "var(--color-info)", "#a855f7", "#2dd4bf", "#f43f5e"];
 
 async function render() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const isFriendCompare = urlParams.has("friendId");
+  
   shell.innerHTML = `
     ${renderStudentHeader(student, "dashboard")}
-    <p class="eyebrow">সকল শিক্ষার্থীর তুলনা</p>
+    <p class="eyebrow">${isFriendCompare ? "বন্ধুর সাথে তুলনা" : "সকল শিক্ষার্থীর তুলনা"}</p>
     <div id="body" class="mt-3"><div class="glass card skeleton" style="height:200px;"></div></div>
   `;
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
 
   const body = document.getElementById("body");
   try {
-    const students = await getActiveStudents();
+    let students = await getActiveStudents();
+    const friendId = urlParams.get("friendId");
+    
+    // Filter specifically for friend comparison
+    if (friendId) {
+      students = students.filter(s => s.studentId === student.studentId || s.studentId === friendId);
+    }
+    
     if (students.length < 2) {
       renderState(body, "empty", "তুলনার জন্য অন্তত দুইজন সক্রিয় শিক্ষার্থী প্রয়োজন।");
       return;
     }
+    
     const [subjects, chapters, topics] = await Promise.all([getSubjects(), getChapters(), getTopics()]);
     const subjectMap = buildNameMap(subjects), chapterMap = buildNameMap(chapters), topicMap = buildNameMap(topics);
 
