@@ -14,7 +14,7 @@
   }
   .lb-card.is-me { border-color: var(--color-accent); background: var(--color-accent-soft); }
   
-  .lb-rank { width: 28px; text-align: center; font-weight: 800; font-size: 1.1rem; color: var(--text-muted); flex-shrink: 0; }
+  .lb-rank { width: 32px; text-align: center; font-weight: 800; font-size: 1.1rem; color: var(--text-muted); flex-shrink: 0; }
   .lb-rank.top1 { color: #f5b301; font-size: 1.4rem; }
   .lb-rank.top2 { color: #94a3b8; font-size: 1.3rem; }
   .lb-rank.top3 { color: #cd7f32; font-size: 1.2rem; }
@@ -26,14 +26,10 @@
   }
   .lb-avatar img { width: 100%; height: 100%; object-fit: cover; }
   .lb-info { flex: 1; min-width: 0; }
-  
-  .lb-name { 
-    font-weight: 700; font-size: 0.95rem; overflow: hidden; 
-    text-overflow: ellipsis; white-space: nowrap; margin-bottom: 4px;
-  }
+  .lb-name { font-weight: 700; font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom:4px; }
   
   .points-pill {
-    display: inline-block; white-space: nowrap; padding: 3px 8px;
+    display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px;
     background: rgba(245, 179, 1, 0.15); color: #b45309; border-radius: 99px;
     font-weight: 800; font-size: 0.75rem;
   }
@@ -45,16 +41,15 @@
   .btn-compare { background: var(--color-accent-soft); color: var(--color-accent); }
   .btn-add { background: var(--surface-border); color: var(--text-secondary); }
   
-  /* ---- Activity Feed (Auto Scroll) ---- */
-  .feed-wrapper { overflow: hidden; width: 100%; padding: 4px 0 12px 0; }
+  /* ---- Super Smooth CSS Marquee Activity Feed ---- */
+  .feed-container { overflow: hidden; white-space: nowrap; width: 100%; position: relative; padding-bottom: 8px; }
   .feed-scroll { 
-    display: flex; gap: 12px; width: max-content;
-    /* JS will handle the smooth scroll */
+    display: inline-flex; gap: 12px; width: max-content;
+    animation: marquee 25s linear infinite; 
   }
-  .feed-card { 
-    flex-shrink: 0; width: 230px; padding: 12px; border-radius: 12px; 
-    border: 1px solid var(--surface-border); background: var(--surface); 
-  }
+  .feed-scroll:hover { animation-play-state: paused; }
+  @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+  .feed-card { flex-shrink: 0; width: 250px; padding: 12px; border-radius: 12px; border: 1px solid var(--surface-border); background: var(--surface); white-space: normal; }
 </style>
 </head>
 <body>
@@ -90,7 +85,7 @@ function render() {
   shell.innerHTML = `
     ${renderStudentHeader(student, "leaderboard")}
 
-    <!-- 1. Leaderboard Section (Moved to TOP) -->
+    <!-- 1. Leaderboard at the TOP -->
     <div class="mt-2">
       <div class="flex justify-between items-center mb-3">
         <h2 style="font-size: 1.1rem; font-weight: 800;">🏆 র‍্যাঙ্কিং ও পয়েন্টস</h2>
@@ -100,7 +95,7 @@ function render() {
       <div id="leaderboardList"></div>
     </div>
 
-    <!-- 2. Activity Feed Section (Moved to Bottom) -->
+    <!-- 2. Activity Feed at the BOTTOM -->
     <div id="activityFeedSection" class="mt-5"></div>
   `;
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
@@ -167,16 +162,14 @@ async function renderLeaderboardList() {
     const isMe = r.studentId === student.studentId;
     const isFriend = myFriendIds.includes(r.studentId);
     const isPending = pendingToIds.has(r.studentId);
-    const pts = r.totalPoints || 0; // Fallback if cache hasn't cleared
     
-    // Target Badge
     const isTarget = (!isMe && myIndex > 0 && i === myIndex - 1 && !friendsOnly);
     const targetBadge = isTarget ? `<span style="font-size:0.6rem; background:#fef08a; color:#854d0e; padding:2px 6px; border-radius:4px; font-weight:800; margin-left:6px; vertical-align:middle;">🔥 টার্গেট</span>` : "";
 
     let friendBtn = "";
     if (!isMe) {
       if (isFriend) friendBtn = `<a href="../student/comparison.html?friendId=${r.studentId}" class="lb-friend-btn btn-compare">তুলনা</a>`;
-      else if (isPending) friendBtn = `<span class="lb-friend-btn" style="color:var(--text-muted); border:1px solid var(--surface-border);">পাঠানো হয়েছে</span>`;
+      else if (isPending) friendBtn = `<span class="lb-friend-btn" style="color:var(--text-muted); border:1px solid var(--surface-border);">পাঠানো</span>`;
       else friendBtn = `<button class="lb-friend-btn btn-add add-friend-btn" data-id="${r.studentId}">+ বন্ধু</button>`;
     }
     
@@ -186,7 +179,7 @@ async function renderLeaderboardList() {
         <span class="lb-avatar">${r.photoURL ? `<img src="${r.photoURL}" alt="">` : r.name.charAt(0)}</span>
         <div class="lb-info">
           <div class="lb-name">${r.name}${isMe ? " (তুমি)" : ""}${targetBadge}</div>
-          <div class="points-pill">⭐ ${pts} পয়েন্ট <span style="color:var(--text-muted); font-weight:600; margin-left:4px;">(${r.avgPercentage || 0}%)</span></div>
+          <div class="points-pill">⭐ ${r.totalPoints || 0} পয়েন্ট <span style="color:var(--text-muted); font-weight:600; margin-left:4px;">(${r.avgPercentage || 0}%)</span></div>
         </div>
         ${friendBtn}
       </div>
@@ -206,40 +199,31 @@ async function renderLeaderboardList() {
 
 function renderActivityFeed(results, students) {
   const el = document.getElementById("activityFeedSection");
-  const feed = results.filter(r => myFriendIds.includes(r.studentId)).slice(0, 8);
+  const feed = results.filter(r => myFriendIds.includes(r.studentId)).slice(0, 5);
   
   if (feed.length === 0) return;
 
   const nameOf = {}; students.forEach(s => { nameOf[s.studentId] = s.name; });
   
+  // Create feed items
+  const feedHtml = feed.map(r => `
+    <div class="feed-card">
+       <p class="text-xs text-muted mb-1">🔥 লাইভ আপডেট</p>
+       <p class="text-sm" style="font-weight:600; line-height:1.4;">
+         ${nameOf[r.studentId]} <span style="color:var(--color-accent);">${r.examName || "পরীক্ষা"}</span>-এ ${r.percentage}% পেয়েছে!
+       </p>
+    </div>
+  `).join("");
+  
+  // Duplicate feedHtml so the marquee loops seamlessly
   el.innerHTML = `
     <p class="eyebrow mb-2">বন্ধুদের লাইভ আপডেট</p>
-    <div class="feed-wrapper">
-      <div class="feed-scroll" id="feedScrollBox">
-        ${feed.map(r => `
-          <div class="feed-card">
-             <p class="text-xs text-muted mb-1">🔥 এইমাত্র</p>
-             <p class="text-sm" style="font-weight:600; line-height:1.4;">
-               ${nameOf[r.studentId]} <span style="color:var(--color-accent);">${r.examName || "পরীক্ষা"}</span>-এ ${r.percentage}% পেয়েছে!
-             </p>
-          </div>
-        `).join("")}
+    <div class="feed-container">
+      <div class="feed-scroll">
+        ${feedHtml}${feedHtml}
       </div>
     </div>
   `;
-
-  // Auto-scroll logic for slow motion running effect
-  const scrollBox = document.getElementById("feedScrollBox");
-  if (scrollBox && feed.length > 1) {
-    let scrollAmount = 0;
-    setInterval(() => {
-      if (scrollBox.scrollWidth <= scrollBox.clientWidth) return;
-      scrollBox.scrollLeft += 1;
-      if (scrollBox.scrollLeft >= (scrollBox.scrollWidth - scrollBox.clientWidth - 1)) {
-        scrollBox.scrollLeft = 0; // Loop back
-      }
-    }, 40); // speed (higher = slower)
-  }
 }
 </script>
 </body>
