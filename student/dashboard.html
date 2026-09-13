@@ -8,7 +8,6 @@
 <style>
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; } }
 
-  /* ===== Section + card entrance ===== */
   .glass.card {
     animation: cardRise 420ms cubic-bezier(.22,.9,.3,1) both;
     transition: transform var(--transition-lift, 220ms ease), box-shadow var(--transition-lift, 220ms ease);
@@ -20,13 +19,11 @@
   }
   .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 
-  /* Stagger the 4 summary stat cards and subject cards without inline delays scattered everywhere */
   #statsSection .grid-2 .glass.card:nth-child(1) { animation-delay: 40ms; }
   #statsSection .grid-2 .glass.card:nth-child(2) { animation-delay: 90ms; }
   #statsSection .grid-2 .glass.card:nth-child(3) { animation-delay: 140ms; }
   #statsSection .grid-2 .glass.card:nth-child(4) { animation-delay: 190ms; }
 
-  /* ===== Trend bars: grow-in from 0, gradient shimmer, tap-friendly tooltip stays native title ===== */
   .trend-bar {
     flex: 1; border-radius: 6px 6px 0 0;
     background: linear-gradient(180deg, var(--color-accent), var(--color-accent-2));
@@ -37,17 +34,12 @@
   }
   @keyframes trendShimmer { 0% { background-position: 0 0%; } 100% { background-position: 0 100%; } }
 
-  /* ===== Subject progress bars: animate width grow-in from 0 =====
-     (No !important here — that was overriding the JS-set inline width
-     forever, which is why the bars always looked like an empty white
-     track. Plain 0% only applies before JS sets the real width.) */
   .progress-track { overflow: hidden; }
   .progress-fill {
     width: 0%;
     transition: width 900ms cubic-bezier(.22,.9,.3,1);
   }
 
-  /* ===== Weak topic alert icon: gentle pulse to draw the eye without being alarming ===== */
   .weak-alert-icon { animation: weakPulse 2.2s ease-in-out infinite; }
   @keyframes weakPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
 
@@ -63,9 +55,10 @@
 <script type="module">
 import { initTheme, toggleTheme, icons, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
 import { getActiveStudent, refreshActiveStudent } from "../js/utils/student-utils.js";
-import { subscribeToUpcomingExams, getApprovedResults, getStudentResultStatusMap } from "../js/utils/results-utils.js";
+import { subscribeToUpcomingExams, getApprovedResults, getStudentResultStatusMap, getStudentRank } from "../js/utils/results-utils.js";
 import { getSubjects, getChapters, buildNameMap } from "../js/utils/syllabus-utils.js";
 import { computeOverallStats, computeSubjectStats, computeTopicStats } from "../js/utils/analytics-utils.js";
+import { generateMotivation } from "../js/utils/motivation-utils.js";
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -74,17 +67,12 @@ let student = getActiveStudent();
 if (!student) {
   window.location.href = "../index.html";
 } else {
-  // Pull the latest name/photo/status from Firestore before rendering —
-  // fixes the "admin changed my photo but I still see the old one" bug,
-  // since getActiveStudent() alone only ever returns a stale local snapshot.
   refreshActiveStudent(student.docId).then(fresh => {
     if (fresh) student = fresh;
     render();
   });
 }
 
-// Count a number up from 0 to `target` inside `el`. Jumps straight to the
-// value when the user prefers reduced motion.
 function animateCountUp(el, target, duration = 800, suffix = "") {
   if (!el || typeof target !== "number" || isNaN(target)) return;
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -102,6 +90,7 @@ function animateCountUp(el, target, duration = 800, suffix = "") {
 async function render() {
   shell.innerHTML = `
     ${renderStudentHeader(student, "dashboard")}
+    <div id="motivationSection"></div>
     <div id="upcomingSection" class="mt-4"></div>
     <div id="statsSection" class="mt-5"></div>
     <div id="subjectSection" class="mt-5"></div>
@@ -113,13 +102,57 @@ async function render() {
   `;
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
 
+  loadMotivation();
   loadUpcoming();
   loadPerformance();
 }
 
-// ---------- Upcoming exams ----------
-// LIVE: subscribes instead of one-time-fetching, so an exam the admin just
-// created/published shows up here instantly — no page refresh needed.
+async function loadMotivation() {
+  const el = document.getElementById("motivationSection");
+  try {
+    const [rank, results, subjects] = await Promise.all([
+      getStudentRank(student.studentId),
+      getApprovedResults(student.studentId),
+      getSubjects()
+    ]);
+    
+    if (results.length === 0) return; 
+
+    const overall = computeOverallStats(results);
+    const subjectStats = computeSubjectStats(results, buildNameMap(subjects));
+    let weakest = null, strongest = null;
+    (subjectStats || []).forEach(s => {
+      if (!weakest || s.accuracy < weakest.accuracy) weakest = s;
+      if (!strongest || s.accuracy > strongest.accuracy) strongest = s;
+    });
+
+    const advice = generateMotivation({
+      overallPercentage: overall?.avgPercentage,
+      rank: rank?.rank,
+      totalStudents: rank?.totalStudents,
+      examsTaken: overall?.examsTaken ?? results.length,
+      weakestSubjectName: weakest?.name,
+      weakestSubjectAccuracy: weakest?.accuracy,
+      strongestSubjectName: strongest?.name !== weakest?.name ? strongest?.name : null,
+      strongestSubjectAccuracy: strongest?.accuracy
+    });
+
+    el.innerHTML = `
+      <div class="glass card mt-4" style="background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(37,99,235,0.08)); border: 1px solid rgba(124,58,237,0.2);">
+        <div class="flex items-start gap-3">
+          <span style="font-size:1.4rem;">💡</span>
+          <div>
+            <p class="text-sm" style="font-weight:700; color: var(--color-accent); margin-bottom:4px;">আজকের বিশ্লেষণ</p>
+            <p class="text-sm" style="line-height:1.6; color: var(--text-secondary);">${advice}</p>
+          </div>
+        </div>
+      </div>
+    `;
+  } catch (err) {
+    console.error("Motivation load failed:", err);
+  }
+}
+
 let unsubscribeUpcoming = null;
 async function loadUpcoming() {
   const el = document.getElementById("upcomingSection");
@@ -185,7 +218,6 @@ function renderUpcomingExams(el, exams, subjectMap, chapterMap, resultMap) {
   }).join("");
 }
 
-// ---------- Performance summary + subject breakdown + weak topics ----------
 async function loadPerformance() {
   const statsEl = document.getElementById("statsSection");
   const subjEl = document.getElementById("subjectSection");
@@ -244,7 +276,6 @@ async function loadPerformance() {
       });
     });
 
-    // Subject breakdown
     const subjects = await getSubjects();
     const subjectMap = buildNameMap(subjects);
     const subjectStats = computeSubjectStats(results, subjectMap);
@@ -267,7 +298,6 @@ async function loadPerformance() {
       });
     });
 
-    // Weak topics
     const { getTopics } = await import("../js/utils/syllabus-utils.js");
     const topics = await getTopics();
     const topicMap = buildNameMap(topics);
