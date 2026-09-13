@@ -468,23 +468,19 @@ import {
 } from "../js/utils/student-utils.js";
 
 import {
-  getLeaderboardData, getUpcomingExams
+  getLeaderboardData, getUpcomingExams, getAllApprovedResults
 } from "../js/utils/results-utils.js";
 
 import {
   getMyFriendIds, getOutgoingRequests, sendFriendRequest
 } from "../js/utils/friend-utils.js";
 
+import { getSubjects } from "../js/utils/syllabus-utils.js";
+
 import {
   getIncomingChallenges, getOutgoingChallenges,
   sendChallenge, acceptChallenge, rejectChallenge
 } from "../js/utils/challenge-utils.js";
-
-import {
-  collection, query, where, onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-
-import { db } from "../js/firebase/firebase-config.js";
 
 initTheme();
 
@@ -501,7 +497,8 @@ let selectedFriendIdForChallenge = null;
 let liveActivities = [];
 let liveActivityIndex = 0;
 let liveActivityTimer = null;
-let unsubscribeLiveResults = null;
+let liveRefreshTimer = null;
+let liveSubjectsMap = {};
 
 /* ---------- Safety / display helpers ---------- */
 
@@ -545,15 +542,12 @@ function getResultSubjectText(result) {
   if (result.subjectName) return result.subjectName;
   if (result.subject) return result.subject;
 
-  const list = Array.isArray(result.subjectBreakdown)
-    ? result.subjectBreakdown
-    : [];
+  const list = Array.isArray(result.subjectBreakdown) ? result.subjectBreakdown : [];
+  const names = list.map(x => liveSubjectsMap[x.subjectId]).filter(Boolean);
 
-  if (list.length === 1 && list[0]?.subjectName) return list[0].subjectName;
-
-  if (list.length > 1) return `${list.length}টি বিষয়`;
+  if (names.length === 1) return names[0];
+  if (names.length > 1) return names.slice(0, 2).join(" + ") + (names.length > 2 ? ` + ${names.length - 2}টি` : "");
   if (list.length === 1) return "বিষয়ভিত্তিক পরীক্ষা";
-
   return "পরীক্ষা";
 }
 
@@ -1082,62 +1076,52 @@ document.getElementById("confirmChallengeBtn").onclick = async () => {
    No fake activity is generated.
    ========================================================= */
 
-function startLiveResultsListener() {
-  if (!student || !myFriendIds.length) {
-    renderLiveActivities([]);
-    return;
-  }
+async function refreshLiveResults() {
+  try {
+    const [results, students, subjects] = await Promise.all([
+      getAllApprovedResults(),
+      getActiveStudents(),
+      getSubjects(true)
+    ]);
 
-  if (unsubscribeLiveResults) {
-    unsubscribeLiveResults();
-    unsubscribeLiveResults = null;
-  }
+    liveSubjectsMap = {};
+    subjects.forEach(sub => {
+      liveSubjectsMap[sub.id] = sub.name_bn || sub.name_en || sub.id;
+    });
 
-  const q = query(
-    collection(db, "results"),
-    where("status", "==", "approved")
-  );
+    const studentMap = {};
+    students.forEach(s => { studentMap[s.studentId] = s; });
 
-  unsubscribeLiveResults = onSnapshot(
-    q,
-    async snap => {
-      try {
-        const students = await getActiveStudents();
-        const studentMap = {};
-        students.forEach(s => studentMap[s.studentId] = s);
+    liveActivities = results
+      .map(r => buildActivityFromResult(r, studentMap))
+      .filter(Boolean)
+      .sort((a,b) => getMillis(b.submittedAt) - getMillis(a.submittedAt))
+      .slice(0, 10);
 
-        const activities = snap.docs
-          .map(d => ({ id:d.id, ...d.data() }))
-          .map(r => buildActivityFromResult(r, studentMap))
-          .filter(Boolean)
-          .sort((a,b) => getMillis(b.submittedAt) - getMillis(a.submittedAt))
-          .slice(0, 10);
+    if (liveActivityIndex >= liveActivities.length) liveActivityIndex = 0;
+    renderLiveActivities();
 
-        liveActivities = activities;
-
-        if (liveActivityIndex >= liveActivities.length) {
-          liveActivityIndex = 0;
-        }
-
-        renderLiveActivities();
-
-        /* Recalculate the existing leaderboard when a result changes. */
-        const latestBoard = await getLeaderboardData(students);
-
-        if (Array.isArray(latestBoard)) {
-          allLeaderboard = latestBoard;
-          renderClassFilterRow();
-          await renderLeaderboardList();
-        }
-      } catch (err) {
-        console.error("Live result processing failed:", err);
-      }
-    },
-    err => {
-      console.error("Live result listener failed:", err);
-      renderLiveActivities([]);
+    /* Keep the existing leaderboard calculation; never calculate points here. */
+    const latestBoard = await getLeaderboardData(students);
+    if (Array.isArray(latestBoard)) {
+      allLeaderboard = latestBoard;
+      renderClassFilterRow();
+      await renderLeaderboardList();
     }
-  );
+  } catch (err) {
+    console.error("Live activity refresh failed:", err);
+    /* Do not replace the whole page with a spinner if live feed fails. */
+  }
+}
+
+function startLiveResultsListener() {
+  if (liveRefreshTimer) clearInterval(liveRefreshTimer);
+
+  /* Initial load + automatic refresh every 10 seconds.
+     This deliberately uses the existing results-utils data layer so this page
+     does not need to know/export the Firebase db instance itself. */
+  refreshLiveResults();
+  liveRefreshTimer = setInterval(refreshLiveResults, 10000);
 }
 
 function renderLiveActivities(list = liveActivities) {
@@ -1225,632 +1209,7 @@ function renderLiveActivities(list = liveActivities) {
 
   updateLiveSlider();
   restartLiveSlider();
-}!DOCTYPE html>
-<html lang="bn">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>লিডারবোর্ড — পরীক্ষা প্রস্তুতি</title>
-<link rel="stylesheet" href="../css/style.css">
-
-<style>
-  @media (prefers-reduced-motion: reduce) {
-    *,*::before,*::after { animation-duration:.001ms!important; transition-duration:.001ms!important; }
-  }
-
-  :root {
-    --lb-glass: rgba(128,128,128,.075);
-    --lb-glass-strong: rgba(128,128,128,.115);
-    --lb-border: rgba(128,128,128,.16);
-    --lb-shadow: 0 18px 55px rgba(0,0,0,.07);
-  }
-
-  .num { font-family:var(--font-num); font-variant-numeric:tabular-nums; }
-
-  .lb-page { padding-bottom:28px; }
-
-  .glass-float-card {
-    background:var(--lb-glass);
-    backdrop-filter:blur(16px);
-    -webkit-backdrop-filter:blur(16px);
-    border:1px solid var(--lb-border);
-    border-radius:18px;
-    box-shadow:var(--lb-shadow);
-  }
-
-  .btn-glass {
-    appearance:none;
-    border:1px solid var(--lb-border);
-    background:var(--lb-glass);
-    color:var(--text-primary);
-    border-radius:11px;
-    min-height:38px;
-    padding:8px 12px;
-    font:inherit;
-    font-size:.76rem;
-    font-weight:800;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:7px;
-    cursor:pointer;
-    transition:transform .18s ease, background .18s ease, border-color .18s ease;
-    text-decoration:none;
-    white-space:nowrap;
-  }
-
-  .btn-glass:hover { background:var(--lb-glass-strong); }
-  .btn-glass:active { transform:scale(.96); }
-  .btn-primary {
-    background:var(--color-accent);
-    color:#fff;
-    border-color:var(--color-accent);
-  }
-  .btn-danger {
-    color:#ef4444;
-    border-color:rgba(239,68,68,.28);
-  }
-
-  .lb-icon { width:17px; height:17px; flex-shrink:0; }
-  .lb-icon-lg { width:19px; height:19px; flex-shrink:0; }
-
-  /* Intro */
-  .lb-hero {
-    position:relative;
-    overflow:hidden;
-    margin-top:16px;
-    padding:22px 20px;
-  }
-  .lb-hero::before {
-    content:"";
-    position:absolute;
-    width:150px;height:150px;
-    right:-55px;top:-75px;
-    border-radius:50%;
-    background:var(--color-accent-soft);
-    opacity:.75;
-  }
-  .lb-kicker {
-    display:flex;
-    align-items:center;
-    gap:8px;
-    color:var(--color-accent);
-    font-size:.7rem;
-    font-weight:900;
-    letter-spacing:.08em;
-    text-transform:uppercase;
-  }
-  .lb-hero h1 {
-    position:relative;
-    margin:6px 0 7px;
-    font-size:1.7rem;
-    line-height:1.15;
-    font-weight:950;
-  }
-  .lb-hero p {
-    position:relative;
-    margin:0;
-    color:var(--text-secondary);
-    font-size:.82rem;
-    line-height:1.65;
-  }
-
-  /* Help */
-  .lb-top-tools { display:flex; justify-content:flex-end; margin:9px 0 2px; }
-  .lb-help-btn { width:40px; height:40px; padding:0; border-radius:13px; }
-  .lb-help-panel {
-    display:none;
-    margin-bottom:12px;
-    animation:lbOpen .22s ease;
-  }
-  .lb-help-panel.show { display:block; }
-  @keyframes lbOpen {
-    from { opacity:0; transform:translateY(-5px); }
-    to { opacity:1; transform:translateY(0); }
-  }
-  .lb-help-inner { padding:16px; }
-  .lb-help-title {
-    font-size:.88rem;
-    font-weight:950;
-    margin-bottom:10px;
-  }
-  .lb-help-row {
-    display:flex;
-    align-items:flex-start;
-    gap:9px;
-    color:var(--text-secondary);
-    font-size:.75rem;
-    line-height:1.6;
-    margin-top:8px;
-  }
-  .lb-help-row:first-of-type { margin-top:0; }
-  .lb-dot {
-    width:6px;height:6px;border-radius:50%;
-    background:var(--color-accent);
-    margin-top:7px;flex-shrink:0;
-  }
-
-  /* Points explainer */
-  .points-card { margin-top:10px; padding:15px; }
-  .points-head {
-    display:flex; align-items:center; justify-content:space-between; gap:10px;
-    margin-bottom:9px;
-  }
-  .points-title { font-size:.83rem; font-weight:950; }
-  .points-formula {
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:7px;
-  }
-  .points-item {
-    border:1px solid var(--lb-border);
-    border-radius:12px;
-    padding:10px 8px;
-    background:rgba(128,128,128,.045);
-    min-width:0;
-  }
-  .points-value { font-size:.95rem; font-weight:950; }
-  .points-label {
-    margin-top:3px;
-    color:var(--text-muted);
-    font-size:.62rem;
-    line-height:1.35;
-  }
-  .points-note {
-    margin-top:9px;
-    color:var(--text-muted);
-    font-size:.65rem;
-    line-height:1.5;
-  }
-
-  /* Live */
-  .live-section { margin-top:14px; }
-  .live-head {
-    display:flex; align-items:center; justify-content:space-between;
-    gap:10px; margin-bottom:9px;
-  }
-  .live-title {
-    display:flex; align-items:center; gap:8px;
-    font-size:.88rem; font-weight:950;
-  }
-  .live-status {
-    display:inline-flex; align-items:center; gap:5px;
-    border-radius:99px;
-    padding:5px 9px;
-    background:rgba(34,197,94,.08);
-    color:#16a34a;
-    font-size:.61rem;
-    font-weight:900;
-  }
-  .live-dot {
-    width:6px;height:6px;border-radius:50%;
-    background:#22c55e;
-    animation:livePulse 1.5s ease-in-out infinite;
-  }
-  @keyframes livePulse {
-    0%,100% { opacity:.45; transform:scale(.82); }
-    50% { opacity:1; transform:scale(1.12); }
-  }
-
-  .live-slider {
-    overflow:hidden;
-    position:relative;
-    min-height:112px;
-    border-radius:17px;
-    border:1px solid var(--lb-border);
-    background:linear-gradient(135deg,rgba(128,128,128,.09),rgba(128,128,128,.025));
-  }
-  .live-track {
-    display:flex;
-    width:100%;
-    transition:transform .45s cubic-bezier(.2,.8,.2,1);
-  }
-  .live-card {
-    min-width:100%;
-    box-sizing:border-box;
-    display:flex;
-    align-items:center;
-    gap:11px;
-    padding:17px 14px 22px;
-  }
-  .live-avatar {
-    width:42px;height:42px;border-radius:13px;
-    overflow:hidden;display:flex;align-items:center;justify-content:center;
-    flex-shrink:0;
-    background:var(--color-accent-soft);
-    color:var(--color-accent);
-    font-weight:950;
-  }
-  .live-avatar img { width:100%;height:100%;object-fit:cover; }
-  .live-copy { flex:1;min-width:0; }
-  .live-line {
-    font-size:.76rem;line-height:1.5;color:var(--text-primary);
-  }
-  .live-line strong { font-weight:950; }
-  .live-meta {
-    margin-top:3px;color:var(--text-muted);
-    font-size:.62rem;line-height:1.45;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  }
-  .live-score {
-    flex-shrink:0;
-    border-radius:10px;
-    padding:6px 8px;
-    background:var(--color-accent-soft);
-    color:var(--color-accent);
-    font-size:.67rem;font-weight:950;
-    text-align:center;
-  }
-  .live-controls {
-    position:absolute;left:50%;bottom:6px;
-    transform:translateX(-50%);
-    display:flex;gap:5px;
-  }
-  .live-control {
-    width:6px;height:6px;padding:0;border:0;border-radius:50%;
-    background:rgba(128,128,128,.28);cursor:pointer;
-  }
-  .live-control.active { background:var(--color-accent); transform:scale(1.15); }
-  .live-empty {
-    padding:19px 14px;color:var(--text-muted);
-    font-size:.72rem;line-height:1.6;
-  }
-  .live-note {
-    margin:6px 2px 0;color:var(--text-muted);font-size:.61rem;
-  }
-
-  /* Leaderboard controls */
-  .lb-section { margin-top:17px; }
-  .lb-section-head {
-    display:flex;align-items:center;justify-content:space-between;
-    gap:10px;margin-bottom:9px;
-  }
-  .lb-section-title {
-    display:flex;align-items:center;gap:7px;
-    font-size:1.05rem;font-weight:950;
-  }
-  .lb-live-badge {
-    display:inline-flex;align-items:center;gap:5px;
-    color:#16a34a;background:rgba(34,197,94,.08);
-    border-radius:99px;padding:4px 7px;font-size:.59rem;font-weight:900;
-  }
-  .lb-filter-row {
-    display:flex;gap:7px;overflow-x:auto;padding:1px 1px 7px;
-    scrollbar-width:none;
-  }
-  .lb-filter-row::-webkit-scrollbar { display:none; }
-  .filter-btn { min-height:34px;padding:7px 11px;font-size:.7rem;flex-shrink:0; }
-  .filter-btn.active { background:var(--color-accent);color:#fff;border-color:var(--color-accent); }
-
-  /* Rows */
-  .lb-list-card { padding:6px; }
-  .lb-row {
-    display:flex;align-items:center;gap:10px;
-    padding:15px 10px;
-    border-bottom:1px dashed rgba(128,128,128,.15);
-  }
-  .lb-row:last-child { border-bottom:none; }
-  .lb-row.is-me {
-    margin:4px 0;
-    padding:12px 9px;
-    border:1px solid rgba(234,179,8,.28);
-    border-radius:13px;
-    background:linear-gradient(135deg,#fefce8,#fef08a);
-  }
-  .lb-row.is-me .lb-name { color:#713f12; }
-  .lb-row.is-me .points-pill { color:#713f12;background:rgba(113,63,18,.1); }
-
-  .rank-number {
-    width:23px;flex-shrink:0;text-align:center;
-    color:var(--text-muted);font-size:.77rem;font-weight:950;
-  }
-  .lb-avatar {
-    width:46px;height:46px;border-radius:50%;overflow:hidden;flex-shrink:0;
-    display:flex;align-items:center;justify-content:center;
-    background:var(--color-accent-soft);color:var(--color-accent);
-    font-weight:950;
-  }
-  .lb-avatar img { width:100%;height:100%;object-fit:cover; }
-  .lb-main { flex:1;min-width:0; }
-  .lb-name {
-    font-size:.86rem;font-weight:900;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-    margin-bottom:4px;
-  }
-  .lb-subline {
-    display:flex;align-items:center;gap:5px;min-width:0;
-  }
-  .points-pill {
-    display:inline-flex;align-items:center;
-    border-radius:99px;padding:3px 8px;
-    background:rgba(128,128,128,.1);
-    color:var(--text-secondary);
-    font-size:.62rem;font-weight:900;
-  }
-  .avg-pill {
-    color:var(--text-muted);font-size:.6rem;font-weight:800;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  }
-  .lb-actions { display:flex;align-items:center;gap:5px;flex-shrink:0; }
-  .action-btn { width:37px;min-height:37px;padding:0;border-radius:10px; }
-  .text-action { min-height:34px;padding:6px 9px;font-size:.65rem; }
-
-
-  .live-detail-grid {
-    display:flex;
-    flex-wrap:wrap;
-    gap:5px;
-    margin-top:7px;
-  }
-  .live-detail {
-    display:inline-flex;
-    align-items:center;
-    gap:4px;
-    padding:4px 7px;
-    border-radius:8px;
-    background:rgba(128,128,128,.08);
-    color:var(--text-secondary);
-    font-size:.59rem;
-    font-weight:850;
-  }
-  .live-detail strong { color:var(--text-primary); }
-  .live-compare {
-    margin-top:6px;
-    font-size:.62rem;
-    font-weight:900;
-    line-height:1.45;
-  }
-  .live-compare.ahead { color:#16a34a; }
-  .live-compare.behind { color:#ef4444; }
-  .live-compare.equal { color:var(--text-muted); }
-  .live-updated {
-    margin-top:2px;
-    color:var(--text-muted);
-    font-size:.55rem;
-  }
-  .live-syncing {
-    font-size:.58rem;
-    color:var(--text-muted);
-    font-weight:800;
-  }
-
-  /* Challenge */
-  .challenge-card { margin-top:12px;padding:14px; }
-  .challenge-kicker {
-    color:#ef4444;font-size:.63rem;font-weight:950;
-    letter-spacing:.05em;margin-bottom:7px;
-  }
-  .challenge-row {
-    display:flex;align-items:center;justify-content:space-between;
-    gap:10px;padding:9px 0;border-bottom:1px dashed var(--lb-border);
-  }
-  .challenge-row:last-child { border-bottom:0;padding-bottom:0; }
-  .challenge-row:first-of-type { padding-top:0; }
-  .challenge-name { font-size:.75rem;font-weight:900; }
-  .challenge-exam { margin-top:3px;font-size:.62rem;color:var(--text-muted); }
-
-  /* Modal */
-  .modal-overlay {
-    position:fixed;inset:0;z-index:9999;
-    display:flex;align-items:center;justify-content:center;
-    padding:20px;
-    background:rgba(0,0,0,.62);
-    backdrop-filter:blur(7px);
-    -webkit-backdrop-filter:blur(7px);
-  }
-  .challenge-modal {
-    width:100%;max-width:410px;
-    padding:20px;
-    background:var(--surface);
-  }
-  .modal-title { font-size:1.05rem;font-weight:950;margin-bottom:5px; }
-  .modal-copy { color:var(--text-muted);font-size:.72rem;line-height:1.55;margin-bottom:13px; }
-  .challenge-select {
-    width:100%;box-sizing:border-box;
-    padding:12px;border-radius:11px;
-    border:1px solid var(--surface-border);
-    background:var(--surface);
-    color:var(--text-primary);
-    font:inherit;font-size:.78rem;font-weight:700;
-    outline:none;
-  }
-
-  @media (max-width:430px) {
-    .points-formula { grid-template-columns:1fr 1fr 1fr; }
-    .lb-actions .compare-label { display:none; }
-    .lb-row { gap:8px; }
-    .lb-avatar { width:39px;height:39px; }
-  }
-</style>
-</head>
-
-<body>
-<div class="app-shell" id="shell">
-  <div class="state-block"><div class="spinner"></div></div>
-</div>
-
-<!-- Challenge modal -->
-<div id="challengeModal" class="modal-overlay" style="display:none;">
-  <div class="glass-float-card challenge-modal">
-    <div class="modal-title">বন্ধুকে চ্যালেঞ্জ করো</div>
-    <div class="modal-copy">
-      একটি আসন্ন পরীক্ষা বেছে নিয়ে বন্ধুকে challenge পাঠাও। দুজনের জন্য healthy competition তৈরি হবে।
-    </div>
-    <div id="challengeModalBody"><div class="spinner"></div></div>
-    <div class="flex gap-2 mt-4">
-      <button class="btn-glass" id="closeChallengeModal" style="flex:1;">বাতিল</button>
-      <button class="btn-glass btn-danger" id="confirmChallengeBtn" style="flex:1;display:none;">চ্যালেঞ্জ পাঠাও</button>
-    </div>
-  </div>
-</div>
-
-<script type="module">
-import {
-  initTheme, toggleTheme, renderState, renderStudentHeader,
-  showToast, friendlyError
-} from "../js/utils/ui-utils.js";
-
-import {
-  getActiveStudent, refreshActiveStudent, getActiveStudents
-} from "../js/utils/student-utils.js";
-
-import {
-  getLeaderboardData, getUpcomingExams
-} from "../js/utils/results-utils.js";
-
-import {
-  getMyFriendIds, getOutgoingRequests, sendFriendRequest
-} from "../js/utils/friend-utils.js";
-
-import {
-  getIncomingChallenges, getOutgoingChallenges,
-  sendChallenge, acceptChallenge, rejectChallenge
-} from "../js/utils/challenge-utils.js";
-
-import {
-  collection, query, where, onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-
-import { db } from "../js/firebase/firebase-config.js";
-
-initTheme();
-
-const shell = document.getElementById("shell");
-let student = getActiveStudent();
-
-let allLeaderboard = [];
-let myFriendIds = [];
-let activeClassFilter = "all";
-let friendsOnly = false;
-let upcomingExamsCache = null;
-let selectedFriendIdForChallenge = null;
-
-let liveActivities = [];
-let liveActivityIndex = 0;
-let liveActivityTimer = null;
-let unsubscribeLiveResults = null;
-
-/* ---------- Safety / display helpers ---------- */
-
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
 }
-
-function getMillis(value) {
-  if (!value) return 0;
-  if (typeof value.toMillis === "function") return value.toMillis();
-  if (value instanceof Date) return value.getTime();
-  const n = new Date(value).getTime();
-  return Number.isFinite(n) ? n : 0;
-}
-
-function relativeTime(value) {
-  const ms = getMillis(value);
-  if (!ms) return "এইমাত্র";
-
-  const diff = Math.max(0, Date.now() - ms);
-  const min = Math.floor(diff / 60000);
-
-  if (min < 1) return "এইমাত্র";
-  if (min < 60) return `${min} মিনিট আগে`;
-
-  const hour = Math.floor(min / 60);
-  if (hour < 24) return `${hour} ঘণ্টা আগে`;
-
-  const day = Math.floor(hour / 24);
-  if (day < 30) return `${day} দিন আগে`;
-
-  return `${Math.floor(day / 30)} মাস আগে`;
-}
-
-function getResultSubjectText(result) {
-  if (result.subjectName) return result.subjectName;
-  if (result.subject) return result.subject;
-
-  const list = Array.isArray(result.subjectBreakdown)
-    ? result.subjectBreakdown
-    : [];
-
-  if (list.length === 1 && list[0]?.subjectName) return list[0].subjectName;
-
-  if (list.length > 1) return `${list.length}টি বিষয়`;
-  if (list.length === 1) return "বিষয়ভিত্তিক পরীক্ষা";
-
-  return "পরীক্ষা";
-}
-
-function buildActivityFromResult(result, studentMap) {
-  const friend = studentMap[result.studentId];
-  if (!friend) return null;
-  if (!myFriendIds.includes(result.studentId)) return null;
-
-  const marks = Number(result.obtainedMarks);
-  const total = Number(result.totalMarks);
-  const pct = Number(result.percentage);
-  const correct = Number(result.correctCount) || 0;
-  const wrong = Number(result.wrongCount) || 0;
-  const unanswered = Number(result.unansweredCount) || 0;
-
-  const mine = allLeaderboard.find(r => r.studentId === student.studentId);
-  const friendBoard = allLeaderboard.find(r => r.studentId === result.studentId);
-
-  const pointGap = mine && friendBoard
-    ? (Number(friendBoard.totalPoints) || 0) - (Number(mine.totalPoints) || 0)
-    : null;
-
-  const percentageGap = Number.isFinite(pct) && mine && Number.isFinite(Number(mine.avgPercentage))
-    ? Math.round((pct - Number(mine.avgPercentage)) * 10) / 10
-    : null;
-
-  let comparison = "সমান";
-  if (pointGap !== null) {
-    if (pointGap > 0) comparison = `${pointGap} points এগিয়ে`;
-    else if (pointGap < 0) comparison = `${Math.abs(pointGap)} points পিছিয়ে`;
-  } else if (percentageGap !== null) {
-    if (percentageGap > 0) comparison = `${percentageGap}% এগিয়ে`;
-    else if (percentageGap < 0) comparison = `${Math.abs(percentageGap)}% পিছিয়ে`;
-  }
-
-  return {
-    id: result.id || `${result.examId}_${result.studentId}`,
-    studentId: result.studentId,
-    name: friend.name || "বন্ধু",
-    photoURL: friend.photoURL || null,
-    subject: getResultSubjectText(result),
-    examName: result.examName || "পরীক্ষা",
-    obtainedMarks: Number.isFinite(marks) ? marks : null,
-    totalMarks: Number.isFinite(total) ? total : null,
-    percentage: Number.isFinite(pct) ? pct : null,
-    correctCount: correct,
-    wrongCount: wrong,
-    unansweredCount: unanswered,
-    submittedAt: result.submittedAt || result.approvedAt || null,
-    pointGap,
-    percentageGap,
-    comparison
-  };
-}
-
-/* ---------- Main page ---------- */
-
-if (!student) {
-  window.location.href = "../index.html";
-} else {
-  refreshActiveStudent(student.docId).then(fresh => {
-    if (fresh) student = fresh;
-    render();
-  });
-}
-
-window.addEventListener("beforeunload", () => {
-  if (unsubscribeLiveResults) unsubscribeLiveResults();
-  if (liveActivityTimer) clearInterval(liveActivityTimer);
-});
 </script>
 </body>
 </html>
