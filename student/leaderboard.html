@@ -65,8 +65,8 @@
   .live-card { min-width:100%; box-sizing:border-box; padding:16px; }
   .live-card-inner { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:12px; }
   
-  .live-avatar { width:48px; height:48px; border-radius:14px; overflow:hidden; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:var(--color-accent-soft); color:var(--color-accent); font-weight:950; font-size:1.1rem; }
-  .live-avatar img { width:100%; height:100%; object-fit:cover; }
+  .live-avatar { width:48px; height:48px; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:var(--color-accent-soft); color:var(--color-accent); font-weight:950; font-size:1.1rem; }
+  .live-avatar img { width:100%; height:100%; object-fit:cover; pointer-events:none; user-select:none; -webkit-user-select:none; }
   .live-copy { min-width:0; }
   .live-name { font-size:.85rem; line-height:1.3; font-weight:950; color:var(--text-primary); }
   .live-exam { margin-top:4px; color:var(--text-muted); font-size:.7rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -120,7 +120,7 @@
   <div class="state-block"><div class="spinner"></div></div>
 </div>
 
-<!-- Challenge Modal (Glassmorphism & SVGs) -->
+<!-- Challenge Modal -->
 <div id="challengeModal" class="modal-overlay" style="display:none;">
   <div class="challenge-modal glass-float-card">
     <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
@@ -331,7 +331,6 @@ async function renderLeaderboardList() {
     const isMe = r.studentId === student.studentId;
     const isFriend = myFriendIds.includes(r.studentId);
     
-    // Target Badge (Pure SVG)
     const isTarget = (!isMe && myIndex > 0 && i === myIndex - 1 && !friendsOnly);
     const targetBadge = isTarget ? `<span class="target-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg> টার্গেট</span>` : "";
 
@@ -358,10 +357,15 @@ async function renderLeaderboardList() {
       }
     }
 
+    // PRIVACY FIX: Added draggable="false" and oncontextmenu="return false" along with pointer-events: none to prevent download
+    const avatar = r.photoURL 
+      ? `<img src="${escapeHtml(r.photoURL)}" alt="" draggable="false" oncontextmenu="return false" style="pointer-events:none; user-select:none; -webkit-user-select:none;">` 
+      : escapeHtml((r.name || "শ").charAt(0));
+
     return `
       <div class="lb-row ${isMe ? "is-me" : ""}">
         <span class="rank-number">${i + 1}.</span>
-        <span class="lb-avatar">${r.photoURL ? `<img src="${escapeHtml(r.photoURL)}" alt="">` : escapeHtml((r.name || "শ").charAt(0))}</span>
+        <span class="lb-avatar">${avatar}</span>
         <div class="lb-main">
           <p class="lb-name">${escapeHtml(r.name || r.studentId)}${isMe ? " (তুমি)" : ""}${targetBadge}</p>
           <div class="points-pill">
@@ -424,17 +428,17 @@ async function renderIncomingChallenges(students) {
     card.querySelectorAll(".chall-accept").forEach(btn => {
       btn.addEventListener("click", async () => {
         try { await acceptChallenge(btn.dataset.id, student.studentId); showToast("চ্যালেঞ্জ গৃহীত!", "success"); await loadEverything(); } 
-        catch (err) { showToast(friendlyError(err), "error"); }
+        catch (err) { showToast(err.message || friendlyError(err), "error"); }
       });
     });
 
     card.querySelectorAll(".chall-reject").forEach(btn => {
       btn.addEventListener("click", async () => {
         try { await rejectChallenge(btn.dataset.id, student.studentId); await loadEverything(); } 
-        catch (err) { showToast(friendlyError(err), "error"); }
+        catch (err) { showToast(err.message || friendlyError(err), "error"); }
       });
     });
-  } catch (err) { console.error(err); }
+  } catch (err) { console.error("Incoming challenges failed:", err); }
 }
 
 async function openChallengeModal(friendId) {
@@ -491,12 +495,14 @@ document.getElementById("confirmChallengeBtn").onclick = async () => {
     selectedFriendIdForChallenge = null;
     await renderLeaderboardList();
   } catch (err) {
-    showToast(friendlyError(err), "error");
+    showToast(err.message || friendlyError(err), "error");
     btn.disabled = false;
     btn.textContent = "চ্যালেঞ্জ পাঠাও";
   }
 };
-  /* ===== Live Feed Logic ===== */
+
+  
+/* ===== Live Feed Logic ===== */
 async function refreshLiveResults() {
   try {
     const [results, students, subjects] = await Promise.all([
@@ -515,7 +521,7 @@ async function refreshLiveResults() {
 
     if (liveActivityIndex >= liveActivities.length) liveActivityIndex = 0;
     renderLiveActivities(studentMap);
-  } catch (err) { console.error(err); }
+  } catch (err) { console.error("Live activity refresh failed:", err); }
 }
 
 function startLiveResultsListener() {
@@ -546,13 +552,15 @@ function renderLiveActivities(studentMap) {
   if (!liveActivities.length) {
     track.innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-muted); font-size:0.8rem; width:100%;">এখনো কোনো বন্ধুর আপডেট নেই।</div>`;
     if (liveActivityTimer) clearInterval(liveActivityTimer);
-    liveActivityTimer = null;
-    return;
+    liveActivityTimer = null; return;
   }
 
   track.innerHTML = liveActivities.map(a => {
     const friend = studentMap[a.studentId] || {};
-    const avatar = friend.photoURL ? `<img src="${escapeHtml(friend.photoURL)}" alt="">` : escapeHtml((friend.name || "ব").charAt(0));
+    // PRIVACY FIX: Live Feed Avatar
+    const avatar = friend.photoURL 
+      ? `<img src="${escapeHtml(friend.photoURL)}" alt="" draggable="false" oncontextmenu="return false" style="pointer-events:none; user-select:none; -webkit-user-select:none;">` 
+      : escapeHtml((friend.name || "ব").charAt(0));
     const marks = a.obtainedMarks !== undefined ? `${a.obtainedMarks}/${a.totalMarks}` : "—";
     const pct = a.percentage !== undefined ? `${a.percentage}%` : "—";
     const correct = a.correctCount || 0;
