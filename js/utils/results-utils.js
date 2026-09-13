@@ -94,14 +94,7 @@ export async function getResultById(resultId) {
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
 
-// ---------- This student's rank among every student who has at least one
-// approved result (ranked by each student's own overall average %). Used
-// for the shareable profile card. Returns null if this student has no
-// approved results yet (nothing to rank). ----------
-// ---------- Full leaderboard: every student who has at least one approved
-// result, with their overall average % and exam count, sorted best-first.
-// studentsList should be the array from getActiveStudents() (so this
-// doesn't have to re-fetch it) — includes name/photoURL/className. ----------
+// ---------- Full leaderboard: Sorted by POINTS now instead of just average ----------
 export async function getLeaderboardData(studentsList) {
   const results = await getAllApprovedResults();
   const byStudent = {};
@@ -112,15 +105,25 @@ export async function getLeaderboardData(studentsList) {
   const infoOf = {};
   studentsList.forEach(s => { infoOf[s.studentId] = s; });
 
-  const rows = Object.entries(byStudent).map(([studentId, pcts]) => ({
-    studentId,
-    name: infoOf[studentId]?.name || studentId,
-    photoURL: infoOf[studentId]?.photoURL || null,
-    className: infoOf[studentId]?.className || null,
-    avgPercentage: Math.round((pcts.reduce((a, b) => a + b, 0) / pcts.length) * 10) / 10,
-    examsTaken: pcts.length
-  }));
-  rows.sort((a, b) => b.avgPercentage - a.avgPercentage);
+  const rows = Object.entries(byStudent).map(([studentId, pcts]) => {
+    const sumPct = pcts.reduce((a, b) => a + b, 0);
+    const avgPercentage = Math.round((sumPct / pcts.length) * 10) / 10;
+    // Point formula: 1 point per 1% scored, plus 50 bonus points per exam taken
+    const totalPoints = Math.round(sumPct + (pcts.length * 50));
+    
+    return {
+      studentId,
+      name: infoOf[studentId]?.name || studentId,
+      photoURL: infoOf[studentId]?.photoURL || null,
+      className: infoOf[studentId]?.className || null,
+      avgPercentage,
+      examsTaken: pcts.length,
+      totalPoints
+    };
+  });
+  
+  // Sort by Points
+  rows.sort((a, b) => b.totalPoints - a.totalPoints);
   return rows;
 }
 
@@ -134,33 +137,34 @@ export async function getStudentRank(studentId, classOf = null) {
     byStudent[r.studentId].push(Number(r.percentage) || 0);
   }
 
-  const averages = Object.entries(byStudent).map(([sid, pcts]) => ({
-    studentId: sid,
-    average: pcts.reduce((sum, p) => sum + p, 0) / pcts.length
-  }));
+  const stats = Object.entries(byStudent).map(([sid, pcts]) => {
+    const sumPct = pcts.reduce((sum, p) => sum + p, 0);
+    return {
+      studentId: sid,
+      average: sumPct / pcts.length,
+      totalPoints: Math.round(sumPct + (pcts.length * 50))
+    };
+  });
 
-  if (!averages.some(a => a.studentId === studentId)) return null;
+  if (!stats.some(a => a.studentId === studentId)) return null;
 
-  averages.sort((a, b) => b.average - a.average);
-  const rank = averages.findIndex(a => a.studentId === studentId) + 1;
-  const mine = averages.find(a => a.studentId === studentId);
-  const result = { rank, totalStudents: averages.length, averagePercentage: Math.round(mine.average * 10) / 10 };
+  stats.sort((a, b) => b.totalPoints - a.totalPoints);
+  const rank = stats.findIndex(a => a.studentId === studentId) + 1;
+  const mine = stats.find(a => a.studentId === studentId);
+  const result = { rank, totalStudents: stats.length, averagePercentage: Math.round(mine.average * 10) / 10, totalPoints: mine.totalPoints };
 
-  // Optional: also rank within just this student's own class, given a
-  // { studentId -> className } lookup map (e.g. from getActiveStudents()).
   if (classOf) {
     const myClass = classOf[studentId];
     if (myClass) {
-      const classAverages = averages.filter(a => classOf[a.studentId] === myClass);
-      const classRank = classAverages.findIndex(a => a.studentId === studentId) + 1;
+      const classStats = stats.filter(a => classOf[a.studentId] === myClass);
+      const classRank = classStats.findIndex(a => a.studentId === studentId) + 1;
       if (classRank > 0) {
         result.classRank = classRank;
-        result.classTotalStudents = classAverages.length;
+        result.classTotalStudents = classStats.length;
         result.className = myClass;
       }
     }
   }
-
   return result;
 }
 
@@ -219,4 +223,4 @@ export async function getChapterExamFrequencyMap(chapterIds) {
     });
   }
   return freq;
-}
+                                                          }
