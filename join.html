@@ -6,66 +6,139 @@
 <title>যুক্ত হওয়ার আবেদন — পরীক্ষা প্রস্তুতি</title>
 <link rel="stylesheet" href="./css/style.css">
 <style>
-  body { overflow-x: hidden; }
-  .app-shell { max-width: 460px; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; } }
+  body { overflow-x: hidden; background: var(--bg); }
+  .app-shell { max-width: 460px; padding-bottom: 40px; }
 
-  .masthead { display: flex; align-items: center; justify-content: space-between; padding-top: 6px; }
-  .seal-mark {
-    width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
-    border: 1.5px solid #ff6a2b;
-    display: flex; align-items: center; justify-content: center;
-    color: #ff6a2b; font-weight: 800; font-size: 1.05rem;
-    text-decoration: none;
+  /* ===== Premium Glassmorphism Theme ===== */
+  .glass-float-card {
+    background: rgba(128, 128, 128, 0.05);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(128, 128, 128, 0.15);
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
   }
 
-  .register-head { margin-top: 28px; }
-  .register-head h1 { font-size: 1.5rem; font-weight: 800; color: var(--text-primary); line-height: 1.3; }
-  .register-head p { margin-top: 8px; font-size: 0.86rem; color: var(--text-muted); line-height: 1.55; }
-
-  .join-form { margin-top: 22px; }
-  .join-note {
-    margin-top: 18px; padding: 14px 16px; border-radius: 14px;
-    border: 1px dashed var(--surface-border); font-size: 0.8rem; color: var(--text-muted); line-height: 1.6;
+  .btn-glass {
+    background: rgba(128, 128, 128, 0.08);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(128, 128, 128, 0.2);
+    border-radius: 12px;
+    color: var(--text-primary);
+    padding: 10px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    cursor: pointer; transition: all 0.2s ease; text-decoration: none;
   }
+  .btn-glass:active { transform: scale(0.96); }
 
-  .back-link { display: inline-block; margin-top: 20px; font-size: 0.8rem; color: var(--text-muted); text-decoration: none; }
-  .back-link:hover { color: #ff6a2b; }
+  /* ===== Topbar ===== */
+  .top-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; margin-bottom: 24px; }
+  .nav-btn { width: 42px; height: 42px; padding: 0; border-radius: 50%; }
+  
+  .page-title { text-align: center; margin-bottom: 30px; }
+  .page-title h1 { font-size: 1.6rem; font-weight: 900; color: var(--text-primary); letter-spacing: -0.5px; }
+
+  /* ===== Form Styles ===== */
+  .field { margin-bottom: 18px; }
+  .field label { display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 8px; }
+  .input-glass {
+    width: 100%; box-sizing: border-box; padding: 14px 16px;
+    background: rgba(128, 128, 128, 0.05);
+    border: 1px solid var(--surface-border);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-family: inherit; font-size: 0.95rem; font-weight: 600;
+    outline: none; transition: all 0.3s ease;
+  }
+  .input-glass:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.15); background: var(--surface); }
+  .input-glass::placeholder { color: var(--text-muted); font-weight: 500; }
+
+  .btn-submit {
+    width: 100%; background: var(--color-accent); color: #fff;
+    border: none; border-radius: 12px; padding: 14px;
+    font-size: 1rem; font-weight: 800; font-family: inherit;
+    cursor: pointer; transition: transform 0.2s, background 0.2s;
+    display: flex; justify-content: center; align-items: center; gap: 8px;
+    margin-top: 10px;
+  }
+  .btn-submit:active { transform: scale(0.98); }
+  .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; }
+
+  /* ===== Guide Modal ===== */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  }
+  .guide-modal { width: 100%; max-width: 400px; padding: 24px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 20px; }
+  .modal-title { display: flex; align-items: center; gap: 8px; font-size: 1.15rem; font-weight: 900; margin-bottom: 12px; color: var(--text-primary); }
+  .modal-text { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 8px; }
+  
+  /* Success Message */
+  .success-box { text-align: center; padding: 20px 10px; }
+  .success-icon { width: 50px; height: 50px; color: #10b981; margin: 0 auto 16px; background: rgba(16, 185, 129, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 </style>
 </head>
 <body>
 
 <div class="app-shell">
 
-  <div class="masthead">
-    <a href="./index.html" class="seal-mark">প</a>
-    <button class="theme-toggle" id="themeToggle" aria-label="থিম পরিবর্তন করুন">
-      <span class="theme-toggle-thumb"></span>
-    </button>
+  <!-- Top Navigation -->
+  <div class="top-nav">
+    <a href="./index.html" class="btn-glass nav-btn" aria-label="ফিরে যান">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+    </a>
+    <div style="display: flex; gap: 10px;">
+      <button class="btn-glass" id="guideBtn" style="border-radius: 99px; padding: 8px 14px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        গাইড
+      </button>
+      <button class="theme-toggle" id="themeToggle" aria-label="থিম পরিবর্তন করুন">
+        <span class="theme-toggle-thumb"></span>
+      </button>
+    </div>
   </div>
 
-  <div class="register-head">
+  <div class="page-title">
     <h1>যুক্ত হওয়ার আবেদন করো</h1>
-    <p>তোমার নাম আর ক্লাস লিখে দাও — অ্যাডমিন দেখে অনুমোদন দিলেই তুমি তালিকায় যুক্ত হয়ে যাবে।</p>
   </div>
 
-  <form id="joinForm" class="glass card join-form">
+  <!-- Application Form -->
+  <form id="joinForm" class="glass-float-card">
     <div class="field">
       <label for="nameInput">তোমার নাম</label>
-      <input class="input" id="nameInput" required placeholder="বাংলা বা ইংরেজি অক্ষরে লিখতে পারো">
+      <input class="input-glass" id="nameInput" required placeholder="বাংলা বা ইংরেজি অক্ষরে লিখতে পারো">
     </div>
-    <div class="field mt-3">
+    <div class="field">
       <label for="classInput">ক্লাস</label>
-      <input class="input" id="classInput" required placeholder="যেমন: ৮ম শ্রেণি">
+      <input class="input-glass" id="classInput" required placeholder="যেমন: ৮ম শ্রেণি">
     </div>
-    <button type="submit" class="btn btn-primary mt-4" id="submitBtn" style="width:100%;">আবেদন পাঠাও</button>
+    <button type="submit" class="btn-submit" id="submitBtn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      আবেদন পাঠাও
+    </button>
   </form>
 
-  <div class="join-note">
-    আবেদন পাঠানোর পর সাথে সাথেই তালিকায় নাম আসবে না — অ্যাডমিন যতক্ষণ না দেখে অনুমোদন দেবেন, ততক্ষণ অপেক্ষা করতে হবে।
+</div>
+
+<!-- Guide Modal -->
+<div id="guideModal" class="modal-overlay" style="display:none;">
+  <div class="guide-modal glass-float-card">
+    <div class="modal-title">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+      কীভাবে যুক্ত হবে?
+    </div>
+    <div style="margin-bottom: 20px;">
+      <p class="modal-text">• তোমার সঠিক নাম এবং ক্লাস লিখে আবেদন পাঠাও।</p>
+      <p class="modal-text">• আবেদন পাঠানোর পর সাথে সাথেই তালিকায় নাম আসবে না।</p>
+      <p class="modal-text">• অ্যাডমিন ম্যানুয়ালি তোমার আবেদন দেখে অনুমোদন দেবেন। অনুমোদন পেলে তবেই তুমি মূল তালিকায় নিজের নাম দেখতে পারবে।</p>
+    </div>
+    <button class="btn-glass" id="closeGuideModal" style="width: 100%;">বুঝতে পেরেছি</button>
   </div>
-
-  <a href="./index.html" class="back-link">← তালিকায় ফিরে যাও</a>
-
 </div>
 
 <script type="module">
@@ -75,6 +148,20 @@ import { submitStudentRequest } from "./js/utils/student-requests-utils.js";
 initTheme();
 document.getElementById("themeToggle").addEventListener("click", toggleTheme);
 
+// Modal Logic
+const guideBtn = document.getElementById("guideBtn");
+const guideModal = document.getElementById("guideModal");
+const closeGuideModal = document.getElementById("closeGuideModal");
+
+guideBtn.addEventListener("click", () => {
+  guideModal.style.display = "flex";
+});
+
+closeGuideModal.addEventListener("click", () => {
+  guideModal.style.display = "none";
+});
+
+// Form Logic
 document.getElementById("joinForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const nameInput = document.getElementById("nameInput");
@@ -85,19 +172,31 @@ document.getElementById("joinForm").addEventListener("submit", async (e) => {
   if (!name || !className) return;
 
   btn.disabled = true;
-  btn.textContent = "পাঠানো হচ্ছে...";
+  btn.innerHTML = `<span class="spinner" style="width:16px; height:16px; border-width:2px; border-color:#fff; border-top-color:transparent;"></span> পাঠানো হচ্ছে...`;
+  
   try {
     await submitStudentRequest(name, className);
+    // Success State with SVG
     document.getElementById("joinForm").innerHTML = `
-      <p style="font-weight:700;">আবেদন পাঠানো হয়েছে ✓</p>
-      <p class="text-sm text-muted mt-2">অ্যাডমিন অনুমোদন দিলেই তালিকায় দেখতে পারবে। এই পেজ বন্ধ করে দিতে পারো।</p>
+      <div class="success-box">
+        <div class="success-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <p style="font-weight:800; font-size:1.1rem; color:var(--text-primary); margin-bottom:8px;">আবেদন সফলভাবে পাঠানো হয়েছে</p>
+        <p class="text-sm text-muted">অ্যাডমিন অনুমোদন দিলেই তুমি প্রথম পেজের তালিকায় নিজের নাম দেখতে পারবে। তুমি এখন এই পেজটি বন্ধ করে দিতে পারো।</p>
+        <a href="./index.html" class="btn-glass" style="margin-top:20px; display:inline-flex; width:auto; padding:10px 20px;">তালিকায় ফিরে যাও</a>
+      </div>
     `;
   } catch (err) {
     showToast(friendlyError(err), "error");
     btn.disabled = false;
-    btn.textContent = "আবেদন পাঠাও";
+    btn.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      আবেদন পাঠাও
+    `;
   }
 });
 </script>
 </body>
 </html>
+
