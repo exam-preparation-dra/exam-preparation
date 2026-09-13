@@ -19,6 +19,48 @@
   }
   .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 
+  /* ===== Premium Hero Points Card Animations ===== */
+  .hero-points-card {
+    background: linear-gradient(135deg, #f59e0b, #ea580c);
+    border-radius: 20px;
+    padding: 24px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 12px 24px -8px rgba(234, 88, 12, 0.5);
+    animation: cardRise 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  
+  /* Shimmering effect across the card */
+  .hero-points-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -150%;
+    width: 50%; height: 100%;
+    background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+    transform: skewX(-25deg);
+    animation: shine 4s infinite;
+  }
+  @keyframes shine {
+    0% { left: -150%; }
+    20% { left: 150%; }
+    100% { left: 150%; }
+  }
+
+  /* Floating animation for the SVG icon */
+  .hero-icon-container {
+    animation: floatIcon 3s ease-in-out infinite;
+    filter: drop-shadow(0 8px 12px rgba(154, 52, 18, 0.4));
+  }
+  @keyframes floatIcon {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  /* ===== Staggered Stats ===== */
   #statsSection .grid-2 .glass.card:nth-child(1) { animation-delay: 40ms; }
   #statsSection .grid-2 .glass.card:nth-child(2) { animation-delay: 90ms; }
   #statsSection .grid-2 .glass.card:nth-child(3) { animation-delay: 140ms; }
@@ -85,11 +127,17 @@ function animateCountUp(el, target, duration = 800, suffix = "") {
 async function render() {
   shell.innerHTML = `
     ${renderStudentHeader(student, "dashboard")}
+    
+    <!-- Premium Hero Points Section (Moved to TOP) -->
+    <div id="pointsHeroSection" class="mt-4"></div>
+    
     <div id="motivationSection"></div>
     <div id="upcomingSection" class="mt-4"></div>
     <div id="statsSection" class="mt-5"></div>
     <div id="subjectSection" class="mt-5"></div>
     <div id="weakTopicSection" class="mt-5"></div>
+    
+    <!-- Original Buttons -->
     <div class="mt-5 flex gap-2">
       <a href="../student/analytics.html" class="btn btn-secondary">বিস্তারিত বিশ্লেষণ</a>
       <a href="../student/comparison.html" class="btn btn-secondary">তুলনা দেখুন</a>
@@ -133,7 +181,7 @@ async function loadMotivation() {
     });
 
     el.innerHTML = `
-      <div class="glass card mt-4" style="background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(37,99,235,0.08)); border: 1px solid rgba(124,58,237,0.2);">
+      <div class="glass card mt-3" style="background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(37,99,235,0.08)); border: 1px solid rgba(124,58,237,0.2);">
         <div class="flex items-start gap-3">
           <span style="font-size:1.4rem;">💡</span>
           <div>
@@ -214,9 +262,12 @@ function renderUpcomingExams(el, exams, subjectMap, chapterMap, resultMap) {
 }
 
 async function loadPerformance() {
+  const ptsEl = document.getElementById("pointsHeroSection");
   const statsEl = document.getElementById("statsSection");
   const subjEl = document.getElementById("subjectSection");
   const weakEl = document.getElementById("weakTopicSection");
+  
+  ptsEl.innerHTML = `<div class="glass card skeleton" style="height:110px;"></div>`;
   statsEl.innerHTML = `<p class="eyebrow">পারফরম্যান্স সারাংশ</p><div class="glass card skeleton mt-2" style="height:120px;"></div>`;
 
   try {
@@ -226,8 +277,10 @@ async function loadPerformance() {
     ]);
     const overall = computeOverallStats(results);
     const totalPoints = rank?.totalPoints || 0;
+    const rankText = rank ? `${rank.rank} / ${rank.totalStudents}` : "—";
 
     if (!overall) {
+      ptsEl.innerHTML = "";
       statsEl.innerHTML = `<p class="eyebrow">পারফরম্যান্স সারাংশ</p>`;
       const box = document.createElement("div");
       box.className = "mt-2";
@@ -237,17 +290,47 @@ async function loadPerformance() {
       return;
     }
 
+    // Custom SVG Icon (Replaces Emoji)
+    const diamondSvg = `
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="none">
+        <defs>
+          <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#fef08a" />
+            <stop offset="50%" stop-color="#eab308" />
+            <stop offset="100%" stop-color="#a16207" />
+          </linearGradient>
+        </defs>
+        <path fill="url(#goldGrad)" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        <path fill="#ffffff" opacity="0.4" d="M12 2l3.09 6.26L12 10.5V2z" />
+      </svg>
+    `;
+
+    // Render Premium Points Hero Card
+    ptsEl.innerHTML = `
+      <div class="hero-points-card">
+        <div>
+          <p style="font-size: 0.85rem; font-weight: 700; opacity: 0.9; margin-bottom: 2px;">সর্বমোট অর্জিত পয়েন্ট</p>
+          <h2 style="font-size: 2.6rem; font-weight: 900; line-height: 1.1; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+            <span class="num" id="heroTotalPoints">0</span>
+          </h2>
+          <p style="font-size: 0.8rem; font-weight: 600; opacity: 0.9; margin-top: 6px; background: rgba(0,0,0,0.15); padding: 4px 10px; border-radius: 99px; display: inline-block;">
+            বর্তমান র‍্যাঙ্ক: ${rankText}
+          </p>
+        </div>
+        <div class="hero-icon-container">
+          ${diamondSvg}
+        </div>
+      </div>
+    `;
+
+    // Render Rest of Stats without points card
     statsEl.innerHTML = `
       <p class="eyebrow">পারফরম্যান্স সারাংশ</p>
       <div class="grid-2 mt-2">
-        <div class="glass card" style="grid-column: span 2; background: rgba(245, 179, 1, 0.1); border-color: rgba(245, 179, 1, 0.3); text-align: center;">
-          <p class="text-xs" style="color: #b45309; font-weight:700;">সর্বমোট অর্জিত পয়েন্ট</p>
-          <p style="font-size:2.4rem;font-weight:900;color: #d97706; margin-top:4px;"> <span class="num" id="statPoints">0</span></p>
-        </div>
         <div class="glass card"><p class="text-xs text-muted">মোট পরীক্ষা</p><p style="font-size:1.5rem;font-weight:800;"><span class="num" id="statExams">0</span></p></div>
+        <div class="glass card"><p class="text-xs text-muted">সঠিক উত্তর</p><p style="font-size:1.5rem;font-weight:800; color:var(--color-success);" class="num">${overall.totalCorrect}</p></div>
         <div class="glass card"><p class="text-xs text-muted">গড় শতাংশ</p><p class="stat-pct stat-pct--lg num" id="statAvgPct">0%</p></div>
         <div class="glass card"><p class="text-xs text-muted">গড় সঠিকতা</p><p class="stat-pct stat-pct--lg num" id="statAvgAcc">0%</p></div>
-        <div class="glass card"><p class="text-xs text-muted">সঠিক উত্তর</p><p style="font-size:1.5rem;font-weight:800; color:var(--color-success);" class="num">${overall.totalCorrect}</p></div>
       </div>
       ${overall.mostRecent ? `
         <div class="glass card mt-3">
@@ -270,7 +353,7 @@ async function loadPerformance() {
     `;
 
     requestAnimationFrame(() => {
-      animateCountUp(document.getElementById("statPoints"), totalPoints, 1200);
+      animateCountUp(document.getElementById("heroTotalPoints"), totalPoints, 1200);
       animateCountUp(document.getElementById("statExams"), Number(overall.examsTaken) || 0, 700);
       if (overall.avgPercentage != null) animateCountUp(document.getElementById("statAvgPct"), Number(overall.avgPercentage) || 0, 800, "%");
       if (overall.avgAccuracy != null) animateCountUp(document.getElementById("statAvgAcc"), Number(overall.avgAccuracy) || 0, 800, "%");
