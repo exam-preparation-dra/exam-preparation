@@ -24,6 +24,7 @@ import { toDirectImageUrl, uploadImageWithGuidedFallback } from "../js/utils/ima
 import { uploadStudentPhoto, deleteStudentPhoto } from "../js/utils/storage-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { collection, getDocs, orderBy, query, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { computeGamificationData } from "../js/utils/gamification-utils.js";
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -258,7 +259,13 @@ async function loadStudents() {
       renderState(listEl, "empty", "এখনো কোনো শিক্ষার্থী যোগ করা হয়নি।");
       return;
     }
-    listEl.innerHTML = students.map(s => `
+    let gamification = null;
+    try { gamification = await computeGamificationData(); } catch (err) { console.warn("Topper tallies unavailable:", err); }
+
+    listEl.innerHTML = students.map(s => {
+      const counts = gamification?.badgeCounts?.[s.studentId];
+      const topperTotal = counts ? (counts.monthlyOverall + counts.monthlyClass + counts.weeklyOverall + counts.weeklyClass) : 0;
+      return `
       <div class="glass card mt-2" data-id="${s.docId}">
         <div class="flex justify-between items-center">
           <div class="flex items-center gap-3">
@@ -270,6 +277,7 @@ async function loadStudents() {
                 <span class="student-name">${s.name}</span>
               </p>
               <p class="text-xs text-muted">${s.studentId}${s.className ? ` • ${s.className}` : ""}${s.isActive ? "" : " • নিষ্ক্রিয়"}</p>
+              ${topperTotal > 0 ? `<p class="text-xs mt-1" style="color:#f97316;font-weight:600;">টপার হয়েছে ${topperTotal} বার (মাসিক ${counts.monthlyOverall + counts.monthlyClass} • সাপ্তাহিক ${counts.weeklyOverall + counts.weeklyClass})</p>` : ""}
             </div>
           </div>
           <div class="flex gap-2">
@@ -279,7 +287,8 @@ async function loadStudents() {
           </div>
         </div>
       </div>
-    `).join("");
+    `;
+    }).join("");
 
     listEl.querySelectorAll("[data-id]").forEach(card => {
       const docId = card.dataset.id;
