@@ -8,82 +8,97 @@
 <style>
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; } }
 
-  .glass.card {
-    animation: cardRise 420ms cubic-bezier(.22,.9,.3,1) both;
-    transition: transform var(--transition-lift, 220ms ease), box-shadow var(--transition-lift, 220ms ease);
-  }
-  @keyframes cardRise { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
-  
   .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 
-  /* ===== Premium Clean Points Card (No Orange) ===== */
+  /* ===== Premium Glassmorphism Theme ===== */
+  .glass-float-card {
+    background: rgba(128, 128, 128, 0.07);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(128, 128, 128, 0.15);
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  @media (hover: hover) {
+    .glass-float-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.08); }
+  }
+
+  .btn-glass {
+    background: rgba(128, 128, 128, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(128, 128, 128, 0.2);
+    border-radius: 12px;
+    color: var(--text-primary);
+    padding: 12px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-align: center;
+    flex: 1;
+    display: inline-flex; justify-content: center; align-items: center; gap: 6px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-decoration: none;
+    transition: all 0.2s ease;
+  }
+  .btn-glass:active { transform: scale(0.96); }
+
+  /* ===== Cream/Yellow Hero Points Card ===== */
   .hero-points-card {
-    background: linear-gradient(135deg, #4f46e5, #2563eb);
+    background: linear-gradient(135deg, #fefce8 0%, #fef08a 100%);
+    border: 1px solid rgba(234, 179, 8, 0.3);
     border-radius: 20px;
     padding: 24px;
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
-    animation: cardRise 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    color: #713f12; /* Dark Gold/Brown for premium contrast */
+    display: flex; align-items: center; justify-content: space-between;
+    position: relative; overflow: hidden;
+    box-shadow: 0 12px 30px -8px rgba(234, 179, 8, 0.3);
+    animation: floatHero 5s ease-in-out infinite;
   }
+  @keyframes floatHero { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
   
   .hero-points-card::after {
-    content: '';
-    position: absolute;
-    top: 0; left: -150%;
+    content: ''; position: absolute; top: 0; left: -150%;
     width: 50%; height: 100%;
-    background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0) 100%);
-    transform: skewX(-25deg);
-    animation: shine 4s infinite;
+    background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 100%);
+    transform: skewX(-25deg); animation: shine 5s infinite;
   }
   @keyframes shine { 0% { left: -150%; } 20% { left: 150%; } 100% { left: 150%; } }
 
-  .hero-icon-container {
-    animation: floatIcon 3s ease-in-out infinite;
-  }
-  @keyframes floatIcon {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
+  .hero-icon-container { filter: drop-shadow(0 6px 8px rgba(113, 63, 18, 0.2)); }
+  .top-scorer-badge {
+    background: rgba(113, 63, 18, 0.1); border: 1px solid rgba(113, 63, 18, 0.2);
+    padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 700;
+    margin-top: 12px; display: inline-block; color: #713f12;
   }
 
-  .top-scorer-badge {
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    margin-top: 12px;
-    display: inline-block;
+  /* ===== Horizontal Scroll for Subjects ===== */
+  .subject-scroller {
+    display: flex; gap: 12px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: none; margin-top: 8px;
   }
+  .subject-scroller::-webkit-scrollbar { display: none; }
+  .subject-mini-card { min-width: 220px; flex-shrink: 0; }
 
   /* ===== Point List Styles ===== */
   .point-list-row {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 8px 0; border-bottom: 1px dashed var(--surface-border);
+    padding: 10px 0; border-bottom: 1px dashed var(--surface-border);
   }
   .point-list-row:last-child { border-bottom: none; padding-bottom: 0; }
-  .rank-number { width: 20px; font-size: 0.8rem; font-weight: 800; color: var(--text-muted); }
+  .rank-number { width: 22px; font-size: 0.85rem; font-weight: 800; color: var(--text-muted); }
 
-  /* ===== Staggered Stats ===== */
-  #statsSection .grid-2 .glass.card:nth-child(1) { animation-delay: 40ms; }
-  #statsSection .grid-2 .glass.card:nth-child(2) { animation-delay: 90ms; }
-  #statsSection .grid-2 .glass.card:nth-child(3) { animation-delay: 140ms; }
-  #statsSection .grid-2 .glass.card:nth-child(4) { animation-delay: 190ms; }
-
+  /* ===== General Utils ===== */
   .trend-bar {
     flex: 1; border-radius: 6px 6px 0 0;
     background: linear-gradient(180deg, var(--color-accent), var(--color-accent-2));
-    background-size: 100% 200%;
-    height: 0%;
+    background-size: 100% 200%; height: 0%;
     transition: height 700ms cubic-bezier(.22,.9,.3,1);
   }
-  .progress-track { overflow: hidden; }
-  .progress-fill { width: 0%; transition: width 900ms cubic-bezier(.22,.9,.3,1); }
+  .progress-track { overflow: hidden; background: rgba(128,128,128,0.15); border-radius: 99px; height: 6px; }
+  .progress-fill { width: 0%; transition: width 900ms cubic-bezier(.22,.9,.3,1); height: 100%; border-radius: 99px; background: var(--color-accent); }
+  
+  .weak-anim { animation: gentlyPulse 3s infinite; }
+  @keyframes gentlyPulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(0.98); } }
 </style>
 </head>
 <body>
@@ -130,76 +145,50 @@ async function render() {
   shell.innerHTML = `
     ${renderStudentHeader(student, "dashboard")}
     
-    <div id="pointsHeroSection" class="mt-4"></div>
-    <div id="motivationSection"></div>
+    <!-- 1. Top Action Buttons (Transparent Glass) -->
+    <div class="mt-4 flex gap-2">
+      <a href="../student/analytics.html" class="btn-glass">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 9l-5 5-3-3-5 5"/></svg>
+        বিস্তারিত বিশ্লেষণ
+      </a>
+      <a href="../student/comparison.html" class="btn-glass">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+        তুলনা দেখুন
+      </a>
+    </div>
+
+    <!-- 2. Upcoming Exams (Main Focus) -->
+    <div id="upcomingSection" class="mt-5"></div>
     
-    <div id="upcomingSection" class="mt-4"></div>
+    <!-- 3. Points Hero Section (Cream Yellow) -->
+    <div id="pointsHeroSection" class="mt-5"></div>
     
-    <!-- New Point List Section -->
+    <!-- 4. Motivation Analysis (Floating Glass) -->
+    <div id="motivationSection" class="mt-4"></div>
+    
+    <!-- 5. Top 3 Point Table -->
     <div id="pointListSection" class="mt-5"></div>
     
+    <!-- 6. Detailed Stats -->
     <div id="statsSection" class="mt-5"></div>
-    <div id="subjectSection" class="mt-5"></div>
-    <div id="weakTopicSection" class="mt-5"></div>
     
-    <div class="mt-5 flex gap-2">
-      <a href="../student/analytics.html" class="btn btn-secondary">বিস্তারিত বিশ্লেষণ</a>
-      <a href="../student/comparison.html" class="btn btn-secondary">তুলনা দেখুন</a>
-    </div>
+    <!-- 7. Advanced Subject Slider -->
+    <div id="subjectSection" class="mt-5"></div>
+    
+    <!-- 8. Weak Topics -->
+    <div id="weakTopicSection" class="mt-5 mb-5"></div>
   `;
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
 
-  loadMotivation();
   loadUpcoming();
+  loadMotivation();
   loadPerformanceAndLeaderboard();
-}
-
-async function loadMotivation() {
-  const el = document.getElementById("motivationSection");
-  try {
-    const [rank, results, subjects] = await Promise.all([
-      getStudentRank(student.studentId),
-      getApprovedResults(student.studentId),
-      getSubjects()
-    ]);
-    
-    if (results.length === 0) return; 
-
-    const overall = computeOverallStats(results);
-    const subjectStats = computeSubjectStats(results, buildNameMap(subjects));
-    let weakest = null, strongest = null;
-    (subjectStats || []).forEach(s => {
-      if (!weakest || s.accuracy < weakest.accuracy) weakest = s;
-      if (!strongest || s.accuracy > strongest.accuracy) strongest = s;
-    });
-
-    const advice = generateMotivation({
-      overallPercentage: overall?.avgPercentage,
-      rank: rank?.rank,
-      totalStudents: rank?.totalStudents,
-      examsTaken: overall?.examsTaken ?? results.length,
-      weakestSubjectName: weakest?.name,
-      weakestSubjectAccuracy: weakest?.accuracy,
-      strongestSubjectName: strongest?.name !== weakest?.name ? strongest?.name : null,
-      strongestSubjectAccuracy: strongest?.accuracy
-    });
-
-    // Clean design without emoji
-    el.innerHTML = `
-      <div class="glass card mt-3" style="border-left: 3px solid var(--color-accent);">
-        <p class="text-sm" style="font-weight:700; color: var(--text-primary); margin-bottom:4px;">বিশ্লেষণ</p>
-        <p class="text-sm" style="line-height:1.6; color: var(--text-secondary);">${advice}</p>
-      </div>
-    `;
-  } catch (err) {
-    console.error("Motivation load failed:", err);
-  }
 }
 
 let unsubscribeUpcoming = null;
 async function loadUpcoming() {
   const el = document.getElementById("upcomingSection");
-  el.innerHTML = `<p class="eyebrow mb-2">আসন্ন পরীক্ষা</p><div class="glass card skeleton" style="height:90px;margin-top:8px;"></div>`;
+  el.innerHTML = `<p class="eyebrow mb-2">আসন্ন পরীক্ষা</p><div class="glass-float-card skeleton" style="height:90px;"></div>`;
   try {
     const [subjects, chapters, resultMap] = await Promise.all([
       getSubjects(), getChapters(), getStudentResultStatusMap(student.studentId)
@@ -228,37 +217,73 @@ function renderUpcomingExams(el, exams, subjectMap, chapterMap, resultMap) {
     return;
   }
 
-  el.innerHTML = `<p class="eyebrow">আসন্ন পরীক্ষা</p>` + exams.map(exam => {
+  el.innerHTML = `<p class="eyebrow mb-2">আসন্ন পরীক্ষা</p>` + exams.map(exam => {
     const dateStr = exam.examDate?.toDate ? exam.examDate.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" }) : "";
-    const subjNames = (exam.subjectIds || []).map(id => subjectMap[id]).filter(Boolean).join(", ");
-    const chapNames = (exam.chapterIds || []).map(id => chapterMap[id]).filter(Boolean).join(", ");
     const own = resultMap[exam.id];
     let actionHtml = "";
+    
     if (own?.status === "approved") {
-      actionHtml = `<a href="../student/result.html?resultId=${own.resultId}" class="btn btn-secondary mt-3">ফলাফল দেখুন</a>`;
+      actionHtml = `<a href="../student/result.html?resultId=${own.resultId}" class="btn-glass mt-3" style="width:100%; border-color:var(--color-success); color:var(--color-success);">ফলাফল দেখুন</a>`;
     } else if (own?.status === "pending") {
-      actionHtml = `<p class="text-xs text-muted mt-3">জমা দেওয়া হয়েছে — অনুমোদনের অপেক্ষায়।</p>`;
+      actionHtml = `<p class="text-xs text-muted mt-3 text-center">জমা দেওয়া হয়েছে — অনুমোদনের অপেক্ষায়।</p>`;
     } else if (exam.status === "published") {
-      actionHtml = `<a href="../student/exam.html?examId=${exam.id}" class="btn btn-primary mt-3">পরীক্ষা শুরু করুন</a>`;
+      actionHtml = `<a href="../student/exam.html?examId=${exam.id}" class="btn-glass mt-3" style="width:100%; background:var(--color-accent); color:#fff; border:none;">পরীক্ষা শুরু করুন</a>`;
     }
+
     return `
-      <div class="glass card mt-2">
+      <div class="glass-float-card mt-2">
         <div class="flex justify-between items-center">
-          <h3>${exam.name}</h3>
-          <span class="badge badge-upcoming">${exam.status === "published" ? "প্রকাশিত" : "আসন্ন"}</span>
+          <h3 style="font-size:1.1rem; font-weight:800;">${exam.name}</h3>
+          <span class="badge badge-upcoming" style="background:rgba(37, 99, 235, 0.1); color:var(--color-accent);">${exam.status === "published" ? "প্রকাশিত" : "আসন্ন"}</span>
         </div>
-        <div class="grid-2 mt-3">
-          <div><p class="text-xs text-muted">তারিখ</p><p class="text-sm" style="font-weight:600;">${dateStr || "—"}</p></div>
-          <div><p class="text-xs text-muted">সময়</p><p class="text-sm" style="font-weight:600;">${exam.informationalTime || "—"}</p></div>
-          <div><p class="text-xs text-muted">সময়কাল</p><p class="text-sm" style="font-weight:600;">${exam.durationMinutes ? exam.durationMinutes + " মিনিট" : "—"}</p></div>
-          <div><p class="text-xs text-muted">মোট নম্বর</p><p class="text-sm" style="font-weight:600;">${exam.totalMarks ?? "—"}</p></div>
+        <div class="grid-2 mt-3 gap-2">
+          <div style="background:rgba(128,128,128,0.05); padding:8px; border-radius:8px;"><p class="text-xs text-muted">তারিখ</p><p class="text-sm font-bold">${dateStr || "—"}</p></div>
+          <div style="background:rgba(128,128,128,0.05); padding:8px; border-radius:8px;"><p class="text-xs text-muted">সময়</p><p class="text-sm font-bold">${exam.informationalTime || "—"}</p></div>
+          <div style="background:rgba(128,128,128,0.05); padding:8px; border-radius:8px;"><p class="text-xs text-muted">সময়কাল</p><p class="text-sm font-bold">${exam.durationMinutes ? exam.durationMinutes + " মিনিট" : "—"}</p></div>
+          <div style="background:rgba(128,128,128,0.05); padding:8px; border-radius:8px;"><p class="text-xs text-muted">মোট নম্বর</p><p class="text-sm font-bold">${exam.totalMarks ?? "—"}</p></div>
         </div>
-        ${subjNames ? `<p class="text-xs text-muted mt-3">বিষয়: <span style="color:var(--text-secondary);">${subjNames}</span></p>` : ""}
-        ${chapNames ? `<p class="text-xs text-muted mt-2">অধ্যায়: <span style="color:var(--text-secondary);">${chapNames}</span></p>` : ""}
         ${actionHtml}
       </div>
     `;
   }).join("");
+}
+
+async function loadMotivation() {
+  const el = document.getElementById("motivationSection");
+  try {
+    const [rank, results, subjects] = await Promise.all([
+      getStudentRank(student.studentId),
+      getApprovedResults(student.studentId),
+      getSubjects()
+    ]);
+    if (results.length === 0) return; 
+
+    const overall = computeOverallStats(results);
+    const subjectStats = computeSubjectStats(results, buildNameMap(subjects));
+    let weakest = null, strongest = null;
+    (subjectStats || []).forEach(s => {
+      if (!weakest || s.accuracy < weakest.accuracy) weakest = s;
+      if (!strongest || s.accuracy > strongest.accuracy) strongest = s;
+    });
+
+    const advice = generateMotivation({
+      overallPercentage: overall?.avgPercentage,
+      rank: rank?.rank,
+      totalStudents: rank?.totalStudents,
+      examsTaken: overall?.examsTaken ?? results.length,
+      weakestSubjectName: weakest?.name,
+      weakestSubjectAccuracy: weakest?.accuracy,
+      strongestSubjectName: strongest?.name !== weakest?.name ? strongest?.name : null,
+      strongestSubjectAccuracy: strongest?.accuracy
+    });
+
+    el.innerHTML = `
+      <div class="glass-float-card" style="border-left: 3px solid var(--color-accent);">
+        <p class="text-sm" style="font-weight:700; color: var(--text-primary); margin-bottom:6px;">বিশ্লেষণ ও পরামর্শ</p>
+        <p class="text-sm" style="line-height:1.6; color: var(--text-secondary);">${advice}</p>
+      </div>
+    `;
+  } catch (err) { console.error(err); }
 }
 
 async function loadPerformanceAndLeaderboard() {
@@ -268,9 +293,8 @@ async function loadPerformanceAndLeaderboard() {
   const subjEl = document.getElementById("subjectSection");
   const weakEl = document.getElementById("weakTopicSection");
   
-  ptsEl.innerHTML = `<div class="glass card skeleton" style="height:140px;"></div>`;
-  pointListEl.innerHTML = `<div class="glass card skeleton mt-2" style="height:100px;"></div>`;
-  statsEl.innerHTML = `<p class="eyebrow">পারফরম্যান্স সারাংশ</p><div class="glass card skeleton mt-2" style="height:120px;"></div>`;
+  ptsEl.innerHTML = `<div class="glass-float-card skeleton" style="height:140px;"></div>`;
+  statsEl.innerHTML = `<div class="glass-float-card skeleton mt-2" style="height:120px;"></div>`;
 
   try {
     const [results, rank, allStudents] = await Promise.all([
@@ -279,26 +303,22 @@ async function loadPerformanceAndLeaderboard() {
       getActiveStudents()
     ]);
     
-    // Fetch full leaderboard data
     const leaderboard = await getLeaderboardData(allStudents);
     const overall = computeOverallStats(results);
     const totalPoints = rank?.totalPoints || 0;
     const rankText = rank ? `${rank.rank} / ${rank.totalStudents}` : "—";
+    const totalQuestions = (overall?.totalCorrect || 0) + (overall?.totalWrong || 0) + (overall?.totalUnanswered || 0);
 
-    // 1. Render Hero Points Card
     if (!overall) {
-      ptsEl.innerHTML = "";
-      pointListEl.innerHTML = "";
-      statsEl.innerHTML = `<p class="eyebrow">পারফরম্যান্স সারাংশ</p>`;
-      const box = document.createElement("div");
-      box.className = "mt-2";
-      renderState(box, "empty", "এখনো কোনো অনুমোদিত ফলাফল নেই। প্রথম পরীক্ষার পর এখানে পারফরম্যান্স দেখা যাবে।");
+      ptsEl.innerHTML = ""; pointListEl.innerHTML = "";
+      statsEl.innerHTML = `<p class="eyebrow">পরিসংখ্যান</p>`;
+      const box = document.createElement("div"); box.className = "mt-2";
+      renderState(box, "empty", "এখনো কোনো অনুমোদিত ফলাফল নেই।");
       statsEl.appendChild(box);
-      subjEl.innerHTML = ""; weakEl.innerHTML = "";
       return;
     }
 
-    // Find the absolute top scorer
+    // 1. Cream Yellow Hero Card
     const topScorer = leaderboard.length > 0 ? leaderboard[0] : null;
     let topScorerText = "";
     if (topScorer) {
@@ -306,15 +326,14 @@ async function loadPerformanceAndLeaderboard() {
       topScorerText = `<div class="top-scorer-badge">শীর্ষস্থান: ${isMeTop ? "তুমি" : topScorer.name} (${topScorer.totalPoints} পয়েন্ট)</div>`;
     }
 
-    // Clean Trophy SVG (No Emojis)
-    const trophySvg = `
-      <svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.9;">
-        <path d="M8 21h8"></path>
-        <path d="M12 17v4"></path>
-        <path d="M7 4h10"></path>
-        <path d="M17 4v8a5 5 0 0 1-10 0V4"></path>
-        <path d="M4 4h3v3a2 2 0 0 0-2-2z"></path>
-        <path d="M20 4h-3v3a2 2 0 0 1 2-2z"></path>
+    const cleanTrophySvg = `
+      <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#854d0e" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+        <path d="M4 22h16"></path>
+        <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+        <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+        <path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path>
       </svg>
     `;
 
@@ -325,18 +344,16 @@ async function loadPerformanceAndLeaderboard() {
           <h2 style="font-size: 2.8rem; font-weight: 900; line-height: 1.1; margin: 0; letter-spacing: -1px;">
             <span class="num" id="heroTotalPoints">0</span>
           </h2>
-          <p style="font-size: 0.8rem; font-weight: 600; opacity: 0.9; margin-top: 4px;">
-            বর্তমান র‍্যাঙ্ক: ${rankText}
+          <p style="font-size: 0.8rem; font-weight: 700; opacity: 0.9; margin-top: 4px;">
+            বর্তমান র‍্যাঙ্ক: <span style="font-family:var(--font-num);">${rankText}</span>
           </p>
           ${topScorerText}
         </div>
-        <div class="hero-icon-container">
-          ${trophySvg}
-        </div>
+        <div class="hero-icon-container">${cleanTrophySvg}</div>
       </div>
     `;
 
-    // 2. Render Class-wise Point List
+    // 2. Point Table (Top 3 Only) with Show More
     const byClass = {};
     leaderboard.forEach(r => {
        const c = r.className || "অনির্ধারিত ক্লাস";
@@ -344,87 +361,99 @@ async function loadPerformanceAndLeaderboard() {
        byClass[c].push(r);
     });
 
-    let classListHtml = `<p class="eyebrow mb-2">ক্লাসভিত্তিক পয়েন্ট তালিকা</p>`;
+    let classListHtml = `<p class="eyebrow mb-2">ক্লাস র‍্যাঙ্কিং (Top 3)</p>`;
     for (const [cls, classStudents] of Object.entries(byClass)) {
+      const top3 = classStudents.slice(0, 3);
       classListHtml += `
-        <div class="glass card mb-3">
-          <p style="font-size:0.9rem; font-weight:800; border-bottom:1px solid var(--surface-border); padding-bottom:8px; margin-bottom:8px; color:var(--text-primary);">${cls}</p>
-          ${classStudents.map((s, idx) => `
+        <div class="glass-float-card mb-3">
+          <p style="font-size:0.9rem; font-weight:800; border-bottom:1px solid rgba(128,128,128,0.1); padding-bottom:8px; margin-bottom:4px; color:var(--color-accent);">${cls}</p>
+          ${top3.map((s, idx) => `
             <div class="point-list-row">
               <div class="flex items-center gap-2">
                 <span class="rank-number">${idx + 1}.</span>
-                <span style="font-size:0.9rem; font-weight:${s.studentId === student.studentId ? '800; color:var(--color-accent)' : '600; color:var(--text-secondary)'};">${s.name}${s.studentId === student.studentId ? ' (তুমি)' : ''}</span>
+                <span style="font-size:0.9rem; font-weight:${s.studentId === student.studentId ? '800; color:var(--text-primary)' : '600; color:var(--text-secondary)'};">${s.name}${s.studentId === student.studentId ? ' (তুমি)' : ''}</span>
               </div>
               <span class="num" style="font-size:0.85rem; font-weight:800; color:var(--text-primary);">${s.totalPoints}</span>
             </div>
           `).join("")}
+          ${classStudents.length > 3 ? `<div style="text-align:center; margin-top:12px;"><a href="../student/leaderboard.html" class="btn-glass" style="font-size:0.75rem; padding:6px 12px; border-radius:6px; display:inline-block; width:auto;">সম্পূর্ণ তালিকা দেখুন</a></div>` : ''}
         </div>
       `;
     }
     pointListEl.innerHTML = classListHtml;
 
-    // 3. Render Rest of Stats
+    // 3. Detailed Stats Grid (Restored Correct/Wrong/Total Qs)
     statsEl.innerHTML = `
-      <p class="eyebrow">পারফরম্যান্স সারাংশ</p>
-      <div class="grid-2 mt-2">
-        <div class="glass card"><p class="text-xs text-muted">মোট পরীক্ষা</p><p style="font-size:1.5rem;font-weight:800;"><span class="num" id="statExams">0</span></p></div>
-        <div class="glass card"><p class="text-xs text-muted">সঠিক উত্তর</p><p style="font-size:1.5rem;font-weight:800; color:var(--color-success);" class="num">${overall.totalCorrect}</p></div>
-        <div class="glass card"><p class="text-xs text-muted">গড় শতাংশ</p><p style="font-size:1.5rem;font-weight:800;"><span class="num" id="statAvgPct">0</span>%</p></div>
-        <div class="glass card"><p class="text-xs text-muted">গড় সঠিকতা</p><p style="font-size:1.5rem;font-weight:800;"><span class="num" id="statAvgAcc">0</span>%</p></div>
+      <p class="eyebrow">বিস্তারিত পরিসংখ্যান</p>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px;">
+        <div class="glass-float-card" style="text-align:center; padding:12px;">
+           <p class="text-xs text-muted">মোট পরীক্ষা</p>
+           <p class="num" style="font-size:1.5rem;font-weight:800; margin-top:4px;" id="statExams">0</p>
+        </div>
+        <div class="glass-float-card" style="text-align:center; padding:12px;">
+           <p class="text-xs text-muted">মোট প্রশ্ন ফেস করা</p>
+           <p class="num" style="font-size:1.5rem;font-weight:800; margin-top:4px;">${totalQuestions}</p>
+        </div>
+        <div class="glass-float-card" style="text-align:center; padding:12px;">
+           <p class="text-xs text-muted">সঠিক উত্তর</p>
+           <p class="num" style="font-size:1.5rem;font-weight:800; color:var(--color-success); margin-top:4px;">${overall.totalCorrect}</p>
+        </div>
+        <div class="glass-float-card" style="text-align:center; padding:12px;">
+           <p class="text-xs text-muted">ভুল উত্তর</p>
+           <p class="num" style="font-size:1.5rem;font-weight:800; color:var(--color-danger); margin-top:4px;">${overall.totalWrong}</p>
+        </div>
+        <div class="glass-float-card" style="text-align:center; padding:12px;">
+           <p class="text-xs text-muted">গড় শতাংশ</p>
+           <p style="font-size:1.5rem;font-weight:800; margin-top:4px;"><span class="num" id="statAvgPct">0</span>%</p>
+        </div>
+        <div class="glass-float-card" style="text-align:center; padding:12px;">
+           <p class="text-xs text-muted">গড় সঠিকতা</p>
+           <p style="font-size:1.5rem;font-weight:800; margin-top:4px;"><span class="num" id="statAvgAcc">0</span>%</p>
+        </div>
       </div>
-      ${overall.mostRecent ? `
-        <div class="glass card mt-3">
-          <p class="eyebrow">সাম্প্রতিক ফলাফল</p>
-          <div class="flex justify-between items-center mt-2">
-            <div>
-              <p style="font-weight:700;">${overall.mostRecent.examName || "পরীক্ষা"}</p>
-              <p class="text-xs text-muted num">${overall.mostRecent.percentage ?? "—"}% • সঠিকতা ${overall.mostRecent.accuracy ?? "—"}%</p>
-            </div>
-            <a href="../student/result.html?resultId=${overall.mostRecent.id}" class="icon-btn">${icons.arrowRight}</a>
-          </div>
-        </div>` : ""}
       ${overall.trend ? `
-        <div class="glass card mt-3">
-          <p class="eyebrow">সার্বিক ধারা</p>
-          <div class="flex items-end gap-2 mt-3" style="height:60px;">
+        <div class="glass-float-card mt-3">
+          <p class="text-xs text-muted mb-3" style="font-weight:700;">পারফরম্যান্স গ্রাফ</p>
+          <div class="flex items-end gap-2" style="height:60px;">
             ${overall.trend.map(t => `<div class="trend-bar" data-h="${Math.max(6, (t.value || 0))}" title="${t.value ?? '—'}%"></div>`).join("")}
           </div>
-        </div>` : `<p class="text-xs text-muted mt-3">ধারা দেখতে আরও পরীক্ষার ফলাফল প্রয়োজন।</p>`}
+        </div>` : ""}
     `;
 
-    requestAnimationFrame(() => {
-      animateCountUp(document.getElementById("heroTotalPoints"), totalPoints, 1200);
-      animateCountUp(document.getElementById("statExams"), Number(overall.examsTaken) || 0, 700);
-      if (overall.avgPercentage != null) animateCountUp(document.getElementById("statAvgPct"), Number(overall.avgPercentage) || 0, 800);
-      if (overall.avgAccuracy != null) animateCountUp(document.getElementById("statAvgAcc"), Number(overall.avgAccuracy) || 0, 800);
-      document.querySelectorAll(".trend-bar").forEach(bar => {
-        const h = bar.dataset.h || 6;
-        requestAnimationFrame(() => { bar.style.height = `${h}%`; });
-      });
-    });
-
+    // 4. Advanced Subject Slider (Horizontal Layout)
     const subjects = await getSubjects();
     const subjectMap = buildNameMap(subjects);
     const subjectStats = computeSubjectStats(results, subjectMap);
-    subjEl.innerHTML = `<p class="eyebrow">বিষয়ভিত্তিক পারফরম্যান্স</p>` + (subjectStats.length === 0
-      ? `<p class="text-xs text-muted mt-2">তথ্য নেই।</p>`
-      : subjectStats.map(s => `
-        <div class="glass card mt-2">
-          <div class="flex justify-between items-center">
-            <p style="font-weight:700;">${s.name}</p>
-            <p style="font-weight:800; font-family:var(--font-num);">${s.accuracy ?? "—"}%</p>
-          </div>
-          <div class="progress-track mt-2"><div class="progress-fill subj-progress" data-w="${s.accuracy ?? 0}"></div></div>
-          <p class="text-xs text-muted mt-2 num">সঠিক ${s.correct} • ভুল ${s.wrong} • মোট নম্বর ${s.marks}</p>
+    if (subjectStats.length === 0) {
+      subjEl.innerHTML = `<p class="eyebrow">বিষয়ভিত্তিক পারফরম্যান্স</p><p class="text-xs text-muted mt-2">তথ্য নেই।</p>`;
+    } else {
+      subjEl.innerHTML = `
+        <p class="eyebrow">বিষয়ভিত্তিক পারফরম্যান্স</p>
+        <div class="subject-scroller">
+          ${subjectStats.map(s => `
+            <div class="glass-float-card subject-mini-card">
+              <div class="flex justify-between items-center mb-2">
+                <p style="font-weight:700; font-size:0.95rem;">${s.name}</p>
+                <p style="font-weight:800; font-family:var(--font-num); color:var(--color-accent);">${s.accuracy ?? "—"}%</p>
+              </div>
+              <div class="progress-track"><div class="progress-fill subj-progress" data-w="${s.accuracy ?? 0}"></div></div>
+              <div class="grid-2 mt-3" style="gap:6px;">
+                 <div style="background:rgba(128,128,128,0.08); padding:6px; border-radius:8px; text-align:center;">
+                    <span style="font-size:0.65rem; color:var(--text-muted); display:block;">সঠিক</span>
+                    <span class="num" style="font-size:0.9rem; font-weight:800; color:var(--color-success);">${s.correct}</span>
+                 </div>
+                 <div style="background:rgba(128,128,128,0.08); padding:6px; border-radius:8px; text-align:center;">
+                    <span style="font-size:0.65rem; color:var(--text-muted); display:block;">ভুল</span>
+                    <span class="num" style="font-size:0.9rem; font-weight:800; color:var(--color-danger);">${s.wrong}</span>
+                 </div>
+              </div>
+            </div>
+          `).join("")}
         </div>
-      `).join(""));
-    requestAnimationFrame(() => {
-      document.querySelectorAll(".subj-progress").forEach(bar => {
-        const w = bar.dataset.w || 0;
-        requestAnimationFrame(() => { bar.style.width = `${w}%`; });
-      });
-    });
+      `;
+    }
 
+    // 5. Weak Topics (Floating Animation)
     const { getTopics } = await import("../js/utils/syllabus-utils.js");
     const topics = await getTopics();
     const topicMap = buildNameMap(topics);
@@ -434,16 +463,32 @@ async function loadPerformanceAndLeaderboard() {
     weakEl.innerHTML = `<p class="eyebrow">দুর্বল টপিক নির্দেশক</p>` + (weakTopics.length === 0
       ? `<p class="text-xs text-muted mt-2">${topicStats.length === 0 ? "পর্যাপ্ত তথ্য নেই।" : "কোনো ধারাবাহিক দুর্বল টপিক পাওয়া যায়নি।"}</p>`
       : weakTopics.map(t => `
-        <div class="glass card mt-2" style="border-color:var(--color-danger)55;">
+        <div class="glass-float-card weak-anim mt-3" style="border: 1px solid rgba(239, 68, 68, 0.2);">
           <div class="flex items-center gap-3">
-            <span class="icon-btn weak-alert-icon" style="color:var(--color-danger);">${icons.alert}</span>
+            <span class="icon-btn" style="color:var(--color-danger); background:rgba(239,68,68,0.1); border:none;">${icons.alert}</span>
             <div>
-              <p style="font-weight:700;">${t.name}</p>
-              <p class="text-xs text-muted">সাম্প্রতিক পরীক্ষাগুলোতে ধারাবাহিকভাবে কম সঠিকতা (${t.accuracy}%)</p>
+              <p style="font-weight:800; font-size:0.95rem;">${t.name}</p>
+              <p class="text-xs text-muted mt-1">সঠিকতার হার মাত্র <span class="num" style="color:var(--color-danger); font-weight:700;">${t.accuracy}%</span></p>
             </div>
           </div>
         </div>
       `).join(""));
+
+    // Trigger Animations
+    requestAnimationFrame(() => {
+      animateCountUp(document.getElementById("heroTotalPoints"), totalPoints, 1200);
+      animateCountUp(document.getElementById("statExams"), Number(overall.examsTaken) || 0, 700);
+      if (overall.avgPercentage != null) animateCountUp(document.getElementById("statAvgPct"), Number(overall.avgPercentage) || 0, 800);
+      if (overall.avgAccuracy != null) animateCountUp(document.getElementById("statAvgAcc"), Number(overall.avgAccuracy) || 0, 800);
+      document.querySelectorAll(".trend-bar").forEach(bar => {
+        const h = bar.dataset.h || 6;
+        requestAnimationFrame(() => { bar.style.height = `${h}%`; });
+      });
+      document.querySelectorAll(".subj-progress").forEach(bar => {
+        const w = bar.dataset.w || 0;
+        requestAnimationFrame(() => { bar.style.width = `${w}%`; });
+      });
+    });
 
   } catch (err) {
     console.error(err);
@@ -453,3 +498,4 @@ async function loadPerformanceAndLeaderboard() {
 </script>
 </body>
 </html>
+    
