@@ -178,315 +178,81 @@ const BADGE_KINDS = {
     icon: `<path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/>`
   },
 
-  attendance: {
-    gradient: "linear-gradient(135deg,#fb923c,#ea580c)",
-    label: null,
-    icon: `
-      <path d="M12 2c1 3-2 4-2 7a4 4 0 0 0 8 0c0-1-.5-2-1-2
-      .5 2-1 3-2 2 1-2-.5-4-3-7z"/>
-      <path d="M9 15a3 3 0 1 0 6 0c0-1-1-2-3-5-2 3-3 4-3 5z"/>
-    `
+  examTopper: {
+    gradient: "linear-gradient(135deg,#f472b6,#db2777)",
+    label: "পরীক্ষার টপার",
+    icon: `<path d="M6 3h12v18H6z"/><path d="M9 7h6M9 11h6M9 15h4"/>`
   }
 };
 
-export function badgeCard(
-  kind,
-  { count = 1, label = null } = {}
-) {
-  const spec = BADGE_KINDS[kind];
+export function badgeCard(kind, value = "") {
+  const config = BADGE_KINDS[kind];
 
-  if (!spec) return "";
-
-  const text = label || spec.label || "";
+  if (!config) {
+    return "";
+  }
 
   return `
-    <div style="
-      background:${spec.gradient};
-      border-radius:16px;
-      padding:14px 10px;
-      text-align:center;
-      color:#fff;
-      position:relative;
-      overflow:hidden;
-    ">
-      <svg width="26" height="26"
-        viewBox="0 0 24 24"
-        fill="#fff"
-        style="margin:0 auto 6px;display:block;">
-        ${spec.icon}
-      </svg>
+    <div class="badge-card"
+      style="
+        background:${config.gradient};
+        color:#fff;
+        border-radius:16px;
+        padding:14px;
+        display:flex;
+        align-items:center;
+        gap:10px;
+      "
+    >
+      <span
+        style="
+          width:32px;
+          height:32px;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          flex-shrink:0;
+        "
+      >
+        <svg
+          viewBox="0 0 24 24"
+          width="24"
+          height="24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.7"
+        >
+          ${config.icon}
+        </svg>
+      </span>
 
-      <p style="
-        margin:0;
-        font-size:0.74rem;
-        font-weight:800;
-        line-height:1.3;
-      ">
-        ${text}
-      </p>
+      <span style="display:flex;flex-direction:column;gap:2px;">
+        <strong style="font-size:13px;">
+          ${config.label}
+        </strong>
 
-      ${
-        count > 1
-          ? `
-            <span style="
-              position:absolute;
-              top:6px;
-              right:6px;
-              background:rgba(255,255,255,0.28);
-              border-radius:999px;
-              padding:1px 7px;
-              font-size:0.62rem;
-              font-weight:800;
-            ">
-              ×${count}
-            </span>
-          `
-          : ""
-      }
+        ${
+          value
+            ? `<span style="font-size:11px;opacity:.9;">
+                 ${value}
+               </span>`
+            : ""
+        }
+      </span>
     </div>
   `;
 }
 
-export const icons = {
-  sun: `
-    <svg viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.6">
-      <circle cx="12" cy="12" r="4"/>
-      <path d="M12 2v2M12 20v2"/>
-      <path d="M4.9 4.9l1.4 1.4"/>
-      <path d="M17.7 17.7l1.4 1.4"/>
-      <path d="M2 12h2M20 12h2"/>
-      <path d="M4.9 19.1l1.4-1.4"/>
-      <path d="M17.7 6.3l1.4-1.4"/>
-    </svg>
-  `,
-
-  moon: `
-    <svg viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.6">
-      <path d="M21 12.8A9 9 0 1 1 11.2 3
-        7 7 0 0 0 21 12.8z"/>
-    </svg>
-  `,
-
-  clock: `
-    <svg viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.6">
-      <circle cx="12" cy="12" r="9"/>
-      <path d="M12 7v5l3 3"/>
-    </svg>
-  `,
-
-  check: `
-    <svg viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2">
-      <path d="M20 6L9 17l-5-5"/>
-    </svg>
-  `,
-
-  arrowRight: `
-    <svg viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.8">
-      <path d="M5 12h14"/>
-      <path d="M13 6l6 6-6 6"/>
-    </svg>
-  `,
-
-  arrowLeft: `
-    <svg viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.8">
-      <path d="M19 12H5"/>
-      <path d="M11 18l-6-6 6-6"/>
-    </svg>
-  `,
-
-  user: `
-    <svg viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.6">
-      <circle cx="12" cy="8" r="4"/>
-      <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
-    </svg>
-  `,
-
-  home: `
-    <svg viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.6">
-      <path d="M3 11l9-7 9 7"/>
-      <path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4
-        a1 1 0 0 0 1-1v-9"/>
-    </svg>
-  `,
-
-  history: `
-    <svg viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.6">
-      <path d="M3 12a9 9 0 1 0 3-6.7"/>
-      <path d="M3 4v5h5"/>
-      <path d="M12 7v5l4 2"/>
-    </svg>
-  `,
-
-  book: `
-    <svg viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.6">
-      <path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5
-        A2.5 2.5 0 0 0 4 21.5v-17z"/>
-      <path d="M20 19H6.5A2.5 2.5 0 0 0 4 21.5"/>
-    </svg>
-  `,
-
-  chart: `
-    <svg viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.6">
-      <path d="M3 3v18h18"/>
-      <path d="M7 15l4-5 3 3 5-7"/>
-    </svg>
-  `,
-
-  trendUp: `
-    <svg viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.8">
-      <path d="M3 17l6-6 4 4 8-10"/>
-      <path d="M15 5h6v6"/>
-    </svg>
-  `,
-
-  trendDown: `
-    <svg viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.8">
-      <path d="M3 7l6 6 4-4 8 10"/>
-      <path d="M15 19h6v-6"/>
-    </svg>
-  `,
-
-  plus: `
-    <svg viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2">
-      <path d="M12 5v14M5 12h14"/>
-    </svg>
-  `,
-
-  edit: `
-    <svg viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.6">
-      <path d="M12 20h9"/>
-      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4
-        12.5-12.5z"/>
-    </svg>
-  `,
-
-  toggle: `
-    <svg viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.6">
-      <rect x="2" y="7" width="20" height="10" rx="5"/>
-      <circle cx="8" cy="12" r="3"
-        fill="currentColor"
-        stroke="none"/>
-    </svg>
-  `,
-
-  chevronDown: `
-    <svg viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.8">
-      <path d="M6 9l6 6 6-6"/>
-    </svg>
-  `,
-
-  layers: `
-    <svg viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.6">
-      <path d="M12 2l9 5-9 5-9-5 9-5z"/>
-      <path d="M3 12l9 5 9-5"/>
-      <path d="M3 17l9 5 9-5"/>
-    </svg>
-  `,
-
-  alert: `
-    <svg viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.6">
-      <path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17
-        a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>
-      <path d="M12 9v4M12 17h.01"/>
-    </svg>
-  `,
-
-  camera: `
-    <svg viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.6">
-      <path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v11
-        a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/>
-      <circle cx="12" cy="13" r="4"/>
-    </svg>
-  `,
-
-  bell: `
-    <svg viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.7"
-      stroke-linecap="round"
-      stroke-linejoin="round">
-      <path d="M18 8a6 6 0 0 0-12 0
-        c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
-      <path d="M10 21h4"/>
-    </svg>
-  `
-};
-
-
-/* =========================================================
-   GLOBAL STUDENT NOTIFICATIONS
-
-   Friend request + Challenge
-   Dashboard / History / Leaderboard / Profile
-   সব জায়গায় একই notification system।
-   ========================================================= */
+// =========================================================
+// GLOBAL STUDENT NOTIFICATIONS
+// Friend Request + Challenge
+// Dashboard / History / Leaderboard / Profile
+// =========================================================
 
 const NOTIF_HIDE_KEY = "studentHiddenNotifications";
 
 let notificationUnsubs = [];
 let notificationOutsideClickBound = false;
-
 
 // ---------- Hidden notification IDs ----------
 function getHiddenNotificationKeys() {
@@ -501,7 +267,6 @@ function getHiddenNotificationKeys() {
   }
 }
 
-
 function hideNotification(key) {
   const keys = getHiddenNotificationKeys();
 
@@ -513,7 +278,6 @@ function hideNotification(key) {
   );
 }
 
-
 // ---------- HTML escaping ----------
 function escapeNotification(value) {
   return String(value ?? "")
@@ -523,7 +287,6 @@ function escapeNotification(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
-
 
 // ---------- Firestore timestamp → milliseconds ----------
 function notificationMillis(value) {
@@ -541,7 +304,6 @@ function notificationMillis(value) {
 
   return Number.isNaN(parsed) ? 0 : parsed;
 }
-
 
 // ---------- Notification age ----------
 function notificationAge(value) {
@@ -578,7 +340,6 @@ function notificationAge(value) {
 
   return `${days} দিন আগে`;
 }
-
 
 // ---------- Notification CSS ----------
 function injectNotificationStyles() {
@@ -629,59 +390,57 @@ function injectNotificationStyles() {
 
     .global-notification-dot {
       position: absolute;
-      width: 9px;
-      height: 9px;
+      top: 8px;
+      right: 8px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
-      background: #22c55e;
-      top: 7px;
-      right: 7px;
+      background: #ef4444;
       display: none;
-      box-shadow:
-        0 0 0 2px var(--bg, #fff);
     }
 
     .global-notification-count {
       position: absolute;
-      min-width: 17px;
-      height: 17px;
+      top: -5px;
+      right: -5px;
+      min-width: 18px;
+      height: 18px;
       padding: 0 4px;
       border-radius: 999px;
       background: #ef4444;
       color: #fff;
-      font-size: 9px;
+      font-size: 10px;
       font-weight: 800;
-      line-height: 17px;
-      text-align: center;
-      top: -4px;
-      right: -4px;
       display: none;
-      box-shadow:
-        0 0 0 2px var(--bg, #fff);
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      box-shadow: 0 2px 8px rgba(239,68,68,.3);
     }
 
     .global-notification-panel {
       position: absolute;
-      z-index: 9999;
       top: calc(100% + 10px);
       right: 0;
-      width: min(380px, calc(100vw - 24px));
-      max-height: 520px;
-      overflow: hidden;
-      border: 1px solid var(--border, rgba(0,0,0,.08));
-      border-radius: 18px;
+      width: min(360px, calc(100vw - 24px));
+      max-height: min(560px, 75vh);
+      overflow-y: auto;
       background: var(--card-bg, #fff);
       color: var(--text, #111);
-      box-shadow:
-        0 18px 55px rgba(0,0,0,.16);
+      border: 1px solid var(--border, rgba(0,0,0,.08));
+      border-radius: 18px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.16);
+      padding: 10px;
+      z-index: 9999;
       display: none;
     }
 
     .global-notification-panel.show {
       display: block;
-      animation: globalNotifIn .16s ease;
+      animation: globalNotificationIn .16s ease;
     }
 
-    @keyframes globalNotifIn {
+    @keyframes globalNotificationIn {
       from {
         opacity: 0;
         transform: translateY(-5px);
@@ -698,8 +457,8 @@ function injectNotificationStyles() {
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border, rgba(0,0,0,.08));
+      padding: 8px 8px 12px;
+      border-bottom: 1px solid var(--border, rgba(0,0,0,.07));
     }
 
     .global-notification-head strong {
@@ -712,83 +471,106 @@ function injectNotificationStyles() {
       color: var(--text-muted, #777);
       cursor: pointer;
       font-size: 11px;
+      padding: 4px 6px;
     }
 
     .global-notification-list {
-      max-height: 450px;
-      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-top: 8px;
     }
 
     .global-notification-item {
-      padding: 15px 16px;
-      border-bottom: 1px solid var(--border, rgba(0,0,0,.07));
+      border: 1px solid var(--border, rgba(0,0,0,.07));
+      border-radius: 14px;
+      padding: 11px;
+      background: var(--surface, rgba(0,0,0,.02));
     }
 
-    .global-notification-item:last-child {
-      border-bottom: 0;
+    .global-notification-item-title {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+    }
+  .global-notification-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: var(--color-accent-soft, rgba(37,99,235,.1));
+      color: var(--color-accent, #2563eb);
     }
 
-    .global-notification-title {
+    .global-notification-icon svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    .global-notification-main {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .global-notification-main strong {
+      display: block;
       font-size: 12px;
-      font-weight: 800;
-      margin-bottom: 5px;
+      line-height: 1.4;
     }
 
-    .global-notification-copy {
-      font-size: 12px;
-      line-height: 1.55;
+    .global-notification-main p {
+      margin: 3px 0 0;
+      font-size: 11px;
+      line-height: 1.5;
       color: var(--text-muted, #777);
     }
 
-    .global-notification-copy strong {
-      color: var(--text, #111);
-    }
-
     .global-notification-time {
+      margin-top: 4px;
       font-size: 10px;
-      color: var(--text-muted, #999);
-      margin-top: 6px;
+      color: var(--text-muted, #888);
     }
 
     .global-notification-actions {
       display: flex;
-      flex-wrap: wrap;
       gap: 6px;
-      margin-top: 11px;
+      margin-top: 9px;
+      padding-left: 41px;
     }
 
     .global-notification-actions button {
       border: 0;
       border-radius: 9px;
       padding: 7px 10px;
-      font-size: 10px;
-      font-weight: 700;
       cursor: pointer;
+      font-size: 11px;
+      font-weight: 700;
     }
 
-    .global-notification-actions .accept {
-      background: #22c55e;
+    .global-notif-accept {
+      background: var(--color-accent, #2563eb);
       color: #fff;
     }
 
-    .global-notification-actions
-      .global-notif-reject-friend,
-    .global-notification-actions
-      .global-notif-reject-challenge {
+    .global-notif-reject {
       background: rgba(239,68,68,.1);
       color: #dc2626;
     }
 
-    .global-notification-actions .hide {
-      background: var(--surface, rgba(0,0,0,.06));
+    .global-notif-hide {
+      background: transparent;
       color: var(--text-muted, #777);
+      border: 1px solid var(--border, rgba(0,0,0,.08)) !important;
     }
 
     .global-notification-empty {
-      padding: 28px 18px;
       text-align: center;
-      color: var(--text-muted, #888);
+      padding: 22px 10px;
       font-size: 12px;
+      color: var(--text-muted, #777);
     }
 
     @media (max-width: 600px) {
@@ -796,13 +578,8 @@ function injectNotificationStyles() {
         position: fixed;
         top: 70px;
         right: 12px;
-        left: 12px;
-        width: auto;
-        max-height: calc(100vh - 90px);
-      }
-
-      .global-notification-list {
-        max-height: calc(100vh - 150px);
+        width: calc(100vw - 24px);
+        max-height: 70vh;
       }
     }
   `;
@@ -810,97 +587,87 @@ function injectNotificationStyles() {
   document.head.appendChild(style);
 }
 
+// ---------- Bell SVG ----------
+function notificationBellIcon() {
+  return `
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+      <path d="M10 21h4"/>
+    </svg>
+  `;
+}
 
-// ---------- Upcoming exam auto-select ----------
-async function refreshChallengeExamPlaceholders(
-  challenges
-) {
-  if (!challenges.length) {
+// ---------- Auto-select upcoming exam ----------
+async function refreshChallengeExamPlaceholders(challenges) {
+  if (!Array.isArray(challenges) || !challenges.length) {
+    return [];
+  }
+
+  const needsExam = challenges.some(
+    challenge =>
+      challenge.examId === "__NEXT_EXAM__"
+  );
+
+  if (!needsExam) {
     return challenges;
   }
 
-  let upcoming = [];
+  let exams = [];
 
   try {
-    upcoming = await getUpcomingExams();
+    exams = await getUpcomingExams();
   } catch (err) {
-    console.warn(
-      "Could not load upcoming exams:",
+    console.error(
+      "Upcoming exam lookup failed:",
       err
     );
   }
 
-  if (!Array.isArray(upcoming) || !upcoming.length) {
-    return challenges;
-  }
-
-  const nextExam = upcoming[0];
+  const nextExam = Array.isArray(exams)
+    ? exams[0]
+    : null;
 
   if (!nextExam) {
     return challenges;
   }
 
-  const updated = [];
+  const nextExamId =
+    nextExam.examId ||
+    nextExam.id ||
+    "";
 
-  for (const challenge of challenges) {
-    if (
-      challenge.examId !== "__NEXT_EXAM__"
-    ) {
-      updated.push(challenge);
-      continue;
-    }
+  const nextExamName =
+    nextExam.examName ||
+    nextExam.name ||
+    "পরবর্তী পরীক্ষা";
 
-    try {
-      await updateDoc(
-        doc(
-          db,
-          "examChallenges",
-          challenge.id
-        ),
-        {
-          examId:
-            nextExam.examId ||
-            nextExam.id ||
-            "__NEXT_EXAM__",
+  return challenges.map(
+    challenge => {
+      if (
+        challenge.examId !== "__NEXT_EXAM__"
+      ) {
+        return challenge;
+      }
 
-          examName:
-            nextExam.examName ||
-            nextExam.name ||
-            "পরবর্তী পরীক্ষা"
-        }
-      );
-
-      updated.push({
+      return {
         ...challenge,
-
-        examId:
-          nextExam.examId ||
-          nextExam.id ||
-          "__NEXT_EXAM__",
-
-        examName:
-          nextExam.examName ||
-          nextExam.name ||
-          "পরবর্তী পরীক্ষা"
-      });
-    } catch (err) {
-      console.warn(
-        "Could not update challenge exam:",
-        err
-      );
-
-      updated.push(challenge);
+        examId: nextExamId,
+        examName: nextExamName,
+        autoSelectedExam: true
+      };
     }
-  }
-
-  return updated;
+  );
 }
 
-
-// ---------- Render notifications ----------
-async function renderGlobalNotifications(
-  student
-) {
+// ---------- Render global notifications ----------
+async function renderGlobalNotifications(student) {
   const list =
     document.getElementById(
       "globalNotificationList"
@@ -1094,180 +861,181 @@ async function renderGlobalNotifications(
     // ---------- Notification HTML ----------
     list.innerHTML =
       items
-        .map(
-          item => {
-            if (
-              item.type === "friend"
-            ) {
-              return `
-                <div
-                  class="global-notification-item"
-                >
-                  <div
-                    class="global-notification-title"
-                  >
-                    নতুন Friend Request
-                  </div>
+        .map(item => {
 
-                  <div
-                    class="global-notification-copy"
-                  >
-                    <strong>
-                      ${escapeNotification(
-                        item.sender
-                      )}
-                    </strong>
-                    তোমাকে friend request পাঠিয়েছে।
-                  </div>
-
-                  <div
-                    class="global-notification-time"
-                  >
-                    ${notificationAge(
-                      item.createdAt
-                    )}
-                  </div>
-
-                  <div
-                    class="global-notification-actions"
-                  >
-                    <button
-                      class="accept
-                        global-notif-accept-friend"
-                      data-id="${escapeNotification(
-                        item.id
-                      )}"
-                    >
-                      গ্রহণ
-                    </button>
-
-                    <button
-                      class="
-                        global-notif-reject-friend"
-                      data-id="${escapeNotification(
-                        item.id
-                      )}"
-                    >
-                      প্রত্যাখ্যান
-                    </button>
-
-                    <button
-                      class="hide
-                        global-notif-hide"
-                      data-key="${escapeNotification(
-                        item.key
-                      )}"
-                    >
-                      Hide
-                    </button>
-                  </div>
-                </div>
-              `;
-            }
-
+          if (item.type === "friend") {
             return `
               <div
                 class="global-notification-item"
+                data-notification-key="${escapeNotification(item.key)}"
               >
-                <div
-                  class="global-notification-title"
-                >
-                  নতুন Challenge
+
+                <div class="global-notification-item-title">
+
+                  <div class="global-notification-icon">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                    >
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                      <circle cx="9" cy="7" r="4"/>
+                      <path d="M19 8v6M22 11h-6"/>
+                    </svg>
+                  </div>
+
+                  <div class="global-notification-main">
+
+                    <strong>
+                      ${escapeNotification(item.sender)}
+                      তোমাকে friend request পাঠিয়েছে
+                    </strong>
+
+                    <p>
+                      এই request গ্রহণ করলে তোমরা friend list-এ যুক্ত হবে।
+                    </p>
+
+                    <div class="global-notification-time">
+                      ${notificationAge(item.createdAt)}
+                    </div>
+
+                  </div>
+
                 </div>
 
-                <div
-                  class="global-notification-copy"
-                >
-                  <strong>
-                    ${escapeNotification(
-                      item.sender
-                    )}
-                  </strong>
+                <div class="global-notification-actions">
 
-                  তোমাকে
-
-                  <strong>
-                    ${escapeNotification(
-                      item.exam
-                    )}
-                  </strong>
-
-                  -এ challenge করেছে।
-
-                  <br>
-
-                  Winner
-                  <strong>+100</strong>
-                  · Loser
-                  <strong>+25</strong>
-                  · Draw
-                  <strong>+50</strong>
-                  points
-                </div>
-
-                <div
-                  class="global-notification-time"
-                >
-                  ${notificationAge(
-                    item.createdAt
-                  )}
-                </div>
-
-                <div
-                  class="global-notification-actions"
-                >
                   <button
-                    class="accept
-                      global-notif-accept-challenge"
-                    data-id="${escapeNotification(
-                      item.id
-                    )}"
+                    type="button"
+                    class="global-notif-accept-friend"
+                    data-id="${escapeNotification(item.id)}"
                   >
                     গ্রহণ
                   </button>
 
                   <button
-                    class="
-                      global-notif-reject-challenge"
-                    data-id="${escapeNotification(
-                      item.id
-                    )}"
+                    type="button"
+                    class="global-notif-reject-friend"
+                    data-id="${escapeNotification(item.id)}"
                   >
                     প্রত্যাখ্যান
                   </button>
 
                   <button
-                    class="hide
-                      global-notif-hide"
-                    data-key="${escapeNotification(
-                      item.key
-                    )}"
+                    type="button"
+                    class="global-notif-hide"
+                    data-key="${escapeNotification(item.key)}"
                   >
-                    Hide
+                    লুকান
                   </button>
+
                 </div>
+
               </div>
             `;
           }
-        )
+
+          return `
+            <div
+              class="global-notification-item"
+              data-notification-key="${escapeNotification(item.key)}"
+            >
+
+              <div class="global-notification-item-title">
+
+                <div class="global-notification-icon">
+
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                  >
+                    <path d="M6 3h12v18H6z"/>
+                    <path d="M9 7h6M9 11h6M9 15h4"/>
+                  </svg>
+
+                </div>
+
+                <div class="global-notification-main">
+
+                  <strong>
+                    ${escapeNotification(item.sender)}
+                    তোমাকে challenge করেছে
+                  </strong>
+
+                  <p>
+                    পরীক্ষা:
+                    ${escapeNotification(item.exam)}
+                  </p>
+
+                  <div class="global-notification-time">
+                    ${notificationAge(item.createdAt)}
+                  </div>
+
+                </div>
+
+              </div>
+
+              <div class="global-notification-actions">
+
+                <button
+                  type="button"
+                  class="global-notif-accept-challenge"
+                  data-id="${escapeNotification(item.id)}"
+                >
+                  গ্রহণ
+                </button>
+
+                <button
+                  type="button"
+                  class="global-notif-reject-challenge"
+                  data-id="${escapeNotification(item.id)}"
+                >
+                  প্রত্যাখ্যান
+                </button>
+
+                <button
+                  type="button"
+                  class="global-notif-hide"
+                  data-key="${escapeNotification(item.key)}"
+                >
+                  লুকান
+                </button>
+
+              </div>
+
+            </div>
+          `;
+        })
         .join("");
 
-   // ---------- Hide ----------
+    // ---------- Hide notification ----------
     list
       .querySelectorAll(
         ".global-notif-hide"
       )
       .forEach(
         button => {
-          button.onclick = () => {
-            hideNotification(
-              button.dataset.key
-            );
+          button.onclick =
+            async event => {
 
-            renderGlobalNotifications(
-              student
-            );
-          };
+              event.stopPropagation();
+
+              const key =
+                button.dataset.key;
+
+              if (!key) {
+                return;
+              }
+
+              hideNotification(key);
+
+              await renderGlobalNotifications(
+                student
+              );
+            };
         }
       );
 
@@ -1280,16 +1048,20 @@ async function renderGlobalNotifications(
         button => {
           button.onclick =
             async () => {
+
               try {
-                await updateDoc(
+
+                const requestRef =
                   doc(
                     db,
                     "friendRequests",
                     button.dataset.id
-                  ),
+                  );
+
+                await updateDoc(
+                  requestRef,
                   {
-                    status:
-                      "accepted"
+                    status: "accepted"
                   }
                 );
 
@@ -1301,11 +1073,14 @@ async function renderGlobalNotifications(
                 await renderGlobalNotifications(
                   student
                 );
+
               } catch (err) {
+
                 showToast(
                   friendlyError(err),
                   "error"
                 );
+
               }
             };
         }
@@ -1320,7 +1095,9 @@ async function renderGlobalNotifications(
         button => {
           button.onclick =
             async () => {
+
               try {
+
                 await deleteDoc(
                   doc(
                     db,
@@ -1337,11 +1114,14 @@ async function renderGlobalNotifications(
                 await renderGlobalNotifications(
                   student
                 );
+
               } catch (err) {
+
                 showToast(
                   friendlyError(err),
                   "error"
                 );
+
               }
             };
         }
@@ -1356,7 +1136,9 @@ async function renderGlobalNotifications(
         button => {
           button.onclick =
             async () => {
+
               try {
+
                 await updateDoc(
                   doc(
                     db,
@@ -1364,8 +1146,7 @@ async function renderGlobalNotifications(
                     button.dataset.id
                   ),
                   {
-                    status:
-                      "accepted"
+                    status: "accepted"
                   }
                 );
 
@@ -1377,11 +1158,14 @@ async function renderGlobalNotifications(
                 await renderGlobalNotifications(
                   student
                 );
+
               } catch (err) {
+
                 showToast(
                   friendlyError(err),
                   "error"
                 );
+
               }
             };
         }
@@ -1396,7 +1180,9 @@ async function renderGlobalNotifications(
         button => {
           button.onclick =
             async () => {
+
               try {
+
                 await deleteDoc(
                   doc(
                     db,
@@ -1413,16 +1199,21 @@ async function renderGlobalNotifications(
                 await renderGlobalNotifications(
                   student
                 );
+
               } catch (err) {
+
                 showToast(
                   friendlyError(err),
                   "error"
                 );
+
               }
             };
         }
       );
+
   } catch (err) {
+
     console.error(
       "Global notification refresh failed:",
       err
@@ -1433,6 +1224,7 @@ async function renderGlobalNotifications(
 
 // ---------- Stop listeners ----------
 function stopGlobalNotificationListeners() {
+
   notificationUnsubs.forEach(
     unsubscribe => {
       try {
@@ -1449,6 +1241,7 @@ function stopGlobalNotificationListeners() {
 function startGlobalNotificationSystem(
   student
 ) {
+
   if (!student?.studentId) {
     return;
   }
@@ -1521,9 +1314,11 @@ function startGlobalNotificationSystem(
   if (
     !notificationOutsideClickBound
   ) {
+
     document.addEventListener(
       "click",
       event => {
+
         const wrap =
           document.querySelector(
             ".student-global-notification"
@@ -1547,13 +1342,133 @@ function startGlobalNotificationSystem(
             "show"
           );
         }
+
       }
     );
 
     notificationOutsideClickBound =
       true;
   }
-}
+         }
+
+// =========================================================
+// Shared icon set
+// =========================================================
+
+export const icons = {
+
+  home: `
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.7"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M3 10.5 12 3l9 7.5"/>
+      <path d="M5 9.5V21h14V9.5"/>
+      <path d="M9 21v-6h6v6"/>
+    </svg>
+  `,
+
+  history: `
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.7"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M3 12a9 9 0 1 0 3-6.7"/>
+      <path d="M3 4v6h6"/>
+      <path d="M12 7v5l3 2"/>
+    </svg>
+  `,
+
+  chart: `
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.7"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M3 3v18h18"/>
+      <path d="M7 15l4-5 3 3 5-7"/>
+    </svg>
+  `,
+
+  user: `
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.7"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <circle cx="12" cy="8" r="4"/>
+      <path d="M4 21a8 8 0 0 1 16 0"/>
+    </svg>
+  `,
+
+  arrowLeft: `
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M19 12H5"/>
+      <path d="M12 19l-7-7 7-7"/>
+    </svg>
+  `,
+
+  bell: `
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.8"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/>
+      <path d="M10 21h4"/>
+    </svg>
+  `,
+
+  check: `
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="m5 12 4 4L19 6"/>
+    </svg>
+  `,
+
+  close: `
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.8"
+      stroke-linecap="round"
+    >
+      <path d="M6 6l12 12M18 6 6 18"/>
+    </svg>
+  `
+};
+
 
 // =========================================================
 // Shared header for student-facing pages
@@ -1563,7 +1478,9 @@ export function renderStudentHeader(
   student,
   activeKey
 ) {
+
   const tabs = [
+
     {
       key: "dashboard",
       href: "../student/dashboard.html",
@@ -1591,83 +1508,124 @@ export function renderStudentHeader(
       icon: icons.user,
       label: "প্রোফাইল"
     }
+
   ];
 
+
+  const safeName =
+    escapeNotification(
+      student?.name || "শিক্ষার্থী"
+    );
+
+  const safeStudentId =
+    escapeNotification(
+      student?.studentId || ""
+    );
+
+
+  const initial =
+    String(
+      student?.name ||
+      "শিক্ষার্থী"
+    ).charAt(0);
+
+
   const html = `
-    <div class="topbar student-header">
 
-      <div class="brand">
+    <!-- =================================================
+         TOP HEADER
+         ================================================= -->
 
-        ${
-          student.photoURL
-            ? `
-              <img
-                src="${student.photoURL}"
-                alt=""
-                draggable="false"
-                oncontextmenu="return false"
-                style="
-                  width:64px;
-                  height:64px;
-                  border-radius:50%;
-                  object-fit:cover;
-                  flex-shrink:0;
-                  -webkit-touch-callout:none;
-                  -webkit-user-select:none;
-                  user-select:none;
-                  pointer-events:none;
-                "
-                onerror="
-                  this.replaceWith(
-                    Object.assign(
-                      document.createElement('div'),
-                      {
-                        className:'brand-mark',
-                        textContent:'${String(
-                          student.name || ""
-                        ).charAt(0)}'
-                      }
-                    )
-                  )
-                "
-              >
-            `
-            : `
-              <div
-                class="brand-mark"
-                style="
-                  width:64px;
-                  height:64px;
-                  font-size:1.6rem;
-                "
-              >
-                ${String(
-                  student.name || ""
-                ).charAt(0)}
-              </div>
-            `
-        }
+    <div class="topbar">
 
-        <div>
-          <h1 style="font-size:1.3rem;">
-            ${student.name || ""}
+      <!-- Student identity -->
+
+      <div
+        class="brand"
+        style="
+          min-width:0;
+          display:flex;
+          align-items:center;
+          gap:10px;
+        "
+      >
+
+        <div
+          class="brand-mark"
+          style="
+            overflow:hidden;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            flex-shrink:0;
+          "
+        >
+
+          ${
+            student?.photoURL
+              ? `
+                <img
+                  src="${escapeNotification(student.photoURL)}"
+                  alt=""
+                  style="
+                    width:100%;
+                    height:100%;
+                    object-fit:cover;
+                    display:block;
+                  "
+                />
+              `
+              : escapeNotification(initial)
+          }
+
+        </div>
+
+
+        <div style="min-width:0;">
+
+          <h1
+            style="
+              font-size:1.05rem;
+              margin:0;
+              white-space:nowrap;
+              overflow:hidden;
+              text-overflow:ellipsis;
+            "
+          >
+            ${safeName}
           </h1>
 
           <p
             class="text-xs text-muted"
-            style="margin:0;"
+            style="
+              margin:0;
+              white-space:nowrap;
+              overflow:hidden;
+              text-overflow:ellipsis;
+            "
           >
-            ${student.studentId || ""}
+            ${safeStudentId}
           </p>
+
         </div>
 
       </div>
 
-      <div class="flex gap-2 items-center">
+
+      <!-- =================================================
+           RIGHT SIDE ACTIONS
+           ================================================= -->
+
+      <div
+        class="flex gap-2 items-center"
+        style="position:relative;"
+      >
 
         <!-- Global Notification -->
+
         <div
           class="student-global-notification"
+          id="studentGlobalNotification"
         >
 
           <button
@@ -1677,6 +1635,7 @@ export function renderStudentHeader(
             aria-label="Notifications"
             title="Notifications"
           >
+
             ${icons.bell}
 
             <span
@@ -1688,7 +1647,11 @@ export function renderStudentHeader(
               class="global-notification-count"
               id="globalNotificationCount"
             ></span>
+
           </button>
+
+
+          <!-- Notification panel -->
 
           <div
             class="global-notification-panel"
@@ -1698,6 +1661,7 @@ export function renderStudentHeader(
             <div
               class="global-notification-head"
             >
+
               <strong>
                 Notifications
               </strong>
@@ -1708,46 +1672,67 @@ export function renderStudentHeader(
               >
                 বন্ধ করুন
               </button>
+
             </div>
+
 
             <div
               class="global-notification-list"
               id="globalNotificationList"
             >
+
               <div
                 class="global-notification-empty"
               >
                 লোড হচ্ছে...
               </div>
+
             </div>
 
           </div>
 
         </div>
 
+
         <!-- Theme -->
+
         <button
           class="theme-toggle"
           id="themeToggle"
+          type="button"
+          aria-label="থিম পরিবর্তন"
+          title="থিম পরিবর্তন"
         >
+
           <span
             class="theme-toggle-thumb"
           ></span>
+
         </button>
 
+
         <!-- Student switch -->
+
         <a
           href="../index.html"
           class="icon-btn"
           title="শিক্ষার্থী পরিবর্তন"
+          aria-label="শিক্ষার্থী পরিবর্তন"
         >
+
           ${icons.arrowLeft}
+
         </a>
 
       </div>
+
     </div>
 
-    <!-- Navigation -->
+
+    <!-- =================================================
+         NAVIGATION
+         ================================================= -->
+
     <div
       class="glass card"
       style="
@@ -1757,64 +1742,82 @@ export function renderStudentHeader(
       "
     >
 
-      ${tabs
-        .map(
-          tab => `
-            <a
-              href="${tab.href}"
-              style="
-                flex:1;
-                display:flex;
-                flex-direction:column;
-                align-items:center;
-                gap:4px;
-                padding:10px 4px;
-                border-radius:12px;
-                ${
-                  tab.key === activeKey
-                    ? `
-                      background:
-                        var(--color-accent-soft);
-                      color:
-                        var(--color-accent);
-                    `
-                    : `
-                      color:
-                        var(--text-muted);
-                    `
-                }
-              "
-            >
+      ${
+        tabs
+          .map(
+            tab => `
 
-              <span
+              <a
+                href="${tab.href}"
                 style="
-                  width:20px;
-                  height:20px;
+                  flex:1;
+                  display:flex;
+                  flex-direction:column;
+                  align-items:center;
+                  gap:4px;
+                  padding:10px 4px;
+                  border-radius:12px;
+
+                  ${
+                    tab.key === activeKey
+                      ? `
+                        background:
+                          var(--color-accent-soft);
+                        color:
+                          var(--color-accent);
+                      `
+                      : `
+                        color:
+                          var(--text-muted);
+                      `
+                  }
                 "
               >
-                ${tab.icon}
-              </span>
 
-              <span
-                class="text-xs"
-                style="
-                  font-weight:600;
-                "
-              >
-                ${tab.label}
-              </span>
+                <span
+                  style="
+                    width:20px;
+                    height:20px;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                  "
+                >
+                  ${tab.icon}
+                </span>
 
-            </a>
-          `
-        )
-        .join("")}
+
+                <span
+                  class="text-xs"
+                  style="
+                    font-weight:600;
+                    text-align:center;
+                  "
+                >
+                  ${tab.label}
+                </span>
+
+              </a>
+
+            `
+          )
+          .join("")
+      }
 
     </div>
+
   `;
 
-  // Header caller-এর DOM-এ বসানোর পর
-  // notification system initialize হবে।
+
+  // =======================================================
+  // IMPORTANT:
+  // Header HTML is returned first.
+  // After the caller puts it into DOM,
+  // notification system is initialized.
+  // =======================================================
+
   queueMicrotask(() => {
+
     const btn =
       document.getElementById(
         "globalNotificationBtn"
@@ -1830,28 +1833,523 @@ export function renderStudentHeader(
         "globalNotificationClose"
       );
 
+
+    // ---------- Open / close notification ----------
+
     if (btn && panel) {
+
       btn.onclick = event => {
+
         event.stopPropagation();
 
         panel.classList.toggle(
           "show"
         );
+
       };
+
     }
 
+
+    // ---------- Close button ----------
+
     if (close && panel) {
-      close.onclick = () => {
+
+      close.onclick = event => {
+
+        event.stopPropagation();
+
         panel.classList.remove(
           "show"
         );
+
       };
+
     }
+
+
+    // ---------- Start Firebase listeners ----------
 
     startGlobalNotificationSystem(
       student
     );
+
   });
 
+
   return html;
-                   }
+         }
+// =========================================================
+// Optional helper utilities
+// =========================================================
+
+// ---------- Safe text ----------
+export function safeText(value, fallback = "") {
+  const text = String(value ?? "").trim();
+
+  return text || fallback;
+}
+
+
+// ---------- Number formatter ----------
+export function formatNumber(value, digits = 0) {
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) {
+    return "0";
+  }
+
+  return number.toLocaleString(
+    "en-IN",
+    {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits
+    }
+  );
+}
+
+
+// ---------- Percentage formatter ----------
+export function formatPercentage(
+  value,
+  digits = 1
+) {
+  const number = Number(value);
+
+  if (!Number.isFinite(number)) {
+    return "0%";
+  }
+
+  return `${number.toFixed(digits)}%`;
+}
+
+
+// ---------- Date formatter ----------
+export function formatDate(value) {
+  const ms =
+    notificationMillis(value);
+
+  if (!ms) {
+    return "";
+  }
+
+  try {
+    return new Date(ms).toLocaleDateString(
+      "bn-BD",
+      {
+        day: "numeric",
+        month: "short",
+        year: "numeric"
+      }
+    );
+  } catch {
+    return "";
+  }
+}
+
+
+// ---------- Time formatter ----------
+export function formatTime(value) {
+  const ms =
+    notificationMillis(value);
+
+  if (!ms) {
+    return "";
+  }
+
+  try {
+    return new Date(ms).toLocaleTimeString(
+      "bn-BD",
+      {
+        hour: "numeric",
+        minute: "2-digit"
+      }
+    );
+  } catch {
+    return "";
+  }
+}
+
+
+// =========================================================
+// Small DOM helpers
+// =========================================================
+
+export function qs(
+  selector,
+  root = document
+) {
+  return root.querySelector(selector);
+}
+
+
+export function qsa(
+  selector,
+  root = document
+) {
+  return [
+    ...root.querySelectorAll(selector)
+  ];
+}
+
+
+export function on(
+  element,
+  event,
+  handler,
+  options
+) {
+  if (!element) {
+    return () => {};
+  }
+
+  element.addEventListener(
+    event,
+    handler,
+    options
+  );
+
+  return () => {
+    element.removeEventListener(
+      event,
+      handler,
+      options
+    );
+  };
+}
+
+
+// =========================================================
+// Empty / loading helpers
+// =========================================================
+
+export function showLoading(
+  container,
+  message = "লোড হচ্ছে..."
+) {
+  if (!container) {
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="state-block">
+
+      <div class="spinner"></div>
+
+      <p class="text-sm">
+        ${escapeNotification(message)}
+      </p>
+
+    </div>
+  `;
+}
+
+
+export function showEmpty(
+  container,
+  message = "কোনো তথ্য পাওয়া যায়নি।"
+) {
+  if (!container) {
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="state-block">
+
+      ${ICONS.empty}
+
+      <p class="text-sm">
+        ${escapeNotification(message)}
+      </p>
+
+    </div>
+  `;
+}
+
+
+export function showError(
+  container,
+  message = "একটি সমস্যা হয়েছে।"
+) {
+  if (!container) {
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="state-block">
+
+      ${ICONS.error}
+
+      <p class="text-sm">
+        ${escapeNotification(message)}
+      </p>
+
+    </div>
+  `;
+}
+
+
+// =========================================================
+// Button loading state
+// =========================================================
+
+export function setButtonLoading(
+  button,
+  loading,
+  loadingText = "অপেক্ষা করুন..."
+) {
+  if (!button) {
+    return;
+  }
+
+  if (loading) {
+
+    if (
+      !button.dataset.originalText
+    ) {
+      button.dataset.originalText =
+        button.textContent;
+    }
+
+    button.disabled = true;
+
+    button.innerHTML = `
+      <span
+        class="spinner"
+        style="
+          width:14px;
+          height:14px;
+          border-width:2px;
+        "
+      ></span>
+
+      ${escapeNotification(
+        loadingText
+      )}
+    `;
+
+  } else {
+
+    button.disabled = false;
+
+    if (
+      button.dataset.originalText !==
+      undefined
+    ) {
+      button.textContent =
+        button.dataset.originalText;
+
+      delete button.dataset.originalText;
+    }
+
+  }
+}
+
+
+// =========================================================
+// Theme button binding
+// =========================================================
+
+export function bindThemeToggle() {
+
+  const button =
+    document.getElementById(
+      "themeToggle"
+    );
+
+  if (!button) {
+    return;
+  }
+
+  button.onclick = () => {
+
+    const next =
+      toggleTheme();
+
+    button.setAttribute(
+      "aria-label",
+      next === "dark"
+        ? "লাইট মোড"
+        : "ডার্ক মোড"
+    );
+
+  };
+}
+
+
+// =========================================================
+// Re-bind global header after dynamic rendering
+// =========================================================
+
+export function bindStudentHeader(
+  student
+) {
+
+  const button =
+    document.getElementById(
+      "globalNotificationBtn"
+    );
+
+  const panel =
+    document.getElementById(
+      "globalNotificationPanel"
+    );
+
+  const close =
+    document.getElementById(
+      "globalNotificationClose"
+    );
+
+
+  // ---------- Notification button ----------
+
+  if (button && panel) {
+
+    button.onclick =
+      event => {
+
+        event.stopPropagation();
+
+        panel.classList.toggle(
+          "show"
+        );
+
+      };
+
+  }
+
+
+  // ---------- Close ----------
+
+  if (close && panel) {
+
+    close.onclick =
+      event => {
+
+        event.stopPropagation();
+
+        panel.classList.remove(
+          "show"
+        );
+
+      };
+
+  }
+
+
+  // ---------- Theme ----------
+
+  bindThemeToggle();
+
+
+  // ---------- Notification system ----------
+
+  if (student?.studentId) {
+
+    startGlobalNotificationSystem(
+      student
+    );
+
+  }
+
+}
+
+
+// =========================================================
+// Cleanup when changing active student
+// =========================================================
+
+export function cleanupStudentHeader() {
+
+  stopGlobalNotificationListeners();
+
+  const panel =
+    document.getElementById(
+      "globalNotificationPanel"
+    );
+
+  if (panel) {
+    panel.classList.remove(
+      "show"
+    );
+  }
+
+}
+
+
+// =========================================================
+// Reset hidden notifications
+// NOTE:
+// This is intentionally NOT used automatically.
+// Hidden notifications remain hidden permanently
+// for their individual notification key.
+// =========================================================
+
+export function resetHiddenNotifications() {
+
+  try {
+
+    localStorage.removeItem(
+      NOTIF_HIDE_KEY
+    );
+
+  } catch {}
+
+}
+
+
+// =========================================================
+// Debug helper
+// =========================================================
+
+export function debugNotificationSystem() {
+
+  const button =
+    document.getElementById(
+      "globalNotificationBtn"
+    );
+
+  const panel =
+    document.getElementById(
+      "globalNotificationPanel"
+    );
+
+  const list =
+    document.getElementById(
+      "globalNotificationList"
+    );
+
+  console.log(
+    "Global Notification System:",
+    {
+      buttonFound: !!button,
+      panelFound: !!panel,
+      listFound: !!list
+    }
+  );
+
+  return {
+    button,
+    panel,
+    list
+  };
+
+}
+
+
+// =========================================================
+// Initial theme setup
+// =========================================================
+
+try {
+
+  initTheme();
+
+} catch (err) {
+
+  console.error(
+    "Theme initialization failed:",
+    err
+  );
+
+}
