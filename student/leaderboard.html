@@ -6,50 +6,67 @@
 <title>লিডারবোর্ড — পরীক্ষা প্রস্তুতি</title>
 <link rel="stylesheet" href="../css/style.css">
 <style>
-  /* ---- Clean Card-based Leaderboard Rows ---- */
-  .lb-card {
-    display: flex; align-items: center; gap: 12px; padding: 12px;
-    background: var(--surface); border: 1px solid var(--surface-border);
-    border-radius: 12px; margin-bottom: 8px; transition: transform 0.2s;
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; } }
+  .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+
+  /* ===== Premium Glassmorphism Theme (Matches Dashboard) ===== */
+  .glass-float-card {
+    background: rgba(128, 128, 128, 0.07);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(128, 128, 128, 0.15);
+    border-radius: 16px; padding: 16px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
   }
-  .lb-card.is-me { border-color: var(--color-accent); background: var(--color-accent-soft); }
+
+  .btn-glass {
+    background: rgba(128, 128, 128, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(128, 128, 128, 0.2);
+    border-radius: 10px; color: var(--text-primary);
+    padding: 8px 12px; font-weight: 700; font-size: 0.8rem;
+    display: inline-flex; justify-content: center; align-items: center; gap: 4px;
+    cursor: pointer; transition: all 0.2s ease; text-decoration: none;
+  }
+  .btn-glass:active { transform: scale(0.96); }
+
+  /* ===== Leaderboard Row Styles ===== */
+  .lb-row {
+    display: flex; align-items: center; gap: 12px; padding: 14px 10px;
+    border-bottom: 1px dashed rgba(128,128,128,0.15);
+  }
+  .lb-row:last-child { border-bottom: none; }
   
-  .lb-rank { width: 32px; text-align: center; font-weight: 800; font-size: 1.1rem; color: var(--text-muted); flex-shrink: 0; }
-  .lb-rank.top1 { color: #f5b301; font-size: 1.4rem; }
-  .lb-rank.top2 { color: #94a3b8; font-size: 1.3rem; }
-  .lb-rank.top3 { color: #cd7f32; font-size: 1.2rem; }
+  .lb-row.is-me {
+    background: linear-gradient(135deg, #fefce8 0%, #fef08a 100%);
+    border: 1px solid rgba(234, 179, 8, 0.3);
+    border-radius: 12px; padding: 14px; margin: 4px 0;
+  }
+  .lb-row.is-me .lb-name { color: #713f12; }
+  .lb-row.is-me .points-pill { background: rgba(113, 63, 18, 0.1); color: #713f12; }
+
+  .rank-number { width: 24px; font-size: 0.9rem; font-weight: 800; color: var(--text-muted); flex-shrink: 0; text-align: center; }
   
   .lb-avatar {
-    width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+    width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
     display: flex; align-items: center; justify-content: center;
     background: var(--color-accent-soft); color: var(--color-accent); font-weight: 800;
   }
   .lb-avatar img { width: 100%; height: 100%; object-fit: cover; }
-  .lb-info { flex: 1; min-width: 0; }
-  .lb-name { font-weight: 700; font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom:4px; }
+  
+  .lb-name { font-weight: 800; font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 4px; }
   
   .points-pill {
-    display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px;
-    background: rgba(245, 179, 1, 0.15); color: #b45309; border-radius: 99px;
-    font-weight: 800; font-size: 0.75rem;
+    display: inline-block; padding: 2px 8px; border-radius: 99px;
+    background: rgba(128, 128, 128, 0.1); color: var(--text-secondary);
+    font-weight: 800; font-size: 0.75rem; font-family: var(--font-num);
   }
 
-  .lb-friend-btn {
-    flex-shrink: 0; font-size: 0.7rem; font-weight: 700; padding: 6px 10px; border-radius: 8px;
-    border: none; cursor: pointer; text-decoration: none; display: inline-block;
+  /* ===== Modal Background ===== */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+    z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;
   }
-  .btn-compare { background: var(--color-accent-soft); color: var(--color-accent); }
-  .btn-add { background: var(--surface-border); color: var(--text-secondary); }
-  
-  /* ---- Super Smooth CSS Marquee Activity Feed ---- */
-  .feed-container { overflow: hidden; white-space: nowrap; width: 100%; position: relative; padding-bottom: 8px; }
-  .feed-scroll { 
-    display: inline-flex; gap: 12px; width: max-content;
-    animation: marquee 25s linear infinite; 
-  }
-  .feed-scroll:hover { animation-play-state: paused; }
-  @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-  .feed-card { flex-shrink: 0; width: 250px; padding: 12px; border-radius: 12px; border: 1px solid var(--surface-border); background: var(--surface); white-space: normal; }
 </style>
 </head>
 <body>
@@ -57,11 +74,25 @@
   <div class="state-block"><div class="spinner"></div></div>
 </div>
 
+<!-- Challenge Modal -->
+<div id="challengeModal" class="modal-overlay" style="display:none;">
+  <div class="glass-float-card" style="background:var(--surface); width:100%; max-width:400px; padding:24px;">
+    <h3 style="font-weight:800; margin-bottom:8px; color:var(--text-primary); font-size:1.2rem;">বন্ধুকে চ্যালেঞ্জ করো! ⚔️</h3>
+    <p class="text-sm text-muted mb-4">কোন পরীক্ষায় চ্যালেঞ্জ করতে চাও নির্বাচন করো। জিতলে পাবে <span style="color:#eab308; font-weight:700;">+১০০ পয়েন্ট!</span></p>
+    <div id="challengeModalBody"><div class="spinner"></div></div>
+    <div class="flex gap-2 mt-5">
+      <button class="btn-glass" id="closeChallengeModal" style="flex:1;">বাতিল</button>
+      <button class="btn-glass" id="confirmChallengeBtn" style="flex:1; background:var(--color-danger); color:#fff; border:none; display:none;">চ্যালেঞ্জ পাঠাও</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
-import { initTheme, toggleTheme, icons, renderState, renderStudentHeader, showToast, friendlyError } from "../js/utils/ui-utils.js";
+import { initTheme, toggleTheme, renderState, renderStudentHeader, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { getActiveStudent, refreshActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
-import { getLeaderboardData, getAllApprovedResults } from "../js/utils/results-utils.js";
+import { getLeaderboardData, getUpcomingExams } from "../js/utils/results-utils.js";
 import { getMyFriendIds, getOutgoingRequests, sendFriendRequest } from "../js/utils/friend-utils.js";
+import { getIncomingChallenges, getOutgoingChallenges, sendChallenge, acceptChallenge, rejectChallenge } from "../js/utils/challenge-utils.js";
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -80,23 +111,27 @@ let allLeaderboard = [];
 let myFriendIds = [];
 let activeClassFilter = "all";
 let friendsOnly = false;
+let upcomingExamsCache = null;
+let selectedFriendIdForChallenge = null;
 
 function render() {
   shell.innerHTML = `
     ${renderStudentHeader(student, "leaderboard")}
 
-    <!-- 1. Leaderboard at the TOP -->
-    <div class="mt-2">
-      <div class="flex justify-between items-center mb-3">
-        <h2 style="font-size: 1.1rem; font-weight: 800;">🏆 র‍্যাঙ্কিং ও পয়েন্টস</h2>
-        <button class="btn btn-secondary btn-sm" id="friendsToggleBtn">সবাই</button>
-      </div>
-      <div id="classFilterRow" class="flex gap-2 mb-3" style="overflow-x:auto;"></div>
-      <div id="leaderboardList"></div>
-    </div>
+    <!-- Incoming Challenges Banner -->
+    <div id="incomingChallengesCard" class="mt-4" style="display:none;"></div>
 
-    <!-- 2. Activity Feed at the BOTTOM -->
-    <div id="activityFeedSection" class="mt-5"></div>
+    <div class="mt-4">
+      <div class="flex justify-between items-center mb-3">
+        <h2 style="font-size: 1.15rem; font-weight: 800;">🏆 লিডারবোর্ড</h2>
+        <button class="btn-glass" id="friendsToggleBtn" style="padding:6px 12px;">সবাই</button>
+      </div>
+      <div id="classFilterRow" class="flex gap-2 mb-3" style="overflow-x:auto; padding-bottom:4px; scrollbar-width:none;"></div>
+      
+      <div class="glass-float-card" style="padding: 4px;">
+        <div id="leaderboardList"></div>
+      </div>
+    </div>
   `;
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
   document.getElementById("friendsToggleBtn").addEventListener("click", () => {
@@ -105,23 +140,60 @@ function render() {
     renderLeaderboardList();
   });
 
+  // Modal Close Events
+  document.getElementById("closeChallengeModal").addEventListener("click", () => {
+    document.getElementById("challengeModal").style.display = "none";
+  });
+
   loadEverything();
 }
 
 async function loadEverything() {
   try {
-    const [students, board, friendIds, allResults] = await Promise.all([
+    const [students, board, friendIds] = await Promise.all([
       getActiveStudents(),
       getLeaderboardData(await getActiveStudents()),
-      getMyFriendIds(student.studentId),
-      getAllApprovedResults()
+      getMyFriendIds(student.studentId)
     ]);
     allLeaderboard = board;
     myFriendIds = friendIds;
 
+    const nameOf = {}; students.forEach(s => { nameOf[s.studentId] = s.name; });
+
+    // Handle Incoming Challenges
+    const incChallenges = await getIncomingChallenges(student.studentId);
+    const incCard = document.getElementById("incomingChallengesCard");
+    if (incChallenges.length > 0) {
+      incCard.style.display = "block";
+      incCard.innerHTML = `
+        <div class="glass-float-card" style="border-left: 3px solid #ef4444;">
+          <p class="eyebrow mb-2" style="color:#ef4444;">⚔️ নতুন চ্যালেঞ্জ!</p>
+          ${incChallenges.map(c => `
+            <div class="flex justify-between items-center mt-2" style="border-bottom:1px dashed var(--surface-border); padding-bottom:8px;">
+              <div>
+                <p class="text-sm font-bold">${nameOf[c.fromStudentId] || "বন্ধু"}</p>
+                <p class="text-xs text-muted mt-1">পরীক্ষা: <span style="font-weight:700;">${c.examName}</span></p>
+              </div>
+              <div class="flex gap-2">
+                <button class="btn-glass chall-reject" data-id="${c.id}" style="padding:6px; font-size:0.7rem;">বাতিল</button>
+                <button class="btn-glass chall-accept" data-id="${c.id}" style="padding:6px; font-size:0.7rem; color:var(--color-success); border-color:var(--color-success);">গ্রহণ</button>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+      incCard.querySelectorAll(".chall-accept").forEach(b => b.addEventListener("click", async () => {
+        try { await acceptChallenge(b.dataset.id); showToast("চ্যালেঞ্জ গৃহীত!", "success"); loadEverything(); } catch(err) { console.error(err); }
+      }));
+      incCard.querySelectorAll(".chall-reject").forEach(b => b.addEventListener("click", async () => {
+        try { await rejectChallenge(b.dataset.id); loadEverything(); } catch(err) { console.error(err); }
+      }));
+    } else {
+      incCard.style.display = "none";
+    }
+
     renderClassFilterRow();
     renderLeaderboardList();
-    renderActivityFeed(allResults, students);
   } catch (err) {
     console.error(err);
     showToast(friendlyError(err), "error");
@@ -132,8 +204,8 @@ function renderClassFilterRow() {
   const el = document.getElementById("classFilterRow");
   const classes = [...new Set(allLeaderboard.map(r => r.className).filter(Boolean))].sort();
   el.innerHTML = [
-    `<button class="btn btn-sm ${activeClassFilter === "all" ? "btn-primary" : "btn-secondary"}" data-class="all" style="flex-shrink:0;">সব</button>`,
-    ...classes.map(c => `<button class="btn btn-sm ${activeClassFilter === c ? "btn-primary" : "btn-secondary"}" data-class="${c}" style="flex-shrink:0;">${c}</button>`)
+    `<button class="btn-glass ${activeClassFilter === "all" ? "" : "text-muted"}" data-class="all" style="${activeClassFilter === 'all' ? 'background:var(--color-accent); color:#fff; border:none;' : ''} flex-shrink:0;">সব</button>`,
+    ...classes.map(c => `<button class="btn-glass ${activeClassFilter === c ? "" : "text-muted"}" data-class="${c}" style="${activeClassFilter === c ? 'background:var(--color-accent); color:#fff; border:none;' : ''} flex-shrink:0;">${c}</button>`)
   ].join("");
   el.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
     activeClassFilter = b.dataset.class;
@@ -149,82 +221,113 @@ async function renderLeaderboardList() {
   if (friendsOnly) rows = rows.filter(r => myFriendIds.includes(r.studentId) || r.studentId === student.studentId);
 
   if (rows.length === 0) {
-    renderState(el, "empty", friendsOnly ? "কোনো বন্ধুর ফলাফল এখনো নেই।" : "এখনো কোনো রেজাল্ট নেই।");
+    renderState(el, "empty", "এখনো কোনো রেজাল্ট নেই।");
     return;
   }
 
-  const outgoing = await getOutgoingRequests(student.studentId);
-  const pendingToIds = new Set(outgoing.map(r => r.toStudentId));
-  const myIndex = rows.findIndex(r => r.studentId === student.studentId);
+  const [outgoingReqs, outgoingChalls] = await Promise.all([
+    getOutgoingRequests(student.studentId),
+    getOutgoingChallenges(student.studentId)
+  ]);
+  const pendingToIds = new Set(outgoingReqs.map(r => r.toStudentId));
+  const challengedIds = new Set(outgoingChalls.filter(c => c.status === "pending").map(c => c.toStudentId));
 
   el.innerHTML = rows.map((r, i) => {
-    const rankClass = i === 0 ? "top1" : i === 1 ? "top2" : i === 2 ? "top3" : "";
     const isMe = r.studentId === student.studentId;
     const isFriend = myFriendIds.includes(r.studentId);
-    const isPending = pendingToIds.has(r.studentId);
     
-    const isTarget = (!isMe && myIndex > 0 && i === myIndex - 1 && !friendsOnly);
-    const targetBadge = isTarget ? `<span style="font-size:0.6rem; background:#fef08a; color:#854d0e; padding:2px 6px; border-radius:4px; font-weight:800; margin-left:6px; vertical-align:middle;">🔥 টার্গেট</span>` : "";
-
     let friendBtn = "";
     if (!isMe) {
-      if (isFriend) friendBtn = `<a href="../student/comparison.html?friendId=${r.studentId}" class="lb-friend-btn btn-compare">তুলনা</a>`;
-      else if (isPending) friendBtn = `<span class="lb-friend-btn" style="color:var(--text-muted); border:1px solid var(--surface-border);">পাঠানো</span>`;
-      else friendBtn = `<button class="lb-friend-btn btn-add add-friend-btn" data-id="${r.studentId}">+ বন্ধু</button>`;
+      if (isFriend) {
+        const hasChallenged = challengedIds.has(r.studentId);
+        friendBtn = `
+          <a href="../student/comparison.html?friendId=${r.studentId}" class="btn-glass" style="padding:8px;" title="তুলনা">📊</a>
+          ${hasChallenged
+            ? `<span class="btn-glass" style="padding:8px; color:var(--text-muted); cursor:default;" title="চ্যালেঞ্জ অপেক্ষমান">⏳</span>`
+            : `<button class="btn-glass challenge-btn" data-id="${r.studentId}" style="padding:8px; color:#ef4444; border-color:rgba(239, 68, 68, 0.3);" title="চ্যালেঞ্জ">⚔️</button>`
+          }
+        `;
+      }
+      else if (pendingToIds.has(r.studentId)) {
+        friendBtn = `<span class="btn-glass" style="padding:6px 10px; font-size:0.75rem; color:var(--text-muted);">পাঠানো</span>`;
+      }
+      else {
+        friendBtn = `<button class="btn-glass add-friend-btn" data-id="${r.studentId}" style="padding:6px 10px; font-size:0.75rem;">+ বন্ধু</button>`;
+      }
     }
     
     return `
-      <div class="lb-card ${isMe ? "is-me" : ""}">
-        <span class="lb-rank ${rankClass}">${i + 1}</span>
+      <div class="lb-row ${isMe ? 'is-me' : ''}">
+        <span class="rank-number">${i + 1}.</span>
         <span class="lb-avatar">${r.photoURL ? `<img src="${r.photoURL}" alt="">` : r.name.charAt(0)}</span>
-        <div class="lb-info">
-          <div class="lb-name">${r.name}${isMe ? " (তুমি)" : ""}${targetBadge}</div>
-          <div class="points-pill">⭐ ${r.totalPoints || 0} পয়েন্ট <span style="color:var(--text-muted); font-weight:600; margin-left:4px;">(${r.avgPercentage || 0}%)</span></div>
+        <div style="flex:1; min-width:0;">
+          <p class="lb-name">${r.name}${isMe ? " (তুমি)" : ""}</p>
+          <span class="points-pill">${r.totalPoints || 0} পয়েন্ট</span>
         </div>
-        ${friendBtn}
+        <div class="flex gap-2">
+          ${friendBtn}
+        </div>
       </div>
     `;
   }).join("");
 
+  // Friend Request Action
   el.querySelectorAll(".add-friend-btn").forEach(b => b.addEventListener("click", async () => {
     try {
       await sendFriendRequest(student.studentId, b.dataset.id);
       showToast("অনুরোধ পাঠানো হয়েছে।", "success");
       renderLeaderboardList();
-    } catch (err) {
-      showToast(friendlyError(err), "error");
+    } catch (err) { showToast(friendlyError(err), "error"); }
+  }));
+
+  // Open Challenge Modal Action
+  el.querySelectorAll(".challenge-btn").forEach(b => b.addEventListener("click", async () => {
+    selectedFriendIdForChallenge = b.dataset.id;
+    const modal = document.getElementById("challengeModal");
+    const body = document.getElementById("challengeModalBody");
+    const confirmBtn = document.getElementById("confirmChallengeBtn");
+    
+    modal.style.display = "flex";
+    confirmBtn.style.display = "none";
+    body.innerHTML = `<div class="spinner"></div>`;
+
+    if (!upcomingExamsCache) {
+      upcomingExamsCache = await getUpcomingExams();
+    }
+
+    if (upcomingExamsCache.length === 0) {
+      body.innerHTML = `<p class="text-sm" style="color:#ef4444; font-weight:600; padding:10px; background:rgba(239, 68, 68, 0.1); border-radius:8px;">বর্তমানে কোনো আসন্ন পরীক্ষা নেই। পরীক্ষা প্রকাশিত হলে চ্যালেঞ্জ করতে পারবে।</p>`;
+    } else {
+      body.innerHTML = `
+        <select id="challengeExamSelect" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--surface-border); background:rgba(128,128,128,0.1); color:var(--text-primary); font-family:inherit; font-size:0.9rem; font-weight:600; outline:none;">
+          ${upcomingExamsCache.map(e => `<option value="${e.id}">${e.name}</option>`).join("")}
+        </select>
+      `;
+      confirmBtn.style.display = "block";
     }
   }));
-}
 
-function renderActivityFeed(results, students) {
-  const el = document.getElementById("activityFeedSection");
-  const feed = results.filter(r => myFriendIds.includes(r.studentId)).slice(0, 5);
-  
-  if (feed.length === 0) return;
+  // Confirm Challenge Action
+  document.getElementById("confirmChallengeBtn").onclick = async () => {
+    const examSelect = document.getElementById("challengeExamSelect");
+    if (!examSelect) return;
+    const examId = examSelect.value;
+    const examName = examSelect.options[examSelect.selectedIndex].text;
 
-  const nameOf = {}; students.forEach(s => { nameOf[s.studentId] = s.name; });
-  
-  // Create feed items
-  const feedHtml = feed.map(r => `
-    <div class="feed-card">
-       <p class="text-xs text-muted mb-1">🔥 লাইভ আপডেট</p>
-       <p class="text-sm" style="font-weight:600; line-height:1.4;">
-         ${nameOf[r.studentId]} <span style="color:var(--color-accent);">${r.examName || "পরীক্ষা"}</span>-এ ${r.percentage}% পেয়েছে!
-       </p>
-    </div>
-  `).join("");
-  
-  // Duplicate feedHtml so the marquee loops seamlessly
-  el.innerHTML = `
-    <p class="eyebrow mb-2">বন্ধুদের লাইভ আপডেট</p>
-    <div class="feed-container">
-      <div class="feed-scroll">
-        ${feedHtml}${feedHtml}
-      </div>
-    </div>
-  `;
+    try {
+      document.getElementById("confirmChallengeBtn").textContent = "পাঠানো হচ্ছে...";
+      await sendChallenge(student.studentId, selectedFriendIdForChallenge, examId, examName);
+      showToast("চ্যালেঞ্জ পাঠানো হয়েছে! ⚔️", "success");
+      document.getElementById("challengeModal").style.display = "none";
+      document.getElementById("confirmChallengeBtn").textContent = "চ্যালেঞ্জ পাঠাও";
+      loadEverything();
+    } catch(err) {
+      showToast("একটি সমস্যা হয়েছে।", "error");
+      document.getElementById("confirmChallengeBtn").textContent = "চ্যালেঞ্জ পাঠাও";
+    }
+  };
 }
 </script>
 </body>
-</html>
+  </html>
+  
