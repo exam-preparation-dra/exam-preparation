@@ -14,7 +14,7 @@
   }
   .lb-card.is-me { border-color: var(--color-accent); background: var(--color-accent-soft); }
   
-  .lb-rank { width: 32px; text-align: center; font-weight: 800; font-size: 1.1rem; color: var(--text-muted); flex-shrink: 0; }
+  .lb-rank { width: 28px; text-align: center; font-weight: 800; font-size: 1.1rem; color: var(--text-muted); flex-shrink: 0; }
   .lb-rank.top1 { color: #f5b301; font-size: 1.4rem; }
   .lb-rank.top2 { color: #94a3b8; font-size: 1.3rem; }
   .lb-rank.top3 { color: #cd7f32; font-size: 1.2rem; }
@@ -26,12 +26,16 @@
   }
   .lb-avatar img { width: 100%; height: 100%; object-fit: cover; }
   .lb-info { flex: 1; min-width: 0; }
-  .lb-name { font-weight: 700; font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  
+  .lb-name { 
+    font-weight: 700; font-size: 0.95rem; overflow: hidden; 
+    text-overflow: ellipsis; white-space: nowrap; margin-bottom: 4px;
+  }
   
   .points-pill {
-    display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px;
+    display: inline-block; white-space: nowrap; padding: 3px 8px;
     background: rgba(245, 179, 1, 0.15); color: #b45309; border-radius: 99px;
-    font-weight: 800; font-size: 0.75rem; margin-top: 4px;
+    font-weight: 800; font-size: 0.75rem;
   }
 
   .lb-friend-btn {
@@ -41,10 +45,16 @@
   .btn-compare { background: var(--color-accent-soft); color: var(--color-accent); }
   .btn-add { background: var(--surface-border); color: var(--text-secondary); }
   
-  /* ---- Activity Feed ---- */
-  .feed-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
-  .feed-scroll::-webkit-scrollbar { display: none; }
-  .feed-card { flex-shrink: 0; width: 240px; padding: 12px; border-radius: 12px; border: 1px solid var(--surface-border); background: var(--surface); }
+  /* ---- Activity Feed (Auto Scroll) ---- */
+  .feed-wrapper { overflow: hidden; width: 100%; padding: 4px 0 12px 0; }
+  .feed-scroll { 
+    display: flex; gap: 12px; width: max-content;
+    /* JS will handle the smooth scroll */
+  }
+  .feed-card { 
+    flex-shrink: 0; width: 230px; padding: 12px; border-radius: 12px; 
+    border: 1px solid var(--surface-border); background: var(--surface); 
+  }
 </style>
 </head>
 <body>
@@ -56,10 +66,7 @@
 import { initTheme, toggleTheme, icons, renderState, renderStudentHeader, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { getActiveStudent, refreshActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
 import { getLeaderboardData, getAllApprovedResults } from "../js/utils/results-utils.js";
-import {
-  MAX_FRIENDS, getMyFriendIds, getIncomingRequests, getOutgoingRequests,
-  sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend
-} from "../js/utils/friend-utils.js";
+import { getMyFriendIds, getOutgoingRequests, sendFriendRequest } from "../js/utils/friend-utils.js";
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -83,21 +90,18 @@ function render() {
   shell.innerHTML = `
     ${renderStudentHeader(student, "leaderboard")}
 
-    <div class="glass card hidden" id="requestsCard"></div>
-
-    <!-- Activity Feed Section -->
-    <div id="activityFeedSection" class="mt-3"></div>
-
-    <div class="glass card mt-3" id="friendsCard"></div>
-
-    <div class="mt-4">
-      <div class="flex justify-between items-center mb-2">
+    <!-- 1. Leaderboard Section (Moved to TOP) -->
+    <div class="mt-2">
+      <div class="flex justify-between items-center mb-3">
         <h2 style="font-size: 1.1rem; font-weight: 800;">🏆 র‍্যাঙ্কিং ও পয়েন্টস</h2>
         <button class="btn btn-secondary btn-sm" id="friendsToggleBtn">সবাই</button>
       </div>
       <div id="classFilterRow" class="flex gap-2 mb-3" style="overflow-x:auto;"></div>
       <div id="leaderboardList"></div>
     </div>
+
+    <!-- 2. Activity Feed Section (Moved to Bottom) -->
+    <div id="activityFeedSection" class="mt-5"></div>
   `;
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
   document.getElementById("friendsToggleBtn").addEventListener("click", () => {
@@ -111,100 +115,22 @@ function render() {
 
 async function loadEverything() {
   try {
-    const [students, board, friendIds, incoming, allResults] = await Promise.all([
+    const [students, board, friendIds, allResults] = await Promise.all([
       getActiveStudents(),
       getLeaderboardData(await getActiveStudents()),
       getMyFriendIds(student.studentId),
-      getIncomingRequests(student.studentId),
       getAllApprovedResults()
     ]);
     allLeaderboard = board;
     myFriendIds = friendIds;
 
-    renderRequestsCard(incoming, students);
-    renderActivityFeed(allResults, students);
-    renderFriendsCard(students);
     renderClassFilterRow();
     renderLeaderboardList();
+    renderActivityFeed(allResults, students);
   } catch (err) {
     console.error(err);
     showToast(friendlyError(err), "error");
   }
-}
-
-function renderActivityFeed(results, students) {
-  const el = document.getElementById("activityFeedSection");
-  const feed = results.filter(r => myFriendIds.includes(r.studentId)).slice(0, 5);
-  
-  if (feed.length === 0) return; // Hide if no friend activity
-
-  const nameOf = {}; students.forEach(s => { nameOf[s.studentId] = s.name; });
-  
-  el.innerHTML = `
-    <p class="eyebrow mb-2">বন্ধুদের লাইভ আপডেট</p>
-    <div class="feed-scroll">
-      ${feed.map(r => `
-        <div class="feed-card">
-           <p class="text-xs text-muted mb-1">🔥 এইমাত্র</p>
-           <p class="text-sm" style="font-weight:600; line-height:1.4;">
-             ${nameOf[r.studentId]} <span style="color:var(--color-accent);">${r.examName || "পরীক্ষা"}</span>-এ ${r.percentage}% পেয়েছে!
-           </p>
-        </div>
-      `).join("")}
-    </div>
-  `;
-}
-
-function renderRequestsCard(incoming, students) {
-  const el = document.getElementById("requestsCard");
-  if (incoming.length === 0) { el.classList.add("hidden"); return; }
-  el.classList.remove("hidden");
-  const nameOf = {}; students.forEach(s => { nameOf[s.studentId] = s.name; });
-  el.innerHTML = `
-    <p class="eyebrow mb-2">বন্ধুর অনুরোধ</p>
-    ${incoming.map(r => `
-      <div class="flex justify-between items-center mt-2">
-        <p class="text-sm">${nameOf[r.fromStudentId] || r.fromStudentId}</p>
-        <div class="flex gap-2">
-          <button class="btn btn-secondary btn-sm req-reject" data-id="${r.id}">প্রত্যাখ্যান</button>
-          <button class="btn btn-primary btn-sm req-accept" data-id="${r.id}">গ্রহণ করো</button>
-        </div>
-      </div>
-    `).join("")}
-  `;
-  el.querySelectorAll(".req-accept").forEach(b => b.addEventListener("click", async () => {
-    try {
-      await acceptFriendRequest(b.dataset.id, student.studentId);
-      showToast("বন্ধু হিসেবে যুক্ত হলো।", "success");
-      loadEverything();
-    } catch (err) { showToast(friendlyError(err), "error"); }
-  }));
-  el.querySelectorAll(".req-reject").forEach(b => b.addEventListener("click", async () => {
-    await rejectFriendRequest(b.dataset.id);
-    loadEverything();
-  }));
-}
-
-function renderFriendsCard(students) {
-  const el = document.getElementById("friendsCard");
-  const nameOf = {}; students.forEach(s => { nameOf[s.studentId] = s.name; });
-  el.innerHTML = `
-    <p class="eyebrow mb-2">আমার বন্ধুরা (${myFriendIds.length}/${MAX_FRIENDS})</p>
-    ${myFriendIds.length === 0
-      ? `<p class="text-sm text-muted">এখনো কোনো বন্ধু যোগ হয়নি — নিচের তালিকা থেকে অনুরোধ পাঠাও।</p>`
-      : myFriendIds.map(fid => `
-        <div class="flex justify-between items-center mt-2">
-          <p class="text-sm">${nameOf[fid] || fid}</p>
-          <button class="btn btn-secondary btn-sm friend-remove" data-id="${fid}">সরাও</button>
-        </div>
-      `).join("")}
-  `;
-  el.querySelectorAll(".friend-remove").forEach(b => b.addEventListener("click", async () => {
-    if (!confirm("এই বন্ধুকে তালিকা থেকে সরাতে চাও?")) return;
-    await removeFriend(student.studentId, b.dataset.id);
-    showToast("সরানো হয়েছে।", "success");
-    loadEverything();
-  }));
 }
 
 function renderClassFilterRow() {
@@ -241,8 +167,9 @@ async function renderLeaderboardList() {
     const isMe = r.studentId === student.studentId;
     const isFriend = myFriendIds.includes(r.studentId);
     const isPending = pendingToIds.has(r.studentId);
+    const pts = r.totalPoints || 0; // Fallback if cache hasn't cleared
     
-    // Rival Tag Logic: The person exactly 1 rank above the student
+    // Target Badge
     const isTarget = (!isMe && myIndex > 0 && i === myIndex - 1 && !friendsOnly);
     const targetBadge = isTarget ? `<span style="font-size:0.6rem; background:#fef08a; color:#854d0e; padding:2px 6px; border-radius:4px; font-weight:800; margin-left:6px; vertical-align:middle;">🔥 টার্গেট</span>` : "";
 
@@ -259,7 +186,7 @@ async function renderLeaderboardList() {
         <span class="lb-avatar">${r.photoURL ? `<img src="${r.photoURL}" alt="">` : r.name.charAt(0)}</span>
         <div class="lb-info">
           <div class="lb-name">${r.name}${isMe ? " (তুমি)" : ""}${targetBadge}</div>
-          <div class="points-pill">⭐ ${r.totalPoints} পয়েন্ট <span style="color:var(--text-muted); font-weight:600; margin-left:4px;">(${r.avgPercentage}%)</span></div>
+          <div class="points-pill">⭐ ${pts} পয়েন্ট <span style="color:var(--text-muted); font-weight:600; margin-left:4px;">(${r.avgPercentage || 0}%)</span></div>
         </div>
         ${friendBtn}
       </div>
@@ -275,6 +202,44 @@ async function renderLeaderboardList() {
       showToast(friendlyError(err), "error");
     }
   }));
+}
+
+function renderActivityFeed(results, students) {
+  const el = document.getElementById("activityFeedSection");
+  const feed = results.filter(r => myFriendIds.includes(r.studentId)).slice(0, 8);
+  
+  if (feed.length === 0) return;
+
+  const nameOf = {}; students.forEach(s => { nameOf[s.studentId] = s.name; });
+  
+  el.innerHTML = `
+    <p class="eyebrow mb-2">বন্ধুদের লাইভ আপডেট</p>
+    <div class="feed-wrapper">
+      <div class="feed-scroll" id="feedScrollBox">
+        ${feed.map(r => `
+          <div class="feed-card">
+             <p class="text-xs text-muted mb-1">🔥 এইমাত্র</p>
+             <p class="text-sm" style="font-weight:600; line-height:1.4;">
+               ${nameOf[r.studentId]} <span style="color:var(--color-accent);">${r.examName || "পরীক্ষা"}</span>-এ ${r.percentage}% পেয়েছে!
+             </p>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+
+  // Auto-scroll logic for slow motion running effect
+  const scrollBox = document.getElementById("feedScrollBox");
+  if (scrollBox && feed.length > 1) {
+    let scrollAmount = 0;
+    setInterval(() => {
+      if (scrollBox.scrollWidth <= scrollBox.clientWidth) return;
+      scrollBox.scrollLeft += 1;
+      if (scrollBox.scrollLeft >= (scrollBox.scrollWidth - scrollBox.clientWidth - 1)) {
+        scrollBox.scrollLeft = 0; // Loop back
+      }
+    }, 40); // speed (higher = slower)
+  }
 }
 </script>
 </body>
