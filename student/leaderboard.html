@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>লিডারবোর্ড — পরীক্ষা প্রস্তুতি</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  /* ---- Leaderboard rows: rank chip + avatar + name + animated bar ---- */
+  .lb-row { display: flex; align-items: center; gap: 12px; padding: 12px 4px; }
+  .lb-row + .lb-row { border-top: 1px dashed var(--surface-border); }
+  .lb-rank {
+    width: 28px; flex-shrink: 0; text-align: center; font-weight: 800; font-size: 0.9rem; color: var(--text-muted);
+  }
+  .lb-rank.top1 { color: #f5b301; }
+  .lb-rank.top2 { color: #94a3b8; }
+  .lb-rank.top3 { color: #cd7f32; }
+  .lb-avatar {
+    width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--color-accent-soft); color: var(--color-accent); font-weight: 800;
+  }
+  .lb-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .lb-info { flex: 1; min-width: 0; }
+  .lb-name { font-weight: 700; font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lb-bar-track { height: 6px; border-radius: 99px; background: var(--surface-border); margin-top: 5px; overflow: hidden; }
+  .lb-bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg,#ff6a2b,#ffb02e); width: 0%; transition: width 900ms cubic-bezier(.22,.9,.3,1); }
+  .lb-pct { flex-shrink: 0; font-weight: 800; font-size: 0.9rem; width: 52px; text-align: right; }
+
+  .lb-friend-btn {
+    flex-shrink: 0; font-size: 0.68rem; font-weight: 700; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--surface-border);
+    background: transparent; color: var(--text-muted); cursor: pointer;
+  }
+  .lb-friend-btn.is-friend { border-color: var(--color-success); color: var(--color-success); }
+  .lb-friend-btn.is-pending { border-color: var(--text-muted); }
+
+  /* ---- Floating motivation button ---- */
+  .motivation-fab {
+    position: fixed; right: 18px; bottom: 24px; z-index: 500;
+    width: 56px; height: 56px; border-radius: 50%; border: none; cursor: pointer;
+    background: linear-gradient(135deg,#7c3aed,#2563eb); box-shadow: 0 10px 24px -8px rgba(124,58,237,0.6);
+    display: flex; align-items: center; justify-content: center;
+    animation: fabPulse 2.6s ease-in-out infinite;
+  }
+  @keyframes fabPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.07); } }
+</style>
+</head>
+<body>
+<div class="app-shell" id="shell">
+  <div class="state-block"><div class="spinner"></div></div>
+</div>
+
+<button class="motivation-fab" id="motivationFab" title="তুমি কেমন করছো?" aria-label="পরামর্শ দেখাও">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M12 2a7 7 0 0 0-4 12.7V17a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2.3A7 7 0 0 0 12 2z"/><path d="M9 21h6"/></svg>
+</button>
+
+<script type="module">
+import { initTheme, toggleTheme, icons, renderState, renderStudentHeader, showToast, friendlyError } from "../js/utils/ui-utils.js";
+import { getActiveStudent, refreshActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
+import { getLeaderboardData, getStudentRank } from "../js/utils/results-utils.js";
+import { computeOverallStats, computeSubjectStats } from "../js/utils/analytics-utils.js";
+import { getApprovedResults } from "../js/utils/results-utils.js";
+import { getSubjects, buildNameMap } from "../js/utils/syllabus-utils.js";
+import {
+  MAX_FRIENDS, getMyFriendIds, getIncomingRequests, getOutgoingRequests,
+  sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend
+} from "../js/utils/friend-utils.js";
+import { generateMotivation } from "../js/utils/motivation-utils.js";
+
+initTheme();
+const shell = document.getElementById("shell");
+let student = getActiveStudent();
+
+if (!student) {
+  window.location.href = "../index.html";
+} else {
+  refreshActiveStudent(student.docId).then(fresh => {
+    if (fresh) student = fresh;
+    render();
+  });
+}
+
+let allLeaderboard = [];   // full unfiltered leaderboard rows
+let myFriendIds = [];
+let activeClassFilter = "all";
+let friendsOnly = false;
+
+function render() {
+  shell.innerHTML = `
+    ${renderStudentHeader(student, "leaderboard")}
+
+    <div class="glass card" id="requestsCard" class="hidden"></div>
+    <div class="glass card mt-3" id="friendsCard"></div>
+
+    <div class="glass card mt-3">
+      <div class="flex justify-between items-center">
+        <p class="eyebrow">লিডারবোর্ড</p>
+        <button class="btn btn-secondary btn-sm" id="friendsToggleBtn">সবাই</button>
+      </div>
+      <div id="classFilterRow" class="flex gap-2 mt-2" style="overflow-x:auto;"></div>
+      <div id="leaderboardList" class="mt-2"></div>
+    </div>
+  `;
+  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+  document.getElementById("friendsToggleBtn").addEventListener("click", () => {
+    friendsOnly = !friendsOnly;
+    document.getElementById("friendsToggleBtn").textContent = friendsOnly ? "শুধু বন্ধুরা" : "সবাই";
+    renderLeaderboardList();
+  });
+  document.getElementById("motivationFab").addEventListener("click", openMotivationPanel);
+
+  loadEverything();
+}
+
+async function loadEverything() {
+  try {
+    const [students, board, friendIds, incoming] = await Promise.all([
+      getActiveStudents(),
+      getLeaderboardData(await getActiveStudents()),
+      getMyFriendIds(student.studentId),
+      getIncomingRequests(student.studentId)
+    ]);
+    allLeaderboard = board;
+    myFriendIds = friendIds;
+
+    renderRequestsCard(incoming, students);
+    renderFriendsCard(students);
+    renderClassFilterRow();
+    renderLeaderboardList();
+  } catch (err) {
+    console.error(err);
+    showToast(friendlyError(err), "error");
+  }
+}
+
+function renderRequestsCard(incoming, students) {
+  const el = document.getElementById("requestsCard");
+  if (incoming.length === 0) { el.classList.add("hidden"); return; }
+  el.classList.remove("hidden");
+  const nameOf = {}; students.forEach(s => { nameOf[s.studentId] = s.name; });
+  el.innerHTML = `
+    <p class="eyebrow mb-2">বন্ধুর অনুরোধ</p>
+    ${incoming.map(r => `
+      <div class="flex justify-between items-center mt-2">
+        <p class="text-sm">${nameOf[r.fromStudentId] || r.fromStudentId}</p>
+        <div class="flex gap-2">
+          <button class="btn btn-secondary btn-sm req-reject" data-id="${r.id}">প্রত্যাখ্যান</button>
+          <button class="btn btn-primary btn-sm req-accept" data-id="${r.id}">গ্রহণ করো</button>
+        </div>
+      </div>
+    `).join("")}
+  `;
+  el.querySelectorAll(".req-accept").forEach(b => b.addEventListener("click", async () => {
+    try {
+      await acceptFriendRequest(b.dataset.id, student.studentId);
+      showToast("বন্ধু হিসেবে যুক্ত হলো।", "success");
+      loadEverything();
+    } catch (err) { showToast(friendlyError(err), "error"); }
+  }));
+  el.querySelectorAll(".req-reject").forEach(b => b.addEventListener("click", async () => {
+    await rejectFriendRequest(b.dataset.id);
+    loadEverything();
+  }));
+}
+
+function renderFriendsCard(students) {
+  const el = document.getElementById("friendsCard");
+  const nameOf = {}; students.forEach(s => { nameOf[s.studentId] = s.name; });
+  el.innerHTML = `
+    <p class="eyebrow mb-2">আমার বন্ধুরা (${myFriendIds.length}/${MAX_FRIENDS})</p>
+    ${myFriendIds.length === 0
+      ? `<p class="text-sm text-muted">এখনো কোনো বন্ধু যোগ হয়নি — নিচের তালিকা থেকে অনুরোধ পাঠাও।</p>`
+      : myFriendIds.map(fid => `
+        <div class="flex justify-between items-center mt-2">
+          <p class="text-sm">${nameOf[fid] || fid}</p>
+          <button class="btn btn-secondary btn-sm friend-remove" data-id="${fid}">সরাও</button>
+        </div>
+      `).join("")}
+  `;
+  el.querySelectorAll(".friend-remove").forEach(b => b.addEventListener("click", async () => {
+    if (!confirm("এই বন্ধুকে তালিকা থেকে সরাতে চাও?")) return;
+    await removeFriend(student.studentId, b.dataset.id);
+    showToast("সরানো হয়েছে।", "success");
+    loadEverything();
+  }));
+}
+
+function renderClassFilterRow() {
+  const el = document.getElementById("classFilterRow");
+  const classes = [...new Set(allLeaderboard.map(r => r.className).filter(Boolean))].sort();
+  el.innerHTML = [
+    `<button class="btn btn-sm ${activeClassFilter === "all" ? "btn-primary" : "btn-secondary"}" data-class="all" style="flex-shrink:0;">সব</button>`,
+    ...classes.map(c => `<button class="btn btn-sm ${activeClassFilter === c ? "btn-primary" : "btn-secondary"}" data-class="${c}" style="flex-shrink:0;">${c}</button>`)
+  ].join("");
+  el.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    activeClassFilter = b.dataset.class;
+    renderClassFilterRow();
+    renderLeaderboardList();
+  }));
+}
+
+async function renderLeaderboardList() {
+  const el = document.getElementById("leaderboardList");
+  let rows = allLeaderboard;
+  if (activeClassFilter !== "all") rows = rows.filter(r => r.className === activeClassFilter);
+  if (friendsOnly) rows = rows.filter(r => myFriendIds.includes(r.studentId) || r.studentId === student.studentId);
+
+  if (rows.length === 0) {
+    renderState(el, "empty", friendsOnly ? "কোনো বন্ধুর ফলাফল এখনো নেই।" : "এখনো কোনো রেজাল্ট নেই।");
+    return;
+  }
+
+  const outgoing = await getOutgoingRequests(student.studentId);
+  const pendingToIds = new Set(outgoing.map(r => r.toStudentId));
+
+  el.innerHTML = rows.map((r, i) => {
+    const rankClass = i === 0 ? "top1" : i === 1 ? "top2" : i === 2 ? "top3" : "";
+    const isMe = r.studentId === student.studentId;
+    const isFriend = myFriendIds.includes(r.studentId);
+    const isPending = pendingToIds.has(r.studentId);
+    let friendBtn = "";
+    if (!isMe) {
+      if (isFriend) friendBtn = `<span class="lb-friend-btn is-friend">বন্ধু</span>`;
+      else if (isPending) friendBtn = `<span class="lb-friend-btn is-pending">পাঠানো হয়েছে</span>`;
+      else friendBtn = `<button class="lb-friend-btn add-friend-btn" data-id="${r.studentId}">+ বন্ধু</button>`;
+    }
+    return `
+      <div class="lb-row">
+        <span class="lb-rank ${rankClass}">${i + 1}</span>
+        <span class="lb-avatar">${r.photoURL ? `<img src="${r.photoURL}" alt="">` : r.name.charAt(0)}</span>
+        <span class="lb-info">
+          <span class="lb-name" style="${isMe ? "color:var(--color-accent);" : ""}">${r.name}${isMe ? " (তুমি)" : ""}</span>
+          <span class="lb-bar-track"><span class="lb-bar-fill" data-pct="${r.avgPercentage}" style="width:0%;"></span></span>
+        </span>
+        <span class="lb-pct">${r.avgPercentage}%</span>
+        ${friendBtn}
+      </div>
+    `;
+  }).join("");
+
+  // Animate the bars in after paint (one orchestrated moment, not a hover gimmick).
+  requestAnimationFrame(() => {
+    el.querySelectorAll(".lb-bar-fill").forEach(bar => { bar.style.width = `${bar.dataset.pct}%`; });
+  });
+
+  el.querySelectorAll(".add-friend-btn").forEach(b => b.addEventListener("click", async () => {
+    try {
+      await sendFriendRequest(student.studentId, b.dataset.id);
+      showToast("অনুরোধ পাঠানো হয়েছে।", "success");
+      renderLeaderboardList();
+    } catch (err) {
+      showToast(friendlyError(err), "error");
+    }
+  }));
+}
+
+// =========================================================
+// FLOATING MOTIVATION PANEL — no typed question, just taps the button and
+// gets a suggestion based on the student's own already-known stats.
+// =========================================================
+async function openMotivationPanel() {
+  const overlay = document.createElement("div");
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;";
+  overlay.innerHTML = `
+    <div class="glass card" style="max-width:400px;width:100%;">
+      <p style="font-weight:700;margin-bottom:8px;">তুমি কেমন করছো?</p>
+      <div id="motivationBody" class="flex items-center gap-2"><div class="spinner" style="width:18px;height:18px;"></div><span class="text-sm text-muted">বিশ্লেষণ করা হচ্ছে...</span></div>
+      <button type="button" class="btn btn-secondary mt-3" id="motivationCloseBtn" style="width:100%;">বন্ধ করো</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.querySelector("#motivationCloseBtn").addEventListener("click", () => overlay.remove());
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
+
+  try {
+    const [rank, results, subjects] = await Promise.all([
+      getStudentRank(student.studentId),
+      getApprovedResults(student.studentId),
+      getSubjects()
+    ]);
+    const overall = computeOverallStats(results);
+    const subjectStats = computeSubjectStats(results, buildNameMap(subjects));
+    let weakest = null, strongest = null;
+    (subjectStats || []).forEach(s => {
+      if (!weakest || s.accuracy < weakest.accuracy) weakest = s;
+      if (!strongest || s.accuracy > strongest.accuracy) strongest = s;
+    });
+
+    const advice = generateMotivation({
+      overallPercentage: overall?.avgPercentage,
+      rank: rank?.rank,
+      totalStudents: rank?.totalStudents,
+      examsTaken: overall?.examsTaken ?? results.length,
+      weakestSubjectName: weakest?.name,
+      weakestSubjectAccuracy: weakest?.accuracy,
+      strongestSubjectName: strongest?.name !== weakest?.name ? strongest?.name : null,
+      strongestSubjectAccuracy: strongest?.accuracy
+    });
+
+    document.getElementById("motivationBody").outerHTML = `<p id="motivationBody" class="text-sm" style="line-height:1.7;">${advice}</p>`;
+  } catch (err) {
+    console.error(err);
+    document.getElementById("motivationBody").outerHTML = `<p id="motivationBody" class="text-sm text-muted">এখন বিশ্লেষণ করা যায়নি — একটু পরে আবার চেষ্টা করো।</p>`;
+  }
+}
+</script>
+</body>
+</html>
