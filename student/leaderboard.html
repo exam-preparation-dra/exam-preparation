@@ -393,6 +393,29 @@
   .challenge-name { font-size:.75rem;font-weight:900; }
   .challenge-exam { margin-top:3px;font-size:.62rem;color:var(--text-muted); }
 
+  /* Notifications */
+  .lb-notification-bar { margin-top:10px; margin-bottom:2px; }
+  .lb-notification-btn { position:relative; width:100%; justify-content:flex-start; padding:10px 12px; }
+  .lb-notification-btn .notif-count {
+    margin-left:auto; min-width:20px; height:20px; padding:0 6px; border-radius:99px;
+    display:inline-flex; align-items:center; justify-content:center;
+    background:#22c55e; color:#fff; font-size:.62rem; font-weight:950;
+  }
+  .profile-notification-dot {
+    width:7px; height:7px; border-radius:50%; background:#22c55e;
+    display:inline-block; margin-left:4px; box-shadow:0 0 0 3px rgba(34,197,94,.13);
+    vertical-align:middle;
+  }
+  .lb-notification-panel { display:none; margin-top:7px; padding:12px; }
+  .lb-notification-panel.show { display:block; animation:lbOpen .2s ease; }
+  .notif-item { padding:10px 0; border-bottom:1px dashed var(--lb-border); }
+  .notif-item:last-child { border-bottom:0; padding-bottom:0; }
+  .notif-title { font-size:.75rem; font-weight:950; }
+  .notif-copy { margin-top:3px; color:var(--text-muted); font-size:.64rem; line-height:1.5; }
+  .notif-actions { display:flex; gap:6px; margin-top:7px; }
+  .notif-actions .text-action { min-height:30px; }
+  .notif-empty { color:var(--text-muted); font-size:.7rem; padding:8px 2px; }
+
   /* Modal */
   .modal-overlay {
     position:fixed;inset:0;z-index:9999;
@@ -469,7 +492,7 @@ import {
 } from "../js/utils/results-utils.js";
 
 import {
-  getMyFriendIds, getOutgoingRequests, sendFriendRequest
+  getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest
 } from "../js/utils/friend-utils.js";
 
 import { getSubjects } from "../js/utils/syllabus-utils.js";
@@ -578,13 +601,13 @@ function buildActivityFromResult(result, studentMap) {
     ? Math.round((pct - Number(mine.avgPercentage)) * 10) / 10
     : null;
 
-  let comparison = "সমান";
-  if (pointGap !== null) {
-    if (pointGap > 0) comparison = `${pointGap} points এগিয়ে`;
-    else if (pointGap < 0) comparison = `${Math.abs(pointGap)} points পিছিয়ে`;
-  } else if (percentageGap !== null) {
-    if (percentageGap > 0) comparison = `${percentageGap}% এগিয়ে`;
-    else if (percentageGap < 0) comparison = `${Math.abs(percentageGap)}% পিছিয়ে`;
+  let comparison = "এই result-এ সমান";
+  if (percentageGap !== null) {
+    if (percentageGap > 0) comparison = `${percentageGap}% বেশি`;
+    else if (percentageGap < 0) comparison = `${Math.abs(percentageGap)}% কম`;
+  }
+  if (pointGap !== null && pointGap !== 0) {
+    comparison += pointGap > 0 ? ` · মোট leaderboard-এ ${pointGap} points এগিয়ে` : ` · মোট leaderboard-এ ${Math.abs(pointGap)} points পিছিয়ে`;
   }
 
   return {
@@ -707,6 +730,20 @@ function render() {
     <div class="lb-page">
       ${renderStudentHeader(student, "leaderboard")}
 
+      <section class="lb-notification-bar">
+        <button class="btn-glass lb-notification-btn" id="leaderboardNotificationBtn" aria-expanded="false">
+          <svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          <span>নোটিফিকেশন</span>
+          <span class="notif-count" id="notificationCount" style="display:none;">0</span>
+        </button>
+        <div class="glass-float-card lb-notification-panel" id="leaderboardNotificationPanel">
+          <div id="notificationList"><div class="notif-empty">নোটিফিকেশন দেখা হচ্ছে...</div></div>
+        </div>
+      </section>
+
       <section class="glass-float-card lb-hero">
         <div class="lb-kicker">
           <svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -799,6 +836,15 @@ function render() {
 
   const helpBtn = document.getElementById("leaderboardHelpBtn");
   const helpPanel = document.getElementById("leaderboardHelpPanel");
+  const notificationBtn = document.getElementById("leaderboardNotificationBtn");
+  const notificationPanel = document.getElementById("leaderboardNotificationPanel");
+
+  notificationBtn?.addEventListener("click", () => {
+    notificationOpen = !notificationOpen;
+    notificationPanel?.classList.toggle("show", notificationOpen);
+    notificationBtn?.setAttribute("aria-expanded", notificationOpen ? "true" : "false");
+    if (notificationOpen) refreshNotifications();
+  });
 
   helpBtn.addEventListener("click", () => {
     const open = helpPanel.classList.toggle("show");
@@ -816,6 +862,7 @@ function render() {
 
   loadEverything();
   startLiveResultsListener();
+  startNotificationListener();
 }
 
 /* ---------- Existing leaderboard data ---------- */
@@ -1140,6 +1187,97 @@ async function renderIncomingChallenges(students) {
   }
 }
 
+/* ---------- Notifications ---------- */
+async function resolveAutoExamChallenges(exams) {
+  if (!Array.isArray(exams) || !exams.length) return;
+  const { getDocs } = await import("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js");
+  const q = query(collection(db, "examChallenges"), where("examId", "==", "__NEXT_EXAM__"));
+  const pending = await getDocs(q);
+  const next = exams[0];
+  await Promise.all(pending.docs.map(d => updateDoc(doc(db, "examChallenges", d.id), {
+    examId: next.id,
+    examName: next.name || "পরীক্ষা"
+  })));
+}
+
+async function refreshNotifications() {
+  const list = document.getElementById("notificationList");
+  const count = document.getElementById("notificationCount");
+  if (!list || !student) return;
+
+  try {
+    const [requests, challenges, students] = await Promise.all([
+      getIncomingRequests(student.studentId),
+      getIncomingChallenges(student.studentId),
+      getActiveStudents()
+    ]);
+    const nameOf = {};
+    students.forEach(s => nameOf[s.studentId] = s.name || "বন্ধু");
+
+    const total = requests.length + challenges.length;
+    if (count) { count.textContent = total; count.style.display = total ? "inline-flex" : "none"; }
+
+    const profileLink = [...document.querySelectorAll('a[href="/student/profile.html"]')][0];
+    if (profileLink) {
+      const old = profileLink.querySelector(".profile-notification-dot");
+      if (total && !old) profileLink.insertAdjacentHTML("beforeend", '<span class="profile-notification-dot" aria-label="নতুন notification"></span>');
+      if (!total && old) old.remove();
+    }
+
+    if (!total) {
+      list.innerHTML = `<div class="notif-empty">এখন কোনো নতুন friend request বা challenge নেই।</div>`;
+      return;
+    }
+
+    list.innerHTML = [
+      ...requests.map(r => `
+        <div class="notif-item">
+          <div class="notif-title">নতুন friend request</div>
+          <div class="notif-copy"><strong>${escapeHtml(nameOf[r.fromStudentId] || "একজন শিক্ষার্থী")}</strong> তোমাকে friend হতে চায়।</div>
+          <div class="notif-actions">
+            <button class="btn-glass text-action notif-accept-friend" data-id="${escapeHtml(r.id)}">গ্রহণ</button>
+            <button class="btn-glass text-action notif-reject-friend" data-id="${escapeHtml(r.id)}">বাতিল</button>
+          </div>
+        </div>`),
+      ...challenges.map(c => `
+        <div class="notif-item">
+          <div class="notif-title">নতুন challenge</div>
+          <div class="notif-copy"><strong>${escapeHtml(nameOf[c.fromStudentId] || "বন্ধু")}</strong> তোমাকে <strong>${escapeHtml(c.examName || "পরবর্তী পরীক্ষা")}</strong>-তে challenge করেছে।<br>Winner +100 · Loser +25 · Draw +50 points.</div>
+          <div class="notif-actions">
+            <button class="btn-glass text-action notif-accept-challenge" data-id="${escapeHtml(c.id)}">গ্রহণ</button>
+            <button class="btn-glass text-action notif-reject-challenge" data-id="${escapeHtml(c.id)}">বাতিল</button>
+          </div>
+        </div>` )
+    ].join("");
+
+    list.querySelectorAll(".notif-accept-friend").forEach(btn => btn.onclick = async () => {
+      try { await acceptFriendRequest(btn.dataset.id, student.studentId); showToast("Friend request গ্রহণ করা হয়েছে।", "success"); await refreshNotifications(); await loadEverything(); }
+      catch (err) { showToast(friendlyError(err), "error"); }
+    });
+    list.querySelectorAll(".notif-reject-friend").forEach(btn => btn.onclick = async () => {
+      try { await rejectFriendRequest(btn.dataset.id); await refreshNotifications(); }
+      catch (err) { showToast(friendlyError(err), "error"); }
+    });
+    list.querySelectorAll(".notif-accept-challenge").forEach(btn => btn.onclick = async () => {
+      try { await acceptChallenge(btn.dataset.id); showToast("Challenge গ্রহণ করা হয়েছে।", "success"); await refreshNotifications(); }
+      catch (err) { showToast(friendlyError(err), "error"); }
+    });
+    list.querySelectorAll(".notif-reject-challenge").forEach(btn => btn.onclick = async () => {
+      try { await rejectChallenge(btn.dataset.id); await refreshNotifications(); }
+      catch (err) { showToast(friendlyError(err), "error"); }
+    });
+  } catch (err) {
+    console.error("Notification refresh failed:", err);
+    list.innerHTML = `<div class="notif-empty">Notification load করা যায়নি। আবার চেষ্টা করো।</div>`;
+  }
+}
+
+function startNotificationListener() {
+  if (notificationRefreshTimer) clearInterval(notificationRefreshTimer);
+  refreshNotifications();
+  notificationRefreshTimer = setInterval(refreshNotifications, 10000);
+}
+
 /* ---------- Challenge modal ---------- */
 
 async function openChallengeModal(friendId) {
@@ -1162,10 +1300,13 @@ async function openChallengeModal(friendId) {
 
     if (!upcomingExamsCache.length) {
       body.innerHTML = `
-        <div style="padding:11px;border-radius:11px;background:rgba(239,68,68,.08);color:#ef4444;font-size:.7rem;font-weight:800;line-height:1.5;">
-          বর্তমানে কোনো আসন্ন পরীক্ষা নেই। পরীক্ষা প্রকাশিত হলে challenge করতে পারবে।
+        <div style="padding:11px;border-radius:11px;background:rgba(34,197,94,.08);color:#16a34a;font-size:.7rem;font-weight:800;line-height:1.55;">
+          এখনো কোনো পরীক্ষা তৈরি হয়নি। তবুও challenge পাঠানো যাবে।
+          <br><br><strong>পরবর্তী যে পরীক্ষা প্রকাশ হবে সেটি automatically challenge-এ যুক্ত হবে।</strong>
+          <br>Winner +100 points · Loser +25 points · Draw +50 points
         </div>
       `;
+      confirmBtn.style.display = "inline-flex";
       return;
     }
 
@@ -1175,6 +1316,9 @@ async function openChallengeModal(friendId) {
           <option value="${escapeHtml(e.id)}">${escapeHtml(e.name || "পরীক্ষা")}</option>
         `).join("")}
       </select>
+      <div style="margin-top:8px;color:var(--text-muted);font-size:.64rem;line-height:1.5;">
+        Challenge result-এর bonus: <strong>Winner +100</strong> · <strong>Loser +25</strong> · <strong>Draw +50</strong> points
+      </div>
     `;
 
     confirmBtn.style.display = "inline-flex";
