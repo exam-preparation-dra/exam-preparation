@@ -145,11 +145,13 @@ export const icons = {
 
 // ---------- Shared header for student-facing pages (dashboard/profile/history) ----------
 export function renderStudentHeader(student, activeKey) {
-  const tabs = [
+   const tabs = [
     { key: "dashboard", href: "../student/dashboard.html", icon: icons.home, label: "ড্যাশবোর্ড" },
     { key: "history", href: "../student/history.html", icon: icons.history, label: "ইতিহাস" },
+    { key: "leaderboard", href: "../student/leaderboard.html", icon: icons.chart, label: "লিডারবোর্ড" },
     { key: "profile", href: "../student/profile.html", icon: icons.user, label: "প্রোফাইল" },
   ];
+   
   return `
     <div class="topbar">
       <div class="brand">
