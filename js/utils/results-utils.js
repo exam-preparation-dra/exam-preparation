@@ -98,7 +98,7 @@ export async function getResultById(resultId) {
 // approved result (ranked by each student's own overall average %). Used
 // for the shareable profile card. Returns null if this student has no
 // approved results yet (nothing to rank). ----------
-export async function getStudentRank(studentId) {
+export async function getStudentRank(studentId, classOf = null) {
   const all = await getAllApprovedResults();
   if (all.length === 0) return null;
 
@@ -118,7 +118,24 @@ export async function getStudentRank(studentId) {
   averages.sort((a, b) => b.average - a.average);
   const rank = averages.findIndex(a => a.studentId === studentId) + 1;
   const mine = averages.find(a => a.studentId === studentId);
-  return { rank, totalStudents: averages.length, averagePercentage: Math.round(mine.average * 10) / 10 };
+  const result = { rank, totalStudents: averages.length, averagePercentage: Math.round(mine.average * 10) / 10 };
+
+  // Optional: also rank within just this student's own class, given a
+  // { studentId -> className } lookup map (e.g. from getActiveStudents()).
+  if (classOf) {
+    const myClass = classOf[studentId];
+    if (myClass) {
+      const classAverages = averages.filter(a => classOf[a.studentId] === myClass);
+      const classRank = classAverages.findIndex(a => a.studentId === studentId) + 1;
+      if (classRank > 0) {
+        result.classRank = classRank;
+        result.classTotalStudents = classAverages.length;
+        result.className = myClass;
+      }
+    }
+  }
+
+  return result;
 }
 
 // ---------- Exam metadata lookup (name, date, etc. for a given examId) ----------

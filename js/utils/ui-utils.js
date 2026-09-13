@@ -75,6 +75,51 @@ export function aiBadge() {
   </span>`;
 }
 
+// ---------- Gamification badge card — code-drawn (SVG icon + gradient),
+// never an image file or emoji. One shared renderer, several "kinds" so
+// every badge in the app looks consistent. count>1 shows a small "×N"
+// corner tag (e.g. "topper 3 times"). ----------
+const BADGE_KINDS = {
+  monthlyOverall: {
+    gradient: "linear-gradient(135deg,#f5b301,#f97316)",
+    label: "মাসিক টপার",
+    icon: `<path d="M12 2l2.4 5.4L20 8l-4.2 3.9L17 18l-5-3-5 3 1.2-6.1L4 8l5.6-.6z"/>`
+  },
+  monthlyClass: {
+    gradient: "linear-gradient(135deg,#60a5fa,#2563eb)",
+    label: "ক্লাস মাসিক টপার",
+    icon: `<path d="M12 2l2.4 5.4L20 8l-4.2 3.9L17 18l-5-3-5 3 1.2-6.1L4 8l5.6-.6z"/>`
+  },
+  weeklyOverall: {
+    gradient: "linear-gradient(135deg,#34d399,#059669)",
+    label: "সাপ্তাহিক টপার",
+    icon: `<path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/>`
+  },
+  weeklyClass: {
+    gradient: "linear-gradient(135deg,#a78bfa,#7c3aed)",
+    label: "ক্লাস সাপ্তাহিক টপার",
+    icon: `<path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/>`
+  },
+  attendance: {
+    gradient: "linear-gradient(135deg,#fb923c,#ea580c)",
+    label: null, // caller supplies the specific milestone label
+    icon: `<path d="M12 2c1 3-2 4-2 7a4 4 0 0 0 8 0c0-1-.5-2-1-2 .5 2-1 3-2 2 1-2-.5-4-3-7z"/><path d="M9 15a3 3 0 1 0 6 0c0-1-1-2-3-5-2 3-3 4-3 5z"/>`
+  }
+};
+
+export function badgeCard(kind, { count = 1, label = null } = {}) {
+  const spec = BADGE_KINDS[kind];
+  if (!spec) return "";
+  const text = label || spec.label || "";
+  return `
+    <div style="background:${spec.gradient};border-radius:16px;padding:14px 10px;text-align:center;color:#fff;position:relative;overflow:hidden;">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="#fff" style="margin:0 auto 6px;display:block;">${spec.icon}</svg>
+      <p style="margin:0;font-size:0.74rem;font-weight:800;line-height:1.3;">${text}</p>
+      ${count > 1 ? `<span style="position:absolute;top:6px;right:6px;background:rgba(255,255,255,0.28);border-radius:999px;padding:1px 7px;font-size:0.62rem;font-weight:800;">×${count}</span>` : ""}
+    </div>
+  `;
+}
+
 export const icons = {
   sun: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`,
   moon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg>`,
