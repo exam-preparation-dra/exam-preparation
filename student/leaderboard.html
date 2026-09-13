@@ -1063,10 +1063,10 @@ document.getElementById("confirmChallengeBtn").onclick = async () => {
   const select = document.getElementById("challengeExamSelect");
   const btn = document.getElementById("confirmChallengeBtn");
 
-  if (!select || !selectedFriendIdForChallenge) return;
+  if (!selectedFriendIdForChallenge) return;
 
-  const examId = select.value;
-  const examName = select.options[select.selectedIndex]?.text || "পরীক্ষা";
+  const examId = select?.value || "__NEXT_EXAM__";
+  const examName = select?.options?.[select.selectedIndex]?.text || "পরবর্তী পরীক্ষা (auto-select)";
 
   try {
     btn.disabled = true;
@@ -1192,6 +1192,17 @@ function renderLiveActivities(list = liveActivities) {
     const marks = a.obtainedMarks !== null && a.totalMarks !== null
       ? `${a.obtainedMarks}/${a.totalMarks}` : "—";
     const pct = a.percentage !== null ? `${a.percentage}%` : "—";
+    const gap = Number(a.pointGap);
+    const comparisonClass = Number.isFinite(gap) ? (gap > 0 ? "behind" : gap < 0 ? "ahead" : "equal") : "equal";
+    const comparisonText = Number.isFinite(gap)
+      ? (gap > 0
+          ? `তুমি ${Math.abs(gap)} points পিছিয়ে`
+          : gap < 0
+            ? `তুমি ${Math.abs(gap)} points এগিয়ে`
+            : "তোমাদের points সমান")
+      : (a.percentageGap !== null && Number.isFinite(Number(a.percentageGap))
+          ? (Number(a.percentageGap) > 0 ? `তুমি ${Number(a.percentageGap).toFixed(1)}% পিছিয়ে` : Number(a.percentageGap) < 0 ? `তুমি ${Math.abs(Number(a.percentageGap)).toFixed(1)}% এগিয়ে` : "তোমাদের percentage সমান")
+          : "তুলনা করার মতো data এখনো নেই");
 
     return `
       <div class="live-card">
@@ -1232,6 +1243,8 @@ function renderLiveActivities(list = liveActivities) {
           </div>
         </div>
 
+        <div class="live-compare ${comparisonClass}">${escapeHtml(comparisonText)}</div>
+        <div class="live-updated">Leaderboard-এর মোট points অনুযায়ী তুলনা</div>
         <div class="live-time">${escapeHtml(relativeTime(a.submittedAt))}</div>
       </div>
     `;
