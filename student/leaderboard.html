@@ -83,6 +83,10 @@ let activeClassFilter="all";
 let friendsOnly=false;
 let upcomingExamsCache=null;
 let selectedFriendIdForChallenge=null;
+let liveActivities=[];
+let liveActivityIndex=0;
+let liveActivityTimer=null;
+let liveRefreshTimer=null;
 
 const guideData={
 purpose:{title:"লিডারবোর্ড কেন আছে?",text:"লিডারবোর্ডের উদ্দেশ্য হলো পরীক্ষার প্রস্তুতিকে আরও নিয়মিত ও motivating করা। এখানে শিক্ষার্থীদের অর্জিত পয়েন্ট অনুযায়ী অবস্থান দেখা যায়। এটি অন্যকে ছোট করার জন্য নয়; নিজের progress বোঝা এবং নিয়মিত পড়াশোনায় উৎসাহ পাওয়ার জন্য তৈরি।"},
@@ -105,7 +109,28 @@ ${renderStudentHeader(student,"leaderboard")}
 <p>তোমার পরীক্ষার পারফরম্যান্স, পয়েন্ট এবং বন্ধুদের progress এক জায়গায় দেখো। নিচের অপশনগুলোতে tap করে প্রতিটি feature কীভাবে কাজ করে জেনে নাও।</p>
 </div></section>
 
-<section class="lb-guide"><div class="guide-grid">
+<div class="lb-top-tools">
+  <button class="btn-glass lb-help-btn" id="leaderboardHelpBtn" title="লিডারবোর্ড সহায়তা" aria-label="লিডারবোর্ড সহায়তা">
+    <svg class="lb-icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M9.8 9a2.4 2.4 0 1 1 4.1 1.7c-.9.8-1.9 1.2-1.9 2.8"/>
+      <path d="M12 17h.01"/>
+    </svg>
+  </button>
+</div>
+
+<div id="leaderboardHelpPanel" class="help-panel">
+  <div class="help-panel-inner">
+    <div class="help-panel-title">লিডারবোর্ড কীভাবে ব্যবহার করবে?</div>
+    <div class="help-point"><span class="help-dot"></span><span><strong>র‍্যাঙ্কিং:</strong> পরীক্ষার performance অনুযায়ী শিক্ষার্থীদের অবস্থান দেখায়।</span></div>
+    <div class="help-point"><span class="help-dot"></span><span><strong>বন্ধু:</strong> শুধু নিজের বন্ধুদের progress আলাদা করে দেখা যায়।</span></div>
+    <div class="help-point"><span class="help-dot"></span><span><strong>তুলনা:</strong> বন্ধুর সঙ্গে academic performance compare করার জন্য।</span></div>
+    <div class="help-point"><span class="help-dot"></span><span><strong>চ্যালেঞ্জ:</strong> আসন্ন পরীক্ষায় বন্ধুর সঙ্গে healthy competition শুরু করার জন্য।</span></div>
+    <div class="help-point"><span class="help-dot"></span><span><strong>Live activity:</strong> বন্ধুদের নতুন academic activity বা score update থাকলে উপরের slider-এ দেখা যাবে।</span></div>
+  </div>
+</div>
+
+<section class="lb-guide" style="display:none;"><div class="guide-grid">
 ${createGuideButton("purpose","লিডারবোর্ড","কেন ব্যবহার করবে?",`<svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>`)}
 ${createGuideButton("points","পয়েন্ট","কীভাবে কাজ করে?",`<svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M17 7.5c0-1.5-2.2-2.5-5-2.5s-5 1-5 2.5 2.2 2.5 5 2.5 5 1 5 2.5-2.2 2.5-5 2.5-5-1-5-2.5"/></svg>`)}
 ${createGuideButton("friends","বন্ধু","শুধু বন্ধুদের দেখো?",`<svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6"/><circle cx="17" cy="9" r="2.5"/><path d="M14 20c.4-2.5 2.4-4.5 5-4.5"/></svg>`)}
@@ -114,6 +139,33 @@ ${createGuideButton("challenge","চ্যালেঞ্জ","বন্ধু�
 </div>
 <div id="guideDetail" class="guide-detail"><div class="guide-detail-inner"><div id="guideDetailTitle" class="guide-detail-title"></div><div id="guideDetailText" class="guide-detail-text"></div></div></div>
 </section>
+
+
+<div class="live-section">
+  <div class="live-head">
+    <div class="live-title">
+      <svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 12a8 8 0 0 1 16 0"/>
+        <path d="M7 12a5 5 0 0 1 10 0"/>
+        <path d="M10 12a2 2 0 0 1 4 0"/>
+        <path d="M12 12v.01"/>
+      </svg>
+      বন্ধুদের Live Activity
+    </div>
+    <span class="live-status"><span class="live-status-dot"></span>লাইভ</span>
+  </div>
+
+  <div class="live-slider" id="liveActivitySlider">
+    <div class="live-track" id="liveActivityTrack">
+      <div class="live-empty">বন্ধুদের recent academic update খোঁজা হচ্ছে...</div>
+    </div>
+    <div class="live-controls" id="liveActivityControls"></div>
+  </div>
+
+  <div class="live-note">
+    নতুন update পাওয়া গেলে slider নিজে থেকেই এগিয়ে যাবে।
+  </div>
+</div>
 
 <div id="incomingChallengesCard" class="mt-4" style="display:none;"></div>
 
@@ -134,7 +186,242 @@ document.querySelectorAll(".guide-item").forEach(item=>item.classList.remove("ac
 if(wasActive){detail.classList.remove("show");return}
 button.classList.add("active");title.textContent=guideData[key].title;text.textContent=guideData[key].text;detail.classList.add("show");
 }));
+const helpBtn=document.getElementById("leaderboardHelpBtn");
+const helpPanel=document.getElementById("leaderboardHelpPanel");
+helpBtn.addEventListener("click",()=>{
+  helpPanel.classList.toggle("show");
+  helpBtn.setAttribute("aria-expanded",helpPanel.classList.contains("show")?"true":"false");
+});
+
 loadEverything();
+startLiveActivityRefresh();
+}
+
+
+/* =========================================================
+   LIVE ACTIVITY
+   =========================================================
+   This UI reads activity-shaped fields when they are available
+   in the student/result objects. It also refreshes the leaderboard
+   automatically so point/rank changes appear without reloading.
+   Supported activity fields include:
+   recentActivity / latestActivity / lastActivity / activity
+   with subject, marks/score, examName/title and timestamp/time.
+   ========================================================= */
+
+function startLiveActivityRefresh(){
+  refreshLiveActivity();
+  if(liveRefreshTimer) clearInterval(liveRefreshTimer);
+  liveRefreshTimer=setInterval(refreshLiveActivity,15000);
+}
+
+function stopLiveActivityRefresh(){
+  if(liveRefreshTimer) clearInterval(liveRefreshTimer);
+  if(liveActivityTimer) clearInterval(liveActivityTimer);
+  liveRefreshTimer=null;
+  liveActivityTimer=null;
+}
+
+function normalizeActivity(value, studentRecord){
+  if(!value) return null;
+
+  const a=Array.isArray(value)?value[0]:value;
+  if(!a || typeof a!=="object") return null;
+
+  const subject=a.subject || a.subjectName || a.topic || a.chapter || "";
+  const marks=a.marks ?? a.score ?? a.obtainedMarks ?? a.totalScore ?? null;
+  const total=a.total ?? a.totalMarks ?? a.maxMarks ?? null;
+  const exam=a.examName || a.exam || a.testName || a.title || "পরীক্ষা";
+  const timestamp=a.timestamp || a.time || a.createdAt || a.updatedAt || null;
+
+  if(!subject && marks===null) return null;
+
+  return {
+    studentId:studentRecord.studentId,
+    name:studentRecord.name || "বন্ধু",
+    photoURL:studentRecord.photoURL || "",
+    subject,
+    marks,
+    total,
+    exam,
+    timestamp
+  };
+}
+
+function collectLiveActivities(students){
+  const result=[];
+
+  students.forEach(s=>{
+    const possible=[
+      s.recentActivity,
+      s.latestActivity,
+      s.lastActivity,
+      s.activity
+    ];
+
+    for(const value of possible){
+      const normalized=normalizeActivity(value,s);
+      if(normalized){
+        result.push(normalized);
+        break;
+      }
+    }
+  });
+
+  return result.filter(a=>myFriendIds.includes(a.studentId));
+}
+
+function formatLiveTime(value){
+  if(!value) return "এইমাত্র";
+
+  try{
+    let date;
+
+    if(typeof value==="object" && typeof value.toDate==="function"){
+      date=value.toDate();
+    }else{
+      date=new Date(value);
+    }
+
+    if(Number.isNaN(date.getTime())) return "এইমাত্র";
+
+    const diff=Math.max(0,Date.now()-date.getTime());
+    const mins=Math.floor(diff/60000);
+
+    if(mins<1) return "এইমাত্র";
+    if(mins<60) return `${mins} মিনিট আগে`;
+
+    const hours=Math.floor(mins/60);
+    if(hours<24) return `${hours} ঘণ্টা আগে`;
+
+    return `${Math.floor(hours/24)} দিন আগে`;
+  }catch{
+    return "এইমাত্র";
+  }
+}
+
+function renderLiveActivities(){
+  const track=document.getElementById("liveActivityTrack");
+  const controls=document.getElementById("liveActivityControls");
+
+  if(!track || !controls) return;
+
+  if(!liveActivities.length){
+    track.innerHTML=`
+      <div class="live-empty">
+        তোমার বন্ধুদের নতুন subject/marks update এলে এখানে automaticভাবে দেখাবে।
+      </div>`;
+    controls.innerHTML="";
+    return;
+  }
+
+  track.innerHTML=liveActivities.map(a=>{
+    const avatar=a.photoURL
+      ? `<img src="${a.photoURL}" alt="">`
+      : (a.name||"ব").charAt(0);
+
+    const score=a.marks===null || a.marks===undefined
+      ? ""
+      : `${a.marks}${a.total!==null && a.total!==undefined ? `/${a.total}` : ""}`;
+
+    const action=a.subject
+      ? `${a.subject} করেছে`
+      : "নতুন academic update করেছে";
+
+    return `
+      <div class="live-card">
+        <span class="live-avatar">${avatar}</span>
+
+        <div class="live-copy">
+          <div class="live-line">
+            <strong>${a.name}</strong> ${action}
+          </div>
+
+          <div class="live-meta">
+            ${a.exam} · ${formatLiveTime(a.timestamp)}
+          </div>
+        </div>
+
+        ${score ? `<span class="live-score">${score}</span>` : ""}
+      </div>`;
+  }).join("");
+
+  controls.innerHTML=liveActivities.map((_,i)=>`
+    <button
+      class="live-control ${i===liveActivityIndex?"active":""}"
+      data-live-index="${i}"
+      aria-label="Activity ${i+1}">
+    </button>
+  `).join("");
+
+  controls.querySelectorAll(".live-control").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      liveActivityIndex=Number(btn.dataset.liveIndex);
+      updateLiveSlider();
+      restartLiveSlider();
+    });
+  });
+
+  updateLiveSlider();
+  restartLiveSlider();
+}
+
+function updateLiveSlider(){
+  const track=document.getElementById("liveActivityTrack");
+  const controls=document.getElementById("liveActivityControls");
+
+  if(!track || !liveActivities.length) return;
+
+  track.style.transform=`translateX(-${liveActivityIndex*100}%)`;
+
+  controls?.querySelectorAll(".live-control").forEach((dot,i)=>{
+    dot.classList.toggle("active",i===liveActivityIndex);
+  });
+}
+
+function restartLiveSlider(){
+  if(liveActivityTimer) clearInterval(liveActivityTimer);
+
+  if(liveActivities.length<=1) return;
+
+  liveActivityTimer=setInterval(()=>{
+    liveActivityIndex=(liveActivityIndex+1)%liveActivities.length;
+    updateLiveSlider();
+  },4000);
+}
+
+async function refreshLiveActivity(){
+  try{
+    const students=await getActiveStudents();
+
+    const activities=collectLiveActivities(students);
+
+    if(activities.length){
+      liveActivities=activities.slice(0,10);
+
+      if(liveActivityIndex>=liveActivities.length){
+        liveActivityIndex=0;
+      }
+
+      renderLiveActivities();
+    }else{
+      renderLiveActivities();
+    }
+
+    /* Refresh leaderboard data silently for live point/rank changes. */
+    const latestBoard=await getLeaderboardData(students);
+
+    if(Array.isArray(latestBoard)){
+      allLeaderboard=latestBoard;
+
+      if(document.getElementById("leaderboardList")){
+        renderClassFilterRow();
+        await renderLeaderboardList();
+      }
+    }
+  }catch(err){
+    console.error("Live activity refresh failed:",err);
+  }
 }
 
 async function loadEverything(){
@@ -176,7 +463,7 @@ friendBtn=`<a href="../student/comparison.html?friendId=${r.studentId}" class="b
 }else if(pendingToIds.has(r.studentId))friendBtn=`<span class="btn-glass lb-action-btn" style="padding:6px 10px;font-size:.7rem;color:var(--text-muted);cursor:default;"><svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l4 4L19 6"/></svg>পাঠানো</span>`;
 else friendBtn=`<button class="btn-glass add-friend-btn lb-action-btn" data-id="${r.studentId}" style="padding:6px 10px;font-size:.72rem;"><svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6"/><path d="M19 8v6"/><path d="M16 11h6"/></svg>+ বন্ধু</button>`;
 }
-return `<div class="lb-row ${isMe?"is-me":""}"><span class="rank-number">${i+1}.</span><span class="lb-avatar">${r.photoURL?`<img src="${r.photoURL}" alt="">`:r.name.charAt(0)}</span><div style="flex:1;min-width:0;"><p class="lb-name">${r.name}${isMe?" (তুমি)":""}</p><span class="points-pill"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18"/><path d="M17 7.5c0-1.5-2.2-2.5-5-2.5s-5 1-5 2.5 2.2 2.5 5 2.5 5 1 5 2.5-2.2 2.5-5 2.5-5-1-5-2.5"/></svg>${r.totalPoints||0} পয়েন্ট</span></div><div class="lb-actions">${friendBtn}</div></div>`;
+return `<div class="lb-row ${isMe?"is-me":""}"><span class="rank-number">${i+1}.</span><span class="lb-avatar">${r.photoURL?`<img src="${r.photoURL}" alt="">`:r.name.charAt(0)}</span><div style="flex:1;min-width:0;"><p class="lb-name">${r.name}${isMe?" (তুমি)":""}</p><span class="points-pill">${r.totalPoints||0} পয়েন্ট</span></div><div class="lb-actions">${friendBtn}</div></div>`;
 }).join("");
 
 el.querySelectorAll(".add-friend-btn").forEach(b=>b.addEventListener("click",async()=>{try{await sendFriendRequest(student.studentId,b.dataset.id);showToast("অনুরোধ পাঠানো হয়েছে।","success");renderLeaderboardList()}catch(err){showToast(friendlyError(err),"error")}}));
@@ -206,6 +493,7 @@ confirmBtn.innerHTML='<svg class="lb-icon" viewBox="0 0 24 24" fill="none" strok
 }catch(err){console.error(err);showToast(friendlyError(err),"error");confirmBtn.innerHTML='<svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>চ্যালেঞ্জ পাঠাও>';confirmBtn.disabled=false}
 };
 }
+window.addEventListener("beforeunload",stopLiveActivityRefresh);
 </script>
 </body>
 </html>
