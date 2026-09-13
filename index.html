@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>বাংলা MCQ পরীক্ষা প্ল্যাটফর্ম</title>
+<link rel="stylesheet" href="./css/style.css">
+<style>
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; } }
+  body { overflow-x: hidden; background: var(--bg); }
+  .app-shell { max-width: 480px; padding-bottom: 40px; }
+
+  /* ===== Premium Clean Header ===== */
+  .register-head { margin-top: 12px; margin-bottom: 24px; text-align: center; }
+  .register-head h1 {
+    font-size: 1.8rem; font-weight: 900; color: var(--text-primary); line-height: 1.3;
+    letter-spacing: -0.5px;
+  }
+  .register-head p { margin-top: 6px; font-size: 0.9rem; color: var(--text-muted); font-weight: 500; }
+
+  /* ===== Glassmorphism Search Bar ===== */
+  .search-glass {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--surface-border);
+    border-radius: 16px;
+    padding: 6px 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.03);
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .search-glass:focus-within {
+    border-color: var(--color-accent);
+    box-shadow: 0 8px 24px rgba(var(--color-accent-rgb), 0.12);
+  }
+  .search-icon { width: 20px; height: 20px; color: var(--text-muted); flex-shrink: 0; }
+  .search-glass input {
+    flex: 1; background: transparent; border: none; outline: none;
+    padding: 10px 0; font-size: 0.95rem; color: var(--text-primary); font-family: inherit; font-weight: 600;
+  }
+  .search-glass input::placeholder { color: var(--text-muted); font-weight: 500; }
+  
+  .search-clear {
+    display: none; background: rgba(128,128,128,0.1); color: var(--text-muted);
+    border: none; border-radius: 50%; width: 28px; height: 28px; 
+    align-items: center; justify-content: center; cursor: pointer;
+  }
+  
+  /* ===== Class Filter Chips ===== */
+  .class-filter { 
+    display: flex; gap: 8px; overflow-x: auto; padding: 12px 0 4px; 
+    margin-top: 12px; scrollbar-width: none; 
+  }
+  .class-filter::-webkit-scrollbar { display: none; }
+  .chip-glass {
+    padding: 8px 16px; border-radius: 99px; font-size: 0.85rem; font-weight: 700;
+    background: var(--surface); border: 1px solid var(--surface-border);
+    color: var(--text-secondary); cursor: pointer; white-space: nowrap;
+    transition: all 0.2s ease; flex-shrink: 0;
+  }
+  .chip-glass.active { background: var(--color-accent); border-color: var(--color-accent); color: #fff; box-shadow: 0 4px 12px rgba(var(--color-accent-rgb), 0.2); }
+
+  /* ===== Student Cards (Premium Floating Style) ===== */
+  .list-head { margin-top: 16px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .list-head-title { font-size: 0.9rem; font-weight: 800; color: var(--text-primary); }
+  .list-count { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; background: rgba(128,128,128,0.1); padding: 4px 10px; border-radius: 99px; }
+
+  .student-card {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--surface);
+    border: 1px solid var(--surface-border);
+    border-radius: 16px;
+    padding: 14px;
+    margin-bottom: 10px;
+    cursor: pointer; text-align: left; width: 100%;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    animation: printIn 400ms ease-out both;
+  }
+  .student-card:active { transform: scale(0.97); }
+  @media (hover:hover) { .student-card:hover { border-color: var(--color-accent); box-shadow: 0 6px 16px rgba(0,0,0,0.06); transform: translateY(-2px); } }
+  @keyframes printIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .student-card.from-cache { animation: none; }
+  
+  .st-avatar {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: var(--color-accent-soft); color: var(--color-accent);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 1.2rem; overflow: hidden; flex-shrink: 0;
+  }
+  .st-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  
+  .st-info { flex: 1; min-width: 0; }
+  .st-name { font-weight: 800; font-size: 1.05rem; color: var(--text-primary); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .st-id { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
+  
+  .st-roll {
+    background: rgba(128,128,128,0.08); color: var(--text-secondary);
+    padding: 6px 12px; border-radius: 10px; font-weight: 800; font-size: 0.85rem; font-family: var(--font-num);
+  }
+
+  /* ===== Skeletons & Empty State ===== */
+  .skel-card { display: flex; gap: 14px; padding: 14px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 16px; margin-bottom: 10px; }
+  .skel-circle { width: 48px; height: 48px; border-radius: 50%; background: rgba(128,128,128,0.1); animation: pulse 1.5s infinite; }
+  .skel-lines { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+  .skel-line { height: 12px; border-radius: 6px; background: rgba(128,128,128,0.1); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 0.6; } 50% { opacity: 1; } }
+
+  .empty-search { padding: 40px 20px; text-align: center; color: var(--text-muted); background: var(--surface); border-radius: 16px; border: 1px dashed var(--surface-border); margin-top: 10px; }
+  .empty-search-icon { width: 42px; height: 42px; margin: 0 auto 12px; color: var(--color-accent); opacity: 0.8; }
+  .empty-search strong { display:block; color:var(--text-primary); font-size:1rem; margin-bottom:6px; font-weight: 800; }
+
+  /* ===== Footer ===== */
+  .foot-section { margin-top: 30px; text-align: center; display: flex; flex-direction: column; gap: 12px; }
+  .btn-join {
+    background: var(--surface); border: 1px solid var(--surface-border);
+    color: var(--text-primary); font-weight: 700; padding: 14px; border-radius: 14px;
+    text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03); transition: transform 0.2s;
+  }
+  .btn-join:active { transform: scale(0.98); }
+  .admin-link { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-decoration: none; padding: 8px; }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <div class="register-head">
+    <h1 id="platformHeading">পরীক্ষা প্রস্তুতি</h1>
+    <p>তালিকা থেকে নিজের নাম বেছে নাও</p>
+  </div>
+
+  <div class="search-glass" role="search">
+    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+    <input id="studentSearchInput" type="search" autocomplete="off" placeholder="শিক্ষার্থীর নাম বা আইডি দিয়ে খুঁজুন...">
+    <button class="search-clear" id="studentSearchClear" type="button">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+    </button>
+  </div>
+
+  <div id="classFilter" class="class-filter hidden"></div>
+
+  <div class="list-head">
+    <div class="list-head-title">শিক্ষার্থীদের তালিকা</div>
+    <div class="list-count" id="studentCount">0 জন</div>
+  </div>
+
+  <div id="studentList">
+    <div class="skel-card"><div class="skel-circle"></div><div class="skel-lines"><div class="skel-line" style="width:60%"></div><div class="skel-line" style="width:40%"></div></div></div>
+    <div class="skel-card"><div class="skel-circle"></div><div class="skel-lines"><div class="skel-line" style="width:50%"></div><div class="skel-line" style="width:30%"></div></div></div>
+    <div class="skel-card"><div class="skel-circle"></div><div class="skel-lines"><div class="skel-line" style="width:70%"></div><div class="skel-line" style="width:45%"></div></div></div>
+  </div>
+
+  <div class="foot-section">
+    <a href="./join.html" class="btn-join">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+      নতুন শিক্ষার্থী? যুক্ত হওয়ার আবেদন করো
+    </a>
+    <a href="./admin/index.html" class="admin-link">অ্যাডমিন প্যানেল</a>
+  </div>
+
+</div>
+
+<script type="module">
+import { initTheme, icons, renderState } from "./js/utils/ui-utils.js";
+import { getActiveStudents, setActiveStudent, findActiveAttempt } from "./js/utils/student-utils.js";
+import { getPlatformSettings } from "./js/utils/settings-utils.js";
+
+initTheme();
+
+const TITLE_CACHE_KEY = "cachedPlatformTitle";
+const headingEl = document.getElementById("platformHeading");
+try {
+  const cachedTitle = localStorage.getItem(TITLE_CACHE_KEY);
+  if (cachedTitle) headingEl.textContent = cachedTitle;
+} catch {}
+
+async function loadPlatformTitle() {
+  try {
+    const settings = await getPlatformSettings();
+    if (settings.platformTitle) {
+      headingEl.textContent = settings.platformTitle;
+      try { localStorage.setItem(TITLE_CACHE_KEY, settings.platformTitle); } catch {}
+    }
+  } catch (err) { console.error(err); }
+}
+loadPlatformTitle();
+
+const listEl = document.getElementById("studentList");
+const filterEl = document.getElementById("classFilter");
+const searchInput = document.getElementById("studentSearchInput");
+const searchClear = document.getElementById("studentSearchClear");
+const countEl = document.getElementById("studentCount");
+const CACHE_KEY = "cachedStudentList";
+
+let students = [];
+let allStudents = [];
+let activeClassFilter = "all";
+let activeSearch = "";
+
+function renderClassFilter() {
+  const classes = [...new Set(allStudents.map(s => s.className).filter(Boolean))].sort();
+  if (classes.length === 0) { filterEl.classList.add("hidden"); return; }
+  filterEl.classList.remove("hidden");
+  filterEl.innerHTML = [
+    `<button class="chip-glass${activeClassFilter === "all" ? " active" : ""}" data-class="all">সব ক্লাস</button>`,
+    ...classes.map(c => `<button class="chip-glass${activeClassFilter === c ? " active" : ""}" data-class="${c}">${c}</button>`)
+  ].join("");
+  filterEl.querySelectorAll(".chip-glass").forEach(chip => {
+    chip.addEventListener("click", () => {
+      activeClassFilter = chip.dataset.class;
+      applySearchAndClassFilter();
+    });
+  });
+}
+
+const BN_DIGITS = ["০","১","২","৩","৪","৫","৬","৭","৮","৯"];
+function bnRoll(n) { return String(n).padStart(2, "0").split("").map(d => BN_DIGITS[Number(d)]).join(""); }
+
+function safeStudentName(s) {
+  const value = s?.name ?? s?.studentName ?? s?.displayName ?? s?.fullName ?? "";
+  const text = String(value).trim();
+  return text && text !== "undefined" && text !== "null" ? text : "নাম পাওয়া যায়নি";
+}
+
+function safeStudentId(s) {
+  const value = s?.studentId ?? s?.id ?? s?.uid ?? "";
+  const text = String(value).trim();
+  return text && text !== "undefined" && text !== "null" ? text : "আইডি পাওয়া যায়নি";
+}
+
+function normalized(value) { return String(value ?? "").trim().toLocaleLowerCase(); }
+
+function applySearchAndClassFilter() {
+  renderClassFilter();
+  let filtered = allStudents;
+  if (activeClassFilter !== "all") filtered = filtered.filter(s => s?.className === activeClassFilter);
+  if (activeSearch) {
+    filtered = filtered.filter(s => {
+      const name = normalized(safeStudentName(s));
+      const id = normalized(safeStudentId(s));
+      return name.includes(activeSearch) || id.includes(activeSearch);
+    });
+  }
+  renderList(filtered, false);
+  const total = filtered.length;
+  if (countEl) countEl.textContent = `${total} জন`;
+  if (searchClear) searchClear.style.display = activeSearch ? "flex" : "none";
+}
+
+function runStudentSearch() {
+  activeSearch = normalized(searchInput?.value);
+  applySearchAndClassFilter();
+}
+
+function rowHtml(s, i, fromCache) {
+  const name = safeStudentName(s);
+  const studentId = safeStudentId(s);
+  const initial = name.charAt(0) || "শ";
+  const photo = typeof s?.photoURL === "string" ? s.photoURL.trim() : "";
+  const avatar = photo
+    ? `<img src="${photo}" alt="" draggable="false" oncontextmenu="return false" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'st-avatar',textContent:'${initial.replace(/'/g,"&#039;")}'}))">`
+    : `<span class="st-avatar">${initial}</span>`;
+  return `
+    <button class="student-card${fromCache ? " from-cache" : ""}" data-idx="${i}" style="animation-delay:${fromCache ? 0 : i * 40}ms;">
+      <div class="st-avatar">${avatar}</div>
+      <div class="st-info">
+        <div class="st-name">${name}</div>
+        <div class="st-id">${studentId}</div>
+      </div>
+      <div class="st-roll">${bnRoll(i + 1)}</div>
+      <div style="color:var(--text-muted); opacity:0.6; margin-left:4px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+    </button>
+  `;
+}
+
+function renderList(list, fromCache = false) {
+  students = list;
+  if (list.length === 0) {
+    if (activeSearch) {
+      listEl.innerHTML = `<div class="empty-search">
+        <svg class="empty-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <strong>শিক্ষার্থী পাওয়া যায়নি</strong>
+        <span style="font-size:0.85rem;">নাম বা আইডি একটু অন্যভাবে লিখে চেষ্টা করো।</span>
+      </div>`;
+    } else {
+      renderState(listEl, "empty", "এখনো কোনো শিক্ষার্থী যোগ করা হয়নি। অ্যাডমিন প্যানেল থেকে শিক্ষার্থী তৈরি করুন।");
+    }
+    if (countEl) countEl.textContent = "0 জন";
+    return;
+  }
+  listEl.innerHTML = list.map((s, i) => rowHtml(s, i, fromCache)).join("");
+  if (countEl) countEl.textContent = `${list.length} জন`;
+  listEl.querySelectorAll("[data-idx]").forEach(btn => {
+    btn.addEventListener("click", () => selectStudent(students[Number(btn.dataset.idx)]));
+  });
+}
+
+async function selectStudent(student) {
+  setActiveStudent(student); 
+  const active = await findActiveAttempt(student.studentId);
+  if (active) {
+    window.location.href = `./student/exam.html?examId=${active.examId}&resume=1`;
+  } else {
+    window.location.href = "./student/dashboard.html";
+  }
+}
+
+searchInput?.addEventListener("input", () => {
+  activeSearch = normalized(searchInput.value);
+  applySearchAndClassFilter();
+});
+searchClear?.addEventListener("click", () => {
+  if (searchInput) searchInput.value = "";
+  activeSearch = "";
+  applySearchAndClassFilter();
+  searchInput?.focus();
+});
+
+try {
+  const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+  if (cached && cached.length) {
+    allStudents = cached;
+    applySearchAndClassFilter();
+  }
+} catch {}
+
+async function loadStudents() {
+  try {
+    const fresh = await getActiveStudents();
+    allStudents = fresh;
+    applySearchAndClassFilter();
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify(fresh)); } catch {}
+  } catch (err) {
+    console.error(err);
+    if (students.length === 0) renderState(listEl, "error", "শিক্ষার্থীদের তালিকা লোড করা যায়নি। ইন্টারনেট সংযোগ চেক করুন।");
+  }
+}
+
+loadStudents();
+</script>
+</body>
+      </html>
+      
