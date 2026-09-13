@@ -419,6 +419,14 @@
     outline:none;
   }
 
+  .lb-error {
+    padding:22px 16px;
+    display:flex;flex-direction:column;align-items:center;gap:7px;
+    text-align:center;color:var(--text-secondary);font-size:.72rem;line-height:1.5;
+  }
+  .lb-error strong { color:var(--text-primary);font-size:.86rem; }
+  .lb-error .text-action { margin-top:5px; }
+
   @media (max-width:430px) {
     .lb-row { gap:8px; }
     .lb-avatar { width:39px;height:39px; }
@@ -598,10 +606,31 @@ function buildActivityFromResult(result, studentMap) {
 if (!student) {
   window.location.href = "../index.html";
 } else {
-  refreshActiveStudent(student.docId).then(fresh => {
-    if (fresh) student = fresh;
-    render();
-  });
+  /* Render immediately. Do NOT keep the whole page behind a Firestore request.
+     This is the main fix for the permanent loading-spinner problem. */
+  render();
+
+  /* Refresh the cached student silently; failure must never block the page. */
+  refreshActiveStudent(student.docId)
+    .then(fresh => {
+      if (!fresh) return;
+      student = fresh;
+      renderStudentHeaderAfterRefresh();
+    })
+    .catch(() => {});
+}
+
+function renderStudentHeaderAfterRefresh() {
+  /* Keep the already-rendered page intact. Only refresh the small header area
+     if the helper can provide the latest student data. */
+  const headerHost = document.querySelector(".student-header");
+  if (!headerHost) return;
+  try {
+    headerHost.outerHTML = renderStudentHeader(student, "leaderboard");
+    document.getElementById("themeToggle")?.addEventListener("click", toggleTheme);
+  } catch (err) {
+    console.warn("Student header refresh skipped:", err);
+  }
 }
 
 function render() {
@@ -723,35 +752,83 @@ function render() {
 /* ---------- Existing leaderboard data ---------- */
 
 async function loadEverything() {
+  const listEl = document.getElementById("leaderboardList");
+
   try {
-    const students = await getActiveStudents();
-    const [board, friendIds, approvedResults] = await Promise.all([
+    /* First fetch the students. This is the only hard dependency for the
+       leaderboard itself. */
+    let students;
+    try {
+      students = await getActiveStudents();
+    } catch (err) {
+      console.error("Students load failed:", err);
+      if (listEl) {
+        listEl.innerHTML = `<div class="lb-error">
+          <strong>লিডারবোর্ড লোড করা যায়নি</strong>
+          <span>ইন্টারনেট/Firebase connection check করে আবার চেষ্টা করো।</span>
+          <button class="btn-glass text-action" id="retryLeaderboardBtn">আবার চেষ্টা</button>
+        </div>`;
+        document.getElementById("retryLeaderboardBtn")?.addEventListener("click", loadEverything);
+      }
+      return;
+    }
+
+    /* Load independent data separately so a challenge/bonus read failure
+       cannot blank the entire leaderboard. */
+    const [boardResult, friendsResult, resultsResult] = await Promise.allSettled([
       getLeaderboardData(students),
       getMyFriendIds(student.studentId),
       getAllApprovedResults()
     ]);
 
-    // Resolve completed challenges before rendering points so the saved
-    // challenge reward is reflected in the leaderboard immediately.
-    const bonusMap = await resolveCompletedChallenges(approvedResults);
+    const board = boardResult.status === "fulfilled" && Array.isArray(boardResult.value)
+      ? boardResult.value : [];
 
-    allLeaderboard = (Array.isArray(board) ? board : []).map(r => ({
+    myFriendIds = friendsResult.status === "fulfilled" && Array.isArray(friendsResult.value)
+      ? friendsResult.value : [];
+
+    const approvedResults = resultsResult.status === "fulfilled"
+      ? resultsResult.value : [];
+
+    if (boardResult.status === "rejected") {
+      console.error("Leaderboard data failed:", boardResult.reason);
+    }
+
+    /* Bonus resolution is optional. The base leaderboard must still render
+       even if Firestore denies the challenge update/read. */
+    let bonusMap = {};
+    try {
+      bonusMap = await resolveCompletedChallenges(approvedResults);
+    } catch (err) {
+      console.warn("Challenge bonus resolution skipped:", err);
+    }
+
+    allLeaderboard = board.map(r => ({
       ...r,
       basePoints: Number(r.totalPoints) || 0,
       challengeBonus: Number(bonusMap[r.studentId]) || 0,
       totalPoints: (Number(r.totalPoints) || 0) + (Number(bonusMap[r.studentId]) || 0)
-    })).sort((a,b) => b.totalPoints - a.totalPoints);
-
-    myFriendIds = Array.isArray(friendIds) ? friendIds : [];
+    })).sort((a, b) => b.totalPoints - a.totalPoints);
 
     renderClassFilterRow();
     await renderLeaderboardList();
-    await renderIncomingChallenges(students);
 
-    startLiveResultsListener();
+    try {
+      await renderIncomingChallenges(students);
+    } catch (err) {
+      console.warn("Incoming challenge render skipped:", err);
+    }
+
   } catch (err) {
-    console.error(err);
-    showToast(friendlyError(err), "error");
+    console.error("Leaderboard load failed:", err);
+    if (listEl) {
+      listEl.innerHTML = `<div class="lb-error">
+        <strong>কিছুক্ষণ পরে আবার চেষ্টা করো</strong>
+        <span>Leaderboard-এর মূল page চালু আছে, কিন্তু data আনতে সমস্যা হয়েছে।</span>
+        <button class="btn-glass text-action" id="retryLeaderboardBtn">আবার চেষ্টা</button>
+      </div>`;
+      document.getElementById("retryLeaderboardBtn")?.addEventListener("click", loadEverything);
+    }
   }
 }
 
