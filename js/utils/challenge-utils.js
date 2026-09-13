@@ -13,7 +13,7 @@ import {
   deleteDoc,
   doc,
   serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 import { db } from "../firebase/firebase-config.js";
 
