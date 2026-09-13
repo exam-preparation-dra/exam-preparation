@@ -236,15 +236,21 @@ async function renderLeaderboardList() {
     const isMe = r.studentId === student.studentId;
     const isFriend = myFriendIds.includes(r.studentId);
     
-    let friendBtn = "";
+        let friendBtn = "";
     if (!isMe) {
       if (isFriend) {
         const hasChallenged = challengedIds.has(r.studentId);
         friendBtn = `
-          <a href="../student/comparison.html?friendId=${r.studentId}" class="btn-glass" style="padding:8px;" title="তুলনা">📊</a>
+          <a href="../student/comparison.html?friendId=${r.studentId}" class="btn-glass" style="padding:7px 10px;" title="তুলনা">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          </a>
           ${hasChallenged
-            ? `<span class="btn-glass" style="padding:8px; color:var(--text-muted); cursor:default;" title="চ্যালেঞ্জ অপেক্ষমান">⏳</span>`
-            : `<button class="btn-glass challenge-btn" data-id="${r.studentId}" style="padding:8px; color:#ef4444; border-color:rgba(239, 68, 68, 0.3);" title="চ্যালেঞ্জ">⚔️</button>`
+            ? `<span class="btn-glass" style="padding:7px 10px; color:var(--text-muted); cursor:default;" title="চ্যালেঞ্জ অপেক্ষমান">
+                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+               </span>`
+            : `<button class="btn-glass challenge-btn" data-id="${r.studentId}" style="padding:7px 10px; color:#ef4444; border-color:rgba(239, 68, 68, 0.3);" title="চ্যালেঞ্জ">
+                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/></svg>
+               </button>`
           }
         `;
       }
@@ -255,6 +261,7 @@ async function renderLeaderboardList() {
         friendBtn = `<button class="btn-glass add-friend-btn" data-id="${r.studentId}" style="padding:6px 10px; font-size:0.75rem;">+ বন্ধু</button>`;
       }
     }
+    
     
     return `
       <div class="lb-row ${isMe ? 'is-me' : ''}">
