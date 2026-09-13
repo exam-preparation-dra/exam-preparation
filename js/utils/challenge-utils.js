@@ -1,62 +1,195 @@
-/* =========================================================
-   CHALLENGE SYSTEM UTILITIES
-   1v1 Friend Battles + Bonus Resolution
-   ========================================================= */
-
-import { db } from "../firebase/firebase-config.js";
+// challenge-utils.js
+// Complete challenge system for student-to-student exam challenges.
+// Uses Firestore and works with the existing student/result structure.
 
 import {
   collection,
-  addDoc,
-  getDocs,
-  getDoc,
   query,
   where,
-  doc,
+  getDocs,
+  getDoc,
+  addDoc,
   updateDoc,
   deleteDoc,
+  doc,
   serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import { db } from "../firebase/firebase-config.js";
 
 
-/* =========================================================
-   BONUS RULES
-   ========================================================= */
+// ============================================================
+// CONFIG
+// ============================================================
 
-export const CHALLENGE_WINNER_BONUS = 100;
-export const CHALLENGE_LOSER_BONUS = 25;
-export const CHALLENGE_DRAW_BONUS = 50;
+export const CHALLENGE_REWARDS = {
+  winner: 100,
+  loser: 25,
+  draw: 50
+};
 
 
-/* =========================================================
-   INCOMING CHALLENGES
-   ========================================================= */
+// ============================================================
+// INTERNAL HELPERS
+// ============================================================
 
-// যে challenge-গুলো এই student-কে করা হয়েছে
-// এবং এখনো pending
+function safeNumber(value, fallback = 0) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+
+function getResultPercentage(result) {
+  const percentage = Number(result?.percentage);
+
+  if (Number.isFinite(percentage)) {
+    return percentage;
+  }
+
+  const obtained = safeNumber(result?.obtainedMarks);
+  const total = safeNumber(result?.totalMarks);
+
+  if (total > 0) {
+    return (obtained / total) * 100;
+  }
+
+  return 0;
+}
+
+
+function getResultMarks(result) {
+  return safeNumber(result?.obtainedMarks);
+}
+
+
+function resultKey(examId, studentId) {
+  return `${examId}_${studentId}`;
+}
+
+
+// ============================================================
+// SEND CHALLENGE
+// ============================================================
+
+export async function sendChallenge({
+  fromStudentId,
+  toStudentId,
+  examId = "__NEXT_EXAM__",
+  examName = "পরবর্তী পরীক্ষা (auto-select)"
+}) {
+  if (!fromStudentId) {
+    throw new Error("তোমার student ID পাওয়া যায়নি।");
+  }
+
+  if (!toStudentId) {
+    throw new Error("যাকে challenge করবে তার student ID পাওয়া যায়নি।");
+  }
+
+  if (fromStudentId === toStudentId) {
+    throw new Error("নিজেকে challenge করা যাবে না।");
+  }
+
+  // Check whether an active/pending challenge already exists.
+  const sentQuery = query(
+    collection(db, "examChallenges"),
+    where("fromStudentId", "==", fromStudentId),
+    where("toStudentId", "==", toStudentId)
+  );
+
+  const receivedQuery = query(
+    collection(db, "examChallenges"),
+    where("fromStudentId", "==", toStudentId),
+    where("toStudentId", "==", fromStudentId)
+  );
+
+  const [sentSnap, receivedSnap] = await Promise.all([
+    getDocs(sentQuery),
+    getDocs(receivedQuery)
+  ]);
+
+  const existingChallenges = [
+    ...sentSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+    ...receivedSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+  ];
+
+  const activeExisting = existingChallenges.find(challenge =>
+    ["pending", "accepted"].includes(challenge.status)
+  );
+
+  if (activeExisting) {
+    throw new Error("এই বন্ধুর সঙ্গে একটি active challenge ইতিমধ্যেই আছে।");
+  }
+
+  const challengeData = {
+    fromStudentId,
+    toStudentId,
+
+    examId,
+    examName,
+
+    status: "pending",
+
+    bonusAwarded: false,
+
+    winnerStudentId: null,
+    loserStudentId: null,
+
+    winnerBonus: CHALLENGE_REWARDS.winner,
+    loserBonus: CHALLENGE_REWARDS.loser,
+    drawBonus: CHALLENGE_REWARDS.draw,
+
+    createdAt: serverTimestamp(),
+
+    acceptedAt: null,
+    completedAt: null,
+    resolvedAt: null
+  };
+
+  const challengeRef = await addDoc(
+    collection(db, "examChallenges"),
+    challengeData
+  );
+
+  return {
+    id: challengeRef.id,
+    ...challengeData
+  };
+}
+
+
+// ============================================================
+// GET INCOMING CHALLENGES
+// ============================================================
+
 export async function getIncomingChallenges(studentId) {
+  if (!studentId) return [];
 
   const q = query(
     collection(db, "examChallenges"),
-    where("toStudentId", "==", studentId),
-    where("status", "==", "pending")
+    where("toStudentId", "==", studentId)
   );
 
   const snap = await getDocs(q);
 
-  return snap.docs.map(d => ({
-    id: d.id,
-    ...d.data()
-  }));
+  return snap.docs
+    .map(d => ({
+      id: d.id,
+      ...d.data()
+    }))
+    .sort((a, b) => {
+      const aTime = a.createdAt?.seconds || 0;
+      const bTime = b.createdAt?.seconds || 0;
+      return bTime - aTime;
+    });
 }
 
 
-/* =========================================================
-   OUTGOING CHALLENGES
-   ========================================================= */
+// ============================================================
+// GET OUTGOING CHALLENGES
+// ============================================================
 
-// এই student যে challenge-গুলো পাঠিয়েছে
 export async function getOutgoingChallenges(studentId) {
+  if (!studentId) return [];
 
   const q = query(
     collection(db, "examChallenges"),
@@ -65,227 +198,103 @@ export async function getOutgoingChallenges(studentId) {
 
   const snap = await getDocs(q);
 
-  return snap.docs.map(d => ({
-    id: d.id,
-    ...d.data()
-  }));
-}
-
-
-/* =========================================================
-   ALL CHALLENGES INVOLVING A STUDENT
-   ========================================================= */
-
-export async function getMyChallenges(studentId) {
-
-  const [sentSnap, receivedSnap] = await Promise.all([
-
-    getDocs(
-      query(
-        collection(db, "examChallenges"),
-        where("fromStudentId", "==", studentId)
-      )
-    ),
-
-    getDocs(
-      query(
-        collection(db, "examChallenges"),
-        where("toStudentId", "==", studentId)
-      )
-    )
-
-  ]);
-
-  const map = new Map();
-
-  sentSnap.docs.forEach(d => {
-    map.set(d.id, {
+  return snap.docs
+    .map(d => ({
       id: d.id,
       ...d.data()
+    }))
+    .sort((a, b) => {
+      const aTime = a.createdAt?.seconds || 0;
+      const bTime = b.createdAt?.seconds || 0;
+      return bTime - aTime;
     });
-  });
-
-  receivedSnap.docs.forEach(d => {
-    map.set(d.id, {
-      id: d.id,
-      ...d.data()
-    });
-  });
-
-  return [...map.values()].sort(
-    (a, b) =>
-      (b.createdAt?.toMillis?.() ?? 0) -
-      (a.createdAt?.toMillis?.() ?? 0)
-  );
 }
 
 
-/* =========================================================
-   SEND CHALLENGE
-   ========================================================= */
+// ============================================================
+// ACCEPT CHALLENGE
+// ============================================================
 
-export async function sendChallenge(
-  fromStudentId,
-  toStudentId,
-  examId,
-  examName
-) {
-
-  if (!fromStudentId || !toStudentId) {
-    throw new Error("Student information পাওয়া যায়নি।");
-  }
-
-  if (fromStudentId === toStudentId) {
-    throw new Error("নিজেকে challenge করা যায় না।");
-  }
-
-  if (!examId) {
-    throw new Error("পরীক্ষা নির্বাচন করো।");
-  }
-
-
-  /*
-     একই exam-এর জন্য একই দুই student-এর
-     pending/accepted challenge আগে থেকেই আছে কিনা দেখি।
-  */
-
-  const [sentSnap, receivedSnap] = await Promise.all([
-
-    getDocs(
-      query(
-        collection(db, "examChallenges"),
-        where("fromStudentId", "==", fromStudentId),
-        where("toStudentId", "==", toStudentId),
-        where("examId", "==", examId)
-      )
-    ),
-
-    getDocs(
-      query(
-        collection(db, "examChallenges"),
-        where("fromStudentId", "==", toStudentId),
-        where("toStudentId", "==", fromStudentId),
-        where("examId", "==", examId)
-      )
-    )
-
-  ]);
-
-
-  const existing = [
-    ...sentSnap.docs,
-    ...receivedSnap.docs
-  ];
-
-
-  const activeChallenge = existing.find(d => {
-
-    const status = d.data().status;
-
-    return status === "pending" ||
-           status === "accepted";
-
-  });
-
-
-  if (activeChallenge) {
-    throw new Error(
-      "এই পরীক্ষার জন্য তোমাদের মধ্যে একটি challenge ইতিমধ্যেই আছে।"
-    );
-  }
-
-
-  const challengeRef = await addDoc(
-    collection(db, "examChallenges"),
-    {
-      fromStudentId,
-      toStudentId,
-      examId,
-      examName,
-
-      status: "pending",
-
-      // Resolution fields
-      winnerStudentId: null,
-      loserStudentId: null,
-
-      fromResultId: null,
-      toResultId: null,
-
-      fromPercentage: null,
-      toPercentage: null,
-
-      fromMarks: null,
-      toMarks: null,
-
-      winnerBonus: 0,
-      loserBonus: 0,
-
-      bonusAwarded: false,
-      resolvedAt: null,
-
-      createdAt: serverTimestamp()
-    }
-  );
-
-
-  return challengeRef.id;
-}
-
-
-/* =========================================================
-   ACCEPT CHALLENGE
-   ========================================================= */
-
-export async function acceptChallenge(challengeId) {
-
+export async function acceptChallenge(challengeId, studentId) {
   if (!challengeId) {
-    throw new Error("Challenge ID পাওয়া যায়নি।");
+    throw new Error("Challenge ID পাওয়া যায়নি।");
   }
 
-  await updateDoc(
-    doc(db, "examChallenges", challengeId),
-    {
-      status: "accepted",
-      acceptedAt: serverTimestamp()
-    }
-  );
+  const challengeRef = doc(db, "examChallenges", challengeId);
+  const challengeSnap = await getDoc(challengeRef);
+
+  if (!challengeSnap.exists()) {
+    throw new Error("Challenge আর পাওয়া যাচ্ছে না।");
+  }
+
+  const challenge = challengeSnap.data();
+
+  if (challenge.toStudentId !== studentId) {
+    throw new Error("এই challenge accept করার অনুমতি নেই।");
+  }
+
+  if (challenge.status !== "pending") {
+    throw new Error("এই challenge আর pending নেই।");
+  }
+
+  await updateDoc(challengeRef, {
+    status: "accepted",
+    acceptedAt: serverTimestamp()
+  });
+
+  return {
+    id: challengeId,
+    ...challenge,
+    status: "accepted"
+  };
+}
+
+
+// ============================================================
+// REJECT CHALLENGE
+// ============================================================
+
+export async function rejectChallenge(challengeId, studentId) {
+  if (!challengeId) {
+    throw new Error("Challenge ID পাওয়া যায়নি।");
+  }
+
+  const challengeRef = doc(db, "examChallenges", challengeId);
+  const challengeSnap = await getDoc(challengeRef);
+
+  if (!challengeSnap.exists()) {
+    throw new Error("Challenge আর পাওয়া যাচ্ছে না।");
+  }
+
+  const challenge = challengeSnap.data();
+
+  if (challenge.toStudentId !== studentId) {
+    throw new Error("এই challenge reject করার অনুমতি নেই।");
+  }
+
+  if (challenge.status !== "pending") {
+    throw new Error("এই challenge আর pending নেই।");
+  }
+
+  await deleteDoc(challengeRef);
 
   return true;
 }
 
 
-/* =========================================================
-   REJECT / DELETE CHALLENGE
-   ========================================================= */
+// ============================================================
+// GET SINGLE CHALLENGE
+// ============================================================
 
-export async function rejectChallenge(challengeId) {
-
-  if (!challengeId) {
-    throw new Error("Challenge ID পাওয়া যায়নি।");
-  }
-
-  await deleteDoc(
-    doc(db, "examChallenges", challengeId)
-  );
-
-  return true;
-}
-
-
-/* =========================================================
-   GET ONE CHALLENGE
-   ========================================================= */
-
-export async function getChallengeById(challengeId) {
-
+export async function getChallenge(challengeId) {
   if (!challengeId) return null;
 
-  const snap = await getDoc(
-    doc(db, "examChallenges", challengeId)
-  );
+  const challengeRef = doc(db, "examChallenges", challengeId);
+  const snap = await getDoc(challengeRef);
 
-  if (!snap.exists()) return null;
+  if (!snap.exists()) {
+    return null;
+  }
 
   return {
     id: snap.id,
@@ -294,590 +303,322 @@ export async function getChallengeById(challengeId) {
 }
 
 
-/* =========================================================
-   FIND APPROVED RESULT
-   ========================================================= */
+// ============================================================
+// RESOLVE COMPLETED CHALLENGES
+// ============================================================
 
-async function getApprovedChallengeResult(
-  studentId,
-  examId
-) {
+export async function resolveCompletedChallenges(studentId) {
+  if (!studentId) return [];
 
-  const q = query(
-    collection(db, "results"),
-    where("studentId", "==", studentId),
-    where("examId", "==", examId),
-    where("status", "==", "approved")
+  const incomingQuery = query(
+    collection(db, "examChallenges"),
+    where("toStudentId", "==", studentId),
+    where("status", "==", "accepted")
   );
 
-  const snap = await getDocs(q);
+  const outgoingQuery = query(
+    collection(db, "examChallenges"),
+    where("fromStudentId", "==", studentId),
+    where("status", "==", "accepted")
+  );
 
-  if (snap.empty) return null;
+  const [incomingSnap, outgoingSnap] = await Promise.all([
+    getDocs(incomingQuery),
+    getDocs(outgoingQuery)
+  ]);
 
-  /*
-     সাধারণত একজন student-এর একটি exam-এর
-     একটি result থাকবে।
-
-     যদি একাধিক থাকে, latest submitted result নেওয়া হবে।
-  */
-
-  const results = snap.docs
-    .map(d => ({
+  const challenges = [
+    ...incomingSnap.docs.map(d => ({
+      id: d.id,
+      ...d.data()
+    })),
+    ...outgoingSnap.docs.map(d => ({
       id: d.id,
       ...d.data()
     }))
-    .sort(
-      (a, b) =>
-        (b.submittedAt?.toMillis?.() ?? 0) -
-        (a.submittedAt?.toMillis?.() ?? 0)
-    );
+  ];
 
-  return results[0] || null;
-}
+  const resolved = [];
 
-
-/* =========================================================
-   RESOLVE CHALLENGE
-   =========================================================
-
-   Rules:
-
-   Winner       = +100
-   Loser        = +25
-   Draw         = +50 each
-
-   দুজনের approved result না আসা পর্যন্ত
-   challenge resolve হবে না।
-
-   Bonus আলাদা করে points হিসেবে increment
-   করা হচ্ছে না।
-
-   Challenge document-এ final result save হচ্ছে।
-   তাই একই challenge বারবার resolve হলেও
-   bonus duplicate হবে না।
-   ========================================================= */
-
-export async function resolveChallengeIfReady(
-  challengeId
-) {
-
-  if (!challengeId) {
-    throw new Error("Challenge ID পাওয়া যায়নি।");
-  }
-
-
-  const challengeRef = doc(
-    db,
-    "examChallenges",
-    challengeId
-  );
-
-
-  const challengeSnap = await getDoc(
-    challengeRef
-  );
-
-
-  if (!challengeSnap.exists()) {
-    return {
-      resolved: false,
-      reason: "challenge-not-found"
-    };
-  }
-
-
-  const challenge = {
-    id: challengeSnap.id,
-    ...challengeSnap.data()
-  };
-
-
-  /*
-     Already resolved হলে আবার bonus গণনা করব না।
-  */
-
-  if (
-    challenge.bonusAwarded === true ||
-    challenge.status === "completed"
-  ) {
-
-    return {
-      resolved: true,
-      alreadyResolved: true,
-      challenge
-    };
-
-  }
-
-
-  /*
-     শুধু accepted challenge resolve হবে।
-  */
-
-  if (challenge.status !== "accepted") {
-
-    return {
-      resolved: false,
-      reason: "not-accepted"
-    };
-
-  }
-
-
-  const fromStudentId = challenge.fromStudentId;
-  const toStudentId = challenge.toStudentId;
-  const examId = challenge.examId;
-
-
-  /*
-     দুজনের approved result একসাথে খুঁজি।
-  */
-
-  const [
-    fromResult,
-    toResult
-  ] = await Promise.all([
-
-    getApprovedChallengeResult(
-      fromStudentId,
-      examId
-    ),
-
-    getApprovedChallengeResult(
-      toStudentId,
-      examId
-    )
-
-  ]);
-
-
-  /*
-     একজন বা দুজনের result এখনো approved না হলে
-     challenge resolve হবে না।
-  */
-
-  if (!fromResult || !toResult) {
-
-    return {
-      resolved: false,
-      reason: "waiting-for-results",
-
-      fromCompleted: !!fromResult,
-      toCompleted: !!toResult,
-
-      challenge
-    };
-
-  }
-
-
-  /*
-     Marks এবং percentage বের করি।
-  */
-
-  const fromMarks =
-    Number(fromResult.obtainedMarks) || 0;
-
-  const toMarks =
-    Number(toResult.obtainedMarks) || 0;
-
-  const fromPercentage =
-    Number(fromResult.percentage) || 0;
-
-  const toPercentage =
-    Number(toResult.percentage) || 0;
-
-
-  /*
-     Winner determination:
-
-     প্রথমে obtainedMarks।
-
-     Marks equal হলে percentage দিয়ে
-     tie-break করা হবে।
-  */
-
-  let winnerStudentId = null;
-  let loserStudentId = null;
-
-  let winnerBonus = 0;
-  let loserBonus = 0;
-
-  let resultType = "draw";
-
-
-  if (fromMarks > toMarks) {
-
-    winnerStudentId = fromStudentId;
-    loserStudentId = toStudentId;
-
-    winnerBonus = CHALLENGE_WINNER_BONUS;
-    loserBonus = CHALLENGE_LOSER_BONUS;
-
-    resultType = "from-won";
-
-  }
-
-  else if (toMarks > fromMarks) {
-
-    winnerStudentId = toStudentId;
-    loserStudentId = fromStudentId;
-
-    winnerBonus = CHALLENGE_WINNER_BONUS;
-    loserBonus = CHALLENGE_LOSER_BONUS;
-
-    resultType = "to-won";
-
-  }
-
-  else if (fromPercentage > toPercentage) {
-
-    winnerStudentId = fromStudentId;
-    loserStudentId = toStudentId;
-
-    winnerBonus = CHALLENGE_WINNER_BONUS;
-    loserBonus = CHALLENGE_LOSER_BONUS;
-
-    resultType = "from-won";
-
-  }
-
-  else if (toPercentage > fromPercentage) {
-
-    winnerStudentId = toStudentId;
-    loserStudentId = fromStudentId;
-
-    winnerBonus = CHALLENGE_WINNER_BONUS;
-    loserBonus = CHALLENGE_LOSER_BONUS;
-
-    resultType = "to-won";
-
-  }
-
-  else {
+  for (const challenge of challenges) {
+    if (challenge.bonusAwarded) {
+      continue;
+    }
 
     /*
-       সম্পূর্ণ draw
-       দুজনেই +50
-    */
+     * A special __NEXT_EXAM__ challenge cannot be resolved until
+     * a real exam ID has been selected/assigned.
+     */
+    if (
+      !challenge.examId ||
+      challenge.examId === "__NEXT_EXAM__"
+    ) {
+      continue;
+    }
 
-    winnerStudentId = null;
-    loserStudentId = null;
+    const fromResultRef = doc(
+      db,
+      "results",
+      resultKey(
+        challenge.examId,
+        challenge.fromStudentId
+      )
+    );
 
-    winnerBonus = CHALLENGE_DRAW_BONUS;
-    loserBonus = CHALLENGE_DRAW_BONUS;
+    const toResultRef = doc(
+      db,
+      "results",
+      resultKey(
+        challenge.examId,
+        challenge.toStudentId
+      )
+    );
 
-    resultType = "draw";
-  }
+    const [fromResultSnap, toResultSnap] = await Promise.all([
+      getDoc(fromResultRef),
+      getDoc(toResultRef)
+    ]);
 
+    if (!fromResultSnap.exists() || !toResultSnap.exists()) {
+      continue;
+    }
 
-  /*
-     Final challenge result Firestore-এ save।
-  */
+    const fromResult = fromResultSnap.data();
+    const toResult = toResultSnap.data();
 
-  await updateDoc(
-    challengeRef,
-    {
+    /*
+     * Only approved results are used for challenge resolution.
+     */
+    if (
+      fromResult.status &&
+      fromResult.status !== "approved"
+    ) {
+      continue;
+    }
 
+    if (
+      toResult.status &&
+      toResult.status !== "approved"
+    ) {
+      continue;
+    }
+
+    const fromPercentage = getResultPercentage(fromResult);
+    const toPercentage = getResultPercentage(toResult);
+
+    const fromMarks = getResultMarks(fromResult);
+    const toMarks = getResultMarks(toResult);
+
+    let winnerStudentId = null;
+    let loserStudentId = null;
+    let winnerBonus = 0;
+
+    /*
+     * Percentage is the primary comparison.
+     * Obtained marks are used as the tie-breaker.
+     */
+    if (fromPercentage > toPercentage) {
+      winnerStudentId = challenge.fromStudentId;
+      loserStudentId = challenge.toStudentId;
+      winnerBonus = CHALLENGE_REWARDS.winner;
+    } else if (toPercentage > fromPercentage) {
+      winnerStudentId = challenge.toStudentId;
+      loserStudentId = challenge.fromStudentId;
+      winnerBonus = CHALLENGE_REWARDS.winner;
+    } else if (fromMarks > toMarks) {
+      winnerStudentId = challenge.fromStudentId;
+      loserStudentId = challenge.toStudentId;
+      winnerBonus = CHALLENGE_REWARDS.winner;
+    } else if (toMarks > fromMarks) {
+      winnerStudentId = challenge.toStudentId;
+      loserStudentId = challenge.fromStudentId;
+      winnerBonus = CHALLENGE_REWARDS.winner;
+    }
+
+    const challengeRef = doc(
+      db,
+      "examChallenges",
+      challenge.id
+    );
+
+    /*
+     * Draw
+     */
+    if (!winnerStudentId) {
+      await updateDoc(challengeRef, {
+        status: "completed",
+        bonusAwarded: true,
+
+        winnerStudentId: null,
+        loserStudentId: null,
+
+        winnerBonus: 0,
+        loserBonus: 0,
+        drawBonus: CHALLENGE_REWARDS.draw,
+
+        completedAt: serverTimestamp(),
+        resolvedAt: serverTimestamp()
+      });
+
+      resolved.push({
+        id: challenge.id,
+        result: "draw",
+        drawBonus: CHALLENGE_REWARDS.draw
+      });
+
+      continue;
+    }
+
+    /*
+     * Winner / loser
+     */
+    await updateDoc(challengeRef, {
       status: "completed",
+      bonusAwarded: true,
 
       winnerStudentId,
       loserStudentId,
 
-      fromResultId: fromResult.id,
-      toResultId: toResult.id,
-
-      fromPercentage,
-      toPercentage,
-
-      fromMarks,
-      toMarks,
-
       winnerBonus,
-      loserBonus,
+      loserBonus: CHALLENGE_REWARDS.loser,
 
-      resultType,
-
-      bonusAwarded: true,
-
+      completedAt: serverTimestamp(),
       resolvedAt: serverTimestamp()
-    }
-  );
+    });
 
+    resolved.push({
+      id: challenge.id,
+      result: "completed",
+      winnerStudentId,
+      loserStudentId,
+      winnerBonus,
+      loserBonus: CHALLENGE_REWARDS.loser
+    });
+  }
 
-  return {
-
-    resolved: true,
-    alreadyResolved: false,
-
-    challengeId,
-
-    resultType,
-
-    winnerStudentId,
-    loserStudentId,
-
-    fromStudentId,
-    toStudentId,
-
-    fromResultId: fromResult.id,
-    toResultId: toResult.id,
-
-    fromMarks,
-    toMarks,
-
-    fromPercentage,
-    toPercentage,
-
-    winnerBonus,
-    loserBonus
-  };
+  return resolved;
 }
 
 
-/* =========================================================
-   GET ALL COMPLETED CHALLENGE BONUSES
-   ========================================================= */
+// ============================================================
+// UPDATE AUTO-SELECTED NEXT EXAM
+// ============================================================
 
-export async function getCompletedChallengeBonuses() {
+export async function updateNextExamChallenges(
+  examId,
+  examName
+) {
+  if (!examId || examId === "__NEXT_EXAM__") {
+    return [];
+  }
 
   const q = query(
     collection(db, "examChallenges"),
-    where("bonusAwarded", "==", true)
+    where("examId", "==", "__NEXT_EXAM__")
   );
 
   const snap = await getDocs(q);
 
-  return snap.docs.map(d => ({
-    id: d.id,
-    ...d.data()
-  }));
-}
+  const updated = [];
 
+  for (const challengeDoc of snap.docs) {
+    const challenge = challengeDoc.data();
 
-/* =========================================================
-   CALCULATE CHALLENGE BONUS FOR EACH STUDENT
-   =========================================================
-
-   Returns:
-
-   {
-      "STU-0001": 125,
-      "STU-0002": 50
-   }
-
-   Leaderboard এই data-এর সঙ্গে
-   existing base points যোগ করতে পারবে।
-   ========================================================= */
-
-export async function getChallengeBonusMap() {
-
-  const challenges =
-    await getCompletedChallengeBonuses();
-
-  const bonusMap = {};
-
-
-  for (const challenge of challenges) {
-
-    if (challenge.bonusAwarded !== true) {
+    /*
+     * Only pending/accepted challenges should receive
+     * the newly created/upcoming exam.
+     */
+    if (
+      challenge.status !== "pending" &&
+      challenge.status !== "accepted"
+    ) {
       continue;
     }
 
+    const ref = doc(
+      db,
+      "examChallenges",
+      challengeDoc.id
+    );
 
-    const winner =
-      challenge.winnerStudentId;
+    await updateDoc(ref, {
+      examId,
+      examName
+    });
 
-    const loser =
-      challenge.loserStudentId;
-
-
-    /*
-       Normal win
-    */
-
-    if (winner && loser) {
-
-      bonusMap[winner] =
-        (bonusMap[winner] || 0) +
-        Number(challenge.winnerBonus || 0);
-
-      bonusMap[loser] =
-        (bonusMap[loser] || 0) +
-        Number(challenge.loserBonus || 0);
-
-    }
-
-
-    /*
-       Draw
-       winner/loser null থাকবে।
-       দুই participant-কে +50 দিতে হবে।
-    */
-
-    else {
-
-      const fromId =
-        challenge.fromStudentId;
-
-      const toId =
-        challenge.toStudentId;
-
-
-      bonusMap[fromId] =
-        (bonusMap[fromId] || 0) +
-        Number(challenge.winnerBonus || 0);
-
-      bonusMap[toId] =
-        (bonusMap[toId] || 0) +
-        Number(challenge.loserBonus || 0);
-    }
-
+    updated.push({
+      id: challengeDoc.id,
+      examId,
+      examName
+    });
   }
 
-
-  return bonusMap;
+  return updated;
 }
 
 
-/* =========================================================
-   GET BONUS FOR ONE STUDENT
-   ========================================================= */
+// ============================================================
+// CHALLENGE DISPLAY INFO
+// ============================================================
 
-export async function getStudentChallengeBonus(
-  studentId
-) {
-
-  if (!studentId) return 0;
-
-  const bonusMap =
-    await getChallengeBonusMap();
-
-  return Number(
-    bonusMap[studentId] || 0
-  );
-}
-
-
-/* =========================================================
-   GET CHALLENGE STATUS FOR UI
-   ========================================================= */
-
-export function getChallengeResultText(
+export function getChallengeResultSummary(
   challenge,
-  studentId
+  myResult,
+  friendResult
 ) {
-
-  if (!challenge) {
-    return "";
+  if (!myResult || !friendResult) {
+    return {
+      status: "waiting",
+      text: "দুজনের result এখনো complete হয়নি।"
+    };
   }
 
+  const myPercentage = getResultPercentage(myResult);
+  const friendPercentage = getResultPercentage(friendResult);
 
-  if (
-    challenge.bonusAwarded !== true &&
-    challenge.status !== "completed"
-  ) {
+  const myMarks = getResultMarks(myResult);
+  const friendMarks = getResultMarks(friendResult);
 
-    return "Result-এর অপেক্ষায়";
-
+  if (friendPercentage > myPercentage) {
+    return {
+      status: "behind",
+      percentageGap: friendPercentage - myPercentage,
+      marksGap: friendMarks - myMarks,
+      text: `বন্ধু ${Math.abs(friendPercentage - myPercentage).toFixed(1)}% এগিয়ে`
+    };
   }
 
-
-  if (
-    challenge.resultType === "draw"
-  ) {
-
-    return "Draw — দুজনেই +50 bonus";
-
+  if (myPercentage > friendPercentage) {
+    return {
+      status: "ahead",
+      percentageGap: myPercentage - friendPercentage,
+      marksGap: myMarks - friendMarks,
+      text: `তুমি ${Math.abs(myPercentage - friendPercentage).toFixed(1)}% এগিয়ে`
+    };
   }
 
-
-  if (
-    challenge.winnerStudentId === studentId
-  ) {
-
-    return `তুমি জিতেছ — +${challenge.winnerBonus || 100} bonus`;
-
+  if (friendMarks > myMarks) {
+    return {
+      status: "behind",
+      percentageGap: 0,
+      marksGap: friendMarks - myMarks,
+      text: `marks-এ বন্ধু ${Math.abs(friendMarks - myMarks)} এগিয়ে`
+    };
   }
 
-
-  if (
-    challenge.loserStudentId === studentId
-  ) {
-
-    return `Challenge complete — +${challenge.loserBonus || 25} bonus`;
-
+  if (myMarks > friendMarks) {
+    return {
+      status: "ahead",
+      percentageGap: 0,
+      marksGap: myMarks - friendMarks,
+      text: `marks-এ তুমি ${Math.abs(myMarks - friendMarks)} এগিয়ে`
+    };
   }
-
-
-  return "Challenge completed";
-}
-
-
-/* =========================================================
-   GET CHALLENGE COMPARISON
-   ========================================================= */
-
-export function getChallengeComparison(
-  challenge,
-  studentId
-) {
-
-  if (!challenge) return null;
-
-
-  const isFrom =
-    challenge.fromStudentId === studentId;
-
-  const myMarks =
-    isFrom
-      ? Number(challenge.fromMarks || 0)
-      : Number(challenge.toMarks || 0);
-
-  const opponentMarks =
-    isFrom
-      ? Number(challenge.toMarks || 0)
-      : Number(challenge.fromMarks || 0);
-
-
-  const myPercentage =
-    isFrom
-      ? Number(challenge.fromPercentage || 0)
-      : Number(challenge.toPercentage || 0);
-
-  const opponentPercentage =
-    isFrom
-      ? Number(challenge.toPercentage || 0)
-      : Number(challenge.fromPercentage || 0);
-
 
   return {
-
-    myMarks,
-    opponentMarks,
-
-    myPercentage,
-    opponentPercentage,
-
-    marksGap:
-      Math.round(
-        (myMarks - opponentMarks) * 100
-      ) / 100,
-
-    percentageGap:
-      Math.round(
-        (myPercentage - opponentPercentage) * 10
-      ) / 10,
-
-    ahead:
-      myMarks > opponentMarks
-        ? true
-        : myMarks < opponentMarks
-          ? false
-          : myPercentage > opponentPercentage
-            ? true
-            : myPercentage < opponentPercentage
-              ? false
-              : null
+    status: "equal",
+    percentageGap: 0,
+    marksGap: 0,
+    text: "দুজনের result সমান"
   };
-}
+     }
