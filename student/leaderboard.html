@@ -143,39 +143,6 @@
     margin-top:7px;flex-shrink:0;
   }
 
-  /* Points explainer */
-  .points-card { margin-top:10px; padding:15px; }
-  .points-head {
-    display:flex; align-items:center; justify-content:space-between; gap:10px;
-    margin-bottom:9px;
-  }
-  .points-title { font-size:.83rem; font-weight:950; }
-  .points-formula {
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:7px;
-  }
-  .points-item {
-    border:1px solid var(--lb-border);
-    border-radius:12px;
-    padding:10px 8px;
-    background:rgba(128,128,128,.045);
-    min-width:0;
-  }
-  .points-value { font-size:.95rem; font-weight:950; }
-  .points-label {
-    margin-top:3px;
-    color:var(--text-muted);
-    font-size:.62rem;
-    line-height:1.35;
-  }
-  .points-note {
-    margin-top:9px;
-    color:var(--text-muted);
-    font-size:.65rem;
-    line-height:1.5;
-  }
-
   /* Live */
   .live-section { margin-top:14px; }
   .live-head {
@@ -208,26 +175,30 @@
   .live-slider {
     overflow:hidden;
     position:relative;
-    min-height:112px;
-    border-radius:17px;
+    min-height:154px;
+    border-radius:18px;
     border:1px solid var(--lb-border);
     background:linear-gradient(135deg,rgba(128,128,128,.09),rgba(128,128,128,.025));
   }
   .live-track {
     display:flex;
     width:100%;
-    transition:transform .45s cubic-bezier(.2,.8,.2,1);
+    transition:transform .55s cubic-bezier(.2,.8,.2,1);
+    will-change:transform;
   }
   .live-card {
     min-width:100%;
     box-sizing:border-box;
-    display:flex;
+    padding:14px;
+  }
+  .live-card-inner {
+    display:grid;
+    grid-template-columns:auto 1fr auto;
     align-items:center;
     gap:11px;
-    padding:17px 14px 22px;
   }
   .live-avatar {
-    width:42px;height:42px;border-radius:13px;
+    width:45px;height:45px;border-radius:14px;
     overflow:hidden;display:flex;align-items:center;justify-content:center;
     flex-shrink:0;
     background:var(--color-accent-soft);
@@ -235,35 +206,37 @@
     font-weight:950;
   }
   .live-avatar img { width:100%;height:100%;object-fit:cover; }
-  .live-copy { flex:1;min-width:0; }
-  .live-line {
-    font-size:.76rem;line-height:1.5;color:var(--text-primary);
+  .live-copy { min-width:0; }
+  .live-name {
+    font-size:.8rem;line-height:1.3;font-weight:950;color:var(--text-primary);
   }
-  .live-line strong { font-weight:950; }
-  .live-meta {
-    margin-top:3px;color:var(--text-muted);
-    font-size:.62rem;line-height:1.45;
+  .live-exam {
+    margin-top:3px;color:var(--text-muted);font-size:.62rem;
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   }
   .live-score {
-    flex-shrink:0;
-    border-radius:10px;
-    padding:6px 8px;
-    background:var(--color-accent-soft);
-    color:var(--color-accent);
-    font-size:.67rem;font-weight:950;
+    flex-shrink:0;text-align:right;
+  }
+  .live-score-value {
+    font-size:1rem;font-weight:950;color:var(--color-accent);
+  }
+  .live-score-label {
+    color:var(--text-muted);font-size:.58rem;margin-top:1px;
+  }
+  .live-stats {
+    display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;
+  }
+  .live-stat {
+    min-width:0;padding:8px 6px;border-radius:11px;
+    background:rgba(128,128,128,.065);border:1px solid rgba(128,128,128,.08);
     text-align:center;
   }
-  .live-controls {
-    position:absolute;left:50%;bottom:6px;
-    transform:translateX(-50%);
-    display:flex;gap:5px;
+  .live-stat-icon { display:block;font-size:.85rem;line-height:1; }
+  .live-stat-value { display:block;margin-top:4px;font-size:.7rem;font-weight:950;color:var(--text-primary); }
+  .live-stat-label { display:block;margin-top:2px;color:var(--text-muted);font-size:.52rem; }
+  .live-time {
+    margin-top:8px;color:var(--text-muted);font-size:.57rem;text-align:right;
   }
-  .live-control {
-    width:6px;height:6px;padding:0;border:0;border-radius:50%;
-    background:rgba(128,128,128,.28);cursor:pointer;
-  }
-  .live-control.active { background:var(--color-accent); transform:scale(1.15); }
   .live-empty {
     padding:19px 14px;color:var(--text-muted);
     font-size:.72rem;line-height:1.6;
@@ -347,6 +320,10 @@
   .lb-actions { display:flex;align-items:center;gap:5px;flex-shrink:0; }
   .action-btn { width:37px;min-height:37px;padding:0;border-radius:10px; }
   .text-action { min-height:34px;padding:6px 9px;font-size:.65rem; }
+  .label-action {
+    width:auto;min-height:34px;padding:6px 9px;gap:5px;
+    font-size:.62rem;font-weight:900;white-space:nowrap;
+  }
 
 
   .live-detail-grid {
@@ -381,10 +358,24 @@
     color:var(--text-muted);
     font-size:.55rem;
   }
+  .mini-icon { width:12px;height:12px;display:block; }
+
   .live-syncing {
     font-size:.58rem;
     color:var(--text-muted);
     font-weight:800;
+  }
+
+  .bonus-pill {
+    display:inline-flex;align-items:center;gap:4px;
+    border-radius:99px;padding:3px 8px;
+    background:rgba(34,197,94,.10);
+    color:#16a34a;font-size:.62rem;font-weight:950;
+  }
+  .challenge-reward-note {
+    margin-top:8px;padding:8px 10px;border-radius:10px;
+    background:rgba(128,128,128,.06);color:var(--text-secondary);
+    font-size:.63rem;font-weight:800;line-height:1.5;
   }
 
   /* Challenge */
@@ -429,8 +420,6 @@
   }
 
   @media (max-width:430px) {
-    .points-formula { grid-template-columns:1fr 1fr 1fr; }
-    .lb-actions .compare-label { display:none; }
     .lb-row { gap:8px; }
     .lb-avatar { width:39px;height:39px; }
   }
@@ -479,7 +468,8 @@ import { getSubjects } from "../js/utils/syllabus-utils.js";
 
 import {
   getIncomingChallenges, getOutgoingChallenges,
-  sendChallenge, acceptChallenge, rejectChallenge
+  sendChallenge, acceptChallenge, rejectChallenge,
+  resolveCompletedChallenges, CHALLENGE_REWARDS
 } from "../js/utils/challenge-utils.js";
 
 initTheme();
@@ -629,7 +619,7 @@ function render() {
           Student Performance
         </div>
         <h1>লিডারবোর্ড</h1>
-        <p>পরীক্ষার performance, points, rank এবং বন্ধুদের progress এক জায়গায় দেখা যাবে।</p>
+        <p>পরীক্ষার performance, points, rank, challenge bonus এবং বন্ধুদের progress এক জায়গায় দেখা যাবে।</p>
       </section>
 
       <div class="lb-top-tools">
@@ -651,7 +641,7 @@ function render() {
           <div class="lb-help-row"><span class="lb-dot"></span><span><strong>র‍্যাঙ্কিং:</strong> approved result থেকে মোট points অনুযায়ী rank তৈরি হয়।</span></div>
           <div class="lb-help-row"><span class="lb-dot"></span><span><strong>সবাই / শুধু বন্ধুরা:</strong> পুরো leaderboard বা নিজের accepted friends-দের আলাদা করে দেখা যায়।</span></div>
           <div class="lb-help-row"><span class="lb-dot"></span><span><strong>তুলনা:</strong> বন্ধুর সঙ্গে academic performance compare করার shortcut।</span></div>
-          <div class="lb-help-row"><span class="lb-dot"></span><span><strong>চ্যালেঞ্জ:</strong> আসন্ন পরীক্ষায় বন্ধুর সঙ্গে competition শুরু করার option।</span></div>
+          <div class="lb-help-row"><span class="lb-dot"></span><span><strong>চ্যালেঞ্জ:</strong> আসন্ন পরীক্ষায় বন্ধুর সঙ্গে competition। Winner +100, completed loser +25, draw +50 points।</span></div>
           <div class="lb-help-row"><span class="lb-dot"></span><span><strong>Live Activity:</strong> বন্ধুর approved result এলে feed automaticভাবে update হবে এবং slide করবে।</span></div>
         </div>
       </div>
@@ -697,7 +687,6 @@ function render() {
           <div class="live-track" id="liveActivityTrack">
             <div class="live-empty">বন্ধুদের approved result খোঁজা হচ্ছে...</div>
           </div>
-          <div class="live-controls" id="liveActivityControls"></div>
         </div>
 
         <div class="live-note">নতুন approved result এলে feed নিজে থেকেই refresh হবে।</div>
@@ -735,21 +724,30 @@ function render() {
 
 async function loadEverything() {
   try {
-    const [students, board, friendIds] = await Promise.all([
-      getActiveStudents(),
-      getLeaderboardData(await getActiveStudents()),
-      getMyFriendIds(student.studentId)
+    const students = await getActiveStudents();
+    const [board, friendIds, approvedResults] = await Promise.all([
+      getLeaderboardData(students),
+      getMyFriendIds(student.studentId),
+      getAllApprovedResults()
     ]);
 
-    allLeaderboard = Array.isArray(board) ? board : [];
+    // Resolve completed challenges before rendering points so the saved
+    // challenge reward is reflected in the leaderboard immediately.
+    const bonusMap = await resolveCompletedChallenges(approvedResults);
+
+    allLeaderboard = (Array.isArray(board) ? board : []).map(r => ({
+      ...r,
+      basePoints: Number(r.totalPoints) || 0,
+      challengeBonus: Number(bonusMap[r.studentId]) || 0,
+      totalPoints: (Number(r.totalPoints) || 0) + (Number(bonusMap[r.studentId]) || 0)
+    })).sort((a,b) => b.totalPoints - a.totalPoints);
+
     myFriendIds = Array.isArray(friendIds) ? friendIds : [];
 
     renderClassFilterRow();
     await renderLeaderboardList();
-
     await renderIncomingChallenges(students);
 
-    /* Live listener needs the latest friend list. */
     startLiveResultsListener();
   } catch (err) {
     console.error(err);
@@ -838,12 +836,13 @@ async function renderLeaderboardList() {
 
         actions += `
           <a href="../student/comparison.html?friendId=${encodeURIComponent(r.studentId)}"
-             class="btn-glass action-btn"
+             class="btn-glass label-action"
              title="তুলনা"
              aria-label="তুলনা">
             <svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>
             </svg>
+            তুলনা
           </a>
         `;
 
@@ -858,7 +857,7 @@ async function renderLeaderboardList() {
             </span>
           `
           : `
-            <button class="btn-glass btn-danger action-btn challenge-btn"
+            <button class="btn-glass btn-danger label-action challenge-btn"
                     data-id="${escapeHtml(r.studentId)}"
                     title="চ্যালেঞ্জ"
                     aria-label="চ্যালেঞ্জ">
@@ -866,6 +865,7 @@ async function renderLeaderboardList() {
                 <path d="m14.5 17.5-11.5-11.5V3h3l11.5 11.5"/>
                 <path d="m13 19 6-6"/><path d="m16 16 4 4"/><path d="m19 21 2-2"/>
               </svg>
+              চ্যালেঞ্জ
             </button>
           `;
       } else if (pendingToIds.has(r.studentId)) {
@@ -899,6 +899,7 @@ async function renderLeaderboardList() {
           <p class="lb-name">${escapeHtml(r.name || r.studentId)}${isMe ? " (তুমি)" : ""}</p>
           <div class="lb-subline">
             <span class="points-pill">${Number(r.totalPoints) || 0} পয়েন্ট</span>
+            ${Number(r.challengeBonus) > 0 ? `<span class="bonus-pill">+${Number(r.challengeBonus)} challenge</span>` : ""}
             ${avgText ? `<span class="avg-pill">${avgText}</span>` : ""}
           </div>
         </div>
@@ -946,6 +947,7 @@ async function renderIncomingChallenges(students) {
     card.innerHTML = `
       <div class="glass-float-card challenge-card">
         <div class="challenge-kicker">নতুন challenge</div>
+        <div class="challenge-reward-note">এই challenge-এ winner +${CHALLENGE_REWARDS.winner}, completed loser +${CHALLENGE_REWARDS.loser}, draw হলে দুজনেই +${CHALLENGE_REWARDS.draw} points পাবে।</div>
         ${incoming.map(c => `
           <div class="challenge-row">
             <div>
@@ -1101,10 +1103,15 @@ async function refreshLiveResults() {
     if (liveActivityIndex >= liveActivities.length) liveActivityIndex = 0;
     renderLiveActivities();
 
-    /* Keep the existing leaderboard calculation; never calculate points here. */
     const latestBoard = await getLeaderboardData(students);
+    const bonusMap = await resolveCompletedChallenges(results);
     if (Array.isArray(latestBoard)) {
-      allLeaderboard = latestBoard;
+      allLeaderboard = latestBoard.map(r => ({
+        ...r,
+        basePoints: Number(r.totalPoints) || 0,
+        challengeBonus: Number(bonusMap[r.studentId]) || 0,
+        totalPoints: (Number(r.totalPoints) || 0) + (Number(bonusMap[r.studentId]) || 0)
+      })).sort((a,b) => b.totalPoints - a.totalPoints);
       renderClassFilterRow();
       await renderLeaderboardList();
     }
@@ -1124,88 +1131,94 @@ function startLiveResultsListener() {
   liveRefreshTimer = setInterval(refreshLiveResults, 10000);
 }
 
+function updateLiveSlider() {
+  const track = document.getElementById("liveActivityTrack");
+  if (!track || !liveActivities.length) return;
+  track.style.transform = `translateX(-${liveActivityIndex * 100}%)`;
+}
+
+function restartLiveSlider() {
+  if (liveActivityTimer) clearInterval(liveActivityTimer);
+  if (liveActivities.length <= 1) {
+    liveActivityTimer = null;
+    return;
+  }
+  liveActivityTimer = setInterval(() => {
+    liveActivityIndex = (liveActivityIndex + 1) % liveActivities.length;
+    updateLiveSlider();
+  }, 4500);
+}
+
 function renderLiveActivities(list = liveActivities) {
   liveActivities = Array.isArray(list) ? list : [];
   const track = document.getElementById("liveActivityTrack");
-  const controls = document.getElementById("liveActivityControls");
-  if (!track || !controls) return;
+  if (!track) return;
 
   if (!liveActivities.length) {
     track.innerHTML = `
       <div class="live-empty">
-        তোমার accepted friend-এর নতুন approved result এলে এখানে
-        <strong>marks, percentage এবং progress comparison</strong> দেখা যাবে।
+        তোমার accepted friend-এর approved result এলে এখানে
+        <strong>marks, percentage ও correct/wrong</strong> দেখা যাবে।
       </div>`;
-    controls.innerHTML = "";
     if (liveActivityTimer) clearInterval(liveActivityTimer);
     liveActivityTimer = null;
     return;
   }
+
+  if (liveActivityIndex >= liveActivities.length) liveActivityIndex = 0;
 
   track.innerHTML = liveActivities.map(a => {
     const avatar = a.photoURL
       ? `<img src="${escapeHtml(a.photoURL)}" alt="">`
       : escapeHtml((a.name || "ব").charAt(0));
 
-    const marksText = a.obtainedMarks !== null && a.totalMarks !== null
-      ? `${a.obtainedMarks}/${a.totalMarks} marks`
-      : "Marks —";
-
-    const pctText = a.percentage !== null ? `${a.percentage}%` : "Percentage —";
-
-    const comparisonClass =
-      a.pointGap > 0 ? "ahead" :
-      a.pointGap < 0 ? "behind" : "equal";
+    const marks = a.obtainedMarks !== null && a.totalMarks !== null
+      ? `${a.obtainedMarks}/${a.totalMarks}` : "—";
+    const pct = a.percentage !== null ? `${a.percentage}%` : "—";
 
     return `
       <div class="live-card">
-        <span class="live-avatar">${avatar}</span>
+        <div class="live-card-inner">
+          <span class="live-avatar">${avatar}</span>
 
-        <div class="live-copy">
-          <div class="live-line">
-            <strong>${escapeHtml(a.name)}</strong>
-            ${escapeHtml(a.subject)}-এ নতুন result দিয়েছে
+          <div class="live-copy">
+            <div class="live-name">${escapeHtml(a.name)}</div>
+            <div class="live-exam">${escapeHtml(a.examName)} · ${escapeHtml(a.subject)}</div>
           </div>
 
-          <div class="live-meta">
-            ${escapeHtml(a.examName)} · ${relativeTime(a.submittedAt)}
-          </div>
-
-          <div class="live-detail-grid">
-            <span class="live-detail"><strong>${escapeHtml(marksText)}</strong></span>
-            <span class="live-detail"><strong>${escapeHtml(pctText)}</strong></span>
-            <span class="live-detail">✓ <strong>${a.correctCount}</strong></span>
-            <span class="live-detail">✕ <strong>${a.wrongCount}</strong></span>
-            <span class="live-detail">— <strong>${a.unansweredCount}</strong></span>
-          </div>
-
-          <div class="live-compare ${comparisonClass}">
-            ${escapeHtml(a.comparison)}
-            ${a.percentageGap !== null
-              ? ` · এই exam-এ তোমার average-এর তুলনায় ${a.percentageGap > 0 ? "+" : ""}${a.percentageGap}%`
-              : ""}
+          <div class="live-score">
+            <div class="live-score-value">${escapeHtml(pct)}</div>
+            <div class="live-score-label">percentage</div>
           </div>
         </div>
 
-        <div class="live-score">
-          ${a.percentage !== null ? escapeHtml(String(a.percentage)) + "%" : "LIVE"}
+        <div class="live-stats">
+          <div class="live-stat">
+            <span class="live-stat-icon"><svg class="mini-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></span>
+            <span class="live-stat-value">${escapeHtml(marks)}</span>
+            <span class="live-stat-label">Marks</span>
+          </div>
+          <div class="live-stat">
+            <span class="live-stat-icon"><svg class="mini-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4 4L19 6"/></svg></span>
+            <span class="live-stat-value">${a.correctCount}</span>
+            <span class="live-stat-label">Correct</span>
+          </div>
+          <div class="live-stat">
+            <span class="live-stat-icon"><svg class="mini-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg></span>
+            <span class="live-stat-value">${a.wrongCount}</span>
+            <span class="live-stat-label">Wrong</span>
+          </div>
+          <div class="live-stat">
+            <span class="live-stat-icon"><svg class="mini-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 5v14l10-7L5 5Z"/><path d="M19 5v14"/></svg></span>
+            <span class="live-stat-value">${a.unansweredCount}</span>
+            <span class="live-stat-label">Skipped</span>
+          </div>
         </div>
+
+        <div class="live-time">${escapeHtml(relativeTime(a.submittedAt))}</div>
       </div>
     `;
   }).join("");
-
-  controls.innerHTML = liveActivities.map((_,i) => `
-    <button class="live-control ${i === liveActivityIndex ? "active" : ""}"
-            data-live-index="${i}" aria-label="Activity ${i+1}"></button>
-  `).join("");
-
-  controls.querySelectorAll(".live-control").forEach(btn => {
-    btn.addEventListener("click", () => {
-      liveActivityIndex = Number(btn.dataset.liveIndex);
-      updateLiveSlider();
-      restartLiveSlider();
-    });
-  });
 
   updateLiveSlider();
   restartLiveSlider();
