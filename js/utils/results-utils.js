@@ -98,6 +98,32 @@ export async function getResultById(resultId) {
 // approved result (ranked by each student's own overall average %). Used
 // for the shareable profile card. Returns null if this student has no
 // approved results yet (nothing to rank). ----------
+// ---------- Full leaderboard: every student who has at least one approved
+// result, with their overall average % and exam count, sorted best-first.
+// studentsList should be the array from getActiveStudents() (so this
+// doesn't have to re-fetch it) — includes name/photoURL/className. ----------
+export async function getLeaderboardData(studentsList) {
+  const results = await getAllApprovedResults();
+  const byStudent = {};
+  for (const r of results) {
+    if (!byStudent[r.studentId]) byStudent[r.studentId] = [];
+    byStudent[r.studentId].push(Number(r.percentage) || 0);
+  }
+  const infoOf = {};
+  studentsList.forEach(s => { infoOf[s.studentId] = s; });
+
+  const rows = Object.entries(byStudent).map(([studentId, pcts]) => ({
+    studentId,
+    name: infoOf[studentId]?.name || studentId,
+    photoURL: infoOf[studentId]?.photoURL || null,
+    className: infoOf[studentId]?.className || null,
+    avgPercentage: Math.round((pcts.reduce((a, b) => a + b, 0) / pcts.length) * 10) / 10,
+    examsTaken: pcts.length
+  }));
+  rows.sort((a, b) => b.avgPercentage - a.avgPercentage);
+  return rows;
+}
+
 export async function getStudentRank(studentId, classOf = null) {
   const all = await getAllApprovedResults();
   if (all.length === 0) return null;
