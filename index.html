@@ -118,6 +118,50 @@
   .roll-skel-line + .roll-skel-line { width: 40%; margin-top: 8px; }
   @keyframes pulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
 
+  /* ---- Student search ---- */
+  .student-search {
+    margin-top: 16px;
+    padding: 10px;
+    border: 1px solid var(--surface-border);
+    border-radius: 16px;
+    background: var(--surface-solid, rgba(255,255,255,.35));
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.035);
+  }
+  .search-icon { width: 20px; height: 20px; flex: 0 0 auto; color: var(--text-muted); }
+  .student-search input {
+    min-width: 0; flex: 1; border: 0; outline: 0; background: transparent;
+    color: var(--text-primary); font: inherit; font-size: .9rem;
+  }
+  .student-search input::placeholder { color: var(--text-muted); }
+  .search-submit, .search-clear {
+    width: 40px; height: 40px; border-radius: 11px; border: 1px solid var(--surface-border);
+    display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+    cursor: pointer; font: inherit; transition: transform .15s ease, background .15s ease;
+  }
+  .search-submit { background: var(--seal); color: #fff; border-color: var(--seal); }
+  .search-clear { display: none; background: transparent; color: var(--text-muted); }
+  .search-submit:active, .search-clear:active { transform: scale(.95); }
+  .search-result-note { margin: 8px 2px 0; color: var(--text-muted); font-size: .68rem; min-height: 1em; }
+
+  .list-head {
+    margin-top: 20px; display: flex; align-items: end; justify-content: space-between; gap: 12px;
+  }
+  .list-head-title { font-size: .82rem; font-weight: 800; color: var(--text-primary); }
+  .list-count { font-size: .68rem; color: var(--text-muted); }
+
+  .roll-sheet { box-shadow: 0 12px 34px rgba(0,0,0,.045); }
+  .roll-row { transition: background .16s ease, transform .16s ease; }
+  .roll-row:hover { background: rgba(255,106,43,.035); }
+  .roll-row:active { transform: scale(.995); }
+  .roll-name { letter-spacing: -.01em; }
+  .roll-id { opacity: .85; }
+  .empty-search { padding: 30px 18px; text-align: center; color: var(--text-muted); }
+  .empty-search-icon { width: 34px; height: 34px; margin: 0 auto 9px; color: var(--seal); }
+  .empty-search strong { display:block; color:var(--text-primary); font-size:.86rem; margin-bottom:4px; }
+
   /* ---- Footer ---- */
   .foot-row { margin-top: 30px; padding-top: 16px; border-top: 1px dashed var(--surface-border); text-align: center; }
   .admin-link { font-size: 0.76rem; color: var(--text-muted); text-decoration: none; }
@@ -135,7 +179,24 @@
     <p>তালিকা থেকে নিজের নাম বেছে নাও।</p>
   </div>
 
-  <div id="classFilter" class="class-filter hidden"></div>
+  <div class="student-search" role="search">
+    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path>
+    </svg>
+    <input id="studentSearchInput" type="search" autocomplete="off" enterkeyhint="search" placeholder="শিক্ষার্থীর নাম লিখে খুঁজুন…" aria-label="শিক্ষার্থীর নাম দিয়ে খুঁজুন">
+    <button class="search-clear" id="studentSearchClear" type="button" aria-label="সার্চ মুছে ফেলুন" title="মুছে ফেলুন">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+    </button>
+    <button class="search-submit" id="studentSearchBtn" type="button" aria-label="শিক্ষার্থী খুঁজুন" title="খুঁজুন">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+    </button>
+  </div>
+  <div class="search-result-note" id="searchResultNote" aria-live="polite"></div>
+
+  <div class="list-head">
+    <div class="list-head-title">শিক্ষার্থীদের তালিকা</div>
+    <div class="list-count" id="studentCount"></div>
+  </div>
 
   <div class="roll-sheet" id="studentList">
     <div class="roll-skel"><div class="roll-skel-bar">
@@ -186,10 +247,16 @@ loadPlatformTitle();
 
 const listEl = document.getElementById("studentList");
 const filterEl = document.getElementById("classFilter");
+const searchInput = document.getElementById("studentSearchInput");
+const searchBtn = document.getElementById("studentSearchBtn");
+const searchClear = document.getElementById("studentSearchClear");
+const searchNote = document.getElementById("searchResultNote");
+const countEl = document.getElementById("studentCount");
 const CACHE_KEY = "cachedStudentList";
 let students = [];       // the currently DISPLAYED (possibly filtered) list — what rowHtml/selectStudent index into
 let allStudents = [];    // the full unfiltered list, used to rebuild chips + re-filter
 let activeClassFilter = "all";
+let activeSearch = "";
 
 function renderClassFilter() {
   const classes = [...new Set(allStudents.map(s => s.className).filter(Boolean))].sort();
@@ -209,8 +276,7 @@ function renderClassFilter() {
 
 function applyClassFilter() {
   renderClassFilter();
-  const filtered = activeClassFilter === "all" ? allStudents : allStudents.filter(s => s.className === activeClassFilter);
-  renderList(filtered, false);
+  applySearchAndClassFilter();
 }
 
 const BN_DIGITS = ["০","১","২","৩","৪","৫","৬","৭","৮","৯"];
@@ -218,17 +284,59 @@ function bnRoll(n) {
   return String(n).padStart(2, "0").split("").map(d => BN_DIGITS[Number(d)]).join("");
 }
 
+function safeStudentName(s) {
+  const value = s?.name ?? s?.studentName ?? s?.displayName ?? s?.fullName ?? "";
+  const text = String(value).trim();
+  return text && text !== "undefined" && text !== "null" ? text : "নাম পাওয়া যায়নি";
+}
+
+function safeStudentId(s) {
+  const value = s?.studentId ?? s?.id ?? s?.uid ?? "";
+  const text = String(value).trim();
+  return text && text !== "undefined" && text !== "null" ? text : "Student ID পাওয়া যায়নি";
+}
+
+function normalized(value) {
+  return String(value ?? "").trim().toLocaleLowerCase();
+}
+
+function applySearchAndClassFilter() {
+  let filtered = allStudents;
+  if (activeClassFilter !== "all") filtered = filtered.filter(s => s?.className === activeClassFilter);
+  if (activeSearch) {
+    filtered = filtered.filter(s => {
+      const name = normalized(safeStudentName(s));
+      const id = normalized(safeStudentId(s));
+      return name.includes(activeSearch) || id.includes(activeSearch);
+    });
+  }
+  renderList(filtered, false);
+  const total = filtered.length;
+  if (searchNote) searchNote.textContent = activeSearch ? `${total} জন শিক্ষার্থী পাওয়া গেছে` : "";
+  if (countEl) countEl.textContent = `${total} জন`;
+  if (searchClear) searchClear.style.display = activeSearch ? "inline-flex" : "none";
+}
+
+function runStudentSearch() {
+  activeSearch = normalized(searchInput?.value);
+  applySearchAndClassFilter();
+}
+
 function rowHtml(s, i, fromCache) {
-  const avatar = s.photoURL
-    ? `<img src="${s.photoURL}" alt="" draggable="false" oncontextmenu="return false" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'roll-avatar-fallback',textContent:'${s.name.charAt(0)}'}))">`
-    : `<span class="roll-avatar-fallback">${s.name.charAt(0)}</span>`;
+  const name = safeStudentName(s);
+  const studentId = safeStudentId(s);
+  const initial = name.charAt(0) || "শ";
+  const photo = typeof s?.photoURL === "string" ? s.photoURL.trim() : "";
+  const avatar = photo
+    ? `<img src="${photo}" alt="" draggable="false" oncontextmenu="return false" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'roll-avatar-fallback',textContent:'${initial.replace(/'/g,"&#039;")}'}))">`
+    : `<span class="roll-avatar-fallback">${initial}</span>`;
   return `
     <button class="roll-row${fromCache ? " from-cache" : ""}" data-idx="${i}" style="animation-delay:${fromCache ? 0 : i * 65}ms;">
       <span class="roll-no">${bnRoll(i + 1)}</span>
       <span class="roll-avatar">${avatar}</span>
       <span class="roll-info">
-        <span class="roll-name">${s.name}</span>
-        <span class="roll-id">${s.studentId}</span>
+        <span class="roll-name">${name}</span>
+        <span class="roll-id">${studentId}</span>
       </span>
       <span class="roll-chevron">${icons.arrowRight}</span>
     </button>
@@ -238,10 +346,20 @@ function rowHtml(s, i, fromCache) {
 function renderList(list, fromCache = false) {
   students = list;
   if (list.length === 0) {
-    renderState(listEl, "empty", "এখনো কোনো শিক্ষার্থী যোগ করা হয়নি। অ্যাডমিন প্যানেল থেকে শিক্ষার্থী তৈরি করুন।");
+    if (activeSearch) {
+      listEl.innerHTML = `<div class="empty-search">
+        <svg class="empty-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path><path d="M8.5 11h5"></path></svg>
+        <strong>কোনো শিক্ষার্থী পাওয়া যায়নি</strong>
+        <span>নাম বা Student ID একটু অন্যভাবে লিখে চেষ্টা করো।</span>
+      </div>`;
+    } else {
+      renderState(listEl, "empty", "এখনো কোনো শিক্ষার্থী যোগ করা হয়নি। অ্যাডমিন প্যানেল থেকে শিক্ষার্থী তৈরি করুন।");
+    }
+    if (countEl) countEl.textContent = "0 জন";
     return;
   }
   listEl.innerHTML = list.map((s, i) => rowHtml(s, i, fromCache)).join("");
+  if (countEl) countEl.textContent = `${list.length} জন`;
   listEl.querySelectorAll("[data-idx]").forEach(btn => {
     btn.addEventListener("click", () => selectStudent(students[Number(btn.dataset.idx)]));
   });
@@ -256,6 +374,23 @@ async function selectStudent(student) {
     window.location.href = "./student/dashboard.html";
   }
 }
+
+searchBtn?.addEventListener("click", runStudentSearch);
+searchInput?.addEventListener("keydown", e => {
+  if (e.key === "Enter") { e.preventDefault(); runStudentSearch(); }
+});
+searchClear?.addEventListener("click", () => {
+  if (searchInput) searchInput.value = "";
+  activeSearch = "";
+  applySearchAndClassFilter();
+  searchInput?.focus();
+});
+searchInput?.addEventListener("input", () => {
+  if (!searchInput.value.trim()) {
+    activeSearch = "";
+    applySearchAndClassFilter();
+  }
+});
 
 // ---- Cache-first paint: show the last-known roll instantly, then quietly
 // refresh from the live list in the background. ----
