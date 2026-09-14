@@ -14,49 +14,50 @@
   .glass-card {
     background: rgba(128, 128, 128, 0.03); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 20px; padding: 20px; margin-bottom: 20px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.02);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.02); transition: transform 0.2s;
   }
-  .section-label { font-size: 1.1rem; font-weight: 900; color: var(--text-primary); margin: 24px 0 16px 4px; display: flex; align-items: center; gap: 8px; border-bottom: 2px dashed var(--surface-border); padding-bottom: 8px; }
+  .section-label { font-size: 1.1rem; font-weight: 900; color: var(--text-primary); margin: 30px 0 16px 4px; display: flex; align-items: center; gap: 8px; border-bottom: 2px dashed var(--surface-border); padding-bottom: 8px; }
 
   /* ===== Smart Insights (Automated) ===== */
-  .insight-box { display: flex; gap: 12px; padding: 14px; border-radius: 16px; margin-bottom: 12px; border: 1px solid transparent; }
-  .insight-icon { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .insight-box { display: flex; gap: 14px; padding: 16px; border-radius: 16px; margin-bottom: 12px; border: 1px solid transparent; background: rgba(128,128,128,0.02); }
+  .insight-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   
-  .insight-danger { background: rgba(239, 68, 68, 0.04); border-color: rgba(239, 68, 68, 0.15); }
+  .insight-danger { border-color: rgba(239, 68, 68, 0.2); }
   .insight-danger .insight-icon { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
   
-  .insight-warning { background: rgba(245, 158, 11, 0.04); border-color: rgba(245, 158, 11, 0.15); }
+  .insight-warning { border-color: rgba(245, 158, 11, 0.2); }
   .insight-warning .insight-icon { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
 
-  .insight-success { background: rgba(16, 185, 129, 0.04); border-color: rgba(16, 185, 129, 0.15); }
+  .insight-success { border-color: rgba(16, 185, 129, 0.2); }
   .insight-success .insight-icon { background: rgba(16, 185, 129, 0.1); color: #10b981; }
 
   /* ===== Donut Charts for Subjects ===== */
-  .subject-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
-  .subject-card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 16px; padding: 16px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+  .subject-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 12px; }
+  .subject-card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 16px; padding: 16px; text-align: center; display: flex; flex-direction: column; align-items: center; transition: 0.2s; }
+  .subject-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.04); }
   
   .circ-chart { display: block; margin: 0 auto; width: 64px; height: 64px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05)); }
   .circ-bg { fill: none; stroke: rgba(128,128,128,0.12); stroke-width: 3.5; }
   .circ-fill { fill: none; stroke-linecap: round; stroke-width: 3.5; animation: fillup 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
-  .circ-text { font-family: var(--font-num); font-size: 8px; font-weight: 900; fill: var(--text-primary); text-anchor: middle; dominant-baseline: central; }
+  .circ-text { font-family: var(--font-num); font-size: 8.5px; font-weight: 900; fill: var(--text-primary); text-anchor: middle; dominant-baseline: central; }
   @keyframes fillup { from { stroke-dasharray: 0, 100; } }
 
   /* ===== Chapter / Topic Rows ===== */
-  .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: rgba(128,128,128,0.02); border: 1px solid var(--surface-border); border-radius: 14px; margin-bottom: 8px; transition: 0.2s; }
+  .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: rgba(128,128,128,0.02); border: 1px solid var(--surface-border); border-radius: 14px; margin-bottom: 10px; transition: 0.2s; }
   .detail-row:hover { background: rgba(128,128,128,0.04); }
-  .detail-name { font-size: 0.95rem; font-weight: 800; color: var(--text-primary); margin-bottom: 4px; }
+  .detail-name { font-size: 0.95rem; font-weight: 800; color: var(--text-primary); margin-bottom: 6px; }
   .detail-meta { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; display: flex; gap: 8px; align-items: center; }
   
-  .trend-up { color: #10b981; font-weight: 800; }
-  .trend-down { color: #ef4444; font-weight: 800; }
-  .trend-flat { color: var(--text-muted); font-weight: 800; }
+  .trend-up { color: #10b981; font-weight: 800; display: flex; align-items: center; gap: 2px; }
+  .trend-down { color: #ef4444; font-weight: 800; display: flex; align-items: center; gap: 2px; }
+  .trend-flat { color: var(--text-muted); font-weight: 800; display: flex; align-items: center; gap: 2px; }
 
   /* ===== Progress Bars ===== */
-  .progress-track { width: 100%; height: 6px; background: rgba(128,128,128,0.12); border-radius: 99px; overflow: hidden; margin-top: 8px; }
-  .progress-fill { height: 100%; border-radius: 99px; }
+  .progress-track { width: 100%; height: 6px; background: rgba(128,128,128,0.12); border-radius: 99px; overflow: hidden; margin-top: 10px; }
+  .progress-fill { height: 100%; border-radius: 99px; transition: width 1s ease; }
 
   /* ===== Trend SVG Styles ===== */
-  .trend-svg-container { background: rgba(128,128,128,0.02); border-radius: 16px; padding: 16px; border: 1px dashed var(--surface-border); margin-top: 12px; }
+  .trend-svg-container { background: rgba(128,128,128,0.02); border-radius: 16px; padding: 20px 16px; border: 1px dashed var(--surface-border); margin-top: 14px; }
 </style>
 </head>
 <body>
@@ -65,7 +66,7 @@
 </div>
 
 <script type="module">
-import { initTheme, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
+import { initTheme, toggleTheme, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
 import { getActiveStudent } from "../js/utils/student-utils.js";
 import { getApprovedResults, getExamSnapshotsMap } from "../js/utils/results-utils.js";
 import { getSubjects, getChapters, getTopics, buildNameMap } from "../js/utils/syllabus-utils.js";
@@ -109,9 +110,9 @@ function buildTrendSvg(trend) {
   return `
     <div class="trend-svg-container">
       <svg viewBox="0 0 ${w} ${h}" style="width:100%;height:80px;overflow:visible;">
-        <path d="${pathD}" fill="none" stroke="var(--color-accent)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="${pathD}" fill="none" stroke="var(--color-accent)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
         ${points.map(p => `
-          <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="5" fill="var(--bg)" stroke="var(--color-accent)" stroke-width="2.5">
+          <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="6" fill="var(--bg)" stroke="var(--color-accent)" stroke-width="3">
             <title>${p.label || "পরীক্ষা"}: ${p.v}%</title>
           </circle>
         `).join("")}
@@ -128,10 +129,12 @@ function formatTime(seconds) {
 }
 
 async function renderPage() {
+  // Corrected active tab to 'analytics' and added Theme Toggle Event
   shell.innerHTML = `
-    ${renderStudentHeader(student, "dashboard")}
-    <div id="body" class="mt-4"><div class="spinner" style="margin:40px auto;"></div></div>
+    ${renderStudentHeader(student, "analytics")}
+    <div id="body" class="mt-4"><div class="spinner" style="margin:50px auto;"></div></div>
   `;
+  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
   const body = document.getElementById("body");
 
   try {
@@ -139,30 +142,32 @@ async function renderPage() {
     const overall = computeOverallStats(results);
 
     if (!overall) {
-      renderState(body, "empty", "বিশ্লেষণের জন্য পর্যাপ্ত তথ্য নেই। পরীক্ষা অনুমোদনের পর এখানে দেখা যাবে।");
+      renderState(body, "empty", "বিশ্লেষণের জন্য পর্যাপ্ত তথ্য নেই। পরীক্ষা দেওয়ার পর এখানে রিপোর্ট দেখা যাবে।");
       return;
     }
 
     const [subjects, chapters, topics] = await Promise.all([getSubjects(), getChapters(), getTopics()]);
     const subjectMap = buildNameMap(subjects), chapterMap = buildNameMap(chapters), topicMap = buildNameMap(topics);
     
-    // FIX: Limit to 15 recent exams for deep snap-fetching to prevent infinite loading!
+    // SMART FETCHING: Limit to 15 recent exams to prevent Infinite Loading!
     const recentResults = results.slice(0, 15);
     const examIds = [...new Set(recentResults.map(r => r.examId).filter(Boolean))];
     
     let snapshotsMap = {};
     try {
-      snapshotsMap = await getExamSnapshotsMap(examIds);
+      if (examIds.length > 0) {
+        snapshotsMap = await getExamSnapshotsMap(examIds);
+      }
     } catch(err) {
-      console.warn("Snapshots load error (non-fatal):", err);
+      console.warn("Snapshots load error (Safe Fallback applied):", err);
     }
     
     const records = buildQuestionRecords(recentResults, snapshotsMap);
 
-    // Compute Advanced Analytics
-    const subjectStats = computeSubjectStats(results, subjectMap).sort((a, b) => (b.accuracy ?? -1) - (a.accuracy ?? -1));
-    const chapterStats = computeChapterStats(results, chapterMap).sort((a, b) => (b.accuracy ?? -1) - (a.accuracy ?? -1));
-    const topicStats = computeTopicStats(results, topicMap).sort((a, b) => (a.accuracy ?? 100) - (b.accuracy ?? 100)); // Weakest first
+    // Compute Advanced Analytics with Fallbacks to prevent crashing
+    const subjectStats = (computeSubjectStats(results, subjectMap) || []).sort((a, b) => (b.accuracy ?? -1) - (a.accuracy ?? -1));
+    const chapterStats = (computeChapterStats(results, chapterMap) || []).sort((a, b) => (b.accuracy ?? -1) - (a.accuracy ?? -1));
+    const topicStats = (computeTopicStats(results, topicMap) || []).sort((a, b) => (a.accuracy ?? 100) - (b.accuracy ?? 100)); // Weakest first
     
     const timeStats = computeTimeManagementStats(records, subjectMap, topicMap) || { bySubject: [], byTopic: [], speedAccuracy: null };
     const wrongPatterns = computeWrongOptionPatterns(records) || [];
@@ -173,12 +178,13 @@ async function renderPage() {
     let insightsHtml = "";
 
     if (timeStats.speedAccuracy?.rushingLikely) {
+      const diff = Math.abs(timeStats.speedAccuracy.fasterWrongRate - timeStats.speedAccuracy.slowerWrongRate).toFixed(1);
       insightsHtml += `
         <div class="insight-box insight-danger">
-          <div class="insight-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div class="insight-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
           <div>
             <p style="font-weight:900; font-size:0.95rem; color:var(--text-primary); margin-bottom:2px;">তাড়াহুড়ো করছো!</p>
-            <p style="font-size:0.8rem; color:var(--text-secondary); line-height:1.4;">তুমি দ্রুত উত্তর দিতে গিয়ে বেশি ভুল করছো। একটু সময় নিয়ে ভেবে উত্তর দিলে স্কোর আরও ${Math.abs(timeStats.speedAccuracy.fasterWrongRate - timeStats.speedAccuracy.slowerWrongRate).toFixed(1)}% বাড়তে পারে।</p>
+            <p style="font-size:0.8rem; color:var(--text-secondary); line-height:1.4;">তুমি দ্রুত উত্তর দিতে গিয়ে বেশি ভুল করছো। একটু সময় নিয়ে ভেবে উত্তর দিলে স্কোর আরও ${diff}% বাড়তে পারে।</p>
           </div>
         </div>`;
     }
@@ -188,7 +194,7 @@ async function renderPage() {
       const qText = wp?.question_bn ? wp.question_bn.substring(0, 35) : "একটি নির্দিষ্ট";
       insightsHtml += `
         <div class="insight-box insight-warning">
-          <div class="insight-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div class="insight-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
           <div>
             <p style="font-weight:900; font-size:0.95rem; color:var(--text-primary); margin-bottom:2px;">একই ভুলের পুনরাবৃত্তি!</p>
             <p style="font-size:0.8rem; color:var(--text-secondary); line-height:1.4;">"${qText}..." এই প্রশ্নে তুমি বারবার '${wp.repeatedOption}' অপশনটি বেছে নিয়েছো। কনসেপ্ট ক্লিয়ার করো।</p>
@@ -200,7 +206,7 @@ async function renderPage() {
       const isGood = reviewStats.accuracy > (reviewStats.unmarkedAccuracy || 0);
       insightsHtml += `
         <div class="insight-box ${isGood ? 'insight-success' : 'insight-danger'}">
-          <div class="insight-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          <div class="insight-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
           <div>
             <p style="font-weight:900; font-size:0.95rem; color:var(--text-primary); margin-bottom:2px;">সন্দেহজনক প্রশ্নের ফলাফল</p>
             <p style="font-size:0.8rem; color:var(--text-secondary); line-height:1.4;">যে প্রশ্নগুলো তুমি মার্ক করে রাখো, সেগুলোর ${reviewStats.accuracy}% সঠিক হচ্ছে। ${isGood ? "তোমার সন্দেহ ভালো কাজ করছে!" : "সন্দেহ হলে উত্তর না দেওয়াই ভালো (নেগেটিভ এড়াতে)।"}</p>
@@ -209,37 +215,38 @@ async function renderPage() {
     }
 
     if (!insightsHtml) {
-      insightsHtml = `<p class="text-sm text-center text-muted font-bold">আরও পরীক্ষা দিলে এখানে অটোমেটেড ইনসাইটস দেখা যাবে।</p>`;
+      insightsHtml = `<p class="text-sm text-center text-muted font-bold" style="padding:10px 0;">আরও পরীক্ষা দিলে এখানে অটোমেটেড পরামর্শ দেখা যাবে।</p>`;
     }
 
+    // Assign to DOM
     body.innerHTML = `
       <!-- Automated Smart Insights -->
       <div class="section-label">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
         AI স্মার্ট ইনসাইটস
       </div>
       <div class="glass-card" style="padding:16px;">
-        <p style="font-size:0.75rem; color:var(--text-muted); font-weight:700; margin-bottom:12px; text-align:center;">সর্বশেষ ১৫টি পরীক্ষার উপর ভিত্তি করে তৈরি</p>
+        <p style="font-size:0.75rem; color:var(--text-muted); font-weight:700; margin-bottom:12px; text-align:center;">সর্বশেষ পরীক্ষাগুলোর উপর ভিত্তি করে তৈরি</p>
         ${insightsHtml}
       </div>
 
       <!-- Trend & Overall -->
-      <div class="glass-card" style="padding:20px 16px;">
-        <p style="font-weight:900; font-size:1.1rem; color:var(--text-primary);">সার্বিক অগ্রগতির ধারা</p>
+      <div class="glass-card" style="padding:24px 20px;">
+        <p style="font-weight:900; font-size:1.15rem; color:var(--text-primary);">সার্বিক অগ্রগতির ধারা</p>
         <p style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">সর্বশেষ পরীক্ষাগুলোর স্কোরের গ্রাফ</p>
         ${buildTrendSvg(overall.trend)}
       </div>
 
       <!-- Subject Wise Mastery -->
       <div class="section-label">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
         বিষয়ভিত্তিক দক্ষতা
       </div>
       <div class="subject-grid">
-        ${subjectStats.length === 0 ? `<p class="text-xs text-muted">তথ্য নেই।</p>` : subjectStats.map((s, i) => `
+        ${subjectStats.length === 0 ? `<p class="text-sm text-muted text-center" style="grid-column:1/-1;">তথ্য নেই।</p>` : subjectStats.map((s, i) => `
           <div class="subject-card">
             ${drawDonut(s.accuracy, i % 2 === 0 ? "var(--color-accent)" : "#3b82f6")}
-            <p style="font-weight:900; font-size:0.95rem; margin-top:12px; color:var(--text-primary);">${s.name}</p>
+            <p style="font-weight:900; font-size:0.95rem; margin-top:14px; color:var(--text-primary);">${s.name}</p>
             <p style="font-size:0.75rem; color:var(--text-muted); font-weight:700; margin-top:6px;">সঠিক: ${s.correct} • ভুল: ${s.wrong}</p>
             <div class="progress-track"><div class="progress-fill" style="width:${s.accuracy ?? 0}%; background:${i % 2 === 0 ? "var(--color-accent)" : "#3b82f6'};"></div></div>
           </div>
@@ -247,48 +254,48 @@ async function renderPage() {
       </div>
 
       <!-- Chapter Analysis -->
-      <div class="section-label">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-        অধ্যায়ভিত্তিক বিশ্লেষণ
+      <div class="section-label mt-5">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+        অধ্যায়ভিত্তিক বিশ্লেষণ
       </div>
       <div class="glass-card" style="padding:16px;">
-        ${chapterStats.length === 0 ? `<p class="text-xs text-muted text-center">তথ্য নেই।</p>` : chapterStats.map(c => `
+        ${chapterStats.length === 0 ? `<p class="text-sm text-muted text-center font-bold">তথ্য নেই।</p>` : chapterStats.map(c => `
           <div class="detail-row">
             <div style="flex:1;">
               <p class="detail-name">${c.name}</p>
               <div class="detail-meta"><span>অ্যাটেম্পট: ${c.attempts} বার</span></div>
             </div>
             <div style="text-align:right;">
-              <p style="font-weight:900; font-size:1.1rem; color:var(--color-accent); font-family:var(--font-num);">${c.accuracy ?? "—"}%</p>
+              <p style="font-weight:900; font-size:1.15rem; color:var(--color-accent); font-family:var(--font-num);">${c.accuracy ?? "—"}%</p>
             </div>
           </div>
         `).join("")}
       </div>
 
       <!-- Weakness & Trends (Topic Level) -->
-      <div class="section-label">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      <div class="section-label mt-5">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
         টপিক বিশ্লেষণ ও দুর্বলতা
       </div>
       <div class="glass-card" style="padding:16px;">
-        ${topicStats.length === 0 ? `<p class="text-xs text-muted text-center">তথ্য নেই।</p>` : topicStats.map(t => {
+        ${topicStats.length === 0 ? `<p class="text-sm text-muted text-center font-bold">তথ্য নেই।</p>` : topicStats.map(t => {
           const perf = getPerformanceLabel(t);
           const trendObj = topicTrends.find(x => x.topicId === t.topicId);
-          let trendIcon = `<span class="trend-flat"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg></span>`;
-          if(trendObj?.direction === 'up') trendIcon = `<span class="trend-up"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></span>`;
-          else if(trendObj?.direction === 'down') trendIcon = `<span class="trend-down"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>`;
+          let trendIcon = `<span class="trend-flat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg></span>`;
+          if(trendObj?.direction === 'up') trendIcon = `<span class="trend-up"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></span>`;
+          else if(trendObj?.direction === 'down') trendIcon = `<span class="trend-down"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>`;
 
           return `
           <div class="detail-row" style="${t.isWeak ? 'border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.03);' : ''}">
             <div style="flex:1;">
-              <p class="detail-name">${t.name} ${t.isWeak ? `<span style="font-size:0.65rem; background:rgba(239,68,68,0.1); color:#ef4444; padding:2px 6px; border-radius:6px; font-weight:900; margin-left:6px;">দুর্বল</span>` : ""}</p>
+              <p class="detail-name">${t.name} ${t.isWeak ? `<span style="font-size:0.65rem; background:rgba(239,68,68,0.1); color:#ef4444; padding:2px 8px; border-radius:6px; font-weight:900; margin-left:8px;">দুর্বল</span>` : ""}</p>
               <div class="detail-meta">
                 <span>স্ট্যাটাস: ${perf.label}</span><span>•</span><span>${t.attempts} বার</span>
               </div>
             </div>
             <div style="text-align:right;">
-              <p style="font-weight:900; font-size:1.15rem; color:${t.isWeak ? '#ef4444' : 'var(--text-secondary)'}; font-family:var(--font-num);">${t.accuracy ?? "—"}%</p>
-              <div style="font-size:0.8rem; color:var(--text-muted); font-weight:800; display:flex; justify-content:flex-end; align-items:center; gap:4px; margin-top:2px;">
+              <p style="font-weight:900; font-size:1.2rem; color:${t.isWeak ? '#ef4444' : 'var(--text-secondary)'}; font-family:var(--font-num);">${t.accuracy ?? "—"}%</p>
+              <div style="font-size:0.85rem; color:var(--text-muted); font-weight:800; display:flex; justify-content:flex-end; align-items:center; gap:4px; margin-top:2px;">
                 ${trendIcon} ${trendObj?.diff ? Math.abs(trendObj.diff) + '%' : ''}
               </div>
             </div>
@@ -297,24 +304,25 @@ async function renderPage() {
       </div>
 
       <!-- Time Management -->
-      <div class="section-label">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        সময় ব্যবস্থাপনা (Time)
+      <div class="section-label mt-5">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        সময় ব্যবস্থাপনা (Time Management)
       </div>
       <div class="glass-card" style="padding:16px;">
-        <p style="font-size:0.85rem; color:var(--text-secondary); font-weight:800; margin-bottom:14px;">যে বিষয়গুলোতে সবচেয়ে বেশি সময় লাগছে:</p>
-        ${(!timeStats || !timeStats.bySubject || timeStats.bySubject.length === 0) ? `<p class="text-xs text-muted text-center">পর্যাপ্ত ডেটা নেই।</p>` : timeStats.bySubject.slice(0, 3).map(ts => `
-          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed rgba(128,128,128,0.15); padding:12px 0;">
-            <p style="font-size:0.95rem; font-weight:800; color:var(--text-primary);">${ts.name}</p>
-            <p style="font-size:0.95rem; font-weight:900; color:var(--color-accent); font-family:var(--font-num);">${formatTime(ts.avgSeconds)} / প্রশ্ন</p>
+        <p style="font-size:0.9rem; color:var(--text-secondary); font-weight:800; margin-bottom:14px;">যে বিষয়গুলোতে সবচেয়ে বেশি সময় লাগছে:</p>
+        ${(!timeStats || !timeStats.bySubject || timeStats.bySubject.length === 0) ? `<p class="text-sm text-muted text-center font-bold">পর্যাপ্ত ডেটা নেই।</p>` : timeStats.bySubject.slice(0, 3).map(ts => `
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed rgba(128,128,128,0.15); padding:14px 0;">
+            <p style="font-size:1rem; font-weight:800; color:var(--text-primary);">${ts.name}</p>
+            <p style="font-size:1rem; font-weight:900; color:var(--color-accent); font-family:var(--font-num);">${formatTime(ts.avgSeconds)} / প্রশ্ন</p>
           </div>
         `).join("")}
       </div>
     `;
 
   } catch (err) {
-    console.error(err);
-    renderState(body, "error", "বিশ্লেষণ লোড করা যায়নি। ইন্টারনেট কানেকশন চেক করুন।");
+    console.error("Analytics Error:", err);
+    // Safe Error State fallback if rendering fails
+    body.innerHTML = `<div class="glass-card text-center font-bold" style="color:#ef4444; padding:30px;">পেজটি লোড করতে সমস্যা হচ্ছে। দয়া করে ইন্টারনেট কানেকশন চেক করে আবার চেষ্টা করুন।</div>`;
   }
 }
 </script>
