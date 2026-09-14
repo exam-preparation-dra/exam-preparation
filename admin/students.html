@@ -59,8 +59,9 @@
   .st-inactive { color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 2px 6px; border-radius: 6px; font-weight: 700; }
   
   .st-actions { display: flex; gap: 6px; flex-shrink: 0; }
-  .action-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: rgba(128,128,128,0.08); color: var(--text-secondary); cursor: pointer; border: none; }
+  .action-icon { width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: rgba(128,128,128,0.08); color: var(--text-secondary); cursor: pointer; border: none; transition: all 0.2s ease; }
   .action-icon:hover { background: rgba(128,128,128,0.15); color: var(--text-primary); }
+  .action-icon.delete-btn:hover { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
 
   /* ===== Modal Styles ===== */
   .modal-overlay { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
@@ -82,7 +83,7 @@ import { transliterateToBengali, promptForApiKey } from "../js/utils/ai-import-u
 import { toDirectImageUrl, uploadImageWithGuidedFallback } from "../js/utils/image-utils.js";
 import { uploadStudentPhoto, deleteStudentPhoto } from "../js/utils/storage-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
-import { collection, getDocs, orderBy, query, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { collection, getDocs, orderBy, query, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { computeGamificationData } from "../js/utils/gamification-utils.js";
 
 initTheme();
@@ -130,10 +131,7 @@ requireAdmin(() => {
     </div>
 
     <!-- Student List -->
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-      <p style="font-size:0.9rem; font-weight:800; color:var(--text-secondary);">সব শিক্ষার্থী</p>
-      <a href="../admin/analytics.html" class="btn-glass" style="padding:6px 12px; font-size:0.75rem;">বিশ্লেষণ</a>
-    </div>
+    <p style="font-size:0.9rem; font-weight:800; color:var(--text-secondary); margin-bottom:10px;">সব শিক্ষার্থী</p>
     <div class="glass-float-card" style="padding:4px;">
       <div id="studentList"><div class="spinner" style="margin:20px auto;"></div></div>
     </div>
@@ -152,7 +150,6 @@ async function loadAllStudents() {
   return snap.docs.map(d => ({ docId: d.id, ...d.data() }));
 }
 
-// Fixed undefined data handling
 function safeText(str, fallback = "") {
   if (str === undefined || str === null || str === "undefined") return fallback;
   return String(str).trim() || fallback;
@@ -171,10 +168,8 @@ async function loadStudents() {
     try { gamification = await computeGamificationData(); } catch (err) {}
 
     listEl.innerHTML = students.map(s => {
-      // Clean up undefined errors
       const docId = s.docId;
       const rawName = safeText(s.name, "নাম নেই");
-      // If name is huge/firebase ID, truncate it
       const displayName = rawName.length > 25 ? rawName.substring(0, 20) + "..." : rawName;
       const initial = displayName !== "নাম নেই" ? displayName.charAt(0) : "S";
       
@@ -201,9 +196,10 @@ async function loadStudents() {
             ${topperTotal > 0 ? `<div style="margin-top:4px; font-size:0.7rem; color:#f59e0b; font-weight:700;">🏆 ${topperTotal} বার টপার</div>` : ""}
           </div>
           <div class="st-actions">
-            <button class="action-icon photo-btn" title="ছবি পরিবর্তন"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
-            <button class="action-icon edit-btn" title="সম্পাদনা"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-            <button class="action-icon toggle-btn" title="সক্রিয়/নিষ্ক্রিয়" style="${s.isActive === false ? 'color:#ef4444;' : ''}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="${s.isActive !== false ? '16' : '8'}" cy="12" r="3"/></svg></button>
+            <button class="action-icon photo-btn" title="ছবি পরিবর্তন"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
+            <button class="action-icon edit-btn" title="সম্পাদনা"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            <button class="action-icon toggle-btn" title="সক্রিয়/নিষ্ক্রিয়" style="${s.isActive === false ? 'color:#ef4444;' : ''}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="${s.isActive !== false ? '16' : '8'}" cy="12" r="3"/></svg></button>
+            <button class="action-icon delete-btn" title="শিক্ষার্থী মুছে ফেলুন" style="color:var(--text-muted);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
           </div>
         </div>
       `;
@@ -265,6 +261,22 @@ function bindStudentActions(students) {
         loadStudents();
       } catch (err) { showToast(friendlyError(err), "error"); }
     });
+
+    // Delete Student
+    row.querySelector(".delete-btn").addEventListener("click", async () => {
+      const msg = `সতর্কতা: আপনি কি "${student.name || 'এই শিক্ষার্থী'}" কে স্থায়ীভাবে মুছে ফেলতে চান?\n\nএই কাজটি আর বাতিল (Undo) করা যাবে না এবং এই শিক্ষার্থীর সমস্ত তথ্য মুছে যাবে।`;
+      if (!confirm(msg)) return;
+      try {
+        if (student.photoURL) {
+          deleteStudentPhoto(student.photoURL).catch(e => console.warn(e));
+        }
+        await deleteDoc(doc(db, "students", docId));
+        showToast("শিক্ষার্থীকে স্থায়ীভাবে মুছে ফেলা হয়েছে।", "success");
+        loadStudents();
+      } catch (err) {
+        showToast(friendlyError(err), "error");
+      }
+    });
   });
 }
 
@@ -292,7 +304,7 @@ async function handleAdd(e) {
   }
 }
 
-// Photo Link Modal (Replaced prompt)
+// Photo Link Modal
 function askForPhotoLink(currentUrl, studentIdHint) {
   return new Promise((resolve) => {
     const overlay = document.createElement("div");
