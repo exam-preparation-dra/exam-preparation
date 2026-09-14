@@ -5,43 +5,144 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>অ্যাডমিন লগইন — পরীক্ষা প্রস্তুতি</title>
 <link rel="stylesheet" href="../css/style.css">
+<style>
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; } }
+  body { overflow-x: hidden; background: var(--bg); display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+  .app-shell { width: 100%; max-width: 420px; padding: 20px; box-sizing: border-box; }
+
+  /* ===== Premium Glassmorphism Theme ===== */
+  .glass-float-card {
+    background: rgba(128, 128, 128, 0.05);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(128, 128, 128, 0.15);
+    border-radius: 20px;
+    padding: 32px 24px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
+  }
+
+  /* ===== Header ===== */
+  .admin-header { text-align: center; margin-bottom: 30px; }
+  .admin-icon {
+    width: 56px; height: 56px; margin: 0 auto 16px;
+    background: linear-gradient(135deg, var(--color-accent), #2563eb);
+    color: #fff; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+  }
+  .admin-header h1 { font-size: 1.4rem; font-weight: 900; color: var(--text-primary); margin: 0 0 4px 0; letter-spacing: -0.5px; }
+  .admin-header p { font-size: 0.85rem; color: var(--text-muted); margin: 0; font-weight: 600; }
+
+  /* ===== Form Styles ===== */
+  .field { margin-bottom: 20px; position: relative; }
+  .field label { display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 8px; }
+  
+  .input-glass {
+    width: 100%; box-sizing: border-box; padding: 14px 16px;
+    background: rgba(128, 128, 128, 0.05);
+    border: 1px solid var(--surface-border);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-family: inherit; font-size: 0.95rem; font-weight: 600;
+    outline: none; transition: all 0.3s ease;
+  }
+  .input-glass:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.15); background: var(--surface); }
+  
+  /* Password Wrapper & Toggle */
+  .password-wrapper { position: relative; display: flex; align-items: center; }
+  .password-wrapper .input-glass { padding-right: 48px; } /* Space for eye icon */
+  .toggle-password {
+    position: absolute; right: 12px;
+    background: transparent; border: none; padding: 6px;
+    color: var(--text-muted); cursor: pointer; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; transition: color 0.2s;
+  }
+  .toggle-password:hover { color: var(--text-primary); background: rgba(128, 128, 128, 0.1); }
+
+  .btn-submit {
+    width: 100%; background: var(--color-accent); color: #fff;
+    border: none; border-radius: 12px; padding: 14px;
+    font-size: 1rem; font-weight: 800; font-family: inherit;
+    cursor: pointer; transition: transform 0.2s, background 0.2s;
+    display: flex; justify-content: center; align-items: center; gap: 8px;
+    margin-top: 10px;
+  }
+  .btn-submit:active { transform: scale(0.98); }
+  .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; }
+
+  /* Error Message */
+  .error-msg {
+    background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #ef4444; padding: 10px 14px; border-radius: 10px; font-size: 0.8rem; font-weight: 700;
+    margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+  }
+  .hidden { display: none !important; }
+
+  /* Footer Link */
+  .back-link {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    margin-top: 24px; font-size: 0.85rem; font-weight: 700;
+    color: var(--text-muted); text-decoration: none; transition: color 0.2s;
+  }
+  .back-link:hover { color: var(--color-accent); }
+</style>
 </head>
 <body>
-<div class="app-shell" style="display:flex;flex-direction:column;justify-content:center;min-height:100vh;">
 
-  <div class="topbar" style="justify-content:center;margin-bottom:var(--space-6);">
-    <div class="brand">
-      <div class="brand-mark">প</div>
-      <div>
-        <h1 style="font-size:1.05rem;">অ্যাডমিন প্যানেল</h1>
-        <p class="text-xs text-muted" style="margin:0;">নিয়ন্ত্রণ কেন্দ্র</p>
+<div class="app-shell">
+
+  <div class="glass-float-card">
+    
+    <div class="admin-header">
+      <div class="admin-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
       </div>
+      <h1>অ্যাডমিন প্যানেল</h1>
+      <p>নিয়ন্ত্রণ কেন্দ্রে প্রবেশ করুন</p>
     </div>
+
+    <form id="loginForm">
+      <div class="field">
+        <label for="email">ইমেইল ঠিকানা</label>
+        <input class="input-glass" type="email" id="email" required autocomplete="username" placeholder="admin@example.com">
+      </div>
+      
+      <div class="field">
+        <label for="password">পাসওয়ার্ড</label>
+        <div class="password-wrapper">
+          <input class="input-glass" type="password" id="password" required autocomplete="current-password" placeholder="পাসওয়ার্ড লিখুন">
+          <button type="button" class="toggle-password" id="togglePasswordBtn" aria-label="পাসওয়ার্ড দেখুন">
+            <!-- Eye Off Icon (Default for hidden password) -->
+            <svg class="eye-off-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            <!-- Eye Open Icon (Hidden by default) -->
+            <svg class="eye-on-icon hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="errorMsg" class="error-msg hidden">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="errorText">ভুল ইমেইল বা পাসওয়ার্ড</span>
+      </div>
+
+      <button type="submit" class="btn-submit" id="loginBtn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        প্রবেশ করুন
+      </button>
+    </form>
+
   </div>
 
-  <form id="loginForm" class="glass card">
-    <div class="field">
-      <label for="email">ইমেইল</label>
-      <input class="input" type="email" id="email" required autocomplete="username">
-    </div>
-    <div class="field">
-      <label for="password">পাসওয়ার্ড</label>
-      <input class="input" type="password" id="password" required autocomplete="current-password">
-    </div>
-    <p id="errorMsg" class="text-sm hidden" style="color:var(--color-danger);margin-bottom:var(--space-3);"></p>
-    <button type="submit" class="btn btn-primary" id="loginBtn">প্রবেশ করুন</button>
-  </form>
-
-  <div class="mt-5 text-center">
-    <a href="../index.html" class="text-xs text-muted">শিক্ষার্থী পাতায় ফিরে যান</a>
-  </div>
+  <a href="../index.html" class="back-link">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    শিক্ষার্থী পাতায় ফিরে যান
+  </a>
 
 </div>
 
 <script type="module">
-import { initTheme } from "../js/utils/ui-utils.js";
+import { initTheme, friendlyError } from "../js/utils/ui-utils.js";
 import { adminLogin, redirectIfLoggedIn } from "../js/utils/auth.js";
-import { friendlyError } from "../js/utils/ui-utils.js";
 
 initTheme();
 redirectIfLoggedIn();
@@ -49,23 +150,46 @@ redirectIfLoggedIn();
 const form = document.getElementById("loginForm");
 const btn = document.getElementById("loginBtn");
 const errorMsg = document.getElementById("errorMsg");
+const errorText = document.getElementById("errorText");
+const passwordInput = document.getElementById("password");
+const togglePasswordBtn = document.getElementById("togglePasswordBtn");
+const eyeOn = document.querySelector(".eye-on-icon");
+const eyeOff = document.querySelector(".eye-off-icon");
+
+// Show/Hide Password Logic
+togglePasswordBtn.addEventListener("click", () => {
+  const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+  passwordInput.setAttribute("type", type);
+  
+  if (type === "text") {
+    eyeOff.classList.add("hidden");
+    eyeOn.classList.remove("hidden");
+  } else {
+    eyeOn.classList.add("hidden");
+    eyeOff.classList.remove("hidden");
+  }
+});
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   errorMsg.classList.add("hidden");
   btn.disabled = true;
-  btn.textContent = "যাচাই করা হচ্ছে...";
+  btn.innerHTML = `<span class="spinner" style="width:16px; height:16px; border-width:2px; border-color:#fff; border-top-color:transparent;"></span> যাচাই করা হচ্ছে...`;
+  
   try {
     await adminLogin(
       document.getElementById("email").value.trim(),
-      document.getElementById("password").value
+      passwordInput.value
     );
     window.location.href = "../admin/dashboard.html";
   } catch (err) {
-    errorMsg.textContent = friendlyError(err);
+    errorText.textContent = friendlyError(err);
     errorMsg.classList.remove("hidden");
     btn.disabled = false;
-    btn.textContent = "প্রবেশ করুন";
+    btn.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      প্রবেশ করুন
+    `;
   }
 });
 </script>
