@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>তুলনা — পরীক্ষা প্রস্তুতি</title>
+<title>বিস্তারিত তুলনা — পরীক্ষা প্রস্তুতি</title>
 <link rel="stylesheet" href="../css/style.css">
 <style>
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
@@ -16,13 +16,7 @@
     border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 20px; padding: 20px; margin-bottom: 16px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.02);
   }
-
-  /* ===== Circular Progress SVG ===== */
-  .circ-chart { display: block; margin: 0 auto; }
-  .circ-bg { fill: none; stroke: rgba(128,128,128,0.15); stroke-width: 3.5; }
-  .circ-fill { fill: none; stroke-linecap: round; stroke-width: 3.5; animation: fillup 1s ease-out forwards; }
-  .circ-text { font-family: var(--font-num); font-size: 8.5px; font-weight: 900; fill: var(--text-primary); text-anchor: middle; dominant-baseline: central; }
-  @keyframes fillup { from { stroke-dasharray: 0, 100; } }
+  .section-title { font-size: 1.1rem; font-weight: 900; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
 
   /* ===== Leaderboard Row ===== */
   .leaderboard-row { display: flex; align-items: center; gap: 14px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 16px; margin-bottom: 10px; transition: transform 0.2s; }
@@ -37,13 +31,26 @@
   .st-points { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
   .pts-val { color: var(--color-accent); font-weight: 800; font-size: 0.85rem; }
 
-  /* ===== VS View Styles ===== */
-  .vs-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; background: rgba(128,128,128,0.06); border-radius: 12px; margin-bottom: 20px; border: 1px dashed var(--surface-border); }
-  .vs-split { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
-  .vs-divider { width: 1px; height: 50px; background: rgba(128,128,128,0.2); }
-  .vs-person { text-align: center; flex: 1; }
-  .vs-name { font-weight: 800; font-size: 0.85rem; color: var(--text-secondary); margin-top: 10px; }
-  .vs-meta { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+  /* ===== Circular Progress SVG ===== */
+  .circ-wrapper { display: flex; flex-direction: column; align-items: center; width: 64px; flex-shrink: 0; }
+  .circ-wrapper.is-me .circ-title { color: var(--color-accent); font-weight: 900; }
+  .circ-chart { display: block; margin: 0 auto; }
+  .circ-bg { fill: none; stroke: rgba(128,128,128,0.15); stroke-width: 3.5; }
+  .circ-fill { fill: none; stroke-linecap: round; stroke-width: 3.5; animation: fillup 1.2s ease-out forwards; }
+  .circ-text { font-family: var(--font-num); font-size: 8.5px; font-weight: 900; fill: var(--text-primary); text-anchor: middle; dominant-baseline: central; }
+  @keyframes fillup { from { stroke-dasharray: 0, 100; } }
+
+  .circ-title { font-size: 0.7rem; font-weight: 700; color: var(--text-secondary); margin-top: 8px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+  .circ-sub { font-size: 0.65rem; color: var(--text-muted); font-weight: 600; text-align: center; margin-top: 2px; }
+
+  /* ===== Scrollable Row ===== */
+  .scroll-row { display: flex; gap: 12px; overflow-x: auto; padding: 4px 0 12px 0; scrollbar-width: none; }
+  .scroll-row::-webkit-scrollbar { display: none; }
+
+  /* ===== Page Header ===== */
+  .vs-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(128,128,128,0.06); border-radius: 16px; margin-bottom: 20px; border: 1px dashed var(--surface-border); }
+  .batch-title { font-size: 0.9rem; font-weight: 800; color: var(--text-secondary); }
+  .batch-name { color: var(--color-accent); }
 </style>
 </head>
 <body>
@@ -68,23 +75,41 @@ if (!student) {
   renderPage();
 }
 
-// Function to draw circular SVG progress
-function drawCircle(pct, color, size = 50) {
+// COLORS array for different students
+const COLORS = ["var(--color-accent)", "#3b82f6", "#a855f7", "#10b981", "#f59e0b", "#f43f5e", "#06b6d4"];
+
+// Helper: Generate Circular Card
+function drawCircleCard(pct, color, title, subtitle, isMe) {
   const p = isNaN(pct) || pct === null ? 0 : Math.round(pct);
-  const c = p === 0 ? "rgba(128,128,128,0.4)" : color;
+  const c = pct === null ? "rgba(128,128,128,0.2)" : color;
+  const textVal = pct === null ? "—" : `${p}%`;
   return `
-    <svg viewBox="0 0 36 36" class="circ-chart" style="width:${size}px; height:${size}px;">
+    <div class="circ-wrapper ${isMe ? 'is-me' : ''}">
+      <svg viewBox="0 0 36 36" class="circ-chart" style="width:50px; height:50px;">
+        <path class="circ-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+        <path class="circ-fill" stroke="${c}" stroke-dasharray="${p}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+        <text x="18" y="18" class="circ-text">${textVal}</text>
+      </svg>
+      <div class="circ-title">${title}</div>
+      <div class="circ-sub">${subtitle}</div>
+    </div>
+  `;
+}
+
+// Generate simple SVG Circle without text for Leaderboard
+function drawMiniCircle(pct, color) {
+  const p = isNaN(pct) || pct === null ? 0 : Math.round(pct);
+  const c = pct === null ? "rgba(128,128,128,0.2)" : color;
+  return `
+    <svg viewBox="0 0 36 36" class="circ-chart" style="width:42px; height:42px;">
       <path class="circ-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
       <path class="circ-fill" stroke="${c}" stroke-dasharray="${p}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-      <text x="18" y="18" class="circ-text">${p}%</text>
+      <text x="18" y="18" class="circ-text">${pct === null ? "—" : p+"%"}</text>
     </svg>
   `;
 }
 
 async function renderPage() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const friendId = urlParams.get("friendId");
-  const isFriendCompare = !!friendId;
   const myBatch = student.className || "অজানা ব্যাচ";
 
   shell.innerHTML = `
@@ -100,14 +125,7 @@ async function renderPage() {
     // STRICT BATCH ISOLATION
     let batchStudents = allStudents.filter(s => (s.className || "অজানা ব্যাচ") === myBatch);
     
-    if (isFriendCompare) {
-      batchStudents = batchStudents.filter(s => s.studentId === student.studentId || s.studentId === friendId);
-      if (batchStudents.length < 2) {
-        renderState(body, "error", "বন্ধু একই ব্যাচের নয় অথবা ডেটা পাওয়া যায়নি।"); return;
-      }
-    }
-
-    if (batchStudents.length < 2 && !isFriendCompare) {
+    if (batchStudents.length < 2) {
       renderState(body, "empty", "আপনার ব্যাচে তুলনার জন্য অন্য কোনো শিক্ষার্থী নেই।"); return;
     }
 
@@ -117,16 +135,24 @@ async function renderPage() {
     const summaries = await Promise.all(batchStudents.map(async s => {
       const results = await getApprovedResults(s.studentId);
       const summary = computeStudentSummary(s, results, subjectMap, chapterMap, topicMap);
-      // Custom Gamified Points Calculation
-      summary.points = Math.round((summary.avgPercentage || 0) * (summary.examsTaken || 0) * 1.5);
+      
+      // REAL POINTS CALCULATION (Fetching actual sum of points/scores from results)
+      let realPoints = 0;
+      results.forEach(r => {
+        realPoints += Number(r.points || r.earnedPoints || r.score || r.obtainedMarks || 0);
+      });
+      
+      // Fallback if realPoints property is somehow totally missing, use totalScore
+      summary.actualPoints = realPoints > 0 ? realPoints : Math.round(summary.totalScore || 0);
+      
       return summary;
     }));
 
-    if (isFriendCompare && summaries.length >= 2) {
-      renderFriendView(body, summaries, myBatch);
-    } else {
-      renderBatchLeaderboard(body, summaries, myBatch);
+    if (summaries.every(s => !s.hasData)) {
+      renderState(body, "empty", "তুলনার জন্য এখনো পর্যাপ্ত ফলাফল পাওয়া যায়নি।"); return;
     }
+
+    renderDetailedView(body, summaries, myBatch);
 
   } catch (err) {
     console.error(err);
@@ -134,102 +160,100 @@ async function renderPage() {
   }
 }
 
-// 1. BATCH LEADERBOARD VIEW (Points Focus, No Deep Subject Details of Others)
-function renderBatchLeaderboard(body, summaries, batchName) {
-  // Sort by Points Descending
-  summaries.sort((a, b) => (b.points || 0) - (a.points || 0));
+function renderDetailedView(body, summaries, batchName) {
+  // Sort by Actual Points Descending
+  summaries.sort((a, b) => (b.actualPoints || 0) - (a.actualPoints || 0));
 
-  const rows = summaries.map((s, idx) => {
+  // Merge Data for Sub & Topics
+  const mergedSubjects = mergeStatsForDisplay(summaries, "subjectStats", "subjectId");
+  const mergedTopics = mergeStatsForDisplay(summaries, "topicStats", "topicId");
+
+  // Leaderboard Rows
+  const leaderboardRows = summaries.map((s, idx) => {
     const isMe = s.studentId === student.studentId;
     const rankClass = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : '';
-    const rankLabel = idx === 0 ? '১ম' : idx === 1 ? '২য়' : idx === 2 ? '৩য়' : `${idx + 1}`;
     
     return `
-      <div class="leaderboard-row" style="${isMe ? 'border-color:var(--color-accent); background:rgba(var(--color-accent-rgb),0.02);' : ''}">
-        <div class="rank-badge ${rankClass}">${rankLabel}</div>
+      <div class="leaderboard-row" style="${isMe ? 'border-color:var(--color-accent); background:rgba(var(--color-accent-rgb),0.03);' : ''}">
+        <div class="rank-badge ${rankClass}">${idx + 1}</div>
         <div class="st-info">
-          <div class="st-name">${s.name} ${isMe ? '<span class="me-badge">আপনি</span>' : ''}</div>
-          <div class="st-points">মোট পয়েন্ট: <span class="pts-val">${s.points}</span></div>
+          <div class="st-name">${s.name.split(" ")[0]} ${isMe ? '<span class="me-badge">আপনি</span>' : ''}</div>
+          <div class="st-points">মোট পয়েন্ট: <span class="pts-val">${s.actualPoints}</span></div>
         </div>
         <div>
-          ${drawCircle(s.avgPercentage, 'var(--color-accent)', 44)}
+          ${drawMiniCircle(s.avgPercentage, isMe ? 'var(--color-accent)' : COLORS[(idx+1) % COLORS.length])}
         </div>
       </div>
     `;
   }).join("");
 
-  body.innerHTML = `
-    <div class="vs-header">
-      <span style="font-size:0.85rem; font-weight:800; color:var(--text-secondary);">আপনার ব্যাচ: <span style="color:var(--color-accent);">${batchName}</span></span>
-    </div>
-    
-    <div class="glass-card" style="padding: 16px;">
-      <p style="font-weight:900; font-size:1.1rem; color:var(--text-primary); margin-bottom:4px;">ব্যাচ লিডারবোর্ড</p>
-      <p style="font-size:0.75rem; color:var(--text-muted); font-weight:600; margin-bottom:16px;">পয়েন্টস এবং গড়ের ভিত্তিতে তালিকা</p>
-      ${rows}
-    </div>
-  `;
-}
+  // Subject Wise Detailed Circles
+  const subjectHtml = mergedSubjects.map(subRow => {
+    const circles = summaries.map((s, idx) => {
+      const isMe = s.studentId === student.studentId;
+      const val = subRow[s.studentId];
+      const color = isMe ? 'var(--color-accent)' : COLORS[(idx+1) % COLORS.length];
+      return drawCircleCard(val, color, isMe ? "আপনি" : s.name.split(" ")[0], `${s.actualPoints} pts`, isMe);
+    }).join("");
 
-// 2. DETAILED FRIEND COMPARISON VIEW
-function renderFriendView(body, summaries, batchName) {
-  const me = summaries.find(s => s.studentId === student.studentId) || summaries[0];
-  const friend = summaries.find(s => s.studentId !== student.studentId) || summaries[1];
-
-  const mergedSubjects = mergeStatsForDisplay(summaries, "subjectStats", "subjectId");
-
-  body.innerHTML = `
-    <div class="vs-header">
-      <span style="font-size:0.85rem; font-weight:800; color:var(--text-secondary);">ব্যাচ: <span style="color:var(--color-accent);">${batchName}</span></span>
-      <a href="comparison_2.html" style="font-size:0.8rem; font-weight:800; color:var(--color-accent); text-decoration:none;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:4px;"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-        লিডারবোর্ড
-      </a>
-    </div>
-
-    <!-- Overall Comparison -->
-    <div class="glass-card">
-      <p style="font-weight:900; font-size:1.05rem; color:var(--text-primary); text-align:center; margin-bottom:20px;">ওভারঅল পারফরম্যান্স</p>
-      <div class="vs-split">
-        <div class="vs-person">
-          ${drawCircle(me.avgPercentage, 'var(--color-accent)', 70)}
-          <div class="vs-name">আপনি</div>
-          <div class="vs-meta">পয়েন্টস: ${me.points}</div>
-        </div>
-        <div class="vs-divider"></div>
-        <div class="vs-person">
-          ${drawCircle(friend.avgPercentage, '#3b82f6', 70)}
-          <div class="vs-name">${friend.name}</div>
-          <div class="vs-meta">পয়েন্টস: ${friend.points}</div>
+    return `
+      <div class="glass-card" style="padding:16px;">
+        <p style="font-weight:800; font-size:0.9rem; color:var(--text-primary); margin-bottom:12px;">${subRow.name}</p>
+        <div class="scroll-row">
+          ${circles}
         </div>
       </div>
+    `;
+  }).join("");
+
+  // Topic Wise Detailed Circles (Only showing topics with data)
+  const topicHtml = mergedTopics.filter(t => summaries.some(s => t[s.studentId] !== null && t[s.studentId] !== undefined)).map(topicRow => {
+    const circles = summaries.map((s, idx) => {
+      const isMe = s.studentId === student.studentId;
+      const val = topicRow[s.studentId];
+      const color = isMe ? 'var(--color-accent)' : COLORS[(idx+1) % COLORS.length];
+      return drawCircleCard(val, color, isMe ? "আপনি" : s.name.split(" ")[0], `${val === null ? '—' : val+'%'}`, isMe);
+    }).join("");
+
+    return `
+      <div class="glass-card" style="padding:16px;">
+        <p style="font-weight:800; font-size:0.85rem; color:var(--text-secondary); margin-bottom:12px;">${topicRow.name}</p>
+        <div class="scroll-row">
+          ${circles}
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  // Construct Final Body
+  body.innerHTML = `
+    <div class="vs-header">
+      <span class="batch-title">আপনার ব্যাচ: <span class="batch-name">${batchName}</span></span>
+      <span style="font-size:0.8rem; font-weight:700; color:var(--text-muted);">${summaries.length} জন শিক্ষার্থী</span>
+    </div>
+    
+    <!-- 1. Overall Points Leaderboard -->
+    <div class="glass-card" style="padding: 16px;">
+      <div class="section-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+        লিডারবোর্ড
+      </div>
+      ${leaderboardRows}
     </div>
 
-    <!-- Subject Wise Details -->
-    <p style="font-weight:900; font-size:1.05rem; color:var(--text-primary); margin:24px 0 12px; padding-left:4px;">বিষয়ভিত্তিক দক্ষতা</p>
+    <!-- 2. Subject Wise Circular Comparison -->
+    <div class="section-title mt-5 mb-2">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+      বিষয়ভিত্তিক পারফরম্যান্স
+    </div>
+    ${subjectHtml}
 
-    ${mergedSubjects.length === 0 ? `<div class="glass-card text-center text-muted text-sm font-bold">পর্যাপ্ত ডেটা নেই।</div>` : 
-      mergedSubjects.map(sub => {
-        const myVal = sub[me.studentId];
-        const frVal = sub[friend.studentId];
-        return `
-        <div class="glass-card" style="padding:16px;">
-          <p style="font-weight:800; font-size:0.95rem; color:var(--text-secondary); margin-bottom:16px; text-align:center;">${sub.name}</p>
-          <div class="vs-split">
-            <div class="vs-person">
-              ${drawCircle(myVal, 'var(--color-accent)', 52)}
-              <div class="vs-name" style="font-size:0.75rem;">আপনি</div>
-            </div>
-            <div class="vs-divider" style="height:35px;"></div>
-            <div class="vs-person">
-              ${drawCircle(frVal, '#3b82f6', 52)}
-              <div class="vs-name" style="font-size:0.75rem;">${friend.name.split(" ")[0]}</div>
-            </div>
-          </div>
-        </div>
-        `;
-      }).join("")
-    }
+    <!-- 3. Topic Wise Circular Comparison -->
+    <div class="section-title mt-5 mb-2">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+      টপিকভিত্তিক দক্ষতা
+    </div>
+    ${topicHtml || `<div class="glass-card text-center text-sm text-muted font-bold">কোনো টপিকের ডেটা পাওয়া যায়নি।</div>`}
   `;
 }
 </script>
