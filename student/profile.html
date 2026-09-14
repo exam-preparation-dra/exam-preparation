@@ -778,8 +778,7 @@ async function loadStats() {
     const overall = computeOverallStats(results);
 
     if (!overall) {
-      <div id="badgeCollectionAdvanced"></div>
-statsEl.innerHTML = `<div class="glass-card text-center text-muted font-bold">কোনো পরীক্ষার ফলাফল নেই।</div>`;
+      statsEl.innerHTML = `<div class="glass-card text-center text-muted font-bold">কোনো পরীক্ষার ফলাফল নেই।</div>`;
       return;
     }
 
