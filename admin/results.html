@@ -8,13 +8,84 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#ff6a2b">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
+  body { overflow-x: hidden; background: var(--bg); }
+  .app-shell { max-width: 850px; padding-bottom: 40px; margin: 0 auto; }
+
+  /* ===== Premium Glass Cards ===== */
+  .glass-card {
+    background: rgba(128, 128, 128, 0.03); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 20px; padding: 20px; margin-bottom: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.02); transition: all 0.3s ease;
+  }
+  .glass-card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.04); border-color: rgba(128,128,128,0.2); }
+
+  /* ===== Topbar (FIXED THEME COLOR) ===== */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    margin: calc(var(--space-5) * -1) calc(var(--space-4) * -1) var(--space-4);
+    padding: 16px 20px; 
+    background: var(--surface); /* Fixed to match natural theme */
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(128,128,128,0.1);
+    display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+  }
+
+  /* ===== Inputs & Filters ===== */
+  .input-glass {
+    padding: 10px 14px; background: rgba(128, 128, 128, 0.04); border: 1px solid var(--surface-border);
+    border-radius: 12px; color: var(--text-primary); font-family: inherit; font-size: 0.9rem; font-weight: 700;
+    outline: none; transition: 0.2s; cursor: pointer; width: 100%;
+  }
+  .input-glass:focus { border-color: var(--color-accent); background: var(--surface); box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.15); }
+  select.input-glass { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em; padding-right: 36px; }
+
+  /* ===== Premium Buttons & Tabs ===== */
+  .btn-glass {
+    background: rgba(128, 128, 128, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(128, 128, 128, 0.15);
+    border-radius: 12px; color: var(--text-primary); padding: 10px 16px; font-weight: 800; font-size: 0.9rem;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s ease;
+  }
+  .btn-glass:hover { background: rgba(128, 128, 128, 0.1); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+  .btn-glass:active { transform: translateY(0) scale(0.96); }
+  
+  .btn-primary { background: linear-gradient(135deg, var(--color-accent), #f59e0b); color: #fff; border: none; box-shadow: 0 4px 15px rgba(var(--color-accent-rgb), 0.3); }
+  .btn-primary:hover { box-shadow: 0 6px 20px rgba(var(--color-accent-rgb), 0.4); transform: translateY(-2px); }
+
+  .tab-btn { flex: 1; padding: 12px; border-radius: 12px; font-weight: 800; font-size: 0.95rem; text-align: center; cursor: pointer; border: 1px solid rgba(128,128,128,0.2); background: rgba(128,128,128,0.05); color: var(--text-secondary); transition: 0.2s; }
+  .tab-btn.active { background: var(--color-accent); color: #fff; border-color: var(--color-accent); box-shadow: 0 4px 15px rgba(var(--color-accent-rgb), 0.3); transform: scale(1.02); }
+
+  /* ===== Result Cards ===== */
+  .result-meta { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-top: 6px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .st-badge { background: rgba(128,128,128,0.1); padding: 4px 10px; border-radius: 8px; font-weight: 800; color: var(--text-primary); font-size: 0.75rem; border: 1px solid rgba(128,128,128,0.15); }
+  .batch-badge { background: rgba(var(--color-accent-rgb), 0.15); color: var(--color-accent); padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 900; border: 1px solid rgba(var(--color-accent-rgb), 0.3); }
+
+  .score-highlight { font-size: 1.8rem; font-weight: 900; color: var(--color-accent); font-family: var(--font-num); text-shadow: 0 2px 10px rgba(var(--color-accent-rgb), 0.2); }
+
+  /* ===== Modals (Premium UI) ===== */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px; animation: fadeIn 0.2s ease; }
+  .custom-modal { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 20px; padding: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); width: 100%; max-width: 600px; max-height: 85vh; overflow-y: auto; animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { transform: translateY(30px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+  
+  .close-modal-btn { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; border-radius: 12px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+  .close-modal-btn:hover { background: #ef4444; color: #fff; }
+
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
+  
+  /* Header Layout */
+  .controls-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; margin-top: 16px; }
+  .tabs-group { display: flex; gap: 12px; flex: 1; min-width: 280px; }
+  .filter-group { flex-shrink: 0; min-width: 160px; max-width: 220px; }
+</style>
 </head>
 <body>
 <div class="app-shell app-shell--wide" id="shell">
   <div class="state-block"><div class="spinner"></div></div>
 </div>
 
-<!-- Hidden render target for the result-card image export (html2canvas). -->
+<!-- Hidden render target for the result-card image export -->
 <div id="cardArea" style="position:fixed;left:-9999px;top:0;"></div>
 
 <script type="module">
@@ -22,7 +93,7 @@ import { initTheme, toggleTheme, icons, renderState, showToast, friendlyError } 
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
 import { initAdminPwaInstall } from "../pwa-install.js";
 import { db } from "../js/firebase/firebase-config.js";
-import { collection, doc, getDocs, getDoc, query, where, orderBy, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { collection, doc, getDocs, getDoc, query, where, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { getSubjects, getChapters, buildNameMap } from "../js/utils/syllabus-utils.js";
 import { getExamSnapshot, getExamById, getApprovedResults, getAllApprovedResults } from "../js/utils/results-utils.js";
 import { getActiveStudents } from "../js/utils/student-utils.js";
@@ -31,94 +102,160 @@ import { buildQuestionReview, formatSeconds } from "../js/utils/grading-utils.js
 initTheme();
 const shell = document.getElementById("shell");
 let activeTab = "pending";
+let batchFilter = "all";
 let subjectMap = {}, chapterMap = {};
+let allStudentsList = [];
+let allFetchedResults = [];
 
 requireAdmin(async () => {
   shell.innerHTML = `
     <div class="topbar">
-      <a href="../admin/dashboard.html" class="icon-btn">${icons.arrowLeft}</a>
-      <h2 style="font-size:1.05rem;">ফলাফল অনুমোদন</h2>
-      <div class="flex gap-2">
-        <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-thumb"></span></button>
-        <button class="icon-btn hidden" id="installBtn" title="অ্যাপ ইনস্টল করুন"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v13m0 0l-4-4m4 4l4-4M5 21h14"/></svg></button>
-        <button class="icon-btn" id="logoutBtn">${icons.arrowRight}</button>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <a href="../admin/dashboard.html" class="btn-glass" style="width:42px; height:42px; padding:0; border-radius:12px; border:none; background:rgba(128,128,128,0.1);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        </a>
+        <h2 style="font-size:1.15rem; font-weight:900; color:var(--text-primary); margin:0;">ফলাফল অনুমোদন</h2>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="theme-toggle" id="themeToggle" style="margin:0;"><span class="theme-toggle-thumb"></span></button>
+        <button class="btn-glass hidden" id="installBtn" style="width:42px;height:42px;padding:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M12 3v13m0 0l-4-4m4 4l4-4M5 21h14"/></svg></button>
+        <button class="btn-glass" id="logoutBtn" style="width:42px;height:42px;padding:0;border-color:rgba(239,68,68,0.3);color:#ef4444;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:18px;height:18px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
       </div>
     </div>
 
-    <div class="flex gap-2">
-      <button class="btn btn-primary btn-sm" id="tabPending">অনুমোদনের অপেক্ষায়</button>
-      <button class="btn btn-secondary btn-sm" id="tabApproved">অনুমোদিত</button>
+    <div class="controls-header">
+      <div class="tabs-group">
+        <div class="tab-btn active" id="tabPending">অপেক্ষায় (Pending)</div>
+        <div class="tab-btn" id="tabApproved">অনুমোদিত (Approved)</div>
+      </div>
+      <div class="filter-group">
+        <select class="input-glass" id="batchFilter">
+          <option value="all">সব ব্যাচ (All Batches)</option>
+        </select>
+      </div>
     </div>
 
-    <div id="listBody" class="mt-4"></div>
-    <div id="detailOverlay" class="hidden" style="position:fixed;inset:0;background:rgba(10,14,26,0.6);z-index:300;overflow-y:auto;padding:20px;"></div>
+    <div id="listBody"></div>
+
+    <!-- Detail Modal -->
+    <div id="detailOverlay" class="modal-overlay hidden">
+      <div class="custom-modal" id="modalContent"></div>
+    </div>
   `;
+  
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
   document.getElementById("logoutBtn").addEventListener("click", adminLogout);
   initAdminPwaInstall("installBtn");
+  
   document.getElementById("tabPending").addEventListener("click", () => { activeTab = "pending"; refreshTabs(); load(); });
   document.getElementById("tabApproved").addEventListener("click", () => { activeTab = "approved"; refreshTabs(); load(); });
+  document.getElementById("batchFilter").addEventListener("change", (e) => { batchFilter = e.target.value; renderList(); });
 
-  const [subjects, chapters] = await Promise.all([getSubjects(), getChapters()]);
-  subjectMap = buildNameMap(subjects); chapterMap = buildNameMap(chapters);
+  const [subjects, chapters, students] = await Promise.all([getSubjects(), getChapters(), getActiveStudents()]);
+  subjectMap = buildNameMap(subjects); 
+  chapterMap = buildNameMap(chapters);
+  allStudentsList = students;
+
+  // Populate Batch Filter
+  const batchSel = document.getElementById("batchFilter");
+  const batches = [...new Set(allStudentsList.map(s => s.className || "ব্যাচ নেই"))].filter(b => b !== "ব্যাচ নেই").sort();
+  batches.forEach(b => { batchSel.innerHTML += `<option value="${b}">${b}</option>`; });
+
   load();
 });
 
 function refreshTabs() {
-  document.getElementById("tabPending").className = `btn ${activeTab === "pending" ? "btn-primary" : "btn-secondary"} btn-sm`;
-  document.getElementById("tabApproved").className = `btn ${activeTab === "approved" ? "btn-primary" : "btn-secondary"} btn-sm`;
+  document.getElementById("tabPending").className = `tab-btn ${activeTab === "pending" ? "active" : ""}`;
+  document.getElementById("tabApproved").className = `tab-btn ${activeTab === "approved" ? "active" : ""}`;
 }
 
-function fmtDate(ts) { return ts?.toDate ? ts.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" }) : "—"; }
+function fmtDate(ts) { return ts?.toDate ? ts.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "short", year: "numeric" }) : "—"; }
 function fmtTime(ts) { return ts?.toDate ? ts.toDate().toLocaleTimeString("bn-BD", { hour: "2-digit", minute: "2-digit" }) : "—"; }
 
 async function load() {
   const el = document.getElementById("listBody");
-  el.innerHTML = `<div class="glass card skeleton" style="height:90px;"></div>`;
+  el.innerHTML = `<div class="glass-card" style="padding:40px; text-align:center;"><div class="spinner" style="margin:0 auto;"></div></div>`;
   try {
-    // NOTE: no Firestore orderBy() here — an equality filter (status) combined
-    // with orderBy() on a different field (submittedAt) needs a manually-
-    // created composite index. Missing index = query fails = "লোড করা যায়নি",
-    // exactly this page's bug. Sort client-side instead, same fix as
-    // results-utils.js / syllabus-utils.js / exam-utils.js.
     const q = query(collection(db, "results"), where("status", "==", activeTab));
     const snap = await getDocs(q);
-    const results = snap.docs
+    allFetchedResults = snap.docs
       .map(d => ({ id: d.id, ...d.data() }))
       .sort((a, b) => (b.submittedAt?.toMillis?.() ?? 0) - (a.submittedAt?.toMillis?.() ?? 0));
-    if (results.length === 0) {
-      renderState(el, "empty", activeTab === "pending" ? "অনুমোদনের অপেক্ষায় কোনো ফলাফল নেই।" : "এখনো কোনো ফলাফল অনুমোদিত হয়নি।");
-      return;
-    }
-    el.innerHTML = results.map(r => `
-      <div class="glass card mt-2">
-        <div class="flex justify-between items-center">
-          <div>
-            <p style="font-weight:700;">${r.examName || "পরীক্ষা"}</p>
-            <p class="text-xs text-muted">শিক্ষার্থী: ${r.studentId} • ${fmtDate(r.submittedAt)} ${fmtTime(r.submittedAt)}</p>
-          </div>
-          <p style="font-weight:800;color:var(--color-accent);">${r.percentage ?? "—"}%</p>
-        </div>
-        <div class="flex gap-2 mt-3">
-          <button class="btn btn-secondary btn-sm view-btn" data-id="${r.id}">বিস্তারিত দেখুন</button>
-          ${activeTab === "pending" ? `<button class="btn btn-primary btn-sm approve-btn" data-id="${r.id}">ফলাফল অনুমোদন করুন</button>` : ""}
-        </div>
-      </div>
-    `).join("");
-
-    el.querySelectorAll(".view-btn").forEach(b => b.addEventListener("click", () => openDetail(b.dataset.id)));
-    el.querySelectorAll(".approve-btn").forEach(b => b.addEventListener("click", () => handleApprove(b.dataset.id)));
+    
+    renderList();
   } catch (err) {
     console.error(err);
-    renderState(el, "error", "ফলাফল লোড করা যায়নি।");
+    renderState(el, "error", "ফলাফল লোড করা যায়নি। ইন্টারনেট কানেকশন চেক করুন।");
   }
+}
+
+function renderList() {
+  const el = document.getElementById("listBody");
+  
+  // Apply Batch Filter locally
+  let filteredResults = allFetchedResults;
+  if (batchFilter !== "all") {
+    filteredResults = filteredResults.filter(r => {
+      const st = allStudentsList.find(s => s.studentId === r.studentId);
+      return st && st.className === batchFilter;
+    });
+  }
+
+  if (filteredResults.length === 0) {
+    el.innerHTML = `<div class="glass-card" style="text-align:center; padding:40px 20px;"><p style="font-size:1rem; font-weight:800; color:var(--text-muted);">${activeTab === "pending" ? "অনুমোদনের অপেক্ষায় কোনো ফলাফল নেই।" : "এই ব্যাচে কোনো ফলাফল অনুমোদিত হয়নি।"}</p></div>`;
+    return;
+  }
+
+  el.innerHTML = filteredResults.map(r => {
+    const st = allStudentsList.find(s => s.studentId === r.studentId);
+    const stName = st ? st.name : "অজানা শিক্ষার্থী";
+    const stBatch = st && st.className ? st.className : "ব্যাচ নেই";
+
+    return `
+      <div class="glass-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+          <div style="flex:1; min-width:200px;">
+            <p style="font-weight:900; font-size:1.15rem; color:var(--text-primary); margin-bottom:8px;">${r.examName || "পরীক্ষা"}</p>
+            <div class="result-meta">
+              <span style="color:var(--text-secondary); font-weight:800; font-size:0.95rem;">${stName}</span>
+              <span class="st-badge">${r.studentId}</span>
+              <span class="batch-badge">${stBatch}</span>
+            </div>
+            <p style="font-size:0.8rem; color:var(--text-muted); font-weight:600; margin-top:10px; display:flex; align-items:center; gap:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              ${fmtDate(r.submittedAt)} • ${fmtTime(r.submittedAt)}
+            </p>
+          </div>
+          <div style="text-align:right;">
+            <p class="score-highlight">${r.percentage ?? "—"}%</p>
+            <p style="font-size:0.8rem; color:var(--text-muted); font-weight:700;">প্রাপ্ত নম্বর</p>
+          </div>
+        </div>
+        
+        <div style="display:flex; gap:12px; margin-top:20px; border-top:1px dashed var(--surface-border); padding-top:16px; flex-wrap:wrap;">
+          <button class="btn-glass view-btn" data-id="${r.id}" style="flex:1; min-width:120px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            বিস্তারিত দেখুন
+          </button>
+          ${activeTab === "pending" ? `
+            <button class="btn-glass btn-primary approve-btn" data-id="${r.id}" style="flex:1; min-width:150px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              ফলাফল অনুমোদন
+            </button>` : ""}
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  el.querySelectorAll(".view-btn").forEach(b => b.addEventListener("click", () => openDetail(b.dataset.id)));
+  el.querySelectorAll(".approve-btn").forEach(b => b.addEventListener("click", () => handleApprove(b.dataset.id)));
 }
 
 async function handleApprove(id) {
   if (!confirm("এই ফলাফলটি অনুমোদন করবেন? অনুমোদনের পর এটি শিক্ষার্থীর স্থায়ী ইতিহাসে যুক্ত হবে।")) return;
   try {
     await updateDoc(doc(db, "results", id), { status: "approved", approvedAt: serverTimestamp() });
-    showToast("ফলাফল অনুমোদন করা হয়েছে।", "success");
+    showToast("ফলাফল সফলভাবে অনুমোদন করা হয়েছে।", "success");
     load();
   } catch (err) {
     showToast(friendlyError(err), "error");
@@ -127,50 +264,85 @@ async function handleApprove(id) {
 
 async function openDetail(id) {
   const overlay = document.getElementById("detailOverlay");
+  const modalContent = document.getElementById("modalContent");
   overlay.classList.remove("hidden");
-  overlay.innerHTML = `<div class="state-block"><div class="spinner"></div></div>`;
+  modalContent.innerHTML = `<div style="text-align:center; padding:30px;"><div class="spinner" style="margin:0 auto;"></div></div>`;
+  
   try {
     const snap = await getDoc(doc(db, "results", id));
-    if (!snap.exists()) { overlay.innerHTML = `<div class="glass card">ফলাফল পাওয়া যায়নি।</div>`; return; }
+    if (!snap.exists()) { modalContent.innerHTML = `<p style="text-align:center; font-weight:800; color:#ef4444;">ফলাফল পাওয়া যায়নি।</p>`; return; }
+    
     const r = { id: snap.id, ...snap.data() };
     const examSnapshot = await getExamSnapshot(r.examId);
     const review = examSnapshot ? buildQuestionReview(examSnapshot.questions, r.answers || {}, r.questionTimes || {}) : [];
 
-    overlay.innerHTML = `
-      <div class="app-shell" style="max-width:600px;">
-        <div class="flex justify-between items-center">
-          <h3>${r.examName || "পরীক্ষা"}</h3>
-          <button class="icon-btn" id="closeDetailBtn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg>
-          </button>
-        </div>
-        <div class="glass card mt-3">
-          <p class="text-sm">শিক্ষার্থী: <span style="font-weight:700;">${r.studentId}</span></p>
-          <div class="grid-2 mt-3">
-            <div><p class="text-xs text-muted">নম্বর</p><p style="font-weight:700;">${r.obtainedMarks}/${r.totalMarks}</p></div>
-            <div><p class="text-xs text-muted">শতাংশ</p><p style="font-weight:700;">${r.percentage}%</p></div>
-            <div><p class="text-xs text-muted">সঠিকতা</p><p style="font-weight:700;">${r.accuracy ?? "—"}%</p></div>
-            <div><p class="text-xs text-muted">সময়</p><p style="font-weight:700;">${formatSeconds(r.timeTakenSeconds)}</p></div>
-          </div>
-          <p class="text-xs text-muted mt-3">সঠিক ${r.correctCount} • ভুল ${r.wrongCount} • অনুত্তরিত ${r.unansweredCount}</p>
-          <button class="btn btn-primary mt-3" id="resultCardBtn" style="width:100%;">🏆 সুন্দর রেজাল্ট কার্ড বানান</button>
-          <div id="resultCardOutput" class="mt-3"></div>
-        </div>
-        <p class="eyebrow mt-4">প্রশ্নভিত্তিক বিস্তারিত</p>
-        ${review.map((q, i) => `
-          <div class="glass card mt-2">
-            <p class="text-xs text-muted">প্রশ্ন ${i + 1} • ${subjectMap[q.subjectId] || ""} / ${chapterMap[q.chapterId] || ""}</p>
-            <p class="mt-1" style="font-weight:600;">${q.question_bn}</p>
-            <p class="text-xs mt-2">উত্তর: ${q.studentAnswer || "দেননি"} • সঠিক: ${q.correctAnswer} • <span style="font-weight:700;color:${q.status === "correct" ? "var(--color-success)" : q.status === "wrong" ? "var(--color-danger)" : "var(--text-muted)"};">${q.status === "correct" ? "সঠিক" : q.status === "wrong" ? "ভুল" : "অনুত্তরিত"}</span>${q.timeSeconds !== null ? ` • সময়: ${q.timeSeconds} সে.` : ""}</p>
-          </div>
-        `).join("")}
+    const st = allStudentsList.find(s => s.studentId === r.studentId);
+    const stName = st ? st.name : "অজানা শিক্ষার্থী";
+
+    modalContent.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <p style="font-weight:900; font-size:1.15rem; color:var(--text-primary);">${r.examName || "পরীক্ষা"}</p>
+        <button class="close-modal-btn" id="closeDetailBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px;height:20px;"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
       </div>
+
+      <div style="background:rgba(128,128,128,0.03); border:1px solid rgba(128,128,128,0.1); border-radius:16px; padding:20px;">
+        <p style="font-size:0.9rem; font-weight:800; color:var(--text-secondary); margin-bottom:16px;">শিক্ষার্থী: <span style="color:var(--text-primary);">${stName}</span> <span class="st-badge" style="margin-left:6px;">${r.studentId}</span></p>
+        
+        <div class="grid-2">
+          <div style="background:var(--surface); border:1px solid var(--surface-border); padding:14px; border-radius:12px; text-align:center;">
+            <p style="font-size:0.75rem; font-weight:800; color:var(--text-muted); margin-bottom:4px;">নম্বর</p>
+            <p style="font-weight:900; font-size:1.2rem; font-family:var(--font-num); color:var(--text-primary);">${r.obtainedMarks}/${r.totalMarks}</p>
+          </div>
+          <div style="background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.15); padding:14px; border-radius:12px; text-align:center;">
+            <p style="font-size:0.75rem; font-weight:800; color:#10b981; margin-bottom:4px;">শতাংশ</p>
+            <p style="font-weight:900; font-size:1.2rem; font-family:var(--font-num); color:#10b981;">${r.percentage}%</p>
+          </div>
+          <div style="background:var(--surface); border:1px solid var(--surface-border); padding:14px; border-radius:12px; text-align:center;">
+            <p style="font-size:0.75rem; font-weight:800; color:var(--text-muted); margin-bottom:4px;">সঠিকতা</p>
+            <p style="font-weight:900; font-size:1.2rem; font-family:var(--font-num); color:var(--text-primary);">${r.accuracy ?? "—"}%</p>
+          </div>
+          <div style="background:var(--surface); border:1px solid var(--surface-border); padding:14px; border-radius:12px; text-align:center;">
+            <p style="font-size:0.75rem; font-weight:800; color:var(--text-muted); margin-bottom:4px;">সময়</p>
+            <p style="font-weight:900; font-size:1rem; font-family:var(--font-num); color:var(--text-primary); margin-top:6px;">${formatSeconds(r.timeTakenSeconds)}</p>
+          </div>
+        </div>
+        
+        <p style="font-size:0.8rem; font-weight:700; color:var(--text-muted); text-align:center; margin-top:16px;">
+          সঠিক: <span style="color:#10b981;">${r.correctCount}</span> • ভুল: <span style="color:#ef4444;">${r.wrongCount}</span> • অনুত্তরিত: ${r.unansweredCount}
+        </p>
+
+        <button class="btn-glass btn-primary" id="resultCardBtn" style="width:100%; margin-top:20px; padding:14px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+          সুন্দর রেজাল্ট কার্ড বানান
+        </button>
+        <div id="resultCardOutput" class="mt-3"></div>
+      </div>
+
+      <p style="font-weight:900; font-size:1.05rem; color:var(--text-primary); margin:24px 0 16px; border-bottom:1px dashed var(--surface-border); padding-bottom:8px;">প্রশ্নভিত্তিক বিস্তারিত</p>
+      
+      ${review.map((q, i) => `
+        <div style="background:var(--surface); border:1px solid rgba(128,128,128,0.1); border-radius:14px; padding:16px; margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <p style="font-size:0.75rem; font-weight:700; color:var(--text-muted);">প্রশ্ন ${i + 1} • ${subjectMap[q.subjectId] || "—"} / ${chapterMap[q.chapterId] || "—"}</p>
+            <span style="font-size:0.7rem; font-weight:800; padding:2px 8px; border-radius:6px; ${q.status === "correct" ? "background:rgba(16,185,129,0.1); color:#10b981;" : q.status === "wrong" ? "background:rgba(239,68,68,0.1); color:#ef4444;" : "background:rgba(128,128,128,0.1); color:var(--text-muted);"}">${q.status === "correct" ? "সঠিক" : q.status === "wrong" ? "ভুল" : "অনুত্তরিত"}</span>
+          </div>
+          <p style="font-weight:800; font-size:0.95rem; color:var(--text-primary); line-height:1.5;">${q.question_bn}</p>
+          <div style="margin-top:12px; font-size:0.8rem; font-weight:700; color:var(--text-secondary); background:rgba(128,128,128,0.03); padding:10px; border-radius:10px;">
+            <p style="margin-bottom:6px;">উত্তর: <span style="color:${q.studentAnswer === q.correctAnswer ? "#10b981" : "#ef4444"};">${q.studentAnswer || "দেননি"}</span></p>
+            <p>সঠিক: <span style="color:#10b981;">${q.correctAnswer}</span> ${q.timeSeconds !== null ? `<span style="float:right; color:var(--text-muted);">সময়: ${q.timeSeconds} সে.</span>` : ""}</p>
+          </div>
+        </div>
+      `).join("")}
     `;
+
     document.getElementById("closeDetailBtn").addEventListener("click", () => overlay.classList.add("hidden"));
     document.getElementById("resultCardBtn").addEventListener("click", () => handleResultCard(r));
+
   } catch (err) {
     console.error(err);
-    overlay.innerHTML = `<div class="glass card">বিস্তারিত লোড করা যায়নি।</div>`;
+    modalContent.innerHTML = `<p style="text-align:center; font-weight:800; color:#ef4444;">বিস্তারিত লোড করা যায়নি।</p>`;
   }
 }
 
@@ -178,13 +350,7 @@ function fmtCardDate(ts) {
   return ts?.toDate ? ts.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" }) : "";
 }
 
-// ---------- Builds the modern gradient result-card HTML (rendered off-
-// screen, then captured to PNG by html2canvas). No photo — this card gets
-// shared outside the app, so only the student's name/scores go on it, never
-// their picture. Pulls together: name, this exam's %, correct/wrong/accuracy
-// for this exam, the student's overall exam count + average % across all
-// their approved results, their class rank for this exam, and how this
-// exam's % compares to the class average ("competitor" gap). ----------
+// ---------- Result Card Generation (Unchanged Logic) ----------
 async function buildResultCardHtml(r) {
   const [allStudents, myResults, allApproved, exam] = await Promise.all([
     getActiveStudents(),
@@ -200,10 +366,6 @@ async function buildResultCardHtml(r) {
     ? Math.round((myResults.reduce((sum, x) => sum + (Number(x.percentage) || 0), 0) / myResults.length) * 10) / 10
     : Number(r.percentage) || 0;
 
-  // Everyone (including this student) who has an approved result for this
-  // exact exam — used for both the rank and the class-average comparison.
-  // r itself might not be in allApproved yet if it's still pending, so make
-  // sure it's included either way.
   let sameExam = allApproved.filter(x => x.examId === r.examId);
   if (!sameExam.some(x => x.id === r.id)) sameExam = [...sameExam, r];
 
@@ -217,9 +379,6 @@ async function buildResultCardHtml(r) {
 
   const examDate = fmtCardDate(exam?.examDate) || fmtCardDate(r.submittedAt);
 
-  // Performance badge — drawn entirely in code (a plain letter-grade
-  // circle), never a device emoji font, so it renders identically on every
-  // phone instead of depending on whichever emoji set that device has.
   const pct = Number(r.percentage) || 0;
   let grade = "C", badgeText = "আরও চেষ্টা দরকার", badgeColor = "#f87171";
   if (pct >= 80) { grade = "A+"; badgeText = "অসাধারণ ফলাফল"; badgeColor = "#4ade80"; }
@@ -300,7 +459,8 @@ async function handleResultCard(r) {
   const btn = document.getElementById("resultCardBtn");
   const out = document.getElementById("resultCardOutput");
   btn.disabled = true;
-  btn.textContent = "কার্ড তৈরি হচ্ছে...";
+  btn.innerHTML = `<span class="spinner" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:8px;"></span> কার্ড তৈরি হচ্ছে...`;
+  
   try {
     const area = document.getElementById("cardArea");
     area.innerHTML = await buildResultCardHtml(r);
@@ -310,18 +470,20 @@ async function handleResultCard(r) {
     const fileName = `${(r.examName || "result").replace(/\s+/g, "_")}_${r.studentId}.png`;
 
     out.innerHTML = `
-      <img src="${dataUrl}" style="width:100%;border-radius:16px;margin-top:4px;">
-      <div class="flex gap-2 mt-3">
-        <button class="btn btn-secondary btn-sm" id="cardDownloadBtn" style="flex:1;">ডাউনলোড</button>
-        <button class="btn btn-primary btn-sm" id="cardShareBtn" style="flex:1;">শেয়ার করুন</button>
+      <img src="${dataUrl}" style="width:100%; border-radius:16px; margin-top:12px; border:1px solid rgba(128,128,128,0.1); box-shadow:0 8px 24px rgba(0,0,0,0.1);">
+      <div style="display:flex; gap:12px; margin-top:16px;">
+        <button class="btn-glass" id="cardDownloadBtn" style="flex:1;">ডাউনলোড করুন</button>
+        <button class="btn-glass btn-primary" id="cardShareBtn" style="flex:1;">শেয়ার করুন</button>
       </div>
     `;
+    
     document.getElementById("cardDownloadBtn").addEventListener("click", () => {
       const a = document.createElement("a");
       a.href = dataUrl;
       a.download = fileName;
       a.click();
     });
+    
     document.getElementById("cardShareBtn").addEventListener("click", async () => {
       try {
         const blob = await (await fetch(dataUrl)).blob();
@@ -329,18 +491,21 @@ async function handleResultCard(r) {
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           await navigator.share({ files: [file], title: fileName });
         } else {
-          showToast("এই ব্রাউজারে সরাসরি শেয়ার সাপোর্ট নেই — ডাউনলোড করে শেয়ার করো।", "error");
+          showToast("এই ব্রাউজারে সরাসরি শেয়ার সাপোর্ট নেই — ডাউনলোড করে শেয়ার করুন।", "error");
         }
-      } catch { /* user cancelled the share sheet — not an error */ }
+      } catch { }
     });
   } catch (err) {
     console.error(err);
     showToast("রেজাল্ট কার্ড তৈরি করা যায়নি।", "error");
   } finally {
     btn.disabled = false;
-    btn.textContent = "🏆 সুন্দর রেজাল্ট কার্ড বানান";
+    btn.innerHTML = ` সুন্দর রেজাল্ট কার্ড বানান`;
   }
 }
 </script>
 </body>
 </html>
+    
+
+        
