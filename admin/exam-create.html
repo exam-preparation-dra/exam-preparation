@@ -10,12 +10,12 @@
 <style>
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
   body { overflow-x: hidden; background: var(--bg); }
-  .app-shell { max-width: 800px; padding-bottom: 40px; margin: 0 auto; }
+  .app-shell { max-width: 800px; padding-bottom: 50px; margin: 0 auto; }
 
   /* ===== Premium Glass Cards ===== */
   .glass-card {
-    background: rgba(128, 128, 128, 0.03); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 20px; padding: 24px; margin-bottom: 20px;
+    background: rgba(128, 128, 128, 0.03); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 20px; padding: 24px; margin-bottom: 24px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.02); transition: all 0.3s ease;
   }
   .section-title { font-size: 1.15rem; font-weight: 900; color: var(--text-primary); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px dashed var(--surface-border); padding-bottom: 12px; }
@@ -53,7 +53,7 @@
   /* ===== AI Rows ===== */
   .ai-row { background: rgba(128,128,128,0.02); border: 1px solid rgba(128,128,128,0.1); border-radius: 16px; padding: 16px; margin-bottom: 16px; position: relative; }
   .remove-ai-btn { position: absolute; top: 16px; right: 16px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; border-radius: 10px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-  .remove-ai-btn:hover { background: #ef4444; color: #fff; }
+  .remove-ai-btn:hover { background: #ef4444; color: #fff; box-shadow: 0 4px 12px rgba(239,68,68,0.2); }
 
   /* ===== Selected Questions List ===== */
   .sel-question-card { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 16px; padding: 16px; margin-bottom: 12px; transition: 0.2s; }
@@ -66,10 +66,10 @@
   .topbar {
     position: sticky; top: 0; z-index: 50;
     margin: calc(var(--space-5) * -1) calc(var(--space-4) * -1) var(--space-4);
-    padding: 16px; background: rgba(var(--bg-rgb, 10,14,26), 0.85);
+    padding: 16px 20px; background: rgba(var(--bg-rgb, 10,14,26), 0.85);
     backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid rgba(128,128,128,0.1);
-    display: flex; justify-content: space-between; align-items: center;
+    display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.02);
   }
 </style>
 </head>
@@ -79,10 +79,9 @@
 </div>
 
 <script type="module">
-import { initTheme, toggleTheme, icons, showToast, friendlyError, aiBadge } from "../js/utils/ui-utils.js";
+import { initTheme, toggleTheme, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
-import { initAdminPwaInstall } from "../pwa-install.js";
-import { getFullSyllabusTree, buildNameMap } from "../js/utils/syllabus-utils.js";
+import { getFullSyllabusTree } from "../js/utils/syllabus-utils.js";
 import { getQuestionsByIds, addQuestion } from "../js/utils/question-utils.js";
 import { createExam, updateExam, getExamById, calculateTotalMarks } from "../js/utils/exam-utils.js";
 import { generateQuestionsFromImage, parseAiImportText, promptForApiKey, fileToImagePart } from "../js/utils/ai-import-utils.js";
@@ -100,7 +99,6 @@ requireAdmin(async () => {
   shell.innerHTML = template();
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
   document.getElementById("logoutBtn").addEventListener("click", adminLogout);
-  initAdminPwaInstall("installBtn");
   
   document.getElementById("examForm").addEventListener("submit", handleSubmit);
   document.getElementById("marksPerQuestion").addEventListener("input", updateTotalMarks);
@@ -116,7 +114,7 @@ requireAdmin(async () => {
   document.getElementById("aiGenerateBtn").addEventListener("click", handleAiGenerate);
 
   tree = await getFullSyllabusTree();
-  populateTargetBatch();
+  populateTargetBatch(); // <-- NEW FEATURE POPULATED
   populateQuickAddSyllabus();
   addAiRow();
 
@@ -151,15 +149,14 @@ function template() {
   return `
     <div class="topbar">
       <div style="display:flex; align-items:center; gap:12px;">
-        <a href="../admin/exams.html" class="btn-glass" style="width:40px; height:40px; padding:0; border-radius:12px;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        <a href="../admin/exams.html" class="btn-glass" style="width:42px; height:42px; padding:0; border-radius:12px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
         </a>
-        <h2 style="font-size:1.15rem; font-weight:900; color:var(--text-primary);">${editId ? "পরীক্ষা সম্পাদনা" : "নতুন পরীক্ষা তৈরি"}</h2>
+        <h2 style="font-size:1.15rem; font-weight:900; color:var(--text-primary); margin:0;">${editId ? "পরীক্ষা সম্পাদনা" : "নতুন পরীক্ষা তৈরি"}</h2>
       </div>
       <div style="display:flex; gap:10px;">
         <button class="theme-toggle" id="themeToggle" style="margin:0;"><span class="theme-toggle-thumb"></span></button>
-        <button class="btn-glass hidden" id="installBtn" style="width:40px;height:40px;padding:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M12 3v13m0 0l-4-4m4 4l4-4M5 21h14"/></svg></button>
-        <button class="btn-glass" id="logoutBtn" style="width:40px;height:40px;padding:0;border-color:rgba(239,68,68,0.3);color:#ef4444;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:18px;height:18px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+        <button class="btn-glass" id="logoutBtn" style="width:42px;height:42px;padding:0;border-color:rgba(239,68,68,0.3);color:#ef4444;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:18px;height:18px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
       </div>
     </div>
 
@@ -177,7 +174,7 @@ function template() {
         </div>
         <div class="field">
           <label>লক্ষ্য ব্যাচ (Target Batch)</label>
-          <select class="input-glass" id="examTargetBatch" required>
+          <select class="input-glass" id="examTargetBatch" required style="border-color:var(--color-accent); background:rgba(var(--color-accent-rgb),0.02);">
             <option value="all">সকল ব্যাচ (সবার জন্য উন্মুক্ত)</option>
             <!-- Batches populated by JS -->
           </select>
@@ -189,16 +186,16 @@ function template() {
         <textarea class="input-glass" id="examDesc" placeholder="পরীক্ষার্থীদের জন্য কোনো বিশেষ নির্দেশনা থাকলে লিখুন..."></textarea>
       </div>
       
-      <div class="grid-2 mt-2">
+      <div class="grid-2 mt-3">
         <div class="field"><label>পরীক্ষার তারিখ</label><input class="input-glass" type="date" id="examDate" required></div>
         <div class="field"><label>সময়কাল (মিনিট)</label><input class="input-glass" type="number" min="1" id="examDuration" placeholder="যেমন: 30" required></div>
         <div class="field"><label>তথ্যগত সময় (ঐচ্ছিক)</label><input class="input-glass" id="examTime" placeholder="যেমন: সকাল ১০:০০"></div>
         <div class="field"><label>প্রতি প্রশ্নে নম্বর</label><input class="input-glass" type="number" min="1" id="marksPerQuestion" value="1" required></div>
       </div>
       
-      <div style="background:rgba(var(--color-accent-rgb), 0.1); border:1px solid rgba(var(--color-accent-rgb), 0.2); padding:16px; border-radius:14px; text-align:center; margin-top:12px;">
-        <p style="font-size:0.9rem; font-weight:800; color:var(--text-secondary);">মোট নম্বর</p>
-        <p style="font-size:2rem; font-weight:900; color:var(--color-accent); font-family:var(--font-num);" id="totalMarksDisplay">0</p>
+      <div style="background:rgba(var(--color-accent-rgb), 0.08); border:1px solid rgba(var(--color-accent-rgb), 0.2); padding:16px; border-radius:14px; text-align:center; margin-top:16px;">
+        <p style="font-size:0.95rem; font-weight:800; color:var(--text-secondary);">মোট নম্বর</p>
+        <p style="font-size:2.2rem; font-weight:900; color:var(--color-accent); font-family:var(--font-num); line-height:1;" id="totalMarksDisplay">0</p>
       </div>
       
       <p id="formError" class="text-sm hidden mt-3" style="color:#ef4444; font-weight:700; text-align:center;"></p>
@@ -224,12 +221,12 @@ function template() {
         আরেকটি বিষয় যোগ করুন
       </button>
 
-      <div class="mt-4 hidden" id="aiGenerateProgress" style="background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.2); padding:16px; border-radius:14px; text-align:center;">
+      <div class="mt-4 hidden" id="aiGenerateProgress" style="background:rgba(139,92,246,0.05); border:1px solid rgba(139,92,246,0.2); padding:16px; border-radius:14px; text-align:center;">
         <div class="spinner" style="width:24px;height:24px; border-color:rgba(139,92,246,0.3); border-top-color:#8b5cf6; margin:0 auto 10px;"></div>
-        <p style="font-size:0.9rem; font-weight:800; color:#8b5cf6;" id="aiGenerateProgressText">প্রশ্ন তৈরি শুরু হচ্ছে...</p>
+        <p style="font-size:0.95rem; font-weight:800; color:#8b5cf6;" id="aiGenerateProgressText">প্রশ্ন তৈরি শুরু হচ্ছে...</p>
       </div>
       
-      <button type="button" class="btn-glass" id="aiGenerateBtn" style="width:100%; background:rgba(139,92,246,0.1); color:#8b5cf6; border-color:rgba(139,92,246,0.3); padding:16px; margin-top:16px; font-size:1rem;">
+      <button type="button" class="btn-glass" id="aiGenerateBtn" style="width:100%; background:rgba(139,92,246,0.1); color:#8b5cf6; border-color:rgba(139,92,246,0.3); padding:16px; margin-top:16px; font-size:1.05rem;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         AI দিয়ে জেনারেট করুন
       </button>
@@ -237,12 +234,12 @@ function template() {
 
     <!-- Selected Questions -->
     <div class="glass-card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
         <div class="section-title" style="margin:0; border:none; padding:0;">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
           নির্বাচিত প্রশ্ন (<span id="selCount">0</span>)
         </div>
-        <button type="button" class="btn-glass" id="goToBank" style="font-size:0.8rem; padding:8px 14px;">প্রশ্ন ব্যাংক থেকে খুঁজুন</button>
+        <button type="button" class="btn-glass" id="goToBank" style="font-size:0.85rem; padding:10px 16px;">প্রশ্ন ব্যাংক থেকে খুঁজুন</button>
       </div>
       
       <div id="selectedList"></div>
@@ -333,8 +330,8 @@ function addAiRow() {
 function aiRowHtml(rowId) {
   return `
     <div class="ai-row" id="aiRow-${rowId}">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-        <p style="font-size:0.85rem; font-weight:800; color:var(--text-secondary);">সিলেকশন #${rowId}</p>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <p style="font-size:0.9rem; font-weight:800; color:var(--text-secondary);">সিলেকশন #${rowId}</p>
         <button type="button" class="remove-ai-btn remove-ai-row-btn" title="মুছে ফেলুন">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
@@ -488,9 +485,9 @@ function renderSelectedList() {
         <p style="font-size:0.95rem; font-weight:800; color:var(--text-primary); line-height:1.4;">${q.question_bn}</p>
       </div>
       <div style="display:flex; gap:6px; flex-shrink:0;">
-        <button class="action-icon up-btn" data-idx="${idx}" ${idx === 0 ? "disabled style='opacity:0.3; cursor:not-allowed;'" : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
-        <button class="action-icon down-btn" data-idx="${idx}" ${idx === selectedQuestions.length - 1 ? "disabled style='opacity:0.3; cursor:not-allowed;'" : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;"><path d="M12 5v14M5 12l7 7 7-7"/></svg></button>
-        <button class="action-icon delete remove-btn" data-idx="${idx}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        <button type="button" class="action-icon up-btn" data-idx="${idx}" ${idx === 0 ? "disabled style='opacity:0.3; cursor:not-allowed;'" : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+        <button type="button" class="action-icon down-btn" data-idx="${idx}" ${idx === selectedQuestions.length - 1 ? "disabled style='opacity:0.3; cursor:not-allowed;'" : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;"><path d="M12 5v14M5 12l7 7 7-7"/></svg></button>
+        <button type="button" class="action-icon delete remove-btn" data-idx="${idx}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
     </div>
   `).join("");
@@ -573,7 +570,7 @@ async function handleSubmit(e) {
     informationalTime: document.getElementById("examTime").value.trim(),
     durationMinutes: Number(document.getElementById("examDuration").value),
     marksPerQuestion: Number(document.getElementById("marksPerQuestion").value),
-    targetBatch: document.getElementById("examTargetBatch").value, // TARGET BATCH ADDED
+    targetBatch: document.getElementById("examTargetBatch").value, // Target Batch Save Logic
     subjectIds, chapterIds,
     questionIds: selectedQuestions.map(q => q.id)
   };
