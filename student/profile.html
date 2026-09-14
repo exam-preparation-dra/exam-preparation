@@ -163,6 +163,114 @@
 @media(max-width:600px){.badge-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.badge-item{border-radius:15px;padding:11px 8px}.premium-badge{width:58px;height:58px}.badge-core{width:43px;height:43px}.badge-core svg{width:22px;height:22px}.badge-head h2{font-size:1.08rem}}
 </style>
 
+
+<style id="badge-polish-fix">
+.advanced-badges{
+  margin:0;
+  padding:18px;
+  overflow:hidden;
+  background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(248,250,252,.96));
+  border:1px solid rgba(15,23,42,.08);
+  box-shadow:0 12px 38px rgba(15,23,42,.07);
+}
+@media (prefers-color-scheme:dark){
+  .advanced-badges{
+    background:linear-gradient(145deg,rgba(20,24,36,.98),rgba(14,18,29,.98));
+    border-color:rgba(255,255,255,.09);
+    box-shadow:0 12px 38px rgba(0,0,0,.25);
+  }
+}
+.badge-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.badge-head h2{margin:3px 0;font-size:1.24rem;letter-spacing:-.02em;color:var(--text-primary)}
+.badge-head p{margin:0;color:var(--text-muted);font-size:.72rem;font-weight:750}
+.badge-total{font-size:1.45rem;font-weight:950;color:var(--color-accent);white-space:nowrap}
+.badge-total span{font-size:.72rem;color:var(--text-muted);font-weight:800}
+.badge-kicker{font-size:.58rem;letter-spacing:.17em;font-weight:950;color:var(--color-accent);opacity:.8}
+.badge-progress{height:6px;border-radius:99px;background:rgba(100,116,139,.14);margin:12px 1px 14px;overflow:hidden}
+.badge-progress i,.mini-progress i,.detail-progress i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#d6a13b,#8b5cf6,#06b6d4);transition:width .7s cubic-bezier(.2,.8,.2,1)}
+.almost-box{
+  border:1px solid rgba(139,92,246,.16);
+  background:linear-gradient(135deg,rgba(139,92,246,.07),rgba(6,182,212,.045));
+  border-radius:17px;padding:11px 12px;margin-bottom:14px;
+}
+.almost-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.almost-title span{font-size:.72rem;font-weight:950;color:var(--text-primary)}
+.almost-title small{font-size:.58rem;color:var(--color-accent);font-weight:800}
+.almost-item{
+  width:100%;display:flex;align-items:center;gap:10px;border:0;background:transparent;
+  color:var(--text-primary);text-align:left;padding:7px 0;cursor:pointer
+}
+.almost-item + .almost-item{border-top:1px solid rgba(100,116,139,.09)}
+.almost-item .premium-badge{width:50px;height:50px;flex:none}
+.almost-item .badge-core{width:38px;height:38px;border-radius:13px}
+.almost-item strong,.almost-item small,.almost-item em{display:block}
+.almost-item strong{font-size:.7rem;font-weight:900}
+.almost-item small{font-size:.59rem;line-height:1.35;color:var(--text-muted);margin-top:2px}
+.almost-item em{font-size:.6rem;color:#7c3aed;font-style:normal;font-weight:850;margin-top:2px}
+.badge-filter{display:flex;gap:7px;margin-bottom:13px;overflow-x:auto;scrollbar-width:none}
+.badge-filter::-webkit-scrollbar{display:none}
+.badge-filter button{
+  border:1px solid rgba(100,116,139,.16);background:rgba(100,116,139,.045);
+  color:var(--text-muted);border-radius:999px;padding:7px 11px;
+  font:inherit;font-size:.62rem;font-weight:850;white-space:nowrap;cursor:pointer
+}
+.badge-filter button b{font-size:.58rem;opacity:.7}
+.badge-filter button.active{
+  background:linear-gradient(135deg,#c99335,#a8751e);
+  border-color:#c99335;color:#fff;box-shadow:0 5px 16px rgba(201,147,53,.2)
+}
+.badge-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.badge-item{
+  min-width:0;min-height:174px;border:1px solid rgba(100,116,139,.13);
+  background:rgba(255,255,255,.68);border-radius:18px;padding:12px 8px;
+  text-align:center;color:var(--text-primary);cursor:pointer;position:relative;overflow:hidden;
+  transition:transform .22s,box-shadow .22s,border-color .22s
+}
+@media (prefers-color-scheme:dark){.badge-item{background:rgba(255,255,255,.035)}}
+.badge-item:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(15,23,42,.09);border-color:rgba(139,92,246,.28)}
+.badge-item strong{display:block;font-size:.68rem;line-height:1.22;margin-top:8px;font-weight:950}
+.badge-item>span{display:block;font-size:.57rem;opacity:.55;margin-top:3px}
+.badge-item>small{display:block;font-size:.55rem;line-height:1.35;margin-top:7px;color:var(--text-muted)}
+.badge-item>em{display:block;font-size:.56rem;font-style:normal;margin-top:4px;color:var(--text-muted);font-weight:800}
+.badge-item.locked{opacity:.86}
+.badge-item.locked .premium-badge{filter:saturate(.55)}
+.badge-item.earned{border-color:rgba(201,147,53,.2);background:linear-gradient(145deg,rgba(201,147,53,.055),rgba(139,92,246,.035))}
+.badge-item.earned .badge-core{box-shadow:0 8px 26px color-mix(in srgb,var(--badge-accent) 28%,transparent),inset 0 0 18px rgba(255,255,255,.12)}
+.claimed-label{color:#a8751e!important;font-weight:950!important;letter-spacing:.08em}
+.mini-progress{height:4px;background:rgba(100,116,139,.13);border-radius:8px;margin:8px 6px 0;overflow:hidden}
+.premium-badge{width:62px;height:62px;position:relative;display:grid;place-items:center;margin:auto}
+.badge-core{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;color:var(--badge-accent);
+ background:linear-gradient(145deg,var(--badge-soft),rgba(255,255,255,.82));border:1px solid color-mix(in srgb,var(--badge-accent) 38%,transparent);
+ box-shadow:0 8px 22px color-mix(in srgb,var(--badge-accent) 18%,transparent),inset 0 0 18px rgba(255,255,255,.5);position:relative;z-index:2}
+.badge-core svg{width:24px;height:24px}
+.badge-orbit{position:absolute;inset:4px;border:1px dashed color-mix(in srgb,var(--badge-accent) 42%,transparent);border-radius:50%;animation:badgeSpin 12s linear infinite}
+.badge-rarity{position:absolute;right:-3px;bottom:-1px;background:var(--badge-accent);color:#fff;border-radius:999px;padding:2px 5px;font-size:.41rem;font-weight:950;z-index:3}
+.is-locked .badge-core{filter:grayscale(.7);opacity:.62;background:linear-gradient(145deg,#f8fafc,#e2e8f0)}
+@media (prefers-color-scheme:dark){.is-locked .badge-core{background:linear-gradient(145deg,#263244,#111827)}}
+.badge-modal{position:fixed;inset:0;background:rgba(15,23,42,.66);backdrop-filter:blur(12px);display:grid;place-items:center;z-index:9999;padding:20px;animation:modalIn .22s ease}
+.badge-modal-card{width:min(360px,100%);background:var(--surface);border:1px solid var(--surface-border);border-radius:27px;padding:27px 22px;text-align:center;box-shadow:0 28px 90px rgba(0,0,0,.3)}
+.badge-modal-card .premium-badge{width:108px;height:108px}.badge-modal-card .badge-core{width:76px;height:76px;border-radius:22px}.badge-modal-card .badge-core svg{width:37px;height:37px}
+.badge-modal-card h3{margin:12px 0 7px;font-size:1.14rem}.badge-modal-rarity{font-size:.58rem;font-weight:950;opacity:.6}.how-to{text-align:left;line-height:1.55;font-size:.77rem;background:rgba(100,116,139,.07);border-radius:14px;padding:12px}.detail-progress{height:6px;background:rgba(100,116,139,.13);border-radius:8px;overflow:hidden}
+.badge-close{margin-top:12px;border:0;border-radius:12px;padding:9px 18px;font-weight:850;cursor:pointer}
+.badge-item.earned{animation:earnedFloat 4.5s ease-in-out infinite}
+@keyframes badgeSpin{to{transform:rotate(360deg)}}
+@keyframes earnedFloat{50%{transform:translateY(-2px)}}
+@keyframes modalIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+@media(max-width:600px){.advanced-badges{padding:15px}.badge-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.badge-item{min-height:170px}.premium-badge{width:58px;height:58px}.badge-core{width:43px;height:43px}.badge-core svg{width:22px;height:22px}}
+</style>
+
+
+<style id="badge-unlock-polish">
+.badge-unlock-overlay{position:fixed;inset:0;z-index:12000;display:grid;place-items:center;padding:20px;background:rgba(15,23,42,.58);backdrop-filter:blur(14px);animation:unlockFade .22s ease}
+.badge-unlock-card{position:relative;width:min(330px,100%);padding:28px 22px 22px;text-align:center;border-radius:28px;border:1px solid rgba(255,255,255,.18);background:linear-gradient(145deg,#fffdf7,#f5f3ff);color:#1e293b;box-shadow:0 30px 100px rgba(0,0,0,.3);overflow:hidden;animation:unlockPop .7s cubic-bezier(.18,.9,.2,1)}
+.badge-unlock-card:before{content:"";position:absolute;inset:-45%;background:radial-gradient(circle,rgba(245,158,11,.2),rgba(139,92,246,.12),transparent 60%);animation:unlockRotate 5s linear infinite}
+.badge-unlock-card>*{position:relative}
+.badge-unlock-card .premium-badge{width:118px;height:118px;margin:0 auto 7px}.badge-unlock-card .badge-core{width:82px;height:82px;border-radius:25px}.badge-unlock-card .badge-core svg{width:40px;height:40px}
+.unlock-label{font-size:.58rem;letter-spacing:.16em;font-weight:950;color:#a8751e;margin-top:4px}.badge-unlock-card h3{margin:8px 0 5px;font-size:1.25rem;font-weight:950}.badge-unlock-card p{margin:0 auto 14px;max-width:260px;font-size:.72rem;line-height:1.5;color:#64748b}.badge-unlock-card button{border:0;border-radius:12px;padding:9px 20px;background:linear-gradient(135deg,#c99335,#8b5cf6);color:#fff;font-weight:900;cursor:pointer;box-shadow:0 8px 20px rgba(139,92,246,.22)}
+.unlock-spark{position:absolute!important;width:7px;height:7px;border-radius:50%;background:#f59e0b;top:28px;left:32px;box-shadow:225px 30px 0 #8b5cf6,170px 230px 0 #06b6d4,35px 200px 0 #ec4899;animation:sparkFloat 1.8s ease-in-out infinite}
+@keyframes unlockFade{from{opacity:0}to{opacity:1}}@keyframes unlockPop{0%{opacity:0;transform:scale(.55) translateY(25px) rotate(-3deg)}55%{opacity:1;transform:scale(1.06) translateY(-3px) rotate(1deg)}100%{transform:scale(1)}}@keyframes unlockRotate{to{transform:rotate(360deg)}}@keyframes sparkFloat{50%{transform:scale(1.7) rotate(12deg);opacity:.7}}
+</style>
+
 </head>
 <body oncontextmenu="return false;"> <!-- Blocks Right Click Globally -->
 <div class="app-shell" id="shell">
@@ -308,29 +416,83 @@ function badgeVisual(badge, earned) {
 function renderBadgeCollection(state) {
   const host = document.getElementById("badgeCollectionAdvanced");
   if (!host) return;
-  const earned = state.filter(x=>x.earned).length;
-  const almost = state.filter(x=>!x.earned && x.progress && x.progress.max>1)
-    .sort((a,b)=>(b.progress.value/b.progress.max)-(a.progress.value/a.progress.max)).slice(0,3);
+
+  const claimed = state.filter(x => x.earned);
+  const locked = state.filter(x => !x.earned);
+  const almost = locked
+    .filter(x => x.progress && x.progress.max > 1)
+    .sort((a,b) => (b.progress.value / b.progress.max) - (a.progress.value / a.progress.max))
+    .slice(0, 3);
 
   host.innerHTML = `<section class="glass-card advanced-badges">
     <div class="badge-head">
-      <div><div class="badge-kicker">ACHIEVEMENTS</div><h2>My Badge Collection</h2><p>${earned} / ${state.length} unlocked</p></div>
-      <div class="badge-total">${earned}<span>/${state.length}</span></div>
+      <div>
+        <div class="badge-kicker">ACHIEVEMENTS</div>
+        <h2>My Badge Collection</h2>
+        <p>${claimed.length} / ${state.length} claimed</p>
+      </div>
+      <div class="badge-total">${claimed.length}<span>/${state.length}</span></div>
     </div>
-    <div class="badge-progress"><i style="width:${state.length?earned/state.length*100:0}%"></i></div>
-    ${almost.length?`<div class="almost-box"><b>Next closest</b>${almost.map(x=>`<button class="almost-item" data-badge-id="${x.id}">${badgeVisual(x,false)}<span><strong>${x.title}</strong><small>${x.requirement}</small><em>${x.progress.text}</em></span></button>`).join("")}</div>`:""}
-    <div class="badge-filter"><button class="active" data-filter="all">All</button><button data-filter="earned">Unlocked</button><button data-filter="locked">Locked</button></div>
-    <div class="badge-grid">${state.map(x=>`<button class="badge-item ${x.earned?"earned":"locked"}" data-badge-id="${x.id}" data-earned="${x.earned}">
-      ${badgeVisual(x,x.earned)}<strong>${x.title}</strong><span>${x.category}</span><small>${x.earned?"UNLOCKED":x.requirement}</small>${x.progress?`<div class="mini-progress"><i style="width:${Math.min(100,x.progress.value/x.progress.max*100)}%"></i></div><em>${x.progress.text}</em>`:""}
-    </button>`).join("")}</div>
+
+    <div class="badge-progress">
+      <i style="width:${state.length ? (claimed.length / state.length) * 100 : 0}%"></i>
+    </div>
+
+    ${almost.length ? `<div class="almost-box">
+      <div class="almost-title"><span>Closest to unlock</span><small>আর একটু এগোলেই</small></div>
+      ${almost.map(x => `<button class="almost-item" type="button" data-badge-id="${x.id}">
+        ${badgeVisual(x,false)}
+        <span>
+          <strong>${x.title}</strong>
+          <small>${x.requirement}</small>
+          <em>${x.progress.text}</em>
+        </span>
+      </button>`).join("")}
+    </div>` : ""}
+
+    <div class="badge-filter">
+      <button type="button" class="active" data-filter="claimed">Claimed <b>${claimed.length}</b></button>
+      <button type="button" data-filter="locked">Locked <b>${locked.length}</b></button>
+      <button type="button" data-filter="all">All <b>${state.length}</b></button>
+    </div>
+
+    <div class="badge-grid">
+      ${state.map(x => `<button type="button"
+          class="badge-item ${x.earned ? "earned" : "locked"}"
+          data-badge-id="${x.id}" data-earned="${x.earned}">
+        ${badgeVisual(x,x.earned)}
+        <strong>${x.title}</strong>
+        <span>${x.category}</span>
+        ${x.earned
+          ? `<small class="claimed-label">CLAIMED</small>`
+          : `<small>${x.requirement}</small>`}
+        ${!x.earned && x.progress ? `<div class="mini-progress">
+          <i style="width:${Math.min(100,(x.progress.value / x.progress.max) * 100)}%"></i>
+        </div><em>${x.progress.text}</em>` : ""}
+      </button>`).join("")}
+    </div>
   </section>`;
 
-  host.querySelectorAll("[data-filter]").forEach(btn=>btn.onclick=()=>{
-    host.querySelectorAll("[data-filter]").forEach(b=>b.classList.remove("active")); btn.classList.add("active");
-    const f=btn.dataset.filter;
-    host.querySelectorAll(".badge-item").forEach(el=>el.style.display=f==="all"||el.dataset.earned===(f==="earned"?"true":"false")?"":"none");
+  const applyFilter = f => {
+    host.querySelectorAll(".badge-item").forEach(el => {
+      const earned = el.dataset.earned === "true";
+      el.style.display = f === "all" || (f === "claimed" && earned) || (f === "locked" && !earned) ? "" : "none";
+    });
+  };
+
+  host.querySelectorAll("[data-filter]").forEach(btn => {
+    btn.onclick = () => {
+      host.querySelectorAll("[data-filter]").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      applyFilter(btn.dataset.filter);
+    };
   });
-  host.querySelectorAll("[data-badge-id]").forEach(el=>el.onclick=()=>showBadgeDetail(state.find(x=>x.id===el.dataset.badgeId)));
+
+  host.querySelectorAll("[data-badge-id]").forEach(el => {
+    el.onclick = () => showBadgeDetail(state.find(x => x.id === el.dataset.badgeId));
+  });
+
+  applyFilter("claimed");
 }
 
 function showBadgeDetail(b) {
@@ -340,6 +502,35 @@ function showBadgeDetail(b) {
   div.innerHTML=`<div class="badge-modal-card">${badgeVisual(b,b.earned)}<div class="badge-modal-rarity">${b.rarity}</div><h3>${b.title}</h3><p class="how-to"><b>কীভাবে অর্জন করবে?</b><br>${b.requirement}</p>${b.progress?`<div class="detail-progress"><i style="width:${Math.min(100,b.progress.value/b.progress.max*100)}%"></i></div><p>${b.progress.text}</p>`:""}<button class="badge-close">Close</button></div>`;
   document.body.appendChild(div); div.onclick=e=>{if(e.target===div||e.target.classList.contains("badge-close"))div.remove()};
 }
+
+
+function showBadgeUnlocks(state) {
+  try {
+    const key = `badge-seen-${student.studentId}`;
+    const previous = JSON.parse(localStorage.getItem(key) || "[]");
+    const prevSet = new Set(previous);
+    const fresh = state.filter(b => b.earned && !prevSet.has(b.id));
+    localStorage.setItem(key, JSON.stringify(state.filter(b=>b.earned).map(b=>b.id)));
+    if (!fresh.length) return;
+
+    const b = fresh[0];
+    const overlay = document.createElement("div");
+    overlay.className = "badge-unlock-overlay";
+    overlay.innerHTML = `<div class="badge-unlock-card">
+      <div class="unlock-spark"></div>
+      ${badgeVisual(b,true)}
+      <div class="unlock-label">BADGE CLAIMED</div>
+      <h3>${b.title}</h3>
+      <p>${b.requirement}</p>
+      <button type="button">Continue</button>
+    </div>`;
+    document.body.appendChild(overlay);
+    const close = () => overlay.remove();
+    overlay.addEventListener("click", e => { if (e.target === overlay || e.target.closest("button")) close(); });
+    setTimeout(close, 6500);
+  } catch {}
+}
+
 
 function getBadgeContext(results, gData, rank, subjectStats, chapterStats, topicStats) {
   const arr=results||[], nums=k=>arr.reduce((s,r)=>s+Number(r[k]||0),0);
@@ -390,6 +581,7 @@ async function initAdvancedBadges() {
     const ctx=getBadgeContext(results,gData,rank,subjectStats,chapterStats,topicStats);
     const state=buildBadgeCatalog(ctx).map(b=>({...b,earned:!!b.check(ctx),progress:b.progress?b.progress(ctx):null}));
     renderBadgeCollection(state);
+    showBadgeUnlocks(state);
     const old=document.getElementById("badgeCollectionAdvancedOld");
     if(old) old.remove();
   } catch(e) { console.warn("Advanced badges unavailable",e); }
@@ -427,8 +619,6 @@ async function renderPage() {
     ${renderStudentHeader(student, "profile")}
     
     <div id="identitySection" class="glass-card profile-header mt-4"><div class="spinner" style="margin: 20px auto;"></div></div>
-<div id="badgeCollectionAdvanced"></div>
-
     <!-- Tab Navigation -->
     <div class="tab-nav">
       <button class="tab-btn active" onclick="switchTab('tab-overview')">
@@ -447,6 +637,7 @@ async function renderPage() {
 
     <div id="tab-overview" class="tab-content active">
       <div id="topperSection"></div>
+      <div id="badgeCollectionAdvanced"></div>
     </div>
     <div id="tab-stats" class="tab-content">
       <div id="statsSection"></div>
@@ -700,11 +891,26 @@ async function buildProfileCardHtml(studentData) {
   const totalPoints = rank?.totalPoints || 0;
   
   const gData = await computeGamificationData();
-  const counts = gData.badgeCounts[student.studentId] || { monthlyOverall: 0, monthlyClass: 0, weeklyOverall: 0, weeklyClass: 0 };
-  const examCount = gData.examCounts[student.studentId] || 0;
-  const attendanceMilestones = attendanceBadgesEarned(examCount);
-  const totalBadges = (counts.monthlyOverall) + (counts.weeklyOverall) + attendanceMilestones.length;
-
+  const examCount = gData.examCounts?.[student.studentId] || 0;
+  let claimedBadgeNames = [];
+  try {
+    const [results, subjectsSnap, chaptersSnap, topicsSnap] = await Promise.all([
+      getApprovedResults(student.studentId),
+      getDocs(collection(db, "subjects")),
+      getDocs(collection(db, "chapters")),
+      getDocs(collection(db, "topics"))
+    ]);
+    const subjectMap={}, chapterMap={}, topicMap={};
+    subjectsSnap.forEach(d=>{const x=d.data();subjectMap[d.id]=x.name_bn||x.name_en||d.id});
+    chaptersSnap.forEach(d=>{const x=d.data();chapterMap[d.id]=x.name_bn||x.name_en||d.id});
+    topicsSnap.forEach(d=>{const x=d.data();topicMap[d.id]=x.name_bn||x.name_en||d.id});
+    const subjectStats=computeSubjectStats(results,subjectMap).map(x=>({...x,id:x.subjectId}));
+    const chapterStats=computeChapterStats(results,chapterMap).map(x=>({...x,id:x.chapterId}));
+    const topicStats=computeTopicStats(results,topicMap).map(x=>({...x,id:x.topicId}));
+    const ctx=getBadgeContext(results,gData,rank,subjectStats,chapterStats,topicStats);
+    claimedBadgeNames=buildBadgeCatalog(ctx).filter(b=>b.check(ctx)).map(b=>b.title);
+  } catch {}
+  const totalBadges = claimedBadgeNames.length;
   const photoURL = studentData.photoURL || null;
   const badgeColor = "#4ade80"; 
 
@@ -734,6 +940,13 @@ async function buildProfileCardHtml(studentData) {
           <p style="margin:4px 0 0;line-height:1.3;font-size:12px;color:#94a3b8;font-weight:600;">পরীক্ষা দিয়েছে</p>
         </div>
       </div>
+      ${claimedBadgeNames.length ? `
+      <div style="margin:16px 20px 0;padding:12px 14px;background:rgba(255,255,255,0.055);border:1px solid rgba(255,255,255,0.10);border-radius:16px;">
+        <p style="margin:0 0 9px;font-size:11px;color:#cbd5e1;font-weight:800;text-align:left;">অর্জিত ব্যাজ</p>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;">
+          ${claimedBadgeNames.slice(0,8).map(name => `<span style="padding:6px 9px;border-radius:999px;background:rgba(201,147,53,.18);border:1px solid rgba(201,147,53,.28);color:#f4c66b;font-size:10px;font-weight:800;">${name}</span>`).join("")}
+        </div>
+      </div>` : ""}
 
       <p style="text-align:center;margin:24px 0 24px;font-size:11px;color:#64748b;font-weight:600;">অফিসিয়াল রিপোর্ট • ${new Date().toLocaleDateString("bn-BD")}</p>
     </div>
