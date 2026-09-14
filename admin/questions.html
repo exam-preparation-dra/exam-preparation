@@ -8,22 +8,94 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#ff6a2b">
 <style>
-  .img-broken { border: 1.5px dashed var(--color-danger); opacity: 0.6; }
-  .img-badge {
-    display: inline-flex; align-items: center; gap: 4px;
-    font-size: 0.68rem; padding: 2px 8px; border-radius: 999px;
-    background: var(--color-accent-soft); color: var(--color-accent);
-    font-weight: 600;
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
+  body { overflow-x: hidden; background: var(--bg); }
+  .app-shell { max-width: 700px; padding-bottom: 40px; margin: 0 auto; }
+
+  /* ===== Premium Glass Cards ===== */
+  .glass-card {
+    background: rgba(128, 128, 128, 0.03); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 20px; padding: 20px; margin-bottom: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.02); transition: all 0.3s ease;
   }
+
+  /* ===== Form & Input Styles ===== */
+  .field { margin-bottom: 16px; }
+  .field label { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 800; color: var(--text-secondary); margin-bottom: 8px; }
+  .input-glass {
+    width: 100%; box-sizing: border-box; padding: 12px 16px;
+    background: rgba(128, 128, 128, 0.04); border: 1px solid var(--surface-border);
+    border-radius: 12px; color: var(--text-primary);
+    font-family: inherit; font-size: 0.95rem; font-weight: 600; outline: none; transition: 0.2s;
+  }
+  .input-glass:focus { border-color: var(--color-accent); background: var(--surface); box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.15); }
+  textarea.input-glass { resize: vertical; min-height: 80px; }
+  
+  select.input-glass { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1.2em; }
+
+  /* ===== Search & Filter ===== */
+  .search-box {
+    display: flex; align-items: center; gap: 10px; background: rgba(128,128,128,0.03);
+    border: 1px solid var(--surface-border); border-radius: 14px; padding: 10px 16px; margin-bottom: 16px; transition: 0.3s;
+  }
+  .search-box:focus-within { border-color: var(--color-accent); box-shadow: 0 4px 16px rgba(var(--color-accent-rgb),0.15); background: var(--surface); }
+  .search-box input { flex: 1; border: none; background: transparent; outline: none; font-family: inherit; font-size: 0.95rem; font-weight: 600; color: var(--text-primary); }
+
+  .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+
+  /* ===== Premium Buttons ===== */
+  .btn-glass {
+    background: rgba(128, 128, 128, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(128, 128, 128, 0.15);
+    border-radius: 12px; color: var(--text-primary); padding: 10px 16px; font-weight: 800; font-size: 0.9rem;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s ease;
+  }
+  .btn-glass:hover { background: rgba(128, 128, 128, 0.1); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.05); }
+  .btn-glass:active { transform: translateY(0) scale(0.96); }
+  
+  .btn-primary { background: linear-gradient(135deg, var(--color-accent), #f59e0b); color: #fff; border: none; box-shadow: 0 4px 15px rgba(var(--color-accent-rgb), 0.3); }
+  .btn-primary:hover { box-shadow: 0 6px 20px rgba(var(--color-accent-rgb), 0.4); transform: translateY(-2px); }
+
+  /* ===== Question List Card ===== */
+  .question-card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 16px; padding: 16px; margin-bottom: 16px; transition: 0.2s; position: relative; overflow: hidden; }
+  .question-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.04); }
+  .question-meta { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .q-badge { background: rgba(128,128,128,0.1); padding: 3px 8px; border-radius: 6px; color: var(--text-secondary); }
+  
+  /* Selection Checkbox */
+  .select-cb-wrapper { position: absolute; top: 16px; right: 16px; z-index: 5; }
+  .select-checkbox { width: 22px; height: 22px; cursor: pointer; accent-color: var(--color-accent); }
+
+  .q-text-bn { font-size: 1.05rem; font-weight: 800; color: var(--text-primary); line-height: 1.5; margin-bottom: 6px; padding-right: 30px; }
+  .q-text-en { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 12px; }
+  
+  .q-details { font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; padding: 8px; background: rgba(128,128,128,0.03); border-radius: 8px; }
+  .q-ans-highlight { color: #10b981; background: rgba(16,185,129,0.1); padding: 2px 8px; border-radius: 6px; }
+
+  /* Action Icons */
+  .action-bar { display: flex; gap: 8px; border-top: 1px dashed var(--surface-border); padding-top: 12px; flex-wrap: wrap; }
+  .icon-btn { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: rgba(128,128,128,0.05); color: var(--text-secondary); border: 1px solid rgba(128,128,128,0.1); cursor: pointer; transition: 0.2s; }
+  .icon-btn:hover { background: var(--surface); color: var(--color-accent); border-color: var(--color-accent); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(var(--color-accent-rgb), 0.15); }
+  .icon-btn.delete-btn:hover { background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: #ef4444; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15); }
+
+  .img-broken { border: 1.5px dashed var(--color-danger); opacity: 0.6; }
+  .img-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; padding: 3px 8px; border-radius: 999px; background: rgba(var(--color-accent-rgb),0.1); color: var(--color-accent); font-weight: 800; border: 1px solid rgba(var(--color-accent-rgb),0.2); }
+
+  /* ===== Modal Styles ===== */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 400; padding: 20px; animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .custom-modal { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 20px; padding: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); width: 100%; max-width: 450px; }
+  
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
-<div class="app-shell app-shell--wide" id="shell">
+<div class="app-shell" id="shell">
   <div class="state-block"><div class="spinner"></div></div>
 </div>
 
 <script type="module">
-import { initTheme, toggleTheme, icons, renderState, showToast, friendlyError, aiBadge } from "../js/utils/ui-utils.js";
+import { initTheme, toggleTheme, renderState, showToast, friendlyError, aiBadge } from "../js/utils/ui-utils.js";
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
 import { initAdminPwaInstall } from "../pwa-install.js";
 import { getFullSyllabusTree } from "../js/utils/syllabus-utils.js";
@@ -38,10 +110,10 @@ import { generateExplanationForQuestion, promptForApiKey } from "../js/utils/ai-
 initTheme();
 const shell = document.getElementById("shell");
 let tree = [];
-let allQuestions = [];       // currently loaded page(s)
+let allQuestions = [];
 let nextCursor = null;
-let editingId = null;        // null = add mode
-let quickImgTargetId = null; // id of question being quick-edited via the image-only modal
+let editingId = null;
+let quickImgTargetId = null;
 let selectedIds = new Set(JSON.parse(localStorage.getItem("examBuilderSelection") || "[]"));
 
 const filterState = { subjectId: "", chapterId: "", topicId: "", text: "" };
@@ -51,18 +123,19 @@ requireAdmin(() => {
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
   document.getElementById("logoutBtn").addEventListener("click", adminLogout);
   initAdminPwaInstall("installBtn");
+  
   document.getElementById("showAddForm").addEventListener("click", () => openForm(null));
   document.getElementById("cancelForm").addEventListener("click", closeForm);
   document.getElementById("questionForm").addEventListener("submit", handleSubmit);
+  
   document.getElementById("searchInput").addEventListener("input", debounce(handleSearchInput, 250));
   document.getElementById("subjectFilter").addEventListener("change", handleSubjectFilterChange);
   document.getElementById("chapterFilter").addEventListener("change", handleChapterFilterChange);
   document.getElementById("topicFilter").addEventListener("change", () => { filterState.topicId = document.getElementById("topicFilter").value; reloadList(); });
   document.getElementById("loadMoreBtn").addEventListener("click", () => loadMore());
+  
   document.getElementById("goToExamBuilder").addEventListener("click", () => {
     localStorage.setItem("examBuilderSelection", JSON.stringify([...selectedIds]));
-    // If we arrived here from an in-progress exam edit, return to that same
-    // exam instead of always landing on "create new" (see exam-create.html).
     const params = new URLSearchParams(window.location.search);
     const returnTo = params.get("returnTo");
     window.location.href = returnTo ? decodeURIComponent(returnTo) : "../admin/exam-create.html";
@@ -70,19 +143,21 @@ requireAdmin(() => {
 
   setupImagePreview();
   setupVoiceButton();
+  
   document.getElementById("imagePreviewModal").addEventListener("click", closeImagePreview);
   document.getElementById("quickImgCancelBtn").addEventListener("click", closeQuickImageModal);
   document.getElementById("quickImgSaveBtn").addEventListener("click", saveQuickImage);
   document.getElementById("quickImageModal").addEventListener("click", (e) => {
     if (e.target.id === "quickImageModal") closeQuickImageModal();
   });
+  
   document.getElementById("quickImgInput").addEventListener("input", debounce((e) => {
     const preview = document.getElementById("quickImgPreview");
     const url = toDirectImageUrl(e.target.value);
     if (!url) { preview.classList.add("hidden"); return; }
-    preview.src = url;
-    preview.classList.remove("hidden");
+    preview.src = url; preview.classList.remove("hidden");
   }, 400));
+  
   document.getElementById("quickImgFileInput").addEventListener("change", async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -92,149 +167,156 @@ requireAdmin(() => {
       const url = await uploadImageWithGuidedFallback(file);
       document.getElementById("quickImgInput").value = url;
       const preview = document.getElementById("quickImgPreview");
-      preview.src = url;
-      preview.classList.remove("hidden");
-      status.textContent = "✓ আপলোড সম্পন্ন — এবার সংরক্ষণ করুন চাপুন।";
+      preview.src = url; preview.classList.remove("hidden");
+      status.textContent = "✓ আপলোড সম্পন্ন — এবার সেভ করুন।";
+      status.style.color = "#10b981";
     } catch (err) {
-      console.error(err);
-      status.textContent = "আপলোড ব্যর্থ হয়েছে। আবার চেষ্টা করুন।";
+      status.textContent = "আপলোড ব্যর্থ হয়েছে।";
+      status.style.color = "#ef4444";
       showToast("ছবি আপলোড করা যায়নি।", "error");
-    } finally {
-      e.target.value = "";
-    }
+    } finally { e.target.value = ""; }
   });
   init();
 });
 
 function shellTemplate() {
   return `
-    <div class="topbar">
-      <a href="../admin/dashboard.html" class="icon-btn">${icons.arrowLeft}</a>
-      <h2 style="font-size:1.05rem;">প্রশ্ন ব্যাংক</h2>
-      <div class="flex gap-2">
-        <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-thumb"></span></button>
-        <button class="icon-btn hidden" id="installBtn" title="অ্যাপ ইনস্টল করুন"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v13m0 0l-4-4m4 4l4-4M5 21h14"/></svg></button>
-        <button class="icon-btn" id="logoutBtn">${icons.arrowRight}</button>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; margin-bottom:24px;">
+      <a href="../admin/dashboard.html" class="btn-glass" style="width:44px; height:44px; padding:0; border-radius:14px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+      </a>
+      <h2 style="font-size:1.2rem; font-weight:900; color:var(--text-primary);">প্রশ্ন ব্যাংক</h2>
+      <div style="display:flex; gap:10px;">
+        <button class="theme-toggle" id="themeToggle" style="margin:0;"><span class="theme-toggle-thumb"></span></button>
+        <button class="icon-btn hidden" id="installBtn" style="width:44px;height:44px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v13m0 0l-4-4m4 4l4-4M5 21h14"/></svg></button>
+        <button class="btn-glass" id="logoutBtn" style="border-color:rgba(239, 68, 68, 0.3); color:#ef4444; width:44px; height:44px; padding:0;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
       </div>
     </div>
 
-    <div class="glass card">
-      <div class="flex justify-between items-center">
-        <p class="eyebrow">ফিল্টার ও অনুসন্ধান</p>
-        <a href="../admin/question-import.html" class="btn btn-secondary btn-sm">AI দিয়ে বাল্ক ইম্পোর্ট</a>
+    <div class="glass-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <p style="font-weight:900; font-size:1.05rem; color:var(--text-primary);">ফিল্টার ও অনুসন্ধান</p>
+        <a href="../admin/question-import.html" class="btn-glass btn-secondary" style="font-size:0.8rem; padding:8px 12px;">AI ইম্পোর্ট</a>
       </div>
-      <div class="field mt-3">
-        <input class="input" id="searchInput" placeholder="প্রশ্ন খুঁজুন...">
+      
+      <div class="search-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="searchInput" placeholder="প্রশ্ন খুঁজুন...">
       </div>
-      <div class="grid-2 mt-2" style="grid-template-columns:1fr 1fr 1fr;gap:8px;">
-        <select class="select" id="subjectFilter"><option value="">সব বিষয়</option></select>
-        <select class="select" id="chapterFilter"><option value="">সব অধ্যায়</option></select>
-        <select class="select" id="topicFilter"><option value="">সব টপিক</option></select>
-      </div>
-    </div>
-
-    <div class="flex justify-between items-center mt-4">
-      <p class="eyebrow" id="selectionCount">${selectedIds.size} টি নির্বাচিত</p>
-      <div class="flex gap-2">
-        <button class="btn btn-secondary btn-sm" id="goToExamBuilder">পরীক্ষায় যোগ করুন</button>
-        <button class="btn btn-primary btn-sm" id="showAddForm">${icons.plus} নতুন প্রশ্ন</button>
+      
+      <!-- Relabeled Filters: Subject->Batch, Chapter->Subject, Topic->Topic -->
+      <div class="filter-grid">
+        <select class="input-glass" id="subjectFilter"><option value="">সব ব্যাচ</option></select>
+        <select class="input-glass" id="chapterFilter"><option value="">সব বিষয়</option></select>
+        <select class="input-glass" id="topicFilter"><option value="">সব টপিক</option></select>
       </div>
     </div>
 
-    <form id="questionForm" class="glass card mt-3 hidden">
-      <p class="eyebrow" id="formTitle">নতুন প্রশ্ন যোগ করুন</p>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin:24px 0 16px;">
+      <p style="font-weight:800; font-size:0.9rem; color:var(--text-secondary);" id="selectionCount">${selectedIds.size} টি নির্বাচিত</p>
+      <div style="display:flex; gap:10px;">
+        <button class="btn-glass" id="goToExamBuilder">পরীক্ষায় যোগ</button>
+        <button class="btn-glass btn-primary" id="showAddForm">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          নতুন প্রশ্ন
+        </button>
+      </div>
+    </div>
 
-      <div class="field mt-3">
-        <label>ইংরেজি প্রশ্ন</label>
-        <textarea class="textarea" id="qEn" required></textarea>
+    <form id="questionForm" class="glass-card hidden">
+      <p style="font-weight:900; font-size:1.15rem; color:var(--text-primary); margin-bottom:20px; border-bottom:1px dashed var(--surface-border); padding-bottom:12px;" id="formTitle">নতুন প্রশ্ন যোগ করুন</p>
+
+      <div class="field">
+        <label>বাংলা প্রশ্ন <button type="button" class="btn-glass" id="voiceBtn" style="padding:4px 8px; font-size:0.75rem; border-radius:8px; margin-left:10px;" title="ভয়েস ইনপুট"></button></label>
+        <textarea class="input-glass" id="qBn" required placeholder="বাংলায় প্রশ্নটি লিখুন..."></textarea>
       </div>
       <div class="field">
-        <label>বাংলা প্রশ্ন <button type="button" class="icon-btn" id="voiceBtn" style="width:32px;height:32px;display:inline-flex;vertical-align:middle;margin-right:6px;" title="ভয়েস ইনপুট"></button></label>
-        <textarea class="textarea" id="qBn" required></textarea>
+        <label>ইংরেজি প্রশ্ন (ঐচ্ছিক)</label>
+        <textarea class="input-glass" id="qEn" placeholder="Optional English Translation..."></textarea>
+      </div>
+
+      <p style="font-weight:800; font-size:0.9rem; color:var(--text-secondary); margin:20px 0 10px;">অপশনসমূহ</p>
+      <div class="grid-2">
+        <div class="field"><input class="input-glass" id="optA" required placeholder="অপশন A"></div>
+        <div class="field"><input class="input-glass" id="optB" required placeholder="অপশন B"></div>
+        <div class="field"><input class="input-glass" id="optC" required placeholder="অপশন C"></div>
+        <div class="field"><input class="input-glass" id="optD" required placeholder="অপশন D"></div>
       </div>
 
       <div class="grid-2 mt-2">
-        <div class="field"><label>অপশন A</label><input class="input" id="optA" required></div>
-        <div class="field"><label>অপশন B</label><input class="input" id="optB" required></div>
-        <div class="field"><label>অপশন C</label><input class="input" id="optC" required></div>
-        <div class="field"><label>অপশন D</label><input class="input" id="optD" required></div>
-      </div>
-
-      <div class="grid-2 mt-2" style="grid-template-columns:1fr 1fr;">
         <div class="field">
           <label>সঠিক উত্তর</label>
-          <select class="select" id="correctAnswer" required>
+          <select class="input-glass" id="correctAnswer" required>
             <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option>
           </select>
         </div>
-        <div class="field"><label>নম্বর</label><input class="input" type="number" min="1" step="1" id="marksInput" value="1" required></div>
+        <div class="field"><label>নম্বর</label><input class="input-glass" type="number" min="1" step="1" id="marksInput" value="1" required></div>
       </div>
 
-      <div class="grid-2 mt-2" style="grid-template-columns:1fr 1fr 1fr;">
-        <div class="field"><label>বিষয়</label><select class="select" id="formSubject" required></select></div>
-        <div class="field"><label>অধ্যায়</label><select class="select" id="formChapter" required></select></div>
-        <div class="field"><label>টপিক</label><select class="select" id="formTopic" required></select></div>
+      <p style="font-weight:800; font-size:0.9rem; color:var(--text-secondary); margin:20px 0 10px;">সিলেবাস ম্যাপিং</p>
+      <div class="grid-2">
+        <div class="field"><label>ব্যাচ</label><select class="input-glass" id="formSubject" required></select></div>
+        <div class="field"><label>বিষয়</label><select class="input-glass" id="formChapter" required></select></div>
+        <div class="field" style="grid-column: 1 / -1;"><label>টপিক</label><select class="input-glass" id="formTopic" required></select></div>
       </div>
 
-      <div class="field">
+      <div class="field mt-3">
         <label>ছবি (ঐচ্ছিক)</label>
-        <input class="input" type="url" id="imageUrlInput" placeholder="সরাসরি ছবির লিংক পেস্ট করুন">
-        <div class="flex items-center gap-2 mt-2">
-          <label class="btn btn-secondary btn-sm" for="imageFileInput" style="cursor:pointer;margin:0;">ফাইল থেকে আপলোড করুন</label>
+        <input class="input-glass" type="url" id="imageUrlInput" placeholder="সরাসরি ছবির লিংক পেস্ট করুন">
+        <div style="display:flex; align-items:center; gap:10px; margin-top:10px;">
+          <label class="btn-glass" for="imageFileInput" style="cursor:pointer;">ফাইল থেকে আপলোড</label>
           <input type="file" id="imageFileInput" accept="image/*" class="hidden">
-          <span id="imageUploadStatus" class="text-xs text-muted hidden"></span>
+          <span id="imageUploadStatus" style="font-size:0.8rem; font-weight:700; color:var(--text-muted);" class="hidden"></span>
         </div>
-        <img id="imagePreview" class="hidden mt-2" style="max-height:140px;border-radius:var(--radius-sm);">
+        <img id="imagePreview" class="hidden mt-3" style="max-height:160px; border-radius:12px; border:1px solid rgba(128,128,128,0.2);">
       </div>
 
-      <div class="field">
+      <div class="field mt-3">
         <label>ব্যাখ্যা (ঐচ্ছিক)</label>
-        <textarea class="textarea" id="explanationInput"></textarea>
+        <textarea class="input-glass" id="explanationInput" placeholder="সঠিক উত্তরের ব্যাখ্যা লিখুন..."></textarea>
       </div>
 
-      <p id="formError" class="text-sm hidden" style="color:var(--color-danger);"></p>
+      <p id="formError" class="text-sm hidden" style="color:#ef4444; font-weight:700;"></p>
 
-      <div class="flex gap-2 mt-2">
-        <button type="button" class="btn btn-secondary" id="cancelForm">বাতিল</button>
-        <button type="submit" class="btn btn-primary" id="submitBtn">সংরক্ষণ করুন</button>
+      <div style="display:flex; gap:12px; margin-top:24px;">
+        <button type="button" class="btn-glass" id="cancelForm" style="flex:1;">বাতিল</button>
+        <button type="submit" class="btn-glass btn-primary" id="submitBtn" style="flex:1;">সংরক্ষণ করুন</button>
       </div>
     </form>
 
-    <div id="questionList" class="mt-4"></div>
-    <div class="mt-4 text-center">
-      <button class="btn btn-secondary hidden" id="loadMoreBtn">আরও দেখুন</button>
+    <div id="questionList"></div>
+    <div style="text-align:center; margin-top:20px;">
+      <button class="btn-glass hidden" id="loadMoreBtn" style="padding:12px 24px;">আরও দেখুন</button>
     </div>
 
-    <div id="imagePreviewModal" class="hidden" style="position:fixed;inset:0;background:rgba(10,14,26,0.85);align-items:center;justify-content:center;z-index:400;padding:20px;cursor:zoom-out;">
-      <img id="imagePreviewModalImg" style="max-width:100%;max-height:100%;border-radius:var(--radius-sm);">
+    <!-- Image Modals -->
+    <div id="imagePreviewModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;cursor:zoom-out;">
+      <img id="imagePreviewModalImg" style="max-width:100%;max-height:85vh;border-radius:16px;">
     </div>
-
-    <div id="quickImageModal" class="hidden" style="position:fixed;inset:0;background:rgba(10,14,26,0.65);align-items:center;justify-content:center;z-index:410;padding:20px;">
-      <div class="glass card" style="max-width:420px;width:100%;">
-        <p class="eyebrow">ছবি যোগ/পরিবর্তন করুন</p>
-        <div class="field mt-3">
-          <label class="btn btn-secondary btn-sm" for="quickImgFileInput" style="cursor:pointer;">ফাইল থেকে আপলোড করুন</label>
+ <div id="quickImageModal" class="modal-overlay hidden">
+      <div class="custom-modal">
+        <p style="font-weight:900; font-size:1.15rem; color:var(--text-primary); margin-bottom:16px;">ছবি যোগ/পরিবর্তন</p>
+        <div class="field">
+          <label class="btn-glass" for="quickImgFileInput" style="width:100%; justify-content:center; cursor:pointer;">ফাইল থেকে আপলোড</label>
           <input type="file" id="quickImgFileInput" accept="image/*" class="hidden">
-          <span id="quickImgUploadStatus" class="text-xs text-muted"></span>
-          <p class="text-xs text-muted mt-2">অথবা সরাসরি লিংক পেস্ট করুন:</p>
-          <input class="input mt-1" type="url" id="quickImgInput" placeholder="সরাসরি ছবির লিংক পেস্ট করুন">
-          <p class="text-xs text-muted mt-1">খালি রেখে সংরক্ষণ করলে ছবি সরে যাবে।</p>
-          <img id="quickImgPreview" class="hidden mt-2" style="max-height:160px;border-radius:var(--radius-sm);">
+          <p id="quickImgUploadStatus" style="font-size:0.8rem; font-weight:700; text-align:center; margin-top:8px;"></p>
+          
+          <p style="font-size:0.8rem; font-weight:700; color:var(--text-muted); text-align:center; margin:16px 0;">— অথবা লিংক পেস্ট করুন —</p>
+          <input class="input-glass" type="url" id="quickImgInput" placeholder="ছবির লিংক...">
+          <p style="font-size:0.75rem; color:var(--text-muted); font-weight:600; margin-top:8px; text-align:center;">খালি রেখে সংরক্ষণ করলে ছবি মুছে যাবে।</p>
+          <div style="text-align:center;"><img id="quickImgPreview" class="hidden mt-3" style="max-height:140px; border-radius:12px; border:1px solid rgba(128,128,128,0.2);"></div>
         </div>
-        <p id="quickImgError" class="text-sm hidden" style="color:var(--color-danger);"></p>
-        <div class="flex gap-2 mt-3">
-          <button type="button" class="btn btn-secondary" id="quickImgCancelBtn">বাতিল</button>
-          <button type="button" class="btn btn-primary" id="quickImgSaveBtn">সংরক্ষণ করুন</button>
+        <p id="quickImgError" class="hidden" style="color:#ef4444; font-size:0.85rem; font-weight:700; text-align:center;"></p>
+        <div style="display:flex; gap:12px; margin-top:20px;">
+          <button type="button" class="btn-glass" id="quickImgCancelBtn" style="flex:1;">বাতিল</button>
+          <button type="button" class="btn-glass btn-primary" id="quickImgSaveBtn" style="flex:1;">সংরক্ষণ</button>
         </div>
       </div>
     </div>
   `;
 }
 
-function debounce(fn, ms) {
-  let t;
-  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
-}
+function debounce(fn, ms) { let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); }; }
 
 async function init() {
   tree = await getFullSyllabusTree();
@@ -275,7 +357,7 @@ function handleSubjectFilterChange() {
   const chapterFilter = document.getElementById("chapterFilter");
   const topicFilter = document.getElementById("topicFilter");
   const subject = tree.find(s => s.id === subjectId);
-  chapterFilter.innerHTML = `<option value="">সব অধ্যায়</option>` + (subject?.chapters || []).map(c => `<option value="${c.id}">${c.name_bn}</option>`).join("");
+  chapterFilter.innerHTML = `<option value="">সব বিষয়</option>` + (subject?.chapters || []).map(c => `<option value="${c.id}">${c.name_bn}</option>`).join("");
   topicFilter.innerHTML = `<option value="">সব টপিক</option>`;
   reloadList();
 }
@@ -293,7 +375,7 @@ function handleChapterFilterChange() {
 
 function handleSearchInput() {
   filterState.text = document.getElementById("searchInput").value;
-  renderQuestionList(); // text filter is client-side over loaded page(s)
+  renderQuestionList(); 
 }
 
 async function reloadList() {
@@ -304,7 +386,7 @@ async function reloadList() {
 
 async function loadMore(isReload = false) {
   const listEl = document.getElementById("questionList");
-  if (isReload) listEl.innerHTML = `<div class="glass card skeleton" style="height:80px;"></div>`;
+  if (isReload) listEl.innerHTML = `<div class="glass-card text-center" style="padding:40px;"><div class="spinner"></div></div>`;
   try {
     const { items, nextCursor: cursor } = await getQuestionsPage({
       subjectId: filterState.subjectId || null,
@@ -336,39 +418,47 @@ function nameFor(id, kind) {
 function renderQuestionList() {
   const listEl = document.getElementById("questionList");
   const filtered = filterByText(allQuestions, filterState.text);
+  
   if (filtered.length === 0) {
-    renderState(listEl, "empty", "কোনো প্রশ্ন পাওয়া যায়নি।");
+    listEl.innerHTML = `<div class="glass-card text-center" style="padding:40px; font-weight:800; color:var(--text-muted);">কোনো প্রশ্ন পাওয়া যায়নি।</div>`;
     return;
   }
+
   listEl.innerHTML = filtered.map(q => `
-    <div class="glass card mt-2" data-id="${q.id}">
-      <div class="flex justify-between" style="gap:10px;">
-        <div style="flex:1;">
-          <label class="flex items-center gap-2" style="cursor:pointer;">
-            <input type="checkbox" class="select-checkbox" data-id="${q.id}" ${selectedIds.has(q.id) ? "checked" : ""}>
-            <span class="text-xs text-muted">${q.isActive ? "" : "(নিষ্ক্রিয়) "}${nameFor(q.subjectId, "subject")} • ${nameFor(q.chapterId, "chapter")} • ${nameFor(q.topicId, "topic")}</span>
-            ${q.createdByAI ? aiBadge() : ""}
-            ${q.imageUrl ? `<span class="img-badge" title="এই প্রশ্নে ছবি যুক্ত আছে"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> ছবি</span>` : ""}
-          </label>
-          <p class="mt-2" style="font-weight:600;">${q.question_bn}</p>
-          <p class="text-xs text-muted lang-en mt-1">${q.question_en}</p>
-          ${q.imageUrl ? `<img src="${q.imageUrl}" class="thumb-preview" data-full="${q.imageUrl}" style="max-height:100px;border-radius:8px;margin-top:8px;cursor:zoom-in;" onerror="this.classList.add('img-broken');this.title='ছবি লোড করা যায়নি — লিংকটি পাবলিক কিনা যাচাই করুন';">` : ""}
-          <p class="text-xs mt-2">সঠিক উত্তর: <span style="font-weight:700;color:var(--color-success);">${q.correctAnswer}</span> • নম্বর: ${q.marks}</p>
-          ${q.explanation_bn
-            ? `<p class="text-xs text-muted mt-2" title="${q.explanation_bn.replace(/"/g, '&quot;')}">📝 ব্যাখ্যা আছে</p>`
-            : `<button class="btn btn-secondary btn-sm ai-explain-btn mt-2" data-id="${q.id}">✨ AI দিয়ে ব্যাখ্যা তৈরি করুন</button>`}
-        </div>
-        <div class="flex flex-col gap-2">
-          <button class="icon-btn edit-btn" data-id="${q.id}" title="সম্পাদনা">${icons.edit}</button>
-          <button class="icon-btn quick-img-btn" data-id="${q.id}" title="${q.imageUrl ? "ছবি পরিবর্তন করুন" : "ছবি যোগ করুন"}">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-          </button>
-          <button class="icon-btn dup-btn" data-id="${q.id}" title="ডুপ্লিকেট">${icons.plus}</button>
-          <button class="icon-btn toggle-btn" data-id="${q.id}" title="সক্রিয়/নিষ্ক্রিয়">${icons.toggle}</button>
-          <button class="icon-btn delete-btn" data-id="${q.id}" title="মুছে ফেলুন" style="color:var(--color-danger);">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
-          </button>
-        </div>
+    <div class="question-card" data-id="${q.id}">
+      <div class="select-cb-wrapper">
+        <input type="checkbox" class="select-checkbox" data-id="${q.id}" ${selectedIds.has(q.id) ? "checked" : ""}>
+      </div>
+
+      <div class="question-meta">
+        <span class="q-badge">${q.isActive ? "" : "<span style='color:#ef4444;'>নিষ্ক্রিয় • </span>"}${nameFor(q.subjectId, "subject")} • ${nameFor(q.chapterId, "chapter")} • ${nameFor(q.topicId, "topic")}</span>
+        ${q.createdByAI ? `<span class="q-badge" style="background:rgba(139,92,246,0.1); color:#8b5cf6;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:2px;"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> AI</span>` : ""}
+        ${q.imageUrl ? `<span class="img-badge"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg> ছবি</span>` : ""}
+      </div>
+
+      <p class="q-text-bn">${q.question_bn}</p>
+      ${q.question_en ? `<p class="q-text-en">${q.question_en}</p>` : ""}
+      
+      ${q.imageUrl ? `<img src="${q.imageUrl}" class="thumb-preview" data-full="${q.imageUrl}" style="max-height:120px; border-radius:12px; margin-bottom:12px; border:1px solid rgba(128,128,128,0.2); cursor:zoom-in;" onerror="this.classList.add('img-broken');">` : ""}
+      
+      <div class="q-details">
+        <span>সঠিক উত্তর: <span class="q-ans-highlight">${q.correctAnswer}</span></span>
+        <span>•</span>
+        <span>নম্বর: ${q.marks}</span>
+      </div>
+
+      ${q.explanation_bn
+        ? `<div style="font-size:0.75rem; color:var(--text-muted); font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> ব্যাখ্যা যুক্ত আছে</div>`
+        : `<button class="btn-glass ai-explain-btn" data-id="${q.id}" style="width:100%; margin-bottom:12px; padding:10px; font-size:0.8rem; background:rgba(139,92,246,0.05); color:#8b5cf6; border-color:rgba(139,92,246,0.2);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> AI দিয়ে ব্যাখ্যা তৈরি করুন
+           </button>`}
+
+      <div class="action-bar">
+        <button class="icon-btn edit-btn" data-id="${q.id}" title="সম্পাদনা"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="icon-btn quick-img-btn" data-id="${q.id}" title="${q.imageUrl ? "ছবি পরিবর্তন" : "ছবি যোগ"}"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></button>
+        <button class="icon-btn dup-btn" data-id="${q.id}" title="ডুপ্লিকেট"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        <button class="icon-btn toggle-btn" data-id="${q.id}" title="সক্রিয়/নিষ্ক্রিয়" style="${!q.isActive ? 'color:#ef4444; border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.05);' : ''}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="${q.isActive ? '16' : '8'}" cy="12" r="3"/></svg></button>
+        <button class="icon-btn delete-btn" data-id="${q.id}" title="মুছে ফেলুন"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
       </div>
     </div>
   `).join("");
@@ -417,38 +507,28 @@ async function saveQuickImage() {
   const errEl = document.getElementById("quickImgError");
   const btn = document.getElementById("quickImgSaveBtn");
   errEl.classList.add("hidden");
-  btn.disabled = true;
-  btn.textContent = "সংরক্ষণ হচ্ছে...";
+  btn.disabled = true; btn.textContent = "সংরক্ষণ হচ্ছে...";
   try {
     const finalUrl = raw ? toDirectImageUrl(raw) : null;
     await updateQuestion(quickImgTargetId, { imageUrl: finalUrl });
     const idx = allQuestions.findIndex(x => x.id === quickImgTargetId);
     if (idx !== -1) allQuestions[idx].imageUrl = finalUrl;
     showToast(finalUrl ? "ছবি যুক্ত হয়েছে।" : "ছবি সরানো হয়েছে।", "success");
-    closeQuickImageModal();
-    renderQuestionList();
+    closeQuickImageModal(); renderQuestionList();
   } catch (err) {
-    console.error(err);
     errEl.textContent = friendlyError ? friendlyError(err) : "সংরক্ষণ করা যায়নি।";
     errEl.classList.remove("hidden");
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "সংরক্ষণ করুন";
-  }
+  } finally { btn.disabled = false; btn.textContent = "সংরক্ষণ করুন"; }
 }
 
 function openImagePreview(url) {
   const modal = document.getElementById("imagePreviewModal");
   const modalImg = document.getElementById("imagePreviewModalImg");
-  modalImg.src = url;
-  modal.style.display = "flex";
-  modal.classList.remove("hidden");
+  modalImg.src = url; modal.style.display = "flex"; modal.classList.remove("hidden");
 }
 function closeImagePreview() {
   const modal = document.getElementById("imagePreviewModal");
-  modal.classList.add("hidden");
-  modal.style.display = "none";
-  document.getElementById("imagePreviewModalImg").src = "";
+  modal.classList.add("hidden"); modal.style.display = "none"; document.getElementById("imagePreviewModalImg").src = "";
 }
 
 function openForm(id) {
@@ -467,7 +547,7 @@ function openForm(id) {
     const q = allQuestions.find(x => x.id === id);
     if (!q) return;
     document.getElementById("formTitle").textContent = "প্রশ্ন সম্পাদনা করুন";
-    document.getElementById("qEn").value = q.question_en;
+    document.getElementById("qEn").value = q.question_en || "";
     document.getElementById("qBn").value = q.question_bn;
     document.getElementById("optA").value = q.options_bn.A;
     document.getElementById("optB").value = q.options_bn.B;
@@ -489,66 +569,55 @@ function openForm(id) {
   form.scrollIntoView({ behavior: "smooth" });
 }
 
-function closeForm() {
-  editingId = null;
-  document.getElementById("questionForm").classList.add("hidden");
-}
+function closeForm() { editingId = null; document.getElementById("questionForm").classList.add("hidden"); }
 
 function setupImagePreview() {
   document.getElementById("imageUrlInput").addEventListener("input", debounce((e) => {
     const preview = document.getElementById("imagePreview");
     const url = toDirectImageUrl(e.target.value);
     if (!url) { preview.classList.add("hidden"); return; }
-    preview.src = url;
-    preview.classList.remove("hidden");
+    preview.src = url; preview.classList.remove("hidden");
   }, 400));
 
   document.getElementById("imageFileInput").addEventListener("change", async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const status = document.getElementById("imageUploadStatus");
-    status.textContent = "আপলোড হচ্ছে...";
-    status.classList.remove("hidden");
+    status.textContent = "আপলোড হচ্ছে..."; status.classList.remove("hidden");
     try {
       const url = await uploadImageWithGuidedFallback(file);
       document.getElementById("imageUrlInput").value = url;
       const preview = document.getElementById("imagePreview");
-      preview.src = url;
-      preview.classList.remove("hidden");
+      preview.src = url; preview.classList.remove("hidden");
       status.textContent = "✓ আপলোড সম্পন্ন হয়েছে।";
+      status.style.color = "#10b981";
       setTimeout(() => status.classList.add("hidden"), 2500);
     } catch (err) {
-      console.error(err);
-      status.textContent = "আপলোড ব্যর্থ হয়েছে। আবার চেষ্টা করুন।";
+      status.textContent = "আপলোড ব্যর্থ হয়েছে।";
+      status.style.color = "#ef4444";
       showToast("ছবি আপলোড করা যায়নি।", "error");
-    } finally {
-      e.target.value = "";
-    }
+    } finally { e.target.value = ""; }
   });
-  }
+}
 
 function setupVoiceButton() {
   const btn = document.getElementById("voiceBtn");
-  btn.innerHTML = icons.book; // placeholder mic-like icon container; real mic svg below
-  btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/></svg>`;
+  btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 19v3"/></svg>`;
   const target = document.getElementById("qBn");
   attachVoiceInput(btn, target, {
-    onStart: () => btn.style.color = "var(--color-danger)",
+    onStart: () => btn.style.color = "#ef4444",
     onEnd: () => btn.style.color = "",
     onError: () => showToast("ভয়েস ইনপুট ব্যর্থ হয়েছে।", "error")
   });
-  if (!isVoiceInputSupported()) {
-    btn.title = "এই ব্রাউজার ভয়েস ইনপুট সমর্থন করে না।";
+  if (!isVoiceInputSupported()) btn.title = "এই ব্রাউজার ভয়েস ইনপুট সমর্থন করে না।";
   }
-}
 
-async function handleSubmit(e) {
+  async function handleSubmit(e) {
   e.preventDefault();
   const submitBtn = document.getElementById("submitBtn");
   const errorEl = document.getElementById("formError");
   errorEl.classList.add("hidden");
-  submitBtn.disabled = true;
-  submitBtn.textContent = "সংরক্ষণ করা হচ্ছে...";
+  submitBtn.disabled = true; submitBtn.textContent = "সংরক্ষণ করা হচ্ছে...";
 
   try {
     const payload = {
@@ -569,28 +638,20 @@ async function handleSubmit(e) {
     };
 
     if (!payload.subjectId || !payload.chapterId || !payload.topicId) {
-      throw new Error("বিষয়, অধ্যায় ও টপিক অবশ্যই নির্বাচন করতে হবে। আগে সিলেবাস ব্যবস্থাপনা থেকে এগুলো যোগ করুন।");
+      throw new Error("ব্যাচ, বিষয় ও টপিক অবশ্যই নির্বাচন করতে হবে।");
     }
 
     const imageUrlRaw = document.getElementById("imageUrlInput").value.trim();
     payload.imageUrl = imageUrlRaw ? toDirectImageUrl(imageUrlRaw) : null;
 
-    if (editingId) {
-      await updateQuestion(editingId, payload);
-      showToast("প্রশ্ন আপডেট করা হয়েছে।", "success");
-    } else {
-      await addQuestion(payload);
-      showToast("প্রশ্ন যোগ করা হয়েছে।", "success");
-    }
-    closeForm();
-    reloadList();
+    if (editingId) { await updateQuestion(editingId, payload); showToast("প্রশ্ন আপডেট করা হয়েছে।", "success"); }
+    else { await addQuestion(payload); showToast("প্রশ্ন যোগ করা হয়েছে।", "success"); }
+    closeForm(); reloadList();
   } catch (err) {
-    console.error(err);
     errorEl.textContent = err.message || friendlyError(err);
     errorEl.classList.remove("hidden");
   } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = "সংরক্ষণ করুন";
+    submitBtn.disabled = false; submitBtn.textContent = "সংরক্ষণ করুন";
   }
 }
 
@@ -600,56 +661,35 @@ async function handleGenerateExplanation(id, btn) {
   const apiKey = promptForApiKey(false);
   if (!apiKey) { showToast("API key ছাড়া ব্যাখ্যা তৈরি করা যাবে না।", "error"); return; }
 
-  btn.disabled = true;
-  btn.textContent = "তৈরি হচ্ছে...";
+  btn.disabled = true; btn.innerHTML = `<span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px;"></span> তৈরি হচ্ছে...`;
   try {
-    const explanation = await generateExplanationForQuestion({
-      apiKey,
-      question_bn: q.question_bn,
-      options_bn: q.options_bn,
-      correctAnswer: q.correctAnswer
-    });
+    const explanation = await generateExplanationForQuestion({ apiKey, question_bn: q.question_bn, options_bn: q.options_bn, correctAnswer: q.correctAnswer });
     await updateQuestion(id, { explanation_bn: explanation });
-    q.explanation_bn = explanation; // keep the in-memory list in sync so the re-render below reflects it immediately
+    q.explanation_bn = explanation; 
     showToast("ব্যাখ্যা তৈরি ও সংরক্ষণ করা হয়েছে।", "success");
-    renderQuestionList(); // button permanently replaced by the 📝 indicator now that explanation_bn is set
+    renderQuestionList(); 
   } catch (err) {
-    console.error(err);
     showToast(err.message || friendlyError(err), "error");
-    btn.disabled = false;
-    btn.textContent = "✨ AI দিয়ে ব্যাখ্যা তৈরি করুন";
+    btn.disabled = false; btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> AI দিয়ে ব্যাখ্যা তৈরি করুন`;
   }
 }
 
 async function handleDuplicate(id) {
   const q = allQuestions.find(x => x.id === id);
   if (!q || !confirm("এই প্রশ্নটি ডুপ্লিকেট করবেন?")) return;
-  try {
-    await duplicateQuestion(q);
-    showToast("প্রশ্ন ডুপ্লিকেট করা হয়েছে।", "success");
-    reloadList();
-  } catch (err) { showToast(friendlyError(err), "error"); }
+  try { await duplicateQuestion(q); showToast("প্রশ্ন ডুপ্লিকেট করা হয়েছে।", "success"); reloadList(); } catch (err) { showToast(friendlyError(err), "error"); }
 }
 
 async function handleToggleActive(id) {
   const q = allQuestions.find(x => x.id === id);
   if (!q) return;
-  const willActivate = !q.isActive;
-  if (!confirm(willActivate ? "এই প্রশ্নটি আবার সক্রিয় করবেন?" : "এই প্রশ্নটি নিষ্ক্রিয় করবেন? এটি নতুন পরীক্ষায় দেখা যাবে না, তবে পুরনো ফলাফলে অপরিবর্তিত থাকবে।")) return;
-  try {
-    await setQuestionActive(id, willActivate);
-    showToast("আপডেট করা হয়েছে।", "success");
-    reloadList();
-  } catch (err) { showToast(friendlyError(err), "error"); }
+  if (!confirm(!q.isActive ? "এই প্রশ্নটি আবার সক্রিয় করবেন?" : "এই প্রশ্নটি নিষ্ক্রিয় করবেন? এটি নতুন পরীক্ষায় দেখা যাবে না, তবে পুরনো ফলাফলে অপরিবর্তিত থাকবে।")) return;
+  try { await setQuestionActive(id, !q.isActive); showToast("আপডেট করা হয়েছে।", "success"); reloadList(); } catch (err) { showToast(friendlyError(err), "error"); }
 }
 
 async function handleDelete(id) {
-  if (!confirm("এই প্রশ্নটি স্থায়ীভাবে মুছে ফেলবেন? যেসব পরীক্ষা ইতিমধ্যে প্রকাশিত হয়ে গেছে সেখানে এই প্রশ্নের একটি ফ্রোজেন কপি থেকে যাবে (তাই পুরনো ফলাফল অপরিবর্তিত থাকবে), কিন্তু এটি আর কোনো নতুন পরীক্ষায় যোগ করা যাবে না।")) return;
-  try {
-    await deleteQuestion(id);
-    showToast("প্রশ্ন মুছে ফেলা হয়েছে।", "success");
-    reloadList();
-  } catch (err) { showToast(friendlyError(err), "error"); }
+  if (!confirm("এই প্রশ্নটি স্থায়ীভাবে মুছে ফেলবেন? যেসব পরীক্ষা ইতিমধ্যে প্রকাশিত হয়ে গেছে সেখানে এই প্রশ্নের একটি কপি থেকে যাবে, কিন্তু এটি আর নতুন পরীক্ষায় যোগ করা যাবে না।")) return;
+  try { await deleteQuestion(id); showToast("প্রশ্ন মুছে ফেলা হয়েছে।", "success"); reloadList(); } catch (err) { showToast(friendlyError(err), "error"); }
 }
 </script>
 </body>
