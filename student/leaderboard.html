@@ -149,6 +149,65 @@
   @media (min-width:700px){.lb-extra-grid{grid-template-columns:1.1fr .9fr}}
   @media (max-width:480px){.lb-podium{gap:5px}.lb-highlight-grid{grid-template-columns:1fr}.lb-streak{display:none}}
 
+
+  /* ===== Final visual fixes: compact circular avatars ===== */
+  .lb-avatar{
+    width:44px !important;
+    height:44px !important;
+    min-width:44px !important;
+    max-width:44px !important;
+    border-radius:50% !important;
+    overflow:hidden !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    flex:0 0 44px !important;
+    background:var(--color-accent-soft);
+    border:1px solid var(--lb-border);
+  }
+  .lb-avatar img{
+    width:100% !important;
+    height:100% !important;
+    max-width:none !important;
+    max-height:none !important;
+    object-fit:cover !important;
+    border-radius:50% !important;
+  }
+  .live-avatar{
+    width:38px !important;
+    height:38px !important;
+    min-width:38px !important;
+    flex:0 0 38px !important;
+    border-radius:50% !important;
+    overflow:hidden !important;
+  }
+  .live-avatar img{
+    width:100% !important;
+    height:100% !important;
+    object-fit:cover !important;
+    border-radius:50% !important;
+  }
+  /* The red crossed-swords button is the existing Challenge action,
+     not a negative/rank symbol. Keep it compact and visually clear. */
+  .challenge-btn{
+    width:38px !important;
+    min-width:38px !important;
+    height:38px !important;
+    min-height:38px !important;
+    padding:0 !important;
+    border-radius:50% !important;
+  }
+  .challenge-btn .lb-icon{
+    width:16px !important;
+    height:16px !important;
+  }
+  @media (max-width:480px){
+    .lb-row{gap:9px;padding:13px 10px;}
+    .lb-avatar{width:40px !important;height:40px !important;min-width:40px !important;flex-basis:40px !important;}
+    .lb-name{font-size:.82rem;}
+    .points-pill{padding:3px 8px;}
+  }
+
 </style>
 </head>
 
