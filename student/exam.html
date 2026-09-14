@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>পরীক্ষা — পরীক্ষা প্রস্তুতি</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  /* ===== Global Text Selection & Right-Click Block ===== */
+  body { 
+    user-select: none; 
+    -webkit-user-select: none; 
+    -webkit-touch-callout: none;
+    background: var(--bg);
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
+
+  /* Prevents space at bottom due to fixed nav */
+  #shell { padding-bottom: 100px; }
+
+  /* ===== Card entrance ===== */
+  .glass.card { animation: cardRise 420ms cubic-bezier(.22,.9,.3,1) both; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 20px; box-shadow: 0 4px 24px rgba(0,0,0,0.03); }
+  @keyframes cardRise {
+    from { opacity: 0; transform: translateY(14px) scale(.985); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* ===== Question transition wrapper ===== */
+  #questionBody { will-change: transform, opacity; }
+  #questionBody.q-enter { animation: qSlideIn 320ms cubic-bezier(.22,.9,.3,1) both; }
+  @keyframes qSlideIn {
+    from { opacity: 0; transform: translateX(10px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  /* ===== Premium Option Cards ===== */
+  .option-card {
+    position: relative; overflow: hidden;
+    display: flex; align-items: center; gap: 14px;
+    width: 100%; min-height: 60px; padding: 14px 18px;
+    border-radius: 16px;
+    border: 1px solid rgba(128,128,128,0.2);
+    background: rgba(128,128,128,0.02);
+    color: var(--text-primary);
+    font-size: 0.95rem; font-weight: 700;
+    text-align: left;
+    transition: all 0.2s ease;
+    margin-bottom: 12px;
+    animation: optRise 320ms cubic-bezier(.22,.9,.3,1) both;
+    cursor: pointer;
+  }
+  .option-card:nth-of-type(1) { animation-delay: 20ms; }
+  .option-card:nth-of-type(2) { animation-delay: 60ms; }
+  .option-card:nth-of-type(3) { animation-delay: 100ms; }
+  .option-card:nth-of-type(4) { animation-delay: 140ms; }
+  @keyframes optRise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  
+  .option-card:active { transform: scale(0.98); }
+  .option-card.selected {
+    border-color: var(--color-accent);
+    background: rgba(var(--color-accent-rgb), 0.08);
+    box-shadow: 0 4px 16px rgba(var(--color-accent-rgb), 0.15);
+  }
+  
+  .option-card.option-flash { animation: optPop 260ms cubic-bezier(.34,1.56,.64,1); }
+  .option-card.option-flash::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(100deg, transparent 20%, rgba(var(--color-accent-rgb), 0.3) 45%, var(--color-accent) 50%, rgba(var(--color-accent-rgb), 0.3) 55%, transparent 80%);
+    background-size: 250% 100%;
+    animation: optionSweep 650ms cubic-bezier(.22,.9,.3,1);
+  }
+  @keyframes optionSweep { from { background-position: 150% 0; opacity: 0.9; } to { background-position: -50% 0; opacity: 0; } }
+  @keyframes optPop { 0% { transform: scale(1); } 40% { transform: scale(1.03); } 100% { transform: scale(1); } }
+  
+  .option-letter {
+    flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(128,128,128,0.1); display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 0.95rem; color: var(--text-secondary);
+    transition: all 0.2s cubic-bezier(.34,1.56,.64,1);
+  }
+  .option-card.selected .option-letter { background: var(--color-accent); color: #fff; transform: scale(1.1); box-shadow: 0 4px 10px rgba(var(--color-accent-rgb), 0.3); }
+
+  /* ===== Palette grid ===== */
+  .palette-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .palette-cell {
+    aspect-ratio: 1; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.95rem; border: 1px solid rgba(128,128,128,0.2);
+    background: rgba(128,128,128,0.03); color: var(--text-secondary);
+    transition: all 0.2s ease; cursor: pointer;
+    animation: cellPop 260ms cubic-bezier(.34,1.56,.64,1) both;
+  }
+  @keyframes cellPop { from { opacity: 0; transform: scale(.8); } to { opacity: 1; transform: scale(1); } }
+  .palette-cell:active { transform: scale(0.92); }
+  .palette-cell.answered { background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.4); }
+  .palette-cell.marked { border-color: #f59e0b; box-shadow: inset 0 0 0 1.5px #f59e0b; }
+  .palette-cell.marked.answered { background: rgba(16, 185, 129, 0.15); box-shadow: inset 0 0 0 2px #f59e0b; }
+  .palette-cell.current {
+    border-color: var(--color-accent); background: var(--color-accent); color: #fff;
+    box-shadow: 0 4px 12px rgba(var(--color-accent-rgb), 0.4);
+    animation: cellPop 260ms cubic-bezier(.34,1.56,.64,1) both, currentPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes currentPulse { 0%,100% { box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.2); } 50% { box-shadow: 0 0 0 6px transparent; } }
+
+  /* ===== Timer ===== */
+  #timerDisplay {
+    font-family: var(--font-num); font-variant-numeric: tabular-nums;
+    font-weight: 900; font-size: 0.95rem; letter-spacing: 0.5px; white-space: nowrap;
+    padding: 6px 14px; border-radius: 99px;
+    background: rgba(128,128,128,0.08); border: 1px solid rgba(128,128,128,0.2);
+    color: var(--text-primary); transition: all 0.2s ease;
+  }
+  #timerDisplay.timer-warning { color: #f59e0b; border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.1); }
+  #timerDisplay.timer-critical { color: #ef4444; border-color: rgba(239, 68, 68, 0.5); background: rgba(239, 68, 68, 0.1); animation: timerPulse 1s infinite; }
+  @keyframes timerPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+  /* ===== Animated progress bar ===== */
+  .exam-progress-track { height: 8px; border-radius: 99px; background: rgba(128,128,128,0.15); overflow: hidden; }
+  .exam-progress-fill {
+    position: relative; height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, var(--color-accent), var(--color-accent-2, #f59e0b));
+    transition: width 420ms cubic-bezier(.22,.9,.3,1); overflow: hidden;
+  }
+  .exam-progress-fill::after {
+    content: ""; position: absolute; inset: 0;
+    background: repeating-linear-gradient(115deg, rgba(255,255,255,0.25) 0px, rgba(255,255,255,0.25) 8px, transparent 8px, transparent 18px);
+    background-size: 200% 100%; animation: fillShimmer 1.4s linear infinite;
+  }
+  @keyframes fillShimmer { from { background-position: 0 0; } to { background-position: -36px 0; } }
+
+  /* ===== English Lang Toggle ===== */
+  .lang-en-toggle { margin-bottom: 2px; }
+  .lang-en-toggle summary {
+    display: inline-flex; align-items: center; gap: 4px; width: fit-content; list-style: none; cursor: pointer;
+    font-size: 0.75rem; font-weight: 800; color: var(--text-muted);
+    padding: 4px 12px; border-radius: 99px; border: 1px solid rgba(128,128,128,0.2); background: rgba(128,128,128,0.05);
+  }
+  .lang-en-toggle summary::-webkit-details-marker { display: none; }
+  .lang-en-toggle summary::before { content: "▸"; font-size: 0.6rem; transition: transform 150ms ease; }
+  .lang-en-toggle[open] summary::before { transform: rotate(90deg); }
+
+  /* ===== Topbar & Fixed Navbar (Corrected Themes) ===== */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    margin: calc(var(--space-5) * -1) calc(var(--space-4) * -1) var(--space-4);
+    padding: 16px;
+    background: var(--surface); /* Fixed Fallback Color */
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--surface-border);
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+  }
+
+  .exam-nav-bar {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 650px; z-index: 40;
+    padding: 14px 16px; padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    background: var(--surface); /* Fixed Fallback Color */
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--surface-border);
+    display: flex; gap: 12px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.03);
+  }
+
+  .btn { transition: transform 140ms ease, box-shadow 180ms ease, filter 180ms ease; flex: 1; display: flex; justify-content: center; align-items: center; gap: 8px; padding: 14px; border-radius: 14px; font-weight: 800; font-size: 1rem; border: none; cursor: pointer; }
+  .btn-primary { background: var(--color-accent); color: #fff; box-shadow: 0 4px 15px rgba(var(--color-accent-rgb), 0.2); }
+  .btn-secondary { background: rgba(128,128,128,0.1); color: var(--text-primary); border: 1px solid rgba(128,128,128,0.2); }
+  .btn:active:not(:disabled) { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ===== Modal & Anti-Download Protected Image ===== */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center; z-index: 300; padding: 20px;
+    animation: overlayFade 200ms ease both;
+  }
+  .modal-overlay .glass.card { animation: modalRise 260ms cubic-bezier(.22,.9,.3,1) both; }
+  @keyframes overlayFade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes modalRise { from { opacity: 0; transform: translateY(16px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+  .protected-img-wrapper { position: relative; display: inline-block; margin: 12px 0 20px; max-width: 100%; border: 1px solid rgba(128,128,128,0.15); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+  .q-figure { max-width: 100%; max-height: 220px; display: block; pointer-events: none; user-select: none; -webkit-user-drag: none; }
+  .img-shield { position: absolute; inset: 0; z-index: 10; cursor: zoom-in; } /* Invisible shield blocking right click */
+  .img-broken { border: 1.5px dashed var(--color-danger); min-height: 60px; opacity: 0.6; }
+</style>
+</head>
+<body oncontextmenu="return false;"> <!-- Global Right Click Blocked -->
+<div class="app-shell" id="shell">
+  <div class="state-block"><div class="spinner"></div></div>
+</div>
+
+<script type="module">
+import { initTheme, icons, renderState, showToast } from "../js/utils/ui-utils.js";
+import { getActiveStudent, refreshActiveStudent } from "../js/utils/student-utils.js";
+import { getExamById, getExamSnapshot } from "../js/utils/results-utils.js";
+import { getSubjects, getChapters, buildNameMap } from "../js/utils/syllabus-utils.js";
+import {
+  peekInProgressAttempt, getOrStartAttempt, saveLocalAttempt,
+  syncToFirestoreDebounced, submitAttempt, getExistingResult
+} from "../js/utils/attempt-utils.js";
+import { formatHms } from "../js/utils/grading-utils.js";
+
+initTheme();
+const shell = document.getElementById("shell");
+const params = new URLSearchParams(window.location.search);
+const examId = params.get("examId");
+const student = getActiveStudent();
+
+let exam = null;
+let snapshot = null;
+let attemptState = null;
+let timerHandle = null;
+let questionStartMillis = null;
+let slowQ1Warned = false, slowQ2Warned = false; 
+const firedMinuteCheckpoints = new Set(); 
+let motivationGiven = false; 
+let lastWarnedInterval = 0; 
+let examInProgress = false;
+
+if (!student) {
+  window.location.href = "../index.html";
+} else if (!examId) {
+  shell.innerHTML = `<div class="state-block"><p class="text-sm">পরীক্ষা শনাক্ত করা যায়নি।</p></div>`;
+} else {
+  refreshActiveStudent(student.docId).then(fresh => {
+    if (fresh) Object.assign(student, fresh); 
+    boot();
+  });
+}
+
+async function boot() {
+  shell.innerHTML = `<div class="state-block"><div class="spinner"></div><p class="text-sm text-muted mt-3">পরীক্ষা লোড করা হচ্ছে...</p></div>`;
+  try {
+    const existingResult = await getExistingResult(examId, student.studentId);
+    if (existingResult) {
+      window.location.href = `../student/result.html?resultId=${examId}_${student.studentId}`;
+      return;
+    }
+
+    exam = await getExamById(examId);
+    if (!exam) {
+      renderState(shell, "error", "এই পরীক্ষাটি এখন উপলব্ধ নয়।"); return;
+    }
+    snapshot = await getExamSnapshot(examId);
+    if (!snapshot || !snapshot.questions || snapshot.questions.length === 0) {
+      renderState(shell, "error", "পরীক্ষার প্রশ্ন এখনো প্রস্তুত হয়নি।"); return;
+    }
+
+    const resumable = await peekInProgressAttempt(examId, student.studentId);
+    if (resumable) {
+      attemptState = resumable;
+      attemptState.questionTimes = attemptState.questionTimes || {};
+      attemptState.markedForReview = attemptState.markedForReview || {};
+      renderExamShell();
+      startTimer();
+      return;
+    }
+
+    if (!["upcoming", "published", "active"].includes(exam.status)) {
+      renderState(shell, "error", "এই পরীক্ষাটি এখন উপলব্ধ নয়।"); return;
+    }
+    renderIntro();
+  } catch (err) {
+    console.error(err);
+    renderState(shell, "error", "পরীক্ষা লোড করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।");
+  }
+}
+
+async function renderIntro() {
+  const [subjects, chapters] = await Promise.all([getSubjects(), getChapters()]);
+  const subjectMap = buildNameMap(subjects);
+  const chapterMap = buildNameMap(chapters);
+  const subjNames = (exam.subjectIds || []).map(id => subjectMap[id]).filter(Boolean).join(", ");
+  const chapNames = (exam.chapterIds || []).map(id => chapterMap[id]).filter(Boolean).join(", ");
+  const dateStr = exam.examDate?.toDate ? exam.examDate.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" }) : "—";
+
+  shell.innerHTML = `
+    <div class="topbar">
+      <a href="../student/dashboard.html" style="background:rgba(128,128,128,0.1); border:1px solid rgba(128,128,128,0.2); border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; text-decoration:none; color:var(--text-primary);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+      </a>
+      <h2 style="font-size:1.1rem; font-weight:900; color:var(--text-primary);">পরীক্ষা শুরুর আগে</h2>
+      <div style="width:40px;"></div> <!-- Alignment Spacer -->
+    </div>
+
+    <div class="glass card" style="padding:24px;">
+      <p style="font-size:1.2rem; font-weight:900; color:var(--color-accent); line-height:1.3; margin-bottom:8px;">${exam.name}</p>
+      ${exam.description ? `<p class="text-sm text-muted mb-4">${exam.description}</p>` : ""}
+      
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px;">
+        <div style="background:rgba(128,128,128,0.03); border:1px solid rgba(128,128,128,0.1); border-radius:14px; padding:16px 12px; text-align:center;">
+          <p style="font-size:0.8rem; color:var(--text-muted); font-weight:800; margin-bottom:4px;">মোট প্রশ্ন</p>
+          <p style="font-size:1.6rem; font-weight:900; color:var(--text-primary); font-family:var(--font-num);">${snapshot.questions.length}</p>
+        </div>
+        <div style="background:rgba(128,128,128,0.03); border:1px solid rgba(128,128,128,0.1); border-radius:14px; padding:16px 12px; text-align:center;">
+          <p style="font-size:0.8rem; color:var(--text-muted); font-weight:800; margin-bottom:4px;">সময়কাল</p>
+          <p style="font-size:1.6rem; font-weight:900; color:var(--text-primary); font-family:var(--font-num);">${exam.durationMinutes} মি</p>
+        </div>
+      </div>
+      
+      <div style="margin-top:16px; font-size:0.85rem; color:var(--text-secondary); font-weight:600; line-height:1.6;">
+        <p><strong>তারিখ:</strong> ${dateStr} • ${exam.informationalTime || "—"}</p>
+        <p><strong>মোট নম্বর:</strong> ${exam.totalMarks ?? "—"}</p>
+        ${subjNames ? `<p><strong>বিষয়:</strong> ${subjNames}</p>` : ""}
+      </div>
+    </div>
+
+    <div class="glass card" style="padding:20px;">
+      <p style="font-weight:900; font-size:0.95rem; color:var(--text-primary); margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        মনে রাখুন
+      </p>
+      <ul style="font-size:0.85rem; color:var(--text-muted); font-weight:600; line-height:1.8; padding-left:20px;">
+        <li>শুরু করার মুহূর্ত থেকেই সময় গণনা শুরু হবে।</li>
+        <li>সময় শেষ হলে পরীক্ষাটি স্বয়ংক্রিয়ভাবে জমা হয়ে যাবে।</li>
+        <li>জমা দেওয়ার পর কোনো উত্তর পরিবর্তন করা যাবে না।</li>
+        <li><strong>ছবির ওপর ক্লিক করে জুম করা যাবে। ছবি ডাউনলোড করা সম্পূর্ণ নিষিদ্ধ।</strong></li>
+      </ul>
+    </div>
+
+    <button class="btn btn-primary" id="startBtn" style="width:100%; padding:16px; margin-top:20px;">পরীক্ষা শুরু করুন</button>
+  `;
+
+  document.getElementById("startBtn").addEventListener("click", async () => {
+    const btn = document.getElementById("startBtn");
+    btn.disabled = true; btn.textContent = "শুরু করা হচ্ছে...";
+    attemptState = await getOrStartAttempt(examId, student.studentId, exam.durationMinutes);
+    attemptState.questionTimes = attemptState.questionTimes || {};
+    attemptState.markedForReview = attemptState.markedForReview || {};
+    renderExamShell();
+    startTimer();
+  });
+}
+
+function renderExamShell() {
+  shell.innerHTML = `
+    <div class="topbar">
+      <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+        ${student.photoURL ? `<img src="${student.photoURL}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; pointer-events:none; user-select:none; -webkit-user-drag:none;">` : `<div style="width:36px; height:36px; border-radius:50%; background:var(--color-accent); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1.1rem;">${student.name.charAt(0)}</div>`}
+        <span style="font-weight:800; font-size:0.95rem; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${student.name}</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
+        <div style="display:flex; flex-direction:column; align-items:flex-end;">
+          <span style="font-size:0.65rem; font-weight:800; color:var(--text-muted); text-transform:uppercase;">বাকি সময়</span>
+          <span id="timerDisplay">--:--</span>
+        </div>
+        <button id="submitBtn" style="background:rgba(239, 68, 68, 0.1); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.2); padding:8px 14px; border-radius:10px; font-weight:800; font-size:0.8rem; cursor:pointer; transition:0.2s;">জমা দিন</button>
+      </div>
+    </div>
+
+    <div class="glass card" style="padding:24px 20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <p style="font-weight:900; font-size:1.05rem; color:var(--text-primary); font-family:var(--font-num);" id="qCounter">প্রশ্ন ১ / ${snapshot.questions.length}</p>
+        <button id="paletteBtn" style="background:rgba(128,128,128,0.08); border:1px solid rgba(128,128,128,0.2); width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-secondary); transition:0.2s;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+        </button>
+      </div>
+      <div class="exam-progress-track mt-3"><div class="exam-progress-fill" id="progressFill" style="width:0%;"></div></div>
+      <p style="font-size:0.75rem; color:var(--text-muted); font-weight:700; margin-top:8px; font-family:var(--font-num);" id="progressLabel"></p>
+      
+      <div id="questionBody" class="mt-4"></div>
+    </div>
+
+    <!-- Floating Navigation Bar (Hardcoded SVGs to fix "undefined" text) -->
+    <div class="exam-nav-bar">
+      <button class="btn btn-secondary" id="prevBtn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        পূর্ববর্তী
+      </button>
+      <button class="btn btn-primary" id="nextBtn">
+        পরবর্তী
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+
+    <!-- Palette Modal -->
+    <div id="paletteOverlay" class="modal-overlay hidden">
+      <div class="glass card" style="max-width:380px; width:100%; max-height:85vh; overflow-y:auto; padding:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <p style="font-weight:900; font-size:1.1rem; color:var(--text-primary);">প্রশ্ন তালিকা</p>
+          <button id="closePaletteBtn" style="background:rgba(239, 68, 68, 0.1); color:#ef4444; border:none; width:36px; height:36px; border-radius:10px; cursor:pointer;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+        <div class="palette-grid" id="paletteGrid"></div>
+        
+        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:24px; justify-content:center; font-size:0.8rem; font-weight:800; color:var(--text-muted);">
+          <span style="display:flex; align-items:center; gap:6px;"><div style="width:16px; height:16px; border-radius:4px; background:rgba(16,185,129,0.15); border:1px solid #10b981;"></div> উত্তরিত</span>
+          <span style="display:flex; align-items:center; gap:6px;"><div style="width:16px; height:16px; border-radius:4px; background:rgba(128,128,128,0.05); border:1px solid rgba(128,128,128,0.2);"></div> অনুত্তরিত</span>
+          <span style="display:flex; align-items:center; gap:6px;"><div style="width:16px; height:16px; border-radius:4px; background:rgba(128,128,128,0.05); border:1px solid #f59e0b;"></div> চিহ্নিত</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Submit Warning Modal -->
+    <div id="submitModal" class="modal-overlay hidden">
+      <div class="glass card" style="max-width:380px; padding:24px; text-align:center;">
+        <div style="width:64px; height:64px; border-radius:50%; background:rgba(239, 68, 68, 0.1); color:#ef4444; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <p style="font-weight:900; font-size:1.1rem; color:var(--text-primary); margin-bottom:8px;">নিশ্চিত করুন</p>
+        <p style="font-size:0.85rem; color:var(--text-muted); font-weight:600; line-height:1.5;">পরীক্ষা জমা দেওয়ার পরে কোনো উত্তর পরিবর্তন করা যাবে না।</p>
+        <div style="display:flex; gap:10px; margin-top:24px;">
+          <button class="btn btn-secondary" id="cancelSubmitBtn">ফিরে যান</button>
+          <button class="btn btn-primary" id="confirmSubmitBtn" style="background:#ef4444; box-shadow:0 4px 15px rgba(239,68,68,0.2);">চূড়ান্ত জমা</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Protected Fullscreen Image Preview -->
+    <div id="figurePreviewModal" class="hidden" style="position:fixed;inset:0;background:rgba(10,14,26,0.95);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;cursor:zoom-out;">
+      <div style="position:relative; display:inline-block; pointer-events:none;">
+        <img id="figurePreviewImg" style="max-width:100%;max-height:85vh;border-radius:16px; pointer-events:none; user-select:none; -webkit-user-drag:none;" draggable="false" oncontextmenu="return false;">
+      </div>
+    </div>
+  `;
+
+  document.getElementById("prevBtn").addEventListener("click", () => navigate(-1));
+  document.getElementById("nextBtn").addEventListener("click", () => navigate(1));
+  document.getElementById("paletteBtn").addEventListener("click", openPalette);
+  document.getElementById("closePaletteBtn").addEventListener("click", closePalette);
+  document.getElementById("submitBtn").addEventListener("click", () => document.getElementById("submitModal").classList.remove("hidden"));
+  document.getElementById("cancelSubmitBtn").addEventListener("click", () => document.getElementById("submitModal").classList.add("hidden"));
+  document.getElementById("confirmSubmitBtn").addEventListener("click", () => doSubmit(false));
+  document.getElementById("figurePreviewModal").addEventListener("click", closeFigurePreview);
+
+  window.addEventListener("online", handleConnChange);
+  window.addEventListener("offline", handleConnChange);
+  if (!examInProgress) {
+    examInProgress = true;
+    window.addEventListener("beforeunload", leaveGuard);
+  }
+  questionStartMillis = Date.now();
+  renderQuestion();
+}
+
+function leaveGuard(e) { if (!examInProgress) return; e.preventDefault(); e.returnValue = ""; }
+function handleConnChange() { showToast(navigator.onLine ? "অনলাইনে সংযুক্ত হয়েছে।" : "অফলাইন — উত্তর ডিভাইসে সেভ হচ্ছে।", navigator.onLine ? "success" : "error"); }
+
+function renderQuestion() {
+  const idx = attemptState.currentIndex;
+  const q = snapshot.questions[idx];
+  document.getElementById("qCounter").innerHTML = `প্রশ্ন <span class="num-part">${idx + 1}</span> / <span class="num-part">${snapshot.questions.length}</span>`;
+  document.getElementById("prevBtn").disabled = idx === 0;
+  document.getElementById("nextBtn").disabled = idx === snapshot.questions.length - 1;
+  
+  const answeredCount = Object.keys(attemptState.answers).length;
+  document.getElementById("progressFill").style.width = `${Math.round((answeredCount / snapshot.questions.length) * 100)}%`;
+  document.getElementById("progressLabel").textContent = `${answeredCount} / ${snapshot.questions.length} টি প্রশ্নের উত্তর দেওয়া হয়েছে`;
+  
+  const selected = attemptState.answers[q.questionId];
+  const isMarked = !!attemptState.markedForReview[q.questionId];
+  
+  const body = document.getElementById("questionBody");
+  body.classList.remove("q-enter");
+  void body.offsetWidth; 
+  body.classList.add("q-enter");
+  
+  // Protected Image Renderer
+  const imageHtml = q.imageUrl ? `
+    <div class="protected-img-wrapper">
+      <img src="${q.imageUrl}" class="q-figure" draggable="false" oncontextmenu="return false;" onerror="this.src=''; this.style.display='none';">
+      <div class="img-shield" data-url="${q.imageUrl}"></div>
+    </div>
+  ` : "";
+
+  // Handled missing options gracefully with `?? ""` fallback to completely avoid "undefined" text.
+  body.innerHTML = `
+    <details class="lang-en-toggle" style="margin-bottom:12px;">
+      <summary>English</summary>
+      <p style="margin-top:8px; font-size:0.9rem; color:var(--text-secondary); line-height:1.5;">${q.question_en}</p>
+    </details>
+
+    <p style="font-weight:800; font-size:1.1rem; color:var(--text-primary); line-height:1.6;">${q.question_bn}</p>
+    ${imageHtml}
+    
+    <div style="margin-top:24px;">
+      ${["A", "B", "C", "D"].map(letter => `
+        <button class="option-card ${selected === letter ? "selected" : ""}" data-letter="${letter}">
+          <span class="option-letter">${letter}</span>
+          <span style="flex:1; line-height:1.4;">${q.options_bn?.[letter] ?? ""}</span>
+        </button>
+      `).join("")}
+    </div>
+    
+    <button type="button" class="review-toggle ${isMarked ? "active" : ""}" id="markReviewBtn" style="margin-top:16px; padding:10px 18px; border-radius:12px; font-weight:800; display:flex; align-items:center; gap:8px; background:rgba(128,128,128,0.05); border:1px solid rgba(128,128,128,0.2); cursor:pointer;">
+      ${isMarked ? 
+        `<svg width="18" height="18" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> চিহ্নিত করা আছে` : 
+        `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> পর্যালোচনার জন্য চিহ্নিত করুন`
+      }
+    </button>
+  `;
+  body.querySelectorAll(".option-card").forEach(btn => {
+    btn.addEventListener("click", () => selectAnswer(q.questionId, btn.dataset.letter));
+  });
+  
+  const reviewBtn = document.getElementById("markReviewBtn");
+  if (reviewBtn) {
+    reviewBtn.addEventListener("click", () => toggleMarkForReview(q.questionId));
+    if (isMarked) {
+      reviewBtn.style.borderColor = "#f59e0b";
+      reviewBtn.style.color = "#f59e0b";
+      reviewBtn.style.background = "rgba(245, 158, 11, 0.1)";
+    }
+  }
+  
+  const shieldBtn = body.querySelector(".img-shield");
+  if (shieldBtn) shieldBtn.addEventListener("click", () => openFigurePreview(shieldBtn.dataset.url));
+}
+
+function openFigurePreview(url) {
+  const modal = document.getElementById("figurePreviewModal");
+  const modalImg = document.getElementById("figurePreviewImg");
+  modalImg.src = url;
+  modal.classList.remove("hidden");
+}
+function closeFigurePreview() {
+  const modal = document.getElementById("figurePreviewModal");
+  modal.classList.add("hidden");
+  document.getElementById("figurePreviewImg").src = "";
+}
+
+function toggleMarkForReview(questionId) {
+  attemptState.markedForReview[questionId] = !attemptState.markedForReview[questionId];
+  persistState(); renderQuestion();
+}
+
+function selectAnswer(questionId, letter) {
+  if (attemptState.answers[questionId] === letter) delete attemptState.answers[questionId];
+  else attemptState.answers[questionId] = letter;
+  
+  persistState();
+
+  const body = document.getElementById("questionBody");
+  const nowSelected = attemptState.answers[questionId];
+  body.querySelectorAll(".option-card").forEach(btn => {
+    btn.classList.toggle("selected", btn.dataset.letter === nowSelected);
+    btn.classList.remove("option-flash");
+  });
+  if (nowSelected) {
+    const tappedBtn = body.querySelector(`.option-card[data-letter="${nowSelected}"]`);
+    if (tappedBtn) { void tappedBtn.offsetWidth; tappedBtn.classList.add("option-flash"); }
+  }
+
+  const answeredCount = Object.keys(attemptState.answers).length;
+  document.getElementById("progressFill").style.width = `${Math.round((answeredCount / snapshot.questions.length) * 100)}%`;
+  document.getElementById("progressLabel").textContent = `${answeredCount} / ${snapshot.questions.length} টি প্রশ্নের উত্তর দেওয়া হয়েছে`;
+}
+
+function navigate(delta) {
+  const next = attemptState.currentIndex + delta;
+  if (next < 0 || next >= snapshot.questions.length) return;
+  recordElapsed();
+  attemptState.currentIndex = next;
+  persistState(); renderQuestion();
+}
+
+function recordElapsed() {
+  if (questionStartMillis == null) return;
+  const q = snapshot.questions[attemptState.currentIndex];
+  const elapsed = Math.round((Date.now() - questionStartMillis) / 1000);
+  if (elapsed > 0 && q) attemptState.questionTimes[q.questionId] = (attemptState.questionTimes[q.questionId] || 0) + elapsed;
+  questionStartMillis = Date.now();
+  slowQ1Warned = false; slowQ2Warned = false;
+}
+
+function persistState() {
+  saveLocalAttempt(examId, student.studentId, attemptState);
+  syncToFirestoreDebounced(examId, student.studentId, {
+    answers: attemptState.answers, currentIndex: attemptState.currentIndex,
+    questionTimes: attemptState.questionTimes, markedForReview: attemptState.markedForReview
+  });
+}
+
+function openPalette() {
+  const grid = document.getElementById("paletteGrid");
+  grid.innerHTML = snapshot.questions.map((q, i) => {
+    const answered = !!attemptState.answers[q.questionId];
+    const marked = !!attemptState.markedForReview[q.questionId];
+    const isCurrent = i === attemptState.currentIndex;
+    return `<button class="palette-cell ${answered ? "answered" : ""} ${marked ? "marked" : ""} ${isCurrent ? "current" : ""}" data-idx="${i}">${i + 1}</button>`;
+  }).join("");
+  grid.querySelectorAll("[data-idx]").forEach(btn => btn.addEventListener("click", () => {
+    recordElapsed(); attemptState.currentIndex = Number(btn.dataset.idx);
+    persistState(); renderQuestion(); closePalette();
+  }));
+  document.getElementById("paletteOverlay").classList.remove("hidden");
+}
+function closePalette() { document.getElementById("paletteOverlay").classList.add("hidden"); }
+
+function speak(name, message) {
+  if (!("speechSynthesis" in window)) return;
+  try {
+    window.speechSynthesis.cancel(); 
+    const text = name ? `${name}, ${message}` : message;
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "bn-BD"; utter.rate = 0.95;
+    window.speechSynthesis.speak(utter);
+  } catch (e) { }
+}
+
+function startTimer() { clearInterval(timerHandle); tick(); timerHandle = setInterval(tick, 1000); }
+function tick() {
+  const remaining = attemptState.endAtMillis - Date.now();
+  const display = document.getElementById("timerDisplay");
+  if (display) {
+    display.textContent = formatHms(remaining);
+    display.classList.toggle("timer-critical", remaining <= 60 * 1000 && remaining > 0);
+    display.classList.toggle("timer-warning", remaining <= 5 * 60 * 1000 && remaining > 60 * 1000);
+  }
+  
+  const totalMinutes = exam?.durationMinutes || 0;
+  const remainingMinutes = remaining / 60000;
+  const MIN_WORDS = { 20: "বিশ", 10: "দশ", 5: "পাঁচ", 1: "এক" };
+  [20, 10, 5, 1].filter(m => m < totalMinutes).forEach(m => {
+    if (remainingMinutes <= m && remainingMinutes > m - 1 && !firedMinuteCheckpoints.has(m)) {
+      firedMinuteCheckpoints.add(m);
+      if (m === 1) { showToast("আর মাত্র ১ মিনিট বাকি — সময় শেষ হলে উত্তর স্বয়ংক্রিয়ভাবে জমা হয়ে যাবে।", "error"); speak(student.name, "আর মাত্র এক মিনিট বাকি আছে। সময় শেষ হয়ে গেলে তোমার উত্তরগুলো স্বয়ংক্রিয়ভাবে জমা হয়ে যাবে।"); }
+      else { showToast(`আর মাত্র ${m} মিনিট বাকি আছে।`, "error"); speak(student.name, `আর মাত্র ${MIN_WORDS[m]} মিনিট বাকি আছে।`); }
+    }
+  });
+
+  if (!motivationGiven && attemptState.startedAtMillis && totalMinutes > 0) {
+    const elapsedMinutes = (Date.now() - attemptState.startedAtMillis) / 60000;
+    if (elapsedMinutes >= totalMinutes / 2) {
+      motivationGiven = true;
+      const answeredCount = Object.keys(attemptState.answers).length;
+      const progressRatio = snapshot.questions.length ? answeredCount / snapshot.questions.length : 0;
+      const paceRatio = Math.min(1, elapsedMinutes / totalMinutes);
+      if (progressRatio >= paceRatio * 0.7) speak(student.name, "তুমি খুব ভালো করছ, পরীক্ষা সুন্দরভাবে এগিয়ে যাচ্ছে। এভাবেই চালিয়ে যাও।");
+    }
+  }
+
+  if (questionStartMillis != null) {
+    const currentQ = snapshot.questions[attemptState.currentIndex];
+    const alreadyAnswered = currentQ && attemptState.answers[currentQ.questionId];
+    if (currentQ && !alreadyAnswered) {
+      const qElapsedSec = (Date.now() - questionStartMillis) / 1000;
+      if (qElapsedSec >= 60 && !slowQ1Warned) { slowQ1Warned = true; speak(student.name, "এই প্রশ্নে একটু বেশি সময় লাগছে। ভেবে উত্তর দিয়ে দাও, চাইলে পরে আবার ফিরে আসতে পারবে।"); }
+      if (qElapsedSec >= 120 && !slowQ2Warned) { slowQ2Warned = true; speak(student.name, "চিন্তা করো না, তুমি ঠিকভাবেই এগিয়ে যাচ্ছ। একটু ভেবে উত্তর দিয়ে সামনে বাড়ো।"); }
+    }
+  }
+
+  if (attemptState.startedAtMillis && remaining > 5 * 60 * 1000) {
+    const elapsedMinutes = (Date.now() - attemptState.startedAtMillis) / 60000;
+    const currentInterval = Math.floor(elapsedMinutes / 30);
+    if (currentInterval > lastWarnedInterval && currentInterval >= 1) { lastWarnedInterval = currentInterval; showToast(`৩০ মিনিট পার হয়ে গেছে — বাকি সময়: ${formatHms(remaining)}`, "error"); }
+  }
+  if (remaining <= 0) { clearInterval(timerHandle); doSubmit(true); }
+}
+
+let submitting = false;
+async function doSubmit(isAutoSubmit) {
+  if (submitting) return;
+  submitting = true; clearInterval(timerHandle); recordElapsed();
+
+  const modal = document.getElementById("submitModal");
+  if (modal) modal.classList.add("hidden");
+  shell.innerHTML = `<div class="state-block"><div class="spinner"></div><p class="text-sm text-muted mt-3" style="font-weight:800;">${isAutoSubmit ? "সময় শেষ — পরীক্ষা জমা দেওয়া হচ্ছে..." : "জমা দেওয়া হচ্ছে..."}</p></div>`;
+
+  try {
+    const result = await submitAttempt({
+      examId, studentId: student.studentId, examName: exam.name,
+      snapshotQuestions: snapshot.questions, answers: attemptState.answers,
+      questionTimes: attemptState.questionTimes, markedForReview: attemptState.markedForReview,
+      startedAtMillis: attemptState.startedAtMillis
+    });
+    examInProgress = false; window.removeEventListener("beforeunload", leaveGuard);
+    window.location.href = `../student/result.html?resultId=${result.resultId}&justSubmitted=1`;
+  } catch (err) {
+    console.error(err); submitting = false;
+    showToast("জমা দেওয়া যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।", "error");
+    renderExamShell(); startTimer();
+  }
+}
+</script>
+</body>
+</html>
