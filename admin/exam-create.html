@@ -10,7 +10,7 @@
 <style>
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
   body { overflow-x: hidden; background: var(--bg); }
-  .app-shell { max-width: 800px; padding-bottom: 50px; margin: 0 auto; }
+  .app-shell { max-width: 850px; padding-bottom: 50px; margin: 0 auto; }
 
   /* ===== Premium Glass Cards ===== */
   .glass-card {
@@ -18,55 +18,85 @@
     border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 20px; padding: 24px; margin-bottom: 24px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.02); transition: all 0.3s ease;
   }
+  @media (max-width: 600px) { .glass-card { padding: 16px; border-radius: 16px; } }
+
   .section-title { font-size: 1.15rem; font-weight: 900; color: var(--text-primary); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px dashed var(--surface-border); padding-bottom: 12px; }
 
-  /* ===== Form & Input Styles ===== */
+  /* ===== Premium Form & Input Styles ===== */
   .field { margin-bottom: 16px; }
   .field label { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 800; color: var(--text-secondary); margin-bottom: 8px; }
   .input-glass {
     width: 100%; box-sizing: border-box; padding: 14px 16px;
     background: rgba(128, 128, 128, 0.04); border: 1px solid var(--surface-border);
     border-radius: 14px; color: var(--text-primary);
-    font-family: inherit; font-size: 0.95rem; font-weight: 600; outline: none; transition: 0.2s;
+    font-family: inherit; font-size: 0.95rem; font-weight: 700; outline: none; transition: all 0.3s ease;
   }
   .input-glass:focus { border-color: var(--color-accent); background: var(--surface); box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.15); }
-  textarea.input-glass { resize: vertical; min-height: 100px; }
-  select.input-glass { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1.2em; }
+  textarea.input-glass { resize: vertical; min-height: 100px; line-height: 1.5; }
+  select.input-glass { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1.2em; padding-right:40px; }
+
+  #examTargetBatch { border-color: var(--color-accent); background: rgba(var(--color-accent-rgb), 0.03); color: var(--text-primary); font-weight: 900; }
 
   /* ===== Responsive Grids ===== */
-  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
-  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
-  .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+  .responsive-grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px; }
+  .responsive-grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 16px; }
+  .responsive-grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 12px; }
 
-  /* ===== Premium Buttons ===== */
-  .btn-glass {
-    background: rgba(128, 128, 128, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(128, 128, 128, 0.15);
-    border-radius: 14px; color: var(--text-primary); padding: 12px 20px; font-weight: 800; font-size: 0.95rem;
-    display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s ease;
+  /* ===== Next-Gen Premium Buttons ===== */
+  .btn-premium {
+    background: linear-gradient(135deg, var(--color-accent), #f59e0b);
+    color: #fff; border: none; padding: 14px 20px; border-radius: 14px;
+    font-weight: 900; font-size: 1.05rem; cursor: pointer;
+    box-shadow: 0 6px 20px rgba(var(--color-accent-rgb), 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   }
-  .btn-glass:hover { background: rgba(128, 128, 128, 0.1); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.05); }
-  .btn-glass:active { transform: translateY(0) scale(0.96); }
-  
-  .btn-primary { background: linear-gradient(135deg, var(--color-accent), #f59e0b); color: #fff; border: none; box-shadow: 0 4px 15px rgba(var(--color-accent-rgb), 0.3); }
-  .btn-primary:hover { box-shadow: 0 6px 20px rgba(var(--color-accent-rgb), 0.4); transform: translateY(-2px); }
+  .btn-premium:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(var(--color-accent-rgb), 0.45); filter: brightness(1.05); }
+  .btn-premium:active:not(:disabled) { transform: translateY(0) scale(0.97); }
+  .btn-premium:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
 
-  /* ===== AI Rows ===== */
-  .ai-row { background: rgba(128,128,128,0.02); border: 1px solid rgba(128,128,128,0.1); border-radius: 16px; padding: 16px; margin-bottom: 16px; position: relative; }
+  .btn-outline {
+    background: rgba(128, 128, 128, 0.05); backdrop-filter: blur(12px);
+    border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px;
+    color: var(--text-primary); padding: 12px 16px; font-weight: 800; font-size: 0.95rem;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    cursor: pointer; transition: all 0.2s ease;
+  }
+  .btn-outline:hover { background: var(--surface); border-color: var(--text-secondary); color: var(--color-accent); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.05); }
+  .btn-outline:active { transform: translateY(0) scale(0.96); }
+
+  /* ===== Modals & Widgets ===== */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 16px; opacity: 0; pointer-events: none; transition: 0.3s ease; }
+  .modal-overlay.active { opacity: 1; pointer-events: auto; }
+  .custom-modal { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 20px; padding: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; transform: translateY(20px); transition: 0.3s ease; }
+  .modal-overlay.active .custom-modal { transform: translateY(0); }
+  
+  .close-modal-btn { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; border-radius: 12px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+  .close-modal-btn:hover { background: #ef4444; color: #fff; }
+
+  /* ===== AI Guide Box ===== */
+  .ai-guide-box { background: rgba(139,92,246,0.08); border: 1px dashed rgba(139,92,246,0.3); border-radius: 14px; padding: 16px; margin-bottom: 20px; }
+  .ai-guide-box p { font-size: 0.9rem; font-weight: 900; color: #8b5cf6; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .ai-guide-box ul { font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; margin: 0; padding-left: 20px; line-height: 1.6; }
+
+  /* ===== AI Rows (Responsive) ===== */
+  .ai-row { background: rgba(128,128,128,0.02); border: 1px solid rgba(128,128,128,0.1); border-radius: 16px; padding: 20px; margin-bottom: 16px; position: relative; }
   .remove-ai-btn { position: absolute; top: 16px; right: 16px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; border-radius: 10px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
   .remove-ai-btn:hover { background: #ef4444; color: #fff; box-shadow: 0 4px 12px rgba(239,68,68,0.2); }
 
   /* ===== Selected Questions List ===== */
-  .sel-question-card { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 16px; padding: 16px; margin-bottom: 12px; transition: 0.2s; }
-  .sel-question-card:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
-  .action-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: rgba(128,128,128,0.05); color: var(--text-secondary); border: 1px solid rgba(128,128,128,0.1); cursor: pointer; transition: 0.2s; flex-shrink: 0; }
-  .action-icon:hover { background: var(--surface); color: var(--color-accent); border-color: var(--color-accent); }
-  .action-icon.delete:hover { background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: #ef4444; }
+  .sel-question-card { display: flex; justify-content: space-between; align-items: center; gap: 16px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 16px; padding: 16px; margin-bottom: 12px; transition: 0.2s; flex-wrap: wrap; }
+  .sel-question-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.04); border-color: rgba(128,128,128,0.2); }
+  .action-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: rgba(128,128,128,0.05); color: var(--text-secondary); border: 1px solid rgba(128,128,128,0.1); cursor: pointer; transition: 0.2s; flex-shrink: 0; }
+  .action-icon:hover { background: var(--surface); color: var(--color-accent); border-color: var(--color-accent); box-shadow: 0 4px 12px rgba(var(--color-accent-rgb),0.15); transform: translateY(-2px); }
+  .action-icon.delete:hover { background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: #ef4444; box-shadow: 0 4px 12px rgba(239,68,68,0.15); }
 
-  /* ===== Topbar ===== */
+  /* ===== Topbar (FIXED THEME COLOR) ===== */
   .topbar {
     position: sticky; top: 0; z-index: 50;
     margin: calc(var(--space-5) * -1) calc(var(--space-4) * -1) var(--space-4);
-    padding: 16px 20px; background: rgba(var(--bg-rgb, 10,14,26), 0.85);
+    padding: 16px 20px; 
+    background: var(--surface); /* Fixed to match natural theme */
     backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid rgba(128,128,128,0.1);
     display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.02);
@@ -78,10 +108,89 @@
   <div class="state-block"><div class="spinner"></div></div>
 </div>
 
+<!-- Modal 1: AI Question Generator -->
+<div class="modal-overlay" id="aiGeneratorModal">
+  <div class="custom-modal">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <p style="font-size:1.2rem; font-weight:900; color:#8b5cf6; display:flex; align-items:center; gap:8px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        AI প্রশ্ন জেনারেটর
+      </p>
+      <button class="close-modal-btn" id="closeAiModalBtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+
+    <!-- AI Guide Box -->
+    <div class="ai-guide-box">
+      <p>💡 AI গাইডলাইন</p>
+      <ul>
+        <li>নির্দিষ্ট টপিক থেকে প্রশ্ন চাইলে "নির্দেশনা" বক্সে লিখে দিন (যেমন: "নিউটনের ৩টা সূত্র")।</li>
+        <li>বইয়ের পৃষ্ঠার ছবি আপলোড করলে AI সরাসরি সেই পৃষ্ঠা থেকেই প্রশ্ন তৈরি করবে।</li>
+        <li>একসাথে একাধিক ব্যাচ বা বিষয়ের প্রশ্ন তৈরি করতে "আরেকটি বিষয় যোগ করুন" বাটনে ক্লিক করুন।</li>
+      </ul>
+    </div>
+
+    <div id="aiRowsContainer"></div>
+    
+    <button type="button" class="btn-outline" id="addAiRowBtn" style="width:100%; border:2px dashed rgba(128,128,128,0.25); margin-top:8px;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      আরেকটি বিষয় যোগ করুন
+    </button>
+
+    <div class="mt-4 hidden" id="aiGenerateProgress" style="background:rgba(139,92,246,0.08); border:1px solid rgba(139,92,246,0.2); padding:20px; border-radius:16px; text-align:center;">
+      <div class="spinner" style="width:28px;height:28px; border-color:rgba(139,92,246,0.3); border-top-color:#8b5cf6; margin:0 auto 12px;"></div>
+      <p style="font-size:1rem; font-weight:900; color:#8b5cf6;" id="aiGenerateProgressText">প্রশ্ন তৈরি শুরু হচ্ছে...</p>
+    </div>
+    
+    <button type="button" class="btn-premium" id="aiGenerateBtn" style="width:100%; background:linear-gradient(135deg, #8b5cf6, #c084fc); margin-top:20px;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      AI দিয়ে জেনারেট করুন
+    </button>
+  </div>
+</div>
+
+<!-- Modal 2: Quick Add Manual Question -->
+<div class="modal-overlay" id="quickAddModalOverlay">
+  <div class="custom-modal">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <p style="font-size:1.2rem; font-weight:900; color:var(--text-primary); display:flex; align-items:center; gap:8px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        ম্যানুয়ালি নতুন প্রশ্ন যোগ করুন
+      </p>
+      <button class="close-modal-btn" id="closeQuickAddModalBtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+
+    <form id="quickAddForm">
+      <div class="field"><label>বাংলা প্রশ্ন</label><input class="input-glass" id="qaBn" required placeholder="প্রশ্নটি লিখুন..."></div>
+      <div class="field"><label>ইংরেজি প্রশ্ন (ঐচ্ছিক)</label><input class="input-glass" id="qaEn" placeholder="Optional translation..."></div>
+      
+      <div class="responsive-grid-2 mt-3">
+        <input class="input-glass" id="qaA" placeholder="অপশন A" required>
+        <input class="input-glass" id="qaB" placeholder="অপশন B" required>
+        <input class="input-glass" id="qaC" placeholder="অপশন C" required>
+        <input class="input-glass" id="qaD" placeholder="অপশন D" required>
+      </div>
+      
+      <div class="responsive-grid-4 mt-4">
+        <div class="field"><label>সঠিক উত্তর</label><select class="input-glass" id="qaCorrect" style="border-color:#10b981;"><option>A</option><option>B</option><option>C</option><option>D</option></select></div>
+        <div class="field"><label>ব্যাচ</label><select class="input-glass" id="qaSubject"></select></div>
+        <div class="field"><label>বিষয়</label><select class="input-glass" id="qaChapter"></select></div>
+        <div class="field"><label>টপিক</label><select class="input-glass" id="qaTopic"></select></div>
+      </div>
+      
+      <button type="submit" class="btn-premium mt-4" style="width:100%;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        তালিকায় যুক্ত করুন
+      </button>
+    </form>
+  </div>
+</div>
+
+
 <script type="module">
-import { initTheme, toggleTheme, showToast, friendlyError } from "../js/utils/ui-utils.js";
+import { initTheme, toggleTheme, icons, showToast, friendlyError, aiBadge } from "../js/utils/ui-utils.js";
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
-import { getFullSyllabusTree } from "../js/utils/syllabus-utils.js";
+import { initAdminPwaInstall } from "../pwa-install.js";
+import { getFullSyllabusTree, buildNameMap } from "../js/utils/syllabus-utils.js";
 import { getQuestionsByIds, addQuestion } from "../js/utils/question-utils.js";
 import { createExam, updateExam, getExamById, calculateTotalMarks } from "../js/utils/exam-utils.js";
 import { generateQuestionsFromImage, parseAiImportText, promptForApiKey, fileToImagePart } from "../js/utils/ai-import-utils.js";
@@ -99,9 +208,17 @@ requireAdmin(async () => {
   shell.innerHTML = template();
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
   document.getElementById("logoutBtn").addEventListener("click", adminLogout);
+  initAdminPwaInstall("installBtn");
   
   document.getElementById("examForm").addEventListener("submit", handleSubmit);
   document.getElementById("marksPerQuestion").addEventListener("input", updateTotalMarks);
+  
+  // Widget Modals Toggle Logic
+  document.getElementById("openAiModalBtn").addEventListener("click", () => document.getElementById("aiGeneratorModal").classList.add("active"));
+  document.getElementById("closeAiModalBtn").addEventListener("click", () => document.getElementById("aiGeneratorModal").classList.remove("active"));
+  
+  document.getElementById("openQuickAddModalBtn").addEventListener("click", () => document.getElementById("quickAddModalOverlay").classList.add("active"));
+  document.getElementById("closeQuickAddModalBtn").addEventListener("click", () => document.getElementById("quickAddModalOverlay").classList.remove("active"));
   
   document.getElementById("goToBank").addEventListener("click", () => {
     persistCart();
@@ -114,7 +231,7 @@ requireAdmin(async () => {
   document.getElementById("aiGenerateBtn").addEventListener("click", handleAiGenerate);
 
   tree = await getFullSyllabusTree();
-  populateTargetBatch(); // <-- NEW FEATURE POPULATED
+  populateTargetBatch();
   populateQuickAddSyllabus();
   addAiRow();
 
@@ -149,130 +266,90 @@ function template() {
   return `
     <div class="topbar">
       <div style="display:flex; align-items:center; gap:12px;">
-        <a href="../admin/exams.html" class="btn-glass" style="width:42px; height:42px; padding:0; border-radius:12px;">
+        <a href="../admin/exams.html" class="btn-outline" style="width:42px; height:42px; padding:0; border-radius:12px; border:none; background:rgba(128,128,128,0.1);">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
         </a>
         <h2 style="font-size:1.15rem; font-weight:900; color:var(--text-primary); margin:0;">${editId ? "পরীক্ষা সম্পাদনা" : "নতুন পরীক্ষা তৈরি"}</h2>
       </div>
       <div style="display:flex; gap:10px;">
         <button class="theme-toggle" id="themeToggle" style="margin:0;"><span class="theme-toggle-thumb"></span></button>
-        <button class="btn-glass" id="logoutBtn" style="width:42px;height:42px;padding:0;border-color:rgba(239,68,68,0.3);color:#ef4444;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:18px;height:18px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+        <button class="btn-outline hidden" id="installBtn" style="width:42px;height:42px;padding:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M12 3v13m0 0l-4-4m4 4l4-4M5 21h14"/></svg></button>
+        <button class="btn-outline" id="logoutBtn" style="width:42px;height:42px;padding:0;border-color:rgba(239,68,68,0.3);color:#ef4444;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:18px;height:18px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
       </div>
     </div>
 
-    <!-- Exam Basic Info -->
+    <!-- Exam Basic Info (Default Shown) -->
     <form id="examForm" class="glass-card">
       <div class="section-title">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
         পরীক্ষার সাধারণ তথ্য
       </div>
       
-      <div class="grid-2">
+      <div class="responsive-grid-2">
         <div class="field">
           <label>পরীক্ষার নাম</label>
           <input class="input-glass" id="examName" required placeholder="যেমন: Weekly Mock Test 1">
         </div>
         <div class="field">
           <label>লক্ষ্য ব্যাচ (Target Batch)</label>
-          <select class="input-glass" id="examTargetBatch" required style="border-color:var(--color-accent); background:rgba(var(--color-accent-rgb),0.02);">
+          <select class="input-glass" id="examTargetBatch" required>
             <option value="all">সকল ব্যাচ (সবার জন্য উন্মুক্ত)</option>
             <!-- Batches populated by JS -->
           </select>
         </div>
       </div>
       
-      <div class="field mt-2">
+            <div class="field mt-2">
         <label>বিবরণ / নির্দেশনা (ঐচ্ছিক)</label>
         <textarea class="input-glass" id="examDesc" placeholder="পরীক্ষার্থীদের জন্য কোনো বিশেষ নির্দেশনা থাকলে লিখুন..."></textarea>
       </div>
       
-      <div class="grid-2 mt-3">
+      <div class="responsive-grid-4 mt-3">
         <div class="field"><label>পরীক্ষার তারিখ</label><input class="input-glass" type="date" id="examDate" required></div>
         <div class="field"><label>সময়কাল (মিনিট)</label><input class="input-glass" type="number" min="1" id="examDuration" placeholder="যেমন: 30" required></div>
         <div class="field"><label>তথ্যগত সময় (ঐচ্ছিক)</label><input class="input-glass" id="examTime" placeholder="যেমন: সকাল ১০:০০"></div>
         <div class="field"><label>প্রতি প্রশ্নে নম্বর</label><input class="input-glass" type="number" min="1" id="marksPerQuestion" value="1" required></div>
       </div>
       
-      <div style="background:rgba(var(--color-accent-rgb), 0.08); border:1px solid rgba(var(--color-accent-rgb), 0.2); padding:16px; border-radius:14px; text-align:center; margin-top:16px;">
+      <div style="background:linear-gradient(135deg, rgba(var(--color-accent-rgb),0.1), rgba(var(--color-accent-rgb),0.02)); border:1px solid rgba(var(--color-accent-rgb), 0.2); padding:20px; border-radius:16px; text-align:center; margin-top:20px;">
         <p style="font-size:0.95rem; font-weight:800; color:var(--text-secondary);">মোট নম্বর</p>
-        <p style="font-size:2.2rem; font-weight:900; color:var(--color-accent); font-family:var(--font-num); line-height:1;" id="totalMarksDisplay">0</p>
+        <p style="font-size:2.5rem; font-weight:900; color:var(--color-accent); font-family:var(--font-num); line-height:1; margin-top:8px;" id="totalMarksDisplay">0</p>
       </div>
       
-      <p id="formError" class="text-sm hidden mt-3" style="color:#ef4444; font-weight:700; text-align:center;"></p>
+      <p id="formError" class="text-sm hidden mt-3" style="color:#ef4444; font-weight:800; text-align:center;"></p>
       
-      <button type="submit" class="btn-glass btn-primary mt-4" id="submitBtn" style="width:100%; padding:16px; font-size:1.05rem;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      <button type="submit" class="btn-premium mt-4" id="submitBtn" style="width:100%;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
         খসড়া হিসেবে সংরক্ষণ করুন
       </button>
     </form>
 
-    <!-- AI Generator -->
+    <!-- Selected Questions & Addition Hub -->
     <div class="glass-card">
-      <div class="section-title" style="color:#8b5cf6; border-bottom-color:rgba(139,92,246,0.2);">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        AI দিয়ে প্রশ্নপত্র তৈরি করুন
-      </div>
-      <p style="font-size:0.85rem; color:var(--text-muted); font-weight:600; line-height:1.6; margin-bottom:16px;">একাধিক ব্যাচ ও বিষয় যোগ করুন। টপিক বা নির্দেশনা লিখে দিন অথবা বইয়ের পাতার ছবি দিন — AI সেই অনুযায়ী প্রশ্ন তৈরি করে নিচে যুক্ত করে দেবে।</p>
-
-      <div id="aiRowsContainer"></div>
-      
-      <button type="button" class="btn-glass" id="addAiRowBtn" style="width:100%; border:2px dashed rgba(128,128,128,0.2); background:rgba(128,128,128,0.02); margin-top:8px;">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        আরেকটি বিষয় যোগ করুন
-      </button>
-
-      <div class="mt-4 hidden" id="aiGenerateProgress" style="background:rgba(139,92,246,0.05); border:1px solid rgba(139,92,246,0.2); padding:16px; border-radius:14px; text-align:center;">
-        <div class="spinner" style="width:24px;height:24px; border-color:rgba(139,92,246,0.3); border-top-color:#8b5cf6; margin:0 auto 10px;"></div>
-        <p style="font-size:0.95rem; font-weight:800; color:#8b5cf6;" id="aiGenerateProgressText">প্রশ্ন তৈরি শুরু হচ্ছে...</p>
-      </div>
-      
-      <button type="button" class="btn-glass" id="aiGenerateBtn" style="width:100%; background:rgba(139,92,246,0.1); color:#8b5cf6; border-color:rgba(139,92,246,0.3); padding:16px; margin-top:16px; font-size:1.05rem;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        AI দিয়ে জেনারেট করুন
-      </button>
-    </div>
-
-    <!-- Selected Questions -->
-    <div class="glass-card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:16px;">
         <div class="section-title" style="margin:0; border:none; padding:0;">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
           নির্বাচিত প্রশ্ন (<span id="selCount">0</span>)
         </div>
-        <button type="button" class="btn-glass" id="goToBank" style="font-size:0.85rem; padding:10px 16px;">প্রশ্ন ব্যাংক থেকে খুঁজুন</button>
       </div>
       
-      <div id="selectedList"></div>
-    </div>
-
-    <!-- Quick Add -->
-    <div class="glass-card">
-      <div class="section-title">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-        দ্রুত নতুন প্রশ্ন যোগ করুন
-      </div>
-      <form id="quickAddForm">
-        <div class="field"><label>বাংলা প্রশ্ন</label><input class="input-glass" id="qaBn" required placeholder="প্রশ্নটি লিখুন..."></div>
-        <div class="field"><label>ইংরেজি প্রশ্ন (ঐচ্ছিক)</label><input class="input-glass" id="qaEn" placeholder="Optional translation..."></div>
-        
-        <div class="grid-2 mt-3">
-          <input class="input-glass" id="qaA" placeholder="অপশন A" required>
-          <input class="input-glass" id="qaB" placeholder="অপশন B" required>
-          <input class="input-glass" id="qaC" placeholder="অপশন C" required>
-          <input class="input-glass" id="qaD" placeholder="অপশন D" required>
-        </div>
-        
-        <div class="grid-4 mt-3">
-          <div class="field"><label>সঠিক উত্তর</label><select class="input-glass" id="qaCorrect"><option>A</option><option>B</option><option>C</option><option>D</option></select></div>
-          <div class="field"><label>ব্যাচ</label><select class="input-glass" id="qaSubject"></select></div>
-          <div class="field"><label>বিষয়</label><select class="input-glass" id="qaChapter"></select></div>
-          <div class="field"><label>টপিক</label><select class="input-glass" id="qaTopic"></select></div>
-        </div>
-        
-        <button type="submit" class="btn-glass mt-3" style="width:100%; border:1px solid var(--color-accent); color:var(--color-accent); background:rgba(var(--color-accent-rgb),0.05); padding:14px;">
-          তালিকায় যুক্ত করুন
+      <!-- Clean Widget Opening Buttons -->
+      <div class="responsive-grid-3" style="margin-bottom:20px; border-bottom:1px dashed var(--surface-border); padding-bottom:20px;">
+        <button type="button" class="btn-outline" id="openAiModalBtn" style="color:#8b5cf6; border-color:rgba(139,92,246,0.3); background:rgba(139,92,246,0.05);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          AI দিয়ে তৈরি করুন
         </button>
-      </form>
+        <button type="button" class="btn-outline" id="openQuickAddModalBtn" style="color:var(--color-accent); border-color:rgba(var(--color-accent-rgb),0.3); background:rgba(var(--color-accent-rgb),0.05);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          ম্যানুয়ালি যোগ করুন
+        </button>
+        <button type="button" class="btn-outline" id="goToBank">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          প্রশ্ন ব্যাংক থেকে খুঁজুন
+        </button>
+      </div>
+
+      <div id="selectedList"></div>
     </div>
   `;
 }
@@ -331,26 +408,26 @@ function aiRowHtml(rowId) {
   return `
     <div class="ai-row" id="aiRow-${rowId}">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <p style="font-size:0.9rem; font-weight:800; color:var(--text-secondary);">সিলেকশন #${rowId}</p>
+        <p style="font-size:0.95rem; font-weight:900; color:var(--text-secondary);">সিলেকশন #${rowId}</p>
         <button type="button" class="remove-ai-btn remove-ai-row-btn" title="মুছে ফেলুন">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:18px;height:18px;"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
       </div>
       
-      <div class="grid-3">
+      <div class="responsive-grid-3">
         <div class="field" style="margin:0;"><label>ব্যাচ</label><select class="input-glass ai-row-subject"></select></div>
         <div class="field" style="margin:0;"><label>বিষয়</label><select class="input-glass ai-row-chapter"></select></div>
         <div class="field" style="margin:0;"><label>কতগুলো প্রশ্ন</label><input class="input-glass ai-row-count" type="number" min="1" value="5"></div>
       </div>
       
-      <div class="field mt-3">
+      <div class="field mt-4">
         <label>টপিক / নির্দেশনা (ঐচ্ছিক)</label>
-        <textarea class="input-glass ai-row-instructions" style="min-height:60px;" placeholder="যেমন: শুধু নিউটনের ৩টা সূত্র থেকে, মাঝারি মানের প্রশ্ন"></textarea>
+        <textarea class="input-glass ai-row-instructions" style="min-height:70px;" placeholder="যেমন: শুধু নিউটনের ৩টা সূত্র থেকে, মাঝারি মানের প্রশ্ন"></textarea>
       </div>
       
       <div class="field mt-3">
         <label>বইয়ের পাতার ছবি (ঐচ্ছিক)</label>
-        <input class="input-glass ai-row-images" type="file" accept="image/*" multiple style="padding:10px;">
+        <input class="input-glass ai-row-images" type="file" accept="image/*" multiple style="padding:12px;">
       </div>
       
       <p class="text-sm mt-3 font-bold" id="aiRowStatus-${rowId}"></p>
@@ -456,6 +533,7 @@ async function handleAiGenerate() {
 
   if (totalAdded > 0) {
     showToast(`${totalAdded} টি প্রশ্ন তৈরি হয়েছে${totalFailed > 0 ? ` (${totalFailed} টি ব্যর্থ)` : ""} — নিচে রিভিউ করুন।`, "success");
+    document.getElementById("aiGeneratorModal").classList.remove("active"); // Auto close on success
   } else { showToast("কোনো প্রশ্ন তৈরি করা যায়নি।", "error"); }
 }
 
@@ -474,20 +552,20 @@ function renderSelectedList() {
   const el = document.getElementById("selectedList");
   document.getElementById("selCount").textContent = selectedQuestions.length;
   if (selectedQuestions.length === 0) {
-    el.innerHTML = `<div style="text-align:center; padding:30px; background:rgba(128,128,128,0.02); border-radius:14px; border:1px dashed rgba(128,128,128,0.2);"><p class="text-sm font-bold" style="color:var(--text-muted);">এখনো কোনো প্রশ্ন নির্বাচিত হয়নি।</p></div>`;
+    el.innerHTML = `<div style="text-align:center; padding:40px 20px; background:rgba(128,128,128,0.02); border-radius:16px; border:2px dashed rgba(128,128,128,0.15);"><p style="font-size:0.95rem; font-weight:800; color:var(--text-muted);">এখনো কোনো প্রশ্ন নির্বাচিত হয়নি। ওপরের বাটনগুলো ব্যবহার করে প্রশ্ন যোগ করুন।</p></div>`;
     return;
   }
   
   el.innerHTML = selectedQuestions.map((q, idx) => `
     <div class="sel-question-card">
-      <div style="flex:1;">
-        <p style="font-size:0.75rem; font-weight:800; color:var(--text-muted); margin-bottom:6px;">#${idx + 1} • ${nameFor(q.subjectId, "subject")} / ${nameFor(q.chapterId, "chapter")} ${q.createdByAI ? `<span style="background:rgba(139,92,246,0.1); color:#8b5cf6; padding:2px 6px; border-radius:6px; margin-left:6px;">AI</span>` : ""}</p>
-        <p style="font-size:0.95rem; font-weight:800; color:var(--text-primary); line-height:1.4;">${q.question_bn}</p>
+      <div style="flex:1; min-width:200px;">
+        <p style="font-size:0.8rem; font-weight:800; color:var(--text-muted); margin-bottom:8px;">#${idx + 1} • ${nameFor(q.subjectId, "subject")} / ${nameFor(q.chapterId, "chapter")} ${q.createdByAI ? `<span style="background:rgba(139,92,246,0.1); color:#8b5cf6; padding:3px 8px; border-radius:6px; margin-left:8px;">AI</span>` : ""}</p>
+        <p style="font-size:1.05rem; font-weight:800; color:var(--text-primary); line-height:1.5;">${q.question_bn}</p>
       </div>
-      <div style="display:flex; gap:6px; flex-shrink:0;">
-        <button type="button" class="action-icon up-btn" data-idx="${idx}" ${idx === 0 ? "disabled style='opacity:0.3; cursor:not-allowed;'" : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
-        <button type="button" class="action-icon down-btn" data-idx="${idx}" ${idx === selectedQuestions.length - 1 ? "disabled style='opacity:0.3; cursor:not-allowed;'" : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;"><path d="M12 5v14M5 12l7 7 7-7"/></svg></button>
-        <button type="button" class="action-icon delete remove-btn" data-idx="${idx}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <div style="display:flex; gap:8px; flex-shrink:0;">
+        <button type="button" class="action-icon up-btn" data-idx="${idx}" ${idx === 0 ? "disabled style='opacity:0.3; cursor:not-allowed;'" : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:18px;height:18px;"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+        <button type="button" class="action-icon down-btn" data-idx="${idx}" ${idx === selectedQuestions.length - 1 ? "disabled style='opacity:0.3; cursor:not-allowed;'" : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:18px;height:18px;"><path d="M12 5v14M5 12l7 7 7-7"/></svg></button>
+        <button type="button" class="action-icon delete remove-btn" data-idx="${idx}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:18px;height:18px;"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
     </div>
   `).join("");
@@ -517,9 +595,9 @@ function persistCart() {
 function updateTotalMarks() {
   const marksPerQ = Number(document.getElementById("marksPerQuestion").value) || 0;
   document.getElementById("totalMarksDisplay").textContent = calculateTotalMarks(selectedQuestions.length, marksPerQ);
-}
+    }
 
-async function handleQuickAdd(e) {
+  async function handleQuickAdd(e) {
   e.preventDefault();
   const payload = {
     question_en: document.getElementById("qaEn").value.trim(),
@@ -545,6 +623,7 @@ async function handleQuickAdd(e) {
     persistCart(); renderSelectedList(); updateTotalMarks();
     e.target.reset();
     showToast("প্রশ্ন তৈরি হয়ে তালিকায় যুক্ত হয়েছে।", "success");
+    // Purposely not closing modal here so teacher can rapidly add multiple questions
   } catch (err) { showToast(friendlyError(err), "error"); }
 }
 
@@ -575,7 +654,7 @@ async function handleSubmit(e) {
     questionIds: selectedQuestions.map(q => q.id)
   };
 
-  submitBtn.disabled = true; submitBtn.innerHTML = `<span class="spinner" style="width:16px;height:16px;border-width:2px;border-color:#fff;border-top-color:transparent;display:inline-block;vertical-align:middle;margin-right:8px;"></span> সংরক্ষণ হচ্ছে...`;
+  submitBtn.disabled = true; submitBtn.innerHTML = `<span class="spinner" style="width:20px;height:20px;border-width:2.5px;border-color:#fff;border-top-color:transparent;display:inline-block;vertical-align:middle;margin-right:10px;"></span> সংরক্ষণ হচ্ছে...`;
   
   try {
     if (editId) {
@@ -593,7 +672,7 @@ async function handleSubmit(e) {
     errorEl.classList.remove("hidden");
   } finally {
     submitBtn.disabled = false;
-    submitBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> খসড়া হিসেবে সংরক্ষণ করুন`;
+    submitBtn.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> খসড়া হিসেবে সংরক্ষণ করুন`;
   }
 }
 </script>
