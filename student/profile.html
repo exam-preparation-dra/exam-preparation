@@ -430,12 +430,13 @@ function buildBadgeContext(results, gData, rank, subjectStats, chapterStats, top
   const chapterCoverage=chapterStats?.length?Math.min(100,chapterStats.filter(x=>Number(x.attempts)>0).length/Math.max(1,chapterStats.length)*100):0;
   const subjectCoverage=subjectStats?.length?Math.min(100,subjectStats.filter(x=>Number(x.attempts)>0).length/Math.max(1,subjectStats.length)*100):0;
   const masteryScore=Math.round((accuracy*0.4+attemptRate*0.2+cleanRunRate*0.15+consistencyScore*0.15+topicCoverage*0.1)*10)/10;
+  const examCount=approved.length;
   const progressLevel=Math.min(100,(examCount/Math.max(1,20))*100);
   const answerQuality=Math.min(100,accuracy*0.7+attemptRate*0.3);
+  const myCounts=gData?.badgeCounts?.[student.studentId]||{};
   const topperCount=(myCounts.weeklyOverall||0)+(myCounts.monthlyOverall||0);
   const classTopperCount=(myCounts.weeklyClass||0)+(myCounts.monthlyClass||0);
   const benchmarkExamCount=approved.filter(r=>Number(r.percentage)>=80).length;
-  const myCounts=gData?.badgeCounts?.[student.studentId]||{};
   const subjectStatsById={}; (subjectStats||[]).forEach(x=>subjectStatsById[x.id]={...x,accuracy:Number(x.accuracy)||0});
   const chapterStatsById={}; (chapterStats||[]).forEach(x=>chapterStatsById[x.id]={...x,accuracy:Number(x.accuracy)||0});
   const topicStatsById={}; (topicStats||[]).forEach(x=>topicStatsById[x.id]={...x,accuracy:Number(x.accuracy)||0});
@@ -597,11 +598,15 @@ let student = getActiveStudent();
 if (!student) {
   window.location.href = "../index.html";
 } else {
+  renderPage();
+  initAdvancedBadges();
   refreshActiveStudent(student.docId).then(fresh => {
-    if (fresh) student = fresh;
-    renderPage();
-    initAdvancedBadges();
-  });
+    if (fresh) {
+      student = fresh;
+      renderPage();
+      initAdvancedBadges();
+    }
+  }).catch(err => console.warn("Student refresh skipped", err));
 }
 
 window.switchTab = function(tabId) {
