@@ -246,7 +246,7 @@ async function loadGamification() {
     const badges = [];
     if (counts.monthlyOverall > 0) badges.push({ icon: svgTrophy, title: "মাসের সেরা", count: counts.monthlyOverall, color: "#f59e0b", bg: "rgba(245, 158, 11, 0.15)" });
     if (counts.weeklyOverall > 0) badges.push({ icon: svgStar, title: "সপ্তাহের সেরা", count: counts.weeklyOverall, color: "#8b5cf6", bg: "rgba(139, 92, 246, 0.15)" });
-    attendanceMilestones.forEach(m => badges.push({ icon: svgTarget, title: "নিয়মিত ছাত্র", count: `${m}+ পরীক্ষা`, color: "#10b981", bg: "rgba(16, 185, 129, 0.15)" }));
+    attendanceMilestones.forEach(m => badges.push({ icon: svgTarget, title: "নিয়মিত", count: `${m}+ পরীক্ষা`, color: "#10b981", bg: "rgba(16, 185, 129, 0.15)" }));
 
     if (badges.length > 0) {
       badgeEl.innerHTML = `
