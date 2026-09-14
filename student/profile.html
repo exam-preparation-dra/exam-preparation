@@ -269,12 +269,12 @@ function buildBadgeCatalog(ctx) {
   for (const s of (ctx.subjectStats || [])) {
     const base = String(s.name || s.id || "Subject");
     [50,60,70,80,90,95].forEach((n,i)=>catalog.push({
-      id:`subject-${s.id}-${n}`, name:`${base} ${n}%`, category:"বিষয়", desc:`${base}-এ অন্তত ${n}% accuracy অর্জন করো।`,
+      id:`subject-${s.id}-${n}`, name:`${base} ${n}%`, category:"বিষয়", desc:`${base}-এ অন্তত ${n}% accuracy অর্জন করো।`, metric:"subjectAccuracy", threshold:n, entityMetric:"subjectStatsById", entityId:s.id, entityValue:"accuracy",
       rarity:n>=95?"Epic":n>=90?"Rare":i<2?"Common":"Uncommon",
       check:c=>Number(c.subjectStatsById?.[s.id]?.accuracy||0)>=n
     }));
     [1,3,5,10,20].forEach(n=>catalog.push({
-      id:`subject-${s.id}-exams-${n}`, name:`${base} ${n} Exams`, category:"বিষয়", desc:`${base}-এ ${n}টি approved exam attempt করো।`,
+      id:`subject-${s.id}-exams-${n}`, name:`${base} ${n} Exams`, category:"বিষয়", desc:`${base}-এ ${n}টি approved exam attempt করো।`, metric:"subjectAttempts", threshold:n, entityMetric:"subjectStatsById", entityId:s.id, entityValue:"attempts",
       rarity:n>=20?"Epic":n>=10?"Rare":"Common", check:c=>(c.subjectStatsById?.[s.id]?.attempts||0)>=n
     }));
   }
@@ -283,11 +283,11 @@ function buildBadgeCatalog(ctx) {
   for (const ch of (ctx.chapterStats || [])) {
     const base = String(ch.name || ch.id || "Chapter");
     [60,70,80,90,95].forEach((n,i)=>catalog.push({
-      id:`chapter-${ch.id}-acc-${n}`, name:`${base} ${n}%`, category:"অধ্যায়", desc:`${base} অধ্যায়ে অন্তত ${n}% accuracy অর্জন করো।`,
+      id:`chapter-${ch.id}-acc-${n}`, name:`${base} ${n}%`, category:"অধ্যায়", desc:`${base} অধ্যায়ে অন্তত ${n}% accuracy অর্জন করো।`, metric:"chapterAccuracy", threshold:n, entityMetric:"chapterStatsById", entityId:ch.id, entityValue:"accuracy",
       rarity:n>=95?"Epic":n>=90?"Rare":i<2?"Common":"Uncommon", check:c=>Number(c.chapterStatsById?.[ch.id]?.accuracy||0)>=n
     }));
     [1,2,5,10].forEach(n=>catalog.push({
-      id:`chapter-${ch.id}-attempts-${n}`, name:`${base} ${n} Attempts`, category:"অধ্যায়", desc:`${base} অধ্যায়ে ${n}টি approved attempt সম্পূর্ণ করো।`,
+      id:`chapter-${ch.id}-attempts-${n}`, name:`${base} ${n} Attempts`, category:"অধ্যায়", desc:`${base} অধ্যায়ে ${n}টি approved attempt সম্পূর্ণ করো।`, metric:"chapterAttempts", threshold:n, entityMetric:"chapterStatsById", entityId:ch.id, entityValue:"attempts",
       rarity:n>=10?"Rare":n>=5?"Uncommon":"Common", check:c=>(c.chapterStatsById?.[ch.id]?.attempts||0)>=n
     }));
   }
@@ -296,15 +296,15 @@ function buildBadgeCatalog(ctx) {
   for (const t of (ctx.topicStats || [])) {
     const base = String(t.name || t.id || "Topic");
     [50,60,70,80,90,100].forEach((n,i)=>catalog.push({
-      id:`topic-${t.id}-acc-${n}`, name:`${base} ${n}%`, category:"টপিক", desc:`${base} টপিকে অন্তত ${n}% accuracy অর্জন করো।`,
+      id:`topic-${t.id}-acc-${n}`, name:`${base} ${n}%`, category:"টপিক", desc:`${base} টপিকে অন্তত ${n}% accuracy অর্জন করো।`, metric:"topicAccuracy", threshold:n, entityMetric:"topicStatsById", entityId:t.id, entityValue:"accuracy",
       rarity:n===100?"Legendary":n>=90?"Epic":n>=80?"Rare":i<2?"Common":"Uncommon", check:c=>Number(c.topicStatsById?.[t.id]?.accuracy||0)>=n
     }));
     [1,2,3,5,10].forEach(n=>catalog.push({
-      id:`topic-${t.id}-attempts-${n}`, name:`${base} ${n} Attempts`, category:"টপিক", desc:`${base} টপিকে ${n}টি approved attempt সম্পূর্ণ করো।`,
+      id:`topic-${t.id}-attempts-${n}`, name:`${base} ${n} Attempts`, category:"টপিক", desc:`${base} টপিকে ${n}টি approved attempt সম্পূর্ণ করো।`, metric:"topicAttempts", threshold:n, entityMetric:"topicStatsById", entityId:t.id, entityValue:"attempts",
       rarity:n>=10?"Epic":n>=5?"Rare":n>=3?"Uncommon":"Common", check:c=>(c.topicStatsById?.[t.id]?.attempts||0)>=n
     }));
     [1,3,5].forEach(n=>catalog.push({
-      id:`topic-${t.id}-correct-${n}`, name:`${base} ${n} Correct`, category:"টপিক", desc:`${base} টপিকে অন্তত ${n}টি সঠিক উত্তর দাও।`,
+      id:`topic-${t.id}-correct-${n}`, name:`${base} ${n} Correct`, category:"টপিক", desc:`${base} টপিকে অন্তত ${n}টি সঠিক উত্তর দাও।`, metric:"topicCorrect", threshold:n, entityMetric:"topicStatsById", entityId:t.id, entityValue:"correct",
       rarity:n>=5?"Rare":"Common", check:c=>(c.topicStatsById?.[t.id]?.correct||0)>=n
     }));
   }
@@ -328,7 +328,7 @@ function buildBadgeCatalog(ctx) {
   for (const [fid,label,getter] of families) {
     for (const [tier,n,rarity] of masteryTiers) catalog.push({
       id:`${fid}-${tier.replace(/\s+/g,"-").toLowerCase()}`,
-      name:`${label} ${tier}`, category:"Mastery", desc:`${label}-এর ${tier} স্তর সম্পূর্ণ করো।`, rarity,
+      name:`${label} ${tier}`, category:"Mastery", metric:fid, threshold:n, progressGetter:getter, desc:`${label}-এর ${tier} স্তর সম্পূর্ণ করো।`, rarity,
       check:c=>Number(getter(c)||0)>=n
     });
   }
@@ -370,8 +370,8 @@ function buildBadgeCatalog(ctx) {
     ["answer-quality","Answer Quality",c=>c.answerQuality,[10,20,30,40,50,60,70,80,90,100]]
   ];
   extraFamilies.forEach(([fid,label,getter,thresholds])=>thresholds.forEach((n,i)=>catalog.push({
-    id:`${fid}-${n}`, name:`${label} ${n}`, category:"Mastery",
-    desc:`${label}-এর ${n} স্তর অর্জন করো।`, rarity:n>=95?"Legendary":n>=80?"Epic":n>=60?"Rare":i>=3?"Uncommon":"Common",
+    id:`${fid}-${n}`, name:`${label} ${n}`, category:"Mastery", metric:fid, threshold:n,
+    progressGetter:getter, desc:`${label}-এর ${n} স্তর অর্জন করো।`, rarity:n>=95?"Legendary":n>=80?"Epic":n>=60?"Rare":i>=3?"Uncommon":"Common",
     check:c=>Number(getter(c)||0)>=n
   })));
 
@@ -387,6 +387,41 @@ function badgeInitials(name) {
   return String(name || "?").split(/\s+/).slice(0,2).map(x=>x[0]).join("").toUpperCase();
 }
 function badgeRarityClass(r) { return String(r||"Common").toLowerCase().replace(/\s+/g,"-"); }
+
+// Convert the catalogue rules into a stable UI state. Every catalogue badge
+// is rendered, while `earned` is calculated locally from the already-loaded
+// student context. No Firestore read is performed per badge.
+function getBadgeState(ctx) {
+  return buildBadgeCatalog(ctx).map((b, index) => {
+    let earned = false;
+    try { earned = !!b.check(ctx); } catch { earned = false; }
+    return { ...b, index, earned };
+  });
+}
+
+function getBadgeProgress(b, ctx) {
+  if (b.earned) return { percent:100, current:b.threshold, target:b.threshold, remaining:0 };
+  if (!Number.isFinite(Number(b.threshold))) return { percent:0, current:null, target:null, remaining:null };
+  let current = null;
+  try {
+    if (typeof b.progressGetter === "function") current = Number(b.progressGetter(ctx) || 0);
+    else if (b.entityMetric) current = Number(ctx[b.entityMetric]?.[b.entityId]?.[b.entityValue] || 0);
+    else if (b.metric) current = Number(ctx[b.metric] || 0);
+  } catch { current = null; }
+  if (!Number.isFinite(current)) return { percent:0, current:null, target:Number(b.threshold), remaining:null };
+  const target = Number(b.threshold);
+  const percent = target > 0 ? Math.max(0, Math.min(99, (current / target) * 100)) : 0;
+  return { percent, current, target, remaining:Math.max(0, target-current) };
+}
+
+function badgeProgressText(b, ctx) {
+  const p = getBadgeProgress(b, ctx);
+  if (b.earned) return "Unlocked";
+  if (p.target == null) return "Locked";
+  const current = Number.isInteger(p.current) ? p.current : Number(p.current).toFixed(1);
+  const target = Number.isInteger(p.target) ? p.target : Number(p.target).toFixed(1);
+  return `${current} / ${target} • ${Math.round(p.percent)}%`;
+}
 
 function buildBadgeContext(results, gData, rank, subjectStats, chapterStats, topicStats) {
   const approved = [...(results || [])].sort((a,b)=>
@@ -464,7 +499,7 @@ function badgeIcon(b) {
   return icons[b.category] || icons.Special;
 }
 
-function renderBadgeCollection(state) {
+function renderBadgeCollection(state, ctx) {
   const host = document.getElementById("badgeCollectionAdvanced");
   if (!host) return;
   const total = state.length;
@@ -474,7 +509,11 @@ function renderBadgeCollection(state) {
     const searchOK = !badgeSearch || `${b.name} ${b.desc}`.toLowerCase().includes(badgeSearch.toLowerCase());
     return categoryOK && searchOK;
   });
-  const almost = state.filter(b=>!b.earned).slice(0,3);
+  const almost = state.filter(b=>!b.earned)
+    .map(b=>({...b, _progress:getBadgeProgress(b,ctx)}))
+    .filter(b=>b._progress.target != null)
+    .sort((a,b)=>b._progress.percent-a._progress.percent)
+    .slice(0,4);
 
   host.innerHTML = `
     <div class="badge-collection-head">
@@ -497,7 +536,7 @@ function renderBadgeCollection(state) {
       ${almost.map(b=>`
         <button type="button" class="badge-mini-card" data-badge-id="${b.id}">
           <span class="badge-art ${badgeRarityClass(b.rarity)}">${badgeIcon(b)}</span>
-          <span><b>${b.hidden&&!b.earned?"Secret Badge":b.name}</b><small>${b.rarity}</small></span>
+          <span><b>${b.hidden&&!b.earned?"Secret Badge":b.name}</b><small>${b.rarity} • ${badgeProgressText(b,ctx)}</small></span>
         </button>`).join("") || `<div class="badge-empty">সব available badge unlocked!</div>`}
     </div>
 
@@ -507,18 +546,18 @@ function renderBadgeCollection(state) {
         <button type="button" class="badge-card-new ${b.earned?"earned":"locked"}" data-badge-id="${b.id}">
           <span class="badge-art ${badgeRarityClass(b.rarity)}">${b.hidden&&!b.earned?"?":badgeIcon(b)}</span>
           <b>${b.hidden&&!b.earned?"Secret":b.name}</b>
-          <small>${b.earned?"Unlocked":"Locked"} • ${b.rarity}</small>
+          <small>${b.earned?"Unlocked":badgeProgressText(b,ctx)} • ${b.rarity}</small>
         </button>`).join("") || `<div class="badge-empty">কোনো badge পাওয়া যায়নি।</div>`}
     </div>
   `;
 
-  host.querySelectorAll("[data-bcat]").forEach(btn=>btn.onclick=()=>{badgeFilter=btn.dataset.bcat;renderBadgeCollection(state);});
-  host.querySelector("#badgeSearchInput")?.addEventListener("input",e=>{badgeSearch=e.target.value;renderBadgeCollection(state);});
-  host.querySelectorAll("[data-badge-id]").forEach(btn=>btn.onclick=()=>openBadgeDetail(state.find(b=>b.id===btn.dataset.badgeId)));
+  host.querySelectorAll("[data-bcat]").forEach(btn=>btn.onclick=()=>{badgeFilter=btn.dataset.bcat;renderBadgeCollection(state, ctx);});
+  host.querySelector("#badgeSearchInput")?.addEventListener("input",e=>{badgeSearch=e.target.value;renderBadgeCollection(state, ctx);});
+  host.querySelectorAll("[data-badge-id]").forEach(btn=>btn.onclick=()=>openBadgeDetail(state.find(b=>b.id===btn.dataset.badgeId), ctx));
   host.querySelector("#shareBadgeCollection")?.addEventListener("click",()=>shareBadgeCollection(state));
 }
 
-function openBadgeDetail(b) {
+function openBadgeDetail(b, ctx) {
   if(!b) return;
   const overlay=document.createElement("div");
   overlay.className="badge-modal-overlay";
@@ -529,6 +568,7 @@ function openBadgeDetail(b) {
       <p class="badge-modal-rarity">${b.rarity}</p>
       <h3>${b.hidden&&!b.earned?"Secret Badge":b.name}</h3>
       <p>${b.desc}</p>
+      <div class="badge-detail-progress">${b.earned?"Completed":`Progress: ${badgeProgressText(b,ctx)}`}</div>
       <strong class="${b.earned?"earned-text":""}">${b.earned?"Unlocked":"Locked"}</strong>
     </div>`;
   document.body.appendChild(overlay);
@@ -584,9 +624,9 @@ async function initAdvancedBadges() {
     const chapterStats = computeChapterStats(results, chapterMap).map(x=>({...x,id:x.chapterId}));
     const topicStats = computeTopicStats(results, topicMap).map(x=>({...x,id:x.topicId}));
     const ctx=buildBadgeContext(results,gData,rank,subjectStats,chapterStats,topicStats);
-    renderBadgeCollection(getBadgeState(ctx));
+    renderBadgeCollection(getBadgeState(ctx), ctx);
     const count=document.querySelector('#badgeCollectionAdvanced .badge-kicker');
-    if(count) count.textContent=`${getBadgeState(ctx).length}+ ACHIEVEMENTS`;
+    if(count) count.textContent=`${getBadgeState(ctx).length} ACHIEVEMENTS`;
   } catch(e) {
     console.warn("Advanced badges unavailable",e);
   }
