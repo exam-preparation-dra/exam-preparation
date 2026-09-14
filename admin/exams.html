@@ -18,23 +18,24 @@
     border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 20px; padding: 24px; margin-bottom: 20px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.02); transition: all 0.3s ease;
   }
-  .glass-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.05); }
+  .glass-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.04); border-color:rgba(128,128,128,0.2); }
 
-  /* ===== Topbar ===== */
+  /* ===== Topbar (FIXED BACKGROUND COLOR) ===== */
   .topbar {
     position: sticky; top: 0; z-index: 50;
     margin: calc(var(--space-5) * -1) calc(var(--space-4) * -1) var(--space-4);
-    padding: 16px 20px; background: rgba(var(--bg-rgb, 10,14,26), 0.85);
+    padding: 16px 20px; 
+    background: var(--surface); /* Fixed to respect Light/Dark theme naturally */
     backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(128,128,128,0.1);
-    display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+    border-bottom: 1px solid var(--surface-border);
+    display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.03);
   }
 
   /* ===== Form Elements ===== */
   .input-glass {
-    padding: 12px 16px; background: rgba(128, 128, 128, 0.05); border: 1px solid var(--surface-border);
+    padding: 12px 16px; background: rgba(128, 128, 128, 0.04); border: 1px solid var(--surface-border);
     border-radius: 14px; color: var(--text-primary); font-family: inherit; font-size: 0.95rem; font-weight: 700;
-    outline: none; transition: 0.2s; cursor: pointer;
+    outline: none; transition: 0.2s; cursor: pointer; width: 100%;
   }
   .input-glass:focus { border-color: var(--color-accent); background: var(--surface); box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.15); }
   select.input-glass { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1.2em; padding-right: 40px; }
@@ -55,11 +56,11 @@
   .btn-danger:hover { background: #ef4444; color: #fff; box-shadow: 0 4px 15px rgba(239,68,68,0.3); }
 
   /* ===== Exam Card Specifics ===== */
-  .exam-title { font-size: 1.2rem; font-weight: 900; color: var(--text-primary); margin-bottom: 6px; line-height: 1.4; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .exam-title { font-size: 1.25rem; font-weight: 900; color: var(--text-primary); margin-bottom: 6px; line-height: 1.4; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .exam-meta { display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.85rem; color: var(--text-muted); font-weight: 600; margin-bottom: 16px; }
-  .meta-item { display: flex; align-items: center; gap: 6px; background: rgba(128,128,128,0.05); padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(128,128,128,0.1); }
+  .meta-item { display: flex; align-items: center; gap: 6px; background: rgba(128,128,128,0.04); padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(128,128,128,0.1); }
   
-  .target-batch-badge { background: rgba(var(--color-accent-rgb), 0.15); color: var(--color-accent); padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 900; border: 1px solid rgba(var(--color-accent-rgb), 0.3); }
+  .target-batch-badge { background: rgba(var(--color-accent-rgb), 0.1); color: var(--color-accent); padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 900; border: 1px solid rgba(var(--color-accent-rgb), 0.25); }
 
   /* Status Badges */
   .st-badge { padding: 6px 14px; border-radius: 99px; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.5px; border: 1px solid transparent; display: inline-block; white-space: nowrap; }
@@ -72,6 +73,7 @@
 
   .action-bar { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--surface-border); }
   .controls-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; margin-top: 16px; }
+  .filter-group { display: flex; gap: 12px; flex-wrap: wrap; flex: 1; }
 </style>
 </head>
 <body>
@@ -84,11 +86,14 @@ import { initTheme, toggleTheme, icons, renderState, showToast, friendlyError } 
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
 import { initAdminPwaInstall } from "../pwa-install.js";
 import { getAllExams, publishExam, duplicateExam, archiveExam, deleteDraftExam, deleteExamPermanently } from "../js/utils/exam-utils.js";
+import { getFullSyllabusTree } from "../js/utils/syllabus-utils.js";
 
 initTheme();
 const shell = document.getElementById("shell");
 let exams = [];
+let tree = [];
 let statusFilter = "";
+let batchFilter = "all";
 
 const STATUS_LABEL = {
   draft: "খসড়া", upcoming: "আসন্ন", published: "প্রকাশিত",
@@ -100,7 +105,9 @@ const STATUS_CLASS = {
   active: "st-active", completed: "st-completed", archived: "st-archived"
 };
 
-requireAdmin(() => {
+requireAdmin(async () => {
+  try { tree = await getFullSyllabusTree(); } catch(err) { console.error(err); }
+
   shell.innerHTML = `
     <div class="topbar">
       <div style="display:flex; align-items:center; gap:12px;">
@@ -117,11 +124,20 @@ requireAdmin(() => {
     </div>
 
     <div class="controls-header">
-      <select class="input-glass" id="statusFilter" style="max-width:200px;">
-        <option value="">সব স্ট্যাটাস (All)</option>
-        ${Object.entries(STATUS_LABEL).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}
-      </select>
-      <a href="../admin/exam-create.html" class="btn-glass btn-primary" style="padding:12px 20px;">
+      <div class="filter-group">
+        <div style="flex:1; min-width:140px; max-width:200px;">
+          <select class="input-glass" id="statusFilter">
+            <option value="">সব স্ট্যাটাস (All)</option>
+            ${Object.entries(STATUS_LABEL).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}
+          </select>
+        </div>
+        <div style="flex:1; min-width:140px; max-width:200px;">
+          <select class="input-glass" id="batchFilter">
+            <option value="all">সব ব্যাচ (All Batches)</option>
+          </select>
+        </div>
+      </div>
+      <a href="../admin/exam-create.html" class="btn-glass btn-primary" style="padding:12px 20px; white-space:nowrap;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         নতুন পরীক্ষা তৈরি
       </a>
@@ -133,7 +149,16 @@ requireAdmin(() => {
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
   document.getElementById("logoutBtn").addEventListener("click", adminLogout);
   initAdminPwaInstall("installBtn");
+  
+  // Populate Batch Filter
+  const batchSel = document.getElementById("batchFilter");
+  const batches = [...new Set(tree.map(b => b.name_bn))].sort();
+  batches.forEach(b => {
+    batchSel.innerHTML += `<option value="${b}">${b}</option>`;
+  });
+
   document.getElementById("statusFilter").addEventListener("change", (e) => { statusFilter = e.target.value; load(); });
+  document.getElementById("batchFilter").addEventListener("change", (e) => { batchFilter = e.target.value; render(); }); // Client-side filtering
   
   load();
 });
@@ -152,15 +177,22 @@ async function load() {
 
 function render() {
   const el = document.getElementById("examList");
-  if (exams.length === 0) {
-    el.innerHTML = `<div class="glass-card" style="text-align:center; padding:40px 20px;"><p style="font-size:1rem; font-weight:800; color:var(--text-muted);">এখনো কোনো পরীক্ষা তৈরি হয়নি বা এই স্ট্যাটাসে নেই।</p></div>`;
+  
+  // Apply Batch Filter
+  let filteredExams = exams;
+  if (batchFilter && batchFilter !== "all") {
+    filteredExams = filteredExams.filter(e => e.targetBatch === batchFilter);
+  }
+
+  if (filteredExams.length === 0) {
+    el.innerHTML = `<div class="glass-card" style="text-align:center; padding:40px 20px;"><p style="font-size:1rem; font-weight:800; color:var(--text-muted);">এখনো কোনো পরীক্ষা তৈরি হয়নি বা এই স্ট্যাটাসে/ব্যাচে নেই।</p></div>`;
     return;
   }
   
-  el.innerHTML = exams.map(exam => {
+  el.innerHTML = filteredExams.map(exam => {
     const dateStr = exam.examDate?.toDate ? exam.examDate.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "short", year: "numeric" }) : "—";
     
-    // NEW BATCH LOGIC
+    // Batch Display Logic
     let targetBatchDisplay = "সকল ব্যাচ";
     if (exam.targetBatch && exam.targetBatch !== "all") {
       targetBatchDisplay = exam.targetBatch;
@@ -177,10 +209,10 @@ function render() {
       </div>
 
       <div class="exam-meta">
-        <div class="meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ${dateStr}</div>
-        <div class="meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${exam.durationMinutes || "—"} মি</div>
-        <div class="meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> ${exam.totalMarks ?? 0} নম্বর</div>
-        <div class="meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ${(exam.questionIds || []).length} টি প্রশ্ন</div>
+        <div class="meta-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ${dateStr}</div>
+        <div class="meta-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${exam.durationMinutes || "—"} মি</div>
+        <div class="meta-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> ${exam.totalMarks ?? 0} নম্বর</div>
+        <div class="meta-item"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ${(exam.questionIds || []).length} টি প্রশ্ন</div>
       </div>
       
       <div class="action-bar">
