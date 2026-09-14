@@ -6,20 +6,14 @@
 <title>পরীক্ষা — পরীক্ষা প্রস্তুতি</title>
 <link rel="stylesheet" href="../css/style.css">
 <style>
-  /* This page rides on the app-wide "Instrument Panel" design system
-     (style.css): amber/ember accent, teal success, rose danger, glass
-     grain texture, Space Grotesk for numerals. No extra background
-     layer added here — just motion + structure on top of the existing
-     mesh so nothing doubles up. */
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
+  body { overflow-x: hidden; background: var(--bg); user-select: none; -webkit-user-select: none; } /* Text selection disabled globally */
 
   /* ===== Card entrance ===== */
-  .glass.card { animation: cardRise 420ms cubic-bezier(.22,.9,.3,1) both; }
+  .glass.card { animation: cardRise 420ms cubic-bezier(.22,.9,.3,1) both; background: rgba(128,128,128,0.03); border: 1px solid rgba(128,128,128,0.12); border-radius: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.02); }
   @keyframes cardRise {
     from { opacity: 0; transform: translateY(14px) scale(.985); }
     to   { opacity: 1; transform: translateY(0) scale(1); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .glass.card, #questionBody.q-enter, .option-card, .palette-cell { animation: none !important; }
   }
 
   /* ===== Question transition wrapper ===== */
@@ -30,21 +24,19 @@
     to   { opacity: 1; transform: translateX(0); }
   }
 
-  /* ===== Option cards ===== */
+  /* ===== Premium Option Cards ===== */
   .option-card {
     position: relative; overflow: hidden;
-    display: flex; align-items: center; gap: 12px;
-    width: 100%; min-height: 56px; padding: 14px 16px;
-    border-radius: var(--radius-md);
-    border: 1.5px solid var(--surface-border);
-    background: var(--surface-solid);
-    backdrop-filter: blur(6px);
+    display: flex; align-items: center; gap: 14px;
+    width: 100%; min-height: 60px; padding: 14px 18px;
+    border-radius: 16px;
+    border: 1px solid rgba(128,128,128,0.15);
+    background: rgba(128,128,128,0.02);
     color: var(--text-primary);
-    font-family: var(--font-bn);
-    font-size: 0.95rem;
-    text-align: right;
-    transition: border-color 180ms ease, background 180ms ease, transform 150ms ease, box-shadow 180ms ease;
-    margin-bottom: 10px;
+    font-size: 0.95rem; font-weight: 600;
+    text-align: left;
+    transition: all 0.2s ease;
+    margin-bottom: 12px;
     animation: optRise 320ms cubic-bezier(.22,.9,.3,1) both;
   }
   .option-card:nth-of-type(1) { animation-delay: 20ms; }
@@ -52,171 +44,126 @@
   .option-card:nth-of-type(3) { animation-delay: 100ms; }
   .option-card:nth-of-type(4) { animation-delay: 140ms; }
   @keyframes optRise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  
   .option-card:active { transform: scale(0.98); }
   .option-card.selected {
     border-color: var(--color-accent);
-    background: var(--color-accent-soft);
-    box-shadow: 0 0 0 1px var(--color-accent), 0 6px 18px -8px var(--color-accent);
+    background: rgba(var(--color-accent-rgb), 0.08);
+    box-shadow: 0 4px 16px rgba(var(--color-accent-rgb), 0.15);
   }
-  /* One-shot "premium" feedback on the exact option just tapped — a scale
-     pop plus a diagonal color-gradient sweep across the card. Applied only
-     to that one button (see selectAnswer() in the script), never to the
-     whole question, so nothing else on the page shifts or re-animates. */
+  
   .option-card.option-flash { animation: optPop 260ms cubic-bezier(.34,1.56,.64,1); }
   .option-card.option-flash::after {
-    content: "";
-    position: absolute; inset: 0; pointer-events: none;
-    background: linear-gradient(100deg, transparent 20%, var(--color-accent-soft) 45%, var(--color-accent) 50%, var(--color-accent-soft) 55%, transparent 80%);
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(100deg, transparent 20%, rgba(var(--color-accent-rgb), 0.3) 45%, var(--color-accent) 50%, rgba(var(--color-accent-rgb), 0.3) 55%, transparent 80%);
     background-size: 250% 100%;
     animation: optionSweep 650ms cubic-bezier(.22,.9,.3,1);
   }
-  @keyframes optionSweep {
-    from { background-position: 150% 0; opacity: 0.9; }
-    to   { background-position: -50% 0; opacity: 0; }
-  }
-  @keyframes optPop { 0% { transform: scale(1); } 40% { transform: scale(1.04); } 100% { transform: scale(1); } }
+  @keyframes optionSweep { from { background-position: 150% 0; opacity: 0.9; } to { background-position: -50% 0; opacity: 0; } }
+  @keyframes optPop { 0% { transform: scale(1); } 40% { transform: scale(1.03); } 100% { transform: scale(1); } }
+  
   .option-letter {
-    flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%;
-    background: var(--surface-border); display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 0.85rem;
-    transition: background 180ms ease, transform 220ms cubic-bezier(.34,1.56,.64,1);
+    flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(128,128,128,0.08); display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.9rem; color: var(--text-secondary);
+    transition: all 0.2s cubic-bezier(.34,1.56,.64,1);
   }
-  .option-card.selected .option-letter { background: var(--color-accent); color: #1a1204; transform: scale(1.08); }
+  .option-card.selected .option-letter { background: var(--color-accent); color: #fff; transform: scale(1.1); box-shadow: 0 4px 10px rgba(var(--color-accent-rgb), 0.3); }
 
   /* ===== Palette grid ===== */
-  .palette-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .palette-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
   .palette-cell {
-    aspect-ratio: 1; border-radius: 10px; display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 0.85rem; border: 1.5px solid var(--surface-border);
-    background: var(--surface-solid); color: var(--text-secondary);
-    transition: transform 140ms ease, box-shadow 180ms ease, background 180ms ease, border-color 180ms ease;
+    aspect-ratio: 1; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.9rem; border: 1px solid rgba(128,128,128,0.15);
+    background: rgba(128,128,128,0.03); color: var(--text-secondary);
+    transition: all 0.2s ease;
     animation: cellPop 260ms cubic-bezier(.34,1.56,.64,1) both;
   }
   @keyframes cellPop { from { opacity: 0; transform: scale(.8); } to { opacity: 1; transform: scale(1); } }
   .palette-cell:active { transform: scale(0.92); }
-  .palette-cell.answered { background: var(--color-success); color: #072925; border-color: var(--color-success); }
-  .palette-cell.marked { border-color: #f2a93b; box-shadow: inset 0 0 0 1.5px #f2a93b; }
-  .palette-cell.marked.answered { background: var(--color-success); box-shadow: inset 0 0 0 2px #f2a93b; }
+  .palette-cell.answered { background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.4); }
+  .palette-cell.marked { border-color: #f59e0b; box-shadow: inset 0 0 0 1.5px #f59e0b; }
+  .palette-cell.marked.answered { background: rgba(16, 185, 129, 0.15); box-shadow: inset 0 0 0 2px #f59e0b; }
   .palette-cell.current {
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px var(--color-accent-soft);
+    border-color: var(--color-accent); background: var(--color-accent); color: #fff;
+    box-shadow: 0 4px 12px rgba(var(--color-accent-rgb), 0.4);
     animation: cellPop 260ms cubic-bezier(.34,1.56,.64,1) both, currentPulse 1.6s ease-in-out infinite;
   }
-  @keyframes currentPulse { 0%,100% { box-shadow: 0 0 0 3px var(--color-accent-soft); } 50% { box-shadow: 0 0 0 6px transparent; } }
+  @keyframes currentPulse { 0%,100% { box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.2); } 50% { box-shadow: 0 0 0 6px transparent; } }
 
-  /* ===== Timer — plain compact text, no ring/circle, minimal footprint ===== */
+  /* ===== Timer ===== */
   #timerDisplay {
-    font-family: var(--font-num);
-    font-variant-numeric: tabular-nums;
-    font-weight: 800; font-size: 0.95rem; letter-spacing: -0.02em; white-space: nowrap;
-    padding: 5px 12px; border-radius: 999px;
-    background: var(--surface-solid); border: 1px solid var(--surface-border);
-    color: var(--color-accent); transition: color 250ms ease, border-color 250ms ease;
+    font-family: var(--font-num); font-variant-numeric: tabular-nums;
+    font-weight: 900; font-size: 0.95rem; letter-spacing: 0.5px; white-space: nowrap;
+    padding: 6px 14px; border-radius: 99px;
+    background: rgba(var(--color-accent-rgb), 0.1); border: 1px solid rgba(var(--color-accent-rgb), 0.2);
+    color: var(--color-accent); transition: all 0.2s ease;
   }
-  #timerDisplay.timer-warning { color: #f2a93b; border-color: #f2a93b66; }
-  #timerDisplay.timer-critical { color: var(--color-danger); border-color: var(--color-danger); animation: timerPulse 1s infinite; }
+  #timerDisplay.timer-warning { color: #f59e0b; border-color: rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.1); }
+  #timerDisplay.timer-critical { color: #ef4444; border-color: rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.1); animation: timerPulse 1s infinite; }
   @keyframes timerPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
-  @media (prefers-reduced-motion: reduce) { #timerDisplay { animation: none !important; } }
 
-  /* ===== Animated progress bar — moving stripe so it reads as "live" while answering ===== */
-  .exam-progress-track { height: 8px; border-radius: 999px; background: var(--surface-border); box-shadow: inset 0 1px 3px rgba(0,0,0,0.12); overflow: hidden; }
+  /* ===== Animated progress bar ===== */
+  .exam-progress-track { height: 8px; border-radius: 99px; background: rgba(128,128,128,0.1); overflow: hidden; }
   .exam-progress-fill {
-    position: relative; height: 100%; border-radius: 999px;
-    background: linear-gradient(90deg, var(--color-accent), var(--color-accent-2));
-    box-shadow: 0 0 12px rgba(201,151,63,0.5);
-    transition: width 420ms cubic-bezier(.22,.9,.3,1);
-    overflow: hidden;
+    position: relative; height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, var(--color-accent), var(--color-accent-2, #f59e0b));
+    transition: width 420ms cubic-bezier(.22,.9,.3,1); overflow: hidden;
   }
   .exam-progress-fill::after {
     content: ""; position: absolute; inset: 0;
-    background: repeating-linear-gradient(115deg, rgba(255,255,255,0.32) 0px, rgba(255,255,255,0.32) 8px, transparent 8px, transparent 18px);
-    background-size: 200% 100%;
-    animation: fillShimmer 1.4s linear infinite;
+    background: repeating-linear-gradient(115deg, rgba(255,255,255,0.2) 0px, rgba(255,255,255,0.2) 8px, transparent 8px, transparent 18px);
+    background-size: 200% 100%; animation: fillShimmer 1.4s linear infinite;
   }
   @keyframes fillShimmer { from { background-position: 0 0; } to { background-position: -36px 0; } }
-  @media (prefers-reduced-motion: reduce) { .exam-progress-fill::after { animation: none; } }
-  #progressLabel { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-weight: 700; font-size: 0.82rem; color: var(--text-secondary); }
-  #qCounter .num-part { font-family: var(--font-num); }
 
+  /* ===== Anti-Download Image Shield ===== */
+  .protected-img-wrapper { position: relative; display: table; margin: 16px auto; border-radius: 12px; overflow: hidden; border: 1px solid rgba(128,128,128,0.15); box-shadow: 0 8px 24px rgba(0,0,0,0.05); }
+  .q-figure { max-width: 100%; max-height: 220px; display: block; pointer-events: none; user-select: none; -webkit-user-drag: none; }
+  .img-shield { position: absolute; inset: 0; z-index: 10; cursor: zoom-in; }
+
+  /* ===== Floating Prev/Next Nav (Premium Dock) ===== */
+  .exam-nav-bar {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 650px; z-index: 40;
+    padding: 16px; background: rgba(var(--bg-rgb, 10,14,26), 0.85);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(128,128,128,0.1);
+    display: flex; gap: 12px;
+  }
+
+  .btn { padding: 14px 20px; border-radius: 14px; font-weight: 800; font-size: 0.95rem; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px; flex: 1; border: none; cursor: pointer; }
+  .btn-primary { background: var(--color-accent); color: #fff; box-shadow: 0 4px 15px rgba(var(--color-accent-rgb), 0.2); }
+  .btn-secondary { background: rgba(128,128,128,0.1); color: var(--text-primary); border: 1px solid rgba(128,128,128,0.2); }
+  .btn:active:not(:disabled) { transform: scale(0.96); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  
   .review-toggle {
-    display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem;
-    padding: 6px 12px; border-radius: 999px; border: 1.5px solid var(--surface-border);
-    background: var(--surface-solid); color: var(--text-secondary); margin-top: 12px;
-    transition: transform 150ms ease, border-color 180ms ease, color 180ms ease, background 180ms ease;
+    display: inline-flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 700;
+    padding: 8px 16px; border-radius: 999px; border: 1px solid rgba(128,128,128,0.2);
+    background: rgba(128,128,128,0.04); color: var(--text-secondary); margin-top: 16px;
+    transition: all 0.2s ease; cursor: pointer;
   }
-  .review-toggle:active { transform: scale(0.96); }
-  .review-toggle.active { border-color: #f2a93b; color: #f2a93b; background: #f2a93b22; }
+  .review-toggle.active { border-color: #f59e0b; color: #f59e0b; background: rgba(245, 158, 11, 0.1); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15); }
 
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(10,14,26,0.55);
-    backdrop-filter: blur(4px);
-    display: flex; align-items: center; justify-content: center; z-index: 300; padding: 20px;
-    animation: overlayFade 200ms ease both;
-  }
-  .modal-overlay .glass.card { animation: modalRise 260ms cubic-bezier(.22,.9,.3,1) both; }
-  @keyframes overlayFade { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes modalRise { from { opacity: 0; transform: translateY(16px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
-
-  .img-broken { border: 1.5px dashed var(--color-danger); min-height: 60px; opacity: 0.6; }
-
-  /* ===== English question — hidden behind a tap-to-reveal pill by default.
-     Bengali is the primary/only language most students need, so keeping
-     English collapsed saves real vertical space on every question. ===== */
-  .lang-en-toggle { margin-bottom: 2px; }
-  .lang-en-toggle summary {
-    display: inline-flex; align-items: center; gap: 4px;
-    width: fit-content; list-style: none; cursor: pointer; user-select: none;
-    font-size: 0.72rem; font-weight: 700; color: var(--text-muted);
-    padding: 3px 11px; border-radius: 999px;
-    border: 1px solid var(--surface-border); background: var(--surface-solid);
-  }
-  .lang-en-toggle summary::-webkit-details-marker { display: none; }
-  .lang-en-toggle summary::before { content: "▸"; font-size: 0.6rem; transition: transform 150ms ease; }
-  .lang-en-toggle[open] summary::before { transform: rotate(90deg); }
-  .lang-en-toggle .lang-en { margin-top: 6px; font-size: 0.88rem; color: var(--text-secondary); }
-
-  .q-figure { transition: transform 200ms ease; }
-  .q-figure:hover { transform: scale(1.015); }
-
-  .btn { transition: transform 140ms ease, box-shadow 180ms ease, filter 180ms ease; }
-  .btn:active:not(:disabled) { transform: scale(0.97); }
-  .btn-primary:not(:disabled):hover { filter: brightness(1.06); }
-
-  /* ===== Sticky topbar — the timer must always stay visible while a
-     student scrolls through a long question, never require scrolling
-     back up to check remaining time. Scoped to this page only. ===== */
+  /* ===== Sticky Topbar ===== */
   .topbar {
     position: sticky; top: 0; z-index: 50;
     margin: calc(var(--space-5) * -1) calc(var(--space-4) * -1) var(--space-4);
-    padding: var(--space-4) var(--space-4) var(--space-3);
-    background: var(--surface-solid);
-    backdrop-filter: blur(var(--blur-sm)) saturate(var(--glass-sat));
-    -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(var(--glass-sat));
-    border-bottom: 1px solid var(--surface-border);
-  }
-  @media (min-width: 900px) {
-    .topbar { margin: calc(var(--space-7) * -1) calc(var(--space-6) * -1) var(--space-4); padding: var(--space-4) var(--space-6) var(--space-3); }
+    padding: 16px;
+    background: rgba(var(--bg-rgb, 10,14,26), 0.85);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(128,128,128,0.1);
   }
 
-  /* ===== Floating prev/next nav — same reasoning as the sticky topbar
-     above: on a long question (big image, long options) the nav buttons
-     used to sit below the fold and needed scrolling to reach. Sticking
-     them to the bottom of the viewport keeps them reachable at all times. */
-  .exam-nav-bar {
-    position: sticky; bottom: 0; z-index: 40;
-    margin: var(--space-4) calc(var(--space-4) * -1) calc(var(--space-5) * -1);
-    padding: var(--space-3) var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
-    background: var(--surface-solid);
-    backdrop-filter: blur(var(--blur-sm)) saturate(var(--glass-sat));
-    -webkit-backdrop-filter: blur(var(--blur-sm)) saturate(var(--glass-sat));
-    border-top: 1px solid var(--surface-border);
-  }
-  @media (min-width: 900px) {
-    .exam-nav-bar { margin: var(--space-4) calc(var(--space-6) * -1) calc(var(--space-7) * -1); padding: var(--space-3) var(--space-6) calc(var(--space-4) + env(safe-area-inset-bottom, 0px)); }
-  }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 300; padding: 20px; animation: overlayFade 200ms ease both; }
+  @keyframes overlayFade { from { opacity: 0; } to { opacity: 1; } }
+
+  /* Prevents space at bottom due to fixed nav */
+  #shell { padding-bottom: 100px; }
 </style>
 </head>
-<body>
+<body oncontextmenu="return false;"> <!-- Block Global Right Click -->
 <div class="app-shell" id="shell">
   <div class="state-block"><div class="spinner"></div></div>
 </div>
@@ -243,10 +190,10 @@ let snapshot = null;
 let attemptState = null;
 let timerHandle = null;
 let questionStartMillis = null;
-let slowQ1Warned = false, slowQ2Warned = false; // per-question "taking a while" nudges — reset every time the question changes
-const firedMinuteCheckpoints = new Set(); // which of the [20,10,5,1]-minute voice checkpoints have already fired
-let motivationGiven = false; // the one mid-exam encouragement nudge — fires at most once
-let lastWarnedInterval = 0; // tracks which 30-min mark we've already toasted
+let slowQ1Warned = false, slowQ2Warned = false; 
+const firedMinuteCheckpoints = new Set(); 
+let motivationGiven = false; 
+let lastWarnedInterval = 0; 
 let examInProgress = false;
 
 if (!student) {
@@ -255,13 +202,13 @@ if (!student) {
   shell.innerHTML = `<div class="state-block"><p class="text-sm">পরীক্ষা শনাক্ত করা যায়নি।</p></div>`;
 } else {
   refreshActiveStudent(student.docId).then(fresh => {
-    if (fresh) Object.assign(student, fresh); // keep the same object reference `student` everywhere below
+    if (fresh) Object.assign(student, fresh); 
     boot();
   });
 }
 
 async function boot() {
-  shell.innerHTML = `<div class="state-block"><div class="spinner"></div><p class="text-sm text-muted">পরীক্ষা লোড করা হচ্ছে...</p></div>`;
+  shell.innerHTML = `<div class="state-block"><div class="spinner"></div><p class="text-sm text-muted mt-3">পরীক্ষা লোড করা হচ্ছে...</p></div>`;
   try {
     const existingResult = await getExistingResult(examId, student.studentId);
     if (existingResult) {
@@ -280,11 +227,6 @@ async function boot() {
       return;
     }
 
-    // Check for an already-in-progress attempt FIRST, before gating on exam
-    // status — a student partway through an exam must always be able to
-    // resume and submit their own answers, even if an admin changes the
-    // exam's status in the meantime (e.g. archives it). Status only gates
-    // whether a NEW attempt may be started.
     const resumable = await peekInProgressAttempt(examId, student.studentId);
     if (resumable) {
       attemptState = resumable;
@@ -316,40 +258,54 @@ async function renderIntro() {
 
   shell.innerHTML = `
     <div class="topbar">
-      <a href="../student/dashboard.html" class="icon-btn">${icons.arrowLeft}</a>
-      <h2 style="font-size:1.05rem;">পরীক্ষা শুরুর আগে</h2>
+      <a href="../student/dashboard.html" class="icon-btn" style="background:rgba(128,128,128,0.08); border-radius:12px; width:40px; height:40px; display:flex; align-items:center; justify-content:center;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+      </a>
+      <h2 style="font-size:1.1rem; font-weight:900;">পরীক্ষা শুরুর আগে</h2>
       <span></span>
     </div>
 
-    <div class="glass card">
-      <p class="eyebrow">${exam.name}</p>
-      ${exam.description ? `<p class="text-sm mt-2">${exam.description}</p>` : ""}
-      <div class="grid-2 mt-4">
-        <div><p class="text-xs text-muted">মোট প্রশ্ন</p><p style="font-weight:700;">${snapshot.questions.length}</p></div>
-        <div><p class="text-xs text-muted">মোট নম্বর</p><p style="font-weight:700;">${exam.totalMarks ?? "—"}</p></div>
-        <div><p class="text-xs text-muted">সময়কাল</p><p style="font-weight:700;">${exam.durationMinutes} মিনিট</p></div>
-        <div><p class="text-xs text-muted">তারিখ / সময়</p><p style="font-weight:700;">${dateStr} • ${exam.informationalTime || "—"}</p></div>
+    <div class="glass card" style="padding:24px;">
+      <p style="font-size:1.2rem; font-weight:900; color:var(--color-accent); line-height:1.3; margin-bottom:8px;">${exam.name}</p>
+      ${exam.description ? `<p class="text-sm text-muted mb-4">${exam.description}</p>` : ""}
+      
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px;">
+        <div style="background:rgba(128,128,128,0.03); border:1px solid rgba(128,128,128,0.1); border-radius:12px; padding:12px; text-align:center;">
+          <p class="text-xs text-muted font-bold">মোট প্রশ্ন</p>
+          <p style="font-size:1.4rem; font-weight:900; color:var(--text-primary); font-family:var(--font-num);">${snapshot.questions.length}</p>
+        </div>
+        <div style="background:rgba(128,128,128,0.03); border:1px solid rgba(128,128,128,0.1); border-radius:12px; padding:12px; text-align:center;">
+          <p class="text-xs text-muted font-bold">সময়কাল</p>
+          <p style="font-size:1.4rem; font-weight:900; color:var(--text-primary); font-family:var(--font-num);">${exam.durationMinutes} মি</p>
+        </div>
       </div>
-      ${subjNames ? `<p class="text-xs text-muted mt-3">বিষয়: <span style="color:var(--text-secondary);">${subjNames}</span></p>` : ""}
-      ${chapNames ? `<p class="text-xs text-muted mt-2">অধ্যায়: <span style="color:var(--text-secondary);">${chapNames}</span></p>` : ""}
+      
+      <div style="margin-top:16px; font-size:0.85rem; color:var(--text-secondary); font-weight:600; line-height:1.6;">
+        <p><strong>তারিখ:</strong> ${dateStr} • ${exam.informationalTime || "—"}</p>
+        <p><strong>মোট নম্বর:</strong> ${exam.totalMarks ?? "—"}</p>
+        ${subjNames ? `<p><strong>বিষয়:</strong> ${subjNames}</p>` : ""}
+      </div>
     </div>
 
-    <div class="glass card mt-4">
-      <p class="text-sm" style="font-weight:600;">মনে রাখুন:</p>
-      <ul class="text-xs text-muted mt-2" style="padding-right:16px;line-height:1.9;">
-        <li>শুরু করার মুহূর্ত থেকেই সময় গণনা শুরু হবে — নির্ধারিত সময়ের সাথে এর সম্পর্ক নেই।</li>
+    <div class="glass card" style="padding:20px;">
+      <p style="font-weight:900; font-size:0.95rem; color:var(--text-primary); margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        মনে রাখুন
+      </p>
+      <ul style="font-size:0.8rem; color:var(--text-muted); font-weight:600; line-height:1.8; padding-left:20px;">
+        <li>শুরু করার মুহূর্ত থেকেই সময় গণনা শুরু হবে।</li>
         <li>সময় শেষ হলে পরীক্ষাটি স্বয়ংক্রিয়ভাবে জমা হয়ে যাবে।</li>
         <li>জমা দেওয়ার পর কোনো উত্তর পরিবর্তন করা যাবে না।</li>
+        <li><strong>ছবির ওপর ক্লিক করে জুম করা যাবে। ছবি সেভ বা ডাউনলোড করা সম্পূর্ণ নিষিদ্ধ।</strong></li>
       </ul>
     </div>
 
-    <button class="btn btn-primary mt-4" id="startBtn">পরীক্ষা শুরু করুন</button>
+    <button class="btn btn-primary" id="startBtn" style="width:100%; padding:16px; font-size:1.05rem; margin-top:20px; box-shadow:0 8px 24px rgba(var(--color-accent-rgb),0.25);">পরীক্ষা শুরু করুন</button>
   `;
 
   document.getElementById("startBtn").addEventListener("click", async () => {
     const btn = document.getElementById("startBtn");
-    btn.disabled = true;
-    btn.textContent = "শুরু করা হচ্ছে...";
+    btn.disabled = true; btn.textContent = "শুরু করা হচ্ছে...";
     attemptState = await getOrStartAttempt(examId, student.studentId, exam.durationMinutes);
     attemptState.questionTimes = attemptState.questionTimes || {};
     attemptState.markedForReview = attemptState.markedForReview || {};
@@ -360,66 +316,85 @@ async function renderIntro() {
 
 function renderExamShell() {
   shell.innerHTML = `
-    <div class="topbar" style="justify-content:space-between;align-items:center;gap:8px;">
-      <span class="flex items-center gap-2" style="min-width:0;overflow:hidden;">
-        ${student.photoURL
-          ? `<img src="${student.photoURL}" alt="" draggable="false" oncontextmenu="return false"
-               style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;pointer-events:none;"
-               onerror="var d=document.createElement('div');d.className='brand-mark';d.textContent='${student.name.charAt(0)}';d.style.cssText='width:32px;height:32px;font-size:0.9rem;flex-shrink:0;';this.replaceWith(d);">`
-          : `<div class="brand-mark" style="width:32px;height:32px;font-size:0.9rem;flex-shrink:0;">${student.name.charAt(0)}</div>`}
-        <span class="text-sm" style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${student.name}</span>
-      </span>
-      <span class="flex items-center gap-2" style="flex-shrink:0;">
-        <span class="text-xs text-muted" style="white-space:nowrap;">বাকি সময়</span>
-        <span id="timerDisplay">--:--</span>
-        <button class="btn btn-danger btn-sm" id="submitBtn" style="padding:5px 10px;font-size:0.72rem;white-space:nowrap;">জমা দিন</button>
-      </span>
-    </div>
-
-    <div class="glass card">
-      <div class="flex justify-between items-center">
-        <p class="eyebrow" id="qCounter">প্রশ্ন ১ / ${snapshot.questions.length}</p>
-        <button class="icon-btn" id="paletteBtn">${icons.layers}</button>
+    <div class="topbar" style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+      <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+        ${student.photoURL ? `<img src="${student.photoURL}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; pointer-events:none; user-select:none; -webkit-user-drag:none;">` : `<div style="width:36px; height:36px; border-radius:50%; background:var(--color-accent); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:900;">${student.name.charAt(0)}</div>`}
+        <span style="font-weight:800; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${student.name}</span>
       </div>
-      <div class="exam-progress-track mt-2"><div class="exam-progress-fill" id="progressFill" style="width:0%;"></div></div>
-      <p class="text-xs text-muted mt-1" id="progressLabel"></p>
-      <div id="questionBody" class="mt-3"></div>
+      <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
+        <div style="display:flex; flex-direction:column; align-items:flex-end;">
+          <span style="font-size:0.65rem; font-weight:800; color:var(--text-muted); text-transform:uppercase;">বাকি সময়</span>
+          <span id="timerDisplay">--:--</span>
+        </div>
+        <button id="submitBtn" style="background:rgba(239, 68, 68, 0.1); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.2); padding:8px 14px; border-radius:10px; font-weight:800; font-size:0.8rem; cursor:pointer;">জমা দিন</button>
+      </div>
     </div>
 
-    <div class="flex gap-2 exam-nav-bar">
-      <button class="btn btn-secondary" id="prevBtn">${icons.arrowLeft} পূর্ববর্তী</button>
-      <button class="btn btn-primary" id="nextBtn">পরবর্তী ${icons.arrowRight}</button>
+    <div class="glass card" style="padding:20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <p style="font-weight:900; font-size:1rem; color:var(--text-primary); font-family:var(--font-num);" id="qCounter">প্রশ্ন ১ / ${snapshot.questions.length}</p>
+        <button id="paletteBtn" style="background:rgba(128,128,128,0.08); border:none; width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-secondary);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+        </button>
+      </div>
+      
+      <div class="exam-progress-track mt-3"><div class="exam-progress-fill" id="progressFill" style="width:0%;"></div></div>
+      <p style="font-size:0.75rem; color:var(--text-muted); font-weight:700; margin-top:8px; font-family:var(--font-num);" id="progressLabel"></p>
+      
+      <div id="questionBody" class="mt-4"></div>
     </div>
 
+    <!-- Floating Navigation Dock -->
+    <div class="exam-nav-bar">
+      <button class="btn btn-secondary" id="prevBtn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        পূর্ববর্তী
+      </button>
+      <button class="btn btn-primary" id="nextBtn">
+        পরবর্তী
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+
+    <!-- Palette Modal -->
     <div id="paletteOverlay" class="modal-overlay hidden">
-      <div class="glass card" style="max-width:360px;width:100%;max-height:80vh;overflow-y:auto;">
-        <div class="flex justify-between items-center">
-          <p class="eyebrow">প্রশ্ন তালিকা</p>
-          <button class="icon-btn" id="closePaletteBtn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      <div class="glass card" style="max-width:400px; width:100%; max-height:85vh; overflow-y:auto; padding:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <p style="font-weight:900; font-size:1.1rem; color:var(--text-primary);">প্রশ্ন তালিকা</p>
+          <button id="closePaletteBtn" style="background:rgba(239, 68, 68, 0.1); color:#ef4444; border:none; width:36px; height:36px; border-radius:10px; cursor:pointer;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg>
           </button>
         </div>
-        <div class="palette-grid mt-3" id="paletteGrid"></div>
-        <div class="flex gap-3 mt-3 text-xs text-muted" style="flex-wrap:wrap;">
-          <span><span class="palette-cell answered" style="display:inline-flex;width:16px;height:16px;vertical-align:middle;"></span> উত্তরিত</span>
-          <span><span class="palette-cell" style="display:inline-flex;width:16px;height:16px;vertical-align:middle;"></span> অনুত্তরিত</span>
-          <span><span class="palette-cell marked" style="display:inline-flex;width:16px;height:16px;vertical-align:middle;"></span> চিহ্নিত</span>
+        <div class="palette-grid" id="paletteGrid"></div>
+        
+        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:24px; justify-content:center; font-size:0.75rem; font-weight:700; color:var(--text-muted);">
+          <span style="display:flex; align-items:center; gap:6px;"><div style="width:14px; height:14px; border-radius:4px; background:rgba(16,185,129,0.15); border:1px solid #10b981;"></div> উত্তরিত</span>
+          <span style="display:flex; align-items:center; gap:6px;"><div style="width:14px; height:14px; border-radius:4px; background:rgba(128,128,128,0.05); border:1px solid rgba(128,128,128,0.2);"></div> অনুত্তরিত</span>
+          <span style="display:flex; align-items:center; gap:6px;"><div style="width:14px; height:14px; border-radius:4px; background:rgba(128,128,128,0.05); border:1px solid #f59e0b;"></div> চিহ্নিত</span>
         </div>
       </div>
     </div>
 
+    <!-- Submit Warning Modal -->
     <div id="submitModal" class="modal-overlay hidden">
-      <div class="glass card" style="max-width:360px;">
-        <p style="font-weight:700;">পরীক্ষা জমা দেওয়ার পরে কোনো উত্তর পরিবর্তন করা যাবে না। আপনি কি নিশ্চিত?</p>
-        <div class="flex gap-2 mt-4">
+      <div class="glass card" style="max-width:380px; padding:24px; text-align:center;">
+        <div style="width:64px; height:64px; border-radius:50%; background:rgba(239, 68, 68, 0.1); color:#ef4444; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <p style="font-weight:900; font-size:1.1rem; color:var(--text-primary); margin-bottom:8px;">নিশ্চিত করুন</p>
+        <p style="font-size:0.85rem; color:var(--text-muted); font-weight:600; line-height:1.5;">পরীক্ষা জমা দেওয়ার পরে কোনো উত্তর পরিবর্তন করা যাবে না।</p>
+        <div style="display:flex; gap:10px; margin-top:24px;">
           <button class="btn btn-secondary" id="cancelSubmitBtn">ফিরে যান</button>
-          <button class="btn btn-danger" id="confirmSubmitBtn">চূড়ান্তভাবে জমা দিন</button>
+          <button class="btn btn-primary" id="confirmSubmitBtn" style="background:#ef4444; box-shadow:0 4px 15px rgba(239,68,68,0.2);">চূড়ান্ত জমা</button>
         </div>
       </div>
     </div>
 
-    <div id="figurePreviewModal" class="hidden" style="position:fixed;inset:0;background:rgba(10,14,26,0.9);align-items:center;justify-content:center;z-index:400;padding:20px;cursor:zoom-out;">
-      <img id="figurePreviewImg" style="max-width:100%;max-height:100%;border-radius:var(--radius-sm);">
+    <!-- Protected Fullscreen Image Preview -->
+    <div id="figurePreviewModal" class="hidden" style="position:fixed;inset:0;background:rgba(10,14,26,0.95);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;cursor:zoom-out;">
+      <div style="position:relative; display:inline-block; pointer-events:none;">
+        <img id="figurePreviewImg" style="max-width:100%;max-height:85vh;border-radius:16px; pointer-events:none; user-select:none; -webkit-user-drag:none;" draggable="false" oncontextmenu="return false;">
+      </div>
     </div>
   `;
 
@@ -441,48 +416,51 @@ function renderExamShell() {
   questionStartMillis = Date.now();
   renderQuestion();
 }
-function leaveGuard(e) {
-  if (!examInProgress) return;
-  e.preventDefault();
-  e.returnValue = "";
-}
-// No persistent badge anymore (it was eating topbar space) — just a
-// quick toast so the student still knows their answers are being saved
-// on-device when the connection drops.
-function handleConnChange() {
-  if (navigator.onLine) {
-    showToast("অনলাইনে সংযুক্ত হয়েছে।", "error");
-  } else {
-    showToast("অফলাইন — উত্তর ডিভাইসে সংরক্ষিত হচ্ছে।", "error");
-  }
-}
+
+function leaveGuard(e) { if (!examInProgress) return; e.preventDefault(); e.returnValue = ""; }
+function handleConnChange() { showToast(navigator.onLine ? "অনলাইনে সংযুক্ত হয়েছে।" : "অফলাইন — উত্তর ডিভাইসে সেভ হচ্ছে।", navigator.onLine ? "success" : "error"); }
+
 function renderQuestion() {
   const idx = attemptState.currentIndex;
   const q = snapshot.questions[idx];
   document.getElementById("qCounter").textContent = `প্রশ্ন ${idx + 1} / ${snapshot.questions.length}`;
   document.getElementById("prevBtn").disabled = idx === 0;
   document.getElementById("nextBtn").disabled = idx === snapshot.questions.length - 1;
+  
   const answeredCount = Object.keys(attemptState.answers).length;
   document.getElementById("progressFill").style.width = `${Math.round((answeredCount / snapshot.questions.length) * 100)}%`;
   document.getElementById("progressLabel").textContent = `${answeredCount} / ${snapshot.questions.length} টি প্রশ্নের উত্তর দেওয়া হয়েছে`;
+  
   const selected = attemptState.answers[q.questionId];
   const isMarked = !!attemptState.markedForReview[q.questionId];
+  
   const body = document.getElementById("questionBody");
   body.classList.remove("q-enter");
-  void body.offsetWidth; // restart animation
+  void body.offsetWidth; 
   body.classList.add("q-enter");
+  
+  // Protected Image Renderer
+  const imageHtml = q.imageUrl ? `
+    <div class="protected-img-wrapper">
+      <img src="${q.imageUrl}" class="q-figure" draggable="false" oncontextmenu="return false;" onerror="this.src=''; this.style.display='none';">
+      <div class="img-shield" id="imgShieldBtn"></div>
+    </div>
+  ` : "";
+
   body.innerHTML = `
-    <details class="lang-en-toggle"><summary>English</summary><p class="lang-en">${q.question_en}</p></details>
-    <p class="mt-2" style="font-weight:700;font-size:1.02rem;">${q.question_bn}</p>
-    ${q.imageUrl ? `<img src="${q.imageUrl}" class="q-figure" style="max-width:100%;max-height:220px;display:block;margin:12px auto 0;border-radius:var(--radius-sm);cursor:zoom-in;" onerror="this.classList.add('img-broken');this.alt='ছবি লোড করা যায়নি';">` : ""}
-    <div class="mt-4">
+    <details class="lang-en-toggle" style="margin-bottom:8px;"><summary>English</summary><p style="margin-top:6px; font-size:0.85rem; color:var(--text-secondary);">${q.question_en}</p></details>
+    <p style="font-weight:800; font-size:1.1rem; color:var(--text-primary); line-height:1.5;">${q.question_bn}</p>
+    ${imageHtml}
+    
+    <div style="margin-top:24px;">
       ${["A", "B", "C", "D"].map(letter => `
         <button class="option-card ${selected === letter ? "selected" : ""}" data-letter="${letter}">
           <span class="option-letter">${letter}</span>
-          <span style="flex:1;">${q.options_bn[letter]}</span>
+          <span style="flex:1; line-height:1.4;">${q.options_bn[letter]}</span>
         </button>
       `).join("")}
     </div>
+    
     <button type="button" class="review-toggle ${isMarked ? "active" : ""}" id="markReviewBtn">
       ${isMarked ? "★ পর্যালোচনার জন্য চিহ্নিত" : "☆ পর্যালোচনার জন্য চিহ্নিত করুন"}
     </button>
@@ -491,43 +469,34 @@ function renderQuestion() {
     btn.addEventListener("click", () => selectAnswer(q.questionId, btn.dataset.letter));
   });
   document.getElementById("markReviewBtn").addEventListener("click", () => toggleMarkForReview(q.questionId));
-  const figure = body.querySelector(".q-figure");
-  if (figure) figure.addEventListener("click", () => openFigurePreview(q.imageUrl));
+  
+  const shieldBtn = body.querySelector("#imgShieldBtn");
+  if (shieldBtn) shieldBtn.addEventListener("click", () => openFigurePreview(q.imageUrl));
 }
+
 function openFigurePreview(url) {
   const modal = document.getElementById("figurePreviewModal");
   const modalImg = document.getElementById("figurePreviewImg");
   modalImg.src = url;
-  modal.style.display = "flex";
   modal.classList.remove("hidden");
 }
 function closeFigurePreview() {
   const modal = document.getElementById("figurePreviewModal");
   modal.classList.add("hidden");
-  modal.style.display = "none";
   document.getElementById("figurePreviewImg").src = "";
 }
+
 function toggleMarkForReview(questionId) {
   attemptState.markedForReview[questionId] = !attemptState.markedForReview[questionId];
-  persistState();
-  renderQuestion();
+  persistState(); renderQuestion();
 }
+
 function selectAnswer(questionId, letter) {
-  // Tapping the already-selected option again clears it — lets a student
-  // undo an accidental tap and leave the question unanswered (skipped),
-  // instead of being forced to pick one of the four options.
-  if (attemptState.answers[questionId] === letter) {
-    delete attemptState.answers[questionId];
-  } else {
-    attemptState.answers[questionId] = letter;
-  }
+  if (attemptState.answers[questionId] === letter) delete attemptState.answers[questionId];
+  else attemptState.answers[questionId] = letter;
+  
   persistState();
 
-  // Deliberately NOT calling renderQuestion() here — a full re-render
-  // recreates every option button, which replays their entrance animation
-  // on every single tap (the "everything wobbles" issue). Instead, just
-  // update the classes on the existing buttons in place, and play the
-  // premium flash animation only on the one option that was tapped.
   const body = document.getElementById("questionBody");
   const nowSelected = attemptState.answers[questionId];
   body.querySelectorAll(".option-card").forEach(btn => {
@@ -536,45 +505,39 @@ function selectAnswer(questionId, letter) {
   });
   if (nowSelected) {
     const tappedBtn = body.querySelector(`.option-card[data-letter="${nowSelected}"]`);
-    if (tappedBtn) {
-      void tappedBtn.offsetWidth; // restart animation
-      tappedBtn.classList.add("option-flash");
-    }
+    if (tappedBtn) { void tappedBtn.offsetWidth; tappedBtn.classList.add("option-flash"); }
   }
 
-  // Progress bar/label (previously only refreshed inside renderQuestion()).
   const answeredCount = Object.keys(attemptState.answers).length;
   document.getElementById("progressFill").style.width = `${Math.round((answeredCount / snapshot.questions.length) * 100)}%`;
   document.getElementById("progressLabel").textContent = `${answeredCount} / ${snapshot.questions.length} টি প্রশ্নের উত্তর দেওয়া হয়েছে`;
 }
+
 function navigate(delta) {
   const next = attemptState.currentIndex + delta;
   if (next < 0 || next >= snapshot.questions.length) return;
   recordElapsed();
   attemptState.currentIndex = next;
-  persistState();
-  renderQuestion();
+  persistState(); renderQuestion();
 }
+
 function recordElapsed() {
   if (questionStartMillis == null) return;
   const q = snapshot.questions[attemptState.currentIndex];
   const elapsed = Math.round((Date.now() - questionStartMillis) / 1000);
-  if (elapsed > 0 && q) {
-    attemptState.questionTimes[q.questionId] = (attemptState.questionTimes[q.questionId] || 0) + elapsed;
-  }
+  if (elapsed > 0 && q) attemptState.questionTimes[q.questionId] = (attemptState.questionTimes[q.questionId] || 0) + elapsed;
   questionStartMillis = Date.now();
-  slowQ1Warned = false;
-  slowQ2Warned = false;
+  slowQ1Warned = false; slowQ2Warned = false;
 }
+
 function persistState() {
   saveLocalAttempt(examId, student.studentId, attemptState);
   syncToFirestoreDebounced(examId, student.studentId, {
-    answers: attemptState.answers,
-    currentIndex: attemptState.currentIndex,
-    questionTimes: attemptState.questionTimes,
-    markedForReview: attemptState.markedForReview
+    answers: attemptState.answers, currentIndex: attemptState.currentIndex,
+    questionTimes: attemptState.questionTimes, markedForReview: attemptState.markedForReview
   });
 }
+
 function openPalette() {
   const grid = document.getElementById("paletteGrid");
   grid.innerHTML = snapshot.questions.map((q, i) => {
@@ -584,36 +547,25 @@ function openPalette() {
     return `<button class="palette-cell ${answered ? "answered" : ""} ${marked ? "marked" : ""} ${isCurrent ? "current" : ""}" data-idx="${i}">${i + 1}</button>`;
   }).join("");
   grid.querySelectorAll("[data-idx]").forEach(btn => btn.addEventListener("click", () => {
-    recordElapsed();
-    attemptState.currentIndex = Number(btn.dataset.idx);
-    persistState();
-    renderQuestion();
-    closePalette();
+    recordElapsed(); attemptState.currentIndex = Number(btn.dataset.idx);
+    persistState(); renderQuestion(); closePalette();
   }));
   document.getElementById("paletteOverlay").classList.remove("hidden");
 }
-function closePalette() {
-  document.getElementById("paletteOverlay").classList.add("hidden");
-}
-// ===== Voice reminders (Web Speech API) — Bengali, calls the student by
-// name. Silently does nothing if the browser/device doesn't support
-// speech synthesis (feature-detected, never throws). =====
+function closePalette() { document.getElementById("paletteOverlay").classList.add("hidden"); }
+
 function speak(name, message) {
   if (!("speechSynthesis" in window)) return;
   try {
-    window.speechSynthesis.cancel(); // don't stack/overlap with any prior utterance
+    window.speechSynthesis.cancel(); 
     const text = name ? `${name}, ${message}` : message;
     const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = "bn-BD";
-    utter.rate = 0.95;
+    utter.lang = "bn-BD"; utter.rate = 0.95;
     window.speechSynthesis.speak(utter);
-  } catch (e) { /* voice is a nice-to-have, never let it break the exam flow */ }
+  } catch (e) { }
 }
-function startTimer() {
-  clearInterval(timerHandle);
-  tick();
-  timerHandle = setInterval(tick, 1000);
-}
+
+function startTimer() { clearInterval(timerHandle); tick(); timerHandle = setInterval(tick, 1000); }
 function tick() {
   const remaining = attemptState.endAtMillis - Date.now();
   const display = document.getElementById("timerDisplay");
@@ -622,28 +574,18 @@ function tick() {
     display.classList.toggle("timer-critical", remaining <= 60 * 1000 && remaining > 0);
     display.classList.toggle("timer-warning", remaining <= 5 * 60 * 1000 && remaining > 60 * 1000);
   }
-  // ---- Countdown voice checkpoints — 20/10/5/1 minutes remaining, but
-  // only the ones that actually fit inside this exam's own duration (a
-  // 15-minute exam should never hear "20 minutes remaining"). ----
+  
   const totalMinutes = exam?.durationMinutes || 0;
   const remainingMinutes = remaining / 60000;
   const MIN_WORDS = { 20: "বিশ", 10: "দশ", 5: "পাঁচ", 1: "এক" };
   [20, 10, 5, 1].filter(m => m < totalMinutes).forEach(m => {
     if (remainingMinutes <= m && remainingMinutes > m - 1 && !firedMinuteCheckpoints.has(m)) {
       firedMinuteCheckpoints.add(m);
-      if (m === 1) {
-        showToast("আর মাত্র ১ মিনিট বাকি — সময় শেষ হলে উত্তর স্বয়ংক্রিয়ভাবে জমা হয়ে যাবে।", "error");
-        speak(student.name, "আর মাত্র এক মিনিট বাকি আছে। সময় শেষ হয়ে গেলে তোমার উত্তরগুলো স্বয়ংক্রিয়ভাবে জমা হয়ে যাবে।");
-      } else {
-        showToast(`আর মাত্র ${m} মিনিট বাকি আছে।`, "error");
-        speak(student.name, `আর মাত্র ${MIN_WORDS[m]} মিনিট বাকি আছে।`);
-      }
+      if (m === 1) { showToast("আর মাত্র ১ মিনিট বাকি — সময় শেষ হলে উত্তর স্বয়ংক্রিয়ভাবে জমা হয়ে যাবে।", "error"); speak(student.name, "আর মাত্র এক মিনিট বাকি আছে। সময় শেষ হয়ে গেলে তোমার উত্তরগুলো স্বয়ংক্রিয়ভাবে জমা হয়ে যাবে।"); }
+      else { showToast(`আর মাত্র ${m} মিনিট বাকি আছে।`, "error"); speak(student.name, `আর মাত্র ${MIN_WORDS[m]} মিনিট বাকি আছে।`); }
     }
   });
 
-  // ---- One-time mid-exam encouragement — fires around the halfway point,
-  // only if the student's progress is reasonably close to their time pace
-  // (never tells someone falling behind that things are "going well"). ----
   if (!motivationGiven && attemptState.startedAtMillis && totalMinutes > 0) {
     const elapsedMinutes = (Date.now() - attemptState.startedAtMillis) / 60000;
     if (elapsedMinutes >= totalMinutes / 2) {
@@ -651,77 +593,50 @@ function tick() {
       const answeredCount = Object.keys(attemptState.answers).length;
       const progressRatio = snapshot.questions.length ? answeredCount / snapshot.questions.length : 0;
       const paceRatio = Math.min(1, elapsedMinutes / totalMinutes);
-      if (progressRatio >= paceRatio * 0.7) {
-        speak(student.name, "তুমি খুব ভালো করছ, পরীক্ষা সুন্দরভাবে এগিয়ে যাচ্ছে। এভাবেই চালিয়ে যাও।");
-      }
+      if (progressRatio >= paceRatio * 0.7) speak(student.name, "তুমি খুব ভালো করছ, পরীক্ষা সুন্দরভাবে এগিয়ে যাচ্ছে। এভাবেই চালিয়ে যাও।");
     }
   }
 
-  // ---- Per-question "taking a while" nudges — resets every time the
-  // question changes (see recordElapsed()). Only fires while the current
-  // question is still unanswered. ----
   if (questionStartMillis != null) {
     const currentQ = snapshot.questions[attemptState.currentIndex];
     const alreadyAnswered = currentQ && attemptState.answers[currentQ.questionId];
     if (currentQ && !alreadyAnswered) {
       const qElapsedSec = (Date.now() - questionStartMillis) / 1000;
-      if (qElapsedSec >= 60 && !slowQ1Warned) {
-        slowQ1Warned = true;
-        speak(student.name, "এই প্রশ্নে একটু বেশি সময় লাগছে। ভেবে উত্তর দিয়ে দাও, চাইলে পরে আবার ফিরে আসতে পারবে।");
-      }
-      if (qElapsedSec >= 120 && !slowQ2Warned) {
-        slowQ2Warned = true;
-        speak(student.name, "চিন্তা করো না, তুমি ঠিকভাবেই এগিয়ে যাচ্ছ। একটু ভেবে উত্তর দিয়ে সামনে বাড়ো।");
-      }
+      if (qElapsedSec >= 60 && !slowQ1Warned) { slowQ1Warned = true; speak(student.name, "এই প্রশ্নে একটু বেশি সময় লাগছে। ভেবে উত্তর দিয়ে দাও, চাইলে পরে আবার ফিরে আসতে পারবে।"); }
+      if (qElapsedSec >= 120 && !slowQ2Warned) { slowQ2Warned = true; speak(student.name, "চিন্তা করো না, তুমি ঠিকভাবেই এগিয়ে যাচ্ছ। একটু ভেবে উত্তর দিয়ে সামনে বাড়ো।"); }
     }
   }
 
-  // Every 30 minutes elapsed, remind the student how much time is left.
-  // Skipped once we're inside the final-5-minute stretch — the dedicated
-  // 5-min/1-min checkpoints above already cover that window.
   if (attemptState.startedAtMillis && remaining > 5 * 60 * 1000) {
     const elapsedMinutes = (Date.now() - attemptState.startedAtMillis) / 60000;
     const currentInterval = Math.floor(elapsedMinutes / 30);
-    if (currentInterval > lastWarnedInterval && currentInterval >= 1) {
-      lastWarnedInterval = currentInterval;
-      showToast(`৩০ মিনিট পার হয়ে গেছে — বাকি সময়: ${formatHms(remaining)}`, "error");
-    }
+    if (currentInterval > lastWarnedInterval && currentInterval >= 1) { lastWarnedInterval = currentInterval; showToast(`৩০ মিনিট পার হয়ে গেছে — বাকি সময়: ${formatHms(remaining)}`, "error"); }
   }
-  if (remaining <= 0) {
-    clearInterval(timerHandle);
-    doSubmit(true);
-  }
+  if (remaining <= 0) { clearInterval(timerHandle); doSubmit(true); }
 }
 
 let submitting = false;
 async function doSubmit(isAutoSubmit) {
   if (submitting) return;
-  submitting = true;
-  clearInterval(timerHandle);
-  recordElapsed();
+  submitting = true; clearInterval(timerHandle); recordElapsed();
 
   const modal = document.getElementById("submitModal");
   if (modal) modal.classList.add("hidden");
-  shell.innerHTML = `<div class="state-block"><div class="spinner"></div><p class="text-sm text-muted">${isAutoSubmit ? "সময় শেষ — পরীক্ষা জমা দেওয়া হচ্ছে..." : "জমা দেওয়া হচ্ছে..."}</p></div>`;
+  shell.innerHTML = `<div class="state-block"><div class="spinner"></div><p class="text-sm text-muted mt-3" style="font-weight:800;">${isAutoSubmit ? "সময় শেষ — পরীক্ষা জমা দেওয়া হচ্ছে..." : "জমা দেওয়া হচ্ছে..."}</p></div>`;
 
   try {
     const result = await submitAttempt({
       examId, studentId: student.studentId, examName: exam.name,
-      snapshotQuestions: snapshot.questions,
-      answers: attemptState.answers,
-      questionTimes: attemptState.questionTimes,
-      markedForReview: attemptState.markedForReview,
+      snapshotQuestions: snapshot.questions, answers: attemptState.answers,
+      questionTimes: attemptState.questionTimes, markedForReview: attemptState.markedForReview,
       startedAtMillis: attemptState.startedAtMillis
     });
-    examInProgress = false;
-    window.removeEventListener("beforeunload", leaveGuard);
+    examInProgress = false; window.removeEventListener("beforeunload", leaveGuard);
     window.location.href = `../student/result.html?resultId=${result.resultId}&justSubmitted=1`;
   } catch (err) {
-    console.error(err);
-    submitting = false;
+    console.error(err); submitting = false;
     showToast("জমা দেওয়া যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করুন।", "error");
-    renderExamShell();
-    startTimer();
+    renderExamShell(); startTimer();
   }
 }
 </script>
