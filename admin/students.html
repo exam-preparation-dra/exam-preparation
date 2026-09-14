@@ -75,6 +75,18 @@
   .custom-modal { width: 100%; max-width: 420px; padding: 24px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease; }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .batch-select-wrap{position:relative;width:100%}
+  .batch-select-wrap .batch-search-input{padding-right:46px}
+  .batch-select-arrow{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:0;border-radius:9px;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--text-muted);cursor:pointer;transition:.18s}
+  .batch-select-arrow svg{width:18px;height:18px;pointer-events:none}
+  .batch-select-arrow:hover{background:rgba(128,128,128,.1);color:var(--color-accent)}
+  .batch-dropdown-portal{position:fixed;inset:0;z-index:10000;pointer-events:none}
+  .batch-menu{position:fixed;pointer-events:auto;overflow:auto;max-height:min(310px,42vh);min-width:180px;padding:7px;background:var(--surface);border:1px solid var(--surface-border);border-radius:14px;box-shadow:0 18px 45px rgba(0,0,0,.18);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+  .batch-option{width:100%;border:0;background:transparent;color:var(--text-primary);text-align:left;padding:11px 12px;border-radius:9px;font:800 .88rem/1.2 inherit;cursor:pointer}
+  .batch-option:hover,.batch-option:focus-visible{outline:none;background:rgba(var(--color-accent-rgb),.12);color:var(--color-accent)}
+  .batch-empty{padding:12px;text-align:center;color:var(--text-muted);font-size:.82rem;font-weight:700}
+  @media(max-width:600px){.search-filter-container{gap:9px}.search-box{min-width:100%}.filter-box{width:100%}.filter-box .input-glass{width:100%}.batch-menu{max-height:42vh;border-radius:13px}.batch-option{padding:12px}}
 </style>
 </head>
 <body>
@@ -82,15 +94,8 @@
   <div class="state-block"><div class="spinner"></div></div>
 </div>
 
-<!-- Datalist for Dropdown Suggestions -->
-<datalist id="batchList">
-  <option value="Class 8"></option>
-  <option value="Class 9"></option>
-  <option value="Class 10"></option>
-  <option value="Class 11"></option>
-  <option value="Class 12"></option>
-  <option value="Admission"></option>
-</datalist>
+<!-- Searchable Batch Dropdown Portal -->
+<div id="batchDropdownPortal" class="batch-dropdown-portal" aria-hidden="true"></div>
 
 <script type="module">
 import { initTheme, toggleTheme, renderState, showToast, friendlyError } from "../js/utils/ui-utils.js";
@@ -110,6 +115,61 @@ const shell = document.getElementById("shell");
 let allAdminStudentsList = [];
 let gamificationData = null;
 let currentEditDocId = null;
+let activeBatchDropdown = null;
+const BATCH_OPTIONS = ["Batch 7","Batch 8","Batch 9","Batch 10","Batch 11","Batch 12","Other"];
+
+function setupBatchDropdowns(){
+  document.querySelectorAll(".batch-search-input").forEach(input=>{
+    input.addEventListener("focus",()=>openBatchDropdown(input));
+    input.addEventListener("input",()=>openBatchDropdown(input));
+  });
+  document.querySelectorAll(".batch-select-arrow").forEach(btn=>{
+    btn.addEventListener("click",e=>{
+      e.preventDefault(); e.stopPropagation();
+      const input=document.getElementById(btn.dataset.batchTarget);
+      if(!input)return;
+      if(activeBatchDropdown?.input===input) closeBatchDropdown();
+      else { input.focus(); openBatchDropdown(input); }
+    });
+  });
+  document.addEventListener("mousedown",e=>{
+    if(activeBatchDropdown&&!activeBatchDropdown.menu.contains(e.target)&&!activeBatchDropdown.input.contains(e.target)&&!e.target.closest(".batch-select-arrow")) closeBatchDropdown();
+  });
+  window.addEventListener("resize",repositionBatchDropdown,{passive:true});
+  window.addEventListener("scroll",repositionBatchDropdown,{passive:true});
+}
+function openBatchDropdown(input){
+  const portal=document.getElementById("batchDropdownPortal"); if(!portal)return;
+  closeBatchDropdown();
+  const menu=document.createElement("div");
+  menu.className="batch-menu"; menu.setAttribute("role","listbox");
+  const q=input.value.trim().toLowerCase();
+  const options=BATCH_OPTIONS.filter(v=>v.toLowerCase().includes(q));
+  menu.innerHTML=options.length?options.map(v=>`<button type="button" class="batch-option" role="option" data-value="${v}">${v}</button>`).join(""):`<div class="batch-empty">কোনো ব্যাচ পাওয়া যায়নি</div>`;
+  portal.appendChild(menu);
+  menu.querySelectorAll(".batch-option").forEach(option=>{
+    option.addEventListener("mousedown",e=>e.preventDefault());
+    option.addEventListener("click",()=>{
+      input.value=option.dataset.value;
+      closeBatchDropdown(); input.focus();
+    });
+  });
+  activeBatchDropdown={input,menu}; input.setAttribute("aria-expanded","true"); repositionBatchDropdown();
+}
+function repositionBatchDropdown(){
+  if(!activeBatchDropdown)return;
+  const {input,menu}=activeBatchDropdown, r=input.getBoundingClientRect(), pad=10, gap=6;
+  const width=Math.max(r.width,180); menu.style.width=`${width}px`;
+  const h=Math.min(310,Math.max(90,window.innerHeight*.42)), below=window.innerHeight-r.bottom-gap, above=r.top-gap;
+  menu.style.top=(below>=150||below>=above)?`${Math.min(window.innerHeight-h-pad,r.bottom+gap)}px`:`${Math.max(pad,r.top-Math.min(h,above))}px`;
+  menu.style.left=`${Math.max(pad,Math.min(r.left,window.innerWidth-width-pad))}px`;
+}
+function closeBatchDropdown(){
+  if(!activeBatchDropdown)return;
+  activeBatchDropdown.input.setAttribute("aria-expanded","false");
+  activeBatchDropdown.menu.remove(); activeBatchDropdown=null;
+}
+
 
 requireAdmin(() => {
   shell.innerHTML = `
@@ -140,8 +200,14 @@ requireAdmin(() => {
           <input class="input-glass" id="newName" required placeholder="যেমন: রহিম উদ্দিন">
         </div>
         <div class="field" style="margin:0;">
-          <label for="newClass">ব্যাচ বা ক্লাস</label>
-          <input class="input-glass" id="newClass" list="batchList" required placeholder="ড্রপডাউন থেকে সিলেক্ট করুন বা লিখুন">
+          <label for="newClass">ব্যাচ</label>
+          <div class="batch-select-wrap">
+            <input class="input-glass batch-search-input" id="newClass" required autocomplete="off"
+                   placeholder="ব্যাচ নির্বাচন করুন..." role="combobox" aria-expanded="false" aria-controls="newBatchOptions">
+            <button type="button" class="batch-select-arrow" data-batch-target="newClass" aria-label="ব্যাচ তালিকা খুলুন">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+          </div>
         </div>
       </div>
       <button type="submit" class="btn-glass btn-primary" id="addBtn" style="width:100%; padding:14px; margin-top:16px;">
@@ -191,8 +257,14 @@ requireAdmin(() => {
           <input type="text" id="editNameInput" class="input-glass" placeholder="নতুন নাম লিখুন">
         </div>
         <div class="field" style="margin-top:16px;">
-          <label>ব্যাচ বা ক্লাস</label>
-          <input type="text" id="editClassInput" list="batchList" class="input-glass" placeholder="ড্রপডাউন থেকে সিলেক্ট করুন বা লিখুন">
+          <label>ব্যাচ</label>
+          <div class="batch-select-wrap">
+            <input type="text" id="editClassInput" class="input-glass batch-search-input" autocomplete="off"
+                   placeholder="ব্যাচ নির্বাচন করুন..." role="combobox" aria-expanded="false" aria-controls="editBatchOptions">
+            <button type="button" class="batch-select-arrow" data-batch-target="editClassInput" aria-label="ব্যাচ তালিকা খুলুন">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+          </div>
         </div>
         <button class="btn-glass btn-primary" id="saveEditModal" style="width:100%; padding:14px; margin-top:20px;">
           সেভ পরিবর্তন
@@ -204,6 +276,7 @@ requireAdmin(() => {
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
   document.getElementById("logoutBtn").addEventListener("click", adminLogout);
   document.getElementById("addForm").addEventListener("submit", handleAdd);
+  setupBatchDropdowns();
   
   document.getElementById("searchStudent").addEventListener("input", renderFilteredList);
   document.getElementById("filterBatch").addEventListener("change", renderFilteredList);
