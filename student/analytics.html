@@ -68,12 +68,10 @@
 <script type="module">
 import { initTheme, toggleTheme, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
 import { getActiveStudent } from "../js/utils/student-utils.js";
-import { getApprovedResults, getExamSnapshotsMap } from "../js/utils/results-utils.js";
+import { getApprovedResults } from "../js/utils/results-utils.js";
 import { getSubjects, getChapters, getTopics, buildNameMap } from "../js/utils/syllabus-utils.js";
 import {
-  computeOverallStats, computeSubjectStats, computeChapterStats, computeTopicStats,
-  buildQuestionRecords, computeTimeManagementStats, computeWrongOptionPatterns,
-  computeMarkedForReviewStats, computeTopicTrends, getPerformanceLabel
+  computeOverallStats, computeSubjectStats, computeChapterStats, computeTopicStats
 } from "../js/utils/analytics-utils.js";
 
 initTheme();
@@ -149,30 +147,16 @@ async function renderPage() {
     const [subjects, chapters, topics] = await Promise.all([getSubjects(), getChapters(), getTopics()]);
     const subjectMap = buildNameMap(subjects), chapterMap = buildNameMap(chapters), topicMap = buildNameMap(topics);
     
-    // SMART FETCHING: Limit to 15 recent exams to prevent Infinite Loading!
-    const recentResults = results.slice(0, 15);
-    const examIds = [...new Set(recentResults.map(r => r.examId).filter(Boolean))];
-    
-    let snapshotsMap = {};
-    try {
-      if (examIds.length > 0) {
-        snapshotsMap = await getExamSnapshotsMap(examIds);
-      }
-    } catch(err) {
-      console.warn("Snapshots load error (Safe Fallback applied):", err);
-    }
-    
-    const records = buildQuestionRecords(recentResults, snapshotsMap);
-
-    // Compute Advanced Analytics with Fallbacks to prevent crashing
+    // Use only the analytics utilities currently available in analytics-utils.js.
+    // This keeps the page load-safe even when question-snapshot data is unavailable.
     const subjectStats = (computeSubjectStats(results, subjectMap) || []).sort((a, b) => (b.accuracy ?? -1) - (a.accuracy ?? -1));
     const chapterStats = (computeChapterStats(results, chapterMap) || []).sort((a, b) => (b.accuracy ?? -1) - (a.accuracy ?? -1));
-    const topicStats = (computeTopicStats(results, topicMap) || []).sort((a, b) => (a.accuracy ?? 100) - (b.accuracy ?? 100)); // Weakest first
-    
-    const timeStats = computeTimeManagementStats(records, subjectMap, topicMap) || { bySubject: [], byTopic: [], speedAccuracy: null };
-    const wrongPatterns = computeWrongOptionPatterns(records) || [];
-    const reviewStats = computeMarkedForReviewStats(records) || null;
-    const topicTrends = computeTopicTrends(results, topicMap) || [];
+    const topicStats = (computeTopicStats(results, topicMap) || []).sort((a, b) => (a.accuracy ?? 100) - (b.accuracy ?? 100));
+
+    const timeStats = { bySubject: [], byTopic: [], speedAccuracy: null };
+    const wrongPatterns = [];
+    const reviewStats = null;
+    const topicTrends = [];
 
     // --- AI Insights Generation ---
     let insightsHtml = "";
@@ -248,7 +232,7 @@ async function renderPage() {
             ${drawDonut(s.accuracy, i % 2 === 0 ? "var(--color-accent)" : "#3b82f6")}
             <p style="font-weight:900; font-size:0.95rem; margin-top:14px; color:var(--text-primary);">${s.name}</p>
             <p style="font-size:0.75rem; color:var(--text-muted); font-weight:700; margin-top:6px;">সঠিক: ${s.correct} • ভুল: ${s.wrong}</p>
-            <div class="progress-track"><div class="progress-fill" style="width:${s.accuracy ?? 0}%; background:${i % 2 === 0 ? "var(--color-accent)" : "#3b82f6'};"></div></div>
+            <div class="progress-track"><div class="progress-fill" style="width:${s.accuracy ?? 0}%; background:${i % 2 === 0 ? "var(--color-accent)" : "#3b82f6"};"></div></div>
           </div>
         `).join("")}
       </div>
@@ -279,7 +263,12 @@ async function renderPage() {
       </div>
       <div class="glass-card" style="padding:16px;">
         ${topicStats.length === 0 ? `<p class="text-sm text-muted text-center font-bold">তথ্য নেই।</p>` : topicStats.map(t => {
-          const perf = getPerformanceLabel(t);
+          const perf = t.accuracy === null || t.accuracy === undefined
+            ? { label: "পর্যাপ্ত তথ্য নেই" }
+            : t.accuracy >= 80 ? { label: "খুব ভালো" }
+            : t.accuracy >= 60 ? { label: "ভালো" }
+            : t.accuracy >= 40 ? { label: "উন্নতি দরকার" }
+            : { label: "দুর্বল" };
           const trendObj = topicTrends.find(x => x.topicId === t.topicId);
           let trendIcon = `<span class="trend-flat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg></span>`;
           if(trendObj?.direction === 'up') trendIcon = `<span class="trend-up"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></span>`;
