@@ -327,11 +327,12 @@ function calculateRankMovement(board, results) {
   return map;
 }
 
-function movementHtml(change) {
-  const n = Number(change) || 0;
-  if (n > 0) return `<span class="lb-movement up">↑ ${n}</span>`;
-  if (n < 0) return `<span class="lb-movement down">↓ ${Math.abs(n)}</span>`;
-  return `<span class="lb-movement same">—</span>`;
+function movementHtml(change, showNeutral = false) {
+  const n = Number(change);
+  if (Number.isFinite(n) && n > 0) return `<span class="lb-movement up">↑ ${n}</span>`;
+  if (Number.isFinite(n) && n < 0) return `<span class="lb-movement down">↓ ${Math.abs(n)}</span>`;
+  if (showNeutral) return `<span class="lb-movement same">তথ্য নেই</span>`;
+  return "";
 }
 
 async function renderSmartHighlights() {
@@ -421,7 +422,7 @@ async function renderSmartHighlights() {
       <div class="lb-highlight-grid">
         <div class="lb-highlight">
           <small>তোমার Rank Movement</small>
-          <strong class="${(movementMap[student.studentId] || 0) > 0 ? "up-text" : "accent-text"}">${movementHtml(movementMap[student.studentId] || 0)}</strong>
+          <strong class="${Number.isFinite(Number(movementMap[student.studentId])) && Number(movementMap[student.studentId]) > 0 ? "up-text" : "accent-text"}">${movementHtml(movementMap[student.studentId], true)}</strong>
         </div>
         <div class="lb-highlight">
           <small>পরীক্ষার Streak</small>
