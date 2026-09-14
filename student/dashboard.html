@@ -268,10 +268,10 @@ async function loadMotivation() {
       rank: rank?.rank,
       totalStudents: rank?.totalStudents,
       examsTaken: overall?.examsTaken ?? results.length,
-      weakestSubjectName: weakest?.name ?? "—",
-      weakestSubjectAccuracy: weakest?.accuracy ?? null,
-      strongestSubjectName: strongest && strongest.name !== weakest?.name ? (strongest.name ?? "—") : null,
-      strongestSubjectAccuracy: strongest?.accuracy ?? null
+      weakestSubjectName: weakest?.name,
+      weakestSubjectAccuracy: weakest?.accuracy,
+      strongestSubjectName: strongest?.name !== weakest?.name ? strongest?.name : null,
+      strongestSubjectAccuracy: strongest?.accuracy
     });
 
     el.innerHTML = `
@@ -458,7 +458,12 @@ async function loadPerformanceAndLeaderboard() {
       : weakTopics.map(t => `
         <div class="glass-float-card weak-anim mt-3" style="border: 1px solid rgba(239, 68, 68, 0.2);">
           <div class="flex items-center gap-3">
-            <span class="icon-btn" style="color:var(--color-danger); background:rgba(239,68,68,0.1); border:none;">${icons.alert}</span>
+            <span class="icon-btn" style="color:var(--color-danger); background:rgba(239,68,68,0.1); border:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+  style="width:20px;height:20px;">
+  <path d="M12 3L2.8 20h18.4L12 3z"></path>
+  <path d="M12 9v5"></path>
+  <path d="M12 17h.01"></path>
+</svg></span>
             <div>
               <p style="font-weight:800; font-size:0.95rem;">${t.name ?? "—"}</p>
               <p class="text-xs text-muted mt-1">সঠিকতার হার মাত্র <span class="num" style="color:var(--color-danger); font-weight:700;">${t.accuracy}%</span></p>
