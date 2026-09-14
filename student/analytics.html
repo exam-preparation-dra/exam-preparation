@@ -58,6 +58,76 @@
 
   /* ===== Trend SVG Styles ===== */
   .trend-svg-container { background: rgba(128,128,128,0.02); border-radius: 16px; padding: 20px 16px; border: 1px dashed var(--surface-border); margin-top: 14px; }
+
+  .page-heading { margin: 18px 2px 22px; }
+  .page-heading h1 { margin: 4px 0 5px; font-size: 1.45rem; font-weight: 950; color: var(--text-primary); }
+  .page-subtitle { margin:0; color:var(--text-muted); font-size:.78rem; font-weight:650; line-height:1.5; }
+  .section-label { border-bottom:0; margin:30px 2px 13px; padding:0; gap:10px; }
+  .section-label > span:first-child { color:var(--color-accent); display:flex; }
+  .section-label strong { display:block; font-size:1.03rem; }
+  .section-label small { display:block; margin-top:3px; font-size:.68rem; color:var(--text-muted); font-weight:650; }
+  .summary-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; }
+  .summary-card { padding:14px 12px; border:1px solid var(--surface-border); background:var(--surface); border-radius:16px; box-shadow:0 5px 20px rgba(0,0,0,.025); }
+  .summary-icon { width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:rgba(99,102,241,.08);color:var(--color-accent);margin-bottom:8px; }
+  .summary-card small { display:block;color:var(--text-muted);font-size:.65rem;font-weight:750; }
+  .summary-card strong { display:block;margin-top:3px;color:var(--text-primary);font-size:1.18rem;font-family:var(--font-num);font-weight:950; }
+  .glass-card { background:var(--surface); border:1px solid var(--surface-border); border-radius:18px; padding:17px; box-shadow:0 7px 25px rgba(0,0,0,.025); }
+  .trend-wrap { padding:2px 0; }
+  .trend-chart { width:100%; height:auto; display:block; }
+  .trend-caption { display:flex;justify-content:space-between;align-items:center;color:var(--text-muted);font-size:.68rem;font-weight:700;margin-top:3px; }
+  .trend-caption strong { color:var(--color-accent);font-size:.9rem;font-family:var(--font-num); }
+  .insight-grid { display:grid;gap:9px; }
+  .insight-box { display:flex;gap:11px;padding:14px;border-radius:15px;border:1px solid var(--surface-border);background:var(--surface); }
+  .insight-icon { width:34px;height:34px;flex:0 0 34px;border-radius:10px;display:flex;align-items:center;justify-content:center; }
+  .insight-box strong { color:var(--text-primary);font-size:.82rem;font-weight:900; }
+  .insight-box p { margin:4px 0 0;color:var(--text-secondary);font-size:.72rem;line-height:1.5;font-weight:600; }
+  .insight-danger .insight-icon { color:#ef4444;background:rgba(239,68,68,.09); }
+  .insight-warning .insight-icon { color:#f59e0b;background:rgba(245,158,11,.09); }
+  .insight-success .insight-icon { color:#10b981;background:rgba(16,185,129,.09); }
+  .insight-neutral .insight-icon { color:var(--color-accent);background:rgba(99,102,241,.09); }
+  .stat-list { display:grid;gap:8px; }
+  .stat-row { display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;background:var(--surface);border:1px solid var(--surface-border);border-radius:14px; }
+  .stat-row.is-weak { border-color:rgba(239,68,68,.28);background:rgba(239,68,68,.035); }
+  .stat-main { min-width:0;flex:1; }
+  .stat-main strong { display:block;color:var(--text-primary);font-size:.82rem;font-weight:850;overflow-wrap:anywhere; }
+  .stat-main span { display:block;color:var(--text-muted);font-size:.65rem;font-weight:650;margin-top:4px; }
+  .stat-value { font-family:var(--font-num);font-size:1rem;white-space:nowrap; }
+  .stat-value.excellent { color:#10b981; }.stat-value.good{color:var(--color-accent)}.stat-value.mid{color:#f59e0b}.stat-value.weak{color:#ef4444}.stat-value.muted{color:var(--text-muted)}
+  .bar { height:5px;background:rgba(128,128,128,.12);border-radius:99px;overflow:hidden;margin-top:8px; }
+  .bar i { display:block;height:100%;border-radius:99px;background:var(--color-accent); }
+  .time-list { margin-top:8px; }
+  .time-row { display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px dashed var(--surface-border);font-size:.73rem;font-weight:700;color:var(--text-secondary); }
+  .time-row strong { color:var(--color-accent);font-family:var(--font-num);white-space:nowrap; }
+  .speed-box { display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;padding:11px;border-radius:12px;background:rgba(99,102,241,.05);font-size:.66rem;color:var(--text-muted);font-weight:700; }
+  .speed-box b { color:var(--text-primary);font-family:var(--font-num); }
+  .pattern-card { padding:13px 14px;border:1px solid rgba(245,158,11,.18);background:rgba(245,158,11,.035);border-radius:14px; }
+  .pattern-card strong,.pattern-card span { display:block; }
+  .pattern-card strong { color:var(--text-primary);font-size:.76rem;line-height:1.45; }
+  .pattern-card span { color:var(--text-muted);font-size:.65rem;font-weight:700;margin-top:4px; }
+  .review-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:8px; }
+  .review-grid div { padding:12px 8px;border-radius:13px;background:rgba(128,128,128,.035);text-align:center; }
+  .review-grid small { display:block;color:var(--text-muted);font-size:.6rem;font-weight:700; }
+  .review-grid strong { display:block;margin-top:4px;color:var(--text-primary);font-size:.95rem;font-family:var(--font-num); }
+  .history-list { display:grid;gap:8px; }
+  .history-row { display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 14px;background:var(--surface);border:1px solid var(--surface-border);border-radius:14px; }
+  .history-row strong,.history-row span { display:block; }
+  .history-row strong { color:var(--text-primary);font-size:.77rem;font-weight:850; }
+  .history-row span { color:var(--text-muted);font-size:.62rem;font-weight:650;margin-top:3px; }
+  .history-score { text-align:right; }
+  .history-score strong { color:var(--color-accent);font-size:.95rem;font-family:var(--font-num); }
+  .empty-mini { padding:18px 12px;text-align:center;color:var(--text-muted);font-size:.7rem;font-weight:700;line-height:1.5; }
+  .loading-card { min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-muted);font-size:.72rem;font-weight:700; }
+  .error-card { color:#ef4444;text-align:center;padding:28px 18px; }
+  .error-card p { color:var(--text-muted);font-size:.72rem;font-weight:650;line-height:1.5;margin-top:7px; }
+  @media (max-width:480px) {
+    .summary-card { padding:12px 9px; }
+    .summary-card strong { font-size:1.02rem; }
+    .summary-icon { width:29px;height:29px; }
+    .stat-row { padding:12px; }
+    .speed-box { grid-template-columns:1fr; }
+    .history-row { align-items:flex-start; }
+  }
+
 </style>
 </head>
 <body>
@@ -68,13 +138,24 @@
 <script type="module">
 import { initTheme, toggleTheme, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
 import { getActiveStudent } from "../js/utils/student-utils.js";
-import { getApprovedResults } from "../js/utils/results-utils.js";
+import { getApprovedResults, getExamSnapshotsMap } from "../js/utils/results-utils.js";
 import { getSubjects, getChapters, getTopics, buildNameMap } from "../js/utils/syllabus-utils.js";
 import {
-  computeOverallStats, computeSubjectStats, computeChapterStats, computeTopicStats
+  computeOverallStats,
+  computeSubjectStats,
+  computeChapterStats,
+  computeTopicStats,
+  buildQuestionRecords,
+  computeTimeManagementStats,
+  computeWrongOptionPatterns,
+  computeMarkedForReviewStats,
+  computeTopicTrends,
+  getPerformanceLabel,
+  buildExamHistoryTimeline
 } from "../js/utils/analytics-utils.js";
 
 initTheme();
+
 const shell = document.getElementById("shell");
 const student = getActiveStudent();
 
@@ -84,55 +165,138 @@ if (!student) {
   renderPage();
 }
 
-function drawDonut(pct, color) {
-  const p = isNaN(pct) || pct === null ? 0 : Math.round(pct);
-  const c = pct === null ? "rgba(128,128,128,0.2)" : color;
-  const textVal = pct === null ? "—" : `${p}%`;
-  return `
-    <svg viewBox="0 0 36 36" class="circ-chart">
-      <path class="circ-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-      <path class="circ-fill" stroke="${c}" stroke-dasharray="${p}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-      <text x="18" y="18" class="circ-text">${textVal}</text>
-    </svg>
-  `;
+function esc(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
-function buildTrendSvg(trend) {
-  if (!trend || trend.length < 2) return `<p class="text-sm text-muted mt-2">ধারা দেখতে আরও পরীক্ষার ফলাফল প্রয়োজন।</p>`;
-  const w = 320, h = 80, pad = 12;
-  const values = trend.map(t => t.value ?? 0);
-  const step = trend.length > 1 ? (w - pad * 2) / (trend.length - 1) : 0;
-  const points = values.map((v, i) => ({ x: pad + step * i, y: h - pad - (v / 100) * (h - pad * 2), v, label: trend[i].label }));
-  const pathD = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+function pct(value) {
+  return value === null || value === undefined || Number.isNaN(Number(value))
+    ? "—"
+    : `${Number(value).toFixed(Number(value) % 1 ? 1 : 0)}%`;
+}
 
+function formatDate(value) {
+  if (!value) return "—";
+  try {
+    const d = value?.toDate ? value.toDate() : new Date(value);
+    if (Number.isNaN(d.getTime())) return "—";
+    return d.toLocaleDateString("bn-BD", {
+      day: "numeric",
+      month: "short",
+      year: "numeric"
+    });
+  } catch {
+    return "—";
+  }
+}
+
+function formatTime(seconds) {
+  if (seconds === null || seconds === undefined || Number.isNaN(Number(seconds))) return "—";
+  const total = Math.max(0, Math.round(Number(seconds)));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return m > 0 ? `${m} মি ${s} সে` : `${s} সে`;
+}
+
+function accuracyClass(value) {
+  if (value === null || value === undefined) return "muted";
+  if (value >= 90) return "excellent";
+  if (value >= 75) return "good";
+  if (value >= 60) return "mid";
+  return "weak";
+}
+
+function icon(name) {
+  const common = 'width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
+  const paths = {
+    chart: `<svg ${common}><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>`,
+    target: `<svg ${common}><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>`,
+    book: `<svg ${common}><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v17H6.5A2.5 2.5 0 0 0 4 22z"/><path d="M4 5.5v16"/><path d="M8 7h8"/></svg>`,
+    topic: `<svg ${common}><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>`,
+    clock: `<svg ${common}><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/></svg>`,
+    warning: `<svg ${common}><path d="M12 3 2.5 20h19z"/><path d="M12 9v5M12 17h.01"/></svg>`,
+    check: `<svg ${common}><circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/></svg>`,
+    trend: `<svg ${common}><polyline points="4 16 9 11 13 14 20 7"/><polyline points="15 7 20 7 20 12"/></svg>`
+  };
+  return paths[name] || paths.chart;
+}
+
+function sectionTitle(iconName, title, subtitle = "") {
   return `
-    <div class="trend-svg-container">
-      <svg viewBox="0 0 ${w} ${h}" style="width:100%;height:80px;overflow:visible;">
-        <path d="${pathD}" fill="none" stroke="var(--color-accent)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
-        ${points.map(p => `
-          <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="6" fill="var(--bg)" stroke="var(--color-accent)" stroke-width="3">
-            <title>${p.label || "পরীক্ষা"}: ${p.v}%</title>
-          </circle>
-        `).join("")}
-      </svg>
+    <div class="section-label">
+      <span class="section-icon">${icon(iconName)}</span>
+      <span>
+        <strong>${esc(title)}</strong>
+        ${subtitle ? `<small>${esc(subtitle)}</small>` : ""}
+      </span>
     </div>
   `;
 }
 
-function formatTime(seconds) {
-  if (seconds === null || isNaN(seconds)) return "—";
-  const m = Math.floor(seconds / 60);
-  const s = Math.round(seconds % 60);
-  return m > 0 ? `${m} মি ${s} সে` : `${s} সে`;
+function buildTrendSvg(trend) {
+  if (!Array.isArray(trend) || trend.length < 2) {
+    return `<div class="empty-mini">কমপক্ষে ২টি পরীক্ষার ফলাফল থাকলে অগ্রগতির ধারা দেখানো হবে।</div>`;
+  }
+
+  const values = trend.map(t => Number(t.value)).filter(v => Number.isFinite(v));
+  if (values.length < 2) {
+    return `<div class="empty-mini">গ্রাফের জন্য পর্যাপ্ত শতাংশের তথ্য নেই।</div>`;
+  }
+
+  const w = 520, h = 170, padX = 28, padY = 22;
+  const minV = Math.max(0, Math.min(...values, 0));
+  const maxV = Math.min(100, Math.max(...values, 100));
+  const range = Math.max(1, maxV - minV);
+  const points = trend.map((t, i) => {
+    const v = Number(t.value);
+    const safeV = Number.isFinite(v) ? v : minV;
+    const x = padX + (i * (w - padX * 2)) / Math.max(1, trend.length - 1);
+    const y = h - padY - ((safeV - minV) / range) * (h - padY * 2);
+    return { x, y, v: safeV, label: t.label || "পরীক্ষা" };
+  });
+
+  const d = points.map((p, i) => `${i ? "L" : "M"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
+
+  return `
+    <div class="trend-wrap">
+      <svg viewBox="0 0 ${w} ${h}" class="trend-chart" aria-label="পরীক্ষার ফলাফলের অগ্রগতি">
+        <line x1="${padX}" y1="${h-padY}" x2="${w-padX}" y2="${h-padY}" stroke="var(--surface-border)" />
+        <path d="${d}" fill="none" stroke="var(--color-accent)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        ${points.map(p => `
+          <circle cx="${p.x}" cy="${p.y}" r="5" fill="var(--bg)" stroke="var(--color-accent)" stroke-width="3">
+            <title>${esc(p.label)}: ${p.v}%</title>
+          </circle>
+        `).join("")}
+      </svg>
+      <div class="trend-caption">
+        <span>পুরনো → নতুন</span>
+        <strong>${pct(values[values.length - 1])}</strong>
+      </div>
+    </div>
+  `;
 }
 
 async function renderPage() {
-  // Corrected active tab to 'analytics' and added Theme Toggle Event
   shell.innerHTML = `
     ${renderStudentHeader(student, "analytics")}
-    <div id="body" class="mt-4"><div class="spinner" style="margin:50px auto;"></div></div>
+    <div class="page-heading">
+      <div>
+        <p class="eyebrow">Performance Analytics</p>
+        <h1>তোমার পারফরম্যান্স রিপোর্ট</h1>
+        <p class="page-subtitle">তোমার অনুমোদিত পরীক্ষার ফলাফল থেকেই এই বিশ্লেষণ তৈরি হচ্ছে।</p>
+      </div>
+    </div>
+    <div id="body"><div class="loading-card"><div class="spinner"></div><p>বিশ্লেষণ তৈরি হচ্ছে...</p></div></div>
   `;
-  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+
+  const themeToggle = document.getElementById("themeToggle");
+  if (themeToggle) themeToggle.addEventListener("click", toggleTheme);
+
   const body = document.getElementById("body");
 
   try {
@@ -140,169 +304,225 @@ async function renderPage() {
     const overall = computeOverallStats(results);
 
     if (!overall) {
-      renderState(body, "empty", "বিশ্লেষণের জন্য পর্যাপ্ত তথ্য নেই। পরীক্ষা দেওয়ার পর এখানে রিপোর্ট দেখা যাবে।");
+      renderState(body, "empty", "বিশ্লেষণের জন্য এখনো কোনো অনুমোদিত পরীক্ষার ফলাফল নেই।");
       return;
     }
 
-    const [subjects, chapters, topics] = await Promise.all([getSubjects(), getChapters(), getTopics()]);
-    const subjectMap = buildNameMap(subjects), chapterMap = buildNameMap(chapters), topicMap = buildNameMap(topics);
-    
-    // Use only the analytics utilities currently available in analytics-utils.js.
-    // This keeps the page load-safe even when question-snapshot data is unavailable.
-    const subjectStats = (computeSubjectStats(results, subjectMap) || []).sort((a, b) => (b.accuracy ?? -1) - (a.accuracy ?? -1));
-    const chapterStats = (computeChapterStats(results, chapterMap) || []).sort((a, b) => (b.accuracy ?? -1) - (a.accuracy ?? -1));
-    const topicStats = (computeTopicStats(results, topicMap) || []).sort((a, b) => (a.accuracy ?? 100) - (b.accuracy ?? 100));
+    const [subjects, chapters, topics] = await Promise.all([
+      getSubjects(),
+      getChapters(),
+      getTopics()
+    ]);
 
-    const timeStats = { bySubject: [], byTopic: [], speedAccuracy: null };
-    const wrongPatterns = [];
-    const reviewStats = null;
-    const topicTrends = [];
+    const subjectMap = buildNameMap(subjects);
+    const chapterMap = buildNameMap(chapters);
+    const topicMap = buildNameMap(topics);
 
-    // --- AI Insights Generation ---
-    let insightsHtml = "";
+    const subjectStats = (computeSubjectStats(results, subjectMap) || [])
+      .sort((a, b) => (b.accuracy ?? -1) - (a.accuracy ?? -1));
 
-    if (timeStats.speedAccuracy?.rushingLikely) {
-      const diff = Math.abs(timeStats.speedAccuracy.fasterWrongRate - timeStats.speedAccuracy.slowerWrongRate).toFixed(1);
-      insightsHtml += `
-        <div class="insight-box insight-danger">
-          <div class="insight-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-          <div>
-            <p style="font-weight:900; font-size:0.95rem; color:var(--text-primary); margin-bottom:2px;">তাড়াহুড়ো করছো!</p>
-            <p style="font-size:0.8rem; color:var(--text-secondary); line-height:1.4;">তুমি দ্রুত উত্তর দিতে গিয়ে বেশি ভুল করছো। একটু সময় নিয়ে ভেবে উত্তর দিলে স্কোর আরও ${diff}% বাড়তে পারে।</p>
-          </div>
-        </div>`;
+    const chapterStats = (computeChapterStats(results, chapterMap) || [])
+      .sort((a, b) => (b.accuracy ?? -1) - (a.accuracy ?? -1));
+
+    const topicStats = (computeTopicStats(results, topicMap) || [])
+      .sort((a, b) => (a.accuracy ?? 100) - (b.accuracy ?? 100));
+
+    // Per-question analytics need the existing exam snapshots.
+    const recentResults = results.slice(0, 15);
+    const examIds = [...new Set(recentResults.map(r => r.examId).filter(Boolean))];
+    let snapshotsMap = {};
+    if (examIds.length) {
+      try {
+        snapshotsMap = await getExamSnapshotsMap(examIds);
+      } catch (e) {
+        console.warn("Exam snapshots could not be loaded:", e);
+      }
     }
 
-    if (wrongPatterns.length > 0) {
+    const records = buildQuestionRecords(recentResults, snapshotsMap) || [];
+    const timeStats = computeTimeManagementStats(records, subjectMap, topicMap);
+    const wrongPatterns = computeWrongOptionPatterns(records) || [];
+    const reviewStats = computeMarkedForReviewStats(records);
+    const topicTrends = computeTopicTrends(results, topicMap) || [];
+    const timeline = buildExamHistoryTimeline(results) || [];
+
+    // Rule-based insights from analytics-utils.js — no AI/API is involved.
+    const insights = [];
+
+    if (timeStats?.speedAccuracy?.rushingLikely) {
+      const diff = Math.abs(
+        timeStats.speedAccuracy.fasterWrongRate - timeStats.speedAccuracy.slowerWrongRate
+      ).toFixed(1);
+      insights.push({
+        type: "danger",
+        title: "তাড়াহুড়োর প্রভাব দেখা যাচ্ছে",
+        text: `দ্রুত উত্তর দেওয়া অংশে ভুলের হার প্রায় ${diff} শতাংশ-পয়েন্ট বেশি। উত্তর দেওয়ার আগে একটু সময় নিয়ে যাচাই করো।`
+      });
+    }
+
+    if (wrongPatterns.length) {
       const wp = wrongPatterns[0];
-      const qText = wp?.question_bn ? wp.question_bn.substring(0, 35) : "একটি নির্দিষ্ট";
-      insightsHtml += `
-        <div class="insight-box insight-warning">
-          <div class="insight-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-          <div>
-            <p style="font-weight:900; font-size:0.95rem; color:var(--text-primary); margin-bottom:2px;">একই ভুলের পুনরাবৃত্তি!</p>
-            <p style="font-size:0.8rem; color:var(--text-secondary); line-height:1.4;">"${qText}..." এই প্রশ্নে তুমি বারবার '${wp.repeatedOption}' অপশনটি বেছে নিয়েছো। কনসেপ্ট ক্লিয়ার করো।</p>
-          </div>
-        </div>`;
+      insights.push({
+        type: "warning",
+        title: "একই ভুলের পুনরাবৃত্তি",
+        text: `"${(wp.question_bn || "একটি প্রশ্ন").slice(0, 55)}${(wp.question_bn || "").length > 55 ? "..." : ""}" প্রশ্নে একই ভুল অপশন ${wp.repeatedCount} বার বেছে নেওয়া হয়েছে।`
+      });
     }
 
     if (reviewStats && reviewStats.markedCount >= 3) {
-      const isGood = reviewStats.accuracy > (reviewStats.unmarkedAccuracy || 0);
-      insightsHtml += `
-        <div class="insight-box ${isGood ? 'insight-success' : 'insight-danger'}">
-          <div class="insight-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
-          <div>
-            <p style="font-weight:900; font-size:0.95rem; color:var(--text-primary); margin-bottom:2px;">সন্দেহজনক প্রশ্নের ফলাফল</p>
-            <p style="font-size:0.8rem; color:var(--text-secondary); line-height:1.4;">যে প্রশ্নগুলো তুমি মার্ক করে রাখো, সেগুলোর ${reviewStats.accuracy}% সঠিক হচ্ছে। ${isGood ? "তোমার সন্দেহ ভালো কাজ করছে!" : "সন্দেহ হলে উত্তর না দেওয়াই ভালো (নেগেটিভ এড়াতে)।"}</p>
-          </div>
-        </div>`;
+      const good = reviewStats.unmarkedAccuracy !== null &&
+        reviewStats.accuracy > reviewStats.unmarkedAccuracy;
+      insights.push({
+        type: good ? "success" : "danger",
+        title: "মার্ক করে রাখা প্রশ্নের ফলাফল",
+        text: `মার্ক করা ${reviewStats.markedCount}টি উত্তর করা প্রশ্নে accuracy ${pct(reviewStats.accuracy)}। ${good ? "তোমার সন্দেহের জায়গা চিহ্নিত করার অভ্যাস কাজে দিচ্ছে।" : "যে প্রশ্নে সন্দেহ হয়, সেখানে উত্তর দেওয়ার আগে আরও যাচাই করা দরকার।"}`
+      });
     }
 
-    if (!insightsHtml) {
-      insightsHtml = `<p class="text-sm text-center text-muted font-bold" style="padding:10px 0;">আরও পরীক্ষা দিলে এখানে অটোমেটেড পরামর্শ দেখা যাবে।</p>`;
+    if (!insights.length) {
+      insights.push({
+        type: "neutral",
+        title: "আরও ডেটা জমলে আরও ইনসাইট আসবে",
+        text: "বর্তমান ফলাফলে নির্দিষ্ট rule-based insight তৈরি করার মতো অতিরিক্ত pattern পাওয়া যায়নি।"
+      });
     }
 
-    // Assign to DOM
     body.innerHTML = `
-      <!-- Automated Smart Insights -->
-      <div class="section-label">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-        AI স্মার্ট ইনসাইটস
-      </div>
-      <div class="glass-card" style="padding:16px;">
-        <p style="font-size:0.75rem; color:var(--text-muted); font-weight:700; margin-bottom:12px; text-align:center;">সর্বশেষ পরীক্ষাগুলোর উপর ভিত্তি করে তৈরি</p>
-        ${insightsHtml}
-      </div>
-
-      <!-- Trend & Overall -->
-      <div class="glass-card" style="padding:24px 20px;">
-        <p style="font-weight:900; font-size:1.15rem; color:var(--text-primary);">সার্বিক অগ্রগতির ধারা</p>
-        <p style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">সর্বশেষ পরীক্ষাগুলোর স্কোরের গ্রাফ</p>
-        ${buildTrendSvg(overall.trend)}
-      </div>
-
-      <!-- Subject Wise Mastery -->
-      <div class="section-label">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-        বিষয়ভিত্তিক দক্ষতা
-      </div>
-      <div class="subject-grid">
-        ${subjectStats.length === 0 ? `<p class="text-sm text-muted text-center" style="grid-column:1/-1;">তথ্য নেই।</p>` : subjectStats.map((s, i) => `
-          <div class="subject-card">
-            ${drawDonut(s.accuracy, i % 2 === 0 ? "var(--color-accent)" : "#3b82f6")}
-            <p style="font-weight:900; font-size:0.95rem; margin-top:14px; color:var(--text-primary);">${s.name}</p>
-            <p style="font-size:0.75rem; color:var(--text-muted); font-weight:700; margin-top:6px;">সঠিক: ${s.correct} • ভুল: ${s.wrong}</p>
-            <div class="progress-track"><div class="progress-fill" style="width:${s.accuracy ?? 0}%; background:${i % 2 === 0 ? "var(--color-accent)" : "#3b82f6"};"></div></div>
-          </div>
-        `).join("")}
+      <div class="summary-grid">
+        <div class="summary-card">
+          <span class="summary-icon">${icon("chart")}</span>
+          <small>পরীক্ষা</small>
+          <strong>${overall.examsTaken}</strong>
+        </div>
+        <div class="summary-card">
+          <span class="summary-icon">${icon("target")}</span>
+          <small>গড় স্কোর</small>
+          <strong>${pct(overall.avgPercentage)}</strong>
+        </div>
+        <div class="summary-card">
+          <span class="summary-icon">${icon("check")}</span>
+          <small>সঠিকতার হার</small>
+          <strong>${pct(overall.avgAccuracy)}</strong>
+        </div>
       </div>
 
-      <!-- Chapter Analysis -->
-      <div class="section-label mt-5">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-        অধ্যায়ভিত্তিক বিশ্লেষণ
-      </div>
-      <div class="glass-card" style="padding:16px;">
-        ${chapterStats.length === 0 ? `<p class="text-sm text-muted text-center font-bold">তথ্য নেই।</p>` : chapterStats.map(c => `
-          <div class="detail-row">
-            <div style="flex:1;">
-              <p class="detail-name">${c.name}</p>
-              <div class="detail-meta"><span>অ্যাটেম্পট: ${c.attempts} বার</span></div>
-            </div>
-            <div style="text-align:right;">
-              <p style="font-weight:900; font-size:1.15rem; color:var(--color-accent); font-family:var(--font-num);">${c.accuracy ?? "—"}%</p>
+      ${sectionTitle("chart", "সার্বিক অগ্রগতির ধারা", "পুরনো পরীক্ষা থেকে সর্বশেষ পরীক্ষা")}
+      <div class="glass-card">${buildTrendSvg(overall.trend)}</div>
+
+      ${sectionTitle("target", "স্মার্ট পারফরম্যান্স ইনসাইটস", "তোমার ফলাফলের pattern থেকে rule-based বিশ্লেষণ")}
+      <div class="insight-grid">
+        ${insights.map(x => `
+          <div class="insight-box insight-${x.type}">
+            <div class="insight-icon">${icon(x.type === "danger" || x.type === "warning" ? "warning" : "check")}</div>
+            <div>
+              <strong>${esc(x.title)}</strong>
+              <p>${esc(x.text)}</p>
             </div>
           </div>
         `).join("")}
       </div>
 
-      <!-- Weakness & Trends (Topic Level) -->
-      <div class="section-label mt-5">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-        টপিক বিশ্লেষণ ও দুর্বলতা
+      ${sectionTitle("book", "বিষয়ভিত্তিক দক্ষতা", "সকল অনুমোদিত পরীক্ষার subject breakdown")}
+      <div class="stat-list">
+        ${subjectStats.length ? subjectStats.map(s => `
+          <div class="stat-row">
+            <div class="stat-main">
+              <strong>${esc(s.name)}</strong>
+              <span>${s.attempts} বার • সঠিক ${s.correct} • ভুল ${s.wrong}</span>
+              <div class="bar"><i style="width:${Math.max(0, Math.min(100, Number(s.accuracy) || 0))}%"></i></div>
+            </div>
+            <strong class="stat-value ${accuracyClass(s.accuracy)}">${pct(s.accuracy)}</strong>
+          </div>
+        `).join("") : `<div class="empty-mini">ফলাফলে subjectBreakdown ডেটা নেই, তাই বিষয়ভিত্তিক হিসাব করা যাচ্ছে না।</div>`}
       </div>
-      <div class="glass-card" style="padding:16px;">
-        ${topicStats.length === 0 ? `<p class="text-sm text-muted text-center font-bold">তথ্য নেই।</p>` : topicStats.map(t => {
-          const perf = t.accuracy === null || t.accuracy === undefined
-            ? { label: "পর্যাপ্ত তথ্য নেই" }
-            : t.accuracy >= 80 ? { label: "খুব ভালো" }
-            : t.accuracy >= 60 ? { label: "ভালো" }
-            : t.accuracy >= 40 ? { label: "উন্নতি দরকার" }
-            : { label: "দুর্বল" };
-          const trendObj = topicTrends.find(x => x.topicId === t.topicId);
-          let trendIcon = `<span class="trend-flat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg></span>`;
-          if(trendObj?.direction === 'up') trendIcon = `<span class="trend-up"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></span>`;
-          else if(trendObj?.direction === 'down') trendIcon = `<span class="trend-down"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>`;
 
+      ${sectionTitle("book", "অধ্যায়ভিত্তিক বিশ্লেষণ", "প্রতিটি অধ্যায়ে তোমার accuracy")}
+      <div class="stat-list">
+        ${chapterStats.length ? chapterStats.map(c => `
+          <div class="stat-row">
+            <div class="stat-main">
+              <strong>${esc(c.name)}</strong>
+              <span>${c.attempts} বার পরীক্ষা হয়েছে</span>
+            </div>
+            <strong class="stat-value ${accuracyClass(c.accuracy)}">${pct(c.accuracy)}</strong>
+          </div>
+        `).join("") : `<div class="empty-mini">ফলাফলে chapterBreakdown ডেটা নেই।</div>`}
+      </div>
+
+      ${sectionTitle("topic", "টপিক বিশ্লেষণ ও দুর্বলতা", "কম accuracy-এর টপিক আগে দেখানো হয়েছে")}
+      <div class="stat-list">
+        ${topicStats.length ? topicStats.map(t => {
+          const perf = getPerformanceLabel(t);
+          const tr = topicTrends.find(x => x.topicId === t.topicId);
+          const trendText = tr?.direction === "up" ? `উন্নতি +${Math.abs(tr.diff)}%`
+            : tr?.direction === "down" ? `কমেছে ${Math.abs(tr.diff)}%`
+            : tr?.direction === "flat" ? "স্থিতিশীল"
+            : "আরও ডেটা প্রয়োজন";
           return `
-          <div class="detail-row" style="${t.isWeak ? 'border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.03);' : ''}">
-            <div style="flex:1;">
-              <p class="detail-name">${t.name} ${t.isWeak ? `<span style="font-size:0.65rem; background:rgba(239,68,68,0.1); color:#ef4444; padding:2px 8px; border-radius:6px; font-weight:900; margin-left:8px;">দুর্বল</span>` : ""}</p>
-              <div class="detail-meta">
-                <span>স্ট্যাটাস: ${perf.label}</span><span>•</span><span>${t.attempts} বার</span>
+            <div class="stat-row topic-row ${t.isWeak ? "is-weak" : ""}">
+              <div class="stat-main">
+                <strong>${esc(t.name)}</strong>
+                <span>${t.attempts} বার • ${esc(perf.label)} • ${esc(trendText)}</span>
               </div>
+              <strong class="stat-value ${accuracyClass(t.accuracy)}">${pct(t.accuracy)}</strong>
             </div>
-            <div style="text-align:right;">
-              <p style="font-weight:900; font-size:1.2rem; color:${t.isWeak ? '#ef4444' : 'var(--text-secondary)'}; font-family:var(--font-num);">${t.accuracy ?? "—"}%</p>
-              <div style="font-size:0.85rem; color:var(--text-muted); font-weight:800; display:flex; justify-content:flex-end; align-items:center; gap:4px; margin-top:2px;">
-                ${trendIcon} ${trendObj?.diff ? Math.abs(trendObj.diff) + '%' : ''}
-              </div>
-            </div>
-          </div>
-        `}).join("")}
+          `;
+        }).join("") : `<div class="empty-mini">ফলাফলে topicBreakdown ডেটা নেই।</div>`}
       </div>
 
-      <!-- Time Management -->
-      <div class="section-label mt-5">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        সময় ব্যবস্থাপনা (Time Management)
+      ${sectionTitle("clock", "সময় ব্যবস্থাপনা", "প্রশ্নে কত সময় লাগছে এবং দ্রুত উত্তর দিলে ভুল বাড়ছে কি না")}
+      <div class="glass-card">
+        ${timeStats ? `
+          <h3>বিষয় অনুযায়ী গড় সময়</h3>
+          <div class="time-list">
+            ${timeStats.bySubject.slice(0, 5).map(x => `
+              <div class="time-row"><span>${esc(x.name)}</span><strong>${formatTime(x.avgSeconds)} / প্রশ্ন</strong></div>
+            `).join("")}
+          </div>
+          ${timeStats.speedAccuracy ? `
+            <div class="speed-box">
+              <span>দ্রুত অংশের ভুলের হার: <b>${pct(timeStats.speedAccuracy.fasterWrongRate)}</b></span>
+              <span>ধীর অংশের ভুলের হার: <b>${pct(timeStats.speedAccuracy.slowerWrongRate)}</b></span>
+            </div>
+          ` : ""}
+        ` : `
+          <div class="empty-mini">কমপক্ষে ৫টি timed question দরকার। বর্তমানে পর্যাপ্ত time data নেই।</div>
+        `}
       </div>
-      <div class="glass-card" style="padding:16px;">
-        <p style="font-size:0.9rem; color:var(--text-secondary); font-weight:800; margin-bottom:14px;">যে বিষয়গুলোতে সবচেয়ে বেশি সময় লাগছে:</p>
-        ${(!timeStats || !timeStats.bySubject || timeStats.bySubject.length === 0) ? `<p class="text-sm text-muted text-center font-bold">পর্যাপ্ত ডেটা নেই।</p>` : timeStats.bySubject.slice(0, 3).map(ts => `
-          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed rgba(128,128,128,0.15); padding:14px 0;">
-            <p style="font-size:1rem; font-weight:800; color:var(--text-primary);">${ts.name}</p>
-            <p style="font-size:1rem; font-weight:900; color:var(--color-accent); font-family:var(--font-num);">${formatTime(ts.avgSeconds)} / প্রশ্ন</p>
+
+      ${sectionTitle("warning", "বারবার হওয়া ভুল", "একই প্রশ্নে একই ভুল অপশন বারবার বেছে নেওয়া হলে এখানে আসে")}
+      <div class="stat-list">
+        ${wrongPatterns.length ? wrongPatterns.slice(0, 5).map(w => `
+          <div class="pattern-card">
+            <strong>${esc(w.question_bn || "প্রশ্ন")}</strong>
+            <span>একই ভুল অপশন ${w.repeatedCount} বার নির্বাচিত হয়েছে</span>
+          </div>
+        `).join("") : `<div class="empty-mini">এখনো এমন repeated wrong-option pattern পাওয়া যায়নি।</div>`}
+      </div>
+
+      ${sectionTitle("target", "মার্ক করে রাখা প্রশ্ন", "যে প্রশ্নগুলো তুমি uncertainty হিসেবে mark করেছিলে")}
+      <div class="glass-card">
+        ${reviewStats ? `
+          <div class="review-grid">
+            <div><small>মার্ক করা প্রশ্ন</small><strong>${reviewStats.markedCount}</strong></div>
+            <div><small>সঠিকতা</small><strong>${pct(reviewStats.accuracy)}</strong></div>
+            <div><small>মার্ক না করা accuracy</small><strong>${pct(reviewStats.unmarkedAccuracy)}</strong></div>
+          </div>
+        ` : `<div class="empty-mini">কোনো marked-for-review answered data পাওয়া যায়নি।</div>`}
+      </div>
+
+      ${sectionTitle("trend", "পরীক্ষার ইতিহাস", "সর্বশেষ ফলাফল আগে")}
+      <div class="history-list">
+        ${timeline.slice(0, 10).map(r => `
+          <div class="history-row">
+            <div>
+              <strong>${esc(r.examName)}</strong>
+              <span>${formatDate(r.submittedAt)}</span>
+            </div>
+            <div class="history-score">
+              <strong>${pct(r.percentage)}</strong>
+              <span>accuracy ${pct(r.accuracy)}</span>
+            </div>
           </div>
         `).join("")}
       </div>
@@ -310,8 +530,12 @@ async function renderPage() {
 
   } catch (err) {
     console.error("Analytics Error:", err);
-    // Safe Error State fallback if rendering fails
-    body.innerHTML = `<div class="glass-card text-center font-bold" style="color:#ef4444; padding:30px;">পেজটি লোড করতে সমস্যা হচ্ছে। দয়া করে ইন্টারনেট কানেকশন চেক করে আবার চেষ্টা করুন।</div>`;
+    body.innerHTML = `
+      <div class="glass-card error-card">
+        <strong>বিশ্লেষণ লোড করা যায়নি।</strong>
+        <p>ডেটা পড়ার সময় একটি সমস্যা হয়েছে। Browser console-এ আসল error দেখা যাবে।</p>
+      </div>
+    `;
   }
 }
 </script>
