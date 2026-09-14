@@ -10,7 +10,7 @@
 // nothing at all (event.respondWith is never called) unless the request is
 // a GET to one of our own known static shell files on our own origin —
 // Firestore, auth, and everything else is left completely untouched.
-const CACHE_NAME = "exam-admin-shell-v2";
+const CACHE_NAME = "exam-admin-shell-v3";
 const SHELL_ASSET_PATHS = ["/css/style.css", "/manifest.json"];
 
 self.addEventListener("install", (event) => {
