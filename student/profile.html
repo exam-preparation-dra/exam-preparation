@@ -124,8 +124,6 @@
 
 
   .badge-unified-panel{margin-bottom:18px}
-  .badge-unified-panel .badge-card-new svg{width:24px;height:24px;color:currentColor}
-
   .badge-collection-head{position:relative;overflow:hidden}
   .badge-collection-head:after{content:"";position:absolute;width:130px;height:130px;right:-55px;top:-70px;border-radius:50%;background:var(--color-accent);opacity:.08;filter:blur(10px)}
   .badge-art{position:relative;overflow:hidden;flex-shrink:0}
@@ -151,6 +149,20 @@
   .badge-unlock-overlay{animation:fadeIn .18s ease}.badge-unlock-card{animation:badgeUnlockPop .65s cubic-bezier(.2,.8,.2,1),badgeUnlockGlow 1.6s ease-in-out .25s 2}
   @media(max-width:420px){.badge-grid{grid-template-columns:repeat(2,1fr)}.badge-card-new{min-height:175px}.badge-how{-webkit-line-clamp:3;min-height:48px}}
 </style>
+
+<style id="premium-badges-css">
+.advanced-badges{margin-top:18px;padding:18px;overflow:hidden}
+.badge-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.badge-kicker{font-size:.68rem;letter-spacing:.16em;font-weight:900;opacity:.55}.badge-head h2{margin:3px 0;font-size:1.3rem}.badge-head p{margin:0;color:var(--text-muted);font-size:.78rem}.badge-total{font-weight:900;font-size:1.5rem}.badge-total span{font-size:.75rem;opacity:.5}.badge-progress{height:5px;border-radius:9px;background:rgba(148,163,184,.18);margin:13px 0 15px;overflow:hidden}.badge-progress i,.mini-progress i,.detail-progress i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#7c3aed,#06b6d4);transition:width .8s ease}
+.badge-filter{display:flex;gap:7px;margin-bottom:14px}.badge-filter button{border:1px solid var(--border-color);background:transparent;border-radius:999px;padding:7px 12px;font-size:.72rem;font-weight:800;color:var(--text-primary)}.badge-filter button.active{background:var(--text-primary);color:var(--bg-primary)}
+.badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:11px}.badge-item{border:1px solid var(--border-color);background:rgba(255,255,255,.025);border-radius:18px;padding:13px 10px;text-align:left;color:var(--text-primary);cursor:pointer;transition:.25s;position:relative;overflow:hidden}.badge-item:hover{transform:translateY(-3px);border-color:rgba(124,58,237,.45)}.badge-item strong{display:block;font-size:.78rem;margin-top:9px}.badge-item>span{display:block;font-size:.64rem;opacity:.55;margin-top:3px}.badge-item>small{display:block;font-size:.62rem;line-height:1.35;margin-top:7px;color:var(--text-muted)}.badge-item>em{font-size:.62rem;font-style:normal;display:block;margin-top:4px;opacity:.7}.badge-item.locked{opacity:.72}.mini-progress{height:4px;background:rgba(148,163,184,.16);border-radius:8px;margin-top:8px;overflow:hidden}
+.premium-badge{width:66px;height:66px;position:relative;display:grid;place-items:center;margin:auto}.badge-core{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;color:var(--badge-accent);background:linear-gradient(145deg,var(--badge-soft),rgba(255,255,255,.04));border:1px solid color-mix(in srgb,var(--badge-accent) 45%,transparent);box-shadow:0 8px 22px color-mix(in srgb,var(--badge-accent) 20%,transparent),inset 0 0 18px rgba(255,255,255,.08);position:relative;z-index:2}.badge-core svg{width:25px;height:25px}.badge-orbit{position:absolute;inset:4px;border:1px dashed color-mix(in srgb,var(--badge-accent) 45%,transparent);border-radius:50%;animation:badgeSpin 10s linear infinite}.badge-rarity{position:absolute;right:-4px;bottom:-1px;background:var(--badge-accent);color:#fff;border-radius:999px;padding:2px 5px;font-size:.43rem;font-weight:900;z-index:3}.is-locked .badge-core{filter:grayscale(.8);opacity:.55}.is-locked .badge-orbit{animation:none;opacity:.35}
+.almost-box{border:1px solid rgba(124,58,237,.2);background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(6,182,212,.04));border-radius:16px;padding:10px;margin-bottom:14px}.almost-box>b{font-size:.7rem}.almost-item{width:100%;display:flex;align-items:center;gap:10px;border:0;background:none;color:var(--text-primary);text-align:left;padding:7px 0;cursor:pointer}.almost-item .premium-badge{width:52px;height:52px;flex:none}.almost-item .badge-core{width:38px;height:38px}.almost-item strong,.almost-item small,.almost-item em{display:block}.almost-item strong{font-size:.73rem}.almost-item small{font-size:.61rem;opacity:.6}.almost-item em{font-size:.61rem;color:#8b5cf6;font-style:normal;margin-top:2px}
+.badge-modal{position:fixed;inset:0;background:rgba(2,6,23,.72);backdrop-filter:blur(12px);display:grid;place-items:center;z-index:9999;padding:20px;animation:modalIn .2s ease}.badge-modal-card{width:min(360px,100%);background:var(--bg-primary);border:1px solid var(--border-color);border-radius:26px;padding:26px;text-align:center;box-shadow:0 25px 80px rgba(0,0,0,.4)}.badge-modal-card .premium-badge{width:110px;height:110px}.badge-modal-card .badge-core{width:78px;height:78px;border-radius:22px}.badge-modal-card .badge-core svg{width:38px;height:38px}.badge-modal-card h3{margin:12px 0 7px;font-size:1.15rem}.badge-modal-rarity{font-size:.62rem;font-weight:900;opacity:.6}.how-to{text-align:left;line-height:1.55;font-size:.8rem;background:rgba(148,163,184,.08);border-radius:14px;padding:12px}.detail-progress{height:6px;background:rgba(148,163,184,.16);border-radius:8px;overflow:hidden}.badge-close{margin-top:12px;border:0;border-radius:12px;padding:9px 18px;font-weight:800;cursor:pointer}
+.badge-item.earned .badge-core{animation:earnedPulse 3s ease-in-out infinite}.badge-item.earned{animation:unlockFloat 4s ease-in-out infinite}
+@keyframes badgeSpin{to{transform:rotate(360deg)}}@keyframes earnedPulse{50%{box-shadow:0 8px 28px color-mix(in srgb,var(--badge-accent) 35%,transparent),inset 0 0 22px rgba(255,255,255,.12)}}@keyframes unlockFloat{50%{transform:translateY(-2px)}}@keyframes modalIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+@media(max-width:600px){.badge-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.badge-item{border-radius:15px;padding:11px 8px}.premium-badge{width:58px;height:58px}.badge-core{width:43px;height:43px}.badge-core svg{width:22px;height:22px}.badge-head h2{font-size:1.08rem}}
+</style>
+
 </head>
 <body oncontextmenu="return false;"> <!-- Blocks Right Click Globally -->
 <div class="app-shell" id="shell">
@@ -190,303 +202,197 @@ function makeTierBadges(prefix, category, thresholds, nameFn, descFn, checkFn, r
   }));
 }
 
-function buildBadgeCatalog(ctx){
-  const c=[];
-  // 1. Exams — maximum tier is deliberately 30.
-  c.push(...makeTierBadges("exam","পরীক্ষা",
-    [1,2,3,5,7,10,12,15,18,20,22,25,27,30],
-    n=>`Exam ${n}`,
-    n=>`মোট ${n}টি approved পরীক্ষা সম্পূর্ণ করো।`,
-    (x,n)=>x.examCount>=n,
-    n=>n>=30?"Legendary":n>=20?"Epic":n>=10?"Rare":"Uncommon"));
 
-  // 2. Accuracy
-  c.push(...makeTierBadges("accuracy","Accuracy",
-    [70,75,80,85,88,90,92,94,96,98,100],
-    n=>`${n}% Accuracy`,
-    n=>`সব approved পরীক্ষার মিলিত accuracy অন্তত ${n}% রাখো।`,
-    (x,n)=>x.accuracy>=n,
-    n=>n===100?"Legendary":n>=96?"Epic":n>=90?"Rare":"Uncommon"));
+function buildBadgeCatalog(ctx) {
+  const catalog = [];
+  const add = (id, title, category, requirement, rarity, icon, check, progress) =>
+    catalog.push({id,title,category,requirement,rarity,icon,check,progress});
 
-  // 3. Correct answers
-  c.push(...makeTierBadges("correct","সঠিক উত্তর",
-    [25,50,100,150,250,400,600,800,1000],
-    n=>`${n} Correct`,
-    n=>`মোট ${n}টি সঠিক উত্তর দাও।`,
-    (x,n)=>x.correct>=n,
-    n=>n>=1000?"Legendary":n>=600?"Epic":n>=250?"Rare":"Uncommon"));
+  const exam = ctx.examCount || 0, correct = ctx.totalCorrect || 0;
+  const avgAcc = Number(ctx.avgAccuracy || 0), avgPct = Number(ctx.avgPercentage || 0);
+  const bestPct = Number(ctx.bestPercentage || 0), bestAcc = Number(ctx.bestAccuracy || 0);
+  const maxImprovement = Number(ctx.maxImprovement || 0), streak = Number(ctx.longestStreak || 0);
+  const zeroWrong = Number(ctx.zeroWrongExams || 0), perfect = Number(ctx.perfectExams || 0);
+  const fast = Number(ctx.fastAccurateExams || 0), attempted = Number(ctx.attemptRate || 0);
+  const monthlyOverall = ctx.monthlyOverall || 0, monthlyClass = ctx.monthlyClass || 0;
+  const weeklyOverall = ctx.weeklyOverall || 0, weeklyClass = ctx.weeklyClass || 0;
 
-  // 4. Points
-  c.push(...makeTierBadges("points","পয়েন্ট",
-    [100,250,500,750,1000,1500,2500,4000,5000,7500,10000],
-    n=>`${n} Point`,
-    n=>`লিডারবোর্ডের মোট ${n} পয়েন্টে পৌঁছাও।`,
-    (x,n)=>x.points>=n,
-    n=>n>=10000?"Legendary":n>=5000?"Epic":n>=1500?"Rare":"Uncommon"));
+  // 20 clean, meaningful badge families. Exam milestones stop at 30.
+  const examMilestones = [1,3,5,10,15,20,25,30];
+  examMilestones.forEach(n => add(
+    `exam-${n}`, `Exam Warrior ${n}`, "পরীক্ষা",
+    `মোট ${n}টি approved পরীক্ষা সম্পূর্ণ করো।`, n>=25?"Legendary":n>=15?"Epic":n>=10?"Rare":"Common",
+    "M8", c => c.examCount >= n, c => ({value:Math.min(c.examCount,n), max:n, text:`${Math.min(c.examCount,n)} / ${n}`})
+  ));
 
-  // 5. Improvement
-  c.push(...makeTierBadges("improvement","উন্নতি",
-    [5,8,10,15,20,25,30],
-    n=>`+${n}% Comeback`,
-    n=>`আগের approved পরীক্ষার তুলনায় পরের পরীক্ষায় অন্তত ${n} percentage-point উন্নতি করো।`,
-    (x,n)=>x.maxImprovement>=n,
-    n=>n>=30?"Legendary":n>=20?"Epic":n>=10?"Rare":"Uncommon"));
+  add("accuracy-master","Accuracy Master","Accuracy","কমপক্ষে 10টি approved পরীক্ষায় গড় accuracy 90% বা তার বেশি রাখো।","Epic","M1",
+    c=>c.highAccuracyExamCount>=10,c=>({value:Math.min(c.highAccuracyExamCount,10),max:10,text:`${Math.min(c.highAccuracyExamCount,10)} / 10`}));
+  add("correct-master","Correct Answer Master","সঠিক উত্তর","মোট 500টি সঠিক উত্তর দাও।","Epic","M2",
+    c=>c.totalCorrect>=500,c=>({value:Math.min(c.totalCorrect,500),max:500,text:`${Math.min(c.totalCorrect,500)} / 500`}));
+  add("point-master","Point Collector","পয়েন্ট","মোট 5000 points অর্জন করো।","Rare","M3",
+    c=>c.totalPoints>=5000,c=>({value:Math.min(c.totalPoints,5000),max:5000,text:`${Math.min(c.totalPoints,5000)} / 5000`}));
+  add("comeback","Comeback Champion","উন্নতি","আগের performance-এর তুলনায় অন্তত 20 percentage-point improvement অর্জন করো।","Legendary","M4",
+    c=>c.maxImprovement>=20,c=>({value:Math.min(Math.max(c.maxImprovement,0),20),max:20,text:`${Math.round(Math.max(c.maxImprovement,0))} / 20%`}));
+  add("consistency","Consistency Champion","Consistency","কমপক্ষে 8টি পরীক্ষায় ধারাবাহিকভাবে 80%+ score রাখো।","Epic","M5",
+    c=>c.highScoreExamCount>=8,c=>({value:Math.min(c.highScoreExamCount,8),max:8,text:`${Math.min(c.highScoreExamCount,8)} / 8`}));
+  add("speed","Speed Solver","Speed","Accuracy অন্তত 80% রেখে 5টি পরীক্ষায় নির্ধারিত সময়ের মধ্যে দ্রুত solve করো।","Rare","M6",
+    c=>c.fastAccurateExams>=5,c=>({value:Math.min(c.fastAccurateExams,5),max:5,text:`${Math.min(c.fastAccurateExams,5)} / 5`}));
+  add("perfect","Perfect Score","Perfect Score","কমপক্ষে 3টি পরীক্ষায় 100% score অর্জন করো।","Legendary","M7",
+    c=>c.perfectExams>=3,c=>({value:Math.min(c.perfectExams,3),max:3,text:`${Math.min(c.perfectExams,3)} / 3`}));
+  add("zero-wrong","Zero Wrong","Accuracy","কমপক্ষে 5টি পরীক্ষায় একটিও ভুল উত্তর দিও না।","Epic","M9",
+    c=>c.zeroWrongExams>=5,c=>({value:Math.min(c.zeroWrongExams,5),max:5,text:`${Math.min(c.zeroWrongExams,5)} / 5`}));
+  add("attempt-discipline","Attempt Master","Consistency","কমপক্ষে 10টি পরীক্ষায় 90%+ প্রশ্ন attempt করো।","Rare","M10",
+    c=>c.highAttemptExams>=10,c=>({value:Math.min(c.highAttemptExams,10),max:10,text:`${Math.min(c.highAttemptExams,10)} / 10`}));
+  add("clean-run","Clean Run","Special","টানা 5টি approved পরীক্ষায় 80%+ score এবং 80%+ accuracy রাখো।","Epic","M11",
+    c=>c.cleanRun>=5,c=>({value:Math.min(c.cleanRun,5),max:5,text:`${Math.min(c.cleanRun,5)} / 5`}));
+  add("weekly-topper","Weekly Topper","Leaderboard","একটি সপ্তাহে overall leaderboard-এ 1st হও।","Legendary","M12",
+    c=>c.weeklyOverall>0,c=>({value:c.weeklyOverall?1:0,max:1,text:c.weeklyOverall?"Unlocked":"1 বার দরকার"}));
+  add("class-weekly-topper","Class Weekly Topper","Leaderboard","নিজের class-এর weekly leaderboard-এ 1st হও।","Epic","M13",
+    c=>c.weeklyClass>0,c=>({value:c.weeklyClass?1:0,max:1,text:c.weeklyClass?"Unlocked":"1 বার দরকার"}));
+  add("monthly-topper","Monthly Topper","Leaderboard","একটি মাসে overall leaderboard-এ 1st হও।","Legendary","M14",
+    c=>c.monthlyOverall>0,c=>({value:c.monthlyOverall?1:0,max:1,text:c.monthlyOverall?"Unlocked":"1 বার দরকার"}));
+  add("class-monthly-topper","Class Monthly Topper","Leaderboard","নিজের class-এর monthly leaderboard-এ 1st হও।","Legendary","M15",
+    c=>c.monthlyClass>0,c=>({value:c.monthlyClass?1:0,max:1,text:c.monthlyClass?"Unlocked":"1 বার দরকার"}));
+  add("subject-master","Subject Master","বিষয়","যেকোনো একটি subject-এ অন্তত 5টি approved attempt এবং 90%+ accuracy অর্জন করো।","Epic","M16",
+    c=>(c.subjectStats||[]).some(x=>x.attempts>=5&&x.accuracy>=90),c=>({value:c.bestSubjectMaster?1:0,max:1,text:c.bestSubjectMaster?"Unlocked":"5 attempts + 90%"}));
+  add("chapter-master","Chapter Master","অধ্যায়","নিজের class-এর যেকোনো chapter-এ অন্তত 5টি attempt এবং 90%+ accuracy অর্জন করো।","Rare","M17",
+    c=>(c.chapterStats||[]).some(x=>x.attempts>=5&&x.accuracy>=90),c=>({value:c.bestChapterMaster?1:0,max:1,text:c.bestChapterMaster?"Unlocked":"5 attempts + 90%"}));
+  add("topic-master","Topic Master","টপিক","নিজের class-এর যেকোনো topic-এ অন্তত 5টি attempt এবং 90%+ accuracy অর্জন করো।","Rare","M18",
+    c=>(c.topicStats||[]).some(x=>x.attempts>=5&&x.accuracy>=90),c=>({value:c.bestTopicMaster?1:0,max:1,text:c.bestTopicMaster?"Unlocked":"5 attempts + 90%"}));
+  add("syllabus-master","Syllabus Master","Special","নিজের applicable syllabus-এর অন্তত 80% topic-এ performance record তৈরি করো।","Legendary","M19",
+    c=>c.topicCoverage>=80,c=>({value:Math.min(c.topicCoverage,80),max:80,text:`${Math.round(c.topicCoverage)}% / 80%`}));
+  add("all-rounder","All-Rounder","Special","কমপক্ষে 3টি subject-এ 5+ attempt এবং 80%+ accuracy অর্জন করো।","Legendary","M20",
+    c=>(c.subjectStats||[]).filter(x=>x.attempts>=5&&x.accuracy>=80).length>=3,c=>({value:Math.min(c.strongSubjects,3),max:3,text:`${Math.min(c.strongSubjects,3)} / 3`}));
 
-  // 6. Consistency — absorbs the old "নিয়মিত" badge.
-  c.push(...makeTierBadges("consistency","Consistency",
-    [3,5,7,10,12,15,20],
-    n=>`Consistency ${n}`,
-    n=>`কমপক্ষে ${n}টি ধারাবাহিক study/exam session সম্পূর্ণ করো।`,
-    (x,n)=>x.longestStreak>=n,
-    n=>n>=20?"Legendary":n>=12?"Epic":n>=7?"Rare":"Uncommon"));
-
-  // 7. Speed
-  c.push(...makeTierBadges("speed","Speed",
-    [2,4,6,10,15],
-    n=>`Quick Solver ${n}`,
-    n=>`নির্ধারিত time benchmark-এর মধ্যে ${n}টি approved পরীক্ষা শেষ করো।`,
-    (x,n)=>x.fastExamCount>=n,
-    n=>n>=15?"Legendary":n>=10?"Epic":n>=6?"Rare":"Uncommon"));
-
-  // 8. Perfect Score
-  c.push(...makeTierBadges("perfect","Perfect Score",
-    [1,2,3,5,7,10],
-    n=>`Perfect ${n}`,
-    n=>`${n}টি approved পরীক্ষায় 100% score অর্জন করো।`,
-    (x,n)=>x.perfectCount>=n,
-    n=>n>=10?"Legendary":n>=7?"Epic":n>=3?"Rare":"Uncommon"));
-
-  // 9. Zero Wrong
-  c.push(...makeTierBadges("zeroWrong","Accuracy",
-    [1,2,3,5,7],
-    n=>`Zero Wrong ${n}`,
-    n=>`${n}টি approved পরীক্ষায় একটি ভুল উত্তরও রেখো না।`,
-    (x,n)=>x.zeroWrongCount>=n,
-    n=>n>=7?"Legendary":n>=5?"Epic":"Rare"));
-
-  // 10. Attempt discipline
-  c.push(...makeTierBadges("attempt","Accuracy",
-    [80,85,90,95,100],
-    n=>`${n}% Attempt`,
-    n=>`সব approved পরীক্ষায় গড়ে অন্তত ${n}% প্রশ্ন attempt করো।`,
-    (x,n)=>x.attemptRate>=n,
-    n=>n===100?"Legendary":n>=95?"Epic":n>=90?"Rare":"Uncommon"));
-
-  // 11. Clean run
-  c.push(...makeTierBadges("cleanRun","Accuracy",
-    [2,4,6,10,15],
-    n=>`Clean Run ${n}`,
-    n=>`${n}টি approved পরীক্ষায় ভুলের হার 5%-এর নিচে রাখো।`,
-    (x,n)=>x.lowWrongExamCount>=n,
-    n=>n>=15?"Legendary":n>=10?"Epic":n>=6?"Rare":"Uncommon"));
-
-  // 12–14. Leaderboard families — replaces the three old separate cards.
-  c.push(...makeTierBadges("weeklyTopper","Leaderboard",[1,3,5],
-    n=>`Weekly Topper ${n}`,
-    n=>`${n} বার overall weekly topper হও।`,
-    (x,n)=>x.weeklyOverall>=n,
-    n=>n>=5?"Legendary":n>=3?"Epic":"Rare"));
-  c.push(...makeTierBadges("monthlyTopper","Leaderboard",[1,2,3],
-    n=>`Monthly Topper ${n}`,
-    n=>`${n} বার overall monthly topper হও।`,
-    (x,n)=>x.monthlyOverall>=n,
-    n=>n>=3?"Legendary":n>=2?"Epic":"Rare"));
-  c.push(...makeTierBadges("classTopper","Leaderboard",[1,3,5],
-    n=>`Class Topper ${n}`,
-    n=>`${n} বার নিজের class-এ weekly/monthly topper হও।`,
-    (x,n)=>(x.weeklyClass+x.monthlyClass)>=n,
-    n=>n>=5?"Legendary":n>=3?"Epic":"Rare"));
-
-  // 15. Subject mastery
-  for(const s of (ctx.subjectStats||[])){
-    const base=String(s.name||s.id||"Subject");
-    c.push(...makeTierBadges(`subject-${s.id}`,"বিষয়",[80,90,95,100],
-      n=>`${base} ${n}%`,
-      n=>`${base}-এ অন্তত ${n}% accuracy অর্জন করো এবং অন্তত 3টি attempt সম্পূর্ণ করো।`,
-      (x,n)=>{const v=x.subjectStatsById?.[s.id];return Number(v?.accuracy||0)>=n && Number(v?.attempts||0)>=3;},
-      n=>n===100?"Legendary":n>=95?"Epic":n>=90?"Rare":"Uncommon"));
-  }
-
-  // 16. Chapter mastery
-  for(const ch of (ctx.chapterStats||[])){
-    const base=String(ch.name||ch.id||"Chapter");
-    c.push(...makeTierBadges(`chapter-${ch.id}`,"অধ্যায়",[75,85,95],
-      n=>`${base} ${n}%`,
-      n=>`${base} অধ্যায়ে অন্তত ${n}% accuracy এবং 3টি attempt অর্জন করো।`,
-      (x,n)=>{const v=x.chapterStatsById?.[ch.id];return Number(v?.accuracy||0)>=n && Number(v?.attempts||0)>=3;},
-      n=>n>=95?"Epic":n>=85?"Rare":"Uncommon"));
-  }
-
-  // 17. Topic mastery
-  for(const t of (ctx.topicStats||[])){
-    const base=String(t.name||t.id||"Topic");
-    c.push(...makeTierBadges(`topic-${t.id}`,"টপিক",[75,85,95],
-      n=>`${base} ${n}%`,
-      n=>`${base} টপিকে অন্তত ${n}% accuracy এবং 3টি attempt অর্জন করো।`,
-      (x,n)=>{const v=x.topicStatsById?.[t.id];return Number(v?.accuracy||0)>=n && Number(v?.attempts||0)>=3;},
-      n=>n>=95?"Epic":n>=85?"Rare":"Uncommon"));
-  }
-
-  // 18. Coverage
-  c.push(...makeTierBadges("coverage","Coverage",[25,50,75,90,100],
-    n=>`${n}% Syllabus Coverage`,
-    n=>`syllabus-এর অন্তত ${n}% tracked topic-এ approved attempt করো।`,
-    (x,n)=>x.topicCoverage>=n,
-    n=>n===100?"Legendary":n>=90?"Epic":n>=75?"Rare":"Uncommon"));
-
-  // 19. All-rounder
-  c.push(...makeTierBadges("allRounder","All-Rounder",[60,70,80,90],
-    n=>`All-Rounder ${n}`,
-    n=>`accuracy, attempt rate, consistency ও syllabus coverage—সব মিলিয়ে অন্তত ${n} composite score অর্জন করো।`,
-    (x,n)=>x.masteryScore>=n,
-    n=>n>=90?"Legendary":n>=80?"Epic":n>=70?"Rare":"Uncommon"));
-
-  // 20. Special milestones
-  const special=[
-    ["first-approved","First Approved","প্রথম approved পরীক্ষা সম্পূর্ণ করো।",x=>x.examCount>=1,"Uncommon"],
-    ["accuracy-guardian","Accuracy Guardian","কমপক্ষে 5টি পরীক্ষায় 85%+ accuracy বজায় রাখো।",x=>x.highAccuracyExamCount>=5,"Epic"],
-    ["comeback","Comeback Survivor","একটি দুর্বল ফলাফলের পর অন্তত 20 percentage-point improvement করো।",x=>x.maxImprovement>=20,"Epic"],
-    ["exam-elite","Exam Elite","কমপক্ষে 10টি পরীক্ষার মধ্যে 80%+ score অন্তত 7 বার অর্জন করো।",x=>x.benchmarkExamCount>=7,"Legendary"]
-  ];
-  special.forEach(([id,name,desc,check,rarity])=>c.push({id,name,category:"Special",desc,check,rarity,metric:id}));
-  return c;
+  return catalog;
 }
 
-function getBadgeProgress(b,ctx){
-  let current=0,target=b.threshold??null;
-  if(target==null) return {current:null,target:null,percent:b.earned?100:0,label:b.earned?"সম্পন্ন":"বিশেষ শর্ত"};
-  if(b.metric.startsWith("subject-")){const id=b.metric.slice(8),v=ctx.subjectStatsById?.[id]||{},acc=Number(v.accuracy||0),attempts=Number(v.attempts||0);const percent=Math.max(0,Math.min(100,(acc/target)*100,(attempts/3)*100));return {current:acc,target,percent,label:`${formatBadgeNum(acc)}% / ${formatBadgeNum(target)}% · ${Math.min(attempts,3)}/3 attempts`};}
-  if(b.metric.startsWith("chapter-")){const id=b.metric.slice(8),v=ctx.chapterStatsById?.[id]||{},acc=Number(v.accuracy||0),attempts=Number(v.attempts||0);const percent=Math.max(0,Math.min(100,(acc/target)*100,(attempts/3)*100));return {current:acc,target,percent,label:`${formatBadgeNum(acc)}% / ${formatBadgeNum(target)}% · ${Math.min(attempts,3)}/3 attempts`};}
-  if(b.metric.startsWith("topic-")){const id=b.metric.slice(6),v=ctx.topicStatsById?.[id]||{},acc=Number(v.accuracy||0),attempts=Number(v.attempts||0);const percent=Math.max(0,Math.min(100,(acc/target)*100,(attempts/3)*100));return {current:acc,target,percent,label:`${formatBadgeNum(acc)}% / ${formatBadgeNum(target)}% · ${Math.min(attempts,3)}/3 attempts`};}
-  current=Number(ctx[b.metric]||0);
-  const percent=Math.max(0,Math.min(100,target>0?(current/target)*100:0));
-  return {current,target,percent,label:`${formatBadgeNum(current)} / ${formatBadgeNum(target)}`};
-}
-function formatBadgeNum(n){return Number.isInteger(Number(n))?String(n):Number(n).toFixed(1);}
-function badgeProgressText(b,ctx){const p=getBadgeProgress(b,ctx);return p.target==null?(b.earned?"সম্পন্ন":"শর্ত দেখুন"):p.label;}
-function badgeRarityClass(r){return String(r||"Uncommon").toLowerCase();}
-
-function getBadgeState(ctx){
-  return buildBadgeCatalog(ctx).map(b=>{const earned=!!b.check(ctx);return {...b,earned};});
-}
-
-function buildBadgeContext(approved,gData,rank,subjectStats,chapterStats,topicStats){
-  const a=[...approved].sort((x,y)=>new Date(x.submittedAt||0)-new Date(y.submittedAt||0));
-  const examCount=a.length;
-  const totalQuestions=a.reduce((s,r)=>s+(Number(r.totalQuestions)||0),0);
-  const answered=a.reduce((s,r)=>s+(Number(r.attempted)||0),0);
-  const correct=a.reduce((s,r)=>s+(Number(r.correctCount)||0),0);
-  const wrong=a.reduce((s,r)=>s+(Number(r.wrongCount)||0),0);
-  const accuracy=answered?correct/answered*100:0;
-  const attemptRate=totalQuestions?answered/totalQuestions*100:0;
-  const perfectCount=a.filter(r=>Number(r.percentage)>=100).length;
-  const zeroWrongCount=a.filter(r=>(Number(r.wrongCount)||0)===0 && (Number(r.attempted)||0)>0).length;
-  const highAccuracyExamCount=a.filter(r=>Number(r.accuracy)>=85).length;
-  const lowWrongExamCount=a.filter(r=>{const q=Number(r.totalQuestions)||0,w=Number(r.wrongCount)||0;return q>0 && w/q<.05;}).length;
-  const fastExamCount=a.filter(r=>{const t=Number(r.timeTakenSeconds);const q=Number(r.totalQuestions)||0;return t>0&&q>0&&(t/q)<=45;}).length;
-  const maxImprovement=a.reduce((m,r,i)=>i?Math.max(m,(Number(r.percentage)||0)-(Number(a[i-1].percentage)||0)):m,0);
-  let longestStreak=0,cur=0,lastDay=null;
-  for(const r of a){const d=new Date(r.submittedAt||0);const day=new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();if(lastDay!==null && day-lastDay<=48*3600*1000)cur++;else cur=1;lastDay=day;longestStreak=Math.max(longestStreak,cur);}
-  const dates=new Set(a.map(r=>{const d=new Date(r.submittedAt||0);return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;}));
-  const topicCoverage=topicStats?.length?topicStats.filter(x=>Number(x.attempts)>0).length/topicStats.length*100:0;
-  const myCounts=gData?.badgeCounts?.[student.studentId]||{};
-  const benchmarkExamCount=a.filter(r=>Number(r.percentage)>=80).length;
-  const subjectStatsById={},chapterStatsById={},topicStatsById={};
-  (subjectStats||[]).forEach(x=>subjectStatsById[x.id||x.subjectId]={...x,accuracy:Number(x.accuracy)||0,attempts:Number(x.attempts)||0});
-  (chapterStats||[]).forEach(x=>chapterStatsById[x.id||x.chapterId]={...x,accuracy:Number(x.accuracy)||0,attempts:Number(x.attempts)||0});
-  (topicStats||[]).forEach(x=>topicStatsById[x.id||x.topicId]={...x,accuracy:Number(x.accuracy)||0,attempts:Number(x.attempts)||0});
-  const masteryScore=Math.round((accuracy*.4+attemptRate*.2+Math.min(100,longestStreak*10)*.15+topicCoverage*.25)*10)/10;
-  return {examCount,totalQuestions,answered,correct,wrong,accuracy,attemptRate,points:Number(rank?.totalPoints)||0,maxImprovement,perfectCount,zeroWrongCount,highAccuracyExamCount,lowWrongExamCount,fastExamCount,longestStreak,topicCoverage,masteryScore,benchmarkExamCount,weeklyOverall:Number(myCounts.weeklyOverall)||0,weeklyClass:Number(myCounts.weeklyClass)||0,monthlyOverall:Number(myCounts.monthlyOverall)||0,monthlyClass:Number(myCounts.monthlyClass)||0,subjectStatsById,chapterStatsById,topicStatsById,subjectStats:subjectStats||[],chapterStats:chapterStats||[],topicStats:topicStats||[]};
+function badgeIconSvg(code) {
+  const paths = {
+    M1:'<path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3z"/>',
+    M2:'<circle cx="12" cy="12" r="8"/><path d="M8.5 12l2.2 2.2 4.8-5"/>',
+    M3:'<path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 14v5M8 21h8"/>',
+    M4:'<path d="M5 18l4-4 3 2 7-8"/><path d="M15 8h4v4"/>',
+    M5:'<path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="8"/>',
+    M6:'<path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/>',
+    M7:'<path d="M6 4h12v16H6z"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+    M8:'<path d="M12 3l7 4v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V7l7-4z"/><path d="M9 12l2 2 4-4"/>',
+    M9:'<circle cx="12" cy="12" r="8"/><path d="M8 12h8"/>',
+    M10:'<path d="M5 5h14v14H5z"/><path d="M8 12l2 2 5-5"/>',
+    M11:'<path d="M4 12a8 8 0 0 0 16 0"/><path d="M4 12V7M20 12V7"/>',
+    M12:'<path d="M6 3h12v5c0 5-2.5 7-6 9-3.5-2-6-4-6-9V3z"/>',
+    M13:'<path d="M12 3l2 5 5 .5-3.8 3.3 1.2 5.2-4.4-2.7-4.4 2.7 1.2-5.2L5 8.5 10 8l2-5z"/>',
+    M14:'<path d="M5 20V9M5 9l7-5 7 5M8 20v-7h8v7"/>',
+    M15:'<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/>',
+    M16:'<path d="M4 19h16M6 16V8h4v8M14 16V5h4v11"/>',
+    M17:'<path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+    M18:'<circle cx="12" cy="12" r="8"/><path d="M9 12l2 2 4-4"/>',
+    M19:'<path d="M4 19l4-8 4 5 4-9 4 12"/>',
+    M20:'<path d="M12 3l2.2 4.5 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5-3.6-3.5 5-.7L12 3z"/>'
+  };
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${paths[code]||paths.M20}</svg>`;
 }
 
-const BADGE_SVG={
-  "পরীক্ষা":`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>`,
-  "Accuracy":`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v5"/></svg>`,
-  "সঠিক উত্তর":`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>`,
-  "পয়েন্ট":`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 20 7v6c0 4-3 7-8 8-5-1-8-4-8-8V7z"/><path d="M9 12h6"/></svg>`,
-  "উন্নতি":`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m4 16 6-6 4 4 6-8"/><path d="M15 6h5v5"/></svg>`,
-  "Consistency":`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>`,
-  "Speed":`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 15a8 8 0 1 1 16 0"/><path d="m12 12 4-4"/></svg>`,
-  "Perfect Score":`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3 2.7 5.4 6 .9-4.3 4.2 1 6-5.4-2.9-5.4 2.9 1-6-4.3-4.2 6-.9z"/></svg>`,
-  "Leaderboard":`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>`,
-  "বিষয়":`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/></svg>`,
-  "অধ্যায়":`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 4h14v16H5z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>`,
-  "টপিক":`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>`,
-  "Coverage":`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v14H4z"/><path d="m7 13 3 3 7-8"/></svg>`,
-  "All-Rounder":`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>`,
-  "Special":`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3 2.5 5.5 6 .8-4.3 4.2 1 6-5.2-2.8-5.2 2.8 1-6-4.3-4.2 6-.8z"/></svg>`
-};
-function badgeIcon(b){return BADGE_SVG[b.category]||BADGE_SVG.Special;}
-
-function badgeArt(b,locked=false,large=false){
-  const r=badgeRarityClass(b.rarity);
-  return `<span class="badge-art ${r} ${large?'large':''} ${locked?'is-locked':''}"><span class="badge-art-ring"></span>${locked?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>`:badgeIcon(b)}</span>`;
+function badgeVisual(badge, earned) {
+  const themes = {
+    Common:["#94a3b8","#e2e8f0"], Uncommon:["#0ea5e9","#dbeafe"], Rare:["#8b5cf6","#ede9fe"],
+    Epic:["#ec4899","#fce7f3"], Legendary:["#f59e0b","#fef3c7"], Secret:["#14b8a6","#ccfbf1"]
+  };
+  const [accent,soft] = themes[badge.rarity] || themes.Rare;
+  return `<div class="premium-badge ${earned?"is-earned":"is-locked"}" style="--badge-accent:${accent};--badge-soft:${soft}">
+    <div class="badge-orbit"></div><div class="badge-core">${badgeIconSvg(badge.icon)}</div>
+    <div class="badge-rarity">${badge.rarity}</div>
+  </div>`;
 }
 
-function renderBadgeCollection(state,ctx){
-  const host=document.getElementById("badgeCollectionAdvanced"); if(!host)return;
-  const total=state.length, earned=state.filter(b=>b.earned).length;
-  const visible=state.filter(b=>(badgeFilter==="সব"||b.category===badgeFilter)&&(!badgeSearch||`${b.name} ${b.desc}`.toLowerCase().includes(badgeSearch.toLowerCase())));
-  const almost=state.filter(b=>!b.earned).map(b=>({...b,p:getBadgeProgress(b,ctx)})).filter(b=>b.p.target!=null).sort((a,z)=>z.p.percent-a.p.percent).slice(0,4);
-  const pct=total?Math.round(earned/total*100):0;
-  host.innerHTML=`
-    <section class="badge-unified-panel">
-      <div class="badge-collection-head">
-        <div><p class="badge-kicker">ACHIEVEMENT COLLECTION</p><h3>আমার Badge Collection</h3><p>${earned} / ${total} unlocked · ${pct}% complete</p></div>
-        <button type="button" class="badge-share-btn" id="shareBadgeCollection">Share</button>
-      </div>
-      <div class="badge-progress"><i style="width:${pct}%"></i></div>
-      <div class="badge-filter-scroll">${BADGE_CATEGORIES.map(x=>`<button type="button" class="badge-chip ${badgeFilter===x?'active':''}" data-bcat="${x}">${x}</button>`).join('')}</div>
-      <div class="badge-search"><input id="badgeSearchInput" type="search" placeholder="Badge খুঁজুন..." value="${badgeSearch.replace(/"/g,'&quot;')}"></div>
-      <div class="badge-section-title">তোমার পরের Badge-এর কাছাকাছি</div>
-      <div class="badge-mini-row">${almost.map(b=>`<button type="button" class="badge-mini-card" data-badge-id="${b.id}">${badgeArt(b,true)}<span><b>${b.name}</b><small>${b.p.label} · আর ${(100-b.p.percent).toFixed(0)}%</small></span></button>`).join('')||`<div class="badge-empty">এখনই কোনো কাছাকাছি locked badge নেই।</div>`}</div>
-      <div class="badge-section-title">সব Badge · ${visible.length}</div>
-      <div class="badge-grid">${visible.map(b=>{const p=getBadgeProgress(b,ctx);return `<button type="button" class="badge-card-new ${b.earned?'earned':'locked'}" data-badge-id="${b.id}">${badgeArt(b,!b.earned)}<b>${b.name}</b><span class="badge-how">${b.desc}</span><small>${b.earned?'Unlocked':p.target!=null?`${p.label}`:'Locked'} · ${b.rarity}</small>${!b.earned&&p.target!=null?`<span class="badge-card-progress"><i style="width:${p.percent}%"></i></span>`:''}</button>`;}).join('')||`<div class="badge-empty">কোনো badge পাওয়া যায়নি।</div>`}</div>
-    </section>`;
-  host.querySelectorAll('[data-bcat]').forEach(x=>x.onclick=()=>{badgeFilter=x.dataset.bcat;renderBadgeCollection(state,ctx);});
-  host.querySelector('#badgeSearchInput')?.addEventListener('input',e=>{badgeSearch=e.target.value;renderBadgeCollection(state,ctx);});
-  host.querySelectorAll('[data-badge-id]').forEach(x=>x.onclick=()=>openBadgeDetail(state.find(b=>b.id===x.dataset.badgeId),ctx));
-  host.querySelector('#shareBadgeCollection')?.addEventListener('click',()=>shareBadgeCollection(state));
+function renderBadgeCollection(state) {
+  const host = document.getElementById("badgeCollectionAdvanced");
+  if (!host) return;
+  const earned = state.filter(x=>x.earned).length;
+  const almost = state.filter(x=>!x.earned && x.progress && x.progress.max>1)
+    .sort((a,b)=>(b.progress.value/b.progress.max)-(a.progress.value/a.progress.max)).slice(0,3);
+
+  host.innerHTML = `<section class="glass-card advanced-badges">
+    <div class="badge-head">
+      <div><div class="badge-kicker">ACHIEVEMENTS</div><h2>My Badge Collection</h2><p>${earned} / ${state.length} unlocked</p></div>
+      <div class="badge-total">${earned}<span>/${state.length}</span></div>
+    </div>
+    <div class="badge-progress"><i style="width:${state.length?earned/state.length*100:0}%"></i></div>
+    ${almost.length?`<div class="almost-box"><b>Next closest</b>${almost.map(x=>`<button class="almost-item" data-badge-id="${x.id}">${badgeVisual(x,false)}<span><strong>${x.title}</strong><small>${x.requirement}</small><em>${x.progress.text}</em></span></button>`).join("")}</div>`:""}
+    <div class="badge-filter"><button class="active" data-filter="all">All</button><button data-filter="earned">Unlocked</button><button data-filter="locked">Locked</button></div>
+    <div class="badge-grid">${state.map(x=>`<button class="badge-item ${x.earned?"earned":"locked"}" data-badge-id="${x.id}" data-earned="${x.earned}">
+      ${badgeVisual(x,x.earned)}<strong>${x.title}</strong><span>${x.category}</span><small>${x.earned?"UNLOCKED":x.requirement}</small>${x.progress?`<div class="mini-progress"><i style="width:${Math.min(100,x.progress.value/x.progress.max*100)}%"></i></div><em>${x.progress.text}</em>`:""}
+    </button>`).join("")}</div>
+  </section>`;
+
+  host.querySelectorAll("[data-filter]").forEach(btn=>btn.onclick=()=>{
+    host.querySelectorAll("[data-filter]").forEach(b=>b.classList.remove("active")); btn.classList.add("active");
+    const f=btn.dataset.filter;
+    host.querySelectorAll(".badge-item").forEach(el=>el.style.display=f==="all"||el.dataset.earned===(f==="earned"?"true":"false")?"":"none");
+  });
+  host.querySelectorAll("[data-badge-id]").forEach(el=>el.onclick=()=>showBadgeDetail(state.find(x=>x.id===el.dataset.badgeId)));
 }
 
-function openBadgeDetail(b,ctx){
-  if(!b)return;
-  const p=getBadgeProgress(b,ctx),o=document.createElement('div');o.className='badge-modal-overlay';
-  o.innerHTML=`<div class="badge-modal"><button type="button" class="badge-modal-close">×</button>${badgeArt(b,!b.earned,true)}<p class="badge-modal-rarity">${b.rarity}</p><h3>${b.name}</h3><div class="badge-how-big">কীভাবে পাবে</div><p class="badge-modal-desc">${b.desc}</p>${p.target!=null?`<div class="badge-modal-track"><i style="width:${p.percent}%"></i></div><div class="badge-modal-progress">${p.label}</div>`:''}<strong class="${b.earned?'earned-text':''}">${b.earned?'UNLOCKED':'LOCKED'}</strong></div>`;
-  document.body.appendChild(o);o.querySelector('.badge-modal-close').onclick=()=>o.remove();o.onclick=e=>{if(e.target===o)o.remove();};
+function showBadgeDetail(b) {
+  if (!b) return;
+  const old=document.getElementById("badgeDetailModal"); if(old) old.remove();
+  const div=document.createElement("div"); div.id="badgeDetailModal"; div.className="badge-modal";
+  div.innerHTML=`<div class="badge-modal-card">${badgeVisual(b,b.earned)}<div class="badge-modal-rarity">${b.rarity}</div><h3>${b.title}</h3><p class="how-to"><b>কীভাবে অর্জন করবে?</b><br>${b.requirement}</p>${b.progress?`<div class="detail-progress"><i style="width:${Math.min(100,b.progress.value/b.progress.max*100)}%"></i></div><p>${b.progress.text}</p>`:""}<button class="badge-close">Close</button></div>`;
+  document.body.appendChild(div); div.onclick=e=>{if(e.target===div||e.target.classList.contains("badge-close"))div.remove()};
 }
 
-async function shareBadgeCollection(state){
-  const earned=state.filter(b=>b.earned); if(!earned.length){showToast('আগে অন্তত একটি badge unlock করো।');return;}
-  const card=document.createElement('div');card.style.cssText='position:fixed;left:-10000px;top:0;width:430px;padding:30px;border-radius:30px;background:linear-gradient(145deg,#0b1020,#24143d);color:#fff;font-family:Arial,sans-serif;text-align:center;';
-  card.innerHTML=`<div style="font-size:11px;letter-spacing:2px;opacity:.65">BADGE COLLECTION</div><div style="font-size:28px;font-weight:900;margin:8px 0">${student.name||'Student'}</div><div style="font-size:15px;opacity:.78">${earned.length} badges unlocked</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:22px">${earned.slice(-12).map(b=>`<div style="padding:12px 7px;border-radius:15px;background:rgba(255,255,255,.08);font-size:10px;font-weight:800;line-height:1.3">${b.name}<br><span style="opacity:.6;font-size:8px">${b.rarity}</span></div>`).join('')}</div>`;
-  document.body.appendChild(card);
-  try{const canvas=await html2canvas(card,{backgroundColor:null,scale:2,useCORS:true});canvas.toBlob(async blob=>{if(!blob){card.remove();return;}const file=new File([blob],'badge-collection.png',{type:'image/png'});if(navigator.share&&navigator.canShare?.({files:[file]})){try{await navigator.share({title:'My Badge Collection',files:[file]});}catch{}}else{const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='badge-collection.png';a.click();URL.revokeObjectURL(u);}card.remove();},'image/png');}catch{card.remove();}
+function getBadgeContext(results, gData, rank, subjectStats, chapterStats, topicStats) {
+  const arr=results||[], nums=k=>arr.reduce((s,r)=>s+Number(r[k]||0),0);
+  const percentages=arr.map(r=>Number(r.percentage||0)), accuracies=arr.map(r=>Number(r.accuracy||0));
+  const highAccuracyExamCount=arr.filter(r=>Number(r.accuracy||0)>=90).length;
+  const highScoreExamCount=arr.filter(r=>Number(r.percentage||0)>=80).length;
+  const perfectExams=arr.filter(r=>Number(r.percentage||0)>=100).length;
+  const zeroWrongExams=arr.filter(r=>Number(r.wrongCount||0)===0&&Number(r.attempted||0)>0).length;
+  const highAttemptExams=arr.filter(r=>Number(r.totalQuestions||0)>0 && Number(r.attempted||0)/Number(r.totalQuestions||1)>=.9).length;
+  const fastAccurateExams=arr.filter(r=>Number(r.accuracy||0)>=80 && Number(r.timeTakenSeconds||0)>0 && Number(r.avgTimePerQuestionSeconds||999)<=60).length;
+  let cleanRun=0,run=0; arr.slice().sort((a,b)=>new Date(a.submittedAt||0)-new Date(b.submittedAt||0)).forEach(r=>{if(Number(r.percentage||0)>=80&&Number(r.accuracy||0)>=80)run++;else run=0;cleanRun=Math.max(cleanRun,run)});
+  const topicCoverage=topicStats?.length ? topicStats.filter(x=>x.attempts>0).length/topicStats.length*100 : 0;
+  return {
+    examCount:arr.length,totalCorrect:nums("correctCount"),totalPoints:nums("obtainedMarks"),
+    avgAccuracy:accuracies.length?accuracies.reduce((a,b)=>a+b,0)/accuracies.length:0,
+    avgPercentage:percentages.length?percentages.reduce((a,b)=>a+b,0)/percentages.length:0,
+    bestPercentage:Math.max(0,...percentages),bestAccuracy:Math.max(0,...accuracies),
+    highAccuracyExamCount,highScoreExamCount,perfectExams,zeroWrongExams,highAttemptExams,fastAccurateExams,cleanRun,
+    maxImprovement:Number(gData?.maxImprovement||0),longestStreak:Number(gData?.longestStreak||0),
+    weeklyOverall:Number(gData?.badgeCounts?.weeklyOverall?.[gData?.nameOf]||0),
+    weeklyClass:Number(gData?.badgeCounts?.weeklyClass?.[gData?.nameOf]||0),
+    monthlyOverall:Number(gData?.badgeCounts?.monthlyOverall?.[gData?.nameOf]||0),
+    monthlyClass:Number(gData?.badgeCounts?.monthlyClass?.[gData?.nameOf]||0),
+    subjectStats,chapterStats,topicStats,topicCoverage,
+    strongSubjects:(subjectStats||[]).filter(x=>x.attempts>=5&&x.accuracy>=80).length,
+    bestSubjectMaster:(subjectStats||[]).some(x=>x.attempts>=5&&x.accuracy>=90),
+    bestChapterMaster:(chapterStats||[]).some(x=>x.attempts>=5&&x.accuracy>=90),
+    bestTopicMaster:(topicStats||[]).some(x=>x.attempts>=5&&x.accuracy>=90)
+  };
 }
-
-async function initAdvancedBadges(){
-  try{
-    const [results,rank,gData,subjectsSnap,chaptersSnap,topicsSnap]=await Promise.all([
-      getApprovedResults(student.studentId),getStudentRank(student.studentId).catch(()=>null),computeGamificationData().catch(()=>({badgeCounts:{}})),getDocs(collection(db,'subjects')),getDocs(collection(db,'chapters')),getDocs(collection(db,'topics'))
+async function initAdvancedBadges() {
+  try {
+    const [results, rank, gData, subjectsSnap, chaptersSnap, topicsSnap] = await Promise.all([
+      getApprovedResults(student.studentId),
+      getStudentRank(student.studentId).catch(()=>null),
+      computeGamificationData().catch(()=>({})),
+      getDocs(collection(db, "subjects")),
+      getDocs(collection(db, "chapters")),
+      getDocs(collection(db, "topics"))
     ]);
-    const subjectMap={},chapterMap={},topicMap={};
-    subjectsSnap.forEach(d=>{const x=d.data();subjectMap[d.id]=x.name_bn||x.name_en||d.id;});
-    chaptersSnap.forEach(d=>{const x=d.data();chapterMap[d.id]=x.name_bn||x.name_en||d.id;});
-    topicsSnap.forEach(d=>{const x=d.data();topicMap[d.id]=x.name_bn||x.name_en||d.id;});
+    const subjectMap={}, chapterMap={}, topicMap={};
+    subjectsSnap.forEach(d=>{const x=d.data();subjectMap[d.id]=x.name_bn||x.name_en||d.id});
+    chaptersSnap.forEach(d=>{const x=d.data();chapterMap[d.id]=x.name_bn||x.name_en||d.id});
+    topicsSnap.forEach(d=>{const x=d.data();topicMap[d.id]=x.name_bn||x.name_en||d.id});
     const subjectStats=computeSubjectStats(results,subjectMap).map(x=>({...x,id:x.subjectId}));
     const chapterStats=computeChapterStats(results,chapterMap).map(x=>({...x,id:x.chapterId}));
     const topicStats=computeTopicStats(results,topicMap).map(x=>({...x,id:x.topicId}));
-    const ctx=buildBadgeContext(results,gData,rank,subjectStats,chapterStats,topicStats);const badgeState=getBadgeState(ctx);renderBadgeCollection(badgeState,ctx);showBadgeUnlocks(badgeState);
-    window.__badgeContext=ctx;window.__badgeState=badgeState;
-  }catch(e){console.warn('Unified badges unavailable',e);}
-}
-
-
-let __seenUnlockedBadgeIds = new Set();
-function showBadgeUnlocks(state){
-  const fresh=state.filter(b=>b.earned&&!__seenUnlockedBadgeIds.has(b.id));
-  if(!__seenUnlockedBadgeIds.size){state.forEach(b=>{if(b.earned)__seenUnlockedBadgeIds.add(b.id);});return;}
-  fresh.slice(0,1).forEach(b=>{__seenUnlockedBadgeIds.add(b.id);const o=document.createElement('div');o.className='badge-modal-overlay badge-unlock-overlay';o.innerHTML=`<div class="badge-modal badge-unlock-card"><div class="badge-kicker">BADGE UNLOCKED</div>${badgeArt(b,false,true)}<p class="badge-modal-rarity">${b.rarity}</p><h3>${b.name}</h3><p class="badge-modal-desc">${b.desc}</p><strong class="earned-text">UNLOCKED</strong><button type="button" class="btn-primary" style="margin-top:16px">Continue</button></div>`;document.body.appendChild(o);o.querySelector('button').onclick=()=>o.remove();setTimeout(()=>{if(o.isConnected)o.remove();},5200);});
+    const ctx=getBadgeContext(results,gData,rank,subjectStats,chapterStats,topicStats);
+    const state=buildBadgeCatalog(ctx).map(b=>({...b,earned:!!b.check(ctx),progress:b.progress?b.progress(ctx):null}));
+    renderBadgeCollection(state);
+    const old=document.getElementById("badgeCollectionAdvancedOld");
+    if(old) old.remove();
+  } catch(e) { console.warn("Advanced badges unavailable",e); }
 }
 
 const shell = document.getElementById("shell");
@@ -521,6 +427,7 @@ async function renderPage() {
     ${renderStudentHeader(student, "profile")}
     
     <div id="identitySection" class="glass-card profile-header mt-4"><div class="spinner" style="margin: 20px auto;"></div></div>
+<div id="badgeCollectionAdvanced"></div>
 
     <!-- Tab Navigation -->
     <div class="tab-nav">
@@ -540,7 +447,6 @@ async function renderPage() {
 
     <div id="tab-overview" class="tab-content active">
       <div id="topperSection"></div>
-      <div id="badgeSection" class="mt-4"><div id="badgeCollectionAdvanced"></div></div>
     </div>
     <div id="tab-stats" class="tab-content">
       <div id="statsSection"></div>
@@ -789,13 +695,15 @@ function openShareChoice(studentData) {
 }
 
 async function buildProfileCardHtml(studentData) {
-  // Use the same unified badge collection in the share card.
-  const rank = await getStudentRank(student.studentId).catch(()=>null);
+  // Fetch Real Rank/Points and Badges
+  const rank = await getStudentRank(student.studentId);
   const totalPoints = rank?.totalPoints || 0;
-  if (!window.__badgeState) await initAdvancedBadges();
-  const sharedBadges = (window.__badgeState || []).filter(b=>b.earned);
-  const totalBadges = sharedBadges.length;
-  const examCount = Number(window.__badgeContext?.examCount || 0);
+  
+  const gData = await computeGamificationData();
+  const counts = gData.badgeCounts[student.studentId] || { monthlyOverall: 0, monthlyClass: 0, weeklyOverall: 0, weeklyClass: 0 };
+  const examCount = gData.examCounts[student.studentId] || 0;
+  const attendanceMilestones = attendanceBadgesEarned(examCount);
+  const totalBadges = (counts.monthlyOverall) + (counts.weeklyOverall) + attendanceMilestones.length;
 
   const photoURL = studentData.photoURL || null;
   const badgeColor = "#4ade80"; 
@@ -819,18 +727,11 @@ async function buildProfileCardHtml(studentData) {
       <div style="display:flex;gap:10px;margin:16px 20px 0;">
         <div style="flex:1;background:rgba(255,255,255,0.07);border-radius:16px;padding:14px;text-align:center;">
           <p style="margin:0;line-height:1.3;font-size:20px;font-weight:800;color:#ffffff;">${totalBadges} টি</p>
-          <p style="margin:4px 0 0;line-height:1.3;font-size:12px;color:#94a3b8;font-weight:600;">ব্যাজ আনলক</p>
+          <p style="margin:4px 0 0;line-height:1.3;font-size:12px;color:#94a3b8;font-weight:600;">ব্যাজ কালেকশন</p>
         </div>
         <div style="flex:1;background:rgba(255,255,255,0.07);border-radius:16px;padding:14px;text-align:center;">
           <p style="margin:0;line-height:1.3;font-size:20px;font-weight:800;color:#ffffff;">${examCount} বার</p>
           <p style="margin:4px 0 0;line-height:1.3;font-size:12px;color:#94a3b8;font-weight:600;">পরীক্ষা দিয়েছে</p>
-        </div>
-      </div>
-
-      <div style="margin:18px 20px 0;text-align:left;">
-        <p style="margin:0 0 10px;font-size:13px;font-weight:900;color:#ffffff;">অর্জিত ব্যাজ</p>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
-          ${sharedBadges.slice(-6).map(b=>`<div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:10px 6px;text-align:center;">${badgeIcon(b).replace("<svg ","<svg style=\"width:24px;height:24px;margin:auto;color:#fff;\" ")}<div style="font-size:9px;font-weight:800;line-height:1.3;margin-top:5px;color:#fff;">${b.name}</div></div>`).join('') || '<div style="grid-column:1/-1;font-size:10px;color:#94a3b8;text-align:center;padding:10px;">এখনো কোনো ব্যাজ আনলক হয়নি।</div>'}
         </div>
       </div>
 
