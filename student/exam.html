@@ -6,11 +6,19 @@
 <title>পরীক্ষা — পরীক্ষা প্রস্তুতি</title>
 <link rel="stylesheet" href="../css/style.css">
 <style>
+  /* ===== Global Text Selection & Right-Click Block ===== */
+  body { 
+    user-select: none; 
+    -webkit-user-select: none; 
+    -webkit-touch-callout: none;
+  }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
-  body { overflow-x: hidden; background: var(--bg); user-select: none; -webkit-user-select: none; } /* Text selection disabled globally */
+
+  /* Prevents space at bottom due to fixed nav */
+  #shell { padding-bottom: 90px; }
 
   /* ===== Card entrance ===== */
-  .glass.card { animation: cardRise 420ms cubic-bezier(.22,.9,.3,1) both; background: rgba(128,128,128,0.03); border: 1px solid rgba(128,128,128,0.12); border-radius: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.02); }
+  .glass.card { animation: cardRise 420ms cubic-bezier(.22,.9,.3,1) both; }
   @keyframes cardRise {
     from { opacity: 0; transform: translateY(14px) scale(.985); }
     to   { opacity: 1; transform: translateY(0) scale(1); }
@@ -24,19 +32,20 @@
     to   { opacity: 1; transform: translateX(0); }
   }
 
-  /* ===== Premium Option Cards ===== */
+  /* ===== Option cards (Original Native Theme) ===== */
   .option-card {
     position: relative; overflow: hidden;
-    display: flex; align-items: center; gap: 14px;
-    width: 100%; min-height: 60px; padding: 14px 18px;
-    border-radius: 16px;
-    border: 1px solid rgba(128,128,128,0.15);
-    background: rgba(128,128,128,0.02);
+    display: flex; align-items: center; gap: 12px;
+    width: 100%; min-height: 56px; padding: 14px 16px;
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--surface-border);
+    background: var(--surface-solid);
     color: var(--text-primary);
+    font-family: var(--font-bn);
     font-size: 0.95rem; font-weight: 600;
-    text-align: left;
-    transition: all 0.2s ease;
-    margin-bottom: 12px;
+    text-align: right;
+    transition: border-color 180ms ease, background 180ms ease, transform 150ms ease, box-shadow 180ms ease;
+    margin-bottom: 10px;
     animation: optRise 320ms cubic-bezier(.22,.9,.3,1) both;
   }
   .option-card:nth-of-type(1) { animation-delay: 20ms; }
@@ -48,122 +57,141 @@
   .option-card:active { transform: scale(0.98); }
   .option-card.selected {
     border-color: var(--color-accent);
-    background: rgba(var(--color-accent-rgb), 0.08);
-    box-shadow: 0 4px 16px rgba(var(--color-accent-rgb), 0.15);
+    background: var(--color-accent-soft);
+    box-shadow: 0 0 0 1px var(--color-accent), 0 6px 18px -8px var(--color-accent);
   }
   
   .option-card.option-flash { animation: optPop 260ms cubic-bezier(.34,1.56,.64,1); }
   .option-card.option-flash::after {
     content: ""; position: absolute; inset: 0; pointer-events: none;
-    background: linear-gradient(100deg, transparent 20%, rgba(var(--color-accent-rgb), 0.3) 45%, var(--color-accent) 50%, rgba(var(--color-accent-rgb), 0.3) 55%, transparent 80%);
+    background: linear-gradient(100deg, transparent 20%, var(--color-accent-soft) 45%, var(--color-accent) 50%, var(--color-accent-soft) 55%, transparent 80%);
     background-size: 250% 100%;
     animation: optionSweep 650ms cubic-bezier(.22,.9,.3,1);
   }
   @keyframes optionSweep { from { background-position: 150% 0; opacity: 0.9; } to { background-position: -50% 0; opacity: 0; } }
-  @keyframes optPop { 0% { transform: scale(1); } 40% { transform: scale(1.03); } 100% { transform: scale(1); } }
+  @keyframes optPop { 0% { transform: scale(1); } 40% { transform: scale(1.04); } 100% { transform: scale(1); } }
   
   .option-letter {
-    flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
-    background: rgba(128,128,128,0.08); display: flex; align-items: center; justify-content: center;
-    font-weight: 800; font-size: 0.9rem; color: var(--text-secondary);
-    transition: all 0.2s cubic-bezier(.34,1.56,.64,1);
+    flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%;
+    background: var(--surface-border); display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.85rem;
+    transition: background 180ms ease, transform 220ms cubic-bezier(.34,1.56,.64,1);
   }
-  .option-card.selected .option-letter { background: var(--color-accent); color: #fff; transform: scale(1.1); box-shadow: 0 4px 10px rgba(var(--color-accent-rgb), 0.3); }
+  .option-card.selected .option-letter { background: var(--color-accent); color: #1a1204; transform: scale(1.08); }
 
   /* ===== Palette grid ===== */
-  .palette-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .palette-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
   .palette-cell {
-    aspect-ratio: 1; border-radius: 12px; display: flex; align-items: center; justify-content: center;
-    font-weight: 800; font-size: 0.9rem; border: 1px solid rgba(128,128,128,0.15);
-    background: rgba(128,128,128,0.03); color: var(--text-secondary);
-    transition: all 0.2s ease;
+    aspect-ratio: 1; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.85rem; border: 1.5px solid var(--surface-border);
+    background: var(--surface-solid); color: var(--text-secondary);
+    transition: transform 140ms ease, box-shadow 180ms ease, background 180ms ease, border-color 180ms ease;
     animation: cellPop 260ms cubic-bezier(.34,1.56,.64,1) both;
   }
   @keyframes cellPop { from { opacity: 0; transform: scale(.8); } to { opacity: 1; transform: scale(1); } }
   .palette-cell:active { transform: scale(0.92); }
-  .palette-cell.answered { background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.4); }
-  .palette-cell.marked { border-color: #f59e0b; box-shadow: inset 0 0 0 1.5px #f59e0b; }
-  .palette-cell.marked.answered { background: rgba(16, 185, 129, 0.15); box-shadow: inset 0 0 0 2px #f59e0b; }
+  .palette-cell.answered { background: var(--color-success); color: #072925; border-color: var(--color-success); }
+  .palette-cell.marked { border-color: #f2a93b; box-shadow: inset 0 0 0 1.5px #f2a93b; }
+  .palette-cell.marked.answered { background: var(--color-success); box-shadow: inset 0 0 0 2px #f2a93b; }
   .palette-cell.current {
-    border-color: var(--color-accent); background: var(--color-accent); color: #fff;
-    box-shadow: 0 4px 12px rgba(var(--color-accent-rgb), 0.4);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-soft);
     animation: cellPop 260ms cubic-bezier(.34,1.56,.64,1) both, currentPulse 1.6s ease-in-out infinite;
   }
-  @keyframes currentPulse { 0%,100% { box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.2); } 50% { box-shadow: 0 0 0 6px transparent; } }
+  @keyframes currentPulse { 0%,100% { box-shadow: 0 0 0 3px var(--color-accent-soft); } 50% { box-shadow: 0 0 0 6px transparent; } }
 
   /* ===== Timer ===== */
   #timerDisplay {
     font-family: var(--font-num); font-variant-numeric: tabular-nums;
-    font-weight: 900; font-size: 0.95rem; letter-spacing: 0.5px; white-space: nowrap;
-    padding: 6px 14px; border-radius: 99px;
-    background: rgba(var(--color-accent-rgb), 0.1); border: 1px solid rgba(var(--color-accent-rgb), 0.2);
-    color: var(--color-accent); transition: all 0.2s ease;
+    font-weight: 800; font-size: 0.95rem; letter-spacing: -0.02em; white-space: nowrap;
+    padding: 5px 12px; border-radius: 999px;
+    background: var(--surface-solid); border: 1px solid var(--surface-border);
+    color: var(--color-accent); transition: color 250ms ease, border-color 250ms ease;
   }
-  #timerDisplay.timer-warning { color: #f59e0b; border-color: rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.1); }
-  #timerDisplay.timer-critical { color: #ef4444; border-color: rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.1); animation: timerPulse 1s infinite; }
+  #timerDisplay.timer-warning { color: #f2a93b; border-color: #f2a93b66; }
+  #timerDisplay.timer-critical { color: var(--color-danger); border-color: var(--color-danger); animation: timerPulse 1s infinite; }
   @keyframes timerPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
 
   /* ===== Animated progress bar ===== */
-  .exam-progress-track { height: 8px; border-radius: 99px; background: rgba(128,128,128,0.1); overflow: hidden; }
+  .exam-progress-track { height: 8px; border-radius: 999px; background: var(--surface-border); box-shadow: inset 0 1px 3px rgba(0,0,0,0.12); overflow: hidden; }
   .exam-progress-fill {
-    position: relative; height: 100%; border-radius: 99px;
-    background: linear-gradient(90deg, var(--color-accent), var(--color-accent-2, #f59e0b));
-    transition: width 420ms cubic-bezier(.22,.9,.3,1); overflow: hidden;
+    position: relative; height: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, var(--color-accent), var(--color-accent-2));
+    box-shadow: 0 0 12px rgba(201,151,63,0.5); transition: width 420ms cubic-bezier(.22,.9,.3,1); overflow: hidden;
   }
   .exam-progress-fill::after {
     content: ""; position: absolute; inset: 0;
-    background: repeating-linear-gradient(115deg, rgba(255,255,255,0.2) 0px, rgba(255,255,255,0.2) 8px, transparent 8px, transparent 18px);
+    background: repeating-linear-gradient(115deg, rgba(255,255,255,0.32) 0px, rgba(255,255,255,0.32) 8px, transparent 8px, transparent 18px);
     background-size: 200% 100%; animation: fillShimmer 1.4s linear infinite;
   }
   @keyframes fillShimmer { from { background-position: 0 0; } to { background-position: -36px 0; } }
+  #progressLabel { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-weight: 700; font-size: 0.82rem; color: var(--text-secondary); }
+  #qCounter .num-part { font-family: var(--font-num); }
 
-  /* ===== Anti-Download Image Shield ===== */
-  .protected-img-wrapper { position: relative; display: table; margin: 16px auto; border-radius: 12px; overflow: hidden; border: 1px solid rgba(128,128,128,0.15); box-shadow: 0 8px 24px rgba(0,0,0,0.05); }
-  .q-figure { max-width: 100%; max-height: 220px; display: block; pointer-events: none; user-select: none; -webkit-user-drag: none; }
-  .img-shield { position: absolute; inset: 0; z-index: 10; cursor: zoom-in; }
-
-  /* ===== Floating Prev/Next Nav (Premium Dock) ===== */
-  .exam-nav-bar {
-    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-    width: 100%; max-width: 650px; z-index: 40;
-    padding: 16px; background: rgba(var(--bg-rgb, 10,14,26), 0.85);
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid rgba(128,128,128,0.1);
-    display: flex; gap: 12px;
-  }
-
-  .btn { padding: 14px 20px; border-radius: 14px; font-weight: 800; font-size: 0.95rem; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px; flex: 1; border: none; cursor: pointer; }
-  .btn-primary { background: var(--color-accent); color: #fff; box-shadow: 0 4px 15px rgba(var(--color-accent-rgb), 0.2); }
-  .btn-secondary { background: rgba(128,128,128,0.1); color: var(--text-primary); border: 1px solid rgba(128,128,128,0.2); }
-  .btn:active:not(:disabled) { transform: scale(0.96); }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  
   .review-toggle {
-    display: inline-flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 700;
-    padding: 8px 16px; border-radius: 999px; border: 1px solid rgba(128,128,128,0.2);
-    background: rgba(128,128,128,0.04); color: var(--text-secondary); margin-top: 16px;
-    transition: all 0.2s ease; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem;
+    padding: 6px 12px; border-radius: 999px; border: 1.5px solid var(--surface-border);
+    background: var(--surface-solid); color: var(--text-secondary); margin-top: 12px;
+    transition: transform 150ms ease, border-color 180ms ease, color 180ms ease, background 180ms ease;
   }
-  .review-toggle.active { border-color: #f59e0b; color: #f59e0b; background: rgba(245, 158, 11, 0.1); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15); }
+  .review-toggle:active { transform: scale(0.96); }
+  .review-toggle.active { border-color: #f2a93b; color: #f2a93b; background: #f2a93b22; }
 
-  /* ===== Sticky Topbar ===== */
+  /* ===== English Lang Toggle ===== */
+  .lang-en-toggle { margin-bottom: 2px; }
+  .lang-en-toggle summary {
+    display: inline-flex; align-items: center; gap: 4px; width: fit-content; list-style: none; cursor: pointer;
+    font-size: 0.72rem; font-weight: 700; color: var(--text-muted);
+    padding: 3px 11px; border-radius: 999px; border: 1px solid var(--surface-border); background: var(--surface-solid);
+  }
+  .lang-en-toggle summary::-webkit-details-marker { display: none; }
+  .lang-en-toggle summary::before { content: "▸"; font-size: 0.6rem; transition: transform 150ms ease; }
+  .lang-en-toggle[open] summary::before { transform: rotate(90deg); }
+  .lang-en-toggle .lang-en { margin-top: 6px; font-size: 0.88rem; color: var(--text-secondary); }
+
+  /* ===== Topbar & Fixed Navbar (Fixed Background colors) ===== */
   .topbar {
     position: sticky; top: 0; z-index: 50;
     margin: calc(var(--space-5) * -1) calc(var(--space-4) * -1) var(--space-4);
-    padding: 16px;
-    background: rgba(var(--bg-rgb, 10,14,26), 0.85);
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(128,128,128,0.1);
+    padding: var(--space-4) var(--space-4) var(--space-3);
+    background: var(--surface-solid); /* Original Theme Background */
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--surface-border);
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  }
+  @media (min-width: 900px) { .topbar { margin: calc(var(--space-7) * -1) calc(var(--space-6) * -1) var(--space-4); padding: var(--space-4) var(--space-6) var(--space-3); } }
+
+  .exam-nav-bar {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 700px; z-index: 40;
+    padding: 12px 16px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    background: var(--surface-solid); /* Original Theme Background */
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--surface-border);
+    display: flex; gap: 12px;
   }
 
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 300; padding: 20px; animation: overlayFade 200ms ease both; }
-  @keyframes overlayFade { from { opacity: 0; } to { opacity: 1; } }
+  .btn { transition: transform 140ms ease, box-shadow 180ms ease, filter 180ms ease; flex: 1; display: flex; justify-content: center; align-items: center; gap: 6px; }
+  .btn:active:not(:disabled) { transform: scale(0.97); }
+  .btn-primary:not(:disabled):hover { filter: brightness(1.06); }
 
-  /* Prevents space at bottom due to fixed nav */
-  #shell { padding-bottom: 100px; }
+  /* ===== Modal & Anti-Download Protected Image ===== */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(10,14,26,0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center; z-index: 300; padding: 20px;
+    animation: overlayFade 200ms ease both;
+  }
+  .modal-overlay .glass.card { animation: modalRise 260ms cubic-bezier(.22,.9,.3,1) both; }
+  @keyframes overlayFade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes modalRise { from { opacity: 0; transform: translateY(16px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+  .protected-img-wrapper { position: relative; display: inline-block; margin-top: 12px; max-width: 100%; }
+  .q-figure { max-width: 100%; max-height: 220px; display: block; border-radius: var(--radius-sm); pointer-events: none; user-select: none; -webkit-user-drag: none; }
+  .img-shield { position: absolute; inset: 0; z-index: 10; cursor: zoom-in; }
+  .img-broken { border: 1.5px dashed var(--color-danger); min-height: 60px; opacity: 0.6; }
 </style>
 </head>
-<body oncontextmenu="return false;"> <!-- Block Global Right Click -->
+<body oncontextmenu="return false;"> <!-- Global Right Click Blocked -->
 <div class="app-shell" id="shell">
   <div class="state-block"><div class="spinner"></div></div>
 </div>
@@ -258,41 +286,29 @@ async function renderIntro() {
 
   shell.innerHTML = `
     <div class="topbar">
-      <a href="../student/dashboard.html" class="icon-btn" style="background:rgba(128,128,128,0.08); border-radius:12px; width:40px; height:40px; display:flex; align-items:center; justify-content:center;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+      <a href="../student/dashboard.html" class="icon-btn" style="border: 1px solid var(--surface-border); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; text-decoration: none;">
+        ${icons.arrowLeft}
       </a>
-      <h2 style="font-size:1.1rem; font-weight:900;">পরীক্ষা শুরুর আগে</h2>
+      <h2 style="font-size:1.05rem;">পরীক্ষা শুরুর আগে</h2>
       <span></span>
     </div>
 
-    <div class="glass card" style="padding:24px;">
-      <p style="font-size:1.2rem; font-weight:900; color:var(--color-accent); line-height:1.3; margin-bottom:8px;">${exam.name}</p>
-      ${exam.description ? `<p class="text-sm text-muted mb-4">${exam.description}</p>` : ""}
-      
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px;">
-        <div style="background:rgba(128,128,128,0.03); border:1px solid rgba(128,128,128,0.1); border-radius:12px; padding:12px; text-align:center;">
-          <p class="text-xs text-muted font-bold">মোট প্রশ্ন</p>
-          <p style="font-size:1.4rem; font-weight:900; color:var(--text-primary); font-family:var(--font-num);">${snapshot.questions.length}</p>
-        </div>
-        <div style="background:rgba(128,128,128,0.03); border:1px solid rgba(128,128,128,0.1); border-radius:12px; padding:12px; text-align:center;">
-          <p class="text-xs text-muted font-bold">সময়কাল</p>
-          <p style="font-size:1.4rem; font-weight:900; color:var(--text-primary); font-family:var(--font-num);">${exam.durationMinutes} মি</p>
-        </div>
+    <div class="glass card">
+      <p class="eyebrow">${exam.name}</p>
+      ${exam.description ? `<p class="text-sm mt-2">${exam.description}</p>` : ""}
+      <div class="grid-2 mt-4">
+        <div><p class="text-xs text-muted">মোট প্রশ্ন</p><p style="font-weight:700;">${snapshot.questions.length}</p></div>
+        <div><p class="text-xs text-muted">মোট নম্বর</p><p style="font-weight:700;">${exam.totalMarks ?? "—"}</p></div>
+        <div><p class="text-xs text-muted">সময়কাল</p><p style="font-weight:700;">${exam.durationMinutes} মিনিট</p></div>
+        <div><p class="text-xs text-muted">তারিখ / সময়</p><p style="font-weight:700;">${dateStr} • ${exam.informationalTime || "—"}</p></div>
       </div>
-      
-      <div style="margin-top:16px; font-size:0.85rem; color:var(--text-secondary); font-weight:600; line-height:1.6;">
-        <p><strong>তারিখ:</strong> ${dateStr} • ${exam.informationalTime || "—"}</p>
-        <p><strong>মোট নম্বর:</strong> ${exam.totalMarks ?? "—"}</p>
-        ${subjNames ? `<p><strong>বিষয়:</strong> ${subjNames}</p>` : ""}
-      </div>
+      ${subjNames ? `<p class="text-xs text-muted mt-3">বিষয়: <span style="color:var(--text-secondary);">${subjNames}</span></p>` : ""}
+      ${chapNames ? `<p class="text-xs text-muted mt-2">অধ্যায়: <span style="color:var(--text-secondary);">${chapNames}</span></p>` : ""}
     </div>
 
-    <div class="glass card" style="padding:20px;">
-      <p style="font-weight:900; font-size:0.95rem; color:var(--text-primary); margin-bottom:12px; display:flex; align-items:center; gap:6px;">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        মনে রাখুন
-      </p>
-      <ul style="font-size:0.8rem; color:var(--text-muted); font-weight:600; line-height:1.8; padding-left:20px;">
+    <div class="glass card mt-4">
+      <p class="text-sm" style="font-weight:600;">মনে রাখুন:</p>
+      <ul class="text-xs text-muted mt-2" style="padding-right:16px;line-height:1.9;">
         <li>শুরু করার মুহূর্ত থেকেই সময় গণনা শুরু হবে।</li>
         <li>সময় শেষ হলে পরীক্ষাটি স্বয়ংক্রিয়ভাবে জমা হয়ে যাবে।</li>
         <li>জমা দেওয়ার পর কোনো উত্তর পরিবর্তন করা যাবে না।</li>
@@ -300,7 +316,7 @@ async function renderIntro() {
       </ul>
     </div>
 
-    <button class="btn btn-primary" id="startBtn" style="width:100%; padding:16px; font-size:1.05rem; margin-top:20px; box-shadow:0 8px 24px rgba(var(--color-accent-rgb),0.25);">পরীক্ষা শুরু করুন</button>
+    <button class="btn btn-primary mt-4" id="startBtn" style="width:100%; padding:14px;">পরীক্ষা শুরু করুন</button>
   `;
 
   document.getElementById("startBtn").addEventListener("click", async () => {
@@ -316,84 +332,69 @@ async function renderIntro() {
 
 function renderExamShell() {
   shell.innerHTML = `
-    <div class="topbar" style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-      <div style="display:flex; align-items:center; gap:10px; min-width:0;">
-        ${student.photoURL ? `<img src="${student.photoURL}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; pointer-events:none; user-select:none; -webkit-user-drag:none;">` : `<div style="width:36px; height:36px; border-radius:50%; background:var(--color-accent); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:900;">${student.name.charAt(0)}</div>`}
-        <span style="font-weight:800; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${student.name}</span>
-      </div>
-      <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
-        <div style="display:flex; flex-direction:column; align-items:flex-end;">
-          <span style="font-size:0.65rem; font-weight:800; color:var(--text-muted); text-transform:uppercase;">বাকি সময়</span>
-          <span id="timerDisplay">--:--</span>
-        </div>
-        <button id="submitBtn" style="background:rgba(239, 68, 68, 0.1); color:#ef4444; border:1px solid rgba(239, 68, 68, 0.2); padding:8px 14px; border-radius:10px; font-weight:800; font-size:0.8rem; cursor:pointer;">জমা দিন</button>
-      </div>
+    <div class="topbar">
+      <span class="flex items-center gap-2" style="min-width:0;overflow:hidden;">
+        ${student.photoURL
+          ? `<img src="${student.photoURL}" alt="" draggable="false" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0; pointer-events:none;">`
+          : `<div class="brand-mark" style="width:32px;height:32px;font-size:0.9rem;flex-shrink:0;">${student.name.charAt(0)}</div>`}
+        <span class="text-sm" style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${student.name}</span>
+      </span>
+      <span class="flex items-center gap-2" style="flex-shrink:0;">
+        <span class="text-xs text-muted" style="white-space:nowrap;">বাকি সময়</span>
+        <span id="timerDisplay">--:--</span>
+        <button class="btn btn-danger btn-sm" id="submitBtn" style="padding:5px 10px;font-size:0.75rem;white-space:nowrap;">জমা দিন</button>
+      </span>
     </div>
 
-    <div class="glass card" style="padding:20px;">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <p style="font-weight:900; font-size:1rem; color:var(--text-primary); font-family:var(--font-num);" id="qCounter">প্রশ্ন ১ / ${snapshot.questions.length}</p>
-        <button id="paletteBtn" style="background:rgba(128,128,128,0.08); border:none; width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-secondary);">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-        </button>
+    <div class="glass card">
+      <div class="flex justify-between items-center">
+        <p class="eyebrow" id="qCounter">প্রশ্ন ১ / ${snapshot.questions.length}</p>
+        <button class="icon-btn" id="paletteBtn">${icons.layers}</button>
       </div>
-      
-      <div class="exam-progress-track mt-3"><div class="exam-progress-fill" id="progressFill" style="width:0%;"></div></div>
-      <p style="font-size:0.75rem; color:var(--text-muted); font-weight:700; margin-top:8px; font-family:var(--font-num);" id="progressLabel"></p>
-      
-      <div id="questionBody" class="mt-4"></div>
+      <div class="exam-progress-track mt-2"><div class="exam-progress-fill" id="progressFill" style="width:0%;"></div></div>
+      <p class="text-xs text-muted mt-1" id="progressLabel"></p>
+      <div id="questionBody" class="mt-3"></div>
     </div>
 
-    <!-- Floating Navigation Dock -->
+    <!-- Floating Navigation Bar -->
     <div class="exam-nav-bar">
-      <button class="btn btn-secondary" id="prevBtn">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
-        পূর্ববর্তী
-      </button>
-      <button class="btn btn-primary" id="nextBtn">
-        পরবর্তী
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
-      </button>
+      <button class="btn btn-secondary" id="prevBtn">${icons.arrowLeft} পূর্ববর্তী</button>
+      <button class="btn btn-primary" id="nextBtn">পরবর্তী ${icons.arrowRight}</button>
     </div>
 
     <!-- Palette Modal -->
     <div id="paletteOverlay" class="modal-overlay hidden">
-      <div class="glass card" style="max-width:400px; width:100%; max-height:85vh; overflow-y:auto; padding:24px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-          <p style="font-weight:900; font-size:1.1rem; color:var(--text-primary);">প্রশ্ন তালিকা</p>
-          <button id="closePaletteBtn" style="background:rgba(239, 68, 68, 0.1); color:#ef4444; border:none; width:36px; height:36px; border-radius:10px; cursor:pointer;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      <div class="glass card" style="max-width:360px;width:100%;max-height:80vh;overflow-y:auto;">
+        <div class="flex justify-between items-center">
+          <p class="eyebrow">প্রশ্ন তালিকা</p>
+          <button class="icon-btn" id="closePaletteBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg>
           </button>
         </div>
-        <div class="palette-grid" id="paletteGrid"></div>
-        
-        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:24px; justify-content:center; font-size:0.75rem; font-weight:700; color:var(--text-muted);">
-          <span style="display:flex; align-items:center; gap:6px;"><div style="width:14px; height:14px; border-radius:4px; background:rgba(16,185,129,0.15); border:1px solid #10b981;"></div> উত্তরিত</span>
-          <span style="display:flex; align-items:center; gap:6px;"><div style="width:14px; height:14px; border-radius:4px; background:rgba(128,128,128,0.05); border:1px solid rgba(128,128,128,0.2);"></div> অনুত্তরিত</span>
-          <span style="display:flex; align-items:center; gap:6px;"><div style="width:14px; height:14px; border-radius:4px; background:rgba(128,128,128,0.05); border:1px solid #f59e0b;"></div> চিহ্নিত</span>
+        <div class="palette-grid mt-3" id="paletteGrid"></div>
+        <div class="flex gap-3 mt-3 text-xs text-muted" style="flex-wrap:wrap;">
+          <span><span class="palette-cell answered" style="display:inline-flex;width:16px;height:16px;vertical-align:middle;"></span> উত্তরিত</span>
+          <span><span class="palette-cell" style="display:inline-flex;width:16px;height:16px;vertical-align:middle;"></span> অনুত্তরিত</span>
+          <span><span class="palette-cell marked" style="display:inline-flex;width:16px;height:16px;vertical-align:middle;"></span> চিহ্নিত</span>
         </div>
       </div>
     </div>
 
     <!-- Submit Warning Modal -->
-    <div id="submitModal" class="modal-overlay hidden">
-      <div class="glass card" style="max-width:380px; padding:24px; text-align:center;">
-        <div style="width:64px; height:64px; border-radius:50%; background:rgba(239, 68, 68, 0.1); color:#ef4444; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        </div>
-        <p style="font-weight:900; font-size:1.1rem; color:var(--text-primary); margin-bottom:8px;">নিশ্চিত করুন</p>
-        <p style="font-size:0.85rem; color:var(--text-muted); font-weight:600; line-height:1.5;">পরীক্ষা জমা দেওয়ার পরে কোনো উত্তর পরিবর্তন করা যাবে না।</p>
-        <div style="display:flex; gap:10px; margin-top:24px;">
+<div id="submitModal" class="modal-overlay hidden">
+      <div class="glass card" style="max-width:360px;">
+        <p style="font-weight:700;">পরীক্ষা জমা দেওয়ার পরে কোনো উত্তর পরিবর্তন করা যাবে না। আপনি কি নিশ্চিত?</p>
+        <div class="flex gap-2 mt-4">
           <button class="btn btn-secondary" id="cancelSubmitBtn">ফিরে যান</button>
-          <button class="btn btn-primary" id="confirmSubmitBtn" style="background:#ef4444; box-shadow:0 4px 15px rgba(239,68,68,0.2);">চূড়ান্ত জমা</button>
+          <button class="btn btn-danger" id="confirmSubmitBtn">চূড়ান্তভাবে জমা দিন</button>
         </div>
       </div>
     </div>
 
-    <!-- Protected Fullscreen Image Preview -->
-    <div id="figurePreviewModal" class="hidden" style="position:fixed;inset:0;background:rgba(10,14,26,0.95);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;cursor:zoom-out;">
+    <!-- Protected Figure Preview Modal -->
+    <div id="figurePreviewModal" class="hidden" style="position:fixed;inset:0;background:rgba(10,14,26,0.9);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;z-index:400;padding:20px;cursor:zoom-out;">
       <div style="position:relative; display:inline-block; pointer-events:none;">
-        <img id="figurePreviewImg" style="max-width:100%;max-height:85vh;border-radius:16px; pointer-events:none; user-select:none; -webkit-user-drag:none;" draggable="false" oncontextmenu="return false;">
+        <img id="figurePreviewImg" style="max-width:100%;max-height:85vh;border-radius:var(--radius-sm);pointer-events:none;user-select:none;-webkit-user-drag:none;">
       </div>
     </div>
   `;
@@ -418,12 +419,12 @@ function renderExamShell() {
 }
 
 function leaveGuard(e) { if (!examInProgress) return; e.preventDefault(); e.returnValue = ""; }
-function handleConnChange() { showToast(navigator.onLine ? "অনলাইনে সংযুক্ত হয়েছে।" : "অফলাইন — উত্তর ডিভাইসে সেভ হচ্ছে।", navigator.onLine ? "success" : "error"); }
+function handleConnChange() { showToast(navigator.onLine ? "অনলাইনে সংযুক্ত হয়েছে।" : "অফলাইন — উত্তর ডিভাইসে সংরক্ষিত হচ্ছে।", navigator.onLine ? "success" : "error"); }
 
 function renderQuestion() {
   const idx = attemptState.currentIndex;
   const q = snapshot.questions[idx];
-  document.getElementById("qCounter").textContent = `প্রশ্ন ${idx + 1} / ${snapshot.questions.length}`;
+  document.getElementById("qCounter").innerHTML = `প্রশ্ন <span class="num-part">${idx + 1}</span> / <span class="num-part">${snapshot.questions.length}</span>`;
   document.getElementById("prevBtn").disabled = idx === 0;
   document.getElementById("nextBtn").disabled = idx === snapshot.questions.length - 1;
   
@@ -433,30 +434,29 @@ function renderQuestion() {
   
   const selected = attemptState.answers[q.questionId];
   const isMarked = !!attemptState.markedForReview[q.questionId];
-  
   const body = document.getElementById("questionBody");
+  
   body.classList.remove("q-enter");
   void body.offsetWidth; 
   body.classList.add("q-enter");
-  
-  // Protected Image Renderer
+
   const imageHtml = q.imageUrl ? `
     <div class="protected-img-wrapper">
-      <img src="${q.imageUrl}" class="q-figure" draggable="false" oncontextmenu="return false;" onerror="this.src=''; this.style.display='none';">
-      <div class="img-shield" id="imgShieldBtn"></div>
+      <img src="${q.imageUrl}" class="q-figure" onerror="this.classList.add('img-broken');this.alt='ছবি লোড করা যায়নি';">
+      <div class="img-shield" data-url="${q.imageUrl}"></div>
     </div>
   ` : "";
 
   body.innerHTML = `
-    <details class="lang-en-toggle" style="margin-bottom:8px;"><summary>English</summary><p style="margin-top:6px; font-size:0.85rem; color:var(--text-secondary);">${q.question_en}</p></details>
-    <p style="font-weight:800; font-size:1.1rem; color:var(--text-primary); line-height:1.5;">${q.question_bn}</p>
+    <details class="lang-en-toggle"><summary>English</summary><p class="lang-en">${q.question_en}</p></details>
+    <p class="mt-2" style="font-weight:700;font-size:1.02rem;line-height:1.5;">${q.question_bn}</p>
     ${imageHtml}
     
-    <div style="margin-top:24px;">
+    <div class="mt-4">
       ${["A", "B", "C", "D"].map(letter => `
         <button class="option-card ${selected === letter ? "selected" : ""}" data-letter="${letter}">
           <span class="option-letter">${letter}</span>
-          <span style="flex:1; line-height:1.4;">${q.options_bn[letter]}</span>
+          <span style="flex:1;">${q.options_bn[letter]}</span>
         </button>
       `).join("")}
     </div>
@@ -465,24 +465,27 @@ function renderQuestion() {
       ${isMarked ? "★ পর্যালোচনার জন্য চিহ্নিত" : "☆ পর্যালোচনার জন্য চিহ্নিত করুন"}
     </button>
   `;
+  
   body.querySelectorAll(".option-card").forEach(btn => {
     btn.addEventListener("click", () => selectAnswer(q.questionId, btn.dataset.letter));
   });
   document.getElementById("markReviewBtn").addEventListener("click", () => toggleMarkForReview(q.questionId));
   
-  const shieldBtn = body.querySelector("#imgShieldBtn");
-  if (shieldBtn) shieldBtn.addEventListener("click", () => openFigurePreview(q.imageUrl));
+  const shieldBtn = body.querySelector(".img-shield");
+  if (shieldBtn) shieldBtn.addEventListener("click", () => openFigurePreview(shieldBtn.dataset.url));
 }
 
 function openFigurePreview(url) {
   const modal = document.getElementById("figurePreviewModal");
   const modalImg = document.getElementById("figurePreviewImg");
   modalImg.src = url;
+  modal.style.display = "flex";
   modal.classList.remove("hidden");
 }
 function closeFigurePreview() {
   const modal = document.getElementById("figurePreviewModal");
   modal.classList.add("hidden");
+  modal.style.display = "none";
   document.getElementById("figurePreviewImg").src = "";
 }
 
@@ -585,7 +588,6 @@ function tick() {
       else { showToast(`আর মাত্র ${m} মিনিট বাকি আছে।`, "error"); speak(student.name, `আর মাত্র ${MIN_WORDS[m]} মিনিট বাকি আছে।`); }
     }
   });
-
   if (!motivationGiven && attemptState.startedAtMillis && totalMinutes > 0) {
     const elapsedMinutes = (Date.now() - attemptState.startedAtMillis) / 60000;
     if (elapsedMinutes >= totalMinutes / 2) {
@@ -622,7 +624,7 @@ async function doSubmit(isAutoSubmit) {
 
   const modal = document.getElementById("submitModal");
   if (modal) modal.classList.add("hidden");
-  shell.innerHTML = `<div class="state-block"><div class="spinner"></div><p class="text-sm text-muted mt-3" style="font-weight:800;">${isAutoSubmit ? "সময় শেষ — পরীক্ষা জমা দেওয়া হচ্ছে..." : "জমা দেওয়া হচ্ছে..."}</p></div>`;
+  shell.innerHTML = `<div class="state-block"><div class="spinner"></div><p class="text-sm text-muted mt-3">${isAutoSubmit ? "সময় শেষ — পরীক্ষা জমা দেওয়া হচ্ছে..." : "জমা দেওয়া হচ্ছে..."}</p></div>`;
 
   try {
     const result = await submitAttempt({
