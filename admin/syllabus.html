@@ -22,54 +22,64 @@
   .btn-glass:active { transform: scale(0.96); }
   .btn-primary { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }
 
-  /* ===== Page Header ===== */
-  .page-header { margin-bottom: 24px; }
+  /* ===== Page Header & Search ===== */
+  .page-header { margin-bottom: 16px; }
   .page-header h1 { font-size: 1.4rem; font-weight: 950; color: var(--text-primary); margin: 0 0 4px 0; letter-spacing: -0.5px; }
   .page-header p { font-size: 0.85rem; color: var(--text-muted); margin: 0; font-weight: 600; }
 
-  /* ===== Batch Filters ===== */
-  .batch-filters { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 12px; scrollbar-width: none; margin-bottom: 12px; }
-  .batch-filters::-webkit-scrollbar { display: none; }
-  .chip {
-    padding: 8px 16px; border-radius: 99px; font-size: 0.8rem; font-weight: 800;
-    background: rgba(128, 128, 128, 0.08); border: 1px solid rgba(128, 128, 128, 0.15);
-    color: var(--text-secondary); cursor: pointer; white-space: nowrap; transition: all 0.2s ease;
+  .search-box {
+    display: flex; align-items: center; gap: 10px; background: var(--surface);
+    border: 1px solid var(--surface-border); border-radius: 14px; padding: 10px 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.02); margin-bottom: 20px; transition: border-color 0.2s;
   }
-  .chip.active { background: var(--color-accent); border-color: var(--color-accent); color: #fff; box-shadow: 0 4px 12px rgba(var(--color-accent-rgb), 0.25); }
-
+  .search-box:focus-within { border-color: var(--color-accent); box-shadow: 0 4px 12px rgba(var(--color-accent-rgb),0.1); }
+  .search-box input { flex: 1; border: none; background: transparent; outline: none; font-family: inherit; font-size: 0.9rem; font-weight: 600; color: var(--text-primary); }
+  
   /* ===== Tree View Styles ===== */
   .glass-card {
-    background: rgba(128, 128, 128, 0.05); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(128, 128, 128, 0.15); border-radius: 16px; padding: 16px; margin-bottom: 12px;
+    background: rgba(128, 128, 128, 0.04); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 16px; padding: 16px; margin-bottom: 14px;
   }
-  .batch-title { display: flex; align-items: center; gap: 10px; font-size: 1.05rem; font-weight: 900; color: var(--color-accent); margin-bottom: 12px; }
+  .batch-title { display: flex; align-items: center; justify-content: space-between; font-size: 1.05rem; font-weight: 900; color: var(--color-accent); margin-bottom: 12px; }
   
-  .chapter-box { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
-  .chapter-head { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-  .chapter-name { font-size: 0.95rem; font-weight: 800; color: var(--text-primary); }
-  .chapter-meta { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+  .subject-box { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 12px; padding: 12px; margin-bottom: 10px; transition: transform 0.2s; }
+  .subject-head { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+  .subject-name { font-size: 0.95rem; font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 6px; }
+  .subject-meta { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-top: 3px; }
   
   .topic-list { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--surface-border); display: none; }
-  .topic-list.open { display: block; }
-  .topic-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: rgba(128,128,128,0.05); border-radius: 8px; margin-bottom: 6px; }
+  .topic-list.open { display: block; animation: slideDown 0.2s ease-out; }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+  
+  .topic-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: rgba(128,128,128,0.04); border-radius: 8px; margin-bottom: 6px; }
   .topic-name { font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); }
 
   /* ===== Action Buttons ===== */
-  .actions { display: flex; gap: 6px; }
+  .actions { display: flex; gap: 4px; }
   .icon-btn { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(128,128,128,0.08); color: var(--text-secondary); border: none; cursor: pointer; transition: all 0.2s; }
   .icon-btn:hover { background: rgba(128,128,128,0.15); color: var(--text-primary); }
-  .inactive-badge { background: rgba(239, 68, 68, 0.1); color: #ef4444; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-left: 6px; }
+  .icon-btn.delete:hover { background: rgba(239,68,68,0.1); color: #ef4444; }
+  .inactive-badge { background: rgba(239, 68, 68, 0.1); color: #ef4444; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 800; }
 
-  /* ===== Modals ===== */
+  /* ===== Wizard Modal Styles ===== */
   .modal-overlay { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
-  .custom-modal { width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; padding: 24px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 20px; box-shadow: 0 12px 40px rgba(0,0,0,0.1); }
-  .modal-title { font-size: 1.15rem; font-weight: 900; color: var(--text-primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .custom-modal { width: 100%; max-width: 440px; padding: 24px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 20px; box-shadow: 0 12px 40px rgba(0,0,0,0.1); }
+  .modal-title { font-size: 1.15rem; font-weight: 900; color: var(--text-primary); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+  
+  .wiz-step { display: none; animation: fadeIn 0.3s ease; }
+  .wiz-step.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
   
   .field { margin-bottom: 16px; }
-  .field label { display: block; font-size: 0.85rem; font-weight: 800; color: var(--text-secondary); margin-bottom: 8px; }
-  .input-glass { width: 100%; box-sizing: border-box; padding: 12px 14px; background: rgba(128, 128, 128, 0.05); border: 1px solid var(--surface-border); border-radius: 12px; color: var(--text-primary); font-family: inherit; font-size: 0.9rem; font-weight: 600; outline: none; }
+  .field label { display: block; font-size: 0.9rem; font-weight: 800; color: var(--text-secondary); margin-bottom: 8px; }
+  .input-glass { width: 100%; box-sizing: border-box; padding: 14px; background: rgba(128, 128, 128, 0.05); border: 1px solid var(--surface-border); border-radius: 12px; color: var(--text-primary); font-family: inherit; font-size: 0.95rem; font-weight: 600; outline: none; }
   .input-glass:focus { border-color: var(--color-accent); }
   select.input-glass { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em; }
+  
+  .wiz-footer { display: flex; gap: 8px; margin-top: 24px; }
+  .step-indicator { display: flex; gap: 4px; justify-content: center; margin-bottom: 16px; }
+  .step-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(128,128,128,0.2); transition: 0.3s; }
+  .step-dot.active { background: var(--color-accent); width: 16px; border-radius: 4px; }
 </style>
 </head>
 <body>
@@ -77,61 +87,67 @@
   <div class="state-block"><div class="spinner"></div></div>
 </div>
 
-<!-- Add Chapter/Topic Wizard -->
-<div id="addWizardModal" class="modal-overlay" style="display:none;">
+<!-- Step-by-Step Wizard Modal -->
+<div id="wizardModal" class="modal-overlay" style="display:none;">
   <div class="custom-modal">
     <div class="modal-title">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-      নতুন অধ্যায় যোগ করুন
+      নতুন সিলেবাস যোগ করুন
     </div>
     
-    <div class="field">
-      <label>কোন ব্যাচের জন্য?</label>
-      <select id="wzBatch" class="input-glass">
-        <option value="" disabled selected>ব্যাচ বেছে নিন...</option>
-        <option value="Batch 6">Batch 6</option>
-        <option value="Batch 7">Batch 7</option>
-        <option value="Batch 8">Batch 8</option>
-        <option value="Batch 9">Batch 9</option>
-        <option value="Batch 10">Batch 10</option>
-        <option value="Batch 11">Batch 11</option>
-        <option value="Batch 12">Batch 12</option>
-        <option value="Other">অন্যান্য</option>
-      </select>
+    <div class="step-indicator">
+      <div class="step-dot active" id="dot1"></div>
+      <div class="step-dot" id="dot2"></div>
+      <div class="step-dot" id="dot3"></div>
     </div>
 
-    <div class="field">
-      <label>অধ্যায়ের নাম</label>
-      <input type="text" id="wzChapter" class="input-glass" placeholder="যেমন: জীবন বিজ্ঞান - কোষ">
+    <!-- Step 1: Batch -->
+    <div id="step1" class="wiz-step active">
+      <div class="field">
+        <label>১. ব্যাচ নির্বাচন করুন</label>
+        <select id="wzBatch" class="input-glass">
+          <option value="" disabled selected>ব্যাচ বেছে নিন...</option>
+          <option value="Batch 6">Batch 6</option>
+          <option value="Batch 7">Batch 7</option>
+          <option value="Batch 8">Batch 8</option>
+          <option value="Batch 9">Batch 9</option>
+          <option value="Batch 10">Batch 10</option>
+          <option value="Batch 11">Batch 11</option>
+          <option value="Batch 12">Batch 12</option>
+          <option value="Other">অন্যান্য</option>
+        </select>
+      </div>
+      <div class="wiz-footer">
+        <button class="btn-glass close-wiz" style="flex:1;">বাতিল</button>
+        <button class="btn-glass btn-primary" onclick="nextStep(2)" style="flex:1;">পরবর্তী</button>
+      </div>
     </div>
 
-    <div class="field">
-      <label>টপিক (ঐচ্ছিক)</label>
-      <p class="text-xs text-muted mb-2" style="line-height:1.4;">নিচে এক লাইনে একটি করে টপিকের নাম লিখুন। খালি রাখলে অধ্যায়ের নামেই স্বয়ংক্রিয়ভাবে টপিক তৈরি হবে।</p>
-      <textarea id="wzTopics" class="input-glass" rows="4" placeholder="যেমন:&#10;উদ্ভিদ কোষ&#10;প্রাণী কোষ"></textarea>
+    <!-- Step 2: Subject -->
+    <div id="step2" class="wiz-step">
+      <div class="field">
+        <label>২. বিষয়ের নাম</label>
+        <input type="text" id="wzSubject" class="input-glass" placeholder="যেমন: জীবন বিজ্ঞান, ভৌতবিজ্ঞান...">
+      </div>
+      <div class="wiz-footer">
+        <button class="btn-glass" onclick="nextStep(1)" style="flex:1;">পেছনে</button>
+        <button class="btn-glass btn-primary" onclick="nextStep(3)" style="flex:1;">পরবর্তী</button>
+      </div>
     </div>
 
-    <div class="flex gap-2 mt-4">
-      <button class="btn-glass" id="closeWizardBtn" style="flex:1;">বাতিল</button>
-      <button class="btn-glass btn-primary" id="saveWizardBtn" style="flex:1;">তৈরি করুন</button>
+    <!-- Step 3: Topics -->
+    <div id="step3" class="wiz-step">
+      <div class="field">
+        <label>৩. টপিকসমূহ (ঐচ্ছিক)</label>
+        <p class="text-xs text-muted mb-2" style="line-height:1.4;">নিচে এক লাইনে একটি করে টপিক লিখুন। খালি রাখলে বিষয়ের নামেই স্বয়ংক্রিয়ভাবে টপিক তৈরি হবে।</p>
+        <textarea id="wzTopics" class="input-glass" rows="4" placeholder="যেমন:&#10;উদ্ভিদ কোষ&#10;প্রাণী কোষ"></textarea>
+      </div>
+      <div class="wiz-footer">
+        <button class="btn-glass" onclick="nextStep(2)" style="flex:1;">পেছনে</button>
+        <button class="btn-glass btn-primary" id="saveWizardBtn" style="flex:1;">তৈরি করুন</button>
+      </div>
     </div>
-  </div>
-</div>
 
-<!-- Guide Modal -->
-<div id="guideModal" class="modal-overlay" style="display:none;">
-  <div class="custom-modal">
-    <div class="modal-title">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-      কীভাবে সিলেবাস বানাবেন?
-    </div>
-    <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.6; margin-bottom:20px;">
-      <p><strong>১. ব্যাচ:</strong> প্রতিটি অধ্যায় একটি নির্দিষ্ট ব্যাচের অধীনে থাকবে। এতে করে ওই ব্যাচের স্টুডেন্টরাই শুধু তাদের পরীক্ষা দেখতে পাবে।</p>
-      <p class="mt-2"><strong>২. অধ্যায়:</strong> 'নতুন অধ্যায়' বাটনে ক্লিক করে ব্যাচ এবং অধ্যায়ের নাম লিখুন (যেমন: ইতিহাস - মুঘল সাম্রাজ্য)।</p>
-      <p class="mt-2"><strong>৩. টপিক:</strong> বড় অধ্যায়কে ছোট ছোট টপিকে ভাগ করতে পারেন। যদি ভাগ করতে না চান, তবে টপিকের ঘর খালি রাখুন। সিস্টেম নিজে থেকেই অধ্যায়ের নামে একটি টপিক বানিয়ে নেবে।</p>
-      <p class="mt-2" style="color:#ef4444;"><strong>সতর্কতা:</strong> কোনো অধ্যায় বা টপিক বন্ধ (Inactive) করে রাখলে তা পরীক্ষায় দেখা যাবে না।</p>
-    </div>
-    <button class="btn-glass btn-primary" id="closeGuideBtn" style="width:100%;">বুঝতে পেরেছি</button>
   </div>
 </div>
 
@@ -139,15 +155,34 @@
 import { initTheme, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
 import {
-  getFullSyllabusTree, addSubject, updateChapter, setChapterActive,
-  addChapter, updateTopic, setTopicActive, addTopic
+  getFullSyllabusTree, addSubject, updateSubject, setSubjectActive,
+  addChapter, updateChapter, setChapterActive,
+  addTopic, updateTopic, setTopicActive
 } from "../js/utils/syllabus-utils.js";
+import { db } from "../js/firebase/firebase-config.js";
+import { doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 initTheme();
 const shell = document.getElementById("shell");
 let tree = [];
-let activeBatchFilter = "all";
-let openChapters = new Set(); // To keep track of opened accordion items
+let searchTerm = "";
+let openSubjects = new Set(); 
+
+// Global function to manage wizard steps
+window.nextStep = function(step) {
+  if (step === 2) {
+    if(!document.getElementById("wzBatch").value) { showToast("দয়া করে ব্যাচ নির্বাচন করুন", "error"); return; }
+  }
+  if (step === 3) {
+    if(!document.getElementById("wzSubject").value.trim()) { showToast("বিষয়ের নাম লিখতে হবে", "error"); return; }
+  }
+  document.querySelectorAll('.wiz-step').forEach(el => el.classList.remove('active'));
+  document.getElementById(`step${step}`).classList.add('active');
+  
+  document.querySelectorAll('.step-dot').forEach((el, idx) => {
+    if(idx < step) el.classList.add('active'); else el.classList.remove('active');
+  });
+};
 
 requireAdmin(() => {
   shell.innerHTML = `
@@ -164,36 +199,44 @@ requireAdmin(() => {
       </div>
     </div>
 
-    <!-- Header & Main Button -->
+    <!-- Header & Button -->
     <div class="page-header">
-      <h1>সিলেবাস ও ব্যাচ</h1>
-      <p>পরীক্ষার অধ্যায় এবং টপিক তৈরি করুন</p>
+      <h1>সিলেবাস ব্যবস্থাপনা</h1>
+      <p>ব্যাচ, বিষয় এবং টপিক তৈরি ও সম্পাদনা</p>
     </div>
+    
     <button class="btn-glass btn-primary" id="openWizardBtn" style="width:100%; padding:14px; font-size:1rem; margin-bottom:20px;">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      নতুন অধ্যায় যোগ করুন
+      নতুন সিলেবাস যোগ করুন
     </button>
 
-    <!-- Batch Filters -->
-    <div class="batch-filters" id="batchFilters"></div>
+    <!-- Search Box -->
+    <div class="search-box">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="ব্যাচ, বিষয় বা টপিক খুঁজুন...">
+    </div>
 
     <!-- Tree View -->
     <div id="syllabusTree"></div>
   `;
 
   document.getElementById("openWizardBtn").addEventListener("click", () => {
-    document.getElementById("addWizardModal").style.display = "flex";
+    window.nextStep(1);
+    document.getElementById("wzBatch").value = "";
+    document.getElementById("wzSubject").value = "";
+    document.getElementById("wzTopics").value = "";
+    document.getElementById("wizardModal").style.display = "flex";
   });
-  document.getElementById("closeWizardBtn").addEventListener("click", () => {
-    document.getElementById("addWizardModal").style.display = "none";
+  
+  document.querySelectorAll(".close-wiz").forEach(btn => {
+    btn.addEventListener("click", () => document.getElementById("wizardModal").style.display = "none");
   });
-  document.getElementById("saveWizardBtn").addEventListener("click", handleCreateChapter);
+  
+  document.getElementById("saveWizardBtn").addEventListener("click", handleCreateWizard);
 
-  document.getElementById("guideBtn").addEventListener("click", () => {
-    document.getElementById("guideModal").style.display = "flex";
-  });
-  document.getElementById("closeGuideBtn").addEventListener("click", () => {
-    document.getElementById("guideModal").style.display = "none";
+  document.getElementById("searchInput").addEventListener("input", (e) => {
+    searchTerm = e.target.value.trim().toLowerCase();
+    renderTree();
   });
 
   loadTree();
@@ -210,70 +253,70 @@ async function loadTree() {
 }
 
 function renderTree() {
-  const filterEl = document.getElementById("batchFilters");
   const treeEl = document.getElementById("syllabusTree");
 
-  // Extract unique batches (Subjects in DB represent Batches in this logic)
-  const batches = [...new Set(tree.map(s => s.name_bn))].sort();
-
-  // Render Filters
-  filterEl.innerHTML = `
-    <div class="chip ${activeBatchFilter === "all" ? "active" : ""}" data-batch="all">সব ব্যাচ</div>
-    ${batches.map(b => `<div class="chip ${activeBatchFilter === b ? "active" : ""}" data-batch="${b}">${b}</div>`).join("")}
-  `;
-
-  filterEl.querySelectorAll(".chip").forEach(chip => {
-    chip.addEventListener("click", () => {
-      activeBatchFilter = chip.dataset.batch;
-      renderTree();
-    });
-  });
-
-  // Render Tree
-  let filteredTree = tree;
-  if (activeBatchFilter !== "all") {
-    filteredTree = tree.filter(s => s.name_bn === activeBatchFilter);
-  }
+  // Filter Logic
+  let filteredTree = tree.map(batch => {
+    const bMatch = batch.name_bn.toLowerCase().includes(searchTerm);
+    const subjects = batch.chapters.map(sub => {
+      const sMatch = sub.name_bn.toLowerCase().includes(searchTerm);
+      const topics = sub.topics.filter(t => t.name_bn.toLowerCase().includes(searchTerm) || sMatch || bMatch);
+      if (topics.length > 0 || sMatch || bMatch) return { ...sub, topics };
+      return null;
+    }).filter(Boolean);
+    
+    if (subjects.length > 0 || bMatch) return { ...batch, chapters: subjects };
+    return null;
+  }).filter(Boolean);
 
   if (filteredTree.length === 0) {
-    treeEl.innerHTML = `<div class="glass-card" style="text-align:center; padding:30px 10px; color:var(--text-muted); font-weight:700;">এখনো কোনো সিলেবাস যোগ করা হয়নি।</div>`;
+    treeEl.innerHTML = `<div class="glass-card" style="text-align:center; padding:30px 10px; color:var(--text-muted); font-weight:700;">কোনো ডেটা পাওয়া যায়নি।</div>`;
     return;
   }
 
+  // NOTE: In DB: Subject = Batch, Chapter = Subject, Topic = Topic
   treeEl.innerHTML = filteredTree.map(batch => `
     <div class="glass-card">
       <div class="batch-title">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-        ${batch.name_bn}
+        <div style="display:flex; align-items:center; gap:8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+          ${batch.name_bn} ${batch.isActive === false ? `<span class="inactive-badge">বন্ধ</span>` : ""}
+        </div>
+        <div class="actions">
+          <button class="icon-btn toggle-batch" data-id="${batch.id}" style="${batch.isActive === false ? 'color:#ef4444;' : ''}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="${batch.isActive !== false ? '16' : '8'}" cy="12" r="3"/></svg></button>
+          <button class="icon-btn delete delete-batch" data-id="${batch.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+        </div>
       </div>
 
-      ${batch.chapters.length === 0 ? `<div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">কোনো অধ্যায় নেই।</div>` : ""}
+      ${batch.chapters.length === 0 ? `<div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">কোনো বিষয় নেই।</div>` : ""}
 
-      ${batch.chapters.map(chapter => {
-        const isOpen = openChapters.has(chapter.id);
+      ${batch.chapters.map(subject => {
+        const isOpen = openSubjects.has(subject.id) || searchTerm !== "";
         return `
-        <div class="chapter-box">
-          <div class="chapter-head" data-id="${chapter.id}">
+        <div class="subject-box">
+          <div class="subject-head" data-id="${subject.id}">
             <div>
-              <div class="chapter-name">${chapter.name_bn} ${chapter.isActive ? "" : `<span class="inactive-badge">বন্ধ</span>`}</div>
-              <div class="chapter-meta">${chapter.topics.length} টি টপিক</div>
+              <div class="subject-name">${subject.name_bn} ${subject.isActive === false ? `<span class="inactive-badge">বন্ধ</span>` : ""}</div>
+              <div class="subject-meta">${subject.topics.length} টি টপিক</div>
             </div>
             <div class="actions" onclick="event.stopPropagation()">
-              <button class="icon-btn edit-chapter" data-id="${chapter.id}" title="সম্পাদনা"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-              <button class="icon-btn toggle-chapter" data-id="${chapter.id}" style="${chapter.isActive ? '' : 'color:#ef4444;'}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="${chapter.isActive ? '16' : '8'}" cy="12" r="3"/></svg></button>
+              <button class="icon-btn edit-subject" data-id="${subject.id}" title="সম্পাদনা"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+              <button class="icon-btn toggle-subject" data-id="${subject.id}" style="${subject.isActive === false ? 'color:#ef4444;' : ''}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="${subject.isActive !== false ? '16' : '8'}" cy="12" r="3"/></svg></button>
+              <button class="icon-btn delete delete-subject" data-id="${subject.id}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
               <div class="icon-btn" style="background:transparent; pointer-events:none;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(${isOpen ? '180deg' : '0deg'}); transition: transform 0.3s;"><path d="M6 9l6 6 6-6"/></svg>
               </div>
             </div>
           </div>
 
-          <div class="topic-list ${isOpen ? "open" : ""}" id="topics-${chapter.id}">
-            ${chapter.topics.map(topic => `
+          <div class="topic-list ${isOpen ? "open" : ""}">
+            ${subject.topics.map(topic => `
               <div class="topic-item">
-                <div class="topic-name">${topic.name_bn} ${topic.isActive ? "" : `<span class="inactive-badge">বন্ধ</span>`}</div>
+                <div class="topic-name">${topic.name_bn} ${topic.isActive === false ? `<span class="inactive-badge">বন্ধ</span>` : ""}</div>
                 <div class="actions">
-                  <button class="icon-btn edit-topic" data-id="${topic.id}" style="width:28px;height:28px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-                  <button class="icon-btn toggle-topic" data-id="${topic.id}" style="width:28px;height:28px; ${topic.isActive ? '' : 'color:#ef4444;'}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="${topic.isActive ? '16' : '8'}" cy="12" r="3"/></svg></button>
+                  <button class="icon-btn edit-topic" data-id="${topic.id}" style="width:26px;height:26px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                  <button class="icon-btn toggle-topic" data-id="${topic.id}" style="width:26px;height:26px; ${topic.isActive === false ? 'color:#ef4444;' : ''}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="${topic.isActive !== false ? '16' : '8'}" cy="12" r="3"/></svg></button>
+                  <button class="icon-btn delete delete-topic" data-id="${topic.id}" style="width:26px;height:26px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
                 </div>
               </div>
             `).join("")}
@@ -284,119 +327,113 @@ function renderTree() {
     </div>
   `).join("");
 
-  attachEvents();
+attachEvents();
 }
 
 function attachEvents() {
-  // Accordion Toggle
-  document.querySelectorAll(".chapter-head").forEach(head => {
+  // Accordion
+  document.querySelectorAll(".subject-head").forEach(head => {
     head.addEventListener("click", () => {
       const id = head.dataset.id;
-      if (openChapters.has(id)) openChapters.delete(id);
-      else openChapters.add(id);
+      if (openSubjects.has(id)) openSubjects.delete(id);
+      else openSubjects.add(id);
       renderTree();
     });
   });
 
-  // Edit Chapter
-  document.querySelectorAll(".edit-chapter").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const id = btn.dataset.id;
-      const chapter = findChapter(id);
-      const name = prompt("অধ্যায়ের নতুন নাম:", chapter.name_bn);
-      if (name && name.trim()) {
-        try { await updateChapter(id, { name_bn: name.trim(), name_en: name.trim() }); showToast("আপডেট হয়েছে!", "success"); loadTree(); }
-        catch (err) { showToast(friendlyError(err), "error"); }
-      }
-    });
-  });
+  // Batch Delete & Toggle
+  document.querySelectorAll(".delete-batch").forEach(btn => btn.addEventListener("click", async () => {
+    if(confirm("সতর্কতা: এই ব্যাচটি মুছলে এর ভেতরের সব বিষয় ও টপিক মুছে যাবে! নিশ্চিত?")) {
+      try { await deleteDoc(doc(db, "subjects", btn.dataset.id)); showToast("মুছে ফেলা হয়েছে", "success"); loadTree(); } catch (err) { showToast(friendlyError(err), "error"); }
+    }
+  }));
+  document.querySelectorAll(".toggle-batch").forEach(btn => btn.addEventListener("click", async () => {
+    const batch = findBatch(btn.dataset.id);
+    if(confirm(`এই ব্যাচটি ${batch.isActive !== false ? "বন্ধ" : "চালু"} করবেন?`)) {
+      try { await setSubjectActive(btn.dataset.id, batch.isActive === false ? true : false); showToast("আপডেট হয়েছে", "success"); loadTree(); } catch (err) { showToast(friendlyError(err), "error"); }
+    }
+  }));
 
-  // Toggle Chapter
-  document.querySelectorAll(".toggle-chapter").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const id = btn.dataset.id;
-      const chapter = findChapter(id);
-      if (confirm(`এই অধ্যায়টি ${chapter.isActive ? "বন্ধ" : "চালু"} করবেন?`)) {
-        try { await setChapterActive(id, !chapter.isActive); showToast("আপডেট হয়েছে!", "success"); loadTree(); }
-        catch (err) { showToast(friendlyError(err), "error"); }
-      }
-    });
-  });
+  // Subject Edit, Toggle & Delete
+  document.querySelectorAll(".edit-subject").forEach(btn => btn.addEventListener("click", async () => {
+    const subject = findSubject(btn.dataset.id);
+    const name = prompt("বিষয়ের নতুন নাম:", subject.name_bn);
+    if (name && name.trim()) {
+      try { await updateChapter(subject.id, { name_bn: name.trim(), name_en: name.trim() }); showToast("আপডেট হয়েছে!", "success"); loadTree(); } catch (err) {}
+    }
+  }));
+  document.querySelectorAll(".toggle-subject").forEach(btn => btn.addEventListener("click", async () => {
+    const subject = findSubject(btn.dataset.id);
+    if(confirm(`এই বিষয়টি ${subject.isActive !== false ? "বন্ধ" : "চালু"} করবেন?`)) {
+      try { await setChapterActive(subject.id, subject.isActive === false ? true : false); showToast("আপডেট হয়েছে!", "success"); loadTree(); } catch (err) {}
+    }
+  }));
+  document.querySelectorAll(".delete-subject").forEach(btn => btn.addEventListener("click", async () => {
+    if(confirm("সতর্কতা: এই বিষয়টি মুছলে এর ভেতরের সব টপিক মুছে যাবে! নিশ্চিত?")) {
+      try { await deleteDoc(doc(db, "chapters", btn.dataset.id)); showToast("মুছে ফেলা হয়েছে", "success"); loadTree(); } catch (err) {}
+    }
+  }));
 
-  // Edit Topic
-  document.querySelectorAll(".edit-topic").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const id = btn.dataset.id;
-      const topic = findTopic(id);
-      const name = prompt("টপিকের নতুন নাম:", topic.name_bn);
-      if (name && name.trim()) {
-        try { await updateTopic(id, { name_bn: name.trim(), name_en: name.trim() }); showToast("আপডেট হয়েছে!", "success"); loadTree(); }
-        catch (err) { showToast(friendlyError(err), "error"); }
-      }
-    });
-  });
-
-  // Toggle Topic
-  document.querySelectorAll(".toggle-topic").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const id = btn.dataset.id;
-      const topic = findTopic(id);
-      if (confirm(`এই টপিকটি ${topic.isActive ? "বন্ধ" : "চালু"} করবেন?`)) {
-        try { await setTopicActive(id, !topic.isActive); showToast("আপডেট হয়েছে!", "success"); loadTree(); }
-        catch (err) { showToast(friendlyError(err), "error"); }
-      }
-    });
-  });
+  // Topic Edit, Toggle & Delete
+  document.querySelectorAll(".edit-topic").forEach(btn => btn.addEventListener("click", async () => {
+    const topic = findTopic(btn.dataset.id);
+    const name = prompt("টপিকের নতুন নাম:", topic.name_bn);
+    if (name && name.trim()) {
+      try { await updateTopic(topic.id, { name_bn: name.trim(), name_en: name.trim() }); showToast("আপডেট হয়েছে!", "success"); loadTree(); } catch (err) {}
+    }
+  }));
+  document.querySelectorAll(".toggle-topic").forEach(btn => btn.addEventListener("click", async () => {
+    const topic = findTopic(btn.dataset.id);
+    if(confirm(`এই টপিকটি ${topic.isActive !== false ? "বন্ধ" : "চালু"} করবেন?`)) {
+      try { await setTopicActive(topic.id, topic.isActive === false ? true : false); showToast("আপডেট হয়েছে!", "success"); loadTree(); } catch (err) {}
+    }
+  }));
+  document.querySelectorAll(".delete-topic").forEach(btn => btn.addEventListener("click", async () => {
+    if(confirm("টপিকটি মুছে ফেলতে চান?")) {
+      try { await deleteDoc(doc(db, "topics", btn.dataset.id)); showToast("মুছে ফেলা হয়েছে", "success"); loadTree(); } catch (err) {}
+    }
+  }));
 }
 
-function findChapter(id) { for (const s of tree) { const c = s.chapters.find(c => c.id === id); if (c) return c; } }
-function findTopic(id) { for (const s of tree) for (const c of s.chapters) { const t = c.topics.find(t => t.id === id); if (t) return t; } }
+function findBatch(id) { return tree.find(b => b.id === id); }
+function findSubject(id) { for (const b of tree) { const s = b.chapters.find(s => s.id === id); if (s) return s; } }
+function findTopic(id) { for (const b of tree) for (const s of b.chapters) { const t = s.topics.find(t => t.id === id); if (t) return t; } }
 
-// Process Creation Logic
-async function handleCreateChapter() {
+// Process Creation Logic (Wizard)
+async function handleCreateWizard() {
   const batchName = document.getElementById("wzBatch").value;
-  const chapterName = document.getElementById("wzChapter").value.trim();
+  const subjectName = document.getElementById("wzSubject").value.trim();
   const topicsRaw = document.getElementById("wzTopics").value.trim();
   const btn = document.getElementById("saveWizardBtn");
-
-  if (!batchName) { showToast("দয়া করে ব্যাচ নির্বাচন করুন।", "error"); return; }
-  if (!chapterName) { showToast("অধ্যায়ের নাম লিখতে হবে।", "error"); return; }
 
   btn.disabled = true;
   btn.innerHTML = `<span class="spinner" style="width:16px;height:16px;border-width:2px;border-color:#fff;border-top-color:transparent;"></span> তৈরি হচ্ছে...`;
 
   try {
-    // 1. Find or create the Batch (Subject in DB)
-    let batchSubject = tree.find(s => s.name_bn === batchName);
-    let subjectId = batchSubject ? batchSubject.id : null;
-
-    if (!subjectId) {
-      const newSubject = await addSubject({ name_bn: batchName, name_en: batchName, order: tree.length });
-      subjectId = newSubject.id || newSubject; 
+    // 1. Create/Find Batch
+    let batch = tree.find(b => b.name_bn === batchName);
+    let batchId = batch ? batch.id : null;
+    if (!batchId) {
+      const newBatch = await addSubject({ name_bn: batchName, name_en: batchName, order: tree.length });
+      batchId = newBatch.id || newBatch; 
     }
 
-    // 2. Create the Chapter
-    const newChapter = await addChapter({ subjectId: subjectId, name_bn: chapterName, name_en: chapterName });
-    const chapterId = newChapter.id || newChapter;
+    // 2. Create Subject
+    const newSubject = await addChapter({ subjectId: batchId, name_bn: subjectName, name_en: subjectName });
+    const subjectId = newSubject.id || newSubject;
 
-    // 3. Create Topics
+    // 3. Create Topics (If empty, use Subject name as Topic)
     let topics = topicsRaw.split('\n').map(t => t.trim()).filter(t => t !== "");
-    if (topics.length === 0) {
-      topics = [chapterName]; // Fallback if no topic provided
-    }
+    if (topics.length === 0) topics = [subjectName]; 
 
     for (const t of topics) {
-      await addTopic({ chapterId: chapterId, subjectId: subjectId, name_bn: t, name_en: t });
+      await addTopic({ chapterId: subjectId, subjectId: batchId, name_bn: t, name_en: t });
     }
 
-    document.getElementById("addWizardModal").style.display = "none";
-    document.getElementById("wzChapter").value = "";
-    document.getElementById("wzTopics").value = "";
-    
-    activeBatchFilter = batchName; // Auto filter to the newly created batch
+    document.getElementById("wizardModal").style.display = "none";
     showToast("সফলভাবে তৈরি হয়েছে!", "success");
+    openSubjects.add(subjectId);
     loadTree();
-
   } catch (err) {
     showToast(friendlyError(err), "error");
   } finally {
