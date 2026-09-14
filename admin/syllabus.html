@@ -5,504 +5,403 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>সিলেবাস ব্যবস্থাপনা — অ্যাডমিন</title>
 <link rel="stylesheet" href="../css/style.css">
+<style>
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
+  body { overflow-x: hidden; background: var(--bg); }
+  .app-shell { max-width: 540px; padding-bottom: 40px; }
+
+  /* ===== Topbar ===== */
+  .top-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; margin-bottom: 20px; }
+  .btn-glass {
+    background: rgba(128, 128, 128, 0.08); backdrop-filter: blur(10px);
+    border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px;
+    color: var(--text-primary); padding: 8px 14px; font-weight: 700; font-size: 0.85rem;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    cursor: pointer; transition: all 0.2s ease; text-decoration: none;
+  }
+  .btn-glass:active { transform: scale(0.96); }
+  .btn-primary { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }
+
+  /* ===== Page Header ===== */
+  .page-header { margin-bottom: 24px; }
+  .page-header h1 { font-size: 1.4rem; font-weight: 950; color: var(--text-primary); margin: 0 0 4px 0; letter-spacing: -0.5px; }
+  .page-header p { font-size: 0.85rem; color: var(--text-muted); margin: 0; font-weight: 600; }
+
+  /* ===== Batch Filters ===== */
+  .batch-filters { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 12px; scrollbar-width: none; margin-bottom: 12px; }
+  .batch-filters::-webkit-scrollbar { display: none; }
+  .chip {
+    padding: 8px 16px; border-radius: 99px; font-size: 0.8rem; font-weight: 800;
+    background: rgba(128, 128, 128, 0.08); border: 1px solid rgba(128, 128, 128, 0.15);
+    color: var(--text-secondary); cursor: pointer; white-space: nowrap; transition: all 0.2s ease;
+  }
+  .chip.active { background: var(--color-accent); border-color: var(--color-accent); color: #fff; box-shadow: 0 4px 12px rgba(var(--color-accent-rgb), 0.25); }
+
+  /* ===== Tree View Styles ===== */
+  .glass-card {
+    background: rgba(128, 128, 128, 0.05); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(128, 128, 128, 0.15); border-radius: 16px; padding: 16px; margin-bottom: 12px;
+  }
+  .batch-title { display: flex; align-items: center; gap: 10px; font-size: 1.05rem; font-weight: 900; color: var(--color-accent); margin-bottom: 12px; }
+  
+  .chapter-box { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+  .chapter-head { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+  .chapter-name { font-size: 0.95rem; font-weight: 800; color: var(--text-primary); }
+  .chapter-meta { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+  
+  .topic-list { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--surface-border); display: none; }
+  .topic-list.open { display: block; }
+  .topic-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: rgba(128,128,128,0.05); border-radius: 8px; margin-bottom: 6px; }
+  .topic-name { font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); }
+
+  /* ===== Action Buttons ===== */
+  .actions { display: flex; gap: 6px; }
+  .icon-btn { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(128,128,128,0.08); color: var(--text-secondary); border: none; cursor: pointer; transition: all 0.2s; }
+  .icon-btn:hover { background: rgba(128,128,128,0.15); color: var(--text-primary); }
+  .inactive-badge { background: rgba(239, 68, 68, 0.1); color: #ef4444; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 800; margin-left: 6px; }
+
+  /* ===== Modals ===== */
+  .modal-overlay { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .custom-modal { width: 100%; max-width: 440px; max-height: 90vh; overflow-y: auto; padding: 24px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 20px; box-shadow: 0 12px 40px rgba(0,0,0,0.1); }
+  .modal-title { font-size: 1.15rem; font-weight: 900; color: var(--text-primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 0.85rem; font-weight: 800; color: var(--text-secondary); margin-bottom: 8px; }
+  .input-glass { width: 100%; box-sizing: border-box; padding: 12px 14px; background: rgba(128, 128, 128, 0.05); border: 1px solid var(--surface-border); border-radius: 12px; color: var(--text-primary); font-family: inherit; font-size: 0.9rem; font-weight: 600; outline: none; }
+  .input-glass:focus { border-color: var(--color-accent); }
+  select.input-glass { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em; }
+</style>
 </head>
 <body>
-<div class="app-shell app-shell--wide" id="shell">
+<div class="app-shell" id="shell">
   <div class="state-block"><div class="spinner"></div></div>
 </div>
 
+<!-- Add Chapter/Topic Wizard -->
+<div id="addWizardModal" class="modal-overlay" style="display:none;">
+  <div class="custom-modal">
+    <div class="modal-title">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      নতুন অধ্যায় যোগ করুন
+    </div>
+    
+    <div class="field">
+      <label>কোন ব্যাচের জন্য?</label>
+      <select id="wzBatch" class="input-glass">
+        <option value="" disabled selected>ব্যাচ বেছে নিন...</option>
+        <option value="Batch 6">Batch 6</option>
+        <option value="Batch 7">Batch 7</option>
+        <option value="Batch 8">Batch 8</option>
+        <option value="Batch 9">Batch 9</option>
+        <option value="Batch 10">Batch 10</option>
+        <option value="Batch 11">Batch 11</option>
+        <option value="Batch 12">Batch 12</option>
+        <option value="Other">অন্যান্য</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>অধ্যায়ের নাম</label>
+      <input type="text" id="wzChapter" class="input-glass" placeholder="যেমন: জীবন বিজ্ঞান - কোষ">
+    </div>
+
+    <div class="field">
+      <label>টপিক (ঐচ্ছিক)</label>
+      <p class="text-xs text-muted mb-2" style="line-height:1.4;">নিচে এক লাইনে একটি করে টপিকের নাম লিখুন। খালি রাখলে অধ্যায়ের নামেই স্বয়ংক্রিয়ভাবে টপিক তৈরি হবে।</p>
+      <textarea id="wzTopics" class="input-glass" rows="4" placeholder="যেমন:&#10;উদ্ভিদ কোষ&#10;প্রাণী কোষ"></textarea>
+    </div>
+
+    <div class="flex gap-2 mt-4">
+      <button class="btn-glass" id="closeWizardBtn" style="flex:1;">বাতিল</button>
+      <button class="btn-glass btn-primary" id="saveWizardBtn" style="flex:1;">তৈরি করুন</button>
+    </div>
+  </div>
+</div>
+
+<!-- Guide Modal -->
+<div id="guideModal" class="modal-overlay" style="display:none;">
+  <div class="custom-modal">
+    <div class="modal-title">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+      কীভাবে সিলেবাস বানাবেন?
+    </div>
+    <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.6; margin-bottom:20px;">
+      <p><strong>১. ব্যাচ:</strong> প্রতিটি অধ্যায় একটি নির্দিষ্ট ব্যাচের অধীনে থাকবে। এতে করে ওই ব্যাচের স্টুডেন্টরাই শুধু তাদের পরীক্ষা দেখতে পাবে।</p>
+      <p class="mt-2"><strong>২. অধ্যায়:</strong> 'নতুন অধ্যায়' বাটনে ক্লিক করে ব্যাচ এবং অধ্যায়ের নাম লিখুন (যেমন: ইতিহাস - মুঘল সাম্রাজ্য)।</p>
+      <p class="mt-2"><strong>৩. টপিক:</strong> বড় অধ্যায়কে ছোট ছোট টপিকে ভাগ করতে পারেন। যদি ভাগ করতে না চান, তবে টপিকের ঘর খালি রাখুন। সিস্টেম নিজে থেকেই অধ্যায়ের নামে একটি টপিক বানিয়ে নেবে।</p>
+      <p class="mt-2" style="color:#ef4444;"><strong>সতর্কতা:</strong> কোনো অধ্যায় বা টপিক বন্ধ (Inactive) করে রাখলে তা পরীক্ষায় দেখা যাবে না।</p>
+    </div>
+    <button class="btn-glass btn-primary" id="closeGuideBtn" style="width:100%;">বুঝতে পেরেছি</button>
+  </div>
+</div>
+
 <script type="module">
-import { initTheme, toggleTheme, icons, renderState, showToast, friendlyError } from "../js/utils/ui-utils.js";
+import { initTheme, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
 import {
-  getFullSyllabusTree, addSubject, updateSubject, setSubjectActive,
-  addChapter, updateChapter, setChapterActive,
-  addTopic, updateTopic, setTopicActive
+  getFullSyllabusTree, addSubject, updateChapter, setChapterActive,
+  addChapter, updateTopic, setTopicActive, addTopic
 } from "../js/utils/syllabus-utils.js";
-import { translateSyllabusTerm, promptForApiKey } from "../js/utils/ai-import-utils.js";
 
 initTheme();
 const shell = document.getElementById("shell");
 let tree = [];
-let openSubjectId = null;
-let openChapterId = null;
+let activeBatchFilter = "all";
+let openChapters = new Set(); // To keep track of opened accordion items
 
 requireAdmin(() => {
   shell.innerHTML = `
-    <div class="topbar">
-      <a href="../admin/dashboard.html" class="icon-btn">${icons.arrowLeft}</a>
-      <h2 style="font-size:1.05rem;">সিলেবাস ব্যবস্থাপনা</h2>
-      <div class="flex gap-2">
-        <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-thumb"></span></button>
-        <button class="icon-btn" id="logoutBtn">${icons.arrowRight}</button>
+    <!-- Topbar -->
+    <div class="top-nav">
+      <a href="../admin/dashboard.html" class="btn-glass" style="width:40px; height:40px; padding:0;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+      </a>
+      <div style="display:flex; gap:10px;">
+        <button class="btn-glass" id="guideBtn" style="border-radius:99px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          গাইড
+        </button>
       </div>
     </div>
 
-    <button type="button" class="btn btn-primary" id="openWizardBtn" style="width:100%;">✨ নতুন অধ্যায় বানান (সহজ, ধাপে ধাপে)</button>
+    <!-- Header & Main Button -->
+    <div class="page-header">
+      <h1>সিলেবাস ও ব্যাচ</h1>
+      <p>পরীক্ষার অধ্যায় এবং টপিক তৈরি করুন</p>
+    </div>
+    <button class="btn-glass btn-primary" id="openWizardBtn" style="width:100%; padding:14px; font-size:1rem; margin-bottom:20px;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      নতুন অধ্যায় যোগ করুন
+    </button>
 
-    <form id="addSubjectForm" class="glass card mt-4">
-      <p class="eyebrow mb-2">নতুন বিষয় যোগ করুন</p>
-      <p class="text-xs text-muted mb-2">এটা শুধু একদম নতুন কোনো বিষয় (যেমন: পদার্থবিজ্ঞান) যোগ করার জন্য — সাধারণত খুব কম দরকার হয়। অধ্যায়/টপিক বানাতে ওপরের বাটন ব্যবহার করুন।</p>
-      <div class="flex gap-2 mt-2">
-        <input class="input" id="newSubjectBn" placeholder="বাংলা নাম (যেমন: পদার্থবিজ্ঞান)" required>
-        <button type="submit" class="btn btn-primary btn-sm">${icons.plus}</button>
-      </div>
-      <input class="input mt-2" id="newSubjectEn" placeholder="English name (e.g. Physics)" required>
-    </form>
+    <!-- Batch Filters -->
+    <div class="batch-filters" id="batchFilters"></div>
 
-    <div id="tree" class="mt-4"></div>
+    <!-- Tree View -->
+    <div id="syllabusTree"></div>
   `;
-  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
-  document.getElementById("logoutBtn").addEventListener("click", adminLogout);
-  document.getElementById("addSubjectForm").addEventListener("submit", handleAddSubject);
-  document.getElementById("openWizardBtn").addEventListener("click", openWizard);
+
+  document.getElementById("openWizardBtn").addEventListener("click", () => {
+    document.getElementById("addWizardModal").style.display = "flex";
+  });
+  document.getElementById("closeWizardBtn").addEventListener("click", () => {
+    document.getElementById("addWizardModal").style.display = "none";
+  });
+  document.getElementById("saveWizardBtn").addEventListener("click", handleCreateChapter);
+
+  document.getElementById("guideBtn").addEventListener("click", () => {
+    document.getElementById("guideModal").style.display = "flex";
+  });
+  document.getElementById("closeGuideBtn").addEventListener("click", () => {
+    document.getElementById("guideModal").style.display = "none";
+  });
+
   loadTree();
 });
 
 async function loadTree() {
-  const el = document.getElementById("tree");
+  const el = document.getElementById("syllabusTree");
   try {
     tree = await getFullSyllabusTree();
     renderTree();
   } catch (err) {
-    console.error(err);
-    renderState(el, "error", "সিলেবাস লোড করা যায়নি।");
+    el.innerHTML = `<div class="glass-card text-center" style="color:#ef4444;">সিলেবাস লোড করা যায়নি।</div>`;
   }
 }
 
 function renderTree() {
-  const el = document.getElementById("tree");
-  if (tree.length === 0) {
-    renderState(el, "empty", "এখনো কোনো বিষয় যোগ করা হয়নি।");
+  const filterEl = document.getElementById("batchFilters");
+  const treeEl = document.getElementById("syllabusTree");
+
+  // Extract unique batches (Subjects in DB represent Batches in this logic)
+  const batches = [...new Set(tree.map(s => s.name_bn))].sort();
+
+  // Render Filters
+  filterEl.innerHTML = `
+    <div class="chip ${activeBatchFilter === "all" ? "active" : ""}" data-batch="all">সব ব্যাচ</div>
+    ${batches.map(b => `<div class="chip ${activeBatchFilter === b ? "active" : ""}" data-batch="${b}">${b}</div>`).join("")}
+  `;
+
+  filterEl.querySelectorAll(".chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      activeBatchFilter = chip.dataset.batch;
+      renderTree();
+    });
+  });
+
+  // Render Tree
+  let filteredTree = tree;
+  if (activeBatchFilter !== "all") {
+    filteredTree = tree.filter(s => s.name_bn === activeBatchFilter);
+  }
+
+  if (filteredTree.length === 0) {
+    treeEl.innerHTML = `<div class="glass-card" style="text-align:center; padding:30px 10px; color:var(--text-muted); font-weight:700;">এখনো কোনো সিলেবাস যোগ করা হয়নি।</div>`;
     return;
   }
 
-  el.innerHTML = tree.map(subject => `
-    <div class="glass card mt-2">
-      <div class="flex justify-between items-center subject-header" data-id="${subject.id}" style="cursor:pointer;">
-        <div class="flex items-center gap-2">
-          <span class="icon-btn" style="width:32px;height:32px;">${icons.layers}</span>
-          <div>
-            <p style="font-weight:700;">${subject.name_bn}${subject.isActive ? "" : " (নিষ্ক্রিয়)"}</p>
-            <p class="text-xs text-muted">${subject.chapters.length} টি অধ্যায়</p>
-          </div>
-        </div>
-        <div class="flex gap-1 items-center">
-          <button class="icon-btn edit-subject" data-id="${subject.id}" title="সম্পাদনা">${icons.edit}</button>
-          <button class="icon-btn toggle-subject" data-id="${subject.id}" title="সক্রিয়/নিষ্ক্রিয়">${icons.toggle}</button>
-          <span style="width:18px;height:18px;">${openSubjectId === subject.id ? icons.chevronDown : icons.arrowRight}</span>
-        </div>
+  treeEl.innerHTML = filteredTree.map(batch => `
+    <div class="glass-card">
+      <div class="batch-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        ${batch.name_bn}
       </div>
 
-      ${openSubjectId === subject.id ? `
-        <div class="mt-3" style="border-top:1px solid var(--surface-border);padding-top:12px;">
-          <form class="add-chapter-form flex gap-2" data-subject="${subject.id}">
-            <input class="input" name="bn" placeholder="অধ্যায়ের বাংলা নাম" required>
-            <input class="input" name="en" placeholder="English name" required style="max-width:140px;">
-            <button type="submit" class="btn btn-primary btn-sm">${icons.plus}</button>
-          </form>
+      ${batch.chapters.length === 0 ? `<div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">কোনো অধ্যায় নেই।</div>` : ""}
 
-          ${subject.chapters.map(chapter => `
-            <div class="mt-3" style="background:var(--surface-solid);border-radius:var(--radius-sm);padding:12px;">
-              <div class="flex justify-between items-center chapter-header" data-id="${chapter.id}" style="cursor:pointer;">
-                <div>
-                  <p style="font-weight:600;font-size:0.9rem;">${chapter.name_bn}${chapter.isActive ? "" : " (নিষ্ক্রিয়)"}</p>
-                  <p class="text-xs text-muted">${chapter.topics.length} টি টপিক</p>
-                </div>
-                <div class="flex gap-1 items-center">
-                  <button class="icon-btn btn-sm edit-chapter" data-id="${chapter.id}" title="সম্পাদনা" style="width:34px;height:34px;">${icons.edit}</button>
-                  <button class="icon-btn btn-sm toggle-chapter" data-id="${chapter.id}" title="সক্রিয়/নিষ্ক্রিয়" style="width:34px;height:34px;">${icons.toggle}</button>
-                  <span style="width:16px;height:16px;">${openChapterId === chapter.id ? icons.chevronDown : icons.arrowRight}</span>
+      ${batch.chapters.map(chapter => {
+        const isOpen = openChapters.has(chapter.id);
+        return `
+        <div class="chapter-box">
+          <div class="chapter-head" data-id="${chapter.id}">
+            <div>
+              <div class="chapter-name">${chapter.name_bn} ${chapter.isActive ? "" : `<span class="inactive-badge">বন্ধ</span>`}</div>
+              <div class="chapter-meta">${chapter.topics.length} টি টপিক</div>
+            </div>
+            <div class="actions" onclick="event.stopPropagation()">
+              <button class="icon-btn edit-chapter" data-id="${chapter.id}" title="সম্পাদনা"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+              <button class="icon-btn toggle-chapter" data-id="${chapter.id}" style="${chapter.isActive ? '' : 'color:#ef4444;'}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="${chapter.isActive ? '16' : '8'}" cy="12" r="3"/></svg></button>
+              <div class="icon-btn" style="background:transparent; pointer-events:none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(${isOpen ? '180deg' : '0deg'}); transition: transform 0.3s;"><path d="M6 9l6 6 6-6"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="topic-list ${isOpen ? "open" : ""}" id="topics-${chapter.id}">
+            ${chapter.topics.map(topic => `
+              <div class="topic-item">
+                <div class="topic-name">${topic.name_bn} ${topic.isActive ? "" : `<span class="inactive-badge">বন্ধ</span>`}</div>
+                <div class="actions">
+                  <button class="icon-btn edit-topic" data-id="${topic.id}" style="width:28px;height:28px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                  <button class="icon-btn toggle-topic" data-id="${topic.id}" style="width:28px;height:28px; ${topic.isActive ? '' : 'color:#ef4444;'}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="${topic.isActive ? '16' : '8'}" cy="12" r="3"/></svg></button>
                 </div>
               </div>
-
-              ${openChapterId === chapter.id ? `
-                <div class="mt-2" style="border-top:1px solid var(--surface-border);padding-top:10px;">
-                  <form class="add-topic-form flex gap-2" data-chapter="${chapter.id}" data-subject="${subject.id}">
-                    <input class="input" name="bn" placeholder="টপিকের বাংলা নাম" required>
-                    <input class="input" name="en" placeholder="English name" required style="max-width:130px;">
-                    <button type="submit" class="btn btn-primary btn-sm">${icons.plus}</button>
-                  </form>
-                  ${chapter.topics.map(topic => `
-                    <div class="flex justify-between items-center mt-2" data-id="${topic.id}">
-                      <p class="text-sm">${topic.name_bn}${topic.isActive ? "" : " (নিষ্ক্রিয়)"}</p>
-                      <div class="flex gap-1">
-                        <button class="icon-btn edit-topic" data-id="${topic.id}" style="width:30px;height:30px;">${icons.edit}</button>
-                        <button class="icon-btn toggle-topic" data-id="${topic.id}" style="width:30px;height:30px;">${icons.toggle}</button>
-                      </div>
-                    </div>
-                  `).join("") || `<p class="text-xs text-muted mt-2">কোনো টপিক নেই।</p>`}
-                </div>
-              ` : ""}
-            </div>
-          `).join("") || `<p class="text-xs text-muted mt-2">কোনো অধ্যায় নেই।</p>`}
+            `).join("")}
+          </div>
         </div>
-      ` : ""}
+        `;
+      }).join("")}
     </div>
   `).join("");
 
-  attachTreeEvents();
+  attachEvents();
 }
 
-function attachTreeEvents() {
-  document.querySelectorAll(".subject-header").forEach(h => h.addEventListener("click", (e) => {
-    if (e.target.closest("button")) return;
-    const id = h.dataset.id;
-    openSubjectId = openSubjectId === id ? null : id;
-    openChapterId = null;
-    renderTree();
-  }));
-  document.querySelectorAll(".chapter-header").forEach(h => h.addEventListener("click", (e) => {
-    if (e.target.closest("button")) return;
-    const id = h.dataset.id;
-    openChapterId = openChapterId === id ? null : id;
-    renderTree();
-  }));
-
-  document.querySelectorAll(".edit-subject").forEach(b => b.addEventListener("click", async () => {
-    const s = findSubject(b.dataset.id);
-    const name = prompt("বাংলা নাম:", s.name_bn);
-    if (name === null || !name.trim()) return;
-    try { await updateSubject(s.id, { name_bn: name.trim() }); showToast("আপডেট হয়েছে।", "success"); loadTree(); }
-    catch (err) { showToast(friendlyError(err), "error"); }
-  }));
-  document.querySelectorAll(".toggle-subject").forEach(b => b.addEventListener("click", async () => {
-    const s = findSubject(b.dataset.id);
-    if (!confirm(`${s.name_bn} ${s.isActive ? "নিষ্ক্রিয়" : "সক্রিয়"} করবেন?`)) return;
-    try { await setSubjectActive(s.id, !s.isActive); showToast("আপডেট হয়েছে।", "success"); loadTree(); }
-    catch (err) { showToast(friendlyError(err), "error"); }
-  }));
-
-  document.querySelectorAll(".edit-chapter").forEach(b => b.addEventListener("click", async () => {
-    const c = findChapter(b.dataset.id);
-    const name = prompt("বাংলা নাম:", c.name_bn);
-    if (name === null || !name.trim()) return;
-    try { await updateChapter(c.id, { name_bn: name.trim() }); showToast("আপডেট হয়েছে।", "success"); loadTree(); }
-    catch (err) { showToast(friendlyError(err), "error"); }
-  }));
-  document.querySelectorAll(".toggle-chapter").forEach(b => b.addEventListener("click", async () => {
-    const c = findChapter(b.dataset.id);
-    if (!confirm(`${c.name_bn} ${c.isActive ? "নিষ্ক্রিয়" : "সক্রিয়"} করবেন?`)) return;
-    try { await setChapterActive(c.id, !c.isActive); showToast("আপডেট হয়েছে।", "success"); loadTree(); }
-    catch (err) { showToast(friendlyError(err), "error"); }
-  }));
-
-  document.querySelectorAll(".edit-topic").forEach(b => b.addEventListener("click", async () => {
-    const t = findTopic(b.dataset.id);
-    const name = prompt("বাংলা নাম:", t.name_bn);
-    if (name === null || !name.trim()) return;
-    try { await updateTopic(t.id, { name_bn: name.trim() }); showToast("আপডেট হয়েছে।", "success"); loadTree(); }
-    catch (err) { showToast(friendlyError(err), "error"); }
-  }));
-  document.querySelectorAll(".toggle-topic").forEach(b => b.addEventListener("click", async () => {
-    const t = findTopic(b.dataset.id);
-    if (!confirm(`${t.name_bn} ${t.isActive ? "নিষ্ক্রিয়" : "সক্রিয়"} করবেন?`)) return;
-    try { await setTopicActive(t.id, !t.isActive); showToast("আপডেট হয়েছে।", "success"); loadTree(); }
-    catch (err) { showToast(friendlyError(err), "error"); }
-  }));
-
-  document.querySelectorAll(".add-chapter-form").forEach(f => f.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const subjectId = f.dataset.subject;
-    const bn = f.bn.value.trim(), en = f.en.value.trim();
-    if (!bn || !en) return;
-    try {
-      await addChapter({ subjectId, name_bn: bn, name_en: en });
-      showToast("অধ্যায় যোগ হয়েছে।", "success");
-      openSubjectId = subjectId;
-      loadTree();
-    } catch (err) { showToast(friendlyError(err), "error"); }
-  }));
-
-  document.querySelectorAll(".add-topic-form").forEach(f => f.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const chapterId = f.dataset.chapter, subjectId = f.dataset.subject;
-    const bn = f.bn.value.trim(), en = f.en.value.trim();
-    if (!bn || !en) return;
-    try {
-      await addTopic({ chapterId, subjectId, name_bn: bn, name_en: en });
-      showToast("টপিক যোগ হয়েছে।", "success");
-      openSubjectId = subjectId; openChapterId = chapterId;
-      loadTree();
-    } catch (err) { showToast(friendlyError(err), "error"); }
-  }));
-}
-
-// =========================================================
-// GUIDED WIZARD — replaces the old "type Bengali AND English into two
-// boxes for subject/chapter/topic all at once" flow, which was confusing.
-// Now: type a chapter name in EITHER language, AI fills in the other one
-// for you to confirm before moving on. Topics are fully optional and
-// repeatable — skip straight to "তৈরি করুন" with zero topics if you just
-// want the chapter for now, or add as many as you like first.
-// =========================================================
-let wizardState = null; // { subjectId, chapterBn, chapterEn, topics: [{bn,en}] }
-let wizardStep = "subject"; // "subject" -> "chapter" -> "topics" -> "review"
-let wizardNewSubjectMode = false;
-
-function openWizard() {
-  wizardState = { subjectId: "", chapterBn: "", chapterEn: "", topics: [] };
-  wizardStep = "subject";
-  wizardNewSubjectMode = false;
-  renderWizard();
-}
-
-function closeWizard() {
-  document.getElementById("wizardOverlay")?.remove();
-}
-
-function renderWizard() {
-  let overlay = document.getElementById("wizardOverlay");
-  if (!overlay) {
-    overlay = document.createElement("div");
-    overlay.id = "wizardOverlay";
-    overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;";
-    document.body.appendChild(overlay);
-  }
-
-  overlay.innerHTML = `
-    <div class="glass card" style="max-width:460px;width:100%;max-height:85vh;overflow-y:auto;">
-      <div class="flex justify-between items-center">
-        <p class="eyebrow">নতুন অধ্যায় বানান</p>
-        <button class="icon-btn" id="wizardCloseBtn" style="width:30px;height:30px;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg>
-        </button>
-      </div>
-      <div id="wizardBody" class="mt-3"></div>
-    </div>
-  `;
-  overlay.querySelector("#wizardCloseBtn").addEventListener("click", closeWizard);
-  renderWizardStep();
-}
-
-function renderWizardStep() {
-  const body = document.getElementById("wizardBody");
-
-  if (wizardStep === "subject") {
-    if (wizardNewSubjectMode) {
-      const translated = wizardState.newSubjectBn && wizardState.newSubjectEn;
-      body.innerHTML = `
-        <p class="text-xs text-muted mb-2">নতুন বিষয়ের নাম লেখো — বাংলা বা ইংরেজি, যেকোনো একটাতেই হবে।</p>
-        ${translated ? `
-          <div class="field"><label>বাংলা নাম</label><input class="input" id="wzNewSubjectBn" value="${wizardState.newSubjectBn}"></div>
-          <div class="field mt-2"><label>English name</label><input class="input" id="wzNewSubjectEn" value="${wizardState.newSubjectEn}"></div>
-        ` : `
-          <input class="input" id="wzNewSubjectRaw" placeholder="যেমন: রসায়ন, অথবা Chemistry">
-        `}
-        <div class="flex gap-2 mt-3">
-          <button type="button" class="btn btn-secondary" id="wzBackToSelectBtn" style="flex:1;">বিষয় বাছাই করবো</button>
-          <button type="button" class="btn btn-primary" id="wzNextBtn" style="flex:1;">${translated ? "তৈরি করে এগিয়ে যাও" : "রূপান্তর করো"}</button>
-        </div>
-      `;
-      document.getElementById("wzBackToSelectBtn").addEventListener("click", () => { wizardNewSubjectMode = false; renderWizardStep(); });
-      document.getElementById("wzNextBtn").addEventListener("click", async () => {
-        if (translated) {
-          const bn = document.getElementById("wzNewSubjectBn").value.trim();
-          const en = document.getElementById("wzNewSubjectEn").value.trim();
-          if (!bn || !en) { showToast("দুটো নামই লাগবে।", "error"); return; }
-          const btn = document.getElementById("wzNextBtn");
-          btn.disabled = true; btn.textContent = "তৈরি হচ্ছে...";
-          try {
-            const ref = await addSubject({ name_bn: bn, name_en: en });
-            tree = await getFullSyllabusTree(); // refresh so the new subject is selectable everywhere else too
-            wizardState.subjectId = ref.id;
-            wizardNewSubjectMode = false;
-            wizardStep = "chapter";
-            renderWizardStep();
-          } catch (err) {
-            showToast(friendlyError(err), "error");
-            btn.disabled = false; btn.textContent = "তৈরি করে এগিয়ে যাও";
-          }
-        } else {
-          const raw = document.getElementById("wzNewSubjectRaw").value.trim();
-          if (!raw) { showToast("বিষয়ের নাম লেখো।", "error"); return; }
-          await runTranslateStep(raw, (result) => {
-            wizardState.newSubjectBn = result.bn;
-            wizardState.newSubjectEn = result.en;
-            renderWizardStep();
-          });
-        }
-      });
-      return;
-    }
-
-    body.innerHTML = `
-      <p class="text-xs text-muted mb-2">কোন বিষয়ের নিচে এই অধ্যায়টা যোগ হবে?</p>
-      <select class="select" id="wzSubject">
-        <option value="">বিষয় বাছাই করো</option>
-        ${tree.map(s => `<option value="${s.id}" ${wizardState.subjectId === s.id ? "selected" : ""}>${s.name_bn}</option>`).join("")}
-      </select>
-      <button type="button" class="btn btn-secondary mt-2" id="wzNewSubjectToggleBtn" style="width:100%;">+ এটা নতুন একটা বিষয়, আগে বানাতে হবে</button>
-      <button type="button" class="btn btn-primary mt-3" id="wzNextBtn" style="width:100%;">পরবর্তী</button>
-    `;
-    document.getElementById("wzNewSubjectToggleBtn").addEventListener("click", () => { wizardNewSubjectMode = true; renderWizardStep(); });
-    document.getElementById("wzNextBtn").addEventListener("click", () => {
-      const val = document.getElementById("wzSubject").value;
-      if (!val) { showToast("একটা বিষয় বাছাই করো, অথবা ওপরের বাটন দিয়ে নতুন বিষয় বানাও।", "error"); return; }
-      wizardState.subjectId = val;
-      wizardStep = "chapter";
-      renderWizardStep();
+function attachEvents() {
+  // Accordion Toggle
+  document.querySelectorAll(".chapter-head").forEach(head => {
+    head.addEventListener("click", () => {
+      const id = head.dataset.id;
+      if (openChapters.has(id)) openChapters.delete(id);
+      else openChapters.add(id);
+      renderTree();
     });
-    return;
-  }
+  });
 
-  if (wizardStep === "chapter") {
-    const translated = wizardState.chapterBn && wizardState.chapterEn;
-    body.innerHTML = `
-      <p class="text-xs text-muted mb-2">অধ্যায়ের নাম লেখো — বাংলা বা ইংরেজি, যেকোনো একটাতেই হবে।</p>
-      ${translated ? `
-        <div class="field"><label>বাংলা নাম</label><input class="input" id="wzChapterBn" value="${wizardState.chapterBn}"></div>
-        <div class="field mt-2"><label>English name</label><input class="input" id="wzChapterEn" value="${wizardState.chapterEn}"></div>
-      ` : `
-        <input class="input" id="wzChapterRaw" placeholder="যেমন: আলো, অথবা Light">
-      `}
-      <div class="flex gap-2 mt-3">
-        <button type="button" class="btn btn-secondary" id="wzPrevBtn" style="flex:1;">পূর্ববর্তী</button>
-        <button type="button" class="btn btn-primary" id="wzNextBtn" style="flex:1;">${translated ? "পরবর্তী" : "রূপান্তর করো"}</button>
-      </div>
-    `;
-    document.getElementById("wzPrevBtn").addEventListener("click", () => { wizardStep = "subject"; renderWizardStep(); });
-    document.getElementById("wzNextBtn").addEventListener("click", async () => {
-      if (translated) {
-        wizardState.chapterBn = document.getElementById("wzChapterBn").value.trim();
-        wizardState.chapterEn = document.getElementById("wzChapterEn").value.trim();
-        if (!wizardState.chapterBn || !wizardState.chapterEn) { showToast("দুটো নামই লাগবে।", "error"); return; }
-        wizardStep = "topics";
-        renderWizardStep();
-      } else {
-        const raw = document.getElementById("wzChapterRaw").value.trim();
-        if (!raw) { showToast("অধ্যায়ের নাম লেখো।", "error"); return; }
-        await runTranslateStep(raw, (result) => {
-          wizardState.chapterBn = result.bn;
-          wizardState.chapterEn = result.en;
-          renderWizardStep();
-        });
+  // Edit Chapter
+  document.querySelectorAll(".edit-chapter").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.id;
+      const chapter = findChapter(id);
+      const name = prompt("অধ্যায়ের নতুন নাম:", chapter.name_bn);
+      if (name && name.trim()) {
+        try { await updateChapter(id, { name_bn: name.trim(), name_en: name.trim() }); showToast("আপডেট হয়েছে!", "success"); loadTree(); }
+        catch (err) { showToast(friendlyError(err), "error"); }
       }
     });
-    return;
-  }
+  });
 
-  if (wizardStep === "topics") {
-    body.innerHTML = `
-      <p class="text-xs text-muted mb-2">চাইলে এই অধ্যায়ের টপিক যোগ করো (একদম ঐচ্ছিক — কিছু না দিয়েও এগিয়ে যেতে পারো)।</p>
-      <div id="wzTopicsList">
-        ${wizardState.topics.map((t, i) => `
-          <div class="flex justify-between items-center mt-2" style="background:var(--surface-solid);border-radius:var(--radius-sm);padding:8px 10px;">
-            <p class="text-sm">${t.bn} <span class="text-xs text-muted">(${t.en})</span></p>
-            <button type="button" class="icon-btn wz-remove-topic" data-idx="${i}" style="width:26px;height:26px;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg>
-            </button>
-          </div>
-        `).join("")}
-      </div>
-      <input class="input mt-3" id="wzTopicRaw" placeholder="টপিকের নাম (বাংলা/ইংরেজি) — খালি রেখে এড়িয়ে যাও">
-      <button type="button" class="btn btn-secondary mt-2" id="wzAddTopicBtn" style="width:100%;">+ এই টপিকটা যোগ করো</button>
-      <div class="flex gap-2 mt-3">
-        <button type="button" class="btn btn-secondary" id="wzPrevBtn" style="flex:1;">পূর্ববর্তী</button>
-        <button type="button" class="btn btn-primary" id="wzNextBtn" style="flex:1;">পরবর্তী</button>
-      </div>
-    `;
-    document.querySelectorAll(".wz-remove-topic").forEach(b => b.addEventListener("click", () => {
-      wizardState.topics.splice(Number(b.dataset.idx), 1);
-      renderWizardStep();
-    }));
-    document.getElementById("wzAddTopicBtn").addEventListener("click", async () => {
-      const raw = document.getElementById("wzTopicRaw").value.trim();
-      if (!raw) { showToast("টপিকের নাম লেখো, নাহলে সরাসরি \"পরবর্তী\"-তে যাও।", "error"); return; }
-      await runTranslateStep(raw, (result) => {
-        wizardState.topics.push(result);
-        renderWizardStep();
-      });
+  // Toggle Chapter
+  document.querySelectorAll(".toggle-chapter").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.id;
+      const chapter = findChapter(id);
+      if (confirm(`এই অধ্যায়টি ${chapter.isActive ? "বন্ধ" : "চালু"} করবেন?`)) {
+        try { await setChapterActive(id, !chapter.isActive); showToast("আপডেট হয়েছে!", "success"); loadTree(); }
+        catch (err) { showToast(friendlyError(err), "error"); }
+      }
     });
-    document.getElementById("wzPrevBtn").addEventListener("click", () => { wizardStep = "chapter"; renderWizardStep(); });
-    document.getElementById("wzNextBtn").addEventListener("click", () => { wizardStep = "review"; renderWizardStep(); });
-    return;
-  }
+  });
 
-  if (wizardStep === "review") {
-    const subject = findSubject(wizardState.subjectId);
-    body.innerHTML = `
-      <p class="text-xs text-muted">বিষয়</p>
-      <p style="font-weight:700;">${subject?.name_bn || "—"}</p>
-      <p class="text-xs text-muted mt-3">অধ্যায়</p>
-      <p style="font-weight:700;">${wizardState.chapterBn} <span class="text-xs text-muted">(${wizardState.chapterEn})</span></p>
-      <p class="text-xs text-muted mt-3">টপিক (${wizardState.topics.length})</p>
-      ${wizardState.topics.length
-        ? wizardState.topics.map(t => `<p class="text-sm mt-1">• ${t.bn} <span class="text-xs text-muted">(${t.en})</span></p>`).join("")
-        : `<p class="text-sm text-muted mt-1">কোনো টপিক দেওয়া হয়নি — পরে যোগ করা যাবে।</p>`}
-      <div class="flex gap-2 mt-4">
-        <button type="button" class="btn btn-secondary" id="wzPrevBtn" style="flex:1;">পূর্ববর্তী</button>
-        <button type="button" class="btn btn-primary" id="wzCreateBtn" style="flex:1;">তৈরি করুন</button>
-      </div>
-    `;
-    document.getElementById("wzPrevBtn").addEventListener("click", () => { wizardStep = "topics"; renderWizardStep(); });
-    document.getElementById("wzCreateBtn").addEventListener("click", handleWizardCreate);
-    return;
-  }
-}
-
-async function runTranslateStep(raw, onDone) {
-  const btn = document.getElementById("wzNextBtn") || document.getElementById("wzAddTopicBtn");
-  const apiKey = promptForApiKey(false);
-  if (!apiKey) { showToast("AI রূপান্তরের জন্য একটা Gemini API key লাগবে।", "error"); return; }
-  const originalText = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = "রূপান্তর হচ্ছে...";
-  try {
-    const result = await translateSyllabusTerm(apiKey, raw);
-    onDone(result);
-  } catch (err) {
-    console.error(err);
-    showToast(err.message || friendlyError(err), "error");
-  } finally {
-    btn.disabled = false;
-    btn.textContent = originalText;
-  }
-}
-
-async function handleWizardCreate() {
-  const btn = document.getElementById("wzCreateBtn");
-  btn.disabled = true;
-  btn.textContent = "তৈরি হচ্ছে...";
-  try {
-    const chapterRef = await addChapter({
-      subjectId: wizardState.subjectId,
-      name_bn: wizardState.chapterBn,
-      name_en: wizardState.chapterEn
+  // Edit Topic
+  document.querySelectorAll(".edit-topic").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.id;
+      const topic = findTopic(id);
+      const name = prompt("টপিকের নতুন নাম:", topic.name_bn);
+      if (name && name.trim()) {
+        try { await updateTopic(id, { name_bn: name.trim(), name_en: name.trim() }); showToast("আপডেট হয়েছে!", "success"); loadTree(); }
+        catch (err) { showToast(friendlyError(err), "error"); }
+      }
     });
-    const chapterId = chapterRef.id || chapterRef; // tolerate either a DocumentReference or a bare id string
-    for (const topic of wizardState.topics) {
-      await addTopic({ chapterId, subjectId: wizardState.subjectId, name_bn: topic.bn, name_en: topic.en });
-    }
-    showToast(`অধ্যায় তৈরি হয়েছে${wizardState.topics.length ? ` (${wizardState.topics.length} টি টপিকসহ)` : ""}।`, "success");
-    closeWizard();
-    openSubjectId = wizardState.subjectId;
-    loadTree();
-  } catch (err) {
-    console.error(err);
-    showToast(friendlyError(err), "error");
-    btn.disabled = false;
-    btn.textContent = "তৈরি করুন";
-  }
+  });
+
+  // Toggle Topic
+  document.querySelectorAll(".toggle-topic").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.id;
+      const topic = findTopic(id);
+      if (confirm(`এই টপিকটি ${topic.isActive ? "বন্ধ" : "চালু"} করবেন?`)) {
+        try { await setTopicActive(id, !topic.isActive); showToast("আপডেট হয়েছে!", "success"); loadTree(); }
+        catch (err) { showToast(friendlyError(err), "error"); }
+      }
+    });
+  });
 }
 
-function findSubject(id) { return tree.find(s => s.id === id); }
 function findChapter(id) { for (const s of tree) { const c = s.chapters.find(c => c.id === id); if (c) return c; } }
 function findTopic(id) { for (const s of tree) for (const c of s.chapters) { const t = c.topics.find(t => t.id === id); if (t) return t; } }
 
-async function handleAddSubject(e) {
-  e.preventDefault();
-  const bnInput = document.getElementById("newSubjectBn");
-  const enInput = document.getElementById("newSubjectEn");
-  const bn = bnInput.value.trim(), en = enInput.value.trim();
-  if (!bn || !en) return;
+// Process Creation Logic
+async function handleCreateChapter() {
+  const batchName = document.getElementById("wzBatch").value;
+  const chapterName = document.getElementById("wzChapter").value.trim();
+  const topicsRaw = document.getElementById("wzTopics").value.trim();
+  const btn = document.getElementById("saveWizardBtn");
+
+  if (!batchName) { showToast("দয়া করে ব্যাচ নির্বাচন করুন।", "error"); return; }
+  if (!chapterName) { showToast("অধ্যায়ের নাম লিখতে হবে।", "error"); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner" style="width:16px;height:16px;border-width:2px;border-color:#fff;border-top-color:transparent;"></span> তৈরি হচ্ছে...`;
+
   try {
-    await addSubject({ name_bn: bn, name_en: en, order: tree.length });
-    bnInput.value = ""; enInput.value = "";
-    showToast("বিষয় যোগ হয়েছে।", "success");
+    // 1. Find or create the Batch (Subject in DB)
+    let batchSubject = tree.find(s => s.name_bn === batchName);
+    let subjectId = batchSubject ? batchSubject.id : null;
+
+    if (!subjectId) {
+      const newSubject = await addSubject({ name_bn: batchName, name_en: batchName, order: tree.length });
+      subjectId = newSubject.id || newSubject; 
+    }
+
+    // 2. Create the Chapter
+    const newChapter = await addChapter({ subjectId: subjectId, name_bn: chapterName, name_en: chapterName });
+    const chapterId = newChapter.id || newChapter;
+
+    // 3. Create Topics
+    let topics = topicsRaw.split('\n').map(t => t.trim()).filter(t => t !== "");
+    if (topics.length === 0) {
+      topics = [chapterName]; // Fallback if no topic provided
+    }
+
+    for (const t of topics) {
+      await addTopic({ chapterId: chapterId, subjectId: subjectId, name_bn: t, name_en: t });
+    }
+
+    document.getElementById("addWizardModal").style.display = "none";
+    document.getElementById("wzChapter").value = "";
+    document.getElementById("wzTopics").value = "";
+    
+    activeBatchFilter = batchName; // Auto filter to the newly created batch
+    showToast("সফলভাবে তৈরি হয়েছে!", "success");
     loadTree();
+
   } catch (err) {
     showToast(friendlyError(err), "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "তৈরি করুন";
   }
 }
 </script>
