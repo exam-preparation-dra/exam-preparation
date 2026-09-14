@@ -5,436 +5,472 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AI প্রশ্ন ইম্পোর্ট — অ্যাডমিন</title>
 <link rel="stylesheet" href="../css/style.css">
-<link rel="manifest" href="../manifest.json">
-<meta name="theme-color" content="#ff6a2b">
+<style>
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
+  body { overflow-x: hidden; background: var(--bg); }
+  .app-shell { max-width: 650px; padding-bottom: 40px; margin: 0 auto; }
+
+  /* ===== Topbar ===== */
+  .top-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; margin-bottom: 20px; }
+  .btn-glass {
+    background: rgba(128, 128, 128, 0.08); backdrop-filter: blur(10px);
+    border: 1px solid rgba(128, 128, 128, 0.2); border-radius: 12px;
+    color: var(--text-primary); padding: 8px 14px; font-weight: 700; font-size: 0.85rem;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    cursor: pointer; transition: all 0.2s ease; text-decoration: none;
+  }
+  .btn-glass:active { transform: scale(0.96); }
+  .btn-primary { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }
+
+  /* ===== Page Header & Main Action ===== */
+  .page-header { margin-bottom: 24px; text-align: center; }
+  .page-header h1 { font-size: 1.5rem; font-weight: 950; color: var(--text-primary); margin: 0 0 6px 0; letter-spacing: -0.5px; }
+  .page-header p { font-size: 0.85rem; color: var(--text-muted); margin: 0; font-weight: 600; }
+
+  .main-action-card {
+    background: linear-gradient(135deg, rgba(128,128,128,0.06), rgba(128,128,128,0.02));
+    border: 1px dashed var(--color-accent); border-radius: 20px; padding: 30px 20px;
+    text-align: center; margin-bottom: 24px; transition: transform 0.2s;
+  }
+  
+  /* ===== Modal Styles ===== */
+  .modal-overlay { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .custom-modal { width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; padding: 24px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 20px; box-shadow: 0 12px 40px rgba(0,0,0,0.1); }
+  .modal-title { font-size: 1.15rem; font-weight: 900; color: var(--text-primary); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+  
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 0.85rem; font-weight: 800; color: var(--text-secondary); margin-bottom: 8px; }
+  .input-glass { width: 100%; box-sizing: border-box; padding: 12px 14px; background: rgba(128, 128, 128, 0.04); border: 1px solid var(--surface-border); border-radius: 12px; color: var(--text-primary); font-family: inherit; font-size: 0.9rem; font-weight: 600; outline: none; transition: border-color 0.2s; }
+  .input-glass:focus { border-color: var(--color-accent); background: var(--surface); }
+  select.input-glass { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em; }
+  
+  /* Dropzone */
+  .dropzone { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px; border: 1.5px dashed var(--surface-border); border-radius: 12px; cursor: pointer; background: rgba(128,128,128,0.02); transition: all 0.2s; }
+  .dropzone:hover { border-color: var(--color-accent); background: rgba(var(--color-accent-rgb), 0.05); }
+  
+  /* Progress Bar */
+  .progress-container { margin-top: 16px; display: none; }
+  .progress-bar-bg { height: 6px; border-radius: 99px; background: rgba(128,128,128,0.2); overflow: hidden; margin-top: 8px; }
+  .progress-bar-fill { height: 100%; width: 0%; border-radius: 99px; background: var(--color-accent); transition: width 0.4s linear; }
+
+  /* ===== Preview Cards ===== */
+  .glass-card { background: rgba(128, 128, 128, 0.04); backdrop-filter: blur(12px); border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 16px; padding: 16px; margin-bottom: 14px; position: relative; }
+  .badge { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; }
+  .badge-valid { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+  .badge-invalid { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+  .remove-btn { position: absolute; top: 16px; right: 16px; width: 30px; height: 30px; border-radius: 8px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+  .remove-btn:hover { background: #ef4444; color: #fff; }
+</style>
 </head>
 <body>
-<div class="app-shell app-shell--wide" id="shell">
-  <div class="state-block"><div class="spinner"></div></div>
+<div class="app-shell" id="shell">
+  <!-- Topbar -->
+  <div class="top-nav">
+    <a href="../admin/dashboard.html" class="btn-glass" style="width:40px; height:40px; padding:0;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+    </a>
+    <div style="display:flex; gap:10px;">
+      <button class="btn-glass" id="apiKeyBtn" style="border-radius:99px;" title="API Key সেটিং">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7a4 4 0 100 8 4 4 0 000-8zM3 21l6-6m-2-2l2 2"/></svg>
+        API Key
+      </button>
+      <button class="btn-glass" id="guideBtn" style="border-radius:99px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        গাইড
+      </button>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="page-header">
+    <h1>AI প্রশ্ন ইম্পোর্ট</h1>
+    <p>Gemini AI দিয়ে মুহূর্তেই হাজারো প্রশ্ন সেট করুন</p>
+  </div>
+
+  <!-- Main Wizard Entry Button -->
+  <div class="main-action-card">
+    <button class="btn-glass btn-primary" id="openWizardBtn" style="padding:16px 24px; font-size:1.1rem; width:100%; max-width:300px; border-radius:16px;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+      নতুন প্রশ্ন ইম্পোর্ট উইজার্ড
+    </button>
+    <p class="text-xs text-muted mt-3">ছবি থেকে, টপিক লিখে অথবা ম্যানুয়ালি পেস্ট করে প্রশ্ন যোগ করুন</p>
+  </div>
+
+  <!-- Preview Section (Loads dynamically) -->
+  <div id="previewSection"></div>
+</div>
+
+<!-- Import Wizard Modal -->
+<div id="wizardModal" class="modal-overlay" style="display:none;">
+  <div class="custom-modal">
+    <div class="modal-title">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+      প্রশ্ন তৈরি করুন
+    </div>
+    
+    <!-- Location Selection -->
+    <div class="field" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px;">
+      <select id="wzBatch" class="input-glass" style="padding:10px 8px; font-size:0.8rem;"><option value="">ব্যাচ...</option></select>
+      <select id="wzSubject" class="input-glass" style="padding:10px 8px; font-size:0.8rem;"><option value="">বিষয়...</option></select>
+      <select id="wzTopic" class="input-glass" style="padding:10px 8px; font-size:0.8rem;"><option value="">টপিক...</option></select>
+    </div>
+
+    <!-- Input Method Tabs (Simple Toggle) -->
+    <div style="display:flex; gap:8px; margin-bottom:16px; background:rgba(128,128,128,0.05); padding:6px; border-radius:12px;">
+      <button class="btn-glass active-tab" id="tabAi" style="flex:1; border:none; background:var(--surface); box-shadow:0 2px 8px rgba(0,0,0,0.05);">AI জেনারেট</button>
+      <button class="btn-glass" id="tabPaste" style="flex:1; border:none; background:transparent;">টেক্সট পেস্ট</button>
+    </div>
+
+    <!-- AI Generate View -->
+    <div id="viewAi">
+      <p class="text-xs text-muted mb-2">বইয়ের পাতার ছবি দিন অথবা টপিকের নাম লিখে দিন, AI নিজে থেকেই প্রশ্ন বানাবে।</p>
+      <label for="imageInput" class="dropzone">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <span class="text-sm font-bold text-secondary">বই/নোটসের ছবি দিন (ঐচ্ছিক)</span>
+      </label>
+      <input type="file" id="imageInput" accept="image/*" multiple style="display:none;">
+      <div id="imagePreview" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"></div>
+
+      <textarea id="aiInstructions" class="input-glass mt-3" rows="3" placeholder="যেমন: কোষ বিভাজন নিয়ে ১০টি মাঝারি মানের প্রশ্ন বানাও, মার্কস ২ করে। (ছবি না দিলে এটা লিখলেই হবে)"></textarea>
+      
+      <div class="field mt-3">
+        <label>কতটি প্রশ্ন চাই?</label>
+        <input type="number" id="promptCount" class="input-glass" value="10" min="1" max="50">
+      </div>
+
+      <div class="progress-container" id="generateProgress">
+        <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; font-weight:700; color:var(--text-secondary);">
+          <div class="spinner" style="width:14px; height:14px;"></div>
+          <span id="generateProgressText">শুরু হচ্ছে...</span>
+        </div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="generateProgressBar"></div></div>
+      </div>
+
+      <div style="display:flex; gap:8px; margin-top:20px;">
+        <button class="btn-glass close-modal" style="flex:1;">বাতিল</button>
+        <button class="btn-glass btn-primary" id="generateBtn" style="flex:2;">AI দিয়ে জেনারেট করুন</button>
+      </div>
+    </div>
+
+    <!-- Paste View -->
+    <div id="viewPaste" style="display:none;">
+      <p class="text-xs text-muted mb-2">Claude বা ChatGPT থেকে পাওয়া নির্দিষ্ট ফরম্যাটের টেক্সট এখানে পেস্ট করুন।</p>
+      <textarea id="pasteArea" class="input-glass" rows="10" placeholder="Question:\n...\nবাংলা প্রশ্ন:\n...\n\nA:\n...\n\nCorrect Answer:\nA..."></textarea>
+      
+      <div style="display:flex; gap:8px; margin-top:20px;">
+        <button class="btn-glass close-modal" style="flex:1;">বাতিল</button>
+        <button class="btn-glass btn-primary" id="parseBtn" style="flex:2;">প্রিভিউ দেখুন</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- API Key Modal -->
+<div id="apiModal" class="modal-overlay" style="display:none;">
+  <div class="custom-modal" style="max-width:400px;">
+    <div class="modal-title">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7a4 4 0 100 8 4 4 0 000-8zM3 21l6-6m-2-2l2 2"/></svg>
+      Gemini API Key সেটআপ
+    </div>
+    <p class="text-xs text-muted mb-3" style="line-height:1.5;">আপনার Google AI Studio থেকে পাওয়া ফ্রি API Key এখানে দিন। এটি শুধুমাত্র আপনার ব্রাউজারের Local Storage-এ সেভ থাকবে, কোথাও আপলোড হবে না।</p>
+    <input type="password" id="apiKeyInput" class="input-glass" placeholder="AIzaSy...">
+    <div style="display:flex; gap:8px; margin-top:20px;">
+      <button class="btn-glass" id="closeApiBtn" style="flex:1;">বাতিল</button>
+      <button class="btn-glass btn-primary" id="saveApiBtn" style="flex:1;">সেভ করুন</button>
+    </div>
+  </div>
+</div>
+
+<!-- Guide Modal -->
+<div id="guideModal" class="modal-overlay" style="display:none;">
+  <div class="custom-modal" style="max-width:400px;">
+    <div class="modal-title">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+      কীভাবে প্রশ্ন ইম্পোর্ট করবেন?
+    </div>
+    <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.6; margin-bottom:20px;">
+      <p><strong>১. API Key:</strong> প্রথমে উপরের "API Key" বাটনে ক্লিক করে আপনার জেমিনি কী সেভ করে নিন।</p>
+      <p class="mt-2"><strong>২. লোকেশন:</strong> উইজার্ড খুলে কোন ব্যাচ, বিষয় ও টপিকের প্রশ্ন বানাচ্ছেন তা সিলেক্ট করুন।</p>
+      <p class="mt-2"><strong>৩. ছবি থেকে প্রশ্ন (AI):</strong> বইয়ের পাতার ছবি আপলোড করুন এবং কতগুলো প্রশ্ন লাগবে তা লিখে দিন। AI নিজে থেকেই প্রশ্ন, অপশন ও ব্যাখ্যা বানিয়ে দেবে।</p>
+      <p class="mt-2"><strong>৪. টেক্সট পেস্ট:</strong> যদি আগে থেকেই ফরম্যাট করা প্রশ্ন থাকে, তবে "টেক্সট পেস্ট" অপশনে গিয়ে পেস্ট করে প্রিভিউ দেখুন।</p>
+    </div>
+    <button class="btn-glass btn-primary" id="closeGuideBtn" style="width:100%;">বুঝতে পেরেছি</button>
+  </div>
 </div>
 
 <script type="module">
-import { initTheme, toggleTheme, icons, showToast, friendlyError } from "../js/utils/ui-utils.js";
-import { requireAdmin, adminLogout } from "../js/utils/auth.js";
-import { initAdminPwaInstall } from "../pwa-install.js";
+import { initTheme, showToast, friendlyError } from "../js/utils/ui-utils.js";
+import { requireAdmin } from "../js/utils/auth.js";
 import { getFullSyllabusTree } from "../js/utils/syllabus-utils.js";
-import { parseAiImportText, buildAiPromptTemplate, generateQuestionsFromImage, fileToImagePart } from "../js/utils/ai-import-utils.js";
+import { parseAiImportText, generateQuestionsFromImage, fileToImagePart } from "../js/utils/ai-import-utils.js";
 import { addQuestion } from "../js/utils/question-utils.js";
 
 const GEMINI_KEY_STORAGE = "gemini_api_key";
-
-initTheme();
-const shell = document.getElementById("shell");
 let tree = [];
 let parsedResults = [];
 
-requireAdmin(() => {
-  shell.innerHTML = template();
-  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
-  document.getElementById("logoutBtn").addEventListener("click", adminLogout);
-  initAdminPwaInstall("installBtn");
-  document.getElementById("parseBtn").addEventListener("click", handleParse);
-  document.getElementById("copyPromptBtn").addEventListener("click", handleCopyPrompt);
-  document.getElementById("generateBtn").addEventListener("click", handleGenerateFromImage);
-  document.getElementById("apiKeyBtn").addEventListener("click", () => promptForApiKey(true));
-  document.getElementById("imageInput").addEventListener("change", renderImagePreview);
-  setupDropzone();
-  init();
+initTheme();
+
+requireAdmin(async () => {
+  setupEventListeners();
+  await initTree();
 });
 
-function template() {
-  return `
-    <div class="topbar">
-      <a href="../admin/questions.html" class="icon-btn">${icons.arrowLeft}</a>
-      <h2 style="font-size:1.05rem;">AI প্রশ্ন ইম্পোর্ট</h2>
-      <div class="flex gap-2">
-        <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-thumb"></span></button>
-        <button class="icon-btn hidden" id="installBtn" title="অ্যাপ ইনস্টল করুন"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v13m0 0l-4-4m4 4l4-4M5 21h14"/></svg></button>
-        <button class="icon-btn" id="logoutBtn">${icons.arrowRight}</button>
-      </div>
-    </div>
+function setupEventListeners() {
+  // Guide Modal
+  document.getElementById("guideBtn").addEventListener("click", () => document.getElementById("guideModal").style.display = "flex");
+  document.getElementById("closeGuideBtn").addEventListener("click", () => document.getElementById("guideModal").style.display = "none");
 
-    <div class="glass card">
-      <div class="flex justify-between items-center">
-        <p class="eyebrow">বিষয় / অধ্যায় / টপিক নির্বাচন করুন</p>
-      </div>
-      <p class="text-xs text-muted mt-1">নিচে যা কিছু পেস্ট বা জেনারেট করবে, সব প্রশ্ন এই selected চ্যাপ্টার-টপিকেই যোগ হবে।</p>
-      <div class="grid-2 mt-2" style="grid-template-columns:1fr 1fr 1fr;">
-        <select class="select" id="promptSubject"></select>
-        <select class="select" id="promptChapter"></select>
-        <select class="select" id="promptTopic"></select>
-      </div>
-      <div class="field mt-2">
-        <input class="input" type="number" min="1" id="promptCount" value="10" placeholder="কতটি প্রশ্ন">
-      </div>
-      <button class="btn btn-secondary mt-2" id="copyPromptBtn">প্রম্পট কপি করুন</button>
-    </div>
-
-    <div class="glass card mt-4">
-      <div class="flex justify-between items-center">
-        <p class="eyebrow">AI দিয়ে অটো জেনারেট</p>
-        <button class="icon-btn" id="apiKeyBtn" title="Gemini API Key সেট/পরিবর্তন করুন">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 7a4 4 0 100 8 4 4 0 000-8zM3 21l6-6m-2-2l2 2"/></svg>
-        </button>
-      </div>
-      <p class="text-xs text-muted mt-1">চ্যাপ্টারের বই/নোটের পাতার ছবি দাও অথবা নিচে সরাসরি টপিক লিখে দাও — Gemini প্রশ্ন বানিয়ে নিচে পেস্ট-বক্সে ভরে দেবে। প্রথমবার ব্যবহারে একটা ফ্রি Gemini API key চাইবে (শুধু এই ব্রাউজারে সেভ থাকবে)।</p>
-
-      <p class="text-xs mt-4" style="font-weight:700;color:var(--text-secondary);">ছবি (ঐচ্ছিক)</p>
-      <label for="imageInput" id="imageDropzone" style="display:flex;align-items:center;gap:10px;margin-top:8px;padding:14px 16px;border:1.5px dashed var(--surface-border);border-radius:var(--radius-sm);cursor:pointer;background:var(--color-surface-2,transparent);transition:border-color 150ms ease,background 150ms ease;">
-        <span class="icon-btn" style="pointer-events:none;flex-shrink:0;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="4"/></svg>
-        </span>
-        <span class="text-sm" style="font-weight:600;">ছবি বাছাই করো (একাধিক নেওয়া যাবে)</span>
-      </label>
-      <input type="file" id="imageInput" accept="image/*" multiple style="display:none;">
-      <div id="imagePreview" class="flex gap-2 mt-2" style="flex-wrap:wrap;"></div>
-
-      <div class="flex items-center gap-2 mt-4" style="color:var(--text-muted);">
-        <span style="flex:1;height:1px;background:var(--surface-border);"></span>
-        <span class="text-xs">অথবা শুধু টপিক লেখো</span>
-        <span style="flex:1;height:1px;background:var(--surface-border);"></span>
-      </div>
-      <textarea class="textarea mt-3" id="extraInstructions" style="min-height:70px;" placeholder="যেমন: নিউটনের গতিসূত্র নিয়ে মাঝারি মানের প্রশ্ন, প্রতিটির মার্কস ২ রাখো — ছবি না দিলেও এটা লিখলেই যথেষ্ট"></textarea>
-
-      <button class="btn btn-primary mt-3" id="generateBtn">AI দিয়ে জেনারেট করুন</button>
-      <div class="mt-3 hidden" id="generateProgress">
-        <div class="flex items-center gap-2">
-          <div class="spinner" style="width:18px;height:18px;"></div>
-          <span class="text-xs" id="generateProgressText">শুরু হচ্ছে...</span>
-        </div>
-        <div style="height:6px;border-radius:99px;background:var(--color-surface-2,#0003);overflow:hidden;margin-top:8px;">
-          <div id="generateProgressBar" style="height:100%;width:6%;border-radius:99px;background:linear-gradient(90deg,#ff6a2b,#ff8a4c);transition:width .4s linear;"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="glass card mt-4">
-      <p class="eyebrow">প্রশ্ন পেস্ট করুন</p>
-      <p class="text-xs text-muted mt-1">Claude/Gemini থেকে পাওয়া নির্দিষ্ট ফরম্যাটের টেক্সট এখানে পেস্ট করুন (অথবা উপরের বাটনে অটো জেনারেট করুন) — একাধিক প্রশ্ন একসাথে পেস্ট করা যাবে।</p>
-      <textarea class="textarea mt-3" id="pasteArea" style="min-height:220px;" placeholder="Question:
-...
-
-বাংলা প্রশ্ন:
-...
-
-A:
-...
-B:
-...
-C:
-...
-D:
-...
-
-Correct Answer:
-B
-
-Subject:
-Physics
-
-Chapter:
-Motion
-
-Topic:
-Velocity
-
-Marks:
-1"></textarea>
-      <button class="btn btn-primary mt-3" id="parseBtn">প্রিভিউ দেখুন</button>
-    </div>
-
-    <div id="previewSection" class="mt-5"></div>
-  `;
-}
-
-async function init() {
-  tree = await getFullSyllabusTree();
-  const subjSel = document.getElementById("promptSubject");
-  subjSel.innerHTML = tree.map(s => `<option value="${s.id}">${s.name_bn}</option>`).join("");
-  subjSel.addEventListener("change", () => { updatePromptChapters(); reparseIfNeeded(); });
-  document.getElementById("promptChapter").addEventListener("change", () => { updatePromptTopics(); reparseIfNeeded(); });
-  document.getElementById("promptTopic").addEventListener("change", reparseIfNeeded);
-  if (tree[0]) updatePromptChapters();
-}
-
-function reparseIfNeeded() {
-  if (parsedResults.length > 0) handleParse();
-}
-
-function updatePromptChapters() {
-  const subject = tree.find(s => s.id === document.getElementById("promptSubject").value);
-  const chapSel = document.getElementById("promptChapter");
-  chapSel.innerHTML = (subject?.chapters || []).map(c => `<option value="${c.id}">${c.name_bn}</option>`).join("");
-  updatePromptTopics();
-}
-
-function updatePromptTopics() {
-  const subject = tree.find(s => s.id === document.getElementById("promptSubject").value);
-  const chapter = subject?.chapters.find(c => c.id === document.getElementById("promptChapter").value);
-  document.getElementById("promptTopic").innerHTML = (chapter?.topics || []).map(t => `<option value="${t.id}">${t.name_bn}</option>`).join("");
-}
-
-function handleCopyPrompt() {
-  const { subject, chapter, topic } = currentSelection();
-  const count = document.getElementById("promptCount").value;
-
-  const text = buildAiPromptTemplate({
-    subjectName: subject?.name_en, chapterName: chapter?.name_en, topicName: topic?.name_en, count
+  // API Key Modal
+  document.getElementById("apiKeyBtn").addEventListener("click", () => {
+    document.getElementById("apiKeyInput").value = localStorage.getItem(GEMINI_KEY_STORAGE) || "";
+    document.getElementById("apiModal").style.display = "flex";
   });
-  navigator.clipboard.writeText(text)
-    .then(() => showToast("প্রম্পট কপি করা হয়েছে।", "success"))
-    .catch(() => showToast("কপি করা যায়নি। ম্যানুয়ালি সিলেক্ট করে কপি করুন।", "error"));
+  document.getElementById("closeApiBtn").addEventListener("click", () => document.getElementById("apiModal").style.display = "none");
+  document.getElementById("saveApiBtn").addEventListener("click", () => {
+    const key = document.getElementById("apiKeyInput").value.trim();
+    if(key) {
+      localStorage.setItem(GEMINI_KEY_STORAGE, key);
+      showToast("API Key সফলভাবে সেভ হয়েছে!", "success");
+      document.getElementById("apiModal").style.display = "none";
+    } else {
+      showToast("API Key ফাঁকা রাখা যাবে না", "error");
+    }
+  });
+
+  // Wizard Modal
+  document.getElementById("openWizardBtn").addEventListener("click", () => document.getElementById("wizardModal").style.display = "flex");
+  document.querySelectorAll(".close-modal").forEach(btn => btn.addEventListener("click", () => document.getElementById("wizardModal").style.display = "none"));
+
+  // Tabs Toggle
+  document.getElementById("tabAi").addEventListener("click", (e) => switchTab(e.target, "viewAi"));
+  document.getElementById("tabPaste").addEventListener("click", (e) => switchTab(e.target, "viewPaste"));
+
+  // Form Logic
+  document.getElementById("imageInput").addEventListener("change", renderImagePreview);
+  document.getElementById("generateBtn").addEventListener("click", handleGenerate);
+  document.getElementById("parseBtn").addEventListener("click", handleParseBtn);
+
+  // Dropdown Logic
+  document.getElementById("wzBatch").addEventListener("change", updateSubjects);
+  document.getElementById("wzSubject").addEventListener("change", updateTopics);
 }
 
-function currentSelection() {
-  const subject = tree.find(s => s.id === document.getElementById("promptSubject").value);
-  const chapter = subject?.chapters.find(c => c.id === document.getElementById("promptChapter").value);
-  const topic = chapter?.topics.find(t => t.id === document.getElementById("promptTopic").value);
-  return { subject, chapter, topic };
+function switchTab(btnElement, viewId) {
+  document.getElementById("tabAi").style.background = "transparent";
+  document.getElementById("tabAi").style.boxShadow = "none";
+  document.getElementById("tabPaste").style.background = "transparent";
+  document.getElementById("tabPaste").style.boxShadow = "none";
+  
+  btnElement.style.background = "var(--surface)";
+  btnElement.style.boxShadow = "0 2px 8px rgba(0,0,0,0.05)";
+  
+  document.getElementById("viewAi").style.display = viewId === "viewAi" ? "block" : "none";
+  document.getElementById("viewPaste").style.display = viewId === "viewPaste" ? "block" : "none";
 }
 
-function currentTarget() {
+// Tree (Syllabus) Initialization & Logic
+async function initTree() {
+  tree = await getFullSyllabusTree();
+  const batchSel = document.getElementById("wzBatch");
+  batchSel.innerHTML = `<option value="" disabled selected>ব্যাচ...</option>` + tree.map(b => `<option value="${b.id}">${b.name_bn}</option>`).join("");
+}
+
+function updateSubjects() {
+  const batchId = document.getElementById("wzBatch").value;
+  const batch = tree.find(b => b.id === batchId);
+  const subjSel = document.getElementById("wzSubject");
+  subjSel.innerHTML = `<option value="" disabled selected>বিষয়...</option>` + (batch?.chapters || []).map(s => `<option value="${s.id}">${s.name_bn}</option>`).join("");
+  updateTopics();
+}
+
+function updateTopics() {
+  const batchId = document.getElementById("wzBatch").value;
+  const subjId = document.getElementById("wzSubject").value;
+  const batch = tree.find(b => b.id === batchId);
+  const subject = batch?.chapters.find(s => s.id === subjId);
+  const topicSel = document.getElementById("wzTopic");
+  topicSel.innerHTML = `<option value="" disabled selected>টপিক...</option>` + (subject?.topics || []).map(t => `<option value="${t.id}">${t.name_bn}</option>`).join("");
+}
+
+function getSelectedTarget() {
   return {
-    subjectId: document.getElementById("promptSubject").value || null,
-    chapterId: document.getElementById("promptChapter").value || null,
-    topicId: document.getElementById("promptTopic").value || null
+    subjectId: document.getElementById("wzBatch").value || null, // Batch -> DB Subject
+    chapterId: document.getElementById("wzSubject").value || null, // Subject -> DB Chapter
+    topicId: document.getElementById("wzTopic").value || null     // Topic -> DB Topic
   };
 }
 
-function targetLabel() {
-  const { subject, chapter, topic } = currentSelection();
-  return [subject?.name_bn, chapter?.name_bn, topic?.name_bn].filter(Boolean).join(" / ") || "—";
+function getSelectedNames() {
+  const bSel = document.getElementById("wzBatch");
+  const sSel = document.getElementById("wzSubject");
+  const tSel = document.getElementById("wzTopic");
+  return {
+    batchName: bSel.options[bSel.selectedIndex]?.text,
+    subjectName: sSel.options[sSel.selectedIndex]?.text,
+    topicName: tSel.options[tSel.selectedIndex]?.text
+  };
 }
 
-// ---------- Gemini API key (browser-local only, never sent anywhere but Google) ----------
-function getStoredApiKey() {
-  return localStorage.getItem(GEMINI_KEY_STORAGE) || "";
-}
-
-function promptForApiKey(forceAsk = false) {
-  const existing = getStoredApiKey();
-  if (existing && !forceAsk) return existing;
-  const key = window.prompt(
-    "তোমার Gemini API key দাও (Google AI Studio থেকে ফ্রি নেওয়া যায়) — এটা শুধু এই ব্রাউজারে সেভ থাকবে, সার্ভার/রিপোতে যাবে না:",
-    existing || ""
-  );
-  if (key && key.trim()) {
-    localStorage.setItem(GEMINI_KEY_STORAGE, key.trim());
-    showToast("API key সেভ হয়েছে।", "success");
-    return key.trim();
-  }
-  return existing || null;
-}
-
-// ---------- AI image → questions ----------
-// ---------- Image preview (confirms the right pages were picked before sending) ----------
+// Image Preview Logic
 function renderImagePreview() {
   const input = document.getElementById("imageInput");
-  const files = Array.from(input.files || []);
   const box = document.getElementById("imagePreview");
   box.innerHTML = "";
-  files.forEach((file, i) => {
+  Array.from(input.files || []).forEach((file, i) => {
     const url = URL.createObjectURL(file);
     const wrap = document.createElement("div");
-    wrap.style.cssText = "position:relative;width:64px;height:64px;flex-shrink:0;";
-    const img = document.createElement("img");
-    img.src = url;
-    img.style.cssText = "width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--color-border,#ffffff22);";
-    img.onload = () => URL.revokeObjectURL(url);
-    const rm = document.createElement("button");
-    rm.type = "button";
-    rm.textContent = "×";
-    rm.title = "সরিয়ে দাও";
-    rm.style.cssText = "position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:none;background:var(--color-danger,#e5484d);color:#fff;font-size:14px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;";
-    rm.addEventListener("click", () => {
-      const dt = new DataTransfer();
-      files.filter((_, j) => j !== i).forEach(f => dt.items.add(f));
-      input.files = dt.files;
-      renderImagePreview();
-    });
-    wrap.appendChild(img);
-    wrap.appendChild(rm);
+    wrap.style.cssText = "position:relative; width:50px; height:50px; border-radius:8px; overflow:hidden; border:1px solid var(--surface-border);";
+    wrap.innerHTML = `<img src="${url}" style="width:100%; height:100%; object-fit:cover;">
+                      <div style="position:absolute; top:2px; right:2px; background:rgba(239,68,68,0.9); color:#fff; width:16px; height:16px; border-radius:50%; font-size:10px; display:flex; align-items:center; justify-content:center; cursor:pointer;" onclick="this.parentElement.remove()">×</div>`;
     box.appendChild(wrap);
   });
 }
 
-// Dropzone visual feedback + drag-and-drop support
-function setupDropzone() {
-  const dropzone = document.getElementById("imageDropzone");
-  if (!dropzone) return;
-  ["dragover", "dragenter"].forEach(evt => dropzone.addEventListener(evt, (e) => {
-    e.preventDefault();
-    dropzone.style.borderColor = "var(--color-primary, #ff6a2b)";
-    dropzone.style.background = "var(--color-surface-2, rgba(255,106,43,0.06))";
-  }));
-  ["dragleave", "drop"].forEach(evt => dropzone.addEventListener(evt, (e) => {
-    e.preventDefault();
-    dropzone.style.borderColor = "var(--surface-border)";
-    dropzone.style.background = "transparent";
-  }));
-  dropzone.addEventListener("drop", (e) => {
-    const dropped = e.dataTransfer?.files;
-    if (dropped && dropped.length > 0) {
-      document.getElementById("imageInput").files = dropped;
-      renderImagePreview();
-    }
-  });
-}
-
-// ---------- Generation progress (real elapsed time — Gemini takes ~8-30s depending on image count) ----------
+// Progress Logic
 let progressTimer = null;
-let progressStartedAt = null;
-
-function startProgress(imageCount) {
-  const box = document.getElementById("generateProgress");
-  const bar = document.getElementById("generateProgressBar");
-  box.classList.remove("hidden");
-  bar.style.width = "6%";
-  progressStartedAt = Date.now();
-  updateProgressText(imageCount);
-  progressTimer = setInterval(() => updateProgressText(imageCount), 1000);
+let progressStart = null;
+function startProgress() {
+  document.getElementById("generateProgress").style.display = "block";
+  document.getElementById("generateProgressBar").style.width = "5%";
+  progressStart = Date.now();
+  progressTimer = setInterval(() => {
+    const secs = Math.floor((Date.now() - progressStart) / 1000);
+    const pct = Math.min(95, 5 + secs * 3);
+    document.getElementById("generateProgressBar").style.width = `${pct}%`;
+    document.getElementById("generateProgressText").textContent = secs < 5 ? "ছবি পড়া হচ্ছে..." : secs < 15 ? "AI কাজ করছে..." : "প্রায় শেষ...";
+  }, 1000);
 }
-
-function updateProgressText(imageCount) {
-  const secs = Math.floor((Date.now() - progressStartedAt) / 1000);
-  let stage;
-  if (secs < 2) stage = imageCount > 0 ? `${imageCount} টি ছবি পড়া হচ্ছে...` : "টপিক প্রস্তুত করা হচ্ছে...";
-  else if (secs < 5) stage = "Gemini-কে পাঠানো হয়েছে...";
-  else if (secs < 20) stage = "Gemini প্রশ্ন তৈরি করছে...";
-  else stage = "প্রায় শেষ — একটু ধৈর্য ধরো...";
-  document.getElementById("generateProgressText").textContent = `${stage} (${secs}s)`;
-  // Not a real countdown (Gemini's response time varies) — this fills toward
-  // ~95% over ~25s as a visual cue, then holds until the actual response lands.
-  const pct = Math.min(95, 6 + secs * 4);
-  document.getElementById("generateProgressBar").style.width = pct + "%";
-}
-
-function stopProgress(success) {
+function stopProgress() {
   clearInterval(progressTimer);
-  progressTimer = null;
-  if (success) document.getElementById("generateProgressBar").style.width = "100%";
-  setTimeout(() => document.getElementById("generateProgress").classList.add("hidden"), success ? 400 : 0);
+  document.getElementById("generateProgressBar").style.width = "100%";
+  setTimeout(() => document.getElementById("generateProgress").style.display = "none", 500);
 }
 
-async function handleGenerateFromImage() {
-  const files = document.getElementById("imageInput").files;
-  const extraInstructions = document.getElementById("extraInstructions").value;
-  if ((!files || files.length === 0) && !extraInstructions.trim()) {
-    showToast("অন্তত একটি ছবি দাও, অথবা নিচে টপিক লিখে দাও।", "error");
+// Generate & Parse Logic
+async function handleGenerate() {
+  const apiKey = localStorage.getItem(GEMINI_KEY_STORAGE);
+  if (!apiKey) {
+    showToast("প্রথমে API Key সেট করুন", "error");
+    document.getElementById("apiModal").style.display = "flex";
     return;
   }
 
-  const target = currentTarget();
+  const target = getSelectedTarget();
   if (!target.subjectId || !target.chapterId || !target.topicId) {
-    showToast("প্রথমে উপরে থেকে বিষয়/অধ্যায়/টপিক নির্বাচন করো।", "error");
-    return;
+    showToast("প্রথমে ব্যাচ, বিষয় এবং টপিক নির্বাচন করুন", "error"); return;
   }
 
-  const apiKey = promptForApiKey(false);
-  if (!apiKey) { showToast("API key ছাড়া জেনারেট করা যাবে না।", "error"); return; }
+  const files = document.getElementById("imageInput").files;
+  const extra = document.getElementById("aiInstructions").value;
+  if ((!files || files.length === 0) && !extra.trim()) {
+    showToast("অন্তত একটি ছবি বা নির্দেশিকা দিন", "error"); return;
+  }
 
-  const { subject, chapter, topic } = currentSelection();
-  const count = document.getElementById("promptCount").value;
+  const names = getSelectedNames();
   const btn = document.getElementById("generateBtn");
   btn.disabled = true;
-  btn.textContent = "জেনারেট করা হচ্ছে...";
-  startProgress(files ? files.length : 0);
+  startProgress();
 
   try {
-    const imageParts = files && files.length > 0 ? await Promise.all(Array.from(files).map(fileToImagePart)) : [];
-    // Sanity check: confirm every selected file actually produced image data
-    // before spending an API call on it.
-    const emptyCount = imageParts.filter(p => !p.base64).length;
-    if (emptyCount > 0) throw new Error(`${emptyCount} টি ছবি ঠিকমতো পড়া যায়নি — আবার সিলেক্ট করে দেখো।`);
-
+    const imageParts = files ? await Promise.all(Array.from(files).map(fileToImagePart)) : [];
     const text = await generateQuestionsFromImage({
-      apiKey,
-      imageParts,
-      subjectName: subject?.name_en,
-      chapterName: chapter?.name_en,
-      topicName: topic?.name_en,
-      count,
-      extraInstructions
+      apiKey, imageParts,
+      subjectName: names.subjectName, chapterName: names.subjectName, topicName: names.topicName,
+      count: document.getElementById("promptCount").value,
+      extraInstructions: extra
     });
+    
     document.getElementById("pasteArea").value = text;
-    handleParse();
-    stopProgress(true);
-    showToast(imageParts.length > 0 ? `${imageParts.length} টি ছবি বিশ্লেষণ করে প্রশ্ন তৈরি হয়েছে — নিচে প্রিভিউ দেখে ইম্পোর্ট করো।` : "টপিক থেকে প্রশ্ন তৈরি হয়েছে — নিচে প্রিভিউ দেখে ইম্পোর্ট করো।", "success");
+    document.getElementById("wizardModal").style.display = "none";
+    
+    parsedResults = parseAiImportText(text, target);
+    renderPreview();
+    showToast("সফলভাবে জেনারেট হয়েছে! নিচে প্রিভিউ দেখুন।", "success");
   } catch (err) {
-    console.error(err);
-    stopProgress(false);
-    showToast(err.message || friendlyError(err), "error");
+    showToast(friendlyError(err), "error");
   } finally {
+    stopProgress();
     btn.disabled = false;
-    btn.textContent = "AI দিয়ে জেনারেট করুন";
   }
 }
 
-function handleParse() {
-  const raw = document.getElementById("pasteArea").value;
-  if (!raw.trim()) { showToast("প্রথমে টেক্সট পেস্ট করুন।", "error"); return; }
-  parsedResults = parseAiImportText(raw, currentTarget());
+function handleParseBtn() {
+  const target = getSelectedTarget();
+  if (!target.subjectId || !target.chapterId || !target.topicId) {
+    showToast("প্রথমে ব্যাচ, বিষয় এবং টপিক নির্বাচন করুন", "error"); return;
+  }
+  
+  const text = document.getElementById("pasteArea").value;
+  if (!text.trim()) { showToast("টেক্সট পেস্ট করুন", "error"); return; }
+  
+  parsedResults = parseAiImportText(text, target);
+  document.getElementById("wizardModal").style.display = "none";
   renderPreview();
+  showToast("টেক্সট প্রসেস করা হয়েছে!", "success");
 }
 
 function renderPreview() {
   const section = document.getElementById("previewSection");
   if (parsedResults.length === 0) {
-    section.innerHTML = `<p class="text-sm text-muted">কোনো প্রশ্ন শনাক্ত করা যায়নি। ফরম্যাট যাচাই করুন।</p>`;
+    section.innerHTML = `<div class="glass-card text-center" style="color:var(--text-muted); font-weight:700;">কোনো প্রশ্ন পাওয়া যায়নি। ফরম্যাট ঠিক আছে কি না চেক করুন।</div>`;
     return;
   }
-  const validCount = parsedResults.filter(r => r.valid).length;
 
+  const validCount = parsedResults.filter(r => r.valid).length;
   section.innerHTML = `
-    <div class="flex justify-between items-center">
-      <p class="eyebrow">প্রিভিউ (${parsedResults.length} টি শনাক্ত, ${validCount} টি বৈধ)</p>
-      <button class="btn btn-primary btn-sm" id="importAllBtn">বৈধ প্রশ্নগুলো ইম্পোর্ট করুন</button>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <h3 style="margin:0; font-size:1.1rem; color:var(--text-secondary);">প্রিভিউ (${validCount} টি বৈধ প্রশ্ন)</h3>
+      <button class="btn-glass btn-primary" id="importAllBtn" style="padding:10px 20px;">ইম্পোর্ট করুন</button>
     </div>
+    
     ${parsedResults.map(r => `
-      <div class="glass card mt-3" style="${r.valid ? "" : "border-color:var(--color-danger)66;"}" data-index="${r.index}">
-        <div class="flex justify-between items-center">
-          <span class="badge ${r.valid ? "badge-completed" : "badge-pending"}">${r.valid ? "বৈধ" : "সমস্যা আছে"}</span>
-          <button class="icon-btn remove-btn" data-index="${r.index}" title="বাদ দিন">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 6l12 12M18 6L6 18"/></svg>
-          </button>
+      <div class="glass-card" style="${r.valid ? "" : "border-color:rgba(239,68,68,0.3);"}" data-index="${r.index}">
+        <span class="badge ${r.valid ? "badge-valid" : "badge-invalid"}">${r.valid ? "বৈধ" : "ত্রুটি আছে"}</span>
+        <button class="remove-btn" data-index="${r.index}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        
+        ${!r.valid ? `<ul style="color:#ef4444; font-size:0.8rem; margin:10px 0;">${r.errors.map(e => `<li>${e}</li>`).join("")}</ul>` : ""}
+        
+        <p style="font-weight:800; font-size:1rem; color:var(--text-primary); margin-top:12px;">${r.question.question_bn || "(প্রশ্ন নেই)"}</p>
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; font-size:0.85rem; color:var(--text-secondary); font-weight:600;">
+          <div style="background:rgba(128,128,128,0.05); padding:8px; border-radius:8px; ${r.question.correctAnswer==='A' ? 'border:1px solid #10b981; color:#10b981;' : ''}">A: ${r.question.options_bn.A || "—"}</div>
+          <div style="background:rgba(128,128,128,0.05); padding:8px; border-radius:8px; ${r.question.correctAnswer==='B' ? 'border:1px solid #10b981; color:#10b981;' : ''}">B: ${r.question.options_bn.B || "—"}</div>
+          <div style="background:rgba(128,128,128,0.05); padding:8px; border-radius:8px; ${r.question.correctAnswer==='C' ? 'border:1px solid #10b981; color:#10b981;' : ''}">C: ${r.question.options_bn.C || "—"}</div>
+          <div style="background:rgba(128,128,128,0.05); padding:8px; border-radius:8px; ${r.question.correctAnswer==='D' ? 'border:1px solid #10b981; color:#10b981;' : ''}">D: ${r.question.options_bn.D || "—"}</div>
         </div>
-        ${!r.valid ? `<ul class="text-xs mt-2" style="color:var(--color-danger);padding-right:16px;">${r.errors.map(e => `<li>${e}</li>`).join("")}</ul>` : ""}
-        <p class="mt-2" style="font-weight:600;">${r.question.question_bn || "(বাংলা প্রশ্ন অনুপস্থিত)"}</p>
-        <p class="text-xs text-muted lang-en">${r.question.question_en || "(English question missing)"}</p>
-        <div class="grid-2 mt-2">
-          <p class="text-xs">A: ${r.question.options_bn.A || "—"}</p>
-          <p class="text-xs">B: ${r.question.options_bn.B || "—"}</p>
-          <p class="text-xs">C: ${r.question.options_bn.C || "—"}</p>
-          <p class="text-xs">D: ${r.question.options_bn.D || "—"}</p>
+        
+        <div style="font-size:0.8rem; color:var(--text-muted); font-weight:700; margin-top:12px; border-top:1px dashed var(--surface-border); padding-top:10px;">
+          মার্কস: ${r.question.marks} &nbsp;•&nbsp; সঠিক উত্তর: ${r.question.correctAnswer || "—"}
         </div>
-        <p class="text-xs mt-2">সঠিক: ${r.question.correctAnswer || "—"} • নম্বর: ${r.question.marks} • ${targetLabel()}</p>
-        ${r.question.explanation_bn ? `<p class="text-xs text-muted mt-2" style="border-top:1px dashed var(--surface-border);padding-top:8px;">ব্যাখ্যা: ${r.question.explanation_bn}</p>` : `<p class="text-xs mt-2" style="color:var(--color-danger);">⚠ ব্যাখ্যা নেই — এই প্রশ্নে ভুল করলে স্টুডেন্ট ব্যাখ্যা দেখতে পাবে না</p>`}
+        ${r.question.explanation_bn ? `<p style="font-size:0.8rem; color:var(--text-muted); margin-top:6px; font-weight:600;">ব্যাখ্যা: ${r.question.explanation_bn}</p>` : ''}
       </div>
     `).join("")}
   `;
 
   document.getElementById("importAllBtn").addEventListener("click", handleImportAll);
   section.querySelectorAll(".remove-btn").forEach(b => b.addEventListener("click", () => {
-    const idx = Number(b.dataset.index);
-    parsedResults = parsedResults.filter(r => r.index !== idx);
+    parsedResults = parsedResults.filter(r => r.index !== Number(b.dataset.index));
     renderPreview();
   }));
 }
 
 async function handleImportAll() {
   const validOnes = parsedResults.filter(r => r.valid);
-  if (validOnes.length === 0) { showToast("ইম্পোর্ট করার মতো কোনো বৈধ প্রশ্ন নেই।", "error"); return; }
+  if (validOnes.length === 0) { showToast("ইম্পোর্ট করার মতো বৈধ প্রশ্ন নেই।", "error"); return; }
+  
   const btn = document.getElementById("importAllBtn");
   btn.disabled = true;
-  btn.textContent = "ইম্পোর্ট করা হচ্ছে...";
+  btn.textContent = "সেভ হচ্ছে...";
+  
   try {
     for (const r of validOnes) {
       await addQuestion({
-        question_en: r.question.question_en,
+        question_en: r.question.question_en || "",
         question_bn: r.question.question_bn,
         options_bn: r.question.options_bn,
         correctAnswer: r.question.correctAnswer,
-        explanation_bn: r.question.explanation_bn,
+        explanation_bn: r.question.explanation_bn || "",
         marks: r.question.marks,
         subjectId: r.question.subjectId,
         chapterId: r.question.chapterId,
@@ -442,16 +478,14 @@ async function handleImportAll() {
         createdByAI: true
       });
     }
-    showToast(`${validOnes.length} টি প্রশ্ন প্রশ্ন ব্যাংকে যোগ করা হয়েছে।`, "success");
+    showToast(`${validOnes.length} টি প্রশ্ন সফলভাবে যোগ হয়েছে!`, "success");
     parsedResults = [];
-    document.getElementById("pasteArea").value = "";
     document.getElementById("previewSection").innerHTML = "";
+    document.getElementById("pasteArea").value = "";
   } catch (err) {
-    console.error(err);
     showToast(friendlyError(err), "error");
   } finally {
     btn.disabled = false;
-    btn.textContent = "বৈধ প্রশ্নগুলো ইম্পোর্ট করুন";
   }
 }
 </script>
