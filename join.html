@@ -53,9 +53,14 @@
     color: var(--text-primary);
     font-family: inherit; font-size: 0.95rem; font-weight: 600;
     outline: none; transition: all 0.3s ease;
+    appearance: none; /* Required for custom select styling */
   }
   .input-glass:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.15); background: var(--surface); }
   .input-glass::placeholder { color: var(--text-muted); font-weight: 500; }
+  
+  /* Select Dropdown specific styling */
+  select.input-glass { cursor: pointer; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em; padding-right: 40px; }
+  select.input-glass option { background: var(--bg); color: var(--text-primary); font-weight:600; }
 
   .btn-submit {
     width: 100%; background: var(--color-accent); color: #fff;
@@ -87,20 +92,15 @@
 
 <div class="app-shell">
 
-  <!-- Top Navigation -->
+  <!-- Top Navigation (No Theme Toggle) -->
   <div class="top-nav">
     <a href="./index.html" class="btn-glass nav-btn" aria-label="ফিরে যান">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
     </a>
-    <div style="display: flex; gap: 10px;">
-      <button class="btn-glass" id="guideBtn" style="border-radius: 99px; padding: 8px 14px;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-        গাইড
-      </button>
-      <button class="theme-toggle" id="themeToggle" aria-label="থিম পরিবর্তন করুন">
-        <span class="theme-toggle-thumb"></span>
-      </button>
-    </div>
+    <button class="btn-glass" id="guideBtn" style="border-radius: 99px; padding: 8px 14px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+      গাইড
+    </button>
   </div>
 
   <div class="page-title">
@@ -111,11 +111,19 @@
   <form id="joinForm" class="glass-float-card">
     <div class="field">
       <label for="nameInput">তোমার নাম</label>
-      <input class="input-glass" id="nameInput" required placeholder="বাংলা বা ইংরেজি অক্ষরে লিখতে পারো">
+      <input class="input-glass" id="nameInput" required placeholder="বাংলা বা ইংরেজি অক্ষরে লেখো">
     </div>
     <div class="field">
-      <label for="classInput">ক্লাস</label>
-      <input class="input-glass" id="classInput" required placeholder="যেমন: ৮ম শ্রেণি">
+      <label for="classInput">ক্লাস নির্বাচন করো</label>
+      <select class="input-glass" id="classInput" required>
+        <option value="" disabled selected>ক্লাস বেছে নাও...</option>
+        <option value="Class 8">Class 8</option>
+        <option value="Class 9">Class 9</option>
+        <option value="Class 10">Class 10</option>
+        <option value="Class 11">Class 11</option>
+        <option value="Class 12">Class 12</option>
+        <option value="Other">অন্যান্য</option>
+      </select>
     </div>
     <button type="submit" class="btn-submit" id="submitBtn">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -142,11 +150,11 @@
 </div>
 
 <script type="module">
-import { initTheme, toggleTheme, showToast, friendlyError } from "./js/utils/ui-utils.js";
+import { initTheme, showToast, friendlyError } from "./js/utils/ui-utils.js";
 import { submitStudentRequest } from "./js/utils/student-requests-utils.js";
 
+// Initialize theme but no toggle button is present
 initTheme();
-document.getElementById("themeToggle").addEventListener("click", toggleTheme);
 
 // Modal Logic
 const guideBtn = document.getElementById("guideBtn");
@@ -168,8 +176,12 @@ document.getElementById("joinForm").addEventListener("submit", async (e) => {
   const classInput = document.getElementById("classInput");
   const btn = document.getElementById("submitBtn");
   const name = nameInput.value.trim();
-  const className = classInput.value.trim();
-  if (!name || !className) return;
+  const className = classInput.value; // Dropdown value
+  
+  if (!name || !className) {
+    showToast("দয়া করে নাম এবং ক্লাস নির্বাচন করো", "error");
+    return;
+  }
 
   btn.disabled = true;
   btn.innerHTML = `<span class="spinner" style="width:16px; height:16px; border-width:2px; border-color:#fff; border-top-color:transparent;"></span> পাঠানো হচ্ছে...`;
@@ -199,4 +211,3 @@ document.getElementById("joinForm").addEventListener("submit", async (e) => {
 </script>
 </body>
 </html>
-
