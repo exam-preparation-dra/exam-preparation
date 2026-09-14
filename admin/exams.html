@@ -7,6 +7,72 @@
 <link rel="stylesheet" href="../css/style.css">
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#ff6a2b">
+<style>
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
+  body { overflow-x: hidden; background: var(--bg); }
+  .app-shell { max-width: 900px; padding-bottom: 40px; margin: 0 auto; }
+
+  /* ===== Premium Glass Cards ===== */
+  .glass-card {
+    background: rgba(128, 128, 128, 0.03); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 20px; padding: 24px; margin-bottom: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.02); transition: all 0.3s ease;
+  }
+  .glass-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.05); }
+
+  /* ===== Topbar ===== */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    margin: calc(var(--space-5) * -1) calc(var(--space-4) * -1) var(--space-4);
+    padding: 16px 20px; background: rgba(var(--bg-rgb, 10,14,26), 0.85);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(128,128,128,0.1);
+    display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+  }
+
+  /* ===== Form Elements ===== */
+  .input-glass {
+    padding: 12px 16px; background: rgba(128, 128, 128, 0.05); border: 1px solid var(--surface-border);
+    border-radius: 14px; color: var(--text-primary); font-family: inherit; font-size: 0.95rem; font-weight: 700;
+    outline: none; transition: 0.2s; cursor: pointer;
+  }
+  .input-glass:focus { border-color: var(--color-accent); background: var(--surface); box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.15); }
+  select.input-glass { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1.2em; padding-right: 40px; }
+
+  /* ===== Premium Buttons ===== */
+  .btn-glass {
+    background: rgba(128, 128, 128, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(128, 128, 128, 0.15);
+    border-radius: 12px; color: var(--text-primary); padding: 10px 16px; font-weight: 800; font-size: 0.9rem;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s ease; text-decoration: none;
+  }
+  .btn-glass:hover { background: rgba(128, 128, 128, 0.1); transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+  .btn-glass:active { transform: translateY(0) scale(0.96); }
+  
+  .btn-primary { background: linear-gradient(135deg, var(--color-accent), #f59e0b); color: #fff; border: none; box-shadow: 0 4px 15px rgba(var(--color-accent-rgb), 0.3); }
+  .btn-primary:hover { box-shadow: 0 6px 20px rgba(var(--color-accent-rgb), 0.4); transform: translateY(-2px); }
+  
+  .btn-danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.2); }
+  .btn-danger:hover { background: #ef4444; color: #fff; box-shadow: 0 4px 15px rgba(239,68,68,0.3); }
+
+  /* ===== Exam Card Specifics ===== */
+  .exam-title { font-size: 1.2rem; font-weight: 900; color: var(--text-primary); margin-bottom: 6px; line-height: 1.4; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .exam-meta { display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.85rem; color: var(--text-muted); font-weight: 600; margin-bottom: 16px; }
+  .meta-item { display: flex; align-items: center; gap: 6px; background: rgba(128,128,128,0.05); padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(128,128,128,0.1); }
+  
+  .target-batch-badge { background: rgba(var(--color-accent-rgb), 0.15); color: var(--color-accent); padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 900; border: 1px solid rgba(var(--color-accent-rgb), 0.3); }
+
+  /* Status Badges */
+  .st-badge { padding: 6px 14px; border-radius: 99px; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.5px; border: 1px solid transparent; display: inline-block; white-space: nowrap; }
+  .st-draft { background: rgba(128,128,128,0.1); color: var(--text-secondary); border-color: rgba(128,128,128,0.2); }
+  .st-upcoming { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border-color: rgba(59, 130, 246, 0.2); }
+  .st-published { background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.2); }
+  .st-active { background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.3); box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); }
+  .st-completed { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border-color: rgba(139, 92, 246, 0.2); }
+  .st-archived { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border-color: rgba(245, 158, 11, 0.2); }
+
+  .action-bar { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--surface-border); }
+  .controls-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; margin-top: 16px; }
+</style>
 </head>
 <body>
 <div class="app-shell app-shell--wide" id="shell">
@@ -28,78 +94,107 @@ const STATUS_LABEL = {
   draft: "খসড়া", upcoming: "আসন্ন", published: "প্রকাশিত",
   active: "চলমান", completed: "সম্পন্ন", archived: "সংরক্ষণাগারে"
 };
-const STATUS_BADGE = {
-  draft: "badge-draft", upcoming: "badge-upcoming", published: "badge-active",
-  active: "badge-active", completed: "badge-completed", archived: "badge-draft"
+
+const STATUS_CLASS = {
+  draft: "st-draft", upcoming: "st-upcoming", published: "st-published",
+  active: "st-active", completed: "st-completed", archived: "st-archived"
 };
 
 requireAdmin(() => {
   shell.innerHTML = `
     <div class="topbar">
-      <a href="../admin/dashboard.html" class="icon-btn">${icons.arrowLeft}</a>
-      <h2 style="font-size:1.05rem;">পরীক্ষা ব্যবস্থাপনা</h2>
-      <div class="flex gap-2">
-        <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-thumb"></span></button>
-        <button class="icon-btn hidden" id="installBtn" title="অ্যাপ ইনস্টল করুন"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v13m0 0l-4-4m4 4l4-4M5 21h14"/></svg></button>
-        <button class="icon-btn" id="logoutBtn">${icons.arrowRight}</button>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <a href="../admin/dashboard.html" class="btn-glass" style="width:42px; height:42px; padding:0; border-radius:12px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        </a>
+        <h2 style="font-size:1.2rem; font-weight:900; color:var(--text-primary); margin:0;">পরীক্ষা ব্যবস্থাপনা</h2>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="theme-toggle" id="themeToggle" style="margin:0;"><span class="theme-toggle-thumb"></span></button>
+        <button class="btn-glass hidden" id="installBtn" style="width:42px;height:42px;padding:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M12 3v13m0 0l-4-4m4 4l4-4M5 21h14"/></svg></button>
+        <button class="btn-glass" id="logoutBtn" style="width:42px;height:42px;padding:0;border-color:rgba(239,68,68,0.3);color:#ef4444;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:18px;height:18px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
       </div>
     </div>
 
-    <div class="flex justify-between items-center">
-      <select class="select" id="statusFilter" style="max-width:180px;">
-        <option value="">সব স্ট্যাটাস</option>
+    <div class="controls-header">
+      <select class="input-glass" id="statusFilter" style="max-width:200px;">
+        <option value="">সব স্ট্যাটাস (All)</option>
         ${Object.entries(STATUS_LABEL).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}
       </select>
-      <a href="../admin/exam-create.html" class="btn btn-primary btn-sm">${icons.plus} নতুন পরীক্ষা</a>
+      <a href="../admin/exam-create.html" class="btn-glass btn-primary" style="padding:12px 20px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        নতুন পরীক্ষা তৈরি
+      </a>
     </div>
 
-    <div id="examList" class="mt-4"></div>
+    <div id="examList"></div>
   `;
+  
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
   document.getElementById("logoutBtn").addEventListener("click", adminLogout);
   initAdminPwaInstall("installBtn");
   document.getElementById("statusFilter").addEventListener("change", (e) => { statusFilter = e.target.value; load(); });
+  
   load();
 });
 
 async function load() {
   const el = document.getElementById("examList");
-  el.innerHTML = `<div class="glass card skeleton" style="height:90px;"></div>`;
+  el.innerHTML = `<div class="glass-card" style="padding:40px; text-align:center;"><div class="spinner" style="margin:0 auto;"></div></div>`;
   try {
     exams = await getAllExams({ status: statusFilter || null });
     render();
   } catch (err) {
     console.error(err);
-    renderState(el, "error", "পরীক্ষার তালিকা লোড করা যায়নি।");
+    renderState(el, "error", "পরীক্ষার তালিকা লোড করা যায়নি। ইন্টারনেট সংযোগ চেক করুন।");
   }
 }
 
 function render() {
   const el = document.getElementById("examList");
   if (exams.length === 0) {
-    renderState(el, "empty", "এখনো কোনো পরীক্ষা তৈরি হয়নি।");
+    el.innerHTML = `<div class="glass-card" style="text-align:center; padding:40px 20px;"><p style="font-size:1rem; font-weight:800; color:var(--text-muted);">এখনো কোনো পরীক্ষা তৈরি হয়নি বা এই স্ট্যাটাসে নেই।</p></div>`;
     return;
   }
+  
   el.innerHTML = exams.map(exam => {
-    const dateStr = exam.examDate?.toDate ? exam.examDate.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" }) : "—";
+    const dateStr = exam.examDate?.toDate ? exam.examDate.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "short", year: "numeric" }) : "—";
+    
+    // NEW BATCH LOGIC
+    let targetBatchDisplay = "সকল ব্যাচ";
+    if (exam.targetBatch && exam.targetBatch !== "all") {
+      targetBatchDisplay = exam.targetBatch;
+    }
+
     return `
-    <div class="glass card mt-2" data-id="${exam.id}">
-      <div class="flex justify-between items-center">
-        <div>
-          <p style="font-weight:700;">${exam.name}</p>
-          <p class="text-xs text-muted">${dateStr} • ${exam.durationMinutes || "—"} মিনিট • মোট ${exam.totalMarks ?? 0} নম্বর • ${(exam.questionIds || []).length} টি প্রশ্ন</p>
+    <div class="glass-card" data-id="${exam.id}">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; margin-bottom:12px;">
+        <div class="exam-title">
+          ${exam.name}
+          <span class="target-batch-badge">${targetBatchDisplay}</span>
         </div>
-        <span class="badge ${STATUS_BADGE[exam.status] || "badge-draft"}">${STATUS_LABEL[exam.status] || exam.status}</span>
+        <span class="st-badge ${STATUS_CLASS[exam.status] || "st-draft"}">${STATUS_LABEL[exam.status] || exam.status}</span>
       </div>
-      <div class="flex gap-2 mt-3" style="flex-wrap:wrap;">
+
+      <div class="exam-meta">
+        <div class="meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ${dateStr}</div>
+        <div class="meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${exam.durationMinutes || "—"} মি</div>
+        <div class="meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> ${exam.totalMarks ?? 0} নম্বর</div>
+        <div class="meta-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> ${(exam.questionIds || []).length} টি প্রশ্ন</div>
+      </div>
+      
+      <div class="action-bar">
         ${exam.status === "draft" ? `
-          <a href="../admin/exam-create.html?id=${exam.id}" class="btn btn-secondary btn-sm">সম্পাদনা</a>
-          <button class="btn btn-primary btn-sm publish-btn" data-id="${exam.id}">প্রকাশ করুন</button>
-          <button class="btn btn-danger btn-sm delete-btn" data-id="${exam.id}">মুছুন</button>
+          <a href="../admin/exam-create.html?id=${exam.id}" class="btn-glass"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> সম্পাদনা</a>
+          <button class="btn-glass btn-primary publish-btn" data-id="${exam.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> প্রকাশ করুন</button>
+          <button class="btn-glass btn-danger delete-btn" data-id="${exam.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg> মুছুন</button>
         ` : ""}
-        <button class="btn btn-secondary btn-sm dup-btn" data-id="${exam.id}">ডুপ্লিকেট</button>
-        ${["published", "completed"].includes(exam.status) ? `<button class="btn btn-secondary btn-sm archive-btn" data-id="${exam.id}">সংরক্ষণাগারে পাঠান</button>` : ""}
-        ${exam.status !== "draft" ? `<button class="btn btn-danger btn-sm perm-delete-btn" data-id="${exam.id}" data-name="${exam.name}">স্থায়ীভাবে মুছুন</button>` : ""}
+        
+        <button class="btn-glass dup-btn" data-id="${exam.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> ডুপ্লিকেট</button>
+        
+        ${["published", "completed"].includes(exam.status) ? `<button class="btn-glass archive-btn" data-id="${exam.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> আর্কাইভ করুন</button>` : ""}
+        
+        ${exam.status !== "draft" ? `<button class="btn-glass btn-danger perm-delete-btn" data-id="${exam.id}" data-name="${exam.name}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg> স্থায়ীভাবে মুছুন</button>` : ""}
       </div>
     </div>
   `;
@@ -113,7 +208,7 @@ function render() {
 }
 
 async function handlePublish(id) {
-  if (!confirm("পরীক্ষা প্রকাশ করলে প্রশ্নগুলো স্থায়ীভাবে লক হয়ে যাবে এবং পরবর্তীতে প্রশ্ন ব্যাংকে পরিবর্তন করলেও এই পরীক্ষা প্রভাবিত হবে না। এগিয়ে যাবেন?")) return;
+  if (!confirm("পরীক্ষা প্রকাশ করলে প্রশ্নগুলো স্থায়ীভাবে লক হয়ে যাবে। এগিয়ে যাবেন?")) return;
   try {
     await publishExam(id);
     showToast("পরীক্ষা প্রকাশ করা হয়েছে।", "success");
