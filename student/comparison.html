@@ -5,6 +5,46 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>তুলনা — পরীক্ষা প্রস্তুতি</title>
 <link rel="stylesheet" href="../css/style.css">
+<style>
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
+  body { overflow-x: hidden; background: var(--bg); }
+  .app-shell { max-width: 600px; padding-bottom: 40px; margin: 0 auto; }
+
+  /* ===== Premium Glass Cards ===== */
+  .glass-card {
+    background: rgba(128, 128, 128, 0.04); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 20px; padding: 20px; margin-bottom: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.02);
+  }
+
+  /* ===== Circular Progress SVG ===== */
+  .circ-chart { display: block; margin: 0 auto; }
+  .circ-bg { fill: none; stroke: rgba(128,128,128,0.15); stroke-width: 3.5; }
+  .circ-fill { fill: none; stroke-linecap: round; stroke-width: 3.5; animation: fillup 1s ease-out forwards; }
+  .circ-text { font-family: var(--font-num); font-size: 8.5px; font-weight: 900; fill: var(--text-primary); text-anchor: middle; dominant-baseline: central; }
+  @keyframes fillup { from { stroke-dasharray: 0, 100; } }
+
+  /* ===== Leaderboard Row ===== */
+  .leaderboard-row { display: flex; align-items: center; gap: 14px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 16px; margin-bottom: 10px; transition: transform 0.2s; }
+  .rank-badge { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(128,128,128,0.1); color: var(--text-secondary); font-weight: 900; font-size: 0.85rem; flex-shrink: 0; }
+  .rank-1 { background: rgba(250, 204, 21, 0.15); color: #ca8a04; border: 1px solid rgba(250, 204, 21, 0.3); }
+  .rank-2 { background: rgba(148, 163, 184, 0.15); color: #64748b; border: 1px solid rgba(148, 163, 184, 0.3); }
+  .rank-3 { background: rgba(180, 83, 9, 0.15); color: #b45309; border: 1px solid rgba(180, 83, 9, 0.3); }
+  
+  .st-info { flex: 1; min-width: 0; }
+  .st-name { font-weight: 800; font-size: 0.95rem; color: var(--text-primary); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .me-badge { font-size: 0.65rem; background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 2px 6px; border-radius: 6px; font-weight: 800; margin-left: 6px; vertical-align: middle; }
+  .st-points { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
+  .pts-val { color: var(--color-accent); font-weight: 800; font-size: 0.85rem; }
+
+  /* ===== VS View Styles ===== */
+  .vs-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; background: rgba(128,128,128,0.06); border-radius: 12px; margin-bottom: 20px; border: 1px dashed var(--surface-border); }
+  .vs-split { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
+  .vs-divider { width: 1px; height: 50px; background: rgba(128,128,128,0.2); }
+  .vs-person { text-align: center; flex: 1; }
+  .vs-name { font-weight: 800; font-size: 0.85rem; color: var(--text-secondary); margin-top: 10px; }
+  .vs-meta { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+</style>
 </head>
 <body>
 <div class="app-shell" id="shell">
@@ -12,7 +52,7 @@
 </div>
 
 <script type="module">
-import { initTheme, toggleTheme, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
+import { initTheme, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
 import { getActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
 import { getApprovedResults } from "../js/utils/results-utils.js";
 import { getSubjects, getChapters, getTopics, buildNameMap } from "../js/utils/syllabus-utils.js";
@@ -25,109 +65,172 @@ const student = getActiveStudent();
 if (!student) {
   window.location.href = "../index.html";
 } else {
-  render();
+  renderPage();
 }
 
-const COLORS = ["var(--color-accent)", "var(--color-info)", "#a855f7", "#2dd4bf", "#f43f5e"];
+// Function to draw circular SVG progress
+function drawCircle(pct, color, size = 50) {
+  const p = isNaN(pct) || pct === null ? 0 : Math.round(pct);
+  const c = p === 0 ? "rgba(128,128,128,0.4)" : color;
+  return `
+    <svg viewBox="0 0 36 36" class="circ-chart" style="width:${size}px; height:${size}px;">
+      <path class="circ-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+      <path class="circ-fill" stroke="${c}" stroke-dasharray="${p}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+      <text x="18" y="18" class="circ-text">${p}%</text>
+    </svg>
+  `;
+}
 
-async function render() {
+async function renderPage() {
   const urlParams = new URLSearchParams(window.location.search);
-  const isFriendCompare = urlParams.has("friendId");
-  
+  const friendId = urlParams.get("friendId");
+  const isFriendCompare = !!friendId;
+  const myBatch = student.className || "অজানা ব্যাচ";
+
   shell.innerHTML = `
     ${renderStudentHeader(student, "dashboard")}
-    <p class="eyebrow">${isFriendCompare ? "বন্ধুর সাথে তুলনা" : "সকল শিক্ষার্থীর তুলনা"}</p>
-    <div id="body" class="mt-3"><div class="glass card skeleton" style="height:200px;"></div></div>
+    <div id="body" class="mt-4"><div class="spinner" style="margin:40px auto;"></div></div>
   `;
-  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
 
   const body = document.getElementById("body");
+
   try {
-    let students = await getActiveStudents();
-    const friendId = urlParams.get("friendId");
+    let allStudents = await getActiveStudents();
     
-    // Filter specifically for friend comparison
-    if (friendId) {
-      students = students.filter(s => s.studentId === student.studentId || s.studentId === friendId);
+    // STRICT BATCH ISOLATION
+    let batchStudents = allStudents.filter(s => (s.className || "অজানা ব্যাচ") === myBatch);
+    
+    if (isFriendCompare) {
+      batchStudents = batchStudents.filter(s => s.studentId === student.studentId || s.studentId === friendId);
+      if (batchStudents.length < 2) {
+        renderState(body, "error", "বন্ধু একই ব্যাচের নয় অথবা ডেটা পাওয়া যায়নি।"); return;
+      }
     }
-    
-    if (students.length < 2) {
-      renderState(body, "empty", "তুলনার জন্য অন্তত দুইজন সক্রিয় শিক্ষার্থী প্রয়োজন।");
-      return;
+
+    if (batchStudents.length < 2 && !isFriendCompare) {
+      renderState(body, "empty", "আপনার ব্যাচে তুলনার জন্য অন্য কোনো শিক্ষার্থী নেই।"); return;
     }
-    
+
     const [subjects, chapters, topics] = await Promise.all([getSubjects(), getChapters(), getTopics()]);
     const subjectMap = buildNameMap(subjects), chapterMap = buildNameMap(chapters), topicMap = buildNameMap(topics);
 
-    const summaries = await Promise.all(students.map(async s => {
+    const summaries = await Promise.all(batchStudents.map(async s => {
       const results = await getApprovedResults(s.studentId);
-      return computeStudentSummary(s, results, subjectMap, chapterMap, topicMap);
+      const summary = computeStudentSummary(s, results, subjectMap, chapterMap, topicMap);
+      // Custom Gamified Points Calculation
+      summary.points = Math.round((summary.avgPercentage || 0) * (summary.examsTaken || 0) * 1.5);
+      return summary;
     }));
 
-    if (summaries.every(s => !s.hasData)) {
-      renderState(body, "empty", "তুলনার জন্য এখনো পর্যাপ্ত অনুমোদিত ফলাফল নেই।");
-      return;
+    if (isFriendCompare && summaries.length >= 2) {
+      renderFriendView(body, summaries, myBatch);
+    } else {
+      renderBatchLeaderboard(body, summaries, myBatch);
     }
 
-    renderComparison(body, summaries);
   } catch (err) {
     console.error(err);
-    renderState(body, "error", "তুলনা লোড করা যায়নি।");
+    renderState(body, "error", "ডেটা লোড করতে সমস্যা হয়েছে।");
   }
 }
 
-function bar(value, color) {
-  return `<div class="progress-track mt-1"><div class="progress-fill" style="width:${value ?? 0}%;background:${color};"></div></div>`;
-}
+// 1. BATCH LEADERBOARD VIEW (Points Focus, No Deep Subject Details of Others)
+function renderBatchLeaderboard(body, summaries, batchName) {
+  // Sort by Points Descending
+  summaries.sort((a, b) => (b.points || 0) - (a.points || 0));
 
-function renderComparison(body, summaries) {
+  const rows = summaries.map((s, idx) => {
+    const isMe = s.studentId === student.studentId;
+    const rankClass = idx === 0 ? 'rank-1' : idx === 1 ? 'rank-2' : idx === 2 ? 'rank-3' : '';
+    const rankLabel = idx === 0 ? '১ম' : idx === 1 ? '২য়' : idx === 2 ? '৩য়' : `${idx + 1}`;
+    
+    return `
+      <div class="leaderboard-row" style="${isMe ? 'border-color:var(--color-accent); background:rgba(var(--color-accent-rgb),0.02);' : ''}">
+        <div class="rank-badge ${rankClass}">${rankLabel}</div>
+        <div class="st-info">
+          <div class="st-name">${s.name} ${isMe ? '<span class="me-badge">আপনি</span>' : ''}</div>
+          <div class="st-points">মোট পয়েন্ট: <span class="pts-val">${s.points}</span></div>
+        </div>
+        <div>
+          ${drawCircle(s.avgPercentage, 'var(--color-accent)', 44)}
+        </div>
+      </div>
+    `;
+  }).join("");
+
   body.innerHTML = `
-    <div class="glass card">
-      <p class="eyebrow">সার্বিক পারফরম্যান্স</p>
-      ${summaries.map((s, i) => `
-        <div class="mt-3">
-          <div class="flex justify-between items-center">
-            <p style="font-weight:700;">${s.name}${s.studentId === student.studentId ? " (আপনি)" : ""}</p>
-            <p style="font-weight:800;color:${COLORS[i % COLORS.length]};">${s.hasData ? (s.avgPercentage ?? "—") + "%" : "তথ্য নেই"}</p>
-          </div>
-          ${s.hasData ? bar(s.avgPercentage, COLORS[i % COLORS.length]) : ""}
-          ${s.hasData ? `<p class="text-xs text-muted mt-1">${s.examsTaken} টি পরীক্ষা • সঠিকতা ${s.avgAccuracy ?? "—"}% • সেরা ${s.bestExam?.percentage ?? "—"}% • সর্বনিম্ন ${s.lowestExam?.percentage ?? "—"}%</p>` : ""}
-        </div>
-      `).join("")}
+    <div class="vs-header">
+      <span style="font-size:0.85rem; font-weight:800; color:var(--text-secondary);">আপনার ব্যাচ: <span style="color:var(--color-accent);">${batchName}</span></span>
     </div>
-
-    <div class="glass card mt-4">
-      <p class="eyebrow">স্থিতিশীলতা ও উন্নতি</p>
-      ${summaries.filter(s => s.hasData).map(s => `
-        <div class="flex justify-between items-center mt-2">
-          <p class="text-sm">${s.name}</p>
-          <p class="text-xs text-muted">স্থিতিশীলতা (কম ভালো): ${s.consistencyStdDev} • উন্নতি: ${s.improvementRate !== null ? (s.improvementRate > 0 ? "+" : "") + s.improvementRate + "%" : "পর্যাপ্ত তথ্য নেই"}</p>
-        </div>
-      `).join("")}
+    
+    <div class="glass-card" style="padding: 16px;">
+      <p style="font-weight:900; font-size:1.1rem; color:var(--text-primary); margin-bottom:4px;">ব্যাচ লিডারবোর্ড</p>
+      <p style="font-size:0.75rem; color:var(--text-muted); font-weight:600; margin-bottom:16px;">পয়েন্টস এবং গড়ের ভিত্তিতে তালিকা</p>
+      ${rows}
     </div>
-
-    <p class="eyebrow mt-5">বিষয়ভিত্তিক তুলনা</p>
-    ${renderMergedTable(mergeStatsForDisplay(summaries, "subjectStats", "subjectId"), summaries)}
-
-    <p class="eyebrow mt-5">অধ্যায়ভিত্তিক তুলনা</p>
-    ${renderMergedTable(mergeStatsForDisplay(summaries, "chapterStats", "chapterId"), summaries)}
   `;
 }
 
-function renderMergedTable(rows, summaries) {
-  if (rows.length === 0) return `<p class="text-xs text-muted mt-2">তথ্য নেই।</p>`;
-  return rows.map(row => `
-    <div class="glass card mt-2">
-      <p style="font-weight:600;">${row.name}</p>
-      ${summaries.filter(s => s.hasData).map((s, i) => `
-        <div class="flex justify-between items-center mt-2">
-          <p class="text-xs text-muted">${s.name}</p>
-          <p class="text-xs" style="font-weight:700;color:${COLORS[i % COLORS.length]};">${row[s.studentId] ?? "—"}${row[s.studentId] !== null && row[s.studentId] !== undefined ? "%" : ""}</p>
-        </div>
-        ${row[s.studentId] !== null && row[s.studentId] !== undefined ? bar(row[s.studentId], COLORS[i % COLORS.length]) : ""}
-      `).join("")}
+// 2. DETAILED FRIEND COMPARISON VIEW
+function renderFriendView(body, summaries, batchName) {
+  const me = summaries.find(s => s.studentId === student.studentId) || summaries[0];
+  const friend = summaries.find(s => s.studentId !== student.studentId) || summaries[1];
+
+  const mergedSubjects = mergeStatsForDisplay(summaries, "subjectStats", "subjectId");
+
+  body.innerHTML = `
+    <div class="vs-header">
+      <span style="font-size:0.85rem; font-weight:800; color:var(--text-secondary);">ব্যাচ: <span style="color:var(--color-accent);">${batchName}</span></span>
+      <a href="comparison_2.html" style="font-size:0.8rem; font-weight:800; color:var(--color-accent); text-decoration:none;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-right:4px;"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        লিডারবোর্ড
+      </a>
     </div>
-  `).join("");
+
+    <!-- Overall Comparison -->
+    <div class="glass-card">
+      <p style="font-weight:900; font-size:1.05rem; color:var(--text-primary); text-align:center; margin-bottom:20px;">ওভারঅল পারফরম্যান্স</p>
+      <div class="vs-split">
+        <div class="vs-person">
+          ${drawCircle(me.avgPercentage, 'var(--color-accent)', 70)}
+          <div class="vs-name">আপনি</div>
+          <div class="vs-meta">পয়েন্টস: ${me.points}</div>
+        </div>
+        <div class="vs-divider"></div>
+        <div class="vs-person">
+          ${drawCircle(friend.avgPercentage, '#3b82f6', 70)}
+          <div class="vs-name">${friend.name}</div>
+          <div class="vs-meta">পয়েন্টস: ${friend.points}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subject Wise Details -->
+    <p style="font-weight:900; font-size:1.05rem; color:var(--text-primary); margin:24px 0 12px; padding-left:4px;">বিষয়ভিত্তিক দক্ষতা</p>
+
+    ${mergedSubjects.length === 0 ? `<div class="glass-card text-center text-muted text-sm font-bold">পর্যাপ্ত ডেটা নেই।</div>` : 
+      mergedSubjects.map(sub => {
+        const myVal = sub[me.studentId];
+        const frVal = sub[friend.studentId];
+        return `
+        <div class="glass-card" style="padding:16px;">
+          <p style="font-weight:800; font-size:0.95rem; color:var(--text-secondary); margin-bottom:16px; text-align:center;">${sub.name}</p>
+          <div class="vs-split">
+            <div class="vs-person">
+              ${drawCircle(myVal, 'var(--color-accent)', 52)}
+              <div class="vs-name" style="font-size:0.75rem;">আপনি</div>
+            </div>
+            <div class="vs-divider" style="height:35px;"></div>
+            <div class="vs-person">
+              ${drawCircle(frVal, '#3b82f6', 52)}
+              <div class="vs-name" style="font-size:0.75rem;">${friend.name.split(" ")[0]}</div>
+            </div>
+          </div>
+        </div>
+        `;
+      }).join("")
+    }
+  `;
 }
 </script>
 </body>
