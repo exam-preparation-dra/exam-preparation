@@ -45,6 +45,7 @@
   /* ===== Form Styles ===== */
   .field { margin-bottom: 18px; }
   .field label { display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 8px; }
+  
   .input-glass {
     width: 100%; box-sizing: border-box; padding: 14px 16px;
     background: rgba(128, 128, 128, 0.05);
@@ -53,14 +54,21 @@
     color: var(--text-primary);
     font-family: inherit; font-size: 0.95rem; font-weight: 600;
     outline: none; transition: all 0.3s ease;
-    appearance: none; /* Required for custom select styling */
+    appearance: none;
   }
   .input-glass:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.15); background: var(--surface); }
   .input-glass::placeholder { color: var(--text-muted); font-weight: 500; }
   
   /* Select Dropdown specific styling */
-  select.input-glass { cursor: pointer; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em; padding-right: 40px; }
-  select.input-glass option { background: var(--bg); color: var(--text-primary); font-weight:600; }
+  select.input-glass { 
+    cursor: pointer; 
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); 
+    background-repeat: no-repeat; 
+    background-position: right 1.2rem center; 
+    background-size: 1.1em; 
+    padding-right: 40px; 
+  }
+  select.input-glass option { background: var(--bg); color: var(--text-primary); font-weight:700; padding:12px; }
 
   .btn-submit {
     width: 100%; background: var(--color-accent); color: #fff;
@@ -114,14 +122,16 @@
       <input class="input-glass" id="nameInput" required placeholder="বাংলা বা ইংরেজি অক্ষরে লেখো">
     </div>
     <div class="field">
-      <label for="classInput">ক্লাস নির্বাচন করো</label>
+      <label for="classInput">ব্যাচ নির্বাচন করো</label>
       <select class="input-glass" id="classInput" required>
-        <option value="" disabled selected>ক্লাস বেছে নাও...</option>
-        <option value="Class 8">Class 8</option>
-        <option value="Class 9">Class 9</option>
-        <option value="Class 10">Class 10</option>
-        <option value="Class 11">Class 11</option>
-        <option value="Class 12">Class 12</option>
+        <option value="" disabled selected>ব্যাচ বেছে নাও...</option>
+        <option value="Batch 6">ব্যাচ ৬</option>
+        <option value="Batch 7">ব্যাচ ৭</option>
+        <option value="Batch 8">ব্যাচ ৮</option>
+        <option value="Batch 9">ব্যাচ ৯</option>
+        <option value="Batch 10">ব্যাচ ১০</option>
+        <option value="Batch 11">ব্যাচ ১১</option>
+        <option value="Batch 12">ব্যাচ ১২</option>
         <option value="Other">অন্যান্য</option>
       </select>
     </div>
@@ -141,7 +151,7 @@
       কীভাবে যুক্ত হবে?
     </div>
     <div style="margin-bottom: 20px;">
-      <p class="modal-text">• তোমার সঠিক নাম এবং ক্লাস লিখে আবেদন পাঠাও।</p>
+      <p class="modal-text">• তোমার সঠিক নাম এবং ব্যাচ নির্বাচন করে আবেদন পাঠাও।</p>
       <p class="modal-text">• আবেদন পাঠানোর পর সাথে সাথেই তালিকায় নাম আসবে না।</p>
       <p class="modal-text">• অ্যাডমিন ম্যানুয়ালি তোমার আবেদন দেখে অনুমোদন দেবেন। অনুমোদন পেলে তবেই তুমি মূল তালিকায় নিজের নাম দেখতে পারবে।</p>
     </div>
@@ -153,7 +163,7 @@
 import { initTheme, showToast, friendlyError } from "./js/utils/ui-utils.js";
 import { submitStudentRequest } from "./js/utils/student-requests-utils.js";
 
-// Initialize theme but no toggle button is present
+// Initialize theme
 initTheme();
 
 // Modal Logic
@@ -179,7 +189,7 @@ document.getElementById("joinForm").addEventListener("submit", async (e) => {
   const className = classInput.value; // Dropdown value
   
   if (!name || !className) {
-    showToast("দয়া করে নাম এবং ক্লাস নির্বাচন করো", "error");
+    showToast("দয়া করে নাম এবং ব্যাচ নির্বাচন করো", "error");
     return;
   }
 
