@@ -8,125 +8,83 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-  .review-option {
-    display: flex; align-items: center; gap: 10px;
-    width: 100%; min-height: 46px; padding: 10px 12px;
-    border-radius: var(--radius-sm);
-    border: 1.5px solid var(--surface-border);
-    background: var(--surface-solid);
-    color: var(--text-primary);
-    font-family: var(--font-bn);
-    font-size: 0.9rem;
-    margin-bottom: 8px;
-    transition: transform 150ms ease;
-  }
-  .review-option .opt-letter {
-    flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
-    background: var(--surface-border); display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 0.78rem;
-  }
-  .review-option .opt-text { flex: 1; }
-  .review-option .opt-tag {
-    flex-shrink: 0; font-size: 0.68rem; font-weight: 700;
-    padding: 3px 8px; border-radius: 999px; white-space: nowrap;
-  }
-  .review-option.correct {
-    border-color: var(--color-success);
-    background: var(--color-success)1a;
-  }
-  .review-option.correct .opt-letter { background: var(--color-success); color: #072925; }
-  .review-option.correct .opt-tag { background: var(--color-success); color: #072925; }
-  .review-option.wrong {
-    border-color: var(--color-danger);
-    background: var(--color-danger)1a;
-  }
-  .review-option.wrong .opt-letter { background: var(--color-danger); color: #fff; }
-  .review-option.wrong .opt-tag { background: var(--color-danger); color: #fff; }
-  .review-unanswered-note {
-    font-size: 0.78rem; color: var(--color-danger); font-weight: 600; margin-top: 8px;
-  }
-
-  /* ===== Card + stat entrance ===== */
-  .glass.card { animation: cardRise 420ms cubic-bezier(.22,.9,.3,1) both; }
-  @keyframes cardRise { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; } }
+  body { overflow-x: hidden; background: var(--bg); }
+  .app-shell { max-width: 650px; padding-bottom: 40px; margin: 0 auto; }
 
-  /* ===== Suspense reveal: shown first, builds anticipation before the
-     score exists on screen at all ===== */
-  .suspense-stage {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 14px; padding: 30px 10px 18px;
+  /* ===== Premium Glass Cards ===== */
+  .glass-card {
+    background: rgba(128, 128, 128, 0.03); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 20px; padding: 20px; margin-bottom: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.02);
   }
-  .suspense-pulse {
-    position: relative; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;
-    color: var(--color-accent);
-  }
-  .suspense-pulse::before {
-    content: ""; position: absolute; inset: 0; border-radius: 50%;
-    background: radial-gradient(circle, var(--color-accent) 0%, transparent 72%);
-    animation: suspensePulse 1.15s ease-in-out infinite;
-  }
-  .suspense-pulse svg { width: 26px; height: 26px; position: relative; z-index: 1; }
+  .glass-card { animation: cardRise 420ms cubic-bezier(.22,.9,.3,1) both; }
+  @keyframes cardRise { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+  /* ===== Suspense Reveal Stage ===== */
+  .suspense-stage { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 30px 10px 18px; }
+  .suspense-pulse { position: relative; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; color: var(--color-accent); }
+  .suspense-pulse::before { content: ""; position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle, rgba(var(--color-accent-rgb),0.2) 0%, transparent 72%); animation: suspensePulse 1.15s ease-in-out infinite; }
+  .suspense-pulse svg { width: 32px; height: 32px; position: relative; z-index: 1; }
   @keyframes suspensePulse { 0%,100% { transform: scale(.8); opacity: .5; } 50% { transform: scale(1.25); opacity: 1; } }
-  .suspense-stage p { font-size: 0.9rem; color: var(--text-secondary); font-weight: 600; }
+  .suspense-stage p { font-size: 1rem; color: var(--text-secondary); font-weight: 800; }
   @keyframes dotBlink { 0%,100% { opacity: .25; } 50% { opacity: 1; } }
   .suspense-stage .dot { animation: dotBlink 1.2s ease-in-out infinite; }
   .suspense-stage .dot:nth-child(2) { animation-delay: 0.15s; }
   .suspense-stage .dot:nth-child(3) { animation-delay: 0.3s; }
 
-  /* ===== Score hero: the number itself is the whole show — no ring/bar,
-     just a large glowing figure that lands with a satisfying pop + a
-     one-shot radial burst behind it, colored by the grade band ===== */
-  .score-hero-box { display: flex; align-items: center; gap: 18px; }
-  .score-mega-wrap { position: relative; flex-shrink: 0; }
-  .score-burst {
-    position: absolute; inset: -34px; border-radius: 50%;
-    background: radial-gradient(circle, var(--score-color, var(--color-accent)) 0%, transparent 70%);
-    opacity: 0; transform: scale(.4); pointer-events: none; z-index: 0;
-  }
+  /* ===== Score Hero Section ===== */
+  .score-hero-box { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 10px 0; }
+  .score-mega-wrap { position: relative; flex-shrink: 0; margin-bottom: 10px; }
+  .score-burst { position: absolute; inset: -40px; border-radius: 50%; background: radial-gradient(circle, var(--score-color, rgba(var(--color-accent-rgb),0.2)) 0%, transparent 70%); opacity: 0; transform: scale(.4); pointer-events: none; z-index: 0; }
   .score-hero-box.landed .score-burst { animation: scoreBurst 750ms cubic-bezier(.22,.9,.3,1) both; }
   @keyframes scoreBurst { 0% { opacity: 0; transform: scale(.4); } 42% { opacity: .5; transform: scale(1.2); } 100% { opacity: 0; transform: scale(1.7); } }
-  .score-mega {
-    position: relative; z-index: 1;
-    font-family: var(--font-num); font-variant-numeric: tabular-nums;
-    font-weight: 800; font-size: 3.1rem; line-height: 1;
-    color: var(--text-primary); transition: color 320ms ease;
-  }
+  .score-mega { position: relative; z-index: 1; font-family: var(--font-num); font-variant-numeric: tabular-nums; font-weight: 900; font-size: 4rem; line-height: 1; color: var(--text-primary); transition: color 320ms ease; text-shadow: 0 4px 20px rgba(0,0,0,0.1); }
   .score-hero-box.landed .score-mega { color: var(--score-color, var(--color-accent)); animation: scoreSettle 420ms cubic-bezier(.34,1.56,.64,1); }
   @keyframes scoreSettle { 0% { transform: scale(1); } 45% { transform: scale(1.1); } 100% { transform: scale(1); } }
-  @media (prefers-reduced-motion: reduce) {
-    .suspense-pulse::before, .score-hero-box.landed .score-mega, .score-hero-box.landed .score-burst, .suspense-stage .dot { animation: none !important; }
-  }
 
-  /* ===== Everything below the score card stays hidden/settled until the
-     reveal lands, then rises in together — the "curtain up" moment ===== */
+  /* ===== Reveal Area & Stats Grid ===== */
   #revealArea { transition: opacity 550ms ease, transform 550ms ease; }
   #revealArea.pre-reveal { opacity: 0; transform: translateY(16px); pointer-events: none; }
-
-  /* ===== Stat cards stagger ===== */
-  .grid-2 .glass.card:nth-child(1) { animation-delay: 60ms; }
-  .grid-2 .glass.card:nth-child(2) { animation-delay: 110ms; }
-  .grid-2 .glass.card:nth-child(3) { animation-delay: 160ms; }
-  .grid-2 .glass.card:nth-child(4) { animation-delay: 210ms; }
+  
+  .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 20px; }
+  .stat-box { background: rgba(128,128,128,0.02); border: 1px solid rgba(128,128,128,0.08); border-radius: 16px; padding: 16px; text-align: center; }
+  .stat-val { font-size: 1.8rem; font-weight: 900; font-family: var(--font-num); margin-bottom: 4px; }
+  .stat-lbl { font-size: 0.8rem; font-weight: 800; color: var(--text-muted); }
   .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
 
-  /* ===== Subject / slowest-question mini bars ===== */
-  .mini-bar-row { margin-top: 10px; }
-  .mini-bar-track { height: 8px; border-radius: 999px; background: var(--surface-border); overflow: hidden; margin-top: 5px; }
-  .mini-bar-fill {
-    height: 100%; border-radius: 999px;
-    background: linear-gradient(90deg, var(--color-accent), var(--color-accent-2));
-    width: 0%;
-    transition: width 900ms cubic-bezier(.22,.9,.3,1);
-  }
-  .mini-bar-fill.fill-success { background: linear-gradient(90deg, var(--color-success), #5eead4); }
+  /* ===== Mini Bars ===== */
+  .mini-bar-row { margin-top: 14px; background: rgba(128,128,128,0.02); border: 1px solid rgba(128,128,128,0.06); padding: 12px; border-radius: 12px; }
+  .mini-bar-track { height: 8px; border-radius: 999px; background: rgba(128,128,128,0.1); overflow: hidden; margin-top: 8px; }
+  .mini-bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--color-accent), #f59e0b); width: 0%; transition: width 900ms cubic-bezier(.22,.9,.3,1); }
+  .mini-bar-fill.fill-success { background: linear-gradient(90deg, #10b981, #34d399); }
 
-  /* ===== Review list stagger ===== */
-  #reviewList .glass.card { animation: reviewRise 380ms cubic-bezier(.22,.9,.3,1) both; }
+  /* ===== Review Options Styling ===== */
+  .review-card { background: rgba(128,128,128,0.02); border: 1px solid rgba(128,128,128,0.12); border-radius: 16px; padding: 20px; margin-bottom: 16px; transition: 0.2s; }
+  .review-option { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 52px; padding: 12px 16px; border-radius: 12px; border: 1.5px solid rgba(128,128,128,0.15); background: rgba(128,128,128,0.03); color: var(--text-primary); font-family: var(--font-bn); font-size: 0.95rem; font-weight: 600; margin-bottom: 10px; transition: transform 150ms ease; }
+  .review-option .opt-letter { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; background: rgba(128,128,128,0.1); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; color: var(--text-secondary); }
+  .review-option .opt-text { flex: 1; line-height: 1.4; }
+  .review-option .opt-tag { flex-shrink: 0; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 999px; white-space: nowrap; display: flex; align-items: center; gap: 4px; }
+  
+  .review-option.correct { border-color: #10b981; background: rgba(16, 185, 129, 0.05); }
+  .review-option.correct .opt-letter { background: #10b981; color: #fff; }
+  .review-option.correct .opt-tag { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+  
+  .review-option.wrong { border-color: #ef4444; background: rgba(239, 68, 68, 0.05); }
+  .review-option.wrong .opt-letter { background: #ef4444; color: #fff; }
+  .review-option.wrong .opt-tag { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+  
+  .review-unanswered-note { font-size: 0.85rem; color: #ef4444; font-weight: 700; margin-top: 12px; display: flex; align-items: center; gap: 6px; }
+
+  /* ===== Buttons ===== */
+  .btn-action { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 20px; border-radius: 14px; font-weight: 800; font-size: 0.95rem; border: none; cursor: pointer; transition: 0.2s; flex: 1; }
+  .btn-primary { background: var(--color-accent); color: #fff; box-shadow: 0 4px 15px rgba(var(--color-accent-rgb), 0.2); }
+  .btn-secondary { background: rgba(128,128,128,0.08); color: var(--text-primary); border: 1px solid rgba(128,128,128,0.2); }
+  .btn-action:active:not(:disabled) { transform: scale(0.96); }
+  .btn-action:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  #reviewList .review-card { animation: reviewRise 380ms cubic-bezier(.22,.9,.3,1) both; }
   @keyframes reviewRise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-  .btn { transition: transform 140ms ease, filter 180ms ease; }
-  .btn:active:not(:disabled) { transform: scale(0.97); }
 </style>
 </head>
 <body>
@@ -134,8 +92,7 @@
   <div class="state-block"><div class="spinner"></div></div>
 </div>
 
-<!-- Hidden render target for PDF export (image-based, so Bengali glyphs render
-     correctly without embedding a custom font into jsPDF — see README). -->
+<!-- Hidden render target for PDF export -->
 <div id="pdfArea" style="position:fixed;left:-9999px;top:0;width:380px;background:#ffffff;color:#111;padding:20px;font-family:'Noto Sans Bengali',sans-serif;"></div>
 
 <script type="module">
@@ -167,10 +124,6 @@ if (!student) {
 function fmtDate(ts) { return ts?.toDate ? ts.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" }) : "—"; }
 function fmtTime(ts) { return ts?.toDate ? ts.toDate().toLocaleTimeString("bn-BD", { hour: "2-digit", minute: "2-digit" }) : "—"; }
 
-// Suspense "lottery reveal": scrambles random digits fast, then converges
-// on the real value with decelerating jitter, locking exactly on target at
-// the end. Feels like a slot machine settling rather than a plain count-up.
-// Respects prefers-reduced-motion by jumping straight to the target.
 function suspenseReveal(el, target, opts = {}) {
   const { totalMs = 2300, scrambleMs = 600, suffix = "" } = opts;
   if (!el || typeof target !== "number" || isNaN(target)) return Promise.resolve();
@@ -184,8 +137,7 @@ function suspenseReveal(el, target, opts = {}) {
       const elapsed = now - start;
       if (elapsed < scrambleMs) {
         el.textContent = `${Math.floor(Math.random() * maxRand)}${suffix}`;
-        requestAnimationFrame(frame);
-        return;
+        requestAnimationFrame(frame); return;
       }
       const t = Math.min(1, (elapsed - scrambleMs) / (totalMs - scrambleMs));
       const eased = 1 - Math.pow(1 - t, 4);
@@ -195,16 +147,13 @@ function suspenseReveal(el, target, opts = {}) {
         el.textContent = `${val}${suffix}`;
         requestAnimationFrame(frame);
       } else {
-        el.textContent = `${target}${suffix}`;
-        resolve();
+        el.textContent = `${target}${suffix}`; resolve();
       }
     }
     requestAnimationFrame(frame);
   });
 }
 
-// Animate a number counting up from 0 to `target` inside `el`, over `duration` ms.
-// Respects prefers-reduced-motion by jumping straight to the target.
 function animateCountUp(el, target, duration = 900, suffix = "") {
   if (!el || typeof target !== "number" || isNaN(target)) return;
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -224,8 +173,7 @@ async function load() {
   try {
     result = await getResultById(resultId);
     if (!result || result.studentId !== student.studentId) {
-      renderState(shell, "error", "এই ফলাফলটি পাওয়া যায়নি অথবা অ্যাক্সেসযোগ্য নয়।");
-      return;
+      renderState(shell, "error", "এই ফলাফলটি পাওয়া যায়নি অথবা অ্যাক্সেসযোগ্য নয়।"); return;
     }
     const [subjects, chapters, topics] = await Promise.all([getSubjects(), getChapters(), getTopics()]);
     subjectMap = buildNameMap(subjects); chapterMap = buildNameMap(chapters); topicMap = buildNameMap(topics);
@@ -243,16 +191,18 @@ async function load() {
 
 function renderPending() {
   shell.innerHTML = `
-    <div class="topbar">
-      <a href="../student/dashboard.html" class="icon-btn">${icons.arrowLeft}</a>
-      <h2 style="font-size:1.05rem;">ফলাফল</h2>
+    <div class="topbar" style="display:flex; justify-content:space-between; align-items:center; padding:16px; background:var(--surface); border-bottom:1px solid var(--surface-border); border-radius:0 0 16px 16px; margin-bottom:20px;">
+      <a href="../student/dashboard.html" class="icon-btn" style="border:1px solid rgba(128,128,128,0.2); border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; text-decoration:none;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+      </a>
+      <h2 style="font-size:1.1rem; font-weight:900;">ফলাফল</h2>
       <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-thumb"></span></button>
     </div>
-    <div class="glass card text-center" style="padding:32px 20px;">
-      <span class="icon-btn" style="width:56px;height:56px;margin:0 auto;color:var(--color-accent);">${icons.clock}</span>
-      <p class="mt-3" style="font-weight:700;font-size:1.1rem;">${justSubmitted ? "পরীক্ষা সফলভাবে জমা হয়েছে।" : result.examName || "পরীক্ষা"}</p>
-      <p class="text-sm text-muted mt-2">অ্যাডমিন অনুমোদনের অপেক্ষায় আছে। অনুমোদনের পর সম্পূর্ণ ফলাফল এখানে দেখা যাবে।</p>
-      <span class="badge badge-pending mt-3">অনুমোদনের অপেক্ষায়</span>
+    <div class="glass-card text-center" style="padding:40px 20px;">
+      <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2" style="margin:0 auto 16px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <p style="font-weight:900;font-size:1.2rem; color:var(--text-primary);">${justSubmitted ? "পরীক্ষা সফলভাবে জমা হয়েছে!" : result.examName || "পরীক্ষা"}</p>
+      <p style="font-size:0.85rem; color:var(--text-muted); font-weight:600; margin-top:12px; line-height:1.6;">অ্যাডমিন অনুমোদনের অপেক্ষায় আছে। অনুমোদনের পর সম্পূর্ণ ফলাফল ও সঠিক উত্তর এখানে দেখা যাবে।</p>
+      <div style="background:rgba(128,128,128,0.1); color:var(--text-secondary); padding:6px 14px; border-radius:99px; font-size:0.8rem; font-weight:800; display:inline-block; margin-top:20px;">অনুমোদনের অপেক্ষায়</div>
     </div>
   `;
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
@@ -263,113 +213,96 @@ async function renderApproved() {
   review = snapshot ? buildQuestionReview(snapshot.questions, result.answers || {}, result.questionTimes || {}) : [];
   const slowest = getSlowestQuestions(review, 3);
   const pctVal = Number(result.percentage) || 0;
-  const scoreColor = pctVal >= 75 ? "var(--color-success)" : pctVal >= 40 ? "var(--color-accent)" : "var(--color-danger)";
+  const scoreColor = pctVal >= 75 ? "#10b981" : pctVal >= 40 ? "var(--color-accent)" : "#ef4444";
 
   shell.innerHTML = `
-    <div class="topbar">
-      <a href="../student/dashboard.html" class="icon-btn">${icons.arrowLeft}</a>
-      <h2 style="font-size:1.05rem;">ফলাফল</h2>
+    <div class="topbar" style="display:flex; justify-content:space-between; align-items:center; padding:16px; background:rgba(128,128,128,0.02); backdrop-filter:blur(10px); border-bottom:1px solid rgba(128,128,128,0.1); border-radius:0 0 16px 16px; margin-bottom:24px;">
+      <a href="../student/dashboard.html" class="icon-btn" style="border:1px solid rgba(128,128,128,0.2); border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; text-decoration:none;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+      </a>
+      <h2 style="font-size:1.1rem; font-weight:900;">ফলাফল কার্ড</h2>
       <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-thumb"></span></button>
     </div>
 
-    <div class="glass card">
-      <p class="eyebrow">${result.examName || "পরীক্ষা"}</p>
+    <div class="glass-card">
+      <p style="font-weight:900; font-size:1.1rem; color:var(--text-primary); text-align:center; margin-bottom:16px;">${result.examName || "পরীক্ষা"}</p>
 
       <div class="suspense-stage" id="suspenseStage">
-        <div class="suspense-pulse">${icons.clock}</div>
+        <div class="suspense-pulse"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
         <p>ফলাফল গণনা করা হচ্ছে<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></p>
       </div>
 
-      <div class="score-hero-box hidden mt-3" id="scoreHeroBox">
+      <div class="score-hero-box hidden" id="scoreHeroBox">
         <div class="score-mega-wrap">
           <div class="score-burst"></div>
           <span class="score-mega" id="scorePct">0%</span>
         </div>
-        <div>
-          <p class="text-sm text-muted">প্রাপ্ত নম্বর</p>
-          <p style="font-size:1.3rem;font-weight:800;"><span class="num" id="marksObtained">0</span><span class="text-sm text-muted"> / ${result.totalMarks ?? "—"}</span></p>
-          <span class="badge badge-completed mt-2">অনুমোদিত</span>
+        <div style="margin-top:8px;">
+          <p style="font-size:0.85rem; color:var(--text-muted); font-weight:700;">প্রাপ্ত নম্বর</p>
+          <p style="font-size:1.5rem;font-weight:900; color:var(--text-primary); margin-top:4px;"><span class="num" id="marksObtained">0</span><span style="font-size:1rem; color:var(--text-muted);"> / ${result.totalMarks ?? "—"}</span></p>
         </div>
       </div>
     </div>
 
     <div id="revealArea" class="pre-reveal">
-    <div class="grid-2 mt-4">
-      <div class="glass card"><p class="text-xs text-muted">সঠিক</p><p style="font-size:1.3rem;font-weight:800;color:var(--color-success);"><span class="num" id="statCorrect">0</span></p></div>
-      <div class="glass card"><p class="text-xs text-muted">ভুল</p><p style="font-size:1.3rem;font-weight:800;color:var(--color-danger);"><span class="num" id="statWrong">0</span></p></div>
-      <div class="glass card"><p class="text-xs text-muted">অনুত্তরিত</p><p style="font-size:1.3rem;font-weight:800;"><span class="num" id="statUnanswered">0</span></p></div>
-      <div class="glass card"><p class="text-xs text-muted">সঠিকতা</p><p style="font-size:1.3rem;font-weight:800;"><span class="num" id="statAccuracy">0</span>%</p></div>
-    </div>
-
-    <div class="glass card mt-4">
-      <p class="eyebrow">সময়</p>
-      <div class="grid-2 mt-2">
-        <div><p class="text-xs text-muted">জমাদানের তারিখ</p><p class="text-sm" style="font-weight:600;">${fmtDate(result.submittedAt)}</p></div>
-        <div><p class="text-xs text-muted">জমাদানের সময়</p><p class="text-sm" style="font-weight:600;">${fmtTime(result.submittedAt)}</p></div>
-        <div><p class="text-xs text-muted">মোট ব্যয়িত সময়</p><p class="text-sm" style="font-weight:600;">${formatSeconds(result.timeTakenSeconds)}</p></div>
-        <div><p class="text-xs text-muted">প্রশ্নপ্রতি গড় সময়</p><p class="text-sm" style="font-weight:600;">${result.avgTimePerQuestionSeconds ?? "—"} সেকেন্ড</p></div>
+      <div class="stats-grid">
+        <div class="stat-box" style="background:rgba(16, 185, 129, 0.05); border-color:rgba(16, 185, 129, 0.15);">
+          <div class="stat-lbl" style="color:#10b981;">সঠিক উত্তর</div>
+          <div class="stat-val" style="color:#10b981;" id="statCorrect">0</div>
+        </div>
+        <div class="stat-box" style="background:rgba(239, 68, 68, 0.05); border-color:rgba(239, 68, 68, 0.15);">
+          <div class="stat-lbl" style="color:#ef4444;">ভুল উত্তর</div>
+          <div class="stat-val" style="color:#ef4444;" id="statWrong">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-lbl">অনুত্তরিত</div>
+          <div class="stat-val" id="statUnanswered">0</div>
+        </div>
+        <div class="stat-box" style="background:rgba(var(--color-accent-rgb), 0.05); border-color:rgba(var(--color-accent-rgb), 0.15);">
+          <div class="stat-lbl" style="color:var(--color-accent);">সঠিকতার হার</div>
+          <div class="stat-val" style="color:var(--color-accent);"><span id="statAccuracy">0</span>%</div>
+        </div>
       </div>
-    </div>
 
-    ${result.subjectBreakdown?.length ? `
-    <div class="glass card mt-4">
-      <p class="eyebrow">বিষয়ভিত্তিক ফলাফল</p>
-      ${result.subjectBreakdown.map((s, i) => {
-        const totalQ = s.correct + s.wrong + s.unanswered;
-        const pct = totalQ ? Math.round((s.correct / totalQ) * 100) : 0;
-        return `
-        <div class="mini-bar-row" ${i === 0 ? "" : "mt-2"}>
-          <div class="flex justify-between items-center">
-            <p class="text-sm">${subjectMap[s.subjectId] || "—"}</p>
-            <p class="text-sm num" style="font-weight:700;">${s.correct}/${totalQ} সঠিক</p>
-          </div>
-          <div class="mini-bar-track"><div class="mini-bar-fill fill-success subj-bar" data-pct="${pct}"></div></div>
-        </div>`;
-      }).join("")}
-    </div>` : ""}
+      <div class="glass-card mt-4">
+        <p style="font-size:1.05rem; font-weight:900; color:var(--text-primary); border-bottom:1px dashed var(--surface-border); padding-bottom:8px; margin-bottom:12px;">সময় ও তারিখ</p>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+          <div><p style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">জমাদানের সময়</p><p style="font-size:0.9rem; font-weight:800; color:var(--text-primary); margin-top:4px;">${fmtDate(result.submittedAt)}<br>${fmtTime(result.submittedAt)}</p></div>
+          <div><p style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">মোট ব্যয়িত সময়</p><p style="font-size:0.95rem; font-weight:800; color:var(--text-primary); font-family:var(--font-num); margin-top:4px;">${formatSeconds(result.timeTakenSeconds)}</p></div>
+        </div>
+      </div>
 
-    ${slowest.length ? `
-    <div class="glass card mt-4">
-      <p class="eyebrow">সবচেয়ে বেশি সময় নেওয়া প্রশ্ন</p>
-      ${(() => {
-        const maxTime = Math.max(...slowest.map(q => q.timeSeconds || 0), 1);
-        return slowest.map((q, i) => `
-        <div class="mini-bar-row" ${i === 0 ? "" : "mt-2"}>
-          <div class="flex justify-between items-center">
-            <p class="text-sm" style="flex:1;">${i + 1}. ${q.question_bn.length > 50 ? q.question_bn.slice(0, 50) + "…" : q.question_bn}</p>
-            <p class="text-sm num" style="font-weight:700;color:var(--color-accent);white-space:nowrap;margin-right:8px;">${q.timeSeconds} সে.</p>
-          </div>
-          <div class="mini-bar-track"><div class="mini-bar-fill slow-bar" data-pct="${Math.round((q.timeSeconds || 0) / maxTime * 100)}"></div></div>
-        </div>`).join("");
-      })()}
-    </div>` : ""}
+      ${result.subjectBreakdown?.length ? `
+      <div class="glass-card mt-4">
+        <p style="font-size:1.05rem; font-weight:900; color:var(--text-primary); margin-bottom:16px;">বিষয়ভিত্তিক ফলাফল</p>
+        ${result.subjectBreakdown.map((s) => {
+          const totalQ = s.correct + s.wrong + s.unanswered;
+          const pct = totalQ ? Math.round((s.correct / totalQ) * 100) : 0;
+          return `
+          <div class="mini-bar-row">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <p style="font-size:0.9rem; font-weight:800; color:var(--text-secondary);">${subjectMap[s.subjectId] || "—"}</p>
+              <p style="font-size:0.85rem; font-weight:900; font-family:var(--font-num); color:var(--text-primary);">${s.correct}/${totalQ} সঠিক</p>
+            </div>
+            <div class="mini-bar-track"><div class="mini-bar-fill fill-success subj-bar" data-pct="${pct}"></div></div>
+          </div>`;
+        }).join("")}
+      </div>` : ""}
 
-    <div class="flex gap-2 mt-4">
-      <button class="btn btn-secondary" id="pdfBtn">ফলাফল PDF ডাউনলোড</button>
-      <button class="btn btn-secondary" id="shareBtn">PDF শেয়ার করুন</button>
-    </div>
-    <p class="text-xs text-muted mt-3">পরে আবার অনুশীলনের জন্য — এই পরীক্ষার সব প্রশ্ন, ৪টি অপশন ও সঠিক উত্তর সহ একটা PDF:</p>
-    <div class="flex gap-2 mt-2">
-      <button class="btn btn-secondary" id="practicePdfBtn">প্রশ্নের PDF ডাউনলোড</button>
-      <button class="btn btn-secondary" id="practiceShareBtn">শেয়ার করুন</button>
-    </div>
-
-    <p class="eyebrow mt-5">প্রশ্নভিত্তিক পর্যালোচনা</p>
-    <div id="reviewList" class="mt-2"></div>
+      <div style="display:flex; gap:12px; margin-top:24px;">
+        <button class="btn-action btn-secondary" id="pdfBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> রেজাল্ট PDF</button>
+        <button class="btn-action btn-primary" id="shareBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> শেয়ার করুন</button>
+      </div>
+      
+      <p style="font-size:1.1rem; font-weight:900; color:var(--text-primary); margin:32px 0 16px;">প্রশ্নভিত্তিক পর্যালোচনা</p>
+      <div id="reviewList"></div>
     </div>
   `;
 
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
   document.getElementById("pdfBtn").addEventListener("click", () => generatePdf(false));
   document.getElementById("shareBtn").addEventListener("click", () => generatePdf(true));
-  document.getElementById("practicePdfBtn").addEventListener("click", () => generateQuestionsPdf(false));
-  document.getElementById("practiceShareBtn").addEventListener("click", () => generateQuestionsPdf(true));
 
-  // ---- Suspense reveal orchestration ----
-  // 1) sit on the "গণনা করা হচ্ছে..." pulse for a beat (builds anticipation)
-  // 2) roll the score + marks like a lottery reveal, landing exactly on the
-  //    real values with a colored pop + one-shot glow burst
-  // 3) only then let the rest of the page (stats, breakdowns, review) rise in
   const heroBox = document.getElementById("scoreHeroBox");
   heroBox.style.setProperty("--score-color", scoreColor);
   runSuspenseReveal();
@@ -377,7 +310,7 @@ async function renderApproved() {
   async function runSuspenseReveal() {
     const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     await new Promise(r => setTimeout(r, reduce ? 50 : 950));
-    document.getElementById("suspenseStage").classList.add("hidden");
+    document.getElementById("suspenseStage").style.display = "none";
     heroBox.classList.remove("hidden");
 
     await Promise.all([
@@ -401,29 +334,29 @@ async function renderApproved() {
 
   const reviewEl = document.getElementById("reviewList");
   if (review.length === 0) {
-    reviewEl.innerHTML = `<p class="text-xs text-muted">প্রশ্নের বিস্তারিত পাওয়া যায়নি।</p>`;
+    reviewEl.innerHTML = `<div class="glass-card text-center text-muted font-bold">প্রশ্নের বিস্তারিত পাওয়া যায়নি।</div>`;
   } else {
     reviewEl.innerHTML = review.map((q, i) => `
-      <div class="glass card mt-2" style="animation-delay:${Math.min(i * 45, 400)}ms;${q.status === "wrong" ? "border-color:var(--color-danger)66;" : q.status === "correct" ? "border-color:var(--color-success)66;" : ""}">
-        <div class="flex justify-between items-center">
-          <p class="text-xs text-muted">প্রশ্ন ${i + 1} • ${subjectMap[q.subjectId] || ""} / ${chapterMap[q.chapterId] || ""}</p>
-          <span class="badge ${q.status === "correct" ? "badge-completed" : q.status === "wrong" ? "badge-pending" : "badge-draft"}">
+      <div class="review-card" style="animation-delay:${Math.min(i * 45, 400)}ms; ${q.status === "wrong" ? "border-color:rgba(239,68,68,0.3);" : q.status === "correct" ? "border-color:rgba(16,185,129,0.3);" : ""}">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <p style="font-size:0.8rem; color:var(--text-muted); font-weight:700;">প্রশ্ন ${i + 1} • ${subjectMap[q.subjectId] || "অজানা বিষয়"}</p>
+          <span style="font-size:0.75rem; font-weight:800; padding:4px 10px; border-radius:8px; border:1px solid transparent; ${q.status === "correct" ? "background:rgba(16,185,129,0.1); color:#10b981; border-color:rgba(16,185,129,0.2);" : q.status === "wrong" ? "background:rgba(239,68,68,0.1); color:#ef4444; border-color:rgba(239,68,68,0.2);" : "background:rgba(128,128,128,0.1); color:var(--text-muted);"}">
             ${q.status === "correct" ? "সঠিক" : q.status === "wrong" ? "ভুল" : "অনুত্তরিত"}
           </span>
         </div>
-        ${q.timeSeconds !== null ? `<p class="text-xs text-muted mt-1">সময় ব্যয়: ${q.timeSeconds} সেকেন্ড</p>` : ""}
-        <p class="mt-2" style="font-weight:600;">${q.question_bn}</p>
-        <p class="text-xs text-muted lang-en">${q.question_en}</p>
-        ${q.imageUrl ? `<img src="${q.imageUrl}" style="max-height:120px;border-radius:8px;margin-top:8px;">` : ""}
-        <div class="mt-3">
+        
+        <p style="font-weight:800; font-size:1.05rem; color:var(--text-primary); line-height:1.5; margin-bottom:16px;">${q.question_bn}</p>
+        ${q.imageUrl ? `<img src="${q.imageUrl}" style="max-height:160px; border-radius:12px; margin-bottom:16px; border:1px solid rgba(128,128,128,0.2);">` : ""}
+        
+        <div>
           ${["A", "B", "C", "D"].map(letter => {
             const isCorrect = letter === q.correctAnswer;
             const isYourPick = letter === q.studentAnswer;
             const cls = isCorrect ? "correct" : (isYourPick ? "wrong" : "");
             let tag = "";
-            if (isCorrect && isYourPick) tag = `<span class="opt-tag">✓ আপনার উত্তর • সঠিক</span>`;
-            else if (isCorrect) tag = `<span class="opt-tag">✓ সঠিক উত্তর</span>`;
-            else if (isYourPick) tag = `<span class="opt-tag">✕ আপনার উত্তর</span>`;
+            if (isCorrect && isYourPick) tag = `<span class="opt-tag"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> আপনার উত্তর</span>`;
+            else if (isCorrect) tag = `<span class="opt-tag"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> সঠিক উত্তর</span>`;
+            else if (isYourPick) tag = `<span class="opt-tag"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> আপনার উত্তর</span>`;
             return `
               <div class="review-option ${cls}">
                 <span class="opt-letter">${letter}</span>
@@ -431,51 +364,35 @@ async function renderApproved() {
                 ${tag}
               </div>`;
           }).join("")}
-          ${!q.studentAnswer ? `<p class="review-unanswered-note">আপনি এই প্রশ্নের উত্তর দেননি।</p>` : ""}
+          ${!q.studentAnswer ? `<div class="review-unanswered-note"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> আপনি এই প্রশ্নের উত্তর দেননি।</div>` : ""}
         </div>
-        ${q.status === "wrong" && q.explanation_bn ? `<p class="text-xs text-muted mt-2">ব্যাখ্যা: ${q.explanation_bn}</p>` : ""}
       </div>
     `).join("");
   }
 }
 
 function buildPdfHtml() {
-  const subjRows = (result.subjectBreakdown || []).map(s => `
-    <tr><td style="padding:4px 8px;">${subjectMap[s.subjectId] || "—"}</td><td style="padding:4px 8px;text-align:center;">${s.correct}</td><td style="padding:4px 8px;text-align:center;">${s.wrong}</td><td style="padding:4px 8px;text-align:center;">${s.marks}/${s.totalMarks}</td></tr>
-  `).join("");
-  const chapRows = (result.chapterBreakdown || []).map(c => `
-    <tr><td style="padding:4px 8px;">${chapterMap[c.chapterId] || "—"}</td><td style="padding:4px 8px;text-align:center;">${c.correct}</td><td style="padding:4px 8px;text-align:center;">${c.wrong}</td><td style="padding:4px 8px;text-align:center;">${c.marks}/${c.totalMarks}</td></tr>
-  `).join("");
+  const subjRows = (result.subjectBreakdown || []).map(s => `<tr><td style="padding:4px 8px;">${subjectMap[s.subjectId] || "—"}</td><td style="padding:4px 8px;text-align:center;">${s.correct}</td><td style="padding:4px 8px;text-align:center;">${s.wrong}</td><td style="padding:4px 8px;text-align:center;">${s.marks}/${s.totalMarks}</td></tr>`).join("");
+  const chapRows = (result.chapterBreakdown || []).map(c => `<tr><td style="padding:4px 8px;">${chapterMap[c.chapterId] || "—"}</td><td style="padding:4px 8px;text-align:center;">${c.correct}</td><td style="padding:4px 8px;text-align:center;">${c.wrong}</td><td style="padding:4px 8px;text-align:center;">${c.marks}/${c.totalMarks}</td></tr>`).join("");
 
   return `
     <h2 style="margin:0 0 4px;">${result.examName || "পরীক্ষা"}</h2>
     <p style="margin:0 0 12px;color:#555;font-size:13px;">${student.name} • ${student.studentId}</p>
     <p style="font-size:28px;font-weight:800;margin:8px 0;">${result.percentage ?? "—"}% <span style="font-size:14px;font-weight:400;color:#555;">(${result.obtainedMarks}/${result.totalMarks} নম্বর)</span></p>
     <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;">
-      <tr><td style="padding:4px 8px;color:#555;">সঠিক</td><td style="padding:4px 8px;">${result.correctCount}</td>
-          <td style="padding:4px 8px;color:#555;">ভুল</td><td style="padding:4px 8px;">${result.wrongCount}</td></tr>
-      <tr><td style="padding:4px 8px;color:#555;">অনুত্তরিত</td><td style="padding:4px 8px;">${result.unansweredCount}</td>
-          <td style="padding:4px 8px;color:#555;">সঠিকতা</td><td style="padding:4px 8px;">${result.accuracy ?? "—"}%</td></tr>
+      <tr><td style="padding:4px 8px;color:#555;">সঠিক</td><td style="padding:4px 8px;">${result.correctCount}</td><td style="padding:4px 8px;color:#555;">ভুল</td><td style="padding:4px 8px;">${result.wrongCount}</td></tr>
+      <tr><td style="padding:4px 8px;color:#555;">অনুত্তরিত</td><td style="padding:4px 8px;">${result.unansweredCount}</td><td style="padding:4px 8px;color:#555;">সঠিকতা</td><td style="padding:4px 8px;">${result.accuracy ?? "—"}%</td></tr>
       <tr><td style="padding:4px 8px;color:#555;">সময়</td><td style="padding:4px 8px;" colspan="3">${formatSeconds(result.timeTakenSeconds)}</td></tr>
     </table>
-    ${subjRows ? `<h3 style="margin:16px 0 4px;font-size:14px;">বিষয়ভিত্তিক</h3>
-    <table style="width:100%;border-collapse:collapse;font-size:12px;">
-      <tr style="color:#555;"><td style="padding:4px 8px;">বিষয়</td><td style="padding:4px 8px;">সঠিক</td><td style="padding:4px 8px;">ভুল</td><td style="padding:4px 8px;">নম্বর</td></tr>
-      ${subjRows}
-    </table>` : ""}
-    ${chapRows ? `<h3 style="margin:16px 0 4px;font-size:14px;">অধ্যায়ভিত্তিক</h3>
-    <table style="width:100%;border-collapse:collapse;font-size:12px;">
-      <tr style="color:#555;"><td style="padding:4px 8px;">অধ্যায়</td><td style="padding:4px 8px;">সঠিক</td><td style="padding:4px 8px;">ভুল</td><td style="padding:4px 8px;">নম্বর</td></tr>
-      ${chapRows}
-    </table>` : ""}
+    ${subjRows ? `<h3 style="margin:16px 0 4px;font-size:14px;">বিষয়ভিত্তিক</h3><table style="width:100%;border-collapse:collapse;font-size:12px;"><tr style="color:#555;"><td style="padding:4px 8px;">বিষয়</td><td style="padding:4px 8px;">সঠিক</td><td style="padding:4px 8px;">ভুল</td><td style="padding:4px 8px;">নম্বর</td></tr>${subjRows}</table>` : ""}
+    ${chapRows ? `<h3 style="margin:16px 0 4px;font-size:14px;">অধ্যায়ভিত্তিক</h3><table style="width:100%;border-collapse:collapse;font-size:12px;"><tr style="color:#555;"><td style="padding:4px 8px;">অধ্যায়</td><td style="padding:4px 8px;">সঠিক</td><td style="padding:4px 8px;">ভুল</td><td style="padding:4px 8px;">নম্বর</td></tr>${chapRows}</table>` : ""}
   `;
 }
 
 async function generatePdf(shareInstead) {
   const btn = shareInstead ? document.getElementById("shareBtn") : document.getElementById("pdfBtn");
-  const originalText = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = "প্রস্তুত করা হচ্ছে...";
+  const originalText = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = "প্রস্তুত করা হচ্ছে...";
 
   try {
     const area = document.getElementById("pdfArea");
@@ -491,91 +408,15 @@ async function generatePdf(shareInstead) {
     if (shareInstead && navigator.canShare) {
       const blob = pdf.output("blob");
       const file = new File([blob], fileName, { type: "application/pdf" });
-      if (navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: fileName });
-        return;
-      }
+      if (navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: fileName }); return; }
     }
     pdf.save(fileName);
   } catch (err) {
-    console.error(err);
     showToast("PDF তৈরি করা যায়নি।", "error");
   } finally {
-    btn.disabled = false;
-    btn.textContent = originalText;
-  }
-}
-
-// ---------- Question-practice PDF (feature: "download question PDF") ----------
-// Plain practice sheet — every question from THIS exam, its 4 options, and
-// the correct answer marked in green. Deliberately does NOT mark the
-// student's own pick as right/wrong (that's what the result-review PDF
-// above is for) — this one is meant to be reusable later as a clean
-// worksheet, e.g. to re-practice the same set of questions.
-function buildQuestionsPdfHtml() {
-  return `
-    <h2 style="margin:0 0 4px;">${result.examName || "পরীক্ষা"} — অনুশীলন শীট</h2>
-    <p style="margin:0 0 18px;color:#555;font-size:12px;">মোট ${review.length} টি প্রশ্ন • প্রতিটির সাথে ৪টি অপশন ও সঠিক উত্তর (সবুজ) দেওয়া আছে</p>
-    ${review.map((q, i) => `
-      <div style="margin-bottom:16px;padding-bottom:14px;${i < review.length - 1 ? "border-bottom:1px solid #ddd;" : ""}">
-        <p style="margin:0 0 6px;font-weight:700;font-size:14px;">${i + 1}. ${q.question_bn}</p>
-        ${q.imageUrl ? `<img src="${q.imageUrl}" crossorigin="anonymous" style="max-height:110px;margin:4px 0 8px;display:block;">` : ""}
-        <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:4px;">
-          ${["A", "B", "C", "D"].map(letter => {
-            const isCorrect = letter === q.correctAnswer;
-            return `
-            <tr>
-              <td style="padding:2px 8px;width:22px;font-weight:${isCorrect ? "800" : "400"};color:${isCorrect ? "#15803d" : "#333"};">${letter}.</td>
-              <td style="padding:2px 8px;font-weight:${isCorrect ? "700" : "400"};color:${isCorrect ? "#15803d" : "#333"};">${q.options_bn[letter] ?? ""}${isCorrect ? " ✓" : ""}</td>
-            </tr>`;
-          }).join("")}
-        </table>
-      </div>
-    `).join("")}
-  `;
-}
-
-async function generateQuestionsPdf(shareInstead) {
-  const btn = shareInstead ? document.getElementById("practiceShareBtn") : document.getElementById("practicePdfBtn");
-  const originalText = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = "প্রস্তুত করা হচ্ছে...";
-
-  try {
-    if (!review.length) { showToast("প্রশ্নের বিস্তারিত পাওয়া যায়নি।", "error"); return; }
-    const area = document.getElementById("pdfArea");
-    area.innerHTML = buildQuestionsPdfHtml();
-    // Wait for every question image to actually finish loading first —
-    // otherwise html2canvas can either capture a blank spot or (with a
-    // cross-origin image) throw a "tainted canvas" error when exporting.
-    const imgs = Array.from(area.querySelectorAll("img"));
-    await Promise.all(imgs.map(img => img.complete ? Promise.resolve() : new Promise(res => { img.onload = res; img.onerror = res; })));
-    const canvas = await html2canvas(area, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
-    const imgData = canvas.toDataURL("image/png");
-
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ unit: "px", format: [canvas.width / 2, canvas.height / 2] });
-    pdf.addImage(imgData, "PNG", 0, 0, canvas.width / 2, canvas.height / 2);
-    const fileName = `${result.examName || "exam"}_প্রশ্ন_অনুশীলন.pdf`;
-
-    if (shareInstead && navigator.canShare) {
-      const blob = pdf.output("blob");
-      const file = new File([blob], fileName, { type: "application/pdf" });
-      if (navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: fileName });
-        return;
-      }
-    }
-    pdf.save(fileName);
-  } catch (err) {
-    console.error(err);
-    showToast(err?.message ? `প্রশ্নের PDF তৈরি করা যায়নি: ${err.message}` : "প্রশ্নের PDF তৈরি করা যায়নি।", "error");
-  } finally {
-    btn.disabled = false;
-    btn.textContent = originalText;
+    btn.disabled = false; btn.innerHTML = originalText;
   }
 }
 </script>
 </body>
 </html>
-
