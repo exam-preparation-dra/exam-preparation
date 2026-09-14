@@ -46,6 +46,59 @@
   .lb-icon { width:17px; height:17px; flex-shrink:0; }
   .lb-icon-lg { width:19px; height:19px; flex-shrink:0; }
 
+  /* ===== Premium but lightweight visual polish ===== */
+  .lb-page { position:relative; }
+  .lb-page::before {
+    content:""; position:absolute; left:50%; top:0; width:92vw; height:260px;
+    transform:translateX(-50%); pointer-events:none; z-index:-1;
+    background:radial-gradient(circle at 50% 0, rgba(234,179,8,.10), transparent 64%);
+  }
+  .lb-hero, .lb-list-card, .live-slider {
+    box-shadow:0 12px 38px rgba(0,0,0,.055);
+  }
+  .lb-hero {
+    border-color:rgba(234,179,8,.16);
+    background:linear-gradient(135deg, rgba(234,179,8,.075), var(--lb-glass));
+  }
+
+  /* Compact circular student photos */
+  .lb-avatar {
+    width:42px !important; height:42px !important; min-width:42px;
+    border-radius:50% !important; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--color-accent-soft);
+    color:var(--color-accent);
+    font-size:.9rem; font-weight:950;
+    border:2px solid rgba(234,179,8,.18);
+    box-shadow:0 4px 12px rgba(0,0,0,.07);
+    flex-shrink:0;
+    -webkit-user-select:none; user-select:none;
+    -webkit-touch-callout:none;
+  }
+  .lb-avatar img {
+    width:100% !important; height:100% !important;
+    max-width:100%; max-height:100%;
+    display:block; object-fit:cover;
+    border-radius:50%;
+    pointer-events:none;
+    -webkit-user-drag:none; user-drag:none;
+    -webkit-user-select:none; user-select:none;
+    -webkit-touch-callout:none;
+  }
+  .lb-row {
+    transition:background .16s ease, transform .16s ease, box-shadow .16s ease;
+  }
+  .lb-row:not(.is-me):hover {
+    background:rgba(128,128,128,.035);
+    transform:translateY(-1px);
+  }
+  .lb-row.is-me {
+    box-shadow:0 8px 24px rgba(234,179,8,.08);
+  }
+  .filter-btn, .btn-glass {
+    -webkit-tap-highlight-color:transparent;
+  }
+
   /* ===== Hero Intro ===== */
   .lb-hero { position:relative; overflow:hidden; margin-top:16px; padding:22px 20px; }
   .lb-kicker { display:flex; align-items:center; gap:8px; color:var(--color-accent); font-size:.75rem; font-weight:900; letter-spacing:.05em; text-transform:uppercase; }
@@ -267,9 +320,9 @@ function render() {
 
 async function loadEverything() {
   try {
-    const [students, board, friendIds] = await Promise.all([
-      getActiveStudents(),
-      getLeaderboardData(await getActiveStudents()),
+    const students = await getActiveStudents();
+    const [board, friendIds] = await Promise.all([
+      getLeaderboardData(students),
       getMyFriendIds(student.studentId)
     ]);
 
@@ -359,7 +412,7 @@ async function renderLeaderboardList() {
 
     // PRIVACY FIX: Added draggable="false" and oncontextmenu="return false" along with pointer-events: none to prevent download
     const avatar = r.photoURL 
-      ? `<img src="${escapeHtml(r.photoURL)}" alt="" draggable="false" oncontextmenu="return false" style="pointer-events:none; user-select:none; -webkit-user-select:none;">` 
+      ? `<img src="${escapeHtml(r.photoURL)}" alt="" draggable="false" oncontextmenu="return false" ondragstart="return false" style="pointer-events:none; user-select:none; -webkit-user-select:none; -webkit-user-drag:none; -webkit-touch-callout:none;">` 
       : escapeHtml((r.name || "শ").charAt(0));
 
     return `
@@ -559,7 +612,7 @@ function renderLiveActivities(studentMap) {
     const friend = studentMap[a.studentId] || {};
     // PRIVACY FIX: Live Feed Avatar
     const avatar = friend.photoURL 
-      ? `<img src="${escapeHtml(friend.photoURL)}" alt="" draggable="false" oncontextmenu="return false" style="pointer-events:none; user-select:none; -webkit-user-select:none;">` 
+      ? `<img src="${escapeHtml(friend.photoURL)}" alt="" draggable="false" oncontextmenu="return false" ondragstart="return false" style="pointer-events:none; user-select:none; -webkit-user-select:none; -webkit-user-drag:none; -webkit-touch-callout:none;">` 
       : escapeHtml((friend.name || "ব").charAt(0));
     const marks = a.obtainedMarks !== undefined ? `${a.obtainedMarks}/${a.totalMarks}` : "—";
     const pct = a.percentage !== undefined ? `${a.percentage}%` : "—";
