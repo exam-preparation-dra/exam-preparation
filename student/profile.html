@@ -14,7 +14,7 @@
 
   /* ===== Premium Glass Cards ===== */
   .glass-card {
-    background: rgba(128, 128, 128, 0.04); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    background: rgba(128, 128, 128, 0.03); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 20px; padding: 20px; margin-bottom: 16px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.02);
   }
@@ -26,7 +26,7 @@
   /* Image Protection Layer */
   .img-container { position: relative; width: 110px; height: 110px; margin: 0 auto 16px; }
   .img-container img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid rgba(128,128,128,0.2); pointer-events: none; user-select: none; -webkit-user-drag: none; }
-  .img-shield { position: absolute; inset: 0; z-index: 10; border-radius: 50%; /* Invisible shield to block long-press/save */ }
+  .img-shield { position: absolute; inset: 0; z-index: 10; border-radius: 50%; } 
   .fallback-avatar { width: 100%; height: 100%; border-radius: 50%; background: linear-gradient(135deg, var(--color-accent), #3b82f6); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 900; }
 
   .st-name { font-size: 1.4rem; font-weight: 900; color: var(--text-primary); margin-bottom: 4px; }
@@ -47,21 +47,37 @@
   .stat-val { font-size: 1.6rem; font-weight: 900; color: var(--text-primary); font-family: var(--font-num); }
   .stat-lbl { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-top: 4px; }
 
-  /* ===== Horizontal Scroll Rows ===== */
+  /* ===== Advanced Badges ===== */
   .scroll-row { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
   .scroll-row::-webkit-scrollbar { display: none; }
+  .badge-card { background: rgba(128,128,128,0.02); border: 1px solid rgba(128,128,128,0.08); border-radius: 16px; padding: 16px; text-align: center; min-width: 110px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .badge-icon-wrap { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; }
+  .badge-title { font-size: 0.8rem; font-weight: 800; color: var(--text-primary); line-height: 1.2; }
+  .badge-count { font-size: 0.75rem; font-weight: 900; background: var(--surface); border: 1px solid var(--surface-border); padding: 4px 10px; border-radius: 8px; display: inline-block; font-family: var(--font-num); }
 
-  /* ===== Badges ===== */
-  .badge-card { background: rgba(128,128,128,0.03); border: 1px solid rgba(128,128,128,0.1); border-radius: 14px; padding: 16px 12px; text-align: center; min-width: 100px; flex-shrink: 0; }
-  .badge-icon { font-size: 2rem; margin-bottom: 8px; }
-  .badge-title { font-size: 0.75rem; font-weight: 800; color: var(--text-secondary); line-height: 1.3; }
-  .badge-count { font-size: 0.7rem; font-weight: 900; color: var(--color-accent); margin-top: 4px; background: rgba(var(--color-accent-rgb), 0.1); padding: 2px 8px; border-radius: 99px; display: inline-block; }
+  /* ===== Search & Filter ===== */
+  .batch-filters { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 12px; scrollbar-width: none; margin-bottom: 12px; }
+  .batch-filters::-webkit-scrollbar { display: none; }
+  .chip { padding: 6px 14px; border-radius: 99px; font-size: 0.75rem; font-weight: 800; background: rgba(128,128,128,0.05); border: 1px solid rgba(128,128,128,0.15); color: var(--text-secondary); cursor: pointer; white-space: nowrap; transition: 0.2s; }
+  .chip.active { background: var(--color-accent); border-color: var(--color-accent); color: #fff; }
+  .search-box { display: flex; align-items: center; gap: 10px; background: rgba(128,128,128,0.03); border: 1px solid var(--surface-border); border-radius: 12px; padding: 10px 14px; margin-bottom: 16px; }
+  .search-box input { flex: 1; border: none; background: transparent; outline: none; font-family: inherit; font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
 
-  .btn-primary { background: var(--color-accent); color: #fff; border: none; padding: 12px 20px; border-radius: 12px; font-weight: 800; width: 100%; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
-  .btn-secondary { background: rgba(128,128,128,0.1); color: var(--text-primary); border: 1px solid rgba(128,128,128,0.2); padding: 10px 16px; border-radius: 10px; font-weight: 800; cursor: pointer; }
+  /* ===== Network Rows ===== */
+  .dir-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: rgba(128,128,128,0.02); border: 1px solid var(--surface-border); border-radius: 14px; margin-bottom: 10px; }
+  .dir-name { font-weight: 800; font-size: 0.9rem; color: var(--text-primary); }
+  .dir-batch { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; background: rgba(128,128,128,0.08); padding: 2px 6px; border-radius: 4px; margin-left: 6px; }
+
+  /* Buttons */
+  .btn-primary { background: var(--color-accent); color: #fff; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; width: 100%; }
+  .btn-secondary { background: rgba(128,128,128,0.08); color: var(--text-primary); border: 1px solid rgba(128,128,128,0.2); padding: 8px 14px; border-radius: 8px; font-weight: 800; cursor: pointer; transition: 0.2s; }
+  .btn-sm { padding: 6px 12px; font-size: 0.75rem; border-radius: 8px; }
+  .status-badge { padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; border: 1px solid transparent; }
+  .badge-friend { background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.2); }
+  .badge-pending { background: rgba(128,128,128,0.1); color: var(--text-muted); border-color: rgba(128,128,128,0.2); }
 </style>
 </head>
-<body oncontextmenu="return false;"> <!-- Block Global Right Click -->
+<body oncontextmenu="return false;"> <!-- Blocks Right Click Globally -->
 <div class="app-shell" id="shell">
   <div class="state-block"><div class="spinner"></div></div>
 </div>
@@ -72,12 +88,12 @@
 import { initTheme, renderState, renderStudentHeader, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { getActiveStudent, refreshActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
 import { getApprovedResults, getStudentRank } from "../js/utils/results-utils.js";
-import { getSubjects, getChapters, buildNameMap } from "../js/utils/syllabus-utils.js";
 import { computeOverallStats, computeSubjectStats } from "../js/utils/analytics-utils.js";
-import { computeGamificationData, attendanceBadgesEarned, currentMonthLabel, currentWeekLabel } from "../js/utils/gamification-utils.js";
+import { computeGamificationData, attendanceBadgesEarned } from "../js/utils/gamification-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-import { getMyFriendIds, getIncomingRequests, acceptFriendRequest, rejectFriendRequest, removeFriend } from "../js/utils/friend-utils.js";
+import { getSubjects, buildNameMap } from "../js/utils/syllabus-utils.js";
+import { getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS } from "../js/utils/friend-utils.js";
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -92,7 +108,6 @@ if (!student) {
   });
 }
 
-// Global Tab Switcher Function
 window.switchTab = function(tabId) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -100,14 +115,14 @@ window.switchTab = function(tabId) {
   document.getElementById(tabId).classList.add('active');
 };
 
+let allNetStudents = [], friendIds = [], incomingReqs = [], outgoingReqs = [];
+let dirBatchFilter = "all", dirSearchTerm = "";
+
 async function renderPage() {
   shell.innerHTML = `
     ${renderStudentHeader(student, "profile")}
     
-    <!-- Identity Header -->
-    <div id="identitySection" class="glass-card profile-header mt-4">
-      <div class="spinner" style="margin: 20px auto;"></div>
-    </div>
+    <div id="identitySection" class="glass-card profile-header mt-4"><div class="spinner" style="margin: 20px auto;"></div></div>
 
     <!-- Tab Navigation -->
     <div class="tab-nav">
@@ -125,22 +140,24 @@ async function renderPage() {
       </button>
     </div>
 
-    <!-- Tab 1: Overview -->
     <div id="tab-overview" class="tab-content active">
       <div id="topperSection"></div>
       <div id="badgeSection" class="mt-4"></div>
     </div>
-
-    <!-- Tab 2: Stats -->
     <div id="tab-stats" class="tab-content">
       <div id="statsSection"></div>
-      <div id="subjectSection" class="mt-4"></div>
     </div>
-
-    <!-- Tab 3: Network -->
     <div id="tab-network" class="tab-content">
-      <div id="friendRequestsSection"></div>
-      <div id="myFriendsSection" class="mt-4"></div>
+      <div id="reqAndFriendsSection"></div>
+      <div class="glass-card mt-4" style="padding:16px;">
+        <p style="font-size:1.05rem; font-weight:900; color:var(--text-primary); margin-bottom:12px;">শিক্ষার্থী ডিরেক্টরি</p>
+        <div class="batch-filters" id="dirFilters"></div>
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="dirSearch" placeholder="নাম দিয়ে খুঁজুন...">
+        </div>
+        <div id="dirList"></div>
+      </div>
     </div>
   `;
 
@@ -148,8 +165,13 @@ async function renderPage() {
     loadIdentity(),
     loadGamification(),
     loadStats(),
-    loadNetwork()
+    loadNetworkData()
   ]);
+
+  document.getElementById("dirSearch").addEventListener("input", (e) => {
+    dirSearchTerm = e.target.value.trim().toLowerCase();
+    renderDirectory();
+  });
 }
 
 async function loadIdentity() {
@@ -157,10 +179,7 @@ async function loadIdentity() {
   try {
     const snap = await getDoc(doc(db, "students", student.docId));
     const data = snap.exists() ? snap.data() : {};
-    
-    // Fallback info
     const myBatch = data.className || student.className || "অজানা ব্যাচ";
-    const joinDate = data.createdAt?.toDate ? data.createdAt.toDate().toLocaleDateString("bn-BD", { month: "short", year: "numeric" }) : "";
 
     el.innerHTML = `
       <div class="img-container">
@@ -168,20 +187,18 @@ async function loadIdentity() {
           ? `<img src="${data.photoURL}" alt="Profile">` 
           : `<div class="fallback-avatar">${student.name.charAt(0)}</div>`
         }
-        <div class="img-shield" oncontextmenu="return false;"></div> <!-- Blocks interactions -->
+        <div class="img-shield"></div>
       </div>
       <div class="st-name">${student.name}</div>
       <div class="st-meta">
         <span class="batch-badge">${myBatch}</span>
         <span>ID: ${student.studentId}</span>
-        ${joinDate ? `<span>• যুক্ত হয়েছেন: ${joinDate}</span>` : ""}
       </div>
-      <button class="btn-primary mt-4" id="shareProfileBtn">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-        প্রোফাইল কার্ড শেয়ার করুন
+      <button class="btn-primary mt-4" id="shareProfileBtn" style="padding:12px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        রিপোর্ট কার্ড শেয়ার বা ডাউনলোড
       </button>
     `;
-
     document.getElementById("shareProfileBtn").addEventListener("click", () => openShareChoice(data));
   } catch (err) {
     el.innerHTML = `<div class="text-center text-muted">প্রোফাইল লোড করা যায়নি।</div>`;
@@ -194,37 +211,42 @@ async function loadGamification() {
   
   try {
     const data = await computeGamificationData();
-    const rank = await getStudentRank(student.studentId, data.classOf);
+    const rank = await getStudentRank(student.studentId);
     
-    // 1. Topper / Rank Info
+    // Rank info
     let topperHtml = "";
     if (rank) {
       topperHtml += `
-        <div style="background:linear-gradient(135deg, rgba(var(--color-accent-rgb),0.1), rgba(var(--color-accent-rgb),0.02)); border:1px solid rgba(var(--color-accent-rgb),0.2); border-radius:16px; padding:16px; margin-bottom:12px; display:flex; align-items:center; gap:12px;">
-          <div style="width:48px; height:48px; border-radius:50%; background:var(--color-accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.2rem; font-weight:900;">#${rank.rank}</div>
-          <div>
-            <p style="font-weight:900; font-size:1rem; color:var(--text-primary);">ওভারঅল র‍্যাঙ্ক</p>
-            <p style="font-size:0.75rem; color:var(--text-secondary); font-weight:600;">${rank.totalStudents} জন শিক্ষার্থীর মধ্যে</p>
+        <div style="background:linear-gradient(135deg, rgba(var(--color-accent-rgb),0.1), rgba(var(--color-accent-rgb),0.02)); border:1px solid rgba(var(--color-accent-rgb),0.2); border-radius:16px; padding:16px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:48px; height:48px; border-radius:50%; background:var(--color-accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1.2rem; font-weight:900;">#${rank.rank}</div>
+            <div>
+              <p style="font-weight:900; font-size:1rem; color:var(--text-primary);">ওভারঅল র‍্যাঙ্ক</p>
+              <p style="font-size:0.75rem; color:var(--text-secondary); font-weight:600;">${rank.totalStudents} জনের মধ্যে</p>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <p style="font-size:1.1rem; font-weight:900; color:var(--color-accent); font-family:var(--font-num);">${rank.totalPoints}</p>
+            <p style="font-size:0.7rem; color:var(--text-muted); font-weight:700;">মোট পয়েন্ট</p>
           </div>
         </div>
       `;
     }
+    topperEl.innerHTML = topperHtml || `<div class="glass-card text-center text-muted text-sm font-bold">র‍্যাঙ্কের জন্য আরও পরীক্ষা দাও।</div>`;
 
-    if (data.currentMonthTopper && data.currentMonthTopper.studentId === student.studentId) {
-      topperHtml += `<div class="glass-card" style="padding:12px; border-color:#f59e0b; background:rgba(245, 158, 11, 0.05); color:#d97706; font-weight:800; font-size:0.85rem; display:flex; gap:8px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 5.4L20 8l-4.2 3.9L17 18l-5-3-5 3 1.2-6.1L4 8l5.6-.6z"/></svg> অভিনন্দন! তুমি এই মাসের টপার।</div>`;
-    }
+    // SVG Badges (No local Emojis)
+    const svgTrophy = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>`;
+    const svgStar = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+    const svgTarget = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`;
 
-    topperEl.innerHTML = topperHtml || `<p class="text-sm text-muted">র‍্যাঙ্কিংয়ের জন্য পরীক্ষা দাও।</p>`;
-
-    // 2. Badges
     const counts = data.badgeCounts[student.studentId] || { monthlyOverall: 0, monthlyClass: 0, weeklyOverall: 0, weeklyClass: 0 };
     const examCount = data.examCounts[student.studentId] || 0;
     const attendanceMilestones = attendanceBadgesEarned(examCount);
 
     const badges = [];
-    if (counts.monthlyOverall > 0) badges.push({ icon: "🏆", title: "মাসের সেরা", count: counts.monthlyOverall });
-    if (counts.weeklyOverall > 0) badges.push({ icon: "⭐", title: "সপ্তাহের সেরা", count: counts.weeklyOverall });
-    attendanceMilestones.forEach(m => badges.push({ icon: "🎯", title: "নিয়মিত ছাত্র", count: `${m}+ পরীক্ষা` }));
+    if (counts.monthlyOverall > 0) badges.push({ icon: svgTrophy, title: "মাসের সেরা", count: counts.monthlyOverall, color: "#f59e0b", bg: "rgba(245, 158, 11, 0.15)" });
+    if (counts.weeklyOverall > 0) badges.push({ icon: svgStar, title: "সপ্তাহের সেরা", count: counts.weeklyOverall, color: "#8b5cf6", bg: "rgba(139, 92, 246, 0.15)" });
+    attendanceMilestones.forEach(m => badges.push({ icon: svgTarget, title: "নিয়মিত ছাত্র", count: `${m}+ পরীক্ষা`, color: "#10b981", bg: "rgba(16, 185, 129, 0.15)" }));
 
     if (badges.length > 0) {
       badgeEl.innerHTML = `
@@ -232,9 +254,9 @@ async function loadGamification() {
         <div class="scroll-row">
           ${badges.map(b => `
             <div class="badge-card">
-              <div class="badge-icon">${b.icon}</div>
+              <div class="badge-icon-wrap" style="background:${b.bg}; color:${b.color};">${b.icon}</div>
               <div class="badge-title">${b.title}</div>
-              <div class="badge-count">${b.count}</div>
+              <div class="badge-count" style="color:${b.color}; border-color:${b.bg};">${b.count}</div>
             </div>
           `).join("")}
         </div>
@@ -250,18 +272,17 @@ async function loadGamification() {
 
 async function loadStats() {
   const statsEl = document.getElementById("statsSection");
-  const subjEl = document.getElementById("subjectSection");
-
   try {
     const results = await getApprovedResults(student.studentId);
     const overall = computeOverallStats(results);
 
     if (!overall) {
       statsEl.innerHTML = `<div class="glass-card text-center text-muted font-bold">কোনো পরীক্ষার ফলাফল নেই।</div>`;
-      subjEl.innerHTML = ""; return;
+      return;
     }
 
     statsEl.innerHTML = `
+      <p style="font-size:1rem; font-weight:900; color:var(--text-primary); margin-bottom:12px;">সার্বিক পরিসংখ্যান</p>
       <div class="stats-grid">
         <div class="stat-box">
           <div class="stat-val">${overall.examsTaken}</div>
@@ -281,25 +302,23 @@ async function loadStats() {
         </div>
       </div>
     `;
-
+    
     const subjects = await getSubjects();
     const subjectStats = computeSubjectStats(results, buildNameMap(subjects));
 
     if (subjectStats.length > 0) {
-      subjEl.innerHTML = `
-        <p style="font-size:1rem; font-weight:900; color:var(--text-primary); margin-bottom:12px;">বিষয়ভিত্তিক পারফরম্যান্স</p>
-        ${subjectStats.map(s => `
-          <div class="glass-card" style="padding:16px; margin-bottom:12px;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-              <span style="font-weight:800; font-size:0.95rem; color:var(--text-secondary);">${s.name}</span>
-              <span style="font-weight:900; color:var(--color-accent); font-family:var(--font-num);">${s.accuracy ?? "—"}%</span>
-            </div>
-            <div style="width:100%; height:6px; background:rgba(128,128,128,0.15); border-radius:99px; overflow:hidden;">
-              <div style="width:${s.accuracy ?? 0}%; height:100%; background:var(--color-accent); border-radius:99px;"></div>
-            </div>
+      const sHtml = subjectStats.map(s => `
+        <div class="glass-card" style="padding:16px; margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+            <span style="font-weight:800; font-size:0.95rem; color:var(--text-secondary);">${s.name}</span>
+            <span style="font-weight:900; color:var(--color-accent); font-family:var(--font-num);">${s.accuracy ?? "—"}%</span>
           </div>
-        `).join("")}
-      `;
+          <div style="width:100%; height:6px; background:rgba(128,128,128,0.15); border-radius:99px; overflow:hidden;">
+            <div style="width:${s.accuracy ?? 0}%; height:100%; background:var(--color-accent); border-radius:99px;"></div>
+          </div>
+        </div>
+      `).join("");
+      statsEl.innerHTML += `<p style="font-size:1rem; font-weight:900; color:var(--text-primary); margin:20px 0 12px;">বিষয়ভিত্তিক পারফরম্যান্স</p>` + sHtml;
     }
 
   } catch (err) {
@@ -307,71 +326,102 @@ async function loadStats() {
   }
 }
 
-async function loadNetwork() {
-  const reqEl = document.getElementById("friendRequestsSection");
-  const friendsEl = document.getElementById("myFriendsSection");
-
+async function loadNetworkData() {
   try {
-    const [students, friendIds, incoming] = await Promise.all([
-      getActiveStudents(), getMyFriendIds(student.studentId), getIncomingRequests(student.studentId)
+    const [students, fIds, inc, out] = await Promise.all([
+      getActiveStudents(), getMyFriendIds(student.studentId),
+      getIncomingRequests(student.studentId), getOutgoingRequests(student.studentId)
     ]);
-    const nameOf = {}; students.forEach(s => { nameOf[s.studentId] = s.name; });
+    allNetStudents = students; friendIds = fIds; incomingReqs = inc; outgoingReqs = out;
+    dirBatchFilter = student.className || "all";
+    renderReqsAndFriends();
+    renderDirectoryFilters();
+    renderDirectory();
+  } catch (err) {}
+}
 
-    // Requests
-    if (incoming.length > 0) {
-      reqEl.innerHTML = `
-        <p style="font-size:1rem; font-weight:900; color:var(--text-primary); margin-bottom:12px;">বন্ধুত্বের অনুরোধ</p>
-        <div class="glass-card" style="padding:12px;">
-          ${incoming.map(r => `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px dashed var(--surface-border);">
-              <span style="font-weight:800; font-size:0.9rem;">${nameOf[r.fromStudentId] || r.fromStudentId}</span>
-              <div style="display:flex; gap:6px;">
-                <button class="btn-secondary req-reject" data-id="${r.id}" style="padding:6px 10px; font-size:0.75rem;">বাতিল</button>
-                <button class="btn-primary req-accept" data-id="${r.id}" style="padding:6px 10px; font-size:0.75rem; width:auto;">গ্রহণ</button>
-              </div>
-            </div>
-          `).join("")}
-        </div>
-      `;
-      reqEl.querySelectorAll(".req-accept").forEach(b => b.addEventListener("click", async () => {
-        try { await acceptFriendRequest(b.dataset.id, student.studentId); showToast("যুক্ত হলো", "success"); loadNetwork(); } 
-        catch (err) { showToast(friendlyError(err), "error"); }
-      }));
-      reqEl.querySelectorAll(".req-reject").forEach(b => b.addEventListener("click", async () => {
-        await rejectFriendRequest(b.dataset.id); loadNetwork();
-      }));
-    } else {
-      reqEl.innerHTML = "";
-    }
+function renderReqsAndFriends() {
+  const el = document.getElementById("reqAndFriendsSection");
+  const nameOf = {}; allNetStudents.forEach(s => { nameOf[s.studentId] = s.name; });
 
-    // Friends List
-    friendsEl.innerHTML = `
-      <p style="font-size:1rem; font-weight:900; color:var(--text-primary); margin-bottom:12px;">আমার বন্ধুরা (${friendIds.length}/50)</p>
+  let html = "";
+  if (incomingReqs.length > 0) {
+    html += `
+      <p style="font-size:1rem; font-weight:900; color:var(--text-primary); margin-bottom:12px;">বন্ধুত্বের অনুরোধ</p>
       <div class="glass-card" style="padding:12px;">
-        ${friendIds.length === 0
-          ? `<p class="text-sm text-center text-muted font-bold">এখনো কোনো বন্ধু যোগ হয়নি।</p>`
-          : friendIds.map(fid => `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px dashed var(--surface-border);">
-              <span style="font-weight:800; font-size:0.9rem;">${nameOf[fid] || fid}</span>
-              <button class="btn-secondary friend-remove" data-id="${fid}" style="padding:6px 10px; font-size:0.75rem; border-color:rgba(239,68,68,0.3); color:#ef4444;">সরাও</button>
+        ${incomingReqs.map(r => `
+          <div class="dir-row" style="background:var(--surface);">
+            <span class="dir-name">${nameOf[r.fromStudentId] || r.fromStudentId}</span>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-secondary req-reject btn-sm" data-id="${r.id}">বাতিল</button>
+              <button class="btn-primary req-accept btn-sm" data-id="${r.id}" style="width:auto;">গ্রহণ</button>
             </div>
-          `).join("")}
+          </div>
+        `).join("")}
       </div>
     `;
-    friendsEl.querySelectorAll(".friend-remove").forEach(b => b.addEventListener("click", async () => {
-      if (!confirm("এই বন্ধুকে তালিকা থেকে সরাতে চাও?")) return;
-      await removeFriend(student.studentId, b.dataset.id);
-      showToast("সরানো হয়েছে", "success");
-      loadNetwork();
-    }));
-
-  } catch (err) {
-    console.error(err);
   }
+
+  html += `
+    <p style="font-size:1rem; font-weight:900; color:var(--text-primary); margin-bottom:12px;">আমার বন্ধুরা (${friendIds.length}/${MAX_FRIENDS})</p>
+    <div class="glass-card" style="padding:12px;">
+      ${friendIds.length === 0
+        ? `<p class="text-sm text-center text-muted font-bold" style="padding:10px;">এখনো কোনো বন্ধু যোগ হয়নি।</p>`
+        : friendIds.map(fid => `
+          <div class="dir-row" style="background:var(--surface);">
+            <span class="dir-name">${nameOf[fid] || fid}</span>
+            <button class="btn-secondary friend-remove btn-sm" data-id="${fid}" style="border-color:rgba(239,68,68,0.3); color:#ef4444;">সরাও</button>
+          </div>
+        `).join("")}
+    </div>
+  `;
+
+  el.innerHTML = html;
+  el.querySelectorAll(".req-accept").forEach(b => b.addEventListener("click", async () => { try { await acceptFriendRequest(b.dataset.id, student.studentId); showToast("যুক্ত হলো", "success"); await loadNetworkData(); } catch (err) { showToast(friendlyError(err), "error"); } }));
+  el.querySelectorAll(".req-reject").forEach(b => b.addEventListener("click", async () => { try { await rejectFriendRequest(b.dataset.id); await loadNetworkData(); } catch(e){} }));
+  el.querySelectorAll(".friend-remove").forEach(b => b.addEventListener("click", async () => { if (!confirm("এই বন্ধুকে তালিকা থেকে সরাতে চাও?")) return; try { await removeFriend(student.studentId, b.dataset.id); showToast("সরানো হয়েছে", "success"); await loadNetworkData(); } catch(e){} }));
+}
+
+function renderDirectoryFilters() {
+  const filterEl = document.getElementById("dirFilters");
+  const batches = [...new Set(allNetStudents.map(s => s.className || "Other"))].sort();
+  filterEl.innerHTML = `<div class="chip ${dirBatchFilter === "all" ? "active" : ""}" data-batch="all">সব ব্যাচ</div>` + batches.map(b => `<div class="chip ${dirBatchFilter === b ? "active" : ""}" data-batch="${b}">${b}</div>`).join("");
+  filterEl.querySelectorAll(".chip").forEach(chip => { chip.addEventListener("click", () => { dirBatchFilter = chip.dataset.batch; renderDirectoryFilters(); renderDirectory(); }); });
+}
+
+function renderDirectory() {
+  const dirList = document.getElementById("dirList");
+  let filtered = allNetStudents.filter(s => s.studentId !== student.studentId);
+  if (dirBatchFilter !== "all") filtered = filtered.filter(s => (s.className || "Other") === dirBatchFilter);
+  if (dirSearchTerm !== "") filtered = filtered.filter(s => s.name.toLowerCase().includes(dirSearchTerm));
+
+  if (filtered.length === 0) { dirList.innerHTML = `<p class="text-sm text-center text-muted font-bold" style="padding:20px;">কাউকে পাওয়া যায়নি।</p>`; return; }
+
+  dirList.innerHTML = filtered.map(s => {
+    const isFriend = friendIds.includes(s.studentId);
+    const isIncoming = incomingReqs.find(r => r.fromStudentId === s.studentId);
+    const isOutgoing = outgoingReqs.find(r => r.toStudentId === s.studentId);
+
+    let actionBtn = '';
+    if (isFriend) actionBtn = `<span class="status-badge badge-friend">বন্ধু</span>`;
+    else if (isIncoming) actionBtn = `<button class="btn-primary req-accept btn-sm" data-id="${isIncoming.id}" style="width:auto;">গ্রহণ করুন</button>`;
+    else if (isOutgoing) actionBtn = `<span class="status-badge badge-pending">অপেক্ষমাণ</span>`;
+    else actionBtn = `<button class="btn-secondary send-req btn-sm" data-sid="${s.studentId}">+ যোগ করো</button>`;
+
+    return `
+      <div class="dir-row">
+        <div><div class="dir-name">${s.name} <span class="dir-batch">${s.className || "N/A"}</span></div></div>
+        <div style="flex-shrink:0;">${actionBtn}</div>
+      </div>
+    `;
+  }).join("");
+
+  dirList.querySelectorAll(".req-accept").forEach(b => b.addEventListener("click", async () => { try { await acceptFriendRequest(b.dataset.id, student.studentId); showToast("যুক্ত হলো", "success"); await loadNetworkData(); } catch (err) { showToast(friendlyError(err), "error"); } }));
+  dirList.querySelectorAll(".send-req").forEach(b => b.addEventListener("click", async () => { const btn = b; const originalText = btn.textContent; btn.disabled = true; btn.textContent = "..."; try { await sendFriendRequest(student.studentId, btn.dataset.sid); showToast("অনুরোধ পাঠানো হয়েছে!", "success"); await loadNetworkData(); } catch (err) { showToast(friendlyError(err), "error"); btn.disabled = false; btn.textContent = originalText; } }));
 }
 
 // ==========================================
-// SHARE PROFILE CARD LOGIC (Unchanged visually but protected)
+// SHARE PROFILE CARD LOGIC (Updated to focus on Points and Badges, no %)
 // ==========================================
 function openShareChoice(studentData) {
   const overlay = document.createElement("div");
@@ -393,43 +443,53 @@ function openShareChoice(studentData) {
   overlay.querySelector("#choosePdfBtn").addEventListener("click", () => { overlay.remove(); generateProfileCard(studentData, "pdf"); });
 }
 
-// (The rest of the buildProfileCardHtml and generateProfileCard functions remain identical to your original source code logic to preserve the output format)
 async function buildProfileCardHtml(studentData) {
-  const [results, rank] = await Promise.all([ getApprovedResults(student.studentId), getStudentRank(student.studentId) ]);
-  const overall = computeOverallStats(results);
-  const pct = overall?.avgPercentage ?? 0;
-  let grade = "C", badgeColor = "#f87171";
-  if (pct >= 80) { grade = "A+"; badgeColor = "#4ade80"; }
-  else if (pct >= 60) { grade = "A"; badgeColor = "#60a5fa"; }
-  else if (pct >= 40) { grade = "B"; badgeColor = "#fbbf24"; }
+  // Fetch Real Rank/Points and Badges
+  const rank = await getStudentRank(student.studentId);
+  const totalPoints = rank?.totalPoints || 0;
+  
+  const gData = await computeGamificationData();
+  const counts = gData.badgeCounts[student.studentId] || { monthlyOverall: 0, monthlyClass: 0, weeklyOverall: 0, weeklyClass: 0 };
+  const examCount = gData.examCounts[student.studentId] || 0;
+  const attendanceMilestones = attendanceBadgesEarned(examCount);
+  const totalBadges = (counts.monthlyOverall) + (counts.weeklyOverall) + attendanceMilestones.length;
 
   const photoURL = studentData.photoURL || null;
-  const ordinalSuffix = rank?.rank === 1 ? "ম" : (rank?.rank === 2 || rank?.rank === 3) ? "য়" : rank?.rank === 4 ? "র্থ" : "তম";
+  const badgeColor = "#4ade80"; 
 
   return `
     <div id="profileCardInner" style="width:400px;font-family:'Noto Sans Bengali',sans-serif;background:linear-gradient(160deg,#0b0f1a 0%,#1a1024 55%,#2b1608 100%);color:#ffffff;border-radius:26px;overflow:hidden;">
       <div style="padding:34px 28px 22px;text-align:center;">
-        <p style="margin:0;line-height:1.4;font-size:12px;text-transform:uppercase;color:#ffb38a;font-weight:700;">পরীক্ষা প্রস্তুতি — প্রোফাইল</p>
+        <p style="margin:0;line-height:1.4;font-size:12px;text-transform:uppercase;color:#ffb38a;font-weight:700;">পরীক্ষা প্রস্তুতি — স্টুডেন্ট কার্ড</p>
         ${photoURL ? `<img src="${photoURL}" crossorigin="anonymous" style="width:104px;height:104px;border-radius:50%;object-fit:cover;margin:18px auto 14px;display:block;border:3px solid ${badgeColor};">` : `<div style="width:104px;height:104px;border-radius:50%;margin:18px auto 14px;background:${badgeColor};display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:800;color:#0b0f1a;">${(student.name || "?").charAt(0)}</div>`}
         <h1 style="margin:0;line-height:1.15;font-size:32px;font-weight:900;color:#ffffff;">${student.name}</h1>
         <div style="margin-top:10px;">
-          <span style="display:inline-block;padding:3px 12px;border-radius:999px;background:rgba(255,255,255,0.1);color:#94a3b8;font-size:11px;font-weight:700;">${student.studentId}${studentData.className ? ` • ${studentData.className}` : ""}</span>
+          <span style="display:inline-block;padding:4px 14px;border-radius:999px;background:rgba(255,255,255,0.1);color:#cbd5e1;font-size:12px;font-weight:700;">${studentData.className || "অজানা ব্যাচ"} • ${student.studentId}</span>
         </div>
       </div>
+      
       <div style="margin:0 20px;background:rgba(255,255,255,0.07);border-radius:18px;padding:22px;text-align:center;border:1px solid rgba(255,255,255,0.12);">
-        <p style="margin:0;font-size:48px;font-weight:900;color:#ff8a3d;">${overall?.avgPercentage ?? "—"}%</p>
-        <p style="margin:8px 0 0;font-size:12px;color:#cbd5e1;font-weight:600;">ওভারঅল গড় শতাংশ</p>
+        <p style="margin:0;font-size:54px;font-weight:900;color:#ff8a3d;font-family:sans-serif;line-height:1;">${totalPoints}</p>
+        <p style="margin:8px 0 0;font-size:14px;color:#cbd5e1;font-weight:700;">সর্বমোট অর্জিত পয়েন্ট</p>
       </div>
-      ${rank ? `
-      <div style="margin:14px 20px 0;background:rgba(255,255,255,0.07);border-radius:16px;padding:14px;text-align:center;">
-        <p style="margin:0;font-size:14px;font-weight:800;color:#ffd08a;">${rank.totalStudents} জনের মধ্যে অবস্থান: ${rank.rank}${ordinalSuffix}</p>
-      </div>` : ""}
-      <p style="text-align:center;margin:22px 0;font-size:10px;color:#64748b;">তৈরি: ${new Date().toLocaleDateString("bn-BD")}</p>
+      
+      <div style="display:flex;gap:10px;margin:16px 20px 0;">
+        <div style="flex:1;background:rgba(255,255,255,0.07);border-radius:16px;padding:14px;text-align:center;">
+          <p style="margin:0;line-height:1.3;font-size:20px;font-weight:800;color:#ffffff;">${totalBadges} টি</p>
+          <p style="margin:4px 0 0;line-height:1.3;font-size:12px;color:#94a3b8;font-weight:600;">ব্যাজ কালেকশন</p>
+        </div>
+        <div style="flex:1;background:rgba(255,255,255,0.07);border-radius:16px;padding:14px;text-align:center;">
+          <p style="margin:0;line-height:1.3;font-size:20px;font-weight:800;color:#ffffff;">${examCount} বার</p>
+          <p style="margin:4px 0 0;line-height:1.3;font-size:12px;color:#94a3b8;font-weight:600;">পরীক্ষা দিয়েছে</p>
+        </div>
+      </div>
+
+      <p style="text-align:center;margin:24px 0 24px;font-size:11px;color:#64748b;font-weight:600;">অফিসিয়াল রিপোর্ট • ${new Date().toLocaleDateString("bn-BD")}</p>
     </div>
   `;
-}
+  }
 
-async function generateProfileCard(studentData, format) {
+  async function generateProfileCard(studentData, format) {
   const btn = document.getElementById("shareProfileBtn");
   const originalText = btn.innerHTML;
   btn.disabled = true; btn.innerHTML = "কার্ড তৈরি হচ্ছে...";
