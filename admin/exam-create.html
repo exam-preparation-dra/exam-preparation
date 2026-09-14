@@ -7,6 +7,71 @@
 <link rel="stylesheet" href="../css/style.css">
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#ff6a2b">
+<style>
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
+  body { overflow-x: hidden; background: var(--bg); }
+  .app-shell { max-width: 800px; padding-bottom: 40px; margin: 0 auto; }
+
+  /* ===== Premium Glass Cards ===== */
+  .glass-card {
+    background: rgba(128, 128, 128, 0.03); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 20px; padding: 24px; margin-bottom: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.02); transition: all 0.3s ease;
+  }
+  .section-title { font-size: 1.15rem; font-weight: 900; color: var(--text-primary); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px dashed var(--surface-border); padding-bottom: 12px; }
+
+  /* ===== Form & Input Styles ===== */
+  .field { margin-bottom: 16px; }
+  .field label { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 800; color: var(--text-secondary); margin-bottom: 8px; }
+  .input-glass {
+    width: 100%; box-sizing: border-box; padding: 14px 16px;
+    background: rgba(128, 128, 128, 0.04); border: 1px solid var(--surface-border);
+    border-radius: 14px; color: var(--text-primary);
+    font-family: inherit; font-size: 0.95rem; font-weight: 600; outline: none; transition: 0.2s;
+  }
+  .input-glass:focus { border-color: var(--color-accent); background: var(--surface); box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.15); }
+  textarea.input-glass { resize: vertical; min-height: 100px; }
+  select.input-glass { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1.2em; }
+
+  /* ===== Responsive Grids ===== */
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+
+  /* ===== Premium Buttons ===== */
+  .btn-glass {
+    background: rgba(128, 128, 128, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(128, 128, 128, 0.15);
+    border-radius: 14px; color: var(--text-primary); padding: 12px 20px; font-weight: 800; font-size: 0.95rem;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s ease;
+  }
+  .btn-glass:hover { background: rgba(128, 128, 128, 0.1); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.05); }
+  .btn-glass:active { transform: translateY(0) scale(0.96); }
+  
+  .btn-primary { background: linear-gradient(135deg, var(--color-accent), #f59e0b); color: #fff; border: none; box-shadow: 0 4px 15px rgba(var(--color-accent-rgb), 0.3); }
+  .btn-primary:hover { box-shadow: 0 6px 20px rgba(var(--color-accent-rgb), 0.4); transform: translateY(-2px); }
+
+  /* ===== AI Rows ===== */
+  .ai-row { background: rgba(128,128,128,0.02); border: 1px solid rgba(128,128,128,0.1); border-radius: 16px; padding: 16px; margin-bottom: 16px; position: relative; }
+  .remove-ai-btn { position: absolute; top: 16px; right: 16px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; border-radius: 10px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+  .remove-ai-btn:hover { background: #ef4444; color: #fff; }
+
+  /* ===== Selected Questions List ===== */
+  .sel-question-card { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 16px; padding: 16px; margin-bottom: 12px; transition: 0.2s; }
+  .sel-question-card:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+  .action-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: rgba(128,128,128,0.05); color: var(--text-secondary); border: 1px solid rgba(128,128,128,0.1); cursor: pointer; transition: 0.2s; flex-shrink: 0; }
+  .action-icon:hover { background: var(--surface); color: var(--color-accent); border-color: var(--color-accent); }
+  .action-icon.delete:hover { background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: #ef4444; }
+
+  /* ===== Topbar ===== */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    margin: calc(var(--space-5) * -1) calc(var(--space-4) * -1) var(--space-4);
+    padding: 16px; background: rgba(var(--bg-rgb, 10,14,26), 0.85);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(128,128,128,0.1);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+</style>
 </head>
 <body>
 <div class="app-shell app-shell--wide" id="shell">
@@ -28,7 +93,7 @@ const params = new URLSearchParams(window.location.search);
 const editId = params.get("id");
 
 let tree = [];
-let selectedQuestions = []; // ordered array of full question objects
+let selectedQuestions = []; 
 let existingExam = null;
 
 requireAdmin(async () => {
@@ -36,20 +101,22 @@ requireAdmin(async () => {
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
   document.getElementById("logoutBtn").addEventListener("click", adminLogout);
   initAdminPwaInstall("installBtn");
+  
   document.getElementById("examForm").addEventListener("submit", handleSubmit);
   document.getElementById("marksPerQuestion").addEventListener("input", updateTotalMarks);
+  
   document.getElementById("goToBank").addEventListener("click", () => {
-    // Preserve edit context — otherwise adding more questions mid-edit would
-    // silently create a duplicate exam instead of continuing this one.
     persistCart();
     const returnUrl = editId ? `../admin/exam-create.html?id=${encodeURIComponent(editId)}` : "../admin/exam-create.html";
     window.location.href = `../admin/questions.html?returnTo=${encodeURIComponent(returnUrl)}`;
   });
+  
   document.getElementById("quickAddForm").addEventListener("submit", handleQuickAdd);
   document.getElementById("addAiRowBtn").addEventListener("click", addAiRow);
   document.getElementById("aiGenerateBtn").addEventListener("click", handleAiGenerate);
 
   tree = await getFullSyllabusTree();
+  populateTargetBatch();
   populateQuickAddSyllabus();
   addAiRow();
 
@@ -59,14 +126,9 @@ requireAdmin(async () => {
   if (editId) {
     existingExam = await getExamById(editId);
     if (!existingExam) { showToast("পরীক্ষা পাওয়া যায়নি।", "error"); return; }
-    if (existingExam.status !== "draft") {
-      showToast("শুধুমাত্র খসড়া পরীক্ষা সম্পাদনা করা যায়।", "error");
-    }
+    if (existingExam.status !== "draft") { showToast("শুধুমাত্র খসড়া পরীক্ষা সম্পাদনা করা যায়।", "error"); }
     fillFormFromExisting();
-    // If the cart already belongs to THIS exam (e.g. we're returning from the
-    // question bank with newly-checked questions added), trust it — it holds
-    // the existing questions PLUS whatever was just added. Otherwise (a fresh
-    // visit to this edit page) seed the cart from what's actually saved.
+    
     if (cartContext === editId) {
       selectedQuestions = await getQuestionsByIds(cartIds);
     } else {
@@ -88,77 +150,142 @@ requireAdmin(async () => {
 function template() {
   return `
     <div class="topbar">
-      <a href="../admin/exams.html" class="icon-btn">${icons.arrowLeft}</a>
-      <h2 style="font-size:1.05rem;">${editId ? "পরীক্ষা সম্পাদনা" : "নতুন পরীক্ষা তৈরি"}</h2>
-      <div class="flex gap-2">
-        <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-thumb"></span></button>
-        <button class="icon-btn hidden" id="installBtn" title="অ্যাপ ইনস্টল করুন"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v13m0 0l-4-4m4 4l4-4M5 21h14"/></svg></button>
-        <button class="icon-btn" id="logoutBtn">${icons.arrowRight}</button>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <a href="../admin/exams.html" class="btn-glass" style="width:40px; height:40px; padding:0; border-radius:12px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        </a>
+        <h2 style="font-size:1.15rem; font-weight:900; color:var(--text-primary);">${editId ? "পরীক্ষা সম্পাদনা" : "নতুন পরীক্ষা তৈরি"}</h2>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="theme-toggle" id="themeToggle" style="margin:0;"><span class="theme-toggle-thumb"></span></button>
+        <button class="btn-glass hidden" id="installBtn" style="width:40px;height:40px;padding:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M12 3v13m0 0l-4-4m4 4l4-4M5 21h14"/></svg></button>
+        <button class="btn-glass" id="logoutBtn" style="width:40px;height:40px;padding:0;border-color:rgba(239,68,68,0.3);color:#ef4444;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:18px;height:18px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
       </div>
     </div>
 
-    <form id="examForm" class="glass card">
-      <p class="eyebrow">পরীক্ষার তথ্য</p>
-      <div class="field mt-3"><label>পরীক্ষার নাম</label><input class="input" id="examName" required></div>
-      <div class="field"><label>বিবরণ / নির্দেশনা</label><textarea class="textarea" id="examDesc"></textarea></div>
-      <div class="grid-2 mt-2">
-        <div class="field"><label>পরীক্ষার তারিখ</label><input class="input" type="date" id="examDate" required></div>
-        <div class="field"><label>তথ্যগত সময়</label><input class="input" id="examTime" placeholder="যেমন: সকাল ১০:০০"></div>
-        <div class="field"><label>সময়কাল (মিনিট)</label><input class="input" type="number" min="1" id="examDuration" required></div>
-        <div class="field"><label>প্রতি প্রশ্নে নম্বর</label><input class="input" type="number" min="1" id="marksPerQuestion" value="1" required></div>
+    <!-- Exam Basic Info -->
+    <form id="examForm" class="glass-card">
+      <div class="section-title">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        পরীক্ষার সাধারণ তথ্য
       </div>
-      <p class="text-sm mt-2">মোট নম্বর: <span id="totalMarksDisplay" style="font-weight:800;color:var(--color-accent);">0</span></p>
-      <p id="formError" class="text-sm hidden mt-2" style="color:var(--color-danger);"></p>
-      <button type="submit" class="btn btn-primary mt-3" id="submitBtn">খসড়া হিসেবে সংরক্ষণ করুন</button>
+      
+      <div class="grid-2">
+        <div class="field">
+          <label>পরীক্ষার নাম</label>
+          <input class="input-glass" id="examName" required placeholder="যেমন: Weekly Mock Test 1">
+        </div>
+        <div class="field">
+          <label>লক্ষ্য ব্যাচ (Target Batch)</label>
+          <select class="input-glass" id="examTargetBatch" required>
+            <option value="all">সকল ব্যাচ (সবার জন্য উন্মুক্ত)</option>
+            <!-- Batches populated by JS -->
+          </select>
+        </div>
+      </div>
+      
+      <div class="field mt-2">
+        <label>বিবরণ / নির্দেশনা (ঐচ্ছিক)</label>
+        <textarea class="input-glass" id="examDesc" placeholder="পরীক্ষার্থীদের জন্য কোনো বিশেষ নির্দেশনা থাকলে লিখুন..."></textarea>
+      </div>
+      
+      <div class="grid-2 mt-2">
+        <div class="field"><label>পরীক্ষার তারিখ</label><input class="input-glass" type="date" id="examDate" required></div>
+        <div class="field"><label>সময়কাল (মিনিট)</label><input class="input-glass" type="number" min="1" id="examDuration" placeholder="যেমন: 30" required></div>
+        <div class="field"><label>তথ্যগত সময় (ঐচ্ছিক)</label><input class="input-glass" id="examTime" placeholder="যেমন: সকাল ১০:০০"></div>
+        <div class="field"><label>প্রতি প্রশ্নে নম্বর</label><input class="input-glass" type="number" min="1" id="marksPerQuestion" value="1" required></div>
+      </div>
+      
+      <div style="background:rgba(var(--color-accent-rgb), 0.1); border:1px solid rgba(var(--color-accent-rgb), 0.2); padding:16px; border-radius:14px; text-align:center; margin-top:12px;">
+        <p style="font-size:0.9rem; font-weight:800; color:var(--text-secondary);">মোট নম্বর</p>
+        <p style="font-size:2rem; font-weight:900; color:var(--color-accent); font-family:var(--font-num);" id="totalMarksDisplay">0</p>
+      </div>
+      
+      <p id="formError" class="text-sm hidden mt-3" style="color:#ef4444; font-weight:700; text-align:center;"></p>
+      
+      <button type="submit" class="btn-glass btn-primary mt-4" id="submitBtn" style="width:100%; padding:16px; font-size:1.05rem;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        খসড়া হিসেবে সংরক্ষণ করুন
+      </button>
     </form>
 
-    <div class="glass card mt-4">
-      <div class="flex justify-between items-center">
-        <p class="eyebrow">✨ AI দিয়ে প্রশ্নপত্র তৈরি করুন</p>
+    <!-- AI Generator -->
+    <div class="glass-card">
+      <div class="section-title" style="color:#8b5cf6; border-bottom-color:rgba(139,92,246,0.2);">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        AI দিয়ে প্রশ্নপত্র তৈরি করুন
       </div>
-      <p class="text-xs text-muted mt-1">একাধিক চ্যাপ্টার যোগ করো, প্রতিটার জন্য কতগুলো প্রশ্ন চাও বলে দাও। চাইলে টপিক/নির্দেশনা লিখে দিতে পারো, বা বইয়ের পাতার ছবি দিতে পারো — দিলে AI ঠিক ওই সীমার মধ্যেই থাকবে, আউট-অফ-সিলেবাস হবে না। কিছু না দিলে চ্যাপ্টার/টপিকের নাম অনুযায়ী AI নিজের জ্ঞান থেকে বানাবে। তৈরি হওয়া প্রশ্ন নিজে থেকেই প্রশ্ন ব্যাংকে যুক্ত হয়ে নিচের "নির্বাচিত প্রশ্ন" তালিকায় চলে আসবে — সেভ করার আগে রিভিউ করে নিতে পারবে।</p>
+      <p style="font-size:0.85rem; color:var(--text-muted); font-weight:600; line-height:1.6; margin-bottom:16px;">একাধিক ব্যাচ ও বিষয় যোগ করুন। টপিক বা নির্দেশনা লিখে দিন অথবা বইয়ের পাতার ছবি দিন — AI সেই অনুযায়ী প্রশ্ন তৈরি করে নিচে যুক্ত করে দেবে।</p>
 
-      <div id="aiRowsContainer" class="mt-3"></div>
-      <button type="button" class="btn btn-secondary btn-sm mt-2" id="addAiRowBtn">+ আরেকটা চ্যাপ্টার যোগ করুন</button>
+      <div id="aiRowsContainer"></div>
+      
+      <button type="button" class="btn-glass" id="addAiRowBtn" style="width:100%; border:2px dashed rgba(128,128,128,0.2); background:rgba(128,128,128,0.02); margin-top:8px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        আরেকটি বিষয় যোগ করুন
+      </button>
 
-      <div class="mt-3 hidden" id="aiGenerateProgress">
-        <div class="flex items-center gap-2">
-          <div class="spinner" style="width:18px;height:18px;"></div>
-          <span class="text-xs" id="aiGenerateProgressText">শুরু হচ্ছে...</span>
-        </div>
+      <div class="mt-4 hidden" id="aiGenerateProgress" style="background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.2); padding:16px; border-radius:14px; text-align:center;">
+        <div class="spinner" style="width:24px;height:24px; border-color:rgba(139,92,246,0.3); border-top-color:#8b5cf6; margin:0 auto 10px;"></div>
+        <p style="font-size:0.9rem; font-weight:800; color:#8b5cf6;" id="aiGenerateProgressText">প্রশ্ন তৈরি শুরু হচ্ছে...</p>
       </div>
-      <button type="button" class="btn btn-primary mt-3" id="aiGenerateBtn" style="width:100%;">✨ AI দিয়ে প্রশ্নপত্র তৈরি করুন</button>
+      
+      <button type="button" class="btn-glass" id="aiGenerateBtn" style="width:100%; background:rgba(139,92,246,0.1); color:#8b5cf6; border-color:rgba(139,92,246,0.3); padding:16px; margin-top:16px; font-size:1rem;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        AI দিয়ে জেনারেট করুন
+      </button>
     </div>
 
-    <div class="glass card mt-4">
-      <div class="flex justify-between items-center">
-        <p class="eyebrow">নির্বাচিত প্রশ্ন (<span id="selCount">0</span>)</p>
-        <button type="button" class="btn btn-secondary btn-sm" id="goToBank">প্রশ্ন ব্যাংক থেকে যোগ করুন</button>
+    <!-- Selected Questions -->
+    <div class="glass-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+        <div class="section-title" style="margin:0; border:none; padding:0;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          নির্বাচিত প্রশ্ন (<span id="selCount">0</span>)
+        </div>
+        <button type="button" class="btn-glass" id="goToBank" style="font-size:0.8rem; padding:8px 14px;">প্রশ্ন ব্যাংক থেকে খুঁজুন</button>
       </div>
-      <div id="selectedList" class="mt-2"></div>
+      
+      <div id="selectedList"></div>
     </div>
 
-    <div class="glass card mt-4">
-      <p class="eyebrow">দ্রুত নতুন প্রশ্ন যোগ করুন</p>
-      <form id="quickAddForm" class="mt-2">
-        <div class="field"><label>ইংরেজি প্রশ্ন</label><input class="input" id="qaEn" required></div>
-        <div class="field"><label>বাংলা প্রশ্ন</label><input class="input" id="qaBn" required></div>
-        <div class="grid-2 mt-2">
-          <input class="input" id="qaA" placeholder="অপশন A" required>
-          <input class="input" id="qaB" placeholder="অপশন B" required>
-          <input class="input" id="qaC" placeholder="অপশন C" required>
-          <input class="input" id="qaD" placeholder="অপশন D" required>
+    <!-- Quick Add -->
+    <div class="glass-card">
+      <div class="section-title">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        দ্রুত নতুন প্রশ্ন যোগ করুন
+      </div>
+      <form id="quickAddForm">
+        <div class="field"><label>বাংলা প্রশ্ন</label><input class="input-glass" id="qaBn" required placeholder="প্রশ্নটি লিখুন..."></div>
+        <div class="field"><label>ইংরেজি প্রশ্ন (ঐচ্ছিক)</label><input class="input-glass" id="qaEn" placeholder="Optional translation..."></div>
+        
+        <div class="grid-2 mt-3">
+          <input class="input-glass" id="qaA" placeholder="অপশন A" required>
+          <input class="input-glass" id="qaB" placeholder="অপশন B" required>
+          <input class="input-glass" id="qaC" placeholder="অপশন C" required>
+          <input class="input-glass" id="qaD" placeholder="অপশন D" required>
         </div>
-        <div class="grid-2 mt-2" style="grid-template-columns:1fr 1fr 1fr 1fr;">
-          <select class="select" id="qaCorrect"><option>A</option><option>B</option><option>C</option><option>D</option></select>
-          <select class="select" id="qaSubject"></select>
-          <select class="select" id="qaChapter"></select>
-          <select class="select" id="qaTopic"></select>
+        
+        <div class="grid-4 mt-3">
+          <div class="field"><label>সঠিক উত্তর</label><select class="input-glass" id="qaCorrect"><option>A</option><option>B</option><option>C</option><option>D</option></select></div>
+          <div class="field"><label>ব্যাচ</label><select class="input-glass" id="qaSubject"></select></div>
+          <div class="field"><label>বিষয়</label><select class="input-glass" id="qaChapter"></select></div>
+          <div class="field"><label>টপিক</label><select class="input-glass" id="qaTopic"></select></div>
         </div>
-        <button type="submit" class="btn btn-secondary mt-2">যোগ করে তালিকায় যুক্ত করুন</button>
+        
+        <button type="submit" class="btn-glass mt-3" style="width:100%; border:1px solid var(--color-accent); color:var(--color-accent); background:rgba(var(--color-accent-rgb),0.05); padding:14px;">
+          তালিকায় যুক্ত করুন
+        </button>
       </form>
     </div>
   `;
+}
+
+function populateTargetBatch() {
+  const targetBatchSel = document.getElementById("examTargetBatch");
+  const batches = [...new Set(tree.map(b => b.name_bn))].sort();
+  batches.forEach(b => {
+    targetBatchSel.innerHTML += `<option value="${b}">${b}</option>`;
+  });
 }
 
 function fillFormFromExisting() {
@@ -170,6 +297,7 @@ function fillFormFromExisting() {
   document.getElementById("examTime").value = existingExam.informationalTime || "";
   document.getElementById("examDuration").value = existingExam.durationMinutes || "";
   document.getElementById("marksPerQuestion").value = existingExam.marksPerQuestion || 1;
+  document.getElementById("examTargetBatch").value = existingExam.targetBatch || "all";
 }
 
 function populateQuickAddSyllabus() {
@@ -190,13 +318,7 @@ function updateQaTopics() {
   document.getElementById("qaTopic").innerHTML = (chapter?.topics || []).map(t => `<option value="${t.id}">${t.name_bn}</option>`).join("");
 }
 
-// =========================================================
-// AI QUESTION PAPER MAKER — one row per chapter. Each row's requested
-// question count is split evenly across all topics under that chapter
-// (the question schema requires a specific topicId per question — see
-// ai-import-utils.js's validateParsed), so a "whole chapter" request still
-// produces topic-tagged questions without asking the admin to pick one.
-// =========================================================
+// AI QUESTION PAPER MAKER 
 let aiRowCounter = 0;
 
 function addAiRow() {
@@ -210,21 +332,31 @@ function addAiRow() {
 
 function aiRowHtml(rowId) {
   return `
-    <div class="glass card mt-2" style="padding:14px;" id="aiRow-${rowId}">
-      <div class="flex justify-between items-center">
-        <p class="text-xs" style="font-weight:700;color:var(--text-secondary);">চ্যাপ্টার #${rowId}</p>
-        <button type="button" class="icon-btn remove-ai-row-btn" style="width:28px;height:28px;color:var(--color-danger);">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    <div class="ai-row" id="aiRow-${rowId}">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <p style="font-size:0.85rem; font-weight:800; color:var(--text-secondary);">সিলেকশন #${rowId}</p>
+        <button type="button" class="remove-ai-btn remove-ai-row-btn" title="মুছে ফেলুন">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
       </div>
-      <div class="grid-2 mt-2">
-        <select class="select ai-row-subject"></select>
-        <select class="select ai-row-chapter"></select>
+      
+      <div class="grid-3">
+        <div class="field" style="margin:0;"><label>ব্যাচ</label><select class="input-glass ai-row-subject"></select></div>
+        <div class="field" style="margin:0;"><label>বিষয়</label><select class="input-glass ai-row-chapter"></select></div>
+        <div class="field" style="margin:0;"><label>কতগুলো প্রশ্ন</label><input class="input-glass ai-row-count" type="number" min="1" value="5"></div>
       </div>
-      <div class="field mt-2"><label>কতগুলো প্রশ্ন</label><input class="input ai-row-count" type="number" min="1" value="5"></div>
-      <div class="field mt-2"><label>টপিক / নির্দেশনা (ঐচ্ছিক)</label><textarea class="textarea ai-row-instructions" style="min-height:50px;" placeholder="যেমন: শুধু নিউটনের ৩টা সূত্র থেকে, মাঝারি মানের প্রশ্ন"></textarea></div>
-      <div class="field mt-2"><label>বইয়ের পাতার ছবি (ঐচ্ছিক)</label><input class="input ai-row-images" type="file" accept="image/*" multiple></div>
-      <p class="text-xs mt-2" id="aiRowStatus-${rowId}"></p>
+      
+      <div class="field mt-3">
+        <label>টপিক / নির্দেশনা (ঐচ্ছিক)</label>
+        <textarea class="input-glass ai-row-instructions" style="min-height:60px;" placeholder="যেমন: শুধু নিউটনের ৩টা সূত্র থেকে, মাঝারি মানের প্রশ্ন"></textarea>
+      </div>
+      
+      <div class="field mt-3">
+        <label>বইয়ের পাতার ছবি (ঐচ্ছিক)</label>
+        <input class="input-glass ai-row-images" type="file" accept="image/*" multiple style="padding:10px;">
+      </div>
+      
+      <p class="text-sm mt-3 font-bold" id="aiRowStatus-${rowId}"></p>
     </div>
   `;
 }
@@ -242,8 +374,6 @@ function populateAiRowSyllabus(rowId) {
   refreshChapters();
 }
 
-// Splits `total` as evenly as possible across `n` buckets (remainder goes
-// to the first buckets) — e.g. splitCount(10, 3) -> [4, 3, 3].
 function splitCount(total, n) {
   const base = Math.floor(total / n);
   const extra = total % n;
@@ -251,8 +381,8 @@ function splitCount(total, n) {
 }
 
 async function handleAiGenerate() {
-  const rows = Array.from(document.querySelectorAll("#aiRowsContainer > div"));
-  if (rows.length === 0) { showToast("অন্তত একটা চ্যাপ্টার যোগ করো।", "error"); return; }
+  const rows = Array.from(document.querySelectorAll("#aiRowsContainer > .ai-row"));
+  if (rows.length === 0) { showToast("অন্তত একটা সিলেকশন যোগ করুন।", "error"); return; }
 
   const apiKey = promptForApiKey(false);
   if (!apiKey) { showToast("API key ছাড়া তৈরি করা যাবে না।", "error"); return; }
@@ -261,8 +391,8 @@ async function handleAiGenerate() {
   const genBtn = document.getElementById("aiGenerateBtn");
   const progress = document.getElementById("aiGenerateProgress");
   const progressText = document.getElementById("aiGenerateProgressText");
-  genBtn.disabled = true;
-  progress.classList.remove("hidden");
+  
+  genBtn.disabled = true; progress.classList.remove("hidden");
 
   let totalAdded = 0, totalFailed = 0;
 
@@ -278,23 +408,18 @@ async function handleAiGenerate() {
     const subject = tree.find(s => s.id === subjectId);
     const chapter = subject?.chapters.find(c => c.id === chapterId);
     if (!subject || !chapter || count <= 0) {
-      statusEl.textContent = "⚠ বিষয়/অধ্যায় বা প্রশ্ন সংখ্যা ঠিক নেই — এই চ্যাপ্টার স্কিপ করা হয়েছে।";
-      statusEl.style.color = "var(--color-danger)";
+      statusEl.innerHTML = `<span style="color:#ef4444;">⚠ ব্যাচ/বিষয় বা প্রশ্ন সংখ্যা ঠিক নেই — স্কিপ করা হয়েছে।</span>`;
       continue;
     }
     const topics = chapter.topics || [];
     if (topics.length === 0) {
-      statusEl.textContent = "⚠ এই অধ্যায়ে কোনো টপিক নেই — সিলেবাস ম্যানেজমেন্টে আগে টপিক যোগ করো।";
-      statusEl.style.color = "var(--color-danger)";
+      statusEl.innerHTML = `<span style="color:#ef4444;">⚠ এই বিষয়ে কোনো টপিক নেই — সিলেবাসে টপিক যোগ করুন।</span>`;
       continue;
     }
 
     let imageParts = [];
-    try {
-      imageParts = files && files.length > 0 ? await Promise.all(Array.from(files).map(fileToImagePart)) : [];
-    } catch {
-      statusEl.textContent = "⚠ ছবি পড়া যায়নি — ছবি ছাড়াই এগোনো হচ্ছে।";
-    }
+    try { imageParts = files && files.length > 0 ? await Promise.all(Array.from(files).map(fileToImagePart)) : []; } 
+    catch { statusEl.innerHTML = `<span style="color:#f59e0b;">⚠ ছবি পড়া যায়নি — ছবি ছাড়াই এগোনো হচ্ছে।</span>`; }
 
     const counts = splitCount(count, topics.length);
 
@@ -304,18 +429,13 @@ async function handleAiGenerate() {
       if (topicCount <= 0) continue;
 
       progressText.textContent = `${chapter.name_bn} — ${topic.name_bn} (${topicCount} টি) তৈরি হচ্ছে...`;
-      statusEl.textContent = `⏳ ${topic.name_bn}: তৈরি হচ্ছে...`;
-      statusEl.style.color = "var(--text-muted)";
+      statusEl.innerHTML = `<span style="color:var(--color-accent);">⏳ ${topic.name_bn}: তৈরি হচ্ছে...</span>`;
 
       try {
         const text = await generateQuestionsFromImage({
-          apiKey,
-          imageParts,
-          subjectName: subject.name_en,
-          chapterName: chapter.name_en,
-          topicName: topic.name_en,
-          count: topicCount,
-          extraInstructions: instructions
+          apiKey, imageParts,
+          subjectName: subject.name_en, chapterName: chapter.name_en, topicName: topic.name_en,
+          count: topicCount, extraInstructions: instructions
         });
         const parsed = parseAiImportText(text, { subjectId, chapterId, topicId: topic.id });
         const validOnes = parsed.filter(p => p.valid);
@@ -326,28 +446,20 @@ async function handleAiGenerate() {
           totalAdded++;
         }
         totalFailed += (parsed.length - validOnes.length);
-        statusEl.textContent = `✓ ${topic.name_bn}: ${validOnes.length} টি প্রশ্ন যুক্ত হয়েছে।`;
-        statusEl.style.color = "var(--color-success)";
+        statusEl.innerHTML = `<span style="color:#10b981;">✓ ${topic.name_bn}: ${validOnes.length} টি প্রশ্ন যুক্ত হয়েছে।</span>`;
       } catch (err) {
-        console.error(err);
-        statusEl.textContent = `✗ ${topic.name_bn}: ${err.message || "ব্যর্থ হয়েছে"}`;
-        statusEl.style.color = "var(--color-danger)";
+        statusEl.innerHTML = `<span style="color:#ef4444;">✗ ${topic.name_bn}: ${err.message || "ব্যর্থ হয়েছে"}</span>`;
         totalFailed++;
       }
     }
   }
 
-  persistCart();
-  renderSelectedList();
-  updateTotalMarks();
-  progress.classList.add("hidden");
-  genBtn.disabled = false;
+  persistCart(); renderSelectedList(); updateTotalMarks();
+  progress.classList.add("hidden"); genBtn.disabled = false;
 
   if (totalAdded > 0) {
-    showToast(`${totalAdded} টি প্রশ্ন তৈরি হয়ে যোগ হয়েছে${totalFailed > 0 ? ` (${totalFailed} টি ব্যর্থ)` : ""} — নিচে রিভিউ করে সংরক্ষণ করো।`, "success");
-  } else {
-    showToast("কোনো প্রশ্ন তৈরি করা যায়নি।", "error");
-  }
+    showToast(`${totalAdded} টি প্রশ্ন তৈরি হয়েছে${totalFailed > 0 ? ` (${totalFailed} টি ব্যর্থ)` : ""} — নিচে রিভিউ করুন।`, "success");
+  } else { showToast("কোনো প্রশ্ন তৈরি করা যায়নি।", "error"); }
 }
 
 function nameFor(id, kind) {
@@ -365,27 +477,20 @@ function renderSelectedList() {
   const el = document.getElementById("selectedList");
   document.getElementById("selCount").textContent = selectedQuestions.length;
   if (selectedQuestions.length === 0) {
-    el.innerHTML = `<p class="text-xs text-muted mt-2">এখনো কোনো প্রশ্ন নির্বাচিত হয়নি। প্রশ্ন ব্যাংক থেকে যোগ করুন অথবা নিচে দ্রুত নতুন প্রশ্ন তৈরি করুন।</p>`;
+    el.innerHTML = `<div style="text-align:center; padding:30px; background:rgba(128,128,128,0.02); border-radius:14px; border:1px dashed rgba(128,128,128,0.2);"><p class="text-sm font-bold" style="color:var(--text-muted);">এখনো কোনো প্রশ্ন নির্বাচিত হয়নি।</p></div>`;
     return;
   }
+  
   el.innerHTML = selectedQuestions.map((q, idx) => `
-    <div class="glass card mt-2" style="padding:12px;">
-      <div class="flex justify-between items-center" style="gap:8px;">
-        <div style="flex:1;">
-          <p class="text-xs text-muted">#${idx + 1} • ${nameFor(q.subjectId, "subject")} / ${nameFor(q.chapterId, "chapter")} ${q.createdByAI ? aiBadge() : ""}</p>
-          <p class="text-sm" style="font-weight:600;">${q.question_bn}</p>
-        </div>
-        <div class="flex gap-1">
-          <button class="icon-btn up-btn" data-idx="${idx}" style="width:32px;height:32px;" ${idx === 0 ? "disabled" : ""}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-          </button>
-          <button class="icon-btn down-btn" data-idx="${idx}" style="width:32px;height:32px;" ${idx === selectedQuestions.length - 1 ? "disabled" : ""}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-          </button>
-          <button class="icon-btn remove-btn" data-idx="${idx}" style="width:32px;height:32px;color:var(--color-danger);">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg>
-          </button>
-        </div>
+    <div class="sel-question-card">
+      <div style="flex:1;">
+        <p style="font-size:0.75rem; font-weight:800; color:var(--text-muted); margin-bottom:6px;">#${idx + 1} • ${nameFor(q.subjectId, "subject")} / ${nameFor(q.chapterId, "chapter")} ${q.createdByAI ? `<span style="background:rgba(139,92,246,0.1); color:#8b5cf6; padding:2px 6px; border-radius:6px; margin-left:6px;">AI</span>` : ""}</p>
+        <p style="font-size:0.95rem; font-weight:800; color:var(--text-primary); line-height:1.4;">${q.question_bn}</p>
+      </div>
+      <div style="display:flex; gap:6px; flex-shrink:0;">
+        <button class="action-icon up-btn" data-idx="${idx}" ${idx === 0 ? "disabled style='opacity:0.3; cursor:not-allowed;'" : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+        <button class="action-icon down-btn" data-idx="${idx}" ${idx === selectedQuestions.length - 1 ? "disabled style='opacity:0.3; cursor:not-allowed;'" : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;"><path d="M12 5v14M5 12l7 7 7-7"/></svg></button>
+        <button class="action-icon delete remove-btn" data-idx="${idx}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px;"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
     </div>
   `).join("");
@@ -435,20 +540,15 @@ async function handleQuickAdd(e) {
     topicId: document.getElementById("qaTopic").value,
   };
   if (!payload.subjectId || !payload.chapterId || !payload.topicId) {
-    showToast("বিষয়/অধ্যায়/টপিক নির্বাচন করুন।", "error");
-    return;
+    showToast("ব্যাচ/বিষয়/টপিক নির্বাচন করুন।", "error"); return;
   }
   try {
     const ref = await addQuestion(payload);
     selectedQuestions.push({ id: ref.id, ...payload });
-    persistCart();
-    renderSelectedList();
-    updateTotalMarks();
+    persistCart(); renderSelectedList(); updateTotalMarks();
     e.target.reset();
     showToast("প্রশ্ন তৈরি হয়ে তালিকায় যুক্ত হয়েছে।", "success");
-  } catch (err) {
-    showToast(friendlyError(err), "error");
-  }
+  } catch (err) { showToast(friendlyError(err), "error"); }
 }
 
 async function handleSubmit(e) {
@@ -473,12 +573,13 @@ async function handleSubmit(e) {
     informationalTime: document.getElementById("examTime").value.trim(),
     durationMinutes: Number(document.getElementById("examDuration").value),
     marksPerQuestion: Number(document.getElementById("marksPerQuestion").value),
+    targetBatch: document.getElementById("examTargetBatch").value, // TARGET BATCH ADDED
     subjectIds, chapterIds,
     questionIds: selectedQuestions.map(q => q.id)
   };
 
-  submitBtn.disabled = true;
-  submitBtn.textContent = "সংরক্ষণ করা হচ্ছে...";
+  submitBtn.disabled = true; submitBtn.innerHTML = `<span class="spinner" style="width:16px;height:16px;border-width:2px;border-color:#fff;border-top-color:transparent;display:inline-block;vertical-align:middle;margin-right:8px;"></span> সংরক্ষণ হচ্ছে...`;
+  
   try {
     if (editId) {
       await updateExam(editId, data);
@@ -491,12 +592,11 @@ async function handleSubmit(e) {
     localStorage.removeItem("examBuilderContext");
     window.location.href = "../admin/exams.html";
   } catch (err) {
-    console.error(err);
     errorEl.textContent = err.message || friendlyError(err);
     errorEl.classList.remove("hidden");
   } finally {
     submitBtn.disabled = false;
-    submitBtn.textContent = "খসড়া হিসেবে সংরক্ষণ করুন";
+    submitBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> খসড়া হিসেবে সংরক্ষণ করুন`;
   }
 }
 </script>
