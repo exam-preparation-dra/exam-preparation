@@ -141,6 +141,13 @@ requireAdmin(() => {
     window.location.href = returnTo ? decodeURIComponent(returnTo) : "../admin/exam-create.html";
   });
 
+  // ===== Quick Select Logic Integrations =====
+  document.getElementById("qsAll").addEventListener("click", () => handleQuickSelect("all"));
+  document.getElementById("qs10").addEventListener("click", () => handleQuickSelect(10));
+  document.getElementById("qs20").addEventListener("click", () => handleQuickSelect(20));
+  document.getElementById("qs30").addEventListener("click", () => handleQuickSelect(30));
+  document.getElementById("qsClear").addEventListener("click", () => handleQuickSelect(0));
+
   setupImagePreview();
   setupVoiceButton();
   
@@ -179,6 +186,29 @@ requireAdmin(() => {
   init();
 });
 
+function handleQuickSelect(limit) {
+  const filtered = filterByText(allQuestions, filterState.text);
+  
+  if (limit === 0) {
+    selectedIds.clear(); // Clear all
+    showToast("সব সিলেকশন মুছে ফেলা হয়েছে।", "success");
+  } else {
+    const count = limit === "all" ? filtered.length : Math.min(limit, filtered.length);
+    if (count === 0) {
+      showToast("সিলেক্ট করার মতো কোনো প্রশ্ন নেই!", "error");
+      return;
+    }
+    for(let i = 0; i < count; i++) {
+      selectedIds.add(filtered[i].id);
+    }
+    showToast(`${count} টি প্রশ্ন সফলভাবে সিলেক্ট হয়েছে!`, "success");
+  }
+  
+  localStorage.setItem("examBuilderSelection", JSON.stringify([...selectedIds]));
+  document.getElementById("selectionCount").textContent = `${selectedIds.size} টি নির্বাচিত`;
+  renderQuestionList();
+}
+
 function shellTemplate() {
   return `
     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; margin-bottom:24px;">
@@ -193,7 +223,8 @@ function shellTemplate() {
       </div>
     </div>
 
-    <div class="glass-card">
+    <!-- Main Filter Box -->
+    <div class="glass-card" style="margin-bottom: 16px;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
         <p style="font-weight:900; font-size:1.05rem; color:var(--text-primary);">ফিল্টার ও অনুসন্ধান</p>
         <a href="../admin/question-import.html" class="btn-glass btn-secondary" style="font-size:0.8rem; padding:8px 12px;">AI ইম্পোর্ট</a>
@@ -204,7 +235,6 @@ function shellTemplate() {
         <input type="text" id="searchInput" placeholder="প্রশ্ন খুঁজুন...">
       </div>
       
-      <!-- Relabeled Filters: Subject->Batch, Chapter->Subject, Topic->Topic -->
       <div class="filter-grid">
         <select class="input-glass" id="subjectFilter"><option value="">সব ব্যাচ</option></select>
         <select class="input-glass" id="chapterFilter"><option value="">সব বিষয়</option></select>
@@ -212,13 +242,28 @@ function shellTemplate() {
       </div>
     </div>
 
+    <!-- Quick Select Action Bar -->
+    <div class="glass-card" style="padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; border: 1px solid rgba(139,92,246,0.3); background: rgba(139,92,246,0.05);">
+      <p style="font-size:0.95rem; font-weight:800; color:#8b5cf6; margin:0; display:flex; align-items:center; gap:6px;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        কুইক সিলেক্ট (<span id="visibleCount" style="font-family:var(--font-num);">0</span> টি দেখাচ্ছে)
+      </p>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="btn-glass" id="qsAll" style="padding: 6px 12px; font-size: 0.8rem;">সব</button>
+        <button class="btn-glass" id="qs10" style="padding: 6px 12px; font-size: 0.8rem;">১০টি</button>
+        <button class="btn-glass" id="qs20" style="padding: 6px 12px; font-size: 0.8rem;">২০টি</button>
+        <button class="btn-glass" id="qs30" style="padding: 6px 12px; font-size: 0.8rem;">৩০টি</button>
+        <button class="btn-glass" id="qsClear" style="padding: 6px 12px; font-size: 0.8rem; color: #ef4444; border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.05);">ক্লিয়ার</button>
+      </div>
+    </div>
+
     <div style="display:flex; justify-content:space-between; align-items:center; margin:24px 0 16px;">
-      <p style="font-weight:800; font-size:0.9rem; color:var(--text-secondary);" id="selectionCount">${selectedIds.size} টি নির্বাচিত</p>
+      <p style="font-weight:900; font-size:1rem; color:var(--text-primary);" id="selectionCount">${selectedIds.size} টি নির্বাচিত</p>
       <div style="display:flex; gap:10px;">
-        <button class="btn-glass" id="goToExamBuilder">পরীক্ষায় যোগ</button>
-        <button class="btn-glass btn-primary" id="showAddForm">
+        <button class="btn-glass" id="goToExamBuilder" style="background:var(--color-accent); color:#fff; border:none;">পরীক্ষায় যোগ</button>
+        <button class="btn-glass" id="showAddForm">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          নতুন প্রশ্ন
+          নতুন
         </button>
       </div>
     </div>
@@ -303,7 +348,7 @@ function shellTemplate() {
           
           <p style="font-size:0.8rem; font-weight:700; color:var(--text-muted); text-align:center; margin:16px 0;">— অথবা লিংক পেস্ট করুন —</p>
           <input class="input-glass" type="url" id="quickImgInput" placeholder="ছবির লিংক...">
-          <p style="font-size:0.75rem; color:var(--text-muted); font-weight:600; margin-top:8px; text-align:center;">খালি রেখে সংরক্ষণ করলে ছবি মুছে যাবে।</p>
+          <p style="font-size:0.75rem; color:var(--text-muted); font-weight:600; margin-top:8px; text-align:center;">খালি রেখে সংরক্ষণ করলে ছবি মুছে যাবে。</p>
           <div style="text-align:center;"><img id="quickImgPreview" class="hidden mt-3" style="max-height:140px; border-radius:12px; border:1px solid rgba(128,128,128,0.2);"></div>
         </div>
         <p id="quickImgError" class="hidden" style="color:#ef4444; font-size:0.85rem; font-weight:700; text-align:center;"></p>
@@ -419,6 +464,10 @@ function renderQuestionList() {
   const listEl = document.getElementById("questionList");
   const filtered = filterByText(allQuestions, filterState.text);
   
+  // Update Visible Count in Quick Select UI
+  const visibleCountEl = document.getElementById("visibleCount");
+  if(visibleCountEl) visibleCountEl.textContent = filtered.length;
+  
   if (filtered.length === 0) {
     listEl.innerHTML = `<div class="glass-card text-center" style="padding:40px; font-weight:800; color:var(--text-muted);">কোনো প্রশ্ন পাওয়া যায়নি।</div>`;
     return;
@@ -513,7 +562,7 @@ async function saveQuickImage() {
     await updateQuestion(quickImgTargetId, { imageUrl: finalUrl });
     const idx = allQuestions.findIndex(x => x.id === quickImgTargetId);
     if (idx !== -1) allQuestions[idx].imageUrl = finalUrl;
-    showToast(finalUrl ? "ছবি যুক্ত হয়েছে।" : "ছবি সরানো হয়েছে।", "success");
+    showToast(finalUrl ? "ছবি যুক্ত হয়েছে।" : "ছবি সরানো হয়েছে。", "success");
     closeQuickImageModal(); renderQuestionList();
   } catch (err) {
     errEl.textContent = friendlyError ? friendlyError(err) : "সংরক্ষণ করা যায়নি।";
