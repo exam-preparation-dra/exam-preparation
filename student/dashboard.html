@@ -206,15 +206,27 @@ async function loadUpcoming() {
   }
 }
 
+// ==========================================
+// NEW TIME-CHECK LOGIC ADDED HERE
+// ==========================================
 function renderUpcomingExams(el, exams, subjectMap, chapterMap, resultMap) {
-  if (exams.length === 0) {
-    el.style.display = "none"; // Hide completely if no exams
+  const now = new Date().getTime(); // বর্তমান সময়
+
+  // ফিল্টার করা হচ্ছে: শুধুমাত্র সেই পরীক্ষাগুলো দেখাবে যেগুলোর সময় পার হয়ে গেছে বা চলছে
+  const visibleExams = exams.filter(exam => {
+    if (!exam.examDate) return true; // যদি অ্যাডমিন কোনো তারিখ সেট না করেন, তবে সবসময় দেখাবে
+    const examTime = exam.examDate.toDate().getTime(); // পরীক্ষার সেট করা সময়
+    return now >= examTime; 
+  });
+
+  if (visibleExams.length === 0) {
+    el.style.display = "none"; // Hide completely if no exams match the time
     el.innerHTML = "";
     return;
   }
 
   el.style.display = "block"; // Show if there are exams
-  el.innerHTML = `<p class="eyebrow mb-2">আসন্ন পরীক্ষা</p>` + exams.map(exam => {
+  el.innerHTML = `<p class="eyebrow mb-2">আসন্ন পরীক্ষা</p>` + visibleExams.map(exam => {
     const dateStr = exam.examDate?.toDate ? exam.examDate.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" }) : "";
     const own = resultMap[exam.id];
     let actionHtml = "";
@@ -244,6 +256,7 @@ function renderUpcomingExams(el, exams, subjectMap, chapterMap, resultMap) {
     `;
   }).join("");
 }
+// ==========================================
 
 async function loadMotivation() {
   const el = document.getElementById("motivationSection");
