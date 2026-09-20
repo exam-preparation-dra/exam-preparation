@@ -12,7 +12,7 @@
 </div>
 
 <script type="module">
-import { initTheme, toggleTheme, icons, renderState, renderStudentHeader, showToast } from "../js/utils/ui-utils.js";
+import { initTheme, icons, renderState, renderStudentHeader, showToast } from "../js/utils/ui-utils.js";
 import { getActiveStudent } from "../js/utils/student-utils.js";
 import { getApprovedResults, getExamSnapshotsMap } from "../js/utils/results-utils.js";
 import { getSubjects, getChapters, getTopics, buildNameMap } from "../js/utils/syllabus-utils.js";
@@ -42,7 +42,6 @@ async function render() {
     </div>
     <div id="body" class="mt-3"><div class="glass card skeleton" style="height:200px;"></div></div>
   `;
-  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
   load();
 }
 
