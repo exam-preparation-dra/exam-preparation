@@ -39,7 +39,21 @@
     border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 16px; padding: 16px; margin-bottom: 12px; 
     text-decoration: none; color: inherit; transition: transform 0.2s, box-shadow 0.2s;
   }
-  .history-card:active { transform: scale(0.97); }
+  .history-card:active { transform: scale(0.99); }
+  .hc-link { display: block; text-decoration: none; color: inherit; }
+  .hc-link:active { opacity: 0.8; }
+
+  /* ===== Per-exam point calculation ===== */
+  .hc-calc { margin-top: 12px; border-top: 1px dashed rgba(128,128,128,0.15); padding-top: 10px; }
+  .hc-calc summary { cursor: pointer; list-style: none; font-size: 0.78rem; font-weight: 800; color: var(--color-accent); display: flex; align-items: center; gap: 6px; -webkit-tap-highlight-color: transparent; }
+  .hc-calc summary::-webkit-details-marker { display: none; }
+  .hc-calc summary::before { content: "▸"; font-size: 0.7rem; transition: transform 150ms ease; }
+  .hc-calc[open] summary::before { transform: rotate(90deg); }
+  .hc-calc-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 6px 2px; font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); border-bottom: 1px solid rgba(128,128,128,0.08); }
+  .hc-calc-row small { display: block; font-size: 0.65rem; font-weight: 600; color: var(--text-muted); }
+  .hc-calc-row .v { font-family: var(--font-num); font-weight: 900; color: var(--text-primary); white-space: nowrap; }
+  .hc-calc-total { display: flex; justify-content: space-between; padding: 8px 2px 0; font-size: 0.85rem; font-weight: 900; color: var(--color-accent); }
+  .sum-breakdown { margin-top: 12px; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-align: center; }
   
   .hc-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
   .hc-title { font-size: 1.05rem; font-weight: 800; color: var(--text-primary); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -64,6 +78,7 @@
 import { initTheme, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
 import { getActiveStudent, refreshActiveStudent } from "../js/utils/student-utils.js";
 import { getApprovedResults, getStudentRank } from "../js/utils/results-utils.js";
+import { computeStudentXP, getExamXPLines } from "../js/utils/xp-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
@@ -120,8 +135,12 @@ async function renderPage() {
     // Fallback sanity check (cannot attend more than total)
     if (totalExamsConducted < results.length) totalExamsConducted = results.length;
 
-    // Use Leaderboard Real Points System
-    const totalPoints = rankData?.totalPoints || 0;
+    // Points: computed by the SAME engine the leaderboard and dashboard use, so
+    // every exam's number below adds up to the total shown in the summary.
+    const xp = computeStudentXP(results, { referralCount: rankData?.referralCount || 0 });
+    const totalPoints = xp.totalXP;
+    const xpByResult = {};
+    xp.exams.forEach(e => { if (e.resultId) xpByResult[e.resultId] = e; });
 
     // Header Summary
     const summaryHtml = `
@@ -145,6 +164,7 @@ async function renderPage() {
             <span class="sum-lbl">সর্বমোট পয়েন্ট</span>
           </div>
         </div>
+        ${xp.referralXP > 0 ? `<p class="sum-breakdown">পরীক্ষা থেকে ${xp.examXP} + বন্ধু রেফার ${xp.referralXP} = ${totalPoints} পয়েন্ট</p>` : ""}
       </div>
     `;
 
@@ -159,36 +179,54 @@ async function renderPage() {
 
     // List Generation
     const listHtml = results.map(r => {
-      // Individual exam points
-      const pts = Number(r.points || r.earnedPoints || r.score || r.obtainedMarks || 0);
+      // Points for THIS exam from the XP engine (not raw marks).
+      const examXp = xpByResult[r.id];
+      const pts = examXp ? examXp.xp : 0;
+      const lines = examXp ? getExamXPLines(examXp.parts) : [];
       const totalQ = (r.correctCount || 0) + (r.wrongCount || 0) + (r.unansweredCount || 0);
-      
+
+      const calcHtml = lines.length ? `
+        <details class="hc-calc">
+          <summary>পয়েন্ট কীভাবে হলো</summary>
+          <div style="margin-top:6px;">
+            ${lines.map(l => `
+              <div class="hc-calc-row">
+                <span>${l.label}<small>${l.hint}</small></span>
+                <span class="v">+${l.xp}</span>
+              </div>`).join("")}
+            <div class="hc-calc-total"><span>মোট</span><span style="font-family:var(--font-num);">+${pts} pts</span></div>
+          </div>
+        </details>` : "";
+
       return `
-        <a href="../student/result.html?resultId=${r.id}" class="history-card">
-          <div class="hc-header">
-            <div class="hc-title">${r.examName || "অজানা পরীক্ষা"}</div>
-            <div class="hc-points">+${pts} pts</div>
-          </div>
-          <div class="hc-meta">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            ${fmtDate(r.submittedAt)}
-          </div>
-          
-          <div class="hc-stats">
-            <div class="hc-stat-box stat-pct">
-              <span class="hc-val">${r.percentage ?? "—"}%</span>
-              <span class="hc-lbl">স্কোর</span>
+        <div class="history-card">
+          <a href="../student/result.html?resultId=${r.id}" class="hc-link">
+            <div class="hc-header">
+              <div class="hc-title">${r.examName || "অজানা পরীক্ষা"}</div>
+              <div class="hc-points">+${pts} pts</div>
             </div>
-            <div class="hc-stat-box">
-              <span class="hc-val">${r.accuracy ?? "—"}%</span>
-              <span class="hc-lbl">সঠিকতা</span>
+            <div class="hc-meta">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              ${fmtDate(r.submittedAt)}
             </div>
-            <div class="hc-stat-box">
-              <span class="hc-val" style="color:#10b981;">${r.correctCount || 0}/${totalQ > 0 ? totalQ : '-'}</span>
-              <span class="hc-lbl">সঠিক উত্তর</span>
+
+            <div class="hc-stats">
+              <div class="hc-stat-box stat-pct">
+                <span class="hc-val">${r.percentage ?? "—"}%</span>
+                <span class="hc-lbl">স্কোর</span>
+              </div>
+              <div class="hc-stat-box">
+                <span class="hc-val">${r.accuracy ?? "—"}%</span>
+                <span class="hc-lbl">সঠিকতা</span>
+              </div>
+              <div class="hc-stat-box">
+                <span class="hc-val" style="color:#10b981;">${r.correctCount || 0}/${totalQ > 0 ? totalQ : '-'}</span>
+                <span class="hc-lbl">সঠিক উত্তর</span>
+              </div>
             </div>
-          </div>
-        </a>
+          </a>
+          ${calcHtml}
+        </div>
       `;
     }).join("");
 
