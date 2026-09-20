@@ -266,7 +266,7 @@ import { initTheme, renderState, renderStudentHeader, showToast, friendlyError }
 import { getActiveStudent, refreshActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
 import { buildLeaderboardRows, getUpcomingExams, getAllApprovedResults } from "../js/utils/results-utils.js";
 import { getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS } from "../js/utils/friend-utils.js";
-import { getIncomingChallenges, getOutgoingChallenges, sendChallenge, acceptChallenge, rejectChallenge } from "../js/utils/challenge-utils.js";
+import { getIncomingChallenges, getOutgoingChallenges, sendChallenge, acceptChallenge, rejectChallenge, resolveCompletedChallenges, getChallengeBonusMap } from "../js/utils/challenge-utils.js";
 import { buildStudentExtras, computeRankMovement, getHeadToHeadMap, toMillis, DAY_MS } from "../js/utils/friend-stats-utils.js";
 
 initTheme();
@@ -290,6 +290,7 @@ const S = {
   outgoing: [],
   outChalls: [],
   h2h: {},
+  challengeBonusMap: {},
   studentMap: {}
 };
 let upcomingExamsCache = null;
@@ -304,8 +305,9 @@ let refreshTimer = null;
 if (!student) {
   window.location.href = "../index.html";
 } else {
-  refreshActiveStudent(student.docId).then(fresh => {
+  refreshActiveStudent(student.docId).then(async fresh => {
     if (fresh) student = fresh;
+    await handleIncomingFriendLink().catch(() => {});
     render();
   });
 }
@@ -379,11 +381,11 @@ function movementChip(change) {
 
 /* ---------------- data ---------------- */
 function computeDerived() {
-  const rows = buildLeaderboardRows(S.results, S.students);
+  const rows = buildLeaderboardRows(S.results, S.students, S.challengeBonusMap);
   S.rows = rows;
 
   const weekAgo = Date.now() - 7 * DAY_MS;
-  const oldRows = buildLeaderboardRows(S.results.filter(r => toMillis(r.submittedAt) && toMillis(r.submittedAt) < weekAgo), S.students);
+  const oldRows = buildLeaderboardRows(S.results.filter(r => toMillis(r.submittedAt) && toMillis(r.submittedAt) < weekAgo), S.students, S.challengeBonusMap);
   S.movement = computeRankMovement(rows, oldRows);
   S.extras = buildStudentExtras(S.results);
 
@@ -406,18 +408,25 @@ async function loadAll({ soft = false } = {}) {
   S.students = students;
 
   const id = student.studentId;
-  const [results, friendIds, incoming, outgoing, outChalls, h2h] = await Promise.all([
+
+  // Settle any of MY challenges whose exam results are both in now, so
+  // win/loss + bonus XP stop sitting stuck on "accepted" forever.
+  await resolveCompletedChallenges(id).catch(() => []);
+
+  const [results, friendIds, incoming, outgoing, outChalls, h2h, challengeBonusMap] = await Promise.all([
     getAllApprovedResults(),
     getMyFriendIds(id),
     getIncomingRequests(id).catch(() => []),
     getOutgoingRequests(id).catch(() => []),
     getOutgoingChallenges(id).catch(() => []),
-    getHeadToHeadMap(id).catch(() => ({}))
+    getHeadToHeadMap(id).catch(() => ({})),
+    getChallengeBonusMap().catch(() => ({}))
   ]);
 
   S.results = results;
   S.friendIds = Array.isArray(friendIds) ? friendIds : [];
   S.incoming = incoming; S.outgoing = outgoing; S.outChalls = outChalls; S.h2h = h2h;
+  S.challengeBonusMap = challengeBonusMap;
 
   computeDerived();
 
@@ -453,6 +462,7 @@ function render() {
         <div class="friend-count" id="friendCount"></div>
       </section>
 
+      <div id="friendLinkCard"></div>
       <div id="requestsCard"></div>
       <div id="incomingChallengesCard"></div>
 
@@ -501,6 +511,7 @@ function render() {
 
 function renderAll() {
   renderHeroCount();
+  renderFriendLinkCard();
   renderRequests();
   renderTabs();
   renderToppers();
@@ -801,6 +812,66 @@ function renderList() {
   el.querySelectorAll("[data-open]").forEach(row => row.addEventListener("click", () => openFriendSheet(row.dataset.open)));
 }
 
+/* ---------------- friend link (share -> auto friend request) ---------------- */
+function myFriendLink() {
+  return new URL(`./leaderboard.html?addFriend=${encodeURIComponent(student.studentId)}`, window.location.href).href;
+}
+
+function renderFriendLinkCard() {
+  const el = document.getElementById("friendLinkCard");
+  if (!el) return;
+
+  const link = myFriendLink();
+  const full = S.friendIds.length >= MAX_FRIENDS;
+
+  el.innerHTML = `
+    <div class="glass-float-card req-card" style="border-left:4px solid var(--color-accent);">
+      <div class="req-head" style="color:var(--color-accent);">${ICON.userPlus} আমার বন্ধু-লিংক</div>
+      <p style="margin:2px 0 10px; font-size:.72rem; color:var(--text-muted); font-weight:700; line-height:1.55;">
+        ${full ? `তোমার বন্ধু তালিকা পূর্ণ (${MAX_FRIENDS}/${MAX_FRIENDS}) — নতুন কাউকে যোগ করতে আগে কাউকে সরাও।` : "এই লিংক যাকে পাঠাবে, সে খুললেই সরাসরি তোমাকে বন্ধুর অনুরোধ পাঠিয়ে দেবে — আইডি খুঁজে বের করার দরকার নেই।"}
+      </p>
+      <div style="background:rgba(128,128,128,0.05); border:1px solid var(--surface-border); border-radius:10px; padding:10px 12px; font-size:0.72rem; color:var(--text-muted); font-weight:700; word-break:break-all; margin-bottom:12px;">${escapeHtml(link)}</div>
+      <div style="display:flex; gap:8px;">
+        <button type="button" class="btn-glass action-btn" id="copyFriendLinkBtn" style="flex:1;">কপি করো</button>
+        <button type="button" class="btn-glass action-btn" id="shareFriendLinkBtn" style="flex:1;">শেয়ার করো</button>
+      </div>
+    </div>`;
+
+  document.getElementById("copyFriendLinkBtn")?.addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(link); showToast("লিংক কপি হয়েছে!", "success"); }
+    catch { showToast("কপি করা যায়নি।", "error"); }
+  });
+
+  document.getElementById("shareFriendLinkBtn")?.addEventListener("click", async () => {
+    const shareText = "আমার সাথে বন্ধু হয়ে যাও:";
+    if (navigator.share) {
+      try { await navigator.share({ title: "বন্ধু হও", text: shareText, url: link }); return; } catch { return; }
+    }
+    try { await navigator.clipboard.writeText(`${shareText} ${link}`); showToast("লিংক কপি হয়েছে!", "success"); }
+    catch { showToast("শেয়ার করা যায়নি।", "error"); }
+  });
+}
+
+// A friend's link lands back here with ?addFriend=<their studentId>. If
+// I'm logged in as someone else, that's an automatic friend request to
+// them — no ID typing needed. Runs once, then the param is scrubbed from
+// the URL so refreshing the page never re-sends it.
+async function handleIncomingFriendLink() {
+  const params = new URLSearchParams(window.location.search);
+  const targetId = params.get("addFriend");
+  if (!targetId) return;
+
+  window.history.replaceState({}, "", window.location.pathname);
+  if (targetId === student.studentId) return;
+
+  try {
+    await sendFriendRequest(student.studentId, targetId);
+    showToast("বন্ধুর অনুরোধ পাঠানো হয়েছে!", "success");
+  } catch (err) {
+    showToast(err.message || friendlyError(err), "error");
+  }
+}
+
 /* ---------------- incoming friend requests ---------------- */
 function renderRequests() {
   const el = document.getElementById("requestsCard");
@@ -954,7 +1025,11 @@ async function renderIncomingChallenges() {
   const card = document.getElementById("incomingChallengesCard");
   if (!card) return;
   try {
-    const incoming = await getIncomingChallenges(student.studentId);
+    const all = await getIncomingChallenges(student.studentId);
+    // Only still-pending challenges belong on this "respond to it" card —
+    // once accepted/completed/etc. it has nothing left for the recipient
+    // to decide, so it must disappear from here.
+    const incoming = all.filter(c => c.status === "pending");
     if (!incoming.length) { card.innerHTML = ""; return; }
 
     card.innerHTML = `

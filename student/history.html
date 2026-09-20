@@ -137,7 +137,7 @@ async function renderPage() {
 
     // Points: computed by the SAME engine the leaderboard and dashboard use, so
     // every exam's number below adds up to the total shown in the summary.
-    const xp = computeStudentXP(results, { referralCount: rankData?.referralCount || 0 });
+    const xp = computeStudentXP(results, { referralCount: rankData?.referralCount || 0, challengeBonusXP: rankData?.challengeXP || 0 });
     const totalPoints = xp.totalXP;
     const xpByResult = {};
     xp.exams.forEach(e => { if (e.resultId) xpByResult[e.resultId] = e; });

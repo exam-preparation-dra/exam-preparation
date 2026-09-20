@@ -220,13 +220,14 @@
 </div>
 
 <script type="module">
-import { initTheme, renderState, renderStudentHeader, showToast } from "../js/utils/ui-utils.js";
+import { initTheme, toggleTheme, renderState, renderStudentHeader, showToast } from "../js/utils/ui-utils.js";
 import { getActiveStudent, refreshActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
-import { subscribeToUpcomingExams, getApprovedResults, getStudentResultStatusMap, getLeaderboardData, isExamAvailableNow } from "../js/utils/results-utils.js";
+import { subscribeToUpcomingExams, getApprovedResults, getStudentResultStatusMap, getLeaderboardData } from "../js/utils/results-utils.js";
 import { getSubjects, getTopics, buildNameMap } from "../js/utils/syllabus-utils.js";
 import { computeOverallStats, computeSubjectStats, computeTopicStats } from "../js/utils/analytics-utils.js";
 import { generateMotivation } from "../js/utils/motivation-utils.js";
 import { computeStudentXP, computeMaxExamXP, getLevelInfo, XP_CATEGORIES, REFERRAL_XP } from "../js/utils/xp-utils.js";
+import { resolveCompletedChallenges, getChallengeBonusXP } from "../js/utils/challenge-utils.js";
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -313,6 +314,7 @@ async function render() {
     <div id="subjectSection" class="d-sec"></div>
     <div id="weakSection" class="d-sec d-last"></div>
   `;
+  $("themeToggle")?.addEventListener("click", toggleTheme);
   loadUpcoming();
   loadMain();
 }
@@ -334,9 +336,8 @@ async function loadUpcoming() {
 function renderUpcoming(el, exams, resultMap) {
   const now = Date.now();
   const list = exams.filter(exam => {
-    // Published exams remain hidden until the scheduled exam date,
-    // then stay available for 7 days.
-    if (!isExamAvailableNow(exam, now)) return false;
+    const pub = exam.publishDate?.toDate ? exam.publishDate.toDate().getTime() : 0;
+    if (pub > now) return false;
     const target = exam.targetBatch || "all";
     if (target !== "all" && target !== student.className) return false;
     const allowed = exam.allowedStudents || [];
@@ -383,13 +384,19 @@ function renderUpcoming(el, exams, resultMap) {
 /* ---------------- main data ---------------- */
 async function loadMain() {
   try {
-    const [results, allStudents, subjects, topics] = await Promise.all([
-      getApprovedResults(student.studentId), getActiveStudents(), getSubjects(), getTopics()
+    // Dashboard is the page almost everyone opens first after logging in,
+    // so this is where "accepted" challenges whose exam result is now in
+    // get settled into "completed" (win/loss/draw + bonus XP decided).
+    await resolveCompletedChallenges(student.studentId).catch(() => []);
+
+    const [results, allStudents, subjects, topics, challengeBonusXP] = await Promise.all([
+      getApprovedResults(student.studentId), getActiveStudents(), getSubjects(), getTopics(),
+      getChallengeBonusXP(student.studentId).catch(() => 0)
     ]);
     const leaderboard = await getLeaderboardData(allStudents);
 
     const myRefs = allStudents.filter(s => s.referredBy === student.studentId && s.studentId !== student.studentId);
-    const xp = computeStudentXP(results, { referralCount: myRefs.length });
+    const xp = computeStudentXP(results, { referralCount: myRefs.length, challengeBonusXP });
     const myIdx = leaderboard.findIndex(r => r.studentId === student.studentId);
     const rank = myIdx >= 0 ? { rank: myIdx + 1, total: leaderboard.length } : null;
 
