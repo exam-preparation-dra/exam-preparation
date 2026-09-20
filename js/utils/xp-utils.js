@@ -165,6 +165,19 @@ export function computeExamXP(result, { prevAvgPct = null, streakRun = 0 } = {})
   return { xp, parts };
 }
 
+// ---------- one exam -> readable calculation lines ----------
+// Takes the `parts` object returned by computeExamXP() / computeStudentXP().exams[i]
+// and returns only the components that earned XP, in display order, so the
+// history page can show "how this exam's points were calculated". The lines
+// always add up exactly to that exam's xp (referral is account-level, so it
+// is never part of an exam).
+export function getExamXPLines(parts = {}) {
+  return XP_CATEGORIES
+    .filter(c => c.key !== "referral")
+    .map(c => ({ key: c.key, label: c.label, hint: c.hint, xp: Math.round(num(parts[c.key])) }))
+    .filter(line => line.xp > 0);
+}
+
 // ---------- the highest a single exam can give (before improvement/streak/mastery) ----------
 // Used on the "upcoming exam" cards. Mastery/improvement/streak depend on the
 // student, so they're shown as extra "+ বোনাস" rather than folded in.
