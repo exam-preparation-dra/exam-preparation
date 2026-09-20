@@ -718,7 +718,7 @@ p { color: var(--text-secondary); }
   .glass::before, .glass::after { display: none !important; }
 
   /* Screen-only chrome that has no place on a printed page */
-  .theme-toggle, #themeToggle, #logoutBtn, #installBtn,
+  .theme-toggle, #themeToggle, #logoutBtn,
   .icon-btn, .btn, a.btn, button, .review-filters {
     display: none !important;
   }
