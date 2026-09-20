@@ -60,6 +60,22 @@ export async function getStudentResultStatusMap(studentId) {
   return map;
 }
 
+/**
+ * Student exam availability window.
+ * An exam can be shown only after BOTH publishDate and examDate,
+ * and remains available for 7 days from examDate.
+ */
+export function isExamAvailableNow(exam, now = Date.now()) {
+  const examMs = exam?.examDate?.toMillis?.();
+  if (!Number.isFinite(examMs)) return false;
+
+  const publishMs = exam?.publishDate?.toMillis?.();
+  const startMs = Math.max(examMs, Number.isFinite(publishMs) ? publishMs : examMs);
+  const expiryMs = examMs + (7 * 24 * 60 * 60 * 1000);
+
+  return now >= startMs && now < expiryMs;
+}
+
 export async function getUpcomingExams() {
   const q = query(collection(db, "exams"), where("status", "in", ["upcoming", "published"]));
   const snap = await getDocs(q);
