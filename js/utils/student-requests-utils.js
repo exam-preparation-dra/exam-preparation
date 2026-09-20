@@ -11,7 +11,11 @@ import {
   collection, addDoc, getDocs, query, where, doc, deleteDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-export async function submitStudentRequest(rawName, className) {
+// referredBy: the STU-XXXX id read from the ?ref= link (see join.html). Carried
+// through to the real student doc when the admin approves this request —
+// see admin/students.html's approve handler, which passes request.referredBy
+// straight into createStudent().
+export async function submitStudentRequest(rawName, className, referredBy = null) {
   const trimmedName = (rawName || "").trim();
   const trimmedClass = (className || "").trim();
   if (!trimmedName) throw new Error("নাম দিতে হবে।");
@@ -19,6 +23,7 @@ export async function submitStudentRequest(rawName, className) {
   await addDoc(collection(db, "studentRequests"), {
     rawName: trimmedName,
     className: trimmedClass,
+    referredBy: referredBy || null,
     status: "pending",
     createdAt: serverTimestamp()
   });

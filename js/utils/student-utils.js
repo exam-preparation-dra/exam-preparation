@@ -10,7 +10,10 @@ import {
 // ---------- Generate permanent Student ID (requirement #7) ----------
 // Uses a counter document + transaction so IDs never collide, even with
 // concurrent admin sessions, and are never manually editable afterward.
-export async function createStudent(name, className) {
+// referredBy: the STU-XXXX id of the friend whose referral link this student
+// joined through (from studentRequests.referredBy, see student-requests-utils.js).
+// null/omitted for admin-added students or students who joined without a link.
+export async function createStudent(name, className, referredBy = null) {
   const trimmedClass = (className || "").trim();
   if (!trimmedClass) throw new Error("ক্লাস দেওয়া বাধ্যতামূলক।");
 
@@ -30,9 +33,21 @@ export async function createStudent(name, className) {
     className: trimmedClass,
     isActive: true,
     sequenceNumber: newSequence,
+    referredBy: referredBy || null,
     createdAt: serverTimestamp()
   });
-  return { docId: docRef.id, studentId, name, className: trimmedClass };
+  return { docId: docRef.id, studentId, name, className: trimmedClass, referredBy: referredBy || null };
+}
+
+// ---------- Referral counts (friend-invite system) ----------
+// Counts, per referring studentId, how many OTHER students joined through
+// their link. Pure in-memory tally over an already-fetched student list —
+// no extra Firestore read, since getActiveStudents()/getLeaderboardData()
+// callers already have the full list loaded.
+export function buildReferralCountMap(studentsList) {
+  const map = {};
+  studentsList.forEach(s => { if (s.referredBy) map[s.referredBy] = (map[s.referredBy] || 0) + 1; });
+  return map;
 }
 
 // ---------- Set/replace a student's profile photo (feature #2) ----------

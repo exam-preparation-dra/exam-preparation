@@ -327,7 +327,7 @@ export async function generateQuestionsFromImage({ apiKey, imageParts, subjectNa
 // explanation_bn. ----------
 export async function generateExplanationForQuestion({ apiKey, question_bn, options_bn, correctAnswer }) {
   if (!apiKey) throw new Error("Gemini API key দেওয়া হয়নি।");
-  const prompt = `নিচের বহুনির্বাচনী প্রশ্নের সঠিক উত্তরটি কেন সঠিক, তার একটি সংক্ষিপ্ত (২-৩ বাক্যের) সহজবোধ্য বাংলা ব্যাখ্যা লেখো। উত্তরে শুধু ব্যাখ্যাটুকুই লিখবে — কোনো ভূমিকা, লেবেল, নম্বরিং বা অতিরিক্ত টেক্সট দেবে না।
+  const prompt = `নিচের বহুনির্বাচনী প্রশ্নের সঠিক উত্তরটি কেন সঠিক, তার একটি সংক্ষিপ্ত (২-৩ বাক্যের) সহজবোধ্য বাংলা ব্যাখ্যা লেখো। উত্তরে শুধু ব্যাখ্যাটুকুই লিখবে — কোনো ভূমিকা, লেবেল, নম্বরিং বা অতিরিক্ত টেক্সট দেবে চৈতন্য না।
 
 প্রশ্ন: ${question_bn}
 A: ${options_bn.A || ""}
