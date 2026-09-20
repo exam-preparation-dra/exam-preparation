@@ -335,8 +335,9 @@ async function loadUpcoming() {
 function renderUpcoming(el, exams, resultMap) {
   const now = Date.now();
   const list = exams.filter(exam => {
-    const pub = exam.publishDate?.toDate ? exam.publishDate.toDate().getTime() : 0;
-    if (pub > now) return false;
+    // Published exams remain hidden until the scheduled exam date,
+    // then stay available for 7 days.
+    if (!isExamAvailableNow(exam, now)) return false;
     const target = exam.targetBatch || "all";
     if (target !== "all" && target !== student.className) return false;
     const allowed = exam.allowedStudents || [];

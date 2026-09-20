@@ -201,7 +201,7 @@
 <script type="module">
 import { initTheme, icons, renderState, showToast } from "../js/utils/ui-utils.js";
 import { getActiveStudent, refreshActiveStudent } from "../js/utils/student-utils.js";
-import { getExamById, getExamSnapshot } from "../js/utils/results-utils.js";
+import { getExamById, getExamSnapshot, isExamAvailableNow } from "../js/utils/results-utils.js";
 import { getSubjects, getChapters, buildNameMap } from "../js/utils/syllabus-utils.js";
 import {
   peekInProgressAttempt, getOrStartAttempt, saveLocalAttempt,
@@ -253,6 +253,12 @@ async function boot() {
     snapshot = await getExamSnapshot(examId);
     if (!snapshot || !snapshot.questions || snapshot.questions.length === 0) {
       renderState(shell, "error", "পরীক্ষার প্রশ্ন এখনো প্রস্তুত হয়নি।"); return;
+    }
+
+    // Do not allow a published exam to be opened before its scheduled date
+    // or after its 7-day availability window.
+    if (!isExamAvailableNow(exam)) {
+      renderState(shell, "error", "এই পরীক্ষা এখনো শুরু হয়নি অথবা এর সময়সীমা শেষ হয়ে গেছে।"); return;
     }
 
     const resumable = await peekInProgressAttempt(examId, student.studentId);
