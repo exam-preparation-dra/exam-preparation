@@ -132,11 +132,12 @@ export async function getResultById(resultId) {
 // All the maths lives in xp-utils.js (one source of truth). This file only
 // gathers the data and turns it into leaderboard rows.
 export { REFERRAL_XP } from "./xp-utils.js";
+import { getChallengeBonusMap } from "./challenge-utils.js";
 
 // results (everyone's) + active students -> { studentId: computeStudentXP(...) }
 // A student appears if they have counted results, or if they are an active
 // student who referred someone (so the referral XP is never lost).
-function buildStatsByStudent(results, studentsList) {
+function buildStatsByStudent(results, studentsList, challengeBonusMap = {}) {
   const referralCounts = buildReferralCountMap(studentsList);
   const activeIds = new Set(studentsList.map(s => s.studentId));
   const grouped = {};
@@ -144,9 +145,15 @@ function buildStatsByStudent(results, studentsList) {
   Object.keys(referralCounts).forEach(sid => {
     if (activeIds.has(sid) && !grouped[sid]) grouped[sid] = [];
   });
+  Object.keys(challengeBonusMap).forEach(sid => {
+    if (activeIds.has(sid) && !grouped[sid]) grouped[sid] = [];
+  });
   const stats = {};
   for (const [sid, list] of Object.entries(grouped)) {
-    stats[sid] = computeStudentXP(list, { referralCount: referralCounts[sid] || 0 });
+    stats[sid] = computeStudentXP(list, {
+      referralCount: referralCounts[sid] || 0,
+      challengeBonusXP: challengeBonusMap[sid] || 0
+    });
   }
   return stats;
 }
@@ -154,8 +161,11 @@ function buildStatsByStudent(results, studentsList) {
 // Pure version: builds the sorted leaderboard rows from an ALREADY-LOADED
 // results list. The leaderboard page uses it so it can read `results` once
 // and reuse them for weekly stats / rank movement instead of re-fetching.
-export function buildLeaderboardRows(results, studentsList) {
-  const stats = buildStatsByStudent(results, studentsList);
+// challengeBonusMap is optional — pass it in (from getChallengeBonusMap())
+// so this function stays pure/sync; omit it (e.g. for a "last week" replay)
+// when challenge bonus shouldn't apply to that snapshot.
+export function buildLeaderboardRows(results, studentsList, challengeBonusMap = {}) {
+  const stats = buildStatsByStudent(results, studentsList, challengeBonusMap);
 
   const infoOf = {};
   studentsList.forEach(s => { infoOf[s.studentId] = s; });
@@ -171,32 +181,36 @@ export function buildLeaderboardRows(results, studentsList) {
 }
 
 export async function getLeaderboardData(studentsList) {
-  const results = await getAllApprovedResults();
-  return buildLeaderboardRows(results, studentsList);
+  const [results, challengeBonusMap] = await Promise.all([
+    getAllApprovedResults(),
+    getChallengeBonusMap().catch(() => ({}))
+  ]);
+  return buildLeaderboardRows(results, studentsList, challengeBonusMap);
 }
 
 // studentsList is optional — pass the already-loaded list (e.g. from
 // getActiveStudents()) to avoid a duplicate fetch when the caller has one;
 // otherwise this fetches it itself so referral counts are always included.
 export async function getStudentRank(studentId, classOf = null, studentsList = null) {
-  const [all, students] = await Promise.all([
+  const [all, students, challengeBonusMap] = await Promise.all([
     getAllApprovedResults(),
-    studentsList || getActiveStudents()
+    studentsList || getActiveStudents(),
+    getChallengeBonusMap().catch(() => ({}))
   ]);
-  const byStudent = buildStatsByStudent(all, students);
+  const byStudent = buildStatsByStudent(all, students, challengeBonusMap);
   if (!byStudent[studentId]) return null;
 
   const nameOf = {};
   students.forEach(s => { nameOf[s.studentId] = s.name; });
   const stats = Object.entries(byStudent).map(([sid, st]) => ({
     studentId: sid, name: nameOf[sid] || sid, average: st.avgPercentage, avgPercentage: st.avgPercentage, examsTaken: st.examsTaken,
-    totalPoints: st.totalXP, level: st.level, referralCount: st.referralCount, referralBonus: st.referralXP
+    totalPoints: st.totalXP, level: st.level, referralCount: st.referralCount, referralBonus: st.referralXP, challengeXP: st.challengeXP
   }));
 
   stats.sort(compareRank);
   const rank = stats.findIndex(a => a.studentId === studentId) + 1;
   const mine = stats.find(a => a.studentId === studentId);
-  const result = { rank, totalStudents: stats.length, averagePercentage: mine.average, totalPoints: mine.totalPoints, level: mine.level, referralCount: mine.referralCount, referralBonus: mine.referralBonus };
+  const result = { rank, totalStudents: stats.length, averagePercentage: mine.average, totalPoints: mine.totalPoints, level: mine.level, referralCount: mine.referralCount, referralBonus: mine.referralBonus, challengeXP: mine.challengeXP };
 
   if (classOf) {
     const myClass = classOf[studentId];

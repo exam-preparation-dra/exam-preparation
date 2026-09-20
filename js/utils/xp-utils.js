@@ -65,7 +65,8 @@ export const XP_CATEGORIES = [
   { key: "mastery",       label: "টপিক ও চ্যাপ্টার দক্ষতা", hint: "টপিকে সব সঠিক হলে +4, চ্যাপ্টারে 80%+ হলে +6" },
   { key: "improvement",   label: "উন্নতি বোনাস",           hint: "নিজের গড়ের চেয়ে ভালো করলে" },
   { key: "streak",        label: "সাপ্তাহিক ধারাবাহিকতা",   hint: "টানা সপ্তাহে পরীক্ষা দিলে" },
-  { key: "referral",      label: "বন্ধু রেফার",             hint: "প্রতি বন্ধুতে 250 XP" }
+  { key: "referral",      label: "বন্ধু রেফার",             hint: "প্রতি বন্ধুতে 250 XP" },
+  { key: "challenge",     label: "চ্যালেঞ্জ বোনাস",         hint: "বন্ধুর সাথে challenge জিতলে/হারলে বোনাস XP" }
 ];
 
 export const LEVEL_THRESHOLDS = [0, 1000, 3000, 6000, 10000, 15000, 25000, 40000, 60000];
@@ -197,7 +198,7 @@ export function computeMaxExamXP({ questionCount = 0, totalMarks = 0 } = {}) {
 
 // ---------- whole student ----------
 // results: this student's counted (approved / auto-approved) results, any order.
-export function computeStudentXP(results, { referralCount = 0 } = {}) {
+export function computeStudentXP(results, { referralCount = 0, challengeBonusXP = 0 } = {}) {
   const sorted = [...(results || [])].sort((a, b) => toMillis(a.submittedAt) - toMillis(b.submittedAt));
 
   const weeksAttended = new Set(sorted.map(r => weekIndex(toMillis(r.submittedAt))));
@@ -235,12 +236,15 @@ export function computeStudentXP(results, { referralCount = 0 } = {}) {
   const referralXP = refCount * REFERRAL_XP;
   breakdown.referral = referralXP;
 
+  const challengeXP = Math.max(0, Math.round(num(challengeBonusXP)));
+  breakdown.challenge = challengeXP;
+
   const examXP = exams.reduce((a, e) => a + e.xp, 0);
-  const totalXP = examXP + referralXP;
+  const totalXP = examXP + referralXP + challengeXP;
   const avgPercentage = sorted.length ? Math.round((pctSum / sorted.length) * 10) / 10 : 0;
 
   return {
-    totalXP, examXP, referralXP, referralCount: refCount,
+    totalXP, examXP, referralXP, referralCount: refCount, challengeXP,
     breakdown, exams: exams.reverse(),   // newest first
     examsTaken: sorted.length, perfectExams, avgPercentage,
     ...getLevelInfo(totalXP), levelInfo: getLevelInfo(totalXP)

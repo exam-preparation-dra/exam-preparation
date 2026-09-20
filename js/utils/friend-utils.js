@@ -1,6 +1,6 @@
 /* =========================================================
    FRIEND SYSTEM — students can send/accept friend requests with any other
-   student (own class or a different one). Max 5 accepted friends per
+   student (own class or a different one). Max 50 accepted friends per
    student. There's no student auth (same convention as attempts/results
    elsewhere in this app — matched by studentId, trusted by browser
    convention, not a real security boundary), and admin never reads this
@@ -18,7 +18,7 @@ import {
   collection, addDoc, getDocs, query, where, doc, updateDoc, deleteDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-export const MAX_FRIENDS = 5;
+export const MAX_FRIENDS = 50;
 
 // All accepted friendships involving this student (either direction),
 // returned as the OTHER student's id for each.

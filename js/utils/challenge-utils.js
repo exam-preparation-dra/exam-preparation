@@ -558,6 +558,87 @@ export async function updateNextExamChallenges(
 
 
 // ============================================================
+// CHALLENGE BONUS XP — turns a completed challenge's stored
+// winnerBonus/loserBonus/drawBonus into real, addable XP.
+//
+// resolveCompletedChallenges() only marks a challenge "completed" and
+// stores the bonus numbers on the document — it never touches a
+// student's XP by itself (this app has no stored XP total; xp-utils.js
+// always recomputes it from source data on every page load). These two
+// functions are that missing link: they read the "completed" documents
+// and turn them into a number the XP engine can add in, the same lazy,
+// computed-on-the-fly way gamification-utils.js already does toppers.
+// ============================================================
+
+// Single student — 2 queries, used on pages that only need "my" XP
+// (dashboard, history, profile via getStudentRank).
+export async function getChallengeBonusXP(studentId) {
+  if (!studentId) return 0;
+
+  const [asFrom, asTo] = await Promise.all([
+    getDocs(query(
+      collection(db, "examChallenges"),
+      where("fromStudentId", "==", studentId),
+      where("status", "==", "completed")
+    )),
+    getDocs(query(
+      collection(db, "examChallenges"),
+      where("toStudentId", "==", studentId),
+      where("status", "==", "completed")
+    ))
+  ]);
+
+  let total = 0;
+  const tally = (c) => {
+    if (c.winnerStudentId === studentId) total += safeNumber(c.winnerBonus);
+    else if (c.loserStudentId === studentId) total += safeNumber(c.loserBonus);
+    else if (!c.winnerStudentId) total += safeNumber(c.drawBonus); // draw
+  };
+  asFrom.docs.forEach(d => tally(d.data()));
+  asTo.docs.forEach(d => tally(d.data()));
+
+  return total;
+}
+
+// Whole collection, one query — used by the leaderboard (which needs
+// every student's bonus at once; N single-student queries would be far
+// more expensive there).
+export async function getAllCompletedChallenges() {
+  const q = query(
+    collection(db, "examChallenges"),
+    where("status", "==", "completed")
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+// Pure — { studentId: bonusXP } from a list of completed challenges.
+export function buildChallengeBonusMap(challenges) {
+  const map = {};
+  const add = (sid, amount) => {
+    if (!sid || !amount) return;
+    map[sid] = (map[sid] || 0) + amount;
+  };
+  for (const c of challenges || []) {
+    if (c.winnerStudentId) {
+      add(c.winnerStudentId, safeNumber(c.winnerBonus));
+      add(c.loserStudentId, safeNumber(c.loserBonus));
+    } else {
+      // draw — both sides earned drawBonus
+      add(c.fromStudentId, safeNumber(c.drawBonus));
+      add(c.toStudentId, safeNumber(c.drawBonus));
+    }
+  }
+  return map;
+}
+
+export async function getChallengeBonusMap() {
+  const challenges = await getAllCompletedChallenges();
+  return buildChallengeBonusMap(challenges);
+}
+
+
+// ============================================================
 // CHALLENGE DISPLAY INFO
 // ============================================================
 
