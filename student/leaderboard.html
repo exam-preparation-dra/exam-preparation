@@ -12,10 +12,15 @@
   }
 
   :root {
+    --color-accent-rgb: 201, 151, 63; /* matches --color-accent; not defined in style.css */
     --lb-glass: rgba(128,128,128,.075);
     --lb-glass-strong: rgba(128,128,128,.115);
     --lb-border: rgba(128,128,128,.16);
     --lb-shadow: 0 18px 55px rgba(0,0,0,.07);
+    --gold: #eab308;
+    --gold-deep: #b45309;
+    --silver: #94a3b8;
+    --bronze: #c2703d;
   }
 
   .num { font-family:var(--font-num); font-variant-numeric:tabular-nums; }
@@ -38,176 +43,195 @@
     display:inline-flex; align-items:center; justify-content:center;
     gap:7px; cursor:pointer; transition:all .18s ease;
     text-decoration:none; white-space:nowrap;
+    -webkit-tap-highlight-color:transparent;
   }
   .btn-glass:hover { background:var(--lb-glass-strong); }
   .btn-glass:active { transform:scale(.96); }
-  .btn-danger { color:#ef4444; border-color:rgba(239,68,68,.28); background: rgba(239,68,68,.05); }
+  .btn-glass:disabled { opacity:.5; cursor:not-allowed; }
+  .btn-danger { color:#ef4444; border-color:rgba(239,68,68,.28); background:rgba(239,68,68,.05); }
+  .btn-ok { color:#16a34a; border-color:rgba(34,197,94,.3); background:rgba(34,197,94,.07); }
 
   .lb-icon { width:17px; height:17px; flex-shrink:0; }
-  .lb-icon-lg { width:19px; height:19px; flex-shrink:0; }
+  .hidden { display:none !important; }
 
-  /* ===== Hero Intro ===== */
-  .lb-hero { position:relative; overflow:hidden; margin-top:16px; padding:22px 20px; }
+  /* ===== Hero ===== */
+  .lb-hero { position:relative; overflow:hidden; margin-top:16px; padding:20px; }
   .lb-kicker { display:flex; align-items:center; gap:8px; color:var(--color-accent); font-size:.75rem; font-weight:900; letter-spacing:.05em; text-transform:uppercase; }
-  .lb-hero h1 { position:relative; margin:6px 0 7px; font-size:1.7rem; line-height:1.15; font-weight:950; }
-  .lb-hero p { position:relative; margin:0; color:var(--text-secondary); font-size:.85rem; line-height:1.5; }
+  .lb-hero h1 { margin:6px 0 6px; font-size:1.6rem; line-height:1.15; font-weight:950; }
+  .lb-hero p { margin:0; color:var(--text-secondary); font-size:.83rem; line-height:1.5; }
+  .friend-count { display:inline-flex; align-items:center; gap:6px; margin-top:12px; padding:5px 11px; border-radius:99px; font-size:.68rem; font-weight:900; color:var(--color-accent); background:rgba(var(--color-accent-rgb),.1); border:1px solid rgba(var(--color-accent-rgb),.2); }
 
-  /* ===== Live Feed Slider ===== */
+  /* ===== Scope tabs (Total / Batch / Friends) ===== */
+  .lb-tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:18px; padding:5px; border-radius:16px; background:var(--lb-glass); border:1px solid var(--lb-border); }
+  .lb-tab { appearance:none; border:0; background:transparent; color:var(--text-secondary); font:inherit; font-size:.78rem; font-weight:900; min-height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; gap:7px; cursor:pointer; transition:all .18s ease; -webkit-tap-highlight-color:transparent; }
+  .lb-tab.active { background:var(--color-accent); color:#fff; box-shadow:0 6px 16px rgba(var(--color-accent-rgb),.28); }
+  .lb-tab .lb-icon { width:16px; height:16px; }
+
+  .lb-filter-row { display:flex; gap:8px; overflow-x:auto; padding:12px 0 4px; scrollbar-width:none; }
+  .lb-filter-row::-webkit-scrollbar { display:none; }
+  .filter-btn { min-height:34px; padding:6px 14px; font-size:.74rem; flex-shrink:0; border-radius:99px; }
+  .filter-btn.active { background:var(--color-accent); color:#fff; border-color:var(--color-accent); box-shadow:0 4px 12px rgba(var(--color-accent-rgb),.2); }
+
+  /* ===== Rank badge / crown / topper pills ===== */
+  .rank-badge { width:28px; height:28px; flex-shrink:0; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--font-num); font-size:.78rem; font-weight:950; color:var(--text-muted); }
+  .rank-badge.r1 { background:linear-gradient(135deg,#fde68a,#f59e0b); color:#78350f; box-shadow:0 3px 10px rgba(245,158,11,.45); }
+  .rank-badge.r2 { background:linear-gradient(135deg,#f8fafc,#94a3b8); color:#334155; box-shadow:0 3px 10px rgba(148,163,184,.4); }
+  .rank-badge.r3 { background:linear-gradient(135deg,#fed7aa,#c2703d); color:#431407; box-shadow:0 3px 10px rgba(194,112,61,.35); }
+
+  .av-wrap { position:relative; flex:0 0 auto; }
+  .av { border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center; background:var(--color-accent-soft); border:1px solid var(--lb-border); font-weight:900; color:var(--color-accent); }
+  .av img { width:100%; height:100%; object-fit:cover; border-radius:50%; pointer-events:none; user-select:none; -webkit-user-select:none; }
+  .av-crown { position:absolute; left:50%; top:-11px; transform:translateX(-50%) rotate(-8deg); width:20px; height:20px; color:var(--gold); filter:drop-shadow(0 2px 3px rgba(180,83,9,.35)); pointer-events:none; }
+
+  .pill { display:inline-flex; align-items:center; gap:4px; border-radius:99px; padding:2px 8px; font-size:.6rem; font-weight:900; white-space:nowrap; line-height:1.5; }
+  .pill svg { width:11px; height:11px; }
+  .pill-topper { color:#78350f; background:linear-gradient(135deg,#fde68a,#fbbf24); border:1px solid rgba(180,83,9,.25); }
+  .pill-batch { color:var(--gold-deep); background:rgba(234,179,8,.14); border:1px solid rgba(234,179,8,.3); }
+  .pill-target { color:#a16207; background:rgba(234,179,8,.18); }
+  .pill-streak { color:var(--color-accent); background:rgba(var(--color-accent-rgb),.1); }
+  .pill-up { color:#16a34a; background:rgba(34,197,94,.1); }
+  .pill-down { color:#dc2626; background:rgba(239,68,68,.1); }
+  .pill-same { color:var(--text-muted); background:rgba(128,128,128,.09); }
+
+  /* ===== Cards ===== */
+  .lb-extra-grid { display:grid; grid-template-columns:1fr; gap:12px; margin-top:16px; }
+  @media (min-width:700px){ .lb-extra-grid { grid-template-columns:1.1fr .9fr; } }
+  .lb-card { position:relative; overflow:hidden; background:linear-gradient(145deg,rgba(128,128,128,.09),rgba(128,128,128,.025)); border:1px solid var(--lb-border); border-radius:18px; padding:15px; }
+  .lb-card-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
+  .lb-card-title { display:flex; align-items:center; gap:7px; font-size:.84rem; font-weight:950; min-width:0; }
+  .lb-card-title svg { color:var(--gold); flex-shrink:0; }
+  .lb-card-sub { font-size:.62rem; color:var(--text-muted); font-weight:700; text-align:right; }
+
+  /* Podium */
+  .podium { display:grid; grid-template-columns:1fr 1.15fr 1fr; align-items:end; gap:8px; }
+  .podium.two { grid-template-columns:1fr 1fr; }
+  .podium.one { grid-template-columns:1fr; max-width:180px; margin:0 auto; }
+  .pod { text-align:center; padding:16px 6px 11px; border:1px solid var(--lb-border); background:rgba(128,128,128,.055); border-radius:16px 16px 11px 11px; min-width:0; display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .pod.first { padding-top:20px; padding-bottom:16px; background:linear-gradient(180deg,rgba(234,179,8,.16),rgba(234,179,8,.04)); border-color:rgba(234,179,8,.4); }
+  .pod.me { box-shadow:inset 0 0 0 1.5px rgba(var(--color-accent-rgb),.5); }
+  .pod-name { font-size:.72rem; font-weight:900; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pod-points { font-family:var(--font-num); font-size:.72rem; color:var(--color-accent); font-weight:950; }
+  .pod .pill { margin-top:1px; }
+
+  /* Batch toppers strip */
+  .topper-strip { display:flex; gap:10px; overflow-x:auto; padding:4px 2px 6px; scrollbar-width:none; }
+  .topper-strip::-webkit-scrollbar { display:none; }
+  .topper-card { flex:0 0 auto; width:150px; padding:12px; border-radius:16px; border:1px solid rgba(234,179,8,.3); background:linear-gradient(160deg,rgba(234,179,8,.12),rgba(234,179,8,.02)); display:flex; flex-direction:column; gap:8px; }
+  .topper-card.me { border-color:rgba(var(--color-accent-rgb),.55); }
+  .topper-batch { font-size:.62rem; font-weight:900; color:var(--gold-deep); text-transform:uppercase; letter-spacing:.03em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .topper-who { display:flex; align-items:center; gap:9px; min-width:0; }
+  .topper-name { font-size:.78rem; font-weight:900; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .topper-pts { font-family:var(--font-num); font-size:.68rem; font-weight:900; color:var(--color-accent); }
+
+  /* Target / highlight */
+  .target-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .target-name { font-size:.9rem; font-weight:950; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .target-gap { margin-top:4px; font-size:.68rem; color:var(--text-muted); font-weight:700; line-height:1.5; }
+  .target-score { text-align:right; flex-shrink:0; }
+  .target-score strong { display:block; font-family:var(--font-num); font-size:1.05rem; color:var(--color-accent); }
+  .target-score span { display:block; font-size:.58rem; color:var(--text-muted); margin-top:2px; }
+  .target-bar { height:7px; margin-top:12px; border-radius:99px; background:rgba(128,128,128,.13); overflow:hidden; }
+  .target-bar i { display:block; height:100%; border-radius:99px; background:var(--color-accent); transition:width .45s ease; }
+  .hl-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:12px; }
+  .hl { padding:11px; border-radius:14px; background:var(--lb-glass); border:1px solid var(--lb-border); min-width:0; }
+  .hl small { display:block; color:var(--text-muted); font-size:.58rem; font-weight:750; }
+  .hl strong { display:flex; align-items:center; gap:5px; margin-top:5px; font-size:.8rem; font-weight:950; }
+
+  /* ===== Ranking list ===== */
+  .lb-section { margin-top:18px; }
+  .lb-section-title { display:flex; align-items:center; gap:8px; font-size:1.02rem; font-weight:950; margin-bottom:10px; }
+  .lb-list-card { padding:8px; }
+  .lb-row { display:flex; align-items:center; gap:11px; padding:14px 10px; border-bottom:1px dashed rgba(128,128,128,.15); }
+  .lb-row:last-child { border-bottom:none; }
+  .lb-row.tappable { cursor:pointer; }
+  .lb-row.is-top { background:linear-gradient(135deg,rgba(234,179,8,.13),rgba(234,179,8,.02)); border:1px solid rgba(234,179,8,.32); border-radius:14px; margin:4px 0; }
+  .lb-row.is-me { margin:4px 0; border:1px solid rgba(234,179,8,.3); border-radius:14px; background:linear-gradient(135deg,#fefce8,#fef08a); }
+  .lb-row.is-me .lb-name { color:#713f12; }
+  .lb-row.is-me .points-pill { color:#713f12; background:rgba(113,63,18,.1); border:1px solid rgba(113,63,18,.15); }
+  .lb-main { flex:1; min-width:0; }
+  .lb-name { font-size:.88rem; font-weight:900; margin:0 0 5px; display:flex; align-items:center; flex-wrap:wrap; gap:5px; }
+  .lb-name-text { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .lb-sub { font-size:.62rem; color:var(--text-muted); font-weight:700; margin:-2px 0 5px; }
+  .points-pill { display:inline-flex; align-items:center; gap:5px; border-radius:99px; padding:3px 10px; background:rgba(128,128,128,.1); color:var(--text-secondary); font-size:.68rem; font-weight:900; }
+  .lb-actions { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+  .action-btn { width:38px; min-height:38px; height:38px; padding:0; border-radius:50%; }
+  .text-action { min-height:34px; padding:6px 12px; font-size:.7rem; border-radius:99px; }
+
+  /* ===== Friend requests / challenge cards ===== */
+  .req-card { margin-top:14px; padding:14px 16px; }
+  .req-head { display:flex; align-items:center; gap:7px; font-size:.86rem; font-weight:950; margin-bottom:6px; }
+  .req-row { display:flex; align-items:center; gap:11px; padding:10px 0; border-bottom:1px dashed var(--surface-border); }
+  .req-row:last-child { border-bottom:none; }
+
+  /* ===== Weekly race ===== */
+  .race-row { display:flex; align-items:center; gap:10px; padding:7px 0; }
+  .race-name { width:82px; flex-shrink:0; font-size:.72rem; font-weight:900; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .race-bar { flex:1; height:10px; border-radius:99px; background:rgba(128,128,128,.13); overflow:hidden; }
+  .race-bar i { display:block; height:100%; border-radius:99px; background:linear-gradient(90deg,var(--color-accent),#f59e0b); transition:width .5s ease; }
+  .race-val { width:52px; text-align:right; font-family:var(--font-num); font-size:.72rem; font-weight:950; }
+
+  /* ===== Live feed ===== */
   .live-section { margin-top:20px; }
   .live-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
   .live-title { display:flex; align-items:center; gap:8px; font-size:.9rem; font-weight:950; }
   .live-status { display:inline-flex; align-items:center; gap:5px; border-radius:99px; padding:5px 9px; background:rgba(34,197,94,.08); color:#16a34a; font-size:.65rem; font-weight:900; }
   .live-dot { width:6px; height:6px; border-radius:50%; background:#22c55e; animation:livePulse 1.5s ease-in-out infinite; }
   @keyframes livePulse { 0%,100% { opacity:.45; transform:scale(.82); } 50% { opacity:1; transform:scale(1.12); } }
-
-  .live-slider { overflow:hidden; position:relative; min-height:140px; border-radius:18px; border:1px solid var(--lb-border); background:linear-gradient(135deg,rgba(128,128,128,.09),rgba(128,128,128,.025)); }
+  .live-slider { overflow:hidden; position:relative; min-height:110px; border-radius:18px; border:1px solid var(--lb-border); background:linear-gradient(135deg,rgba(128,128,128,.08),rgba(128,128,128,.02)); }
   .live-track { display:flex; width:100%; transition:transform .55s cubic-bezier(.2,.8,.2,1); will-change:transform; }
   .live-card { min-width:100%; box-sizing:border-box; padding:16px; }
   .live-card-inner { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:12px; }
-  
-  .live-avatar { width:48px; height:48px; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:var(--color-accent-soft); color:var(--color-accent); font-weight:950; font-size:1.1rem; }
-  .live-avatar img { width:100%; height:100%; object-fit:cover; pointer-events:none; user-select:none; -webkit-user-select:none; }
-  .live-copy { min-width:0; }
-  .live-name { font-size:.85rem; line-height:1.3; font-weight:950; color:var(--text-primary); }
+  .live-name { font-size:.85rem; line-height:1.3; font-weight:950; }
   .live-exam { margin-top:4px; color:var(--text-muted); font-size:.7rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  
   .live-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:14px; }
   .live-stat { min-width:0; padding:10px 6px; border-radius:12px; background:rgba(128,128,128,.05); border:1px solid rgba(128,128,128,.08); text-align:center; }
-  .live-stat-value { display:block; margin-top:6px; font-size:.75rem; font-weight:950; color:var(--text-primary); }
+  .live-stat b { display:block; font-size:.9rem; font-weight:900; }
   .live-stat-label { display:block; margin-top:2px; color:var(--text-muted); font-size:.55rem; }
   .live-time { margin-top:10px; color:var(--text-muted); font-size:.6rem; text-align:right; display:flex; justify-content:flex-end; align-items:center; gap:4px; }
 
-  /* ===== Leaderboard Section ===== */
-  .lb-section { margin-top:20px; }
-  .lb-section-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
-  .lb-section-title { display:flex; align-items:center; gap:8px; font-size:1.1rem; font-weight:950; }
-  
-  .lb-filter-row { display:flex; gap:8px; overflow-x:auto; padding:2px 0 8px; scrollbar-width:none; margin-bottom:12px; }
-  .lb-filter-row::-webkit-scrollbar { display:none; }
-  .filter-btn { min-height:36px; padding:8px 14px; font-size:.75rem; flex-shrink:0; border-radius:99px; }
-  .filter-btn.active { background:var(--color-accent); color:#fff; border-color:var(--color-accent); box-shadow:0 4px 12px rgba(var(--color-accent-rgb),0.2); }
+  /* ===== Modals / friend sheet ===== */
+  .modal-overlay { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px; background:rgba(0,0,0,.6); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+  .challenge-modal { width:100%; max-width:420px; padding:24px; background:#fffdf6; border:1px solid rgba(0,0,0,.08); border-radius:20px; }
+  .challenge-select { width:100%; box-sizing:border-box; padding:14px; border-radius:12px; border:1px solid var(--surface-border); background:rgba(128,128,128,.05); color:var(--text-primary); font:inherit; font-size:.85rem; font-weight:700; }
 
-  /* Rows */
-  .lb-list-card { padding:8px; }
-  .lb-row { display:flex; align-items:center; gap:12px; padding:16px 12px; border-bottom:1px dashed rgba(128,128,128,.15); }
-  .lb-row:last-child { border-bottom:none; }
-  
-  .lb-row.is-me { margin:4px 0; padding:16px 12px; border:1px solid rgba(234,179,8,.3); border-radius:14px; background:linear-gradient(135deg,#fefce8,#fef08a); }
-  .lb-row.is-me .lb-name { color:#713f12; }
-  .lb-row.is-me .points-pill { color:#713f12; background:rgba(113,63,18,.1); border:1px solid rgba(113,63,18,.15); }
+  .sheet-overlay { position:fixed; inset:0; z-index:9000; background:rgba(0,0,0,.55); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); display:flex; align-items:flex-end; justify-content:center; animation:fadeIn .18s ease; }
+  .sheet { width:100%; max-width:560px; max-height:88vh; overflow-y:auto; background:#fffdf6; border-radius:24px 24px 0 0; padding:18px 18px calc(22px + env(safe-area-inset-bottom,0px)); animation:sheetUp .28s cubic-bezier(.2,.8,.2,1); box-shadow:0 -12px 50px rgba(0,0,0,.25); }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  @keyframes sheetUp { from{transform:translateY(40px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .sheet-grab { width:42px; height:4px; border-radius:99px; background:rgba(128,128,128,.35); margin:0 auto 14px; }
+  .sheet-top { display:flex; align-items:center; gap:14px; }
+  .sheet-name { font-size:1.15rem; font-weight:950; line-height:1.2; }
+  .sheet-close { margin-left:auto; align-self:flex-start; width:36px; min-height:36px; height:36px; padding:0; border-radius:50%; }
+  .stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:16px; }
+  .stat-box { padding:11px 6px; border-radius:14px; text-align:center; background:var(--lb-glass); border:1px solid var(--lb-border); min-width:0; }
+  .stat-box b { display:block; font-family:var(--font-num); font-size:1.02rem; font-weight:950; }
+  .stat-box small { display:block; margin-top:3px; font-size:.58rem; font-weight:700; color:var(--text-muted); }
+  .sheet-block { margin-top:16px; padding:14px; border-radius:16px; background:var(--lb-glass); border:1px solid var(--lb-border); }
+  .sheet-block h4 { margin:0 0 10px; font-size:.8rem; font-weight:950; display:flex; align-items:center; gap:7px; }
+  .vs-row { margin-top:9px; }
+  .vs-labels { display:flex; justify-content:space-between; font-size:.64rem; font-weight:800; color:var(--text-muted); margin-bottom:4px; }
+  .vs-labels b { color:var(--text-primary); font-family:var(--font-num); }
+  .vs-bar { display:flex; height:9px; border-radius:99px; overflow:hidden; background:rgba(128,128,128,.13); }
+  .vs-bar i { display:block; height:100%; }
+  .vs-me { background:var(--color-accent); }
+  .vs-fr { background:#64748b; }
+  .h2h { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; text-align:center; }
+  .h2h div { padding:10px 4px; border-radius:12px; background:rgba(128,128,128,.06); }
+  .h2h b { display:block; font-family:var(--font-num); font-size:1.15rem; font-weight:950; }
+  .h2h small { font-size:.6rem; font-weight:800; color:var(--text-muted); }
+  .spark { display:flex; align-items:flex-end; justify-content:center; gap:7px; height:74px; }
+  .spark-col { flex:1; max-width:56px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:4px; height:100%; min-width:0; }
+  .spark-bar { width:100%; border-radius:7px 7px 3px 3px; background:linear-gradient(180deg,var(--color-accent),rgba(var(--color-accent-rgb),.45)); min-height:4px; }
+  .spark-col span { font-family:var(--font-num); font-size:.58rem; font-weight:900; color:var(--text-secondary); }
+  .sheet-actions { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:16px; }
+  .sheet-actions .full { grid-column:1 / -1; }
+  .empty-note { padding:20px 10px; text-align:center; font-size:.78rem; color:var(--text-muted); font-weight:700; }
 
-  .rank-number { width:26px; flex-shrink:0; text-align:center; color:var(--text-muted); font-size:.85rem; font-weight:950; }
-  .lb-name { font-size:.9rem; font-weight:900; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-bottom:6px; display:flex; align-items:center; }
-  
-  .points-pill { display:inline-flex; align-items:center; border-radius:99px; padding:3px 10px; background:rgba(128,128,128,.1); color:var(--text-secondary); font-size:.65rem; font-weight:900; }
-  .target-badge { font-size:0.6rem; background:rgba(234,179,8,0.2); color:#a16207; padding:2px 6px; border-radius:4px; font-weight:800; margin-left:6px; display:inline-flex; align-items:center; gap:3px; border:1px solid rgba(234,179,8,0.3); }
-
-  .lb-actions { display:flex; align-items:center; gap:6px; flex-shrink:0; }
-  .action-btn { width:40px; min-height:40px; padding:0; border-radius:12px; }
-  .text-action { min-height:36px; padding:6px 12px; font-size:.7rem; border-radius:99px; }
-
-  /* ===== Challenge Modal ===== */
-  .modal-overlay { position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px; background:rgba(0,0,0,.6); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
-  .challenge-modal { width:100%; max-width:420px; padding:24px; background:var(--surface); border:1px solid var(--surface-border); border-radius:20px; }
-  .modal-title { font-size:1.15rem; font-weight:950; margin-bottom:6px; display:flex; align-items:center; gap:8px; }
-  .modal-copy { color:var(--text-muted); font-size:.8rem; line-height:1.55; margin-bottom:16px; }
-  .challenge-select { width:100%; box-sizing:border-box; padding:14px; border-radius:12px; border:1px solid var(--surface-border); background:rgba(128,128,128,0.05); color:var(--text-primary); font:inherit; font-size:.85rem; font-weight:700; outline:none; margin-top:16px; }
-
-  /* ===== Leaderboard Upgrade: podium / target / movement / streak ===== */
-  .lb-extra-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:18px}
-  .lb-premium-card{position:relative;overflow:hidden;background:linear-gradient(145deg,rgba(128,128,128,.09),rgba(128,128,128,.025));border:1px solid var(--lb-border);border-radius:18px;padding:15px;box-shadow:var(--lb-shadow)}
-  .lb-premium-card::after{content:"";position:absolute;width:130px;height:130px;border-radius:50%;right:-65px;top:-65px;background:rgba(var(--color-accent-rgb),.08);pointer-events:none}
-  .lb-mini-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px}
-  .lb-mini-title{display:flex;align-items:center;gap:7px;font-size:.82rem;font-weight:950}
-  .lb-mini-sub{font-size:.6rem;color:var(--text-muted);font-weight:700}
-  .lb-target-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
-  .lb-target-main{min-width:0}
-  .lb-target-name{font-size:.9rem;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .lb-target-gap{margin-top:4px;font-size:.67rem;color:var(--text-muted);font-weight:700}
-  .lb-target-score{text-align:right;flex-shrink:0}
-  .lb-target-score strong{display:block;font-family:var(--font-num);font-size:1rem;color:var(--color-accent)}
-  .lb-target-score span{display:block;font-size:.58rem;color:var(--text-muted);margin-top:2px}
-  .lb-target-bar{height:7px;margin-top:12px;border-radius:99px;background:rgba(128,128,128,.13);overflow:hidden}
-  .lb-target-bar i{display:block;height:100%;border-radius:99px;background:var(--color-accent);max-width:100%;transition:width .45s ease}
-  .lb-podium{display:grid;grid-template-columns:1fr 1.18fr 1fr;align-items:end;gap:8px}
-  .lb-podium-item{text-align:center;padding:11px 6px 10px;border:1px solid var(--lb-border);background:rgba(128,128,128,.055);border-radius:14px 14px 11px 11px;min-width:0}
-  .lb-podium-item.first{padding-top:15px}
-  .lb-podium-rank{font-family:var(--font-num);font-size:.63rem;color:var(--text-muted);font-weight:900}
-  .lb-podium-name{margin-top:7px;font-size:.7rem;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .lb-podium-points{margin-top:4px;font-family:var(--font-num);font-size:.7rem;color:var(--color-accent);font-weight:950}
-  .lb-podium-me{box-shadow:inset 0 0 0 1px rgba(234,179,8,.35)}
-  .lb-movement{display:inline-flex;align-items:center;gap:4px;padding:4px 7px;border-radius:99px;font-size:.58rem;font-family:var(--font-num);font-weight:950;margin-left:6px;vertical-align:middle}
-  .lb-movement.up{color:#16a34a;background:rgba(34,197,94,.1)}
-  .lb-movement.down{color:#dc2626;background:rgba(239,68,68,.1)}
-  .lb-movement.same{color:var(--text-muted);background:rgba(128,128,128,.08)}
-  .lb-streak{display:inline-flex;align-items:center;gap:5px;margin-left:6px;padding:4px 7px;border-radius:99px;color:var(--color-accent);background:rgba(var(--color-accent-rgb),.08);font-size:.58rem;font-weight:900}
-  .lb-highlight-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
-  .lb-highlight{padding:12px;border-radius:14px;background:var(--lb-glass);border:1px solid var(--lb-border);min-width:0}
-  .lb-highlight small{display:block;color:var(--text-muted);font-size:.58rem;font-weight:750}
-  .lb-highlight strong{display:block;margin-top:5px;font-size:.78rem;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .lb-highlight .up-text{color:#16a34a}.lb-highlight .accent-text{color:var(--color-accent)}
-  @media (min-width:700px){.lb-extra-grid{grid-template-columns:1.1fr .9fr}}
-  @media (max-width:480px){.lb-podium{gap:5px}.lb-highlight-grid{grid-template-columns:1fr}.lb-streak{display:none}}
-
-
-  /* ===== Final visual fixes: compact circular avatars ===== */
-  .lb-avatar{
-    width:44px !important;
-    height:44px !important;
-    min-width:44px !important;
-    max-width:44px !important;
-    border-radius:50% !important;
-    overflow:hidden !important;
-    display:flex !important;
-    align-items:center !important;
-    justify-content:center !important;
-    flex:0 0 44px !important;
-    background:var(--color-accent-soft);
-    border:1px solid var(--lb-border);
-  }
-  .lb-avatar img{
-    width:100% !important;
-    height:100% !important;
-    max-width:none !important;
-    max-height:none !important;
-    object-fit:cover !important;
-    border-radius:50% !important;
-  }
-  .live-avatar{
-    width:38px !important;
-    height:38px !important;
-    min-width:38px !important;
-    flex:0 0 38px !important;
-    border-radius:50% !important;
-    overflow:hidden !important;
-  }
-  .live-avatar img{
-    width:100% !important;
-    height:100% !important;
-    object-fit:cover !important;
-    border-radius:50% !important;
-  }
-  /* The red crossed-swords button is the existing Challenge action,
-     not a negative/rank symbol. Keep it compact and visually clear. */
-  .challenge-btn{
-    width:38px !important;
-    min-width:38px !important;
-    height:38px !important;
-    min-height:38px !important;
-    padding:0 !important;
-    border-radius:50% !important;
-  }
-  .challenge-btn .lb-icon{
-    width:16px !important;
-    height:16px !important;
-  }
   @media (max-width:480px){
-    .lb-row{gap:9px;padding:13px 10px;}
-    .lb-avatar{width:40px !important;height:40px !important;min-width:40px !important;flex-basis:40px !important;}
-    .lb-name{font-size:.82rem;}
-    .points-pill{padding:3px 8px;}
+    .lb-row { gap:9px; padding:12px 8px; }
+    .podium { gap:5px; }
+    .race-name { width:70px; }
   }
-
 </style>
 </head>
 
@@ -216,18 +240,21 @@
   <div class="state-block"><div class="spinner"></div></div>
 </div>
 
+<!-- Friend detail sheet -->
+<div id="friendSheet" class="sheet-overlay hidden"><div class="sheet" id="friendSheetBody"></div></div>
+
 <!-- Challenge Modal -->
 <div id="challengeModal" class="modal-overlay" style="display:none;">
-  <div class="challenge-modal glass-float-card">
+  <div class="challenge-modal">
     <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/></svg>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5 3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/><path d="M14.5 6.5 18 3h3v3l-3.5 3.5"/><path d="M5 14l4 4"/><path d="M7 17l-3 3"/><path d="M3 19l2 2"/></svg>
       <h3 style="font-size:1.15rem; font-weight:900; color:var(--text-primary); margin:0;">বন্ধুকে চ্যালেঞ্জ করো</h3>
     </div>
-    <p style="color:var(--text-muted); font-size:0.8rem; line-height:1.5;">একটি আসন্ন পরীক্ষা বেছে নিয়ে বন্ধুকে চ্যালেঞ্জ পাঠাও। জিতলে পাবে <span style="color:#eab308; font-weight:800;">+১০০ পয়েন্ট!</span></p>
-    
+    <p style="color:var(--text-muted); font-size:0.8rem; line-height:1.5; margin:0 0 14px;">একটি আসন্ন পরীক্ষা বেছে নিয়ে বন্ধুকে চ্যালেঞ্জ পাঠাও। জিতলে পাবে <span style="color:#b45309; font-weight:900;">+100 পয়েন্ট</span>।</p>
+
     <div id="challengeModalBody"><div class="spinner"></div></div>
-    
-    <div class="flex gap-2 mt-4">
+
+    <div style="display:flex; gap:8px; margin-top:16px;">
       <button class="btn-glass" id="closeChallengeModal" style="flex:1;">বাতিল</button>
       <button class="btn-glass btn-danger" id="confirmChallengeBtn" style="flex:1; display:none;">চ্যালেঞ্জ পাঠাও</button>
     </div>
@@ -237,27 +264,42 @@
 <script type="module">
 import { initTheme, renderState, renderStudentHeader, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { getActiveStudent, refreshActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
-import { getLeaderboardData, getUpcomingExams, getAllApprovedResults } from "../js/utils/results-utils.js";
-import { getMyFriendIds, getOutgoingRequests, sendFriendRequest } from "../js/utils/friend-utils.js";
-import { getSubjects } from "../js/utils/syllabus-utils.js";
+import { buildLeaderboardRows, getUpcomingExams, getAllApprovedResults } from "../js/utils/results-utils.js";
+import { getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS } from "../js/utils/friend-utils.js";
 import { getIncomingChallenges, getOutgoingChallenges, sendChallenge, acceptChallenge, rejectChallenge } from "../js/utils/challenge-utils.js";
+import { buildStudentExtras, computeRankMovement, getHeadToHeadMap, toMillis, DAY_MS } from "../js/utils/friend-stats-utils.js";
 
 initTheme();
 const shell = document.getElementById("shell");
 let student = getActiveStudent();
 
-let allLeaderboard = [];
-let myFriendIds = [];
-let activeClassFilter = "all";
-let friendsOnly = false;
+/* ---------------- state ---------------- */
+const S = {
+  scope: "overall",          // "overall" | "batch" | "friends"
+  batch: null,               // selected batch in "batch" scope
+  students: [],
+  results: [],
+  rows: [],                  // leaderboard rows, best first
+  extras: {},                // weekly XP / streak / recent scores per student
+  movement: {},              // rank change vs 7 days ago (null = new)
+  overallRank: {},
+  batchRank: {},
+  batchTop: {},              // { batchName: row }
+  friendIds: [],
+  incoming: [],
+  outgoing: [],
+  outChalls: [],
+  h2h: {},
+  studentMap: {}
+};
 let upcomingExamsCache = null;
 let selectedFriendIdForChallenge = null;
+let openFriendId = null;
 
 let liveActivities = [];
 let liveActivityIndex = 0;
 let liveActivityTimer = null;
-let liveRefreshTimer = null;
-let liveSubjectsMap = {};
+let refreshTimer = null;
 
 if (!student) {
   window.location.href = "../index.html";
@@ -268,20 +310,18 @@ if (!student) {
   });
 }
 
+/* ---------------- helpers ---------------- */
+const NO_BATCH = "ব্যাচ নেই";
+
 function escapeHtml(value) {
   return String(value ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
 }
-
-function getMillis(value) {
-  if (!value) return 0;
-  if (typeof value.toMillis === "function") return value.toMillis();
-  if (value instanceof Date) return value.getTime();
-  const n = new Date(value).getTime();
-  return Number.isFinite(n) ? n : 0;
-}
+const safeNum = v => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
+const batchOf = r => (r && r.className) || NO_BATCH;
+const isFriend = id => S.friendIds.includes(id);
 
 function relativeTime(value) {
-  const ms = getMillis(value);
+  const ms = toMillis(value);
   if (!ms) return "এইমাত্র";
   const diff = Math.max(0, Date.now() - ms);
   const min = Math.floor(diff / 60000);
@@ -294,415 +334,651 @@ function relativeTime(value) {
   return `${Math.floor(day / 30)} মাস আগে`;
 }
 
+/* Icons: plain SVG, no emoji anywhere. */
+const svg = (inner, cls = "lb-icon", sw = 2.2) =>
+  `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
+const ICON = {
+  crown:  `<svg class="av-crown" viewBox="0 0 24 24" fill="currentColor" stroke="#b45309" stroke-width="1.2" stroke-linejoin="round"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg>`,
+  crownSm: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg>`,
+  trophy: svg(`<path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/>`),
+  users:  svg(`<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>`),
+  userPlus: svg(`<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>`),
+  layers: svg(`<path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/>`),
+  chart:  svg(`<path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>`),
+  swords: svg(`<path d="M14.5 17.5 3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/><path d="M14.5 6.5 18 3h3v3l-3.5 3.5"/><path d="M5 14l4 4"/><path d="M7 17l-3 3"/><path d="M3 19l2 2"/>`, "lb-icon", 2.4),
+  flame:  svg(`<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>`),
+  up:     svg(`<path d="m6 15 6-6 6 6"/>`, "lb-icon", 3),
+  down:   svg(`<path d="m6 9 6 6 6-6"/>`, "lb-icon", 3),
+  minus:  svg(`<path d="M5 12h14"/>`, "lb-icon", 3),
+  check:  svg(`<path d="m5 12 4 4L19 6"/>`, "lb-icon", 3),
+  close:  svg(`<path d="M18 6 6 18M6 6l12 12"/>`, "lb-icon", 2.6),
+  clock:  svg(`<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>`),
+  target: svg(`<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/>`),
+  chevron: svg(`<path d="m9 6 6 6-6 6"/>`, "lb-icon", 2.6),
+  activity: svg(`<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>`),
+  userMinus: svg(`<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11h-6"/>`)
+};
 
-function safeNum(v) {
-  const n = Number(v);
-  return Number.isFinite(n) ? n : 0;
+function avatar(r, size = 44, crown = false) {
+  const inner = r?.photoURL
+    ? `<img src="${escapeHtml(r.photoURL)}" alt="" draggable="false" oncontextmenu="return false">`
+    : escapeHtml((r?.name || "শ").charAt(0));
+  return `<span class="av-wrap"><span class="av" style="width:${size}px;height:${size}px;font-size:${Math.round(size * 0.4)}px;">${inner}</span>${crown ? ICON.crown : ""}</span>`;
 }
 
-function getStudentStreak(studentId, results) {
-  const own = (results || [])
-    .filter(r => r.studentId === studentId && getMillis(r.submittedAt))
-    .sort((a,b) => getMillis(b.submittedAt) - getMillis(a.submittedAt));
-  // Streak = consecutive completed exams in the student's result history.
-  // We intentionally use existing result data only; no new field is required.
-  return own.length;
+function rankBadge(n) {
+  return `<span class="rank-badge ${n <= 3 ? "r" + n : ""}">${n}</span>`;
 }
 
-function calculateRankMovement(board, results) {
-  // If the existing leaderboard data already provides a previous rank,
-  // use it. Otherwise keep the indicator neutral rather than inventing data.
-  const map = {};
-  (board || []).forEach((r, i) => {
-    const previous = r.previousRank ?? r.prevRank ?? r.rankChangeFrom;
-    const current = i + 1;
-    if (Number.isFinite(Number(previous))) {
-      map[r.studentId] = Number(previous) - current;
-    } else if (Number.isFinite(Number(r.rankChange))) {
-      map[r.studentId] = Number(r.rankChange);
-    } else {
-      map[r.studentId] = 0;
-    }
-  });
-  return map;
-}
-
-function movementHtml(change, showNeutral = false) {
-  const n = Number(change);
-  if (Number.isFinite(n) && n > 0) return `<span class="lb-movement up">↑ ${n}</span>`;
-  if (Number.isFinite(n) && n < 0) return `<span class="lb-movement down">↓ ${Math.abs(n)}</span>`;
-  if (showNeutral) return `<span class="lb-movement same">তথ্য নেই</span>`;
+function movementChip(change) {
+  if (change === null || change === undefined) return "";
+  if (change > 0) return `<span class="pill pill-up">${ICON.up}${change}</span>`;
+  if (change < 0) return `<span class="pill pill-down">${ICON.down}${Math.abs(change)}</span>`;
   return "";
 }
 
-async function renderSmartHighlights() {
-  const el = document.getElementById("lbSmartHighlights");
-  if (!el) return;
+/* ---------------- data ---------------- */
+function computeDerived() {
+  const rows = buildLeaderboardRows(S.results, S.students);
+  S.rows = rows;
 
-  const rows = [...allLeaderboard].sort((a,b) => safeNum(b.totalPoints) - safeNum(a.totalPoints));
-  if (!rows.length) { el.innerHTML = ""; return; }
+  const weekAgo = Date.now() - 7 * DAY_MS;
+  const oldRows = buildLeaderboardRows(S.results.filter(r => toMillis(r.submittedAt) && toMillis(r.submittedAt) < weekAgo), S.students);
+  S.movement = computeRankMovement(rows, oldRows);
+  S.extras = buildStudentExtras(S.results);
 
-  const myPos = rows.findIndex(r => r.studentId === student.studentId);
-  const me = myPos >= 0 ? rows[myPos] : null;
-  const target = myPos > 0 ? rows[myPos - 1] : null;
+  S.overallRank = {}; S.batchRank = {}; S.batchTop = {};
+  const seen = {};
+  rows.forEach((r, i) => {
+    S.overallRank[r.studentId] = i + 1;
+    const b = batchOf(r);
+    seen[b] = (seen[b] || 0) + 1;
+    S.batchRank[r.studentId] = seen[b];
+    if (seen[b] === 1 && safeNum(r.totalPoints) > 0) S.batchTop[b] = r;
+  });
 
-  let results = [];
-  try { results = await getAllApprovedResults(); } catch (e) { console.warn("Streak data unavailable:", e); }
-
-  const myStreak = getStudentStreak(student.studentId, results);
-  const movementMap = calculateRankMovement(rows, results);
-
-  // Biggest climber only uses explicit rank-change data already present.
-  const climbers = rows
-    .map(r => ({...r, change: Number(movementMap[r.studentId] || 0)}))
-    .filter(r => r.change > 0)
-    .sort((a,b) => b.change - a.change);
-  const climber = climbers[0] || null;
-
-  window.__lbMovementMap = movementMap;
-  window.__lbStreaks = {};
-  rows.forEach(r => { window.__lbStreaks[r.studentId] = getStudentStreak(r.studentId, results); });
-
-  const top3 = rows.slice(0,3);
-  const order = top3.length === 3 ? [top3[1], top3[0], top3[2]] : top3;
-
-  const targetGap = target && me ? Math.max(0, safeNum(target.totalPoints) - safeNum(me.totalPoints)) : 0;
-  const targetProgress = target && me && safeNum(target.totalPoints) > 0
-    ? Math.min(100, Math.max(8, safeNum(me.totalPoints) / safeNum(target.totalPoints) * 100))
-    : 0;
-
-  el.innerHTML = `
-    <section class="lb-premium-card">
-      <div class="lb-mini-head">
-        <div class="lb-mini-title">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M7 7H4a3 3 0 0 0 3 3"/><path d="M17 7h3a3 3 0 0 1-3 3"/></svg>
-          Top 3
-        </div>
-        <span class="lb-mini-sub">বর্তমান র‍্যাঙ্ক</span>
-      </div>
-      <div class="lb-podium">
-        ${order.map((r, idx) => {
-          const actualRank = top3.indexOf(r) + 1;
-          return `
-            <div class="lb-podium-item ${actualRank === 1 ? "first" : ""} ${r.studentId === student.studentId ? "lb-podium-me" : ""}">
-              <div class="lb-podium-rank">${actualRank === 1 ? "1st" : actualRank === 2 ? "2nd" : "3rd"}</div>
-              <div class="lb-podium-name">${escapeHtml(r.name || r.studentId || "স্টুডেন্ট")}</div>
-              <div class="lb-podium-points">${safeNum(r.totalPoints)} পয়েন্ট</div>
-            </div>`;
-        }).join("")}
-      </div>
-    </section>
-
-    <section class="lb-premium-card">
-      <div class="lb-mini-head">
-        <div class="lb-mini-title">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
-          ${target ? "পরের টার্গেট" : "তোমার অবস্থান"}
-        </div>
-        <span class="lb-mini-sub">${me ? `${myPos + 1} নম্বর` : "—"}</span>
-      </div>
-      ${target && me ? `
-        <div class="lb-target-row">
-          <div class="lb-target-main">
-            <div class="lb-target-name">${escapeHtml(target.name || target.studentId || "স্টুডেন্ট")}</div>
-            <div class="lb-target-gap">আরও <b>${targetGap}</b> পয়েন্ট পেলে এই র‍্যাঙ্কের কাছে যাবে</div>
-          </div>
-          <div class="lb-target-score">
-            <strong>${safeNum(me.totalPoints)}</strong>
-            <span>তোমার পয়েন্ট</span>
-          </div>
-        </div>
-        <div class="lb-target-bar"><i style="width:${targetProgress}%"></i></div>
-      ` : `
-        <div class="lb-target-main">
-          <div class="lb-target-name">${me ? "তুমি বর্তমানে সবার উপরে" : "র‍্যাঙ্ক পাওয়া যায়নি"}</div>
-          <div class="lb-target-gap">${me ? `${safeNum(me.totalPoints)} পয়েন্ট নিয়ে শীর্ষে আছো।` : "বর্তমান র‍্যাঙ্কিং ডেটা পাওয়া যায়নি।"}</div>
-        </div>
-      `}
-      <div class="lb-highlight-grid">
-        <div class="lb-highlight">
-          <small>তোমার Rank Movement</small>
-          <strong class="${Number.isFinite(Number(movementMap[student.studentId])) && Number(movementMap[student.studentId]) > 0 ? "up-text" : "accent-text"}">${movementHtml(movementMap[student.studentId], true)}</strong>
-        </div>
-        <div class="lb-highlight">
-          <small>পরীক্ষার Streak</small>
-          <strong class="accent-text">${myStreak} দিন</strong>
-        </div>
-      </div>
-    </section>
-
-    ${climber ? `
-      <section class="lb-premium-card">
-        <div class="lb-mini-head">
-          <div class="lb-mini-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 14 14 21 7"/><polyline points="15 7 21 7 21 13"/></svg>
-            Biggest Climber
-          </div>
-          <span class="lb-mini-sub">র‍্যাঙ্কে সবচেয়ে বেশি উন্নতি</span>
-        </div>
-        <div class="lb-target-row">
-          <div class="lb-target-main">
-            <div class="lb-target-name">${escapeHtml(climber.name || climber.studentId || "স্টুডেন্ট")}</div>
-            <div class="lb-target-gap">বর্তমান র‍্যাঙ্ক ${rows.indexOf(climber) + 1}</div>
-          </div>
-          <div class="lb-target-score">
-            <strong style="color:#16a34a;">↑ ${climber.change}</strong>
-            <span>র‍্যাঙ্ক উন্নতি</span>
-          </div>
-        </div>
-      </section>
-    ` : ""}
-  `;
+  S.studentMap = {};
+  S.students.forEach(s => { S.studentMap[s.studentId] = s; });
 }
 
+async function loadAll({ soft = false } = {}) {
+  const students = await getActiveStudents();
+  S.students = students;
 
+  const id = student.studentId;
+  const [results, friendIds, incoming, outgoing, outChalls, h2h] = await Promise.all([
+    getAllApprovedResults(),
+    getMyFriendIds(id),
+    getIncomingRequests(id).catch(() => []),
+    getOutgoingRequests(id).catch(() => []),
+    getOutgoingChallenges(id).catch(() => []),
+    getHeadToHeadMap(id).catch(() => ({}))
+  ]);
+
+  S.results = results;
+  S.friendIds = Array.isArray(friendIds) ? friendIds : [];
+  S.incoming = incoming; S.outgoing = outgoing; S.outChalls = outChalls; S.h2h = h2h;
+
+  computeDerived();
+
+  if (!S.batch) {
+    const mine = S.rows.find(r => r.studentId === id);
+    const batches = allBatches();
+    S.batch = (mine && batchOf(mine) !== NO_BATCH ? batchOf(mine) : null) || student.className || batches[0] || null;
+  }
+  renderAll();
+  await renderIncomingChallenges();
+}
+
+function allBatches() {
+  return [...new Set(S.rows.map(batchOf))].filter(b => b !== NO_BATCH).sort();
+}
+
+function scopeRows() {
+  if (S.scope === "batch") return S.rows.filter(r => batchOf(r) === S.batch);
+  if (S.scope === "friends") return S.rows.filter(r => isFriend(r.studentId) || r.studentId === student.studentId);
+  return S.rows;
+}
+
+/* ---------------- render: page skeleton ---------------- */
 function render() {
   shell.innerHTML = `
     <div class="lb-page">
       ${renderStudentHeader(student, "leaderboard")}
 
-      <!-- 1. Hero Intro -->
       <section class="glass-float-card lb-hero">
-        <div class="lb-kicker">
-          <svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M7 7H4a3 3 0 0 0 3 3"/><path d="M17 7h3a3 3 0 0 1-3 3"/></svg>
-          স্টুডেন্ট পারফরম্যান্স
-        </div>
+        <div class="lb-kicker">${ICON.trophy} স্টুডেন্ট পারফরম্যান্স</div>
         <h1>লিডারবোর্ড</h1>
-        <p>পরীক্ষার রেটিং, পয়েন্ট, র‍্যাঙ্ক এবং বন্ধুদের প্রোগ্রেস এক জায়গায় দেখা যাবে।</p>
+        <p>সর্বমোট, ব্যাচ অনুযায়ী আর বন্ধুদের মধ্যে — কে কোথায় আছে এক জায়গায় দেখো।</p>
+        <div class="friend-count" id="friendCount"></div>
       </section>
 
+      <div id="requestsCard"></div>
       <div id="incomingChallengesCard"></div>
 
-      <!-- Leaderboard smart highlights -->
-      <div id="lbSmartHighlights" class="lb-extra-grid"></div>
+      <div class="lb-tabs" id="scopeTabs"></div>
+      <div class="lb-filter-row hidden" id="batchChips"></div>
 
-      <!-- 2. Leaderboard Rankings -->
+      <div id="topperStrip"></div>
+      <div id="lbHighlights" class="lb-extra-grid"></div>
+      <div id="weeklyRace"></div>
+
       <section class="lb-section">
-        <div class="lb-section-head">
-          <div class="lb-section-title">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M7 7H4a3 3 0 0 0 3 3"/><path d="M17 7h3a3 3 0 0 1-3 3"/></svg>
-            র‍্যাঙ্কিং ও পয়েন্টস
-          </div>
-          <button class="btn-glass" id="friendsToggleBtn" style="border-radius:99px; padding:6px 14px;">সবাই</button>
-        </div>
-        <div class="lb-filter-row" id="classFilterRow"></div>
-        <div class="glass-float-card lb-list-card">
-          <div id="leaderboardList"></div>
-        </div>
+        <div class="lb-section-title" id="listTitle"></div>
+        <div class="glass-float-card lb-list-card"><div id="leaderboardList"><div class="spinner" style="margin:24px auto;"></div></div></div>
       </section>
 
-      <!-- 3. Live Activity Feed Slider -->
       <section class="live-section">
         <div class="live-head">
-          <div class="live-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-            বন্ধুদের লাইভ আপডেট
-          </div>
+          <div class="live-title">${ICON.activity} বন্ধুদের লাইভ আপডেট</div>
           <span class="live-status"><span class="live-dot"></span>LIVE SYNC</span>
         </div>
-        <div class="live-slider" id="liveActivitySlider">
-          <div class="live-track" id="liveActivityTrack">
-            <div style="padding:20px; text-align:center; color:var(--text-muted); font-size:0.8rem;">বন্ধুদের ফলাফল খোঁজা হচ্ছে...</div>
-          </div>
-        </div>
+        <div class="live-slider"><div class="live-track" id="liveActivityTrack">
+          <div style="padding:20px; text-align:center; color:var(--text-muted); font-size:0.8rem; width:100%;">বন্ধুদের ফলাফল খোঁজা হচ্ছে...</div>
+        </div></div>
       </section>
     </div>
   `;
-
-  
-  document.getElementById("friendsToggleBtn").addEventListener("click", () => {
-    friendsOnly = !friendsOnly;
-    document.getElementById("friendsToggleBtn").textContent = friendsOnly ? "শুধু বন্ধুরা" : "সবাই";
-    renderLeaderboardList();
-  });
 
   document.getElementById("closeChallengeModal").addEventListener("click", () => {
     document.getElementById("challengeModal").style.display = "none";
     selectedFriendIdForChallenge = null;
   });
+  document.getElementById("friendSheet").addEventListener("click", e => { if (e.target.id === "friendSheet") closeFriendSheet(); });
 
-  loadEverything();
-  startLiveResultsListener();
-}
-
-async function loadEverything() {
-  try {
-    const [students, board, friendIds] = await Promise.all([
-      getActiveStudents(),
-      getLeaderboardData(await getActiveStudents()),
-      getMyFriendIds(student.studentId)
-    ]);
-
-    allLeaderboard = Array.isArray(board) ? board : [];
-    myFriendIds = Array.isArray(friendIds) ? friendIds : [];
-
-    renderClassFilterRow();
-    await renderSmartHighlights();
-    await renderLeaderboardList();
-    await renderIncomingChallenges(students);
-  } catch (err) {
+  loadAll().catch(err => {
     console.error(err);
     showToast(friendlyError(err), "error");
+    renderState(document.getElementById("leaderboardList"), "error", "লিডারবোর্ড লোড করা যায়নি।");
+  });
+
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(() => {
+    if (document.hidden) return;
+    loadAll({ soft: true }).catch(err => console.warn("Background refresh failed:", err));
+  }, 45000);
+}
+
+function renderAll() {
+  renderHeroCount();
+  renderRequests();
+  renderTabs();
+  renderToppers();
+  renderHighlights();
+  renderWeeklyRace();
+  renderList();
+  renderLive();
+  if (openFriendId) renderFriendSheet(openFriendId);
+}
+
+function renderHeroCount() {
+  const el = document.getElementById("friendCount");
+  if (el) el.innerHTML = `${ICON.users} বন্ধু ${S.friendIds.length}/${MAX_FRIENDS}`;
+}
+
+/* ---------------- scope tabs ---------------- */
+function renderTabs() {
+  const tabs = document.getElementById("scopeTabs");
+  const chips = document.getElementById("batchChips");
+  if (!tabs) return;
+
+  const defs = [
+    { key: "overall", label: "সর্বমোট", icon: ICON.trophy },
+    { key: "batch",   label: "ব্যাচ",   icon: ICON.layers },
+    { key: "friends", label: "বন্ধুরা", icon: ICON.users }
+  ];
+  tabs.innerHTML = defs.map(d => `<button type="button" class="lb-tab ${S.scope === d.key ? "active" : ""}" data-scope="${d.key}">${d.icon}${d.label}</button>`).join("");
+  tabs.querySelectorAll(".lb-tab").forEach(b => b.addEventListener("click", () => {
+    S.scope = b.dataset.scope;
+    renderTabs(); renderToppers(); renderHighlights(); renderWeeklyRace(); renderList();
+  }));
+
+  if (S.scope === "batch") {
+    const batches = allBatches();
+    chips.classList.remove("hidden");
+    chips.innerHTML = batches.length
+      ? batches.map(b => `<button type="button" class="btn-glass filter-btn ${S.batch === b ? "active" : ""}" data-batch="${escapeHtml(b)}">${escapeHtml(b)}</button>`).join("")
+      : `<span style="font-size:.75rem; color:var(--text-muted); font-weight:700;">কোনো ব্যাচ পাওয়া যায়নি।</span>`;
+    chips.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+      S.batch = b.dataset.batch;
+      renderTabs(); renderToppers(); renderHighlights(); renderList();
+    }));
+  } else {
+    chips.classList.add("hidden");
   }
 }
 
-function renderClassFilterRow() {
-  const el = document.getElementById("classFilterRow");
-  if (!el) return;
-  const classes = [...new Set(allLeaderboard.map(r => r.className).filter(Boolean))].sort();
-
-  el.innerHTML = [
-    `<button class="btn-glass filter-btn ${activeClassFilter === "all" ? "active" : ""}" data-class="all">সব ক্লাস</button>`,
-    ...classes.map(c => `<button class="btn-glass filter-btn ${activeClassFilter === c ? "active" : ""}" data-class="${escapeHtml(c)}">${escapeHtml(c)}</button>`)
-  ].join("");
-
-  el.querySelectorAll("button").forEach(btn => {
-    btn.addEventListener("click", () => {
-      activeClassFilter = btn.dataset.class;
-      renderClassFilterRow();
-      renderLeaderboardList();
-    });
-  });
+/* ---------------- toppers: podium + batch toppers ---------------- */
+function scopeLabels() {
+  if (S.scope === "batch") return { podium: `${S.batch || "ব্যাচ"} — সেরা ৩`, top: "ব্যাচ টপার", list: `${S.batch || "ব্যাচ"} র‍্যাঙ্কিং` };
+  if (S.scope === "friends") return { podium: "বন্ধুদের মধ্যে সেরা ৩", top: "বন্ধুদের সেরা", list: "বন্ধুদের র‍্যাঙ্কিং" };
+  return { podium: "সর্বমোট সেরা ৩", top: "সেরা টপার", list: "সর্বমোট র‍্যাঙ্কিং" };
 }
 
-async function renderLeaderboardList() {
-  const el = document.getElementById("leaderboardList");
+function renderToppers() {
+  const el = document.getElementById("topperStrip");
   if (!el) return;
 
-  let rows = [...allLeaderboard];
-  if (activeClassFilter !== "all") rows = rows.filter(r => r.className === activeClassFilter);
-  if (friendsOnly) rows = rows.filter(r => myFriendIds.includes(r.studentId) || r.studentId === student.studentId);
+  const rows = scopeRows().filter(r => safeNum(r.totalPoints) > 0 || safeNum(r.examsTaken) > 0);
+  const labels = scopeLabels();
+  const top3 = rows.slice(0, 3);
+  if (!top3.length) { el.innerHTML = ""; return; }
 
-  if (!rows.length) { renderState(el, "empty", "এখনো কোনো রেজাল্ট নেই।"); return; }
+  const order = top3.length === 3 ? [top3[1], top3[0], top3[2]] : top3;
+  const cls = top3.length === 3 ? "" : top3.length === 2 ? "two" : "one";
 
-  let outgoingReqs = [], outgoingChalls = [];
-  try {
-    [outgoingReqs, outgoingChalls] = await Promise.all([
-      getOutgoingRequests(student.studentId),
-      getOutgoingChallenges(student.studentId)
-    ]);
-  } catch (err) { console.error("Action state load failed:", err); }
+  const podium = `
+    <section class="lb-card" style="margin-top:16px;">
+      <div class="lb-card-head">
+        <div class="lb-card-title">${ICON.crownSm.replace("<svg", '<svg width="18" height="18"')}${escapeHtml(labels.podium)}</div>
+        <span class="lb-card-sub">পয়েন্ট অনুযায়ী</span>
+      </div>
+      <div class="podium ${cls}">
+        ${order.map(r => {
+          const pos = top3.indexOf(r) + 1;
+          const me = r.studentId === student.studentId;
+          return `
+            <div class="pod ${pos === 1 ? "first" : ""} ${me ? "me" : ""}">
+              ${rankBadge(pos)}
+              ${avatar(r, pos === 1 ? 54 : 44, pos === 1)}
+              <div class="pod-name">${escapeHtml(r.name || r.studentId)}${me ? " (তুমি)" : ""}</div>
+              <div class="pod-points">${safeNum(r.totalPoints)} pts</div>
+              ${pos === 1 ? `<span class="pill pill-topper">${ICON.crownSm}${escapeHtml(labels.top)}</span>` : ""}
+            </div>`;
+        }).join("")}
+      </div>
+    </section>`;
 
-  const pendingToIds = new Set(outgoingReqs.map(r => r.toStudentId));
-  const challengedIds = new Set(outgoingChalls.filter(c => c.status === "pending").map(c => c.toStudentId));
+  let strip = "";
+  if (S.scope === "overall") {
+    const tops = Object.entries(S.batchTop);
+    if (tops.length > 1) {
+      strip = `
+        <section class="lb-card" style="margin-top:12px;">
+          <div class="lb-card-head">
+            <div class="lb-card-title">${ICON.layers}ব্যাচ টপারস</div>
+            <span class="lb-card-sub">প্রতি ব্যাচের সেরা</span>
+          </div>
+          <div class="topper-strip">
+            ${tops.map(([batch, r]) => `
+              <div class="topper-card ${r.studentId === student.studentId ? "me" : ""}">
+                <div class="topper-batch">${escapeHtml(batch)}</div>
+                <div class="topper-who">
+                  ${avatar(r, 38, true)}
+                  <div style="min-width:0;">
+                    <div class="topper-name">${escapeHtml(r.name || r.studentId)}</div>
+                    <div class="topper-pts">${safeNum(r.totalPoints)} pts</div>
+                  </div>
+                </div>
+              </div>`).join("")}
+          </div>
+        </section>`;
+    }
+  }
 
+  el.innerHTML = podium + strip;
+}
+
+/* ---------------- my position card ---------------- */
+function renderHighlights() {
+  const el = document.getElementById("lbHighlights");
+  if (!el) return;
+
+  const rows = scopeRows();
+  const myPos = rows.findIndex(r => r.studentId === student.studentId);
+  const me = myPos >= 0 ? rows[myPos] : null;
+  const target = myPos > 0 ? rows[myPos - 1] : null;
+  const ex = S.extras[student.studentId] || { streak: 0, weeklyXP: 0 };
+
+  if (!rows.length) { el.innerHTML = ""; return; }
+
+  const gap = target && me ? Math.max(0, safeNum(target.totalPoints) - safeNum(me.totalPoints)) : 0;
+  const progress = target && me && safeNum(target.totalPoints) > 0
+    ? Math.min(100, Math.max(8, safeNum(me.totalPoints) / safeNum(target.totalPoints) * 100)) : 0;
+
+  const mv = S.movement[student.studentId];
+  const mvHtml = mv === null || mv === undefined ? `<span style="color:var(--text-muted);">নতুন</span>`
+    : mv > 0 ? `<span style="color:#16a34a; display:flex; align-items:center; gap:3px;">${ICON.up}${mv} ধাপ</span>`
+    : mv < 0 ? `<span style="color:#dc2626; display:flex; align-items:center; gap:3px;">${ICON.down}${Math.abs(mv)} ধাপ</span>`
+    : `<span style="color:var(--text-muted); display:flex; align-items:center; gap:3px;">${ICON.minus}অপরিবর্তিত</span>`;
+
+  let body;
+  if (!me) {
+    body = `<div class="target-name">${S.scope === "batch" ? "তুমি এই ব্যাচে নেই" : "র‍্যাঙ্ক পাওয়া যায়নি"}</div>
+            <div class="target-gap">${S.scope === "batch" ? "নিজের ব্যাচ বেছে নিলে তোমার অবস্থান দেখা যাবে।" : "পরীক্ষা দিলে এখানে তোমার অবস্থান দেখা যাবে।"}</div>`;
+  } else if (target) {
+    body = `
+      <div class="target-row">
+        <div style="min-width:0;">
+          <div class="target-name">${escapeHtml(target.name || target.studentId)}</div>
+          <div class="target-gap">আরও <b>${gap}</b> পয়েন্ট পেলে এই র‍্যাঙ্কে পৌঁছাবে।</div>
+        </div>
+        <div class="target-score"><strong>${safeNum(me.totalPoints)}</strong><span>তোমার পয়েন্ট</span></div>
+      </div>
+      <div class="target-bar"><i style="width:${progress}%"></i></div>`;
+  } else {
+    body = `<div class="target-name">তুমি এই তালিকার সবার উপরে</div>
+            <div class="target-gap">${safeNum(me.totalPoints)} পয়েন্ট নিয়ে শীর্ষে আছো।</div>`;
+  }
+
+  el.innerHTML = `
+    <section class="lb-card">
+      <div class="lb-card-head">
+        <div class="lb-card-title">${ICON.target}${target ? "পরের টার্গেট" : "তোমার অবস্থান"}</div>
+        <span class="lb-card-sub">${me ? `${myPos + 1} নম্বর` : "—"}</span>
+      </div>
+      ${body}
+      <div class="hl-grid">
+        <div class="hl"><small>গত ৭ দিনে র‍্যাঙ্ক</small><strong>${mvHtml}</strong></div>
+        <div class="hl"><small>সাপ্তাহিক স্ট্রিক</small><strong style="color:var(--color-accent);">${ICON.flame}${ex.streak} সপ্তাহ</strong></div>
+      </div>
+    </section>`;
+}
+
+/* ---------------- weekly race (friends) ---------------- */
+function renderWeeklyRace() {
+  const el = document.getElementById("weeklyRace");
+  if (!el) return;
+  if (S.scope !== "friends") { el.innerHTML = ""; return; }
+
+  const people = S.rows.filter(r => isFriend(r.studentId) || r.studentId === student.studentId)
+    .map(r => ({ r, xp: (S.extras[r.studentId]?.weeklyXP) || 0 }))
+    .sort((a, b) => b.xp - a.xp);
+
+  if (people.length < 2) {
+    el.innerHTML = `
+      <section class="lb-card" style="margin-top:12px;">
+        <div class="lb-card-head"><div class="lb-card-title">${ICON.flame}সাপ্তাহিক রেস</div></div>
+        <div class="empty-note">বন্ধু যোগ করলে এখানে এই সপ্তাহে কে বেশি পয়েন্ট পেল তা দেখা যাবে।</div>
+      </section>`;
+    return;
+  }
+
+  const max = Math.max(1, ...people.map(p => p.xp));
+  const leader = people[0].xp > 0 ? people[0] : null;
+
+  el.innerHTML = `
+    <section class="lb-card" style="margin-top:12px;">
+      <div class="lb-card-head">
+        <div class="lb-card-title">${ICON.flame}সাপ্তাহিক রেস</div>
+        <span class="lb-card-sub">সোমবার থেকে এই পর্যন্ত</span>
+      </div>
+      ${leader ? `<div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;"><span class="pill pill-topper">${ICON.crownSm}সপ্তাহের সেরা</span><b style="font-size:.78rem;">${escapeHtml(leader.r.name || leader.r.studentId)}${leader.r.studentId === student.studentId ? " (তুমি)" : ""}</b></div>` : ""}
+      ${people.map(p => `
+        <div class="race-row">
+          <div class="race-name">${escapeHtml(p.r.studentId === student.studentId ? "তুমি" : (p.r.name || p.r.studentId))}</div>
+          <div class="race-bar"><i style="width:${p.xp > 0 ? Math.max(4, Math.round(p.xp / max * 100)) : 0}%"></i></div>
+          <div class="race-val">+${p.xp}</div>
+        </div>`).join("")}
+      ${leader ? "" : `<div class="empty-note" style="padding:10px 0 0;">এই সপ্তাহে এখনো কেউ পরীক্ষা দেয়নি।</div>`}
+    </section>`;
+}
+
+/* ---------------- ranking list ---------------- */
+function renderList() {
+  const el = document.getElementById("leaderboardList");
+  const title = document.getElementById("listTitle");
+  if (!el) return;
+
+  const labels = scopeLabels();
+  if (title) title.innerHTML = `${ICON.trophy}${escapeHtml(labels.list)}`;
+
+  const rows = scopeRows();
+  if (!rows.length) {
+    renderState(el, "empty", S.scope === "friends" ? "এখনো কোনো বন্ধু নেই। সর্বমোট তালিকা থেকে বন্ধু যোগ করো।" : "এখনো কোনো রেজাল্ট নেই।");
+    return;
+  }
+
+  const pendingTo = new Set(S.outgoing.map(r => r.toStudentId));
+  const challenged = new Set(S.outChalls.filter(c => c.status === "pending").map(c => c.toStudentId));
+  const incomingFrom = new Set(S.incoming.map(r => r.fromStudentId));
   const myIndex = rows.findIndex(r => r.studentId === student.studentId);
 
   el.innerHTML = rows.map((r, i) => {
-    const isMe = r.studentId === student.studentId;
-    const isFriend = myFriendIds.includes(r.studentId);
-    
-    const isTarget = (!isMe && myIndex > 0 && i === myIndex - 1 && !friendsOnly);
-    const targetBadge = isTarget ? `<span class="target-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg> টার্গেট</span>` : "";
+    const me = r.studentId === student.studentId;
+    const friend = isFriend(r.studentId);
+    const pos = i + 1;
+    const hasPoints = safeNum(r.totalPoints) > 0;
+    const isScopeTop = pos === 1 && hasPoints;
+    const isBatchTop = hasPoints && S.batchRank[r.studentId] === 1;
+    const ex = S.extras[r.studentId];
+    const isTarget = !me && myIndex > 0 && i === myIndex - 1 && S.scope !== "friends";
+
+    const pills = [];
+    if (me) pills.push(`<span class="pill pill-same">তুমি</span>`);
+    if (isScopeTop) pills.push(`<span class="pill pill-topper">${ICON.crownSm}${escapeHtml(labels.top)}</span>`);
+    else if (isBatchTop && S.scope !== "batch") pills.push(`<span class="pill pill-batch">${ICON.crownSm}ব্যাচ টপার</span>`);
+    if (isTarget) pills.push(`<span class="pill pill-target">${ICON.target}টার্গেট</span>`);
+    const mv = movementChip(S.movement[r.studentId]);
+    if (mv) pills.push(mv);
+    if (ex && ex.streak >= 2) pills.push(`<span class="pill pill-streak">${ICON.flame}${ex.streak} সপ্তাহ</span>`);
 
     let actions = "";
-    if (!isMe) {
-      if (isFriend) {
-        const hasChallenged = challengedIds.has(r.studentId);
-        actions += `
-          <a href="../student/comparison.html?friendId=${encodeURIComponent(r.studentId)}" class="btn-glass action-btn" title="তুলনা">
-            <svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
-          </a>
-        `;
-        actions += hasChallenged
-          ? `<span class="btn-glass action-btn" style="color:var(--text-muted); cursor:default;" title="চ্যালেঞ্জ অপেক্ষমান">
-              <svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-             </span>`
-          : `<button class="btn-glass btn-danger action-btn challenge-btn" data-id="${escapeHtml(r.studentId)}" title="চ্যালেঞ্জ">
-              <svg class="lb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/></svg>
-             </button>`;
-      } else if (pendingToIds.has(r.studentId)) {
-        actions = `<span class="btn-glass text-action" style="color:var(--text-muted);">পাঠানো</span>`;
+    if (!me) {
+      if (friend) {
+        actions = `<button type="button" class="btn-glass action-btn open-friend" data-id="${escapeHtml(r.studentId)}" title="বিস্তারিত">${ICON.chevron}</button>`;
+      } else if (pendingTo.has(r.studentId)) {
+        actions = `<span class="btn-glass text-action" style="color:var(--text-muted); cursor:default;">পাঠানো</span>`;
+      } else if (incomingFrom.has(r.studentId)) {
+        actions = `<span class="btn-glass text-action" style="color:var(--color-accent); cursor:default;">অনুরোধ এসেছে</span>`;
       } else {
-        actions = `<button class="btn-glass text-action add-friend-btn" data-id="${escapeHtml(r.studentId)}">+ বন্ধু</button>`;
+        actions = `<button type="button" class="btn-glass text-action add-friend-btn" data-id="${escapeHtml(r.studentId)}">${ICON.userPlus}বন্ধু</button>`;
       }
     }
 
-    // PRIVACY FIX: Added draggable="false" and oncontextmenu="return false" along with pointer-events: none to prevent download
-    const avatar = r.photoURL 
-      ? `<img src="${escapeHtml(r.photoURL)}" alt="" draggable="false" oncontextmenu="return false" style="pointer-events:none; user-select:none; -webkit-user-select:none;">` 
-      : escapeHtml((r.name || "শ").charAt(0));
-
-    const movementMap = window.__lbMovementMap || {};
-    const rowMovement = movementMap[r.studentId] || 0;
-    const streak = window.__lbStreaks?.[r.studentId] || 0;
+    const showBatchLine = S.scope !== "batch";
+    const overallLine = S.scope === "batch" ? `<span class="lb-sub">সর্বমোট #${S.overallRank[r.studentId]}</span>` : (showBatchLine ? `<span class="lb-sub">${escapeHtml(batchOf(r))}</span>` : "");
 
     return `
-      <div class="lb-row ${isMe ? "is-me" : ""}">
-        <span class="rank-number">${i + 1}.</span>
-        <span class="lb-avatar">${avatar}</span>
+      <div class="lb-row ${me ? "is-me" : ""} ${isScopeTop && !me ? "is-top" : ""} ${friend ? "tappable" : ""}" ${friend ? `data-open="${escapeHtml(r.studentId)}"` : ""}>
+        ${rankBadge(pos)}
+        ${avatar(r, 42, isScopeTop)}
         <div class="lb-main">
-          <p class="lb-name">${escapeHtml(r.name || r.studentId)}${isMe ? " (তুমি)" : ""}${targetBadge}${movementHtml(rowMovement)}${streak > 0 ? `<span class="lb-streak">স্ট্রিক ${streak}</span>` : ""}</p>
+          <p class="lb-name"><span class="lb-name-text">${escapeHtml(r.name || r.studentId)}</span>${pills.join("")}</p>
+          ${overallLine}
           <div class="points-pill">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-accent); margin-right:4px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            <span class="num">${Number(r.totalPoints) || 0}</span> 
-            <span style="margin-left:6px; opacity:0.8; font-weight:700;">(${r.avgPercentage}%)</span>
+            <span class="num">${safeNum(r.totalPoints)}</span> pts
+            <span style="opacity:.75; font-weight:700;">(${escapeHtml(r.avgPercentage)}%)</span>
           </div>
         </div>
         <div class="lb-actions">${actions}</div>
-      </div>
-    `;
+      </div>`;
   }).join("");
 
   el.querySelectorAll(".add-friend-btn").forEach(btn => {
-    btn.addEventListener("click", async () => {
+    btn.addEventListener("click", async e => {
+      e.stopPropagation();
       btn.disabled = true;
       try {
         await sendFriendRequest(student.studentId, btn.dataset.id);
         showToast("অনুরোধ পাঠানো হয়েছে।", "success");
-        await renderLeaderboardList();
-      } catch (err) { showToast(friendlyError(err), "error"); btn.disabled = false; }
+        S.outgoing = await getOutgoingRequests(student.studentId);
+        renderList();
+      } catch (err) { showToast(err.message || friendlyError(err), "error"); btn.disabled = false; }
     });
   });
 
-  el.querySelectorAll(".challenge-btn").forEach(btn => {
-    btn.addEventListener("click", () => openChallengeModal(btn.dataset.id));
+  el.querySelectorAll("[data-open]").forEach(row => row.addEventListener("click", () => openFriendSheet(row.dataset.open)));
+}
+
+/* ---------------- incoming friend requests ---------------- */
+function renderRequests() {
+  const el = document.getElementById("requestsCard");
+  if (!el) return;
+  if (!S.incoming.length) { el.innerHTML = ""; return; }
+
+  el.innerHTML = `
+    <div class="glass-float-card req-card" style="border-left:4px solid var(--color-accent);">
+      <div class="req-head" style="color:var(--color-accent);">${ICON.userPlus} বন্ধুর অনুরোধ (${S.incoming.length})</div>
+      ${S.incoming.map(req => {
+        const from = S.studentMap[req.fromStudentId] || {};
+        const row = S.rows.find(r => r.studentId === req.fromStudentId) || from;
+        return `
+          <div class="req-row">
+            ${avatar({ name: from.name, photoURL: from.photoURL }, 40)}
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:.88rem; font-weight:900; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(from.name || req.fromStudentId)}</div>
+              <div style="font-size:.66rem; color:var(--text-muted); font-weight:700;">${escapeHtml(batchOf(from))}${row.totalPoints !== undefined ? ` · ${safeNum(row.totalPoints)} pts` : ""}</div>
+            </div>
+            <button type="button" class="btn-glass action-btn btn-danger req-reject" data-id="${escapeHtml(req.id)}" title="বাতিল">${ICON.close}</button>
+            <button type="button" class="btn-glass action-btn btn-ok req-accept" data-id="${escapeHtml(req.id)}" title="গ্রহণ">${ICON.check}</button>
+          </div>`;
+      }).join("")}
+    </div>`;
+
+  el.querySelectorAll(".req-accept").forEach(b => b.addEventListener("click", async () => {
+    b.disabled = true;
+    try { await acceptFriendRequest(b.dataset.id, student.studentId); showToast("এখন তোমরা বন্ধু!", "success"); await loadAll(); }
+    catch (err) { showToast(err.message || friendlyError(err), "error"); b.disabled = false; }
+  }));
+  el.querySelectorAll(".req-reject").forEach(b => b.addEventListener("click", async () => {
+    b.disabled = true;
+    try { await rejectFriendRequest(b.dataset.id); await loadAll(); }
+    catch (err) { showToast(err.message || friendlyError(err), "error"); b.disabled = false; }
+  }));
+}
+
+/* ---------------- friend detail sheet (the "friend perk") ---------------- */
+function vsRow(label, mine, theirs, suffix = "") {
+  const total = Math.max(1, safeNum(mine) + safeNum(theirs));
+  const a = Math.round(safeNum(mine) / total * 100);
+  return `
+    <div class="vs-row">
+      <div class="vs-labels"><span>তুমি <b>${safeNum(mine)}${suffix}</b></span><span>${label}</span><span><b>${safeNum(theirs)}${suffix}</b> সে</span></div>
+      <div class="vs-bar"><i class="vs-me" style="width:${a}%"></i><i class="vs-fr" style="width:${100 - a}%"></i></div>
+    </div>`;
+}
+
+function openFriendSheet(friendId) {
+  if (!isFriend(friendId)) return;
+  openFriendId = friendId;
+  document.getElementById("friendSheet").classList.remove("hidden");
+  renderFriendSheet(friendId);
+}
+
+function closeFriendSheet() {
+  openFriendId = null;
+  document.getElementById("friendSheet").classList.add("hidden");
+}
+
+function renderFriendSheet(friendId) {
+  const body = document.getElementById("friendSheetBody");
+  const f = S.rows.find(r => r.studentId === friendId);
+  const info = S.studentMap[friendId];
+  if (!body) return;
+  if (!info && !f) { closeFriendSheet(); return; }
+
+  const me = S.rows.find(r => r.studentId === student.studentId) || { totalPoints: 0, avgPercentage: 0, examsTaken: 0 };
+  const row = f || { studentId: friendId, name: info?.name, photoURL: info?.photoURL, className: info?.className, totalPoints: 0, avgPercentage: 0, examsTaken: 0, level: 1 };
+  const ex = S.extras[friendId] || { weeklyXP: 0, weeklyExams: 0, streak: 0, recent: [], last: null, perfectExams: 0 };
+  const rec = S.h2h[friendId] || { wins: 0, losses: 0, draws: 0 };
+  const isTop = S.overallRank[friendId] === 1 && safeNum(row.totalPoints) > 0;
+  const isBatchTop = S.batchRank[friendId] === 1 && safeNum(row.totalPoints) > 0;
+  const challenged = S.outChalls.some(c => c.status === "pending" && c.toStudentId === friendId);
+  const last = ex.last;
+
+  const maxPct = 100;
+  const spark = ex.recent.length
+    ? `<div class="spark">${ex.recent.map(x => `<div class="spark-col" title="${escapeHtml(x.name)}"><span>${Math.round(x.pct)}%</span><div class="spark-bar" style="height:${Math.max(6, Math.round(x.pct / maxPct * 100))}%"></div></div>`).join("")}</div>`
+    : `<div class="empty-note" style="padding:8px;">এখনো কোনো পরীক্ষার ফলাফল নেই।</div>`;
+
+  body.innerHTML = `
+    <div class="sheet-grab"></div>
+    <div class="sheet-top">
+      ${avatar(row, 60, isTop)}
+      <div style="min-width:0;">
+        <div class="sheet-name">${escapeHtml(row.name || friendId)}</div>
+        <div style="font-size:.7rem; color:var(--text-muted); font-weight:700; margin:3px 0 6px;">${escapeHtml(batchOf(row))} · লেভেল ${safeNum(row.level) || 1}</div>
+        <div style="display:flex; gap:5px; flex-wrap:wrap;">
+          ${isTop ? `<span class="pill pill-topper">${ICON.crownSm}সেরা টপার</span>` : isBatchTop ? `<span class="pill pill-batch">${ICON.crownSm}ব্যাচ টপার</span>` : ""}
+          ${ex.streak >= 1 ? `<span class="pill pill-streak">${ICON.flame}${ex.streak} সপ্তাহ স্ট্রিক</span>` : ""}
+        </div>
+      </div>
+      <button type="button" class="btn-glass sheet-close" id="sheetCloseBtn" aria-label="বন্ধ করো">${ICON.close}</button>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-box"><b>#${S.overallRank[friendId] || "—"}</b><small>সর্বমোট র‍্যাঙ্ক</small></div>
+      <div class="stat-box"><b>#${S.batchRank[friendId] || "—"}</b><small>ব্যাচ র‍্যাঙ্ক</small></div>
+      <div class="stat-box"><b>${safeNum(row.totalPoints)}</b><small>মোট পয়েন্ট</small></div>
+      <div class="stat-box"><b>${row.avgPercentage ?? 0}%</b><small>গড় স্কোর</small></div>
+      <div class="stat-box"><b>${safeNum(row.examsTaken)}</b><small>পরীক্ষা দিয়েছে</small></div>
+      <div class="stat-box"><b>+${ex.weeklyXP}</b><small>এই সপ্তাহে</small></div>
+    </div>
+
+    <div class="sheet-block">
+      <h4>${ICON.chart}তুমি বনাম ${escapeHtml(row.name || "বন্ধু")}</h4>
+      ${vsRow("পয়েন্ট", me.totalPoints, row.totalPoints)}
+      ${vsRow("গড় স্কোর", me.avgPercentage, row.avgPercentage, "%")}
+      ${vsRow("পরীক্ষা", me.examsTaken, row.examsTaken)}
+    </div>
+
+    <div class="sheet-block">
+      <h4>${ICON.swords}চ্যালেঞ্জ রেকর্ড</h4>
+      <div class="h2h">
+        <div><b style="color:#16a34a;">${rec.wins}</b><small>তোমার জয়</small></div>
+        <div><b>${rec.draws}</b><small>ড্র</small></div>
+        <div><b style="color:#dc2626;">${rec.losses}</b><small>তোমার হার</small></div>
+      </div>
+    </div>
+
+    <div class="sheet-block">
+      <h4>${ICON.activity}সাম্প্রতিক স্কোর</h4>
+      ${spark}
+      ${last ? `<div style="margin-top:10px; font-size:.68rem; color:var(--text-muted); font-weight:700; display:flex; justify-content:space-between; gap:8px;"><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">শেষ পরীক্ষা: ${escapeHtml(last.examName || "পরীক্ষা")}</span><span>${escapeHtml(relativeTime(last.submittedAt))}</span></div>` : ""}
+    </div>
+
+    <div class="sheet-actions">
+      <a class="btn-glass" href="../student/comparison.html?friendId=${encodeURIComponent(friendId)}">${ICON.chart}বিস্তারিত তুলনা</a>
+      ${challenged
+        ? `<span class="btn-glass" style="color:var(--text-muted); cursor:default;">${ICON.clock}চ্যালেঞ্জ অপেক্ষমান</span>`
+        : `<button type="button" class="btn-glass btn-danger" id="sheetChallengeBtn">${ICON.swords}চ্যালেঞ্জ করো</button>`}
+      <button type="button" class="btn-glass full" id="sheetRemoveBtn" style="color:var(--text-muted);">${ICON.userMinus}বন্ধুত্ব শেষ করো</button>
+    </div>`;
+
+  document.getElementById("sheetCloseBtn").addEventListener("click", closeFriendSheet);
+  document.getElementById("sheetChallengeBtn")?.addEventListener("click", () => openChallengeModal(friendId));
+  document.getElementById("sheetRemoveBtn").addEventListener("click", async () => {
+    if (!confirm("এই বন্ধুকে তালিকা থেকে সরাতে চাও?")) return;
+    try {
+      await removeFriend(student.studentId, friendId);
+      showToast("বন্ধুত্ব শেষ হয়েছে।", "success");
+      closeFriendSheet();
+      await loadAll();
+    } catch (err) { showToast(err.message || friendlyError(err), "error"); }
   });
 }
 
-async function renderIncomingChallenges(students) {
+/* ---------------- challenges ---------------- */
+async function renderIncomingChallenges() {
   const card = document.getElementById("incomingChallengesCard");
   if (!card) return;
   try {
     const incoming = await getIncomingChallenges(student.studentId);
-    const nameOf = {}; students.forEach(s => nameOf[s.studentId] = s.name);
-
     if (!incoming.length) { card.innerHTML = ""; return; }
 
     card.innerHTML = `
-      <div class="glass-float-card mt-4" style="border-left: 4px solid #ef4444; padding:16px;">
-        <div style="display:flex; align-items:center; gap:6px; margin-bottom:12px; color:#ef4444;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/></svg>
-          <span style="font-weight:900; font-size:0.9rem;">নতুন চ্যালেঞ্জ!</span>
-        </div>
+      <div class="glass-float-card req-card" style="border-left:4px solid #ef4444;">
+        <div class="req-head" style="color:#ef4444;">${ICON.swords} নতুন চ্যালেঞ্জ!</div>
         ${incoming.map(c => `
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px dashed var(--surface-border);">
-            <div>
-              <div style="font-size:0.95rem; font-weight:800; color:var(--text-primary);">${escapeHtml(nameOf[c.fromStudentId] || "বন্ধু")}</div>
-              <div style="margin-top:4px; font-size:0.75rem; color:var(--text-secondary);">পরীক্ষা: <span style="font-weight:700;">${escapeHtml(c.examName || "পরীক্ষা")}</span></div>
+          <div class="req-row">
+            <div style="flex:1; min-width:0;">
+              <div style="font-size:.92rem; font-weight:900;">${escapeHtml(S.studentMap[c.fromStudentId]?.name || "বন্ধু")}</div>
+              <div style="margin-top:3px; font-size:.72rem; color:var(--text-secondary);">পরীক্ষা: <b>${escapeHtml(c.examName || "পরীক্ষা")}</b></div>
             </div>
-            <div class="flex gap-2">
-              <button class="btn-glass chall-reject" data-id="${escapeHtml(c.id)}" style="padding:6px 12px; font-size:0.75rem; color:var(--text-muted);">বাতিল</button>
-              <button class="btn-glass chall-accept" data-id="${escapeHtml(c.id)}" style="padding:6px 12px; font-size:0.75rem; color:var(--color-success); border-color:rgba(34,197,94,0.3); background:rgba(34,197,94,0.1);">গ্রহণ</button>
-            </div>
-          </div>
-        `).join("")}
-      </div>
-    `;
+            <button type="button" class="btn-glass action-btn btn-danger chall-reject" data-id="${escapeHtml(c.id)}" title="বাতিল">${ICON.close}</button>
+            <button type="button" class="btn-glass action-btn btn-ok chall-accept" data-id="${escapeHtml(c.id)}" title="গ্রহণ">${ICON.check}</button>
+          </div>`).join("")}
+      </div>`;
 
-    card.querySelectorAll(".chall-accept").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        try { await acceptChallenge(btn.dataset.id, student.studentId); showToast("চ্যালেঞ্জ গৃহীত!", "success"); await loadEverything(); } 
-        catch (err) { showToast(err.message || friendlyError(err), "error"); }
-      });
-    });
-
-    card.querySelectorAll(".chall-reject").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        try { await rejectChallenge(btn.dataset.id, student.studentId); await loadEverything(); } 
-        catch (err) { showToast(err.message || friendlyError(err), "error"); }
-      });
-    });
+    card.querySelectorAll(".chall-accept").forEach(btn => btn.addEventListener("click", async () => {
+      try { await acceptChallenge(btn.dataset.id, student.studentId); showToast("চ্যালেঞ্জ গৃহীত!", "success"); await loadAll(); }
+      catch (err) { showToast(err.message || friendlyError(err), "error"); }
+    }));
+    card.querySelectorAll(".chall-reject").forEach(btn => btn.addEventListener("click", async () => {
+      try { await rejectChallenge(btn.dataset.id, student.studentId); await loadAll(); }
+      catch (err) { showToast(err.message || friendlyError(err), "error"); }
+    }));
   } catch (err) { console.error("Incoming challenges failed:", err); }
 }
 
@@ -719,26 +995,23 @@ async function openChallengeModal(friendId) {
   body.innerHTML = `<div class="spinner"></div>`;
 
   try {
-    if (!upcomingExamsCache) { upcomingExamsCache = await getUpcomingExams(); }
+    if (!upcomingExamsCache) upcomingExamsCache = await getUpcomingExams();
     const exams = Array.isArray(upcomingExamsCache) ? upcomingExamsCache : [];
-
     body.innerHTML = `
       <select id="challengeExamSelect" class="challenge-select">
         <option value="__NEXT_EXAM__">পরবর্তী পরীক্ষা (Auto Select)</option>
         ${exams.map(e => `<option value="${escapeHtml(e.id)}">${escapeHtml(e.name || "পরীক্ষা")}</option>`).join("")}
       </select>
-      <div style="margin-top:14px; padding:12px; border-radius:12px; background:rgba(234, 179, 8, 0.1); border:1px solid rgba(234, 179, 8, 0.2); color:#b45309; font-size:0.75rem; font-weight:700; line-height:1.5;">
-        এখনো কোনো পরীক্ষা প্রকাশিত না থাকলেও চ্যালেঞ্জ পাঠানো যাবে। এটি পরবর্তী পরীক্ষার সঙ্গে স্বয়ংক্রিয়ভাবে যুক্ত হবে।
-      </div>
-    `;
+      <div style="margin-top:14px; padding:12px; border-radius:12px; background:rgba(234,179,8,.1); border:1px solid rgba(234,179,8,.2); color:#b45309; font-size:.75rem; font-weight:700; line-height:1.55;">
+        এখনো কোনো পরীক্ষা প্রকাশিত না থাকলেও চ্যালেঞ্জ পাঠানো যাবে। এটি পরবর্তী পরীক্ষার সঙ্গে স্বয়ংক্রিয়ভাবে যুক্ত হবে।
+      </div>`;
     confirmBtn.style.display = "inline-flex";
-  } catch (err) { body.innerHTML = `<p style="font-size:0.8rem; color:#ef4444;">পরীক্ষার তালিকা আনা যায়নি।</p>`; }
+  } catch (err) { body.innerHTML = `<p style="font-size:.8rem; color:#ef4444;">পরীক্ষার তালিকা আনা যায়নি।</p>`; }
 }
 
 document.getElementById("confirmChallengeBtn").onclick = async () => {
   const select = document.getElementById("challengeExamSelect");
   const btn = document.getElementById("confirmChallengeBtn");
-
   if (!select || !selectedFriendIdForChallenge) return;
 
   const examId = select.value;
@@ -747,18 +1020,13 @@ document.getElementById("confirmChallengeBtn").onclick = async () => {
   try {
     btn.disabled = true;
     btn.textContent = "পাঠানো হচ্ছে...";
-    
-    await sendChallenge({
-      fromStudentId: student.studentId,
-      toStudentId: selectedFriendIdForChallenge,
-      examId: examId,
-      examName: examName
-    });
-
+    await sendChallenge({ fromStudentId: student.studentId, toStudentId: selectedFriendIdForChallenge, examId, examName });
     showToast("চ্যালেঞ্জ পাঠানো হয়েছে!", "success");
     document.getElementById("challengeModal").style.display = "none";
     selectedFriendIdForChallenge = null;
-    await renderLeaderboardList();
+    S.outChalls = await getOutgoingChallenges(student.studentId).catch(() => S.outChalls);
+    renderList();
+    if (openFriendId) renderFriendSheet(openFriendId);
   } catch (err) {
     showToast(err.message || friendlyError(err), "error");
     btn.disabled = false;
@@ -766,33 +1034,52 @@ document.getElementById("confirmChallengeBtn").onclick = async () => {
   }
 };
 
-  
-/* ===== Live Feed Logic ===== */
-async function refreshLiveResults() {
-  try {
-    const [results, students, subjects] = await Promise.all([
-      getAllApprovedResults(), getActiveStudents(), getSubjects(true)
-    ]);
+/* ---------------- live feed (friends' latest results) ---------------- */
+function renderLive() {
+  const track = document.getElementById("liveActivityTrack");
+  if (!track) return;
 
-    liveSubjectsMap = {};
-    subjects.forEach(sub => { liveSubjectsMap[sub.id] = sub.name_bn || sub.name_en || sub.id; });
-    const studentMap = {};
-    students.forEach(s => { studentMap[s.studentId] = s; });
+  liveActivities = S.results
+    .filter(r => isFriend(r.studentId))
+    .sort((a, b) => toMillis(b.submittedAt) - toMillis(a.submittedAt))
+    .slice(0, 8);
 
-    liveActivities = results
-      .filter(r => myFriendIds.includes(r.studentId))
-      .sort((a,b) => getMillis(b.submittedAt) - getMillis(a.submittedAt))
-      .slice(0, 8);
+  if (liveActivityIndex >= liveActivities.length) liveActivityIndex = 0;
 
-    if (liveActivityIndex >= liveActivities.length) liveActivityIndex = 0;
-    renderLiveActivities(studentMap);
-  } catch (err) { console.error("Live activity refresh failed:", err); }
-}
+  if (!liveActivities.length) {
+    track.innerHTML = `<div style="padding:22px; text-align:center; color:var(--text-muted); font-size:.8rem; width:100%;">এখনো কোনো বন্ধুর আপডেট নেই।</div>`;
+    if (liveActivityTimer) clearInterval(liveActivityTimer);
+    liveActivityTimer = null;
+    track.style.transform = "translateX(0)";
+    return;
+  }
 
-function startLiveResultsListener() {
-  if (liveRefreshTimer) clearInterval(liveRefreshTimer);
-  refreshLiveResults();
-  liveRefreshTimer = setInterval(refreshLiveResults, 15000);
+  track.innerHTML = liveActivities.map(a => {
+    const friend = S.studentMap[a.studentId] || {};
+    const marks = a.obtainedMarks !== undefined ? `${a.obtainedMarks}/${a.totalMarks}` : "—";
+    const pct = a.percentage !== undefined ? `${a.percentage}%` : "—";
+    return `
+      <div class="live-card">
+        <div class="live-card-inner">
+          ${avatar(friend, 38)}
+          <div style="min-width:0;">
+            <div class="live-name">${escapeHtml(friend.name || "বন্ধু")}</div>
+            <div class="live-exam">${escapeHtml(a.examName)}</div>
+          </div>
+          <div style="font-size:1.1rem; font-weight:950; color:var(--color-accent);">${escapeHtml(pct)}</div>
+        </div>
+        <div class="live-stats">
+          <div class="live-stat"><b>${escapeHtml(marks)}</b><span class="live-stat-label">Marks</span></div>
+          <div class="live-stat"><b style="color:var(--color-success);">${a.correctCount || 0}</b><span class="live-stat-label">Correct</span></div>
+          <div class="live-stat"><b style="color:var(--color-danger);">${a.wrongCount || 0}</b><span class="live-stat-label">Wrong</span></div>
+          <div class="live-stat"><b style="color:var(--text-secondary);">${a.unansweredCount || 0}</b><span class="live-stat-label">Skipped</span></div>
+        </div>
+        <div class="live-time">${ICON.clock}${escapeHtml(relativeTime(a.submittedAt))}</div>
+      </div>`;
+  }).join("");
+
+  updateLiveSlider();
+  restartLiveSlider();
 }
 
 function updateLiveSlider() {
@@ -808,72 +1095,6 @@ function restartLiveSlider() {
     liveActivityIndex = (liveActivityIndex + 1) % liveActivities.length;
     updateLiveSlider();
   }, 4000);
-}
-
-function renderLiveActivities(studentMap) {
-  const track = document.getElementById("liveActivityTrack");
-  if (!track) return;
-
-  if (!liveActivities.length) {
-    track.innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-muted); font-size:0.8rem; width:100%;">এখনো কোনো বন্ধুর আপডেট নেই।</div>`;
-    if (liveActivityTimer) clearInterval(liveActivityTimer);
-    liveActivityTimer = null; return;
-  }
-
-  track.innerHTML = liveActivities.map(a => {
-    const friend = studentMap[a.studentId] || {};
-    // PRIVACY FIX: Live Feed Avatar
-    const avatar = friend.photoURL 
-      ? `<img src="${escapeHtml(friend.photoURL)}" alt="" draggable="false" oncontextmenu="return false" style="pointer-events:none; user-select:none; -webkit-user-select:none;">` 
-      : escapeHtml((friend.name || "ব").charAt(0));
-    const marks = a.obtainedMarks !== undefined ? `${a.obtainedMarks}/${a.totalMarks}` : "—";
-    const pct = a.percentage !== undefined ? `${a.percentage}%` : "—";
-    const correct = a.correctCount || 0;
-    const wrong = a.wrongCount || 0;
-
-    return `
-      <div class="live-card">
-        <div class="live-card-inner">
-          <span class="live-avatar">${avatar}</span>
-          <div class="live-copy">
-            <div class="live-name">${escapeHtml(friend.name || "বন্ধু")}</div>
-            <div class="live-exam">${escapeHtml(a.examName)}</div>
-          </div>
-          <div style="text-align:right;">
-            <div style="font-size:1.1rem; font-weight:950; color:var(--color-accent);">${escapeHtml(pct)}</div>
-          </div>
-        </div>
-        <div class="live-stats">
-          <div class="live-stat">
-            <span style="display:block; font-size:0.9rem; font-weight:900; color:var(--text-primary);">${escapeHtml(marks)}</span>
-            <span class="live-stat-label">Marks</span>
-          </div>
-          <div class="live-stat">
-            <span style="display:block; font-size:0.9rem; font-weight:900; color:var(--color-success);">${correct}</span>
-            <span class="live-stat-label">Correct</span>
-          </div>
-          <div class="live-stat">
-            <span style="display:block; font-size:0.9rem; font-weight:900; color:var(--color-danger);">${wrong}</span>
-            <span class="live-stat-label">Wrong</span>
-          </div>
-          <div class="live-stat">
-            <span style="display:block; margin-bottom:4px; color:var(--text-secondary);">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin:auto;"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
-            </span>
-            <span style="display:block; font-size:0.9rem; font-weight:900; color:var(--text-secondary);">${a.unansweredCount || 0}</span>
-            <span class="live-stat-label">Skipped</span>
-          </div>
-        </div>
-        <div class="live-time">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 
-          ${escapeHtml(relativeTime(a.submittedAt))}
-        </div>
-      </div>
-    `;
-  }).join("");
-
-  updateLiveSlider();
-  restartLiveSlider();
 }
 </script>
 </body>
