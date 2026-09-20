@@ -17,13 +17,28 @@ import {
 import { getUpcomingExams } from "./results-utils.js";
 
 // ---------- Theme (light/dark) ----------
+// Student side (dashboard, exam, result, login…) is permanently light —
+// there is no theme toggle there any more. Only the admin panel keeps
+// its dark/light switch.
+function isAdminPage() {
+  return window.location.pathname.includes("/admin/");
+}
+
 export function initTheme() {
-  const saved = localStorage.getItem("theme") || "light";
+  let saved = "light";
+  if (isAdminPage()) {
+    try { saved = localStorage.getItem("theme") || "light"; } catch { saved = "light"; }
+  }
   document.documentElement.setAttribute("data-theme", saved);
   return saved;
 }
 
 export function toggleTheme() {
+  // Student side has no toggle — theme stays light.
+  if (!isAdminPage()) {
+    document.documentElement.setAttribute("data-theme", "light");
+    return "light";
+  }
   const current =
     document.documentElement.getAttribute("data-theme") || "light";
 
@@ -362,25 +377,33 @@ function injectNotificationStyles() {
       position: relative;
       display: inline-flex;
       align-items: center;
+      margin-right: 6px;
     }
 
     .global-notification-btn {
       position: relative;
-      width: 42px;
-      height: 42px;
-      border: 0;
-      border-radius: 12px;
-      background: var(--card-bg, rgba(255,255,255,.65));
-      color: var(--text, currentColor);
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border: 1px solid var(--surface-border, rgba(0,0,0,.08));
+      border-radius: var(--radius-sm, 12px);
+      background: var(--surface-solid, #fff);
+      color: var(--text-secondary, currentColor);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: .2s ease;
+      transition: transform .2s ease, box-shadow .2s ease;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .global-notification-btn:hover {
       transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(0,0,0,.08);
+    }
+
+    .global-notification-btn:active {
+      transform: scale(.94);
     }
 
     .global-notification-btn svg {
@@ -425,9 +448,9 @@ function injectNotificationStyles() {
       width: min(360px, calc(100vw - 24px));
       max-height: min(560px, 75vh);
       overflow-y: auto;
-      background: var(--card-bg, #fff);
-      color: var(--text, #111);
-      border: 1px solid var(--border, rgba(0,0,0,.08));
+      background: #fffdf6;
+      color: var(--text-primary, #111);
+      border: 1px solid rgba(0,0,0,.08);
       border-radius: 18px;
       box-shadow: 0 18px 50px rgba(0,0,0,.16);
       padding: 10px;
@@ -458,7 +481,7 @@ function injectNotificationStyles() {
       justify-content: space-between;
       gap: 10px;
       padding: 8px 8px 12px;
-      border-bottom: 1px solid var(--border, rgba(0,0,0,.07));
+      border-bottom: 1px solid var(--surface-border, rgba(0,0,0,.07));
     }
 
     .global-notification-head strong {
@@ -482,10 +505,10 @@ function injectNotificationStyles() {
     }
 
     .global-notification-item {
-      border: 1px solid var(--border, rgba(0,0,0,.07));
+      border: 1px solid var(--surface-border, rgba(0,0,0,.07));
       border-radius: 14px;
       padding: 11px;
-      background: var(--surface, rgba(0,0,0,.02));
+      background: rgba(128,128,128,.05);
     }
 
     .global-notification-item-title {
@@ -550,12 +573,14 @@ function injectNotificationStyles() {
       font-weight: 700;
     }
 
-    .global-notif-accept {
+    .global-notif-accept,
+    [class*="global-notif-accept-"] {
       background: var(--color-accent, #2563eb);
       color: #fff;
     }
 
-    .global-notif-reject {
+    .global-notif-reject,
+    [class*="global-notif-reject-"] {
       background: rgba(239,68,68,.1);
       color: #dc2626;
     }
@@ -563,7 +588,7 @@ function injectNotificationStyles() {
     .global-notif-hide {
       background: transparent;
       color: var(--text-muted, #777);
-      border: 1px solid var(--border, rgba(0,0,0,.08)) !important;
+      border: 1px solid var(--surface-border, rgba(0,0,0,.08)) !important;
     }
 
     .global-notification-empty {
@@ -576,9 +601,10 @@ function injectNotificationStyles() {
     @media (max-width: 600px) {
       .global-notification-panel {
         position: fixed;
-        top: 70px;
+        top: 72px;
+        left: 12px;
         right: 12px;
-        width: calc(100vw - 24px);
+        width: auto;
         max-height: 70vh;
       }
     }
@@ -1617,8 +1643,8 @@ export function renderStudentHeader(
            ================================================= -->
 
       <div
-        class="flex gap-2 items-center"
-        style="position:relative;"
+        class="flex items-center"
+        style="position:relative; gap:10px;"
       >
 
         <!-- Global Notification -->
@@ -1692,23 +1718,6 @@ export function renderStudentHeader(
           </div>
 
         </div>
-
-
-        <!-- Theme -->
-
-        <button
-          class="theme-toggle"
-          id="themeToggle"
-          type="button"
-          aria-label="থিম পরিবর্তন"
-          title="থিম পরিবর্তন"
-        >
-
-          <span
-            class="theme-toggle-thumb"
-          ></span>
-
-        </button>
 
 
         <!-- Student switch -->
