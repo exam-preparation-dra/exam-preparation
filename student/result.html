@@ -120,7 +120,7 @@
 <div id="pdfArea" style="position:fixed;left:-9999px;top:0;width:380px;background:#ffffff;color:#111;padding:20px;font-family:'Noto Sans Bengali',sans-serif;"></div>
 
 <script type="module">
-import { initTheme, toggleTheme, icons, renderState, showToast } from "../js/utils/ui-utils.js";
+import { initTheme, icons, renderState, showToast } from "../js/utils/ui-utils.js";
 import { getActiveStudent } from "../js/utils/student-utils.js";
 import { getResultById, getExamSnapshot } from "../js/utils/results-utils.js";
 import { getSubjects, getChapters, getTopics, buildNameMap } from "../js/utils/syllabus-utils.js";
@@ -220,7 +220,7 @@ function renderPending() {
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
       </a>
       <h2 style="font-size:1.1rem; font-weight:900; color:var(--text-primary);">ফলাফল</h2>
-      <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-thumb"></span></button>
+      <span style="width:40px;height:40px;" aria-hidden="true"></span>
     </div>
     <div class="glass-card text-center" style="padding:40px 20px;">
       <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2" style="margin:0 auto 16px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -229,7 +229,6 @@ function renderPending() {
       <div style="background:rgba(128,128,128,0.1); color:var(--text-secondary); padding:6px 14px; border-radius:99px; font-size:0.8rem; font-weight:800; display:inline-block; margin-top:20px;">অনুমোদনের অপেক্ষায়</div>
     </div>
   `;
-  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
 }
 
 async function renderApproved() {
@@ -244,7 +243,7 @@ async function renderApproved() {
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
       </a>
       <h2 style="font-size:1.1rem; font-weight:900; color:var(--text-primary);">ফলাফল কার্ড</h2>
-      <button class="theme-toggle" id="themeToggle"><span class="theme-toggle-thumb"></span></button>
+      <span style="width:40px;height:40px;" aria-hidden="true"></span>
     </div>
 
     <div class="glass-card">
@@ -322,7 +321,6 @@ async function renderApproved() {
     </div>
   `;
 
-  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
   document.getElementById("pdfBtn").addEventListener("click", () => generatePdf(false));
   document.getElementById("shareBtn").addEventListener("click", () => generatePdf(true));
 

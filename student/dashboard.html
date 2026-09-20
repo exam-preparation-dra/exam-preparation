@@ -220,9 +220,9 @@
 </div>
 
 <script type="module">
-import { initTheme, toggleTheme, renderState, renderStudentHeader, showToast } from "../js/utils/ui-utils.js";
+import { initTheme, renderState, renderStudentHeader, showToast } from "../js/utils/ui-utils.js";
 import { getActiveStudent, refreshActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
-import { subscribeToUpcomingExams, getApprovedResults, getStudentResultStatusMap, getLeaderboardData } from "../js/utils/results-utils.js";
+import { subscribeToUpcomingExams, getApprovedResults, getStudentResultStatusMap, getLeaderboardData, isExamAvailableNow } from "../js/utils/results-utils.js";
 import { getSubjects, getTopics, buildNameMap } from "../js/utils/syllabus-utils.js";
 import { computeOverallStats, computeSubjectStats, computeTopicStats } from "../js/utils/analytics-utils.js";
 import { generateMotivation } from "../js/utils/motivation-utils.js";
@@ -313,7 +313,6 @@ async function render() {
     <div id="subjectSection" class="d-sec"></div>
     <div id="weakSection" class="d-sec d-last"></div>
   `;
-  $("themeToggle")?.addEventListener("click", toggleTheme);
   loadUpcoming();
   loadMain();
 }

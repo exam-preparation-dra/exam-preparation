@@ -235,7 +235,7 @@
 </div>
 
 <script type="module">
-import { initTheme, toggleTheme, renderState, renderStudentHeader, showToast, friendlyError } from "../js/utils/ui-utils.js";
+import { initTheme, renderState, renderStudentHeader, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { getActiveStudent, refreshActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
 import { getLeaderboardData, getUpcomingExams, getAllApprovedResults } from "../js/utils/results-utils.js";
 import { getMyFriendIds, getOutgoingRequests, sendFriendRequest } from "../js/utils/friend-utils.js";
@@ -509,7 +509,6 @@ function render() {
     </div>
   `;
 
-  document.getElementById("themeToggle")?.addEventListener("click", toggleTheme);
   
   document.getElementById("friendsToggleBtn").addEventListener("click", () => {
     friendsOnly = !friendsOnly;

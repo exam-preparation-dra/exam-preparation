@@ -136,7 +136,7 @@
 </div>
 
 <script type="module">
-import { initTheme, toggleTheme, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
+import { initTheme, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
 import { getActiveStudent } from "../js/utils/student-utils.js";
 import { getApprovedResults, getExamSnapshotsMap } from "../js/utils/results-utils.js";
 import { getSubjects, getChapters, getTopics, buildNameMap } from "../js/utils/syllabus-utils.js";
@@ -294,8 +294,6 @@ async function renderPage() {
     <div id="body"><div class="loading-card"><div class="spinner"></div><p>বিশ্লেষণ তৈরি হচ্ছে...</p></div></div>
   `;
 
-  const themeToggle = document.getElementById("themeToggle");
-  if (themeToggle) themeToggle.addEventListener("click", toggleTheme);
 
   const body = document.getElementById("body");
 
