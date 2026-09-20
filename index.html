@@ -3,123 +3,95 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>বাংলা MCQ পরীক্ষা প্ল্যাটফর্ম</title>
+<title>Physics Lover 2.0</title>
 <link rel="stylesheet" href="./css/style.css">
+<link rel="manifest" href="./manifest.json">
 <style>
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; } }
-  body { overflow-x: hidden; background: var(--bg); }
-  .app-shell { max-width: 480px; padding-bottom: 40px; }
+  body { overflow-x: hidden; background: var(--bg); margin: 0; }
+  
+  /* ===== Mandatory Install Overlay (Theme Matched) ===== */
+  #installOverlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--bg); /* Matches the light/dark website theme perfectly */
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 24px; text-align: center;
+  }
+  .install-card {
+    background: var(--surface); border: 1px solid var(--surface-border); 
+    border-radius: 24px; padding: 40px 24px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.06); max-width: 400px; width: 100%;
+    animation: slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+  
+  .app-icon-placeholder {
+    width: 84px; height: 84px; background: linear-gradient(135deg, var(--color-accent), #f59e0b);
+    border-radius: 22px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 10px 20px rgba(var(--color-accent-rgb), 0.25); overflow: hidden;
+  }
+  .install-title { font-size: 1.6rem; font-weight: 900; color: var(--text-primary); margin-bottom: 12px; letter-spacing:-0.5px; }
+  .install-desc { font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 28px; font-weight: 600; }
+  
+  .btn-install-mega {
+    background: linear-gradient(135deg, var(--color-accent), #f59e0b);
+    color: #fff; border: none; padding: 16px 24px; border-radius: 16px;
+    font-weight: 900; font-size: 1.1rem; cursor: pointer; width: 100%;
+    box-shadow: 0 8px 20px rgba(var(--color-accent-rgb), 0.4);
+    transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .btn-install-mega:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(var(--color-accent-rgb), 0.5); }
+  .btn-install-mega:active:not(:disabled) { transform: translateY(0) scale(0.97); }
+  .btn-install-mega:disabled { background: rgba(128,128,128,0.1); color: var(--text-muted); box-shadow: none; cursor: not-allowed; }
+
+  /* ===== Normal App Shell ===== */
+  .app-shell { max-width: 480px; padding-bottom: 40px; margin: 0 auto; display: none; }
 
   /* ===== Premium Clean Header ===== */
   .register-head { margin-top: 12px; margin-bottom: 24px; text-align: center; }
-  .register-head h1 {
-    font-size: 1.8rem; font-weight: 900; color: var(--text-primary); line-height: 1.3;
-    letter-spacing: -0.5px;
-  }
+  .register-head h1 { font-size: 1.8rem; font-weight: 900; color: var(--text-primary); line-height: 1.3; letter-spacing: -0.5px; }
   .register-head p { margin-top: 6px; font-size: 0.9rem; color: var(--text-muted); font-weight: 500; }
 
   /* ===== Glassmorphism Search Bar ===== */
   .search-glass {
-    display: flex; align-items: center; gap: 10px;
-    background: var(--surface);
-    border: 1px solid var(--surface-border);
-    border-radius: 16px;
-    padding: 6px 14px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.03);
-    transition: border-color 0.3s, box-shadow 0.3s;
+    display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--surface-border);
+    border-radius: 16px; padding: 6px 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.03); transition: 0.3s;
   }
-  .search-glass:focus-within {
-    border-color: var(--color-accent);
-    box-shadow: 0 8px 24px rgba(var(--color-accent-rgb), 0.12);
-  }
+  .search-glass:focus-within { border-color: var(--color-accent); box-shadow: 0 8px 24px rgba(var(--color-accent-rgb), 0.12); }
   .search-icon { width: 20px; height: 20px; color: var(--text-muted); flex-shrink: 0; }
-  
-  .search-glass input {
-    flex: 1; background: transparent; border: none; outline: none;
-    padding: 10px 0; font-size: 0.95rem; color: var(--text-primary); font-family: inherit; font-weight: 600;
-  }
+  .search-glass input { flex: 1; background: transparent; border: none; outline: none; padding: 10px 0; font-size: 0.95rem; color: var(--text-primary); font-family: inherit; font-weight: 600; }
   .search-glass input::placeholder { color: var(--text-muted); font-weight: 500; }
-  
-  /* ব্রাউজারের ডিফল্ট Search Cross বাটন হাইড করার কোড */
-  .search-glass input[type="search"]::-webkit-search-cancel-button {
-    -webkit-appearance: none; appearance: none; display: none;
-  }
-  
-  .search-clear {
-    display: none; background: rgba(128,128,128,0.1); color: var(--text-muted);
-    border: none; border-radius: 50%; width: 28px; height: 28px; 
-    align-items: center; justify-content: center; cursor: pointer;
-  }
+  .search-glass input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; display: none; }
+  .search-clear { display: none; background: rgba(128,128,128,0.1); color: var(--text-muted); border: none; border-radius: 50%; width: 28px; height: 28px; align-items: center; justify-content: center; cursor: pointer; }
   
   /* ===== Class Filter Chips ===== */
-  .class-filter { 
-    display: flex; gap: 8px; overflow-x: auto; padding: 12px 0 4px; 
-    margin-top: 12px; scrollbar-width: none; 
-  }
+  .class-filter { display: flex; gap: 8px; overflow-x: auto; padding: 12px 0 4px; margin-top: 12px; scrollbar-width: none; }
   .class-filter::-webkit-scrollbar { display: none; }
-  .chip-glass {
-    padding: 8px 16px; border-radius: 99px; font-size: 0.85rem; font-weight: 700;
-    background: var(--surface); border: 1px solid var(--surface-border);
-    color: var(--text-secondary); cursor: pointer; white-space: nowrap;
-    transition: all 0.2s ease; flex-shrink: 0;
-  }
+  .chip-glass { padding: 8px 16px; border-radius: 99px; font-size: 0.85rem; font-weight: 700; background: var(--surface); border: 1px solid var(--surface-border); color: var(--text-secondary); cursor: pointer; white-space: nowrap; transition: all 0.2s ease; flex-shrink: 0; }
   .chip-glass.active { background: var(--color-accent); border-color: var(--color-accent); color: #fff; box-shadow: 0 4px 12px rgba(var(--color-accent-rgb), 0.2); }
 
-  /* ===== Student Cards (Premium Floating Style) ===== */
+  /* ===== Student Cards ===== */
   .list-head { margin-top: 16px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
   .list-head-title { font-size: 0.9rem; font-weight: 800; color: var(--text-primary); }
   .list-count { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; background: rgba(128,128,128,0.1); padding: 4px 10px; border-radius: 99px; }
 
-  .student-card {
-    position: relative; display: flex; align-items: center; gap: 14px;
-    background: var(--surface);
-    border: 1px solid var(--surface-border);
-    border-radius: 16px; padding: 14px; margin-bottom: 10px;
-    cursor: pointer; text-align: left; width: 100%;
-    transition: all 0.2s ease;
-    animation: printIn 400ms ease-out both;
-    overflow: hidden;
-  }
+  .student-card { position: relative; display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 16px; padding: 14px; margin-bottom: 10px; cursor: pointer; text-align: left; width: 100%; transition: all 0.2s ease; animation: printIn 400ms ease-out both; overflow: hidden; }
   .student-card:active { transform: scale(0.96); background: rgba(128,128,128,0.05); }
-  @media (hover:hover) { .student-card:hover { border-color: var(--color-accent); box-shadow: 0 6px 16px rgba(0,0,0,0.06); transform: translateY(-2px); } }
   @keyframes printIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   .student-card.from-cache { animation: none; }
   
-  /* Tap Loading Animation Styles */
-  .student-card.is-loading {
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 2px rgba(var(--color-accent-rgb), 0.15);
-    transform: scale(0.97);
-    background: rgba(128, 128, 128, 0.05);
-    pointer-events: none;
-  }
+  .student-card.is-loading { border-color: var(--color-accent); box-shadow: 0 0 0 2px rgba(var(--color-accent-rgb), 0.15); transform: scale(0.97); background: rgba(128, 128, 128, 0.05); pointer-events: none; }
   .student-card.is-loading .st-arrow, .student-card.is-loading .st-roll { display: none; }
-  .student-card.is-loading::after {
-    content: ""; position: absolute; right: 20px; top: 50%; margin-top: -9px;
-    width: 18px; height: 18px;
-    border: 2.5px solid var(--color-accent);
-    border-top-color: transparent;
-    border-radius: 50%;
-    animation: spinLoad 0.8s linear infinite;
-  }
+  .student-card.is-loading::after { content: ""; position: absolute; right: 20px; top: 50%; margin-top: -9px; width: 18px; height: 18px; border: 2.5px solid var(--color-accent); border-top-color: transparent; border-radius: 50%; animation: spinLoad 0.8s linear infinite; }
   @keyframes spinLoad { to { transform: rotate(360deg); } }
   
-  .st-avatar {
-    width: 48px; height: 48px; border-radius: 50%;
-    background: var(--color-accent-soft); color: var(--color-accent);
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 800; font-size: 1.2rem; overflow: hidden; flex-shrink: 0;
-  }
+  .st-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--color-accent-soft); color: var(--color-accent); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; overflow: hidden; flex-shrink: 0; }
   .st-avatar img { width: 100%; height: 100%; object-fit: cover; }
   
   .st-info { flex: 1; min-width: 0; }
   .st-name { font-weight: 800; font-size: 1.05rem; color: var(--text-primary); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .st-id { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
-  
-  .st-roll {
-    background: rgba(128,128,128,0.08); color: var(--text-secondary);
-    padding: 6px 12px; border-radius: 10px; font-weight: 800; font-size: 0.85rem; font-family: var(--font-num);
-  }
+  .st-roll { background: rgba(128,128,128,0.08); color: var(--text-secondary); padding: 6px 12px; border-radius: 10px; font-weight: 800; font-size: 0.85rem; font-family: var(--font-num); }
 
   /* ===== Skeletons & Empty State ===== */
   .skel-card { display: flex; gap: 14px; padding: 14px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 16px; margin-bottom: 10px; }
@@ -134,22 +106,33 @@
 
   /* ===== Footer ===== */
   .foot-section { margin-top: 30px; text-align: center; display: flex; flex-direction: column; gap: 12px; }
-  .btn-join {
-    background: var(--surface); border: 1px solid var(--surface-border);
-    color: var(--text-primary); font-weight: 700; padding: 14px; border-radius: 14px;
-    text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.03); transition: transform 0.2s;
-  }
+  .btn-join { background: var(--surface); border: 1px solid var(--surface-border); color: var(--text-primary); font-weight: 700; padding: 14px; border-radius: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); transition: transform 0.2s; }
   .btn-join:active { transform: scale(0.98); }
   .admin-link { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-decoration: none; padding: 8px; }
 </style>
 </head>
 <body>
 
-<div class="app-shell">
+<!-- Mandatory Install Overlay (Theme Matched) -->
+<div id="installOverlay">
+  <div class="install-card">
+    <div class="app-icon-placeholder">
+      <img src="./icon-192.png" alt="App Icon" style="width:100%; height:100%; border-radius:22px; object-fit:cover;" onerror="this.style.display='none'">
+    </div>
+    <h2 class="install-title">Physics Lover 2.0</h2>
+    <p class="install-desc">এই ওয়েবসাইটটি ব্রাউজার থেকে ব্যবহার করা যাবে না। পরীক্ষা দেওয়ার জন্য দয়া করে আমাদের অফিশিয়াল অ্যাপটি আপনার ফোনে ইনস্টল করুন।</p>
+    
+    <button id="mainInstallBtn" class="btn-install-mega" disabled>
+      <div class="spinner" style="width:20px;height:20px;border-width:2.5px;margin-right:8px;border-color:rgba(255,255,255,0.3);border-top-color:#fff;"></div>
+      চেক করা হচ্ছে...
+    </button>
+  </div>
+</div>
 
+<!-- Actual App Content (Hidden until installed) -->
+<div class="app-shell" id="appShell">
   <div class="register-head">
-    <h1 id="platformHeading">পরীক্ষা প্রস্তুতি</h1>
+    <h1 id="platformHeading">Physics Lover 2.0</h1>
     <p>তালিকা থেকে নিজের নাম বেছে নাও</p>
   </div>
 
@@ -181,16 +164,19 @@
     </a>
     <a href="./admin/index.html" class="admin-link">অ্যাডমিন প্যানেল</a>
   </div>
-
 </div>
 
 <script type="module">
 import { initTheme, icons, renderState } from "./js/utils/ui-utils.js";
 import { getActiveStudents, setActiveStudent, findActiveAttempt } from "./js/utils/student-utils.js";
 import { getPlatformSettings } from "./js/utils/settings-utils.js";
+import { initStudentMandatoryInstall } from "./pwa-install.js";
 
+// Initialize Theme & Mandatory Install Lock
 initTheme();
+initStudentMandatoryInstall("installOverlay", "mainInstallBtn", "appShell");
 
+// Name fallback logic
 const TITLE_CACHE_KEY = "cachedPlatformTitle";
 const headingEl = document.getElementById("platformHeading");
 try {
@@ -313,7 +299,6 @@ function renderList(list, fromCache = false) {
   listEl.innerHTML = list.map((s, i) => rowHtml(s, i, fromCache)).join("");
   if (countEl) countEl.textContent = `${list.length} জন`;
   
-  // Binding click event to trigger the Tap Loading Animation
   listEl.querySelectorAll("[data-idx]").forEach(btn => {
     btn.addEventListener("click", function() {
       selectStudent(students[Number(this.dataset.idx)], this);
@@ -321,11 +306,8 @@ function renderList(list, fromCache = false) {
   });
 }
 
-// Added btnElement to trigger animation
 async function selectStudent(student, btnElement) {
-  if (btnElement) {
-    btnElement.classList.add("is-loading");
-  }
+  if (btnElement) { btnElement.classList.add("is-loading"); }
   
   setActiveStudent(student); 
   const active = await findActiveAttempt(student.studentId);

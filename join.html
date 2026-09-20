@@ -115,6 +115,8 @@
     <h1>যুক্ত হওয়ার আবেদন করো</h1>
   </div>
 
+  <div id="referralBanner"></div>
+
   <!-- Application Form -->
   <form id="joinForm" class="glass-float-card">
     <div class="field">
@@ -166,6 +168,22 @@ import { submitStudentRequest } from "./js/utils/student-requests-utils.js";
 // Initialize theme
 initTheme();
 
+// ---------- Referral link (?ref=STU-0001) ----------
+// A friend's share link lands here with their studentId in the query
+// string. We just carry it through to the join request as-is — no
+// Firestore lookup needed here (join.html has no admin access anyway);
+// the admin sees/approves the real name when reviewing the request, and
+// an unknown/mistyped ref simply earns no one a referral credit.
+const referredBy = new URLSearchParams(window.location.search).get("ref");
+if (referredBy) {
+  document.getElementById("referralBanner").innerHTML = `
+    <div class="glass-float-card" style="padding:14px 16px; margin-bottom:18px; display:flex; align-items:center; gap:10px; border-color:rgba(16,185,129,0.3); background:rgba(16,185,129,0.06);">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg>
+      <p style="margin:0; font-size:0.85rem; font-weight:700; color:var(--text-primary);">একজন বন্ধুর আমন্ত্রণে যুক্ত হচ্ছ</p>
+    </div>
+  `;
+}
+
 // Modal Logic
 const guideBtn = document.getElementById("guideBtn");
 const guideModal = document.getElementById("guideModal");
@@ -197,7 +215,7 @@ document.getElementById("joinForm").addEventListener("submit", async (e) => {
   btn.innerHTML = `<span class="spinner" style="width:16px; height:16px; border-width:2px; border-color:#fff; border-top-color:transparent;"></span> পাঠানো হচ্ছে...`;
   
   try {
-    await submitStudentRequest(name, className);
+    await submitStudentRequest(name, className, referredBy);
     // Success State with SVG
     document.getElementById("joinForm").innerHTML = `
       <div class="success-box">
