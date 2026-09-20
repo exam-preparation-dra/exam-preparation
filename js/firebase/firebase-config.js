@@ -1,22 +1,16 @@
 /* =========================================================
    FIREBASE CONFIGURATION
    =========================================================
-   >>> এখানে আপনার নিজের Firebase project configuration paste করুন <<<
-
-   Firebase Console → Project Settings → General → Your apps → SDK config
-   থেকে এই object copy করে নিচে paste করুন।
-
-   এই ফাইলে কোনো real credential আগে থেকে বসানো নেই — placeholder আছে।
+   Physics Lover - Teacher 2 Project
    ========================================================= */
 
-// TODO: এই object টি আপনার নিজের Firebase config দিয়ে replace করুন
 const firebaseConfig = {
-  apiKey: "AIzaSyCfhlXO9EKShin5x7GHNHic2UQcIJGeCvQ",
-  authDomain: "exam-preparation-dra.firebaseapp.com",
-  projectId: "exam-preparation-dra",
-  storageBucket: "exam-preparation-dra.firebasestorage.app",
-  messagingSenderId: "426879208763",
-  appId: "1:426879208763:web:fd20bd7523661c32c77b1e"
+  apiKey: "AIzaSyCQG23Rle-VaWgEtcKj4KuxiAZfsZnn79s",
+  authDomain: "physicslover-16ee5.firebaseapp.com",
+  projectId: "physicslover-16ee5",
+  storageBucket: "physicslover-16ee5.firebasestorage.app",
+  messagingSenderId: "960004318623",
+  appId: "1:960004318623:web:d7adb915e4bfa541e9c9aa"
 };
 
 // Firebase SDK (CDN, modular v10) — index.html / admin pages এ type="module" হিসেবে import হয়
