@@ -6,99 +6,212 @@
 <title>ড্যাশবোর্ড — পরীক্ষা প্রস্তুতি</title>
 <link rel="stylesheet" href="../css/style.css">
 <style>
-  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
 
-  .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+  /* =========================================================
+     Dashboard — "honour roll" layout on top of the app's Bound Ledger
+     tokens (forest ink, brass, parchment). One loud moment per zone:
+     the level seal in the hero, and the brass referral ticket.
+     Everything else stays quiet and ledger-like.
+     ========================================================= */
+  .d-sec { margin-top: 20px; }
+  .d-h { font-size: 1rem; font-weight: 800; color: var(--text-primary); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .d-h svg { color: var(--color-accent); flex-shrink: 0; }
+  .d-sub { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); }
 
-  /* ===== Premium Glassmorphism Theme ===== */
-  .glass-float-card {
-    background: rgba(128, 128, 128, 0.07);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(128, 128, 128, 0.15);
-    border-radius: 16px;
-    padding: 16px;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  @media (hover: hover) {
-    .glass-float-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.08); }
-  }
-
-  .btn-glass {
-    background: rgba(128, 128, 128, 0.1);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(128, 128, 128, 0.2);
-    border-radius: 12px;
-    color: var(--text-primary);
-    padding: 12px;
-    font-weight: 700;
-    font-size: 0.85rem;
-    text-align: center;
-    flex: 1;
-    display: inline-flex; justify-content: center; align-items: center; gap: 6px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-decoration: none;
-    transition: all 0.2s ease;
-  }
-  .btn-glass:active { transform: scale(0.96); }
-
-  /* ===== Cream/Yellow Hero Points Card ===== */
-  .hero-points-card {
-    background: linear-gradient(135deg, #fefce8 0%, #fef08a 100%);
-    border: 1px solid rgba(234, 179, 8, 0.3);
+  .d-card {
+    background: var(--surface);
+    border: 1px solid var(--surface-border);
     border-radius: 20px;
-    padding: 24px;
-    color: #713f12; 
-    display: flex; align-items: center; justify-content: space-between;
-    position: relative; overflow: hidden;
-    box-shadow: 0 12px 30px -8px rgba(234, 179, 8, 0.3);
-    animation: floatHero 5s ease-in-out infinite;
-  }
-  @keyframes floatHero { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-  
-  .hero-points-card::after {
-    content: ''; position: absolute; top: 0; left: -150%;
-    width: 50%; height: 100%;
-    background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 100%);
-    transform: skewX(-25deg); animation: shine 5s infinite;
-  }
-  @keyframes shine { 0% { left: -150%; } 20% { left: 150%; } 100% { left: 150%; } }
-
-  .hero-icon-container { filter: drop-shadow(0 6px 8px rgba(113, 63, 18, 0.2)); }
-  .top-scorer-badge {
-    background: rgba(113, 63, 18, 0.1); border: 1px solid rgba(113, 63, 18, 0.2);
-    padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 700;
-    margin-top: 12px; display: inline-block; color: #713f12;
+    padding: 16px;
+    backdrop-filter: blur(var(--blur-sm)); -webkit-backdrop-filter: blur(var(--blur-sm));
+    box-shadow: var(--shadow-soft);
   }
 
-  /* ===== Horizontal Scroll for Subjects ===== */
-  .subject-scroller {
-    display: flex; gap: 12px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: none; margin-top: 8px;
+  /* ---------- quick links ---------- */
+  .d-links { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .d-link {
+    display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px;
+    border-radius: 14px; border: 1px solid var(--surface-border); background: var(--surface-solid);
+    font-weight: 700; font-size: 0.85rem; color: var(--text-primary);
+    transition: transform var(--transition);
   }
-  .subject-scroller::-webkit-scrollbar { display: none; }
-  .subject-mini-card { min-width: 220px; flex-shrink: 0; }
+  .d-link:active { transform: scale(0.96); }
+  .d-link:focus-visible, .d-btn:focus-visible, .d-rules summary:focus-visible, .d-row-link:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 
-  /* ===== Point List Styles ===== */
-  .point-list-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 10px 0; border-bottom: 1px dashed var(--surface-border);
+  /* ---------- hero ---------- */
+  .d-hero {
+    position: relative; overflow: hidden; color: #f1ece0;
+    border-radius: 24px; padding: 20px 18px 16px;
+    border: 1px solid rgba(201,151,63,0.3);
+    background:
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 30px),
+      linear-gradient(155deg, #0f1a12 0%, #1a2a1c 62%, #2a2413 100%);
+    box-shadow: 0 18px 40px -14px rgba(15,26,18,0.55);
+    display: grid; grid-template-columns: 1fr auto; column-gap: 12px; align-items: center;
   }
-  .point-list-row:last-child { border-bottom: none; padding-bottom: 0; }
-  .rank-number { width: 22px; font-size: 0.85rem; font-weight: 800; color: var(--text-muted); }
+  .d-hero-label { font-size: 0.8rem; font-weight: 700; color: rgba(241,236,224,0.7); }
+  .d-hero-xp {
+    font-family: var(--font-num); font-weight: 700; font-size: 3.3rem; line-height: 1.05; letter-spacing: -0.03em; margin: 2px 0 10px;
+    background: linear-gradient(135deg, #f0cf8a, #c9973f); -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .d-hero-xp small { font-size: 1.1rem; letter-spacing: 0; margin-left: 4px; }
+  .d-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .d-chip { font-size: 0.74rem; font-weight: 700; padding: 5px 10px; border-radius: 999px; background: rgba(241,236,224,0.09); border: 1px solid rgba(241,236,224,0.14); color: rgba(241,236,224,0.92); }
+  .d-chip b { font-family: var(--font-num); font-weight: 700; }
+  .d-chip-gain { background: rgba(63,157,99,0.18); border-color: rgba(63,157,99,0.4); color: #9fe0b8; }
 
-  /* ===== General Utils ===== */
-  .trend-bar {
-    flex: 1; border-radius: 6px 6px 0 0;
-    background: linear-gradient(180deg, var(--color-accent), var(--color-accent-2));
-    background-size: 100% 200%; height: 0%;
-    transition: height 700ms cubic-bezier(.22,.9,.3,1);
+  .d-seal { position: relative; width: 112px; height: 112px; }
+  .d-seal svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .d-seal-ring { transition: stroke-dashoffset 1.4s cubic-bezier(0.22, 1, 0.36, 1); }
+  .d-seal-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .d-seal-center span { font-size: 0.68rem; font-weight: 700; color: rgba(241,236,224,0.65); }
+  .d-seal-center b { font-family: var(--font-num); font-size: 2.2rem; line-height: 1; font-weight: 700; color: #f0cf8a; }
+
+  .d-hero-foot { grid-column: 1 / -1; margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(241,236,224,0.2); font-size: 0.8rem; font-weight: 600; color: rgba(241,236,224,0.82); line-height: 1.6; }
+  .d-hero-foot b { font-family: var(--font-num); color: #f0cf8a; font-weight: 700; }
+
+  /* ---------- upcoming exam ---------- */
+  .d-exam { position: relative; padding-left: 20px; margin-top: 10px; }
+  .d-exam::before { content: ""; position: absolute; left: 0; top: 14px; bottom: 14px; width: 4px; border-radius: 4px; background: linear-gradient(180deg, var(--color-accent), var(--color-accent-2)); }
+  .d-exam-special { border-color: var(--color-accent); }
+  .d-exam-title { font-size: 1.05rem; font-weight: 800; line-height: 1.4; }
+  .d-tag { font-size: 0.68rem; font-weight: 800; padding: 3px 9px; border-radius: 999px; background: var(--color-accent-soft); color: var(--color-accent); white-space: nowrap; }
+  .d-facts { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 12px; border-top: 1px solid rgba(128,128,128,0.16); border-bottom: 1px solid rgba(128,128,128,0.16); }
+  .d-fact { padding: 9px 8px; text-align: center; }
+  .d-fact + .d-fact { border-left: 1px solid rgba(128,128,128,0.16); }
+  .d-fact p:first-child { font-size: 0.68rem; color: var(--text-muted); font-weight: 700; }
+  .d-fact p:last-child { font-size: 0.85rem; font-weight: 800; margin-top: 2px; }
+  .d-xp-line { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 12px; }
+  .d-xp-line p { font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); }
+  .d-xp-line strong { font-family: var(--font-num); font-size: 1.35rem; font-weight: 700; color: var(--color-accent); white-space: nowrap; }
+  .d-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 46px; margin-top: 12px;
+    border-radius: 14px; border: 1px solid var(--surface-border); font-weight: 800; font-size: 0.9rem; font-family: inherit; cursor: pointer;
+    background: var(--surface-solid); color: var(--text-primary); transition: transform var(--transition);
   }
-  .progress-track { overflow: hidden; background: rgba(128,128,128,0.15); border-radius: 99px; height: 6px; }
-  .progress-fill { width: 0%; transition: width 900ms cubic-bezier(.22,.9,.3,1); height: 100%; border-radius: 99px; background: var(--color-accent); }
-  
-  .weak-anim { animation: gentlyPulse 3s infinite; }
-  @keyframes gentlyPulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(0.98); } }
+  .d-btn:active { transform: scale(0.97); }
+  .d-btn-primary { background: linear-gradient(135deg, var(--color-accent), var(--color-accent-2)); color: #2b1d09; border: none; box-shadow: 0 8px 20px rgba(201,151,63,0.3); }
+  .d-btn-ok { color: var(--color-success); border-color: rgba(63,157,99,0.45); }
+  .d-note { text-align: center; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-top: 12px; }
+
+  /* ---------- referral ticket ---------- */
+  .d-ticket-wrap { filter: drop-shadow(0 14px 22px rgba(70,45,8,0.26)); }
+  .d-ticket {
+    --perf: 96px; --r: 12px;
+    color: #2b1d09; border-radius: 22px; overflow: hidden;
+    background: linear-gradient(165deg, #f6e2ac 0%, #e6bd70 58%, #d5a24b 100%);
+    -webkit-mask: radial-gradient(circle var(--r) at 0 var(--perf), #0000 calc(var(--r) - 1px), #000 var(--r)) left / 51% 100% no-repeat,
+                  radial-gradient(circle var(--r) at 100% var(--perf), #0000 calc(var(--r) - 1px), #000 var(--r)) right / 51% 100% no-repeat;
+            mask: radial-gradient(circle var(--r) at 0 var(--perf), #0000 calc(var(--r) - 1px), #000 var(--r)) left / 51% 100% no-repeat,
+                  radial-gradient(circle var(--r) at 100% var(--perf), #0000 calc(var(--r) - 1px), #000 var(--r)) right / 51% 100% no-repeat;
+  }
+  .d-ticket h3, .d-ticket p { color: inherit; }
+  .d-ticket-top { height: var(--perf); padding: 0 20px; display: flex; align-items: center; gap: 14px; }
+  .d-ticket-amt { font-family: var(--font-num); font-weight: 700; font-size: 2.9rem; line-height: 1; letter-spacing: -0.03em; white-space: nowrap; }
+  .d-ticket-amt small { font-size: 1rem; letter-spacing: 0; margin-left: 3px; }
+  .d-ticket-top h3 { font-size: 1.02rem; font-weight: 800; line-height: 1.3; }
+  .d-ticket-top p { font-size: 0.76rem; font-weight: 600; color: rgba(43,29,9,0.72); margin-top: 3px; line-height: 1.45; }
+  .d-ticket-perf { height: 0; margin: 0 18px; border-top: 2px dashed rgba(43,29,9,0.3); }
+  .d-ticket-body { padding: 16px 18px 18px; }
+
+  .d-linkrow { display: flex; gap: 8px; }
+  .d-linkrow input {
+    flex: 1; min-width: 0; min-height: 44px; padding: 0 12px; border-radius: 12px; font-family: var(--font-en); font-size: 0.78rem; font-weight: 600;
+    color: #2b1d09; background: rgba(255,253,246,0.6); border: 1px dashed rgba(43,29,9,0.4); text-overflow: ellipsis;
+  }
+  .d-linkrow .d-btn { width: auto; margin: 0; padding: 0 16px; background: #1a2a1c; color: #f0cf8a; border: none; }
+  .d-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .d-actions .d-btn { margin: 0; background: rgba(255,253,246,0.55); color: #2b1d09; border: 1px solid rgba(43,29,9,0.25); }
+
+  .d-ladder { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 16px; }
+  .d-step { text-align: center; padding: 8px 2px; border-radius: 12px; border: 1px dashed rgba(43,29,9,0.35); }
+  .d-step p:first-child { font-size: 0.7rem; font-weight: 700; color: rgba(43,29,9,0.72); }
+  .d-step p:last-child { font-family: var(--font-num); font-size: 0.95rem; font-weight: 700; margin-top: 1px; }
+  .d-step-done { background: #1a2a1c; border: 1px solid #1a2a1c; }
+  .d-step-done p:first-child { color: rgba(240,207,138,0.8); }
+  .d-step-done p:last-child { color: #f0cf8a; }
+  .d-ladder-msg { font-size: 0.8rem; font-weight: 700; margin-top: 10px; line-height: 1.55; }
+  .d-ladder-msg b { font-family: var(--font-num); }
+
+  .d-joined { margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(43,29,9,0.3); }
+  .d-joined-h { display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 800; }
+  .d-joined-h b { font-family: var(--font-num); }
+  .d-joined-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .d-joined-pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 3px; border-radius: 999px; background: rgba(255,253,246,0.6); font-size: 0.76rem; font-weight: 700; }
+  .d-joined-pill i { width: 22px; height: 22px; border-radius: 50%; background: #1a2a1c; color: #f0cf8a; font-style: normal; display: inline-flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; }
+  .d-foot { font-size: 0.7rem; font-weight: 600; color: rgba(43,29,9,0.68); margin-top: 10px; line-height: 1.5; }
+
+  /* ---------- XP breakdown ---------- */
+  .d-stack { display: flex; height: 12px; border-radius: 8px; overflow: hidden; background: rgba(128,128,128,0.14); }
+  .d-stack i { display: block; height: 100%; }
+  .d-xrow { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px dashed rgba(128,128,128,0.22); }
+  .d-xrow:last-of-type { border-bottom: none; }
+  .d-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  .d-xrow-name { flex: 1; min-width: 0; font-size: 0.86rem; font-weight: 700; }
+  .d-xrow-name span { display: block; font-size: 0.68rem; font-weight: 600; color: var(--text-muted); }
+  .d-xrow-val { font-family: var(--font-num); font-weight: 700; font-size: 0.95rem; }
+  .d-rules { margin-top: 10px; border-top: 1px solid rgba(128,128,128,0.16); padding-top: 10px; }
+  .d-rules summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; font-weight: 800; color: var(--color-accent); min-height: 32px; }
+  .d-rules summary::-webkit-details-marker { display: none; }
+  .d-rules summary svg { transition: transform var(--transition); }
+  .d-rules[open] summary svg { transform: rotate(180deg); }
+  .d-rules ul { list-style: none; margin-top: 8px; }
+  .d-rules li { font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); padding: 6px 0; line-height: 1.5; }
+  .d-rules li b { color: var(--text-primary); font-weight: 800; }
+
+  /* ---------- recent exams ---------- */
+  .d-row-link { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px dashed rgba(128,128,128,0.22); min-height: 52px; }
+  .d-row-link:last-child { border-bottom: none; padding-bottom: 0; }
+  .d-row-link:first-of-type { padding-top: 0; }
+  .d-row-main { flex: 1; min-width: 0; }
+  .d-row-main strong { display: block; font-size: 0.9rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .d-row-main span { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); }
+  .d-gain { font-family: var(--font-num); font-weight: 700; font-size: 0.88rem; padding: 4px 10px; border-radius: 999px; background: rgba(63,157,99,0.14); color: var(--color-success); white-space: nowrap; }
+
+  /* ---------- note ---------- */
+  .d-quote { border-left: 3px solid var(--color-accent); padding: 4px 0 4px 14px; }
+  .d-quote p:first-child { font-size: 0.78rem; font-weight: 800; color: var(--text-primary); margin-bottom: 4px; }
+  .d-quote p:last-child { font-size: 0.86rem; font-weight: 600; color: var(--text-secondary); line-height: 1.65; }
+
+  /* ---------- class ranking ---------- */
+  .d-class { margin-top: 10px; }
+  .d-class-name { font-size: 0.85rem; font-weight: 800; color: var(--color-accent); padding-bottom: 8px; border-bottom: 1px solid rgba(128,128,128,0.16); margin-bottom: 4px; }
+  .d-rank { display: flex; align-items: center; gap: 10px; padding: 9px 0; }
+  .d-pos { width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-num); font-size: 0.78rem; font-weight: 700; color: #fff; background: var(--text-muted); flex-shrink: 0; }
+  .d-pos-1 { background: #c9973f; } .d-pos-2 { background: #8f9aa0; } .d-pos-3 { background: #a5673f; }
+  .d-rank-name { flex: 1; min-width: 0; font-size: 0.9rem; font-weight: 700; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .d-rank-me .d-rank-name { color: var(--text-primary); font-weight: 800; }
+  .d-rank-me { background: var(--color-accent-soft); margin: 0 -10px; padding: 9px 10px; border-radius: 12px; }
+  .d-rank-xp { font-family: var(--font-num); font-weight: 700; font-size: 0.88rem; }
+  .d-gap { text-align: center; color: var(--text-muted); font-size: 0.8rem; letter-spacing: 3px; line-height: 0.6; padding: 2px 0; }
+
+  /* ---------- stats ---------- */
+  .d-stats { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .d-stat { text-align: center; padding: 14px 4px; border-bottom: 1px solid rgba(128,128,128,0.16); }
+  .d-stat:nth-child(n+4) { border-bottom: none; }
+  .d-stat:not(:nth-child(3n+1)) { border-left: 1px solid rgba(128,128,128,0.16); }
+  .d-stat p:first-child { font-size: 0.68rem; font-weight: 700; color: var(--text-muted); }
+  .d-stat p:last-child { font-family: var(--font-num); font-size: 1.4rem; font-weight: 700; margin-top: 3px; }
+  .d-trend { display: flex; align-items: flex-end; gap: 5px; height: 84px; margin-top: 12px; }
+  .d-trend i { flex: 1; border-radius: 5px 5px 0 0; background: linear-gradient(180deg, var(--color-accent-2), var(--color-accent)); height: 0; transition: height 1s cubic-bezier(0.22, 1, 0.36, 1); }
+
+  /* ---------- subjects / weak topics ---------- */
+  .d-bar { height: 7px; border-radius: 6px; background: rgba(128,128,128,0.16); overflow: hidden; margin-top: 7px; }
+  .d-bar i { display: block; height: 100%; width: 0; border-radius: 6px; background: var(--color-accent); transition: width 1.1s cubic-bezier(0.22, 1, 0.36, 1); }
+  .d-subj { padding: 12px 0; border-bottom: 1px dashed rgba(128,128,128,0.22); }
+  .d-subj:first-child { padding-top: 0; } .d-subj:last-child { border-bottom: none; padding-bottom: 0; }
+  .d-subj-top { display: flex; justify-content: space-between; align-items: baseline; }
+  .d-subj-top strong { font-size: 0.9rem; font-weight: 800; }
+  .d-subj-top span { font-family: var(--font-num); font-weight: 700; color: var(--color-accent); }
+  .d-subj-meta { font-size: 0.7rem; font-weight: 600; color: var(--text-muted); margin-top: 5px; }
+  .d-weak { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-top: 8px; border-radius: 14px; border: 1px solid rgba(177,80,63,0.28); border-left: 4px solid var(--color-danger); background: rgba(177,80,63,0.06); }
+  .d-weak strong { display: block; font-size: 0.92rem; font-weight: 800; }
+  .d-weak span { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
+  .d-weak em { font-style: normal; font-family: var(--font-num); font-weight: 700; color: var(--color-danger); }
+
+  .d-last { padding-bottom: 24px; }
+  [hidden] { display: none !important; }
 </style>
 </head>
 <body>
@@ -107,12 +220,13 @@
 </div>
 
 <script type="module">
-import { initTheme, toggleTheme, icons, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
+import { initTheme, toggleTheme, renderState, renderStudentHeader, showToast } from "../js/utils/ui-utils.js";
 import { getActiveStudent, refreshActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
-import { subscribeToUpcomingExams, getApprovedResults, getStudentResultStatusMap, getStudentRank, getLeaderboardData } from "../js/utils/results-utils.js";
-import { getSubjects, getChapters, buildNameMap } from "../js/utils/syllabus-utils.js";
+import { subscribeToUpcomingExams, getApprovedResults, getStudentResultStatusMap, getLeaderboardData } from "../js/utils/results-utils.js";
+import { getSubjects, getTopics, buildNameMap } from "../js/utils/syllabus-utils.js";
 import { computeOverallStats, computeSubjectStats, computeTopicStats } from "../js/utils/analytics-utils.js";
 import { generateMotivation } from "../js/utils/motivation-utils.js";
+import { computeStudentXP, computeMaxExamXP, getLevelInfo, XP_CATEGORIES, REFERRAL_XP } from "../js/utils/xp-utils.js";
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -127,383 +241,461 @@ if (!student) {
   });
 }
 
-function animateCountUp(el, target, duration = 800) {
-  if (!el || typeof target !== "number" || isNaN(target)) return;
-  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (reduce) { el.textContent = target; return; }
+/* ---------------- helpers ---------------- */
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = (n) => Number(n || 0).toLocaleString("en-IN");
+const $ = (id) => document.getElementById(id);
+const reduceMotion = () => window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function countUp(el, target, duration = 1000) {
+  if (!el || !Number.isFinite(target)) return;
+  if (reduceMotion()) { el.textContent = fmt(target); return; }
   const start = performance.now();
-  function frame(now) {
+  (function frame(now) {
     const t = Math.min(1, (now - start) / duration);
-    const eased = 1 - Math.pow(1 - t, 3);
-    el.textContent = Math.round(target * eased);
+    el.textContent = fmt(Math.round(target * (1 - Math.pow(1 - t, 3))));
     if (t < 1) requestAnimationFrame(frame);
-  }
-  requestAnimationFrame(frame);
+  })(start);
 }
 
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; }
+  catch {
+    const ta = document.createElement("textarea");
+    ta.value = text; ta.style.cssText = "position:fixed;opacity:0;top:0;left:0;";
+    document.body.appendChild(ta); ta.select();
+    let ok = false; try { ok = document.execCommand("copy"); } catch {}
+    ta.remove(); return ok;
+  }
+}
+
+const ic = {
+  chart: '<path d="M3 3v18h18"/><path d="M18 9l-5 5-3-3-5 5"/>',
+  compare: '<path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>',
+  gift: '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v9H5v-9M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/>',
+  clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  bolt: '<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>',
+  list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+  users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+  grid: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>',
+  alert: '<path d="M12 3L2.8 20h18.4L12 3z"/><path d="M12 9v5M12 17h.01"/>',
+  msg: '<path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7A8.4 8.4 0 1 1 21 11.5z"/>',
+  share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/>',
+  copy: '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  check: '<polyline points="20 6 9 17 4 12"/>',
+  down: '<polyline points="6 9 12 15 18 9"/>'
+};
+const svg = (name, size = 18) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ic[name]}</svg>`;
+
+const CAT_COLORS = {
+  correct: "#3f9d63", participation: "#4c7f9e", effort: "#6f9a8d", accuracy: "#7d5fb0", tier: "#c9973f",
+  flawless: "#d27a3a", mastery: "#a05a8a", improvement: "#5b8f3a", streak: "#b1503f", referral: "#e2b568"
+};
+
+/* ---------------- page skeleton ---------------- */
 async function render() {
   shell.innerHTML = `
     ${renderStudentHeader(student, "dashboard")}
-    
-    <!-- 1. Top Action Buttons (Transparent Glass) -->
-    <div class="mt-4 flex gap-2">
-      <a href="../student/analytics.html" class="btn-glass">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 9l-5 5-3-3-5 5"/></svg>
-        বিস্তারিত বিশ্লেষণ
-      </a>
-      <a href="../student/comparison.html" class="btn-glass">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
-        তুলনা দেখুন
-      </a>
+
+    <div class="d-links">
+      <a href="../student/analytics.html" class="d-link">${svg("chart")} বিশ্লেষণ</a>
+      <a href="../student/comparison.html" class="d-link">${svg("compare")} তুলনা</a>
     </div>
 
-    <!-- 2. Upcoming Exams (Will be completely hidden if none exist) -->
-    <div id="upcomingSection" class="mt-5" style="display: none;"></div>
-    
-    <!-- 3. Points Hero Section (Cream Yellow) -->
-    <div id="pointsHeroSection" class="mt-5"></div>
-    
-    <!-- 4. Motivation Analysis (Floating Glass without border) -->
-    <div id="motivationSection" class="mt-4"></div>
-    
-    <!-- 5. Top 3 Point Table -->
-    <div id="pointListSection" class="mt-5"></div>
-    
-    <!-- 6. Detailed Stats -->
-    <div id="statsSection" class="mt-5"></div>
-    
-    <!-- 7. Advanced Subject Slider -->
-    <div id="subjectSection" class="mt-5"></div>
-    
-    <!-- 8. Weak Topics -->
-    <div id="weakTopicSection" class="mt-5 mb-5"></div>
+    <div id="heroSection" class="d-sec"><div class="skeleton" style="height:190px;border-radius:24px;"></div></div>
+    <div id="upcomingSection" class="d-sec" hidden></div>
+    <div id="referralSection" class="d-sec"><div class="skeleton" style="height:300px;border-radius:22px;"></div></div>
+    <div id="xpSection" class="d-sec"></div>
+    <div id="recentSection" class="d-sec"></div>
+    <div id="motivationSection" class="d-sec"></div>
+    <div id="rankSection" class="d-sec"></div>
+    <div id="statsSection" class="d-sec"></div>
+    <div id="subjectSection" class="d-sec"></div>
+    <div id="weakSection" class="d-sec d-last"></div>
   `;
-  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
-
+  $("themeToggle")?.addEventListener("click", toggleTheme);
   loadUpcoming();
-  loadMotivation();
-  loadPerformanceAndLeaderboard();
+  loadMain();
 }
 
+/* ---------------- upcoming exams (live) ---------------- */
 let unsubscribeUpcoming = null;
 async function loadUpcoming() {
-  const el = document.getElementById("upcomingSection");
+  const el = $("upcomingSection");
   try {
-    const [subjects, chapters, resultMap] = await Promise.all([
-      getSubjects(), getChapters(), getStudentResultStatusMap(student.studentId)
-    ]);
-    const subjectMap = buildNameMap(subjects);
-    const chapterMap = buildNameMap(chapters);
-
+    const resultMap = await getStudentResultStatusMap(student.studentId);
     if (unsubscribeUpcoming) unsubscribeUpcoming();
     unsubscribeUpcoming = subscribeToUpcomingExams(
-      (exams) => renderUpcomingExams(el, exams, subjectMap, chapterMap, resultMap),
-      (err) => { console.error(err); el.style.display = "none"; }
+      (exams) => renderUpcoming(el, exams, resultMap),
+      (err) => { console.error(err); el.hidden = true; }
     );
-  } catch (err) {
-    console.error(err);
-    el.style.display = "none";
-  }
+  } catch (err) { console.error(err); el.hidden = true; }
 }
 
-// ==========================================
-// NEW TIME-CHECK LOGIC ADDED HERE
-// ==========================================
-function renderUpcomingExams(el, exams, subjectMap, chapterMap, resultMap) {
-  const now = new Date().getTime(); // বর্তমান সময়
-
-  // ফিল্টার করা হচ্ছে: শুধুমাত্র সেই পরীক্ষাগুলো দেখাবে যেগুলোর সময় পার হয়ে গেছে বা চলছে
-  const visibleExams = exams.filter(exam => {
-    if (!exam.examDate) return true; // যদি অ্যাডমিন কোনো তারিখ সেট না করেন, তবে সবসময় দেখাবে
-    const examTime = exam.examDate.toDate().getTime(); // পরীক্ষার সেট করা সময়
-    return now >= examTime; 
+function renderUpcoming(el, exams, resultMap) {
+  const now = Date.now();
+  const list = exams.filter(exam => {
+    const pub = exam.publishDate?.toDate ? exam.publishDate.toDate().getTime() : 0;
+    if (pub > now) return false;
+    const target = exam.targetBatch || "all";
+    if (target !== "all" && target !== student.className) return false;
+    const allowed = exam.allowedStudents || [];
+    if (allowed.length > 0 && !allowed.includes(student.studentId)) return false;
+    return true;
   });
+  if (list.length === 0) { el.hidden = true; el.innerHTML = ""; return; }
 
-  if (visibleExams.length === 0) {
-    el.style.display = "none"; // Hide completely if no exams match the time
-    el.innerHTML = "";
-    return;
-  }
-
-  el.style.display = "block"; // Show if there are exams
-  el.innerHTML = `<p class="eyebrow mb-2">আসন্ন পরীক্ষা</p>` + visibleExams.map(exam => {
-    const dateStr = exam.examDate?.toDate ? exam.examDate.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" }) : "";
+  el.hidden = false;
+  el.innerHTML = `<p class="d-h">${svg("clock", 20)} আসন্ন পরীক্ষা</p>` + list.map(exam => {
+    const d = exam.examDate?.toDate ? exam.examDate.toDate() : null;
+    const dateStr = d ? d.toLocaleDateString("bn-BD", { day: "numeric", month: "short" }) : "—";
     const own = resultMap[exam.id];
-    let actionHtml = "";
-    
-    if (own?.status === "approved") {
-      actionHtml = `<a href="../student/result.html?resultId=${own.resultId}" class="btn-glass mt-3" style="width:100%; border-color:var(--color-success); color:var(--color-success);">ফলাফল দেখুন</a>`;
-    } else if (own?.status === "pending") {
-      actionHtml = `<p class="text-xs text-muted mt-3 text-center">জমা দেওয়া হয়েছে — অনুমোদনের অপেক্ষায়।</p>`;
-    } else if (exam.status === "published") {
-      actionHtml = `<a href="../student/exam.html?examId=${exam.id}" class="btn-glass mt-3" style="width:100%; background:var(--color-accent); color:#fff; border:none;">পরীক্ষা শুরু করুন</a>`;
-    }
+    const qCount = exam.questionIds ? exam.questionIds.length : 0;
+    const marks = Number(exam.totalMarks) || 0;
+    const maxXP = computeMaxExamXP({ questionCount: qCount || marks, totalMarks: marks });
+    const special = exam.allowedStudents && exam.allowedStudents.length > 0;
+
+    let action = "";
+    if (own?.status === "approved") action = `<a href="../student/result.html?resultId=${esc(own.resultId)}" class="d-btn d-btn-ok">ফলাফল দেখুন</a>`;
+    else if (own?.status === "pending") action = `<p class="d-note">জমা দেওয়া হয়েছে — অনুমোদনের অপেক্ষায়।</p>`;
+    else if (exam.status === "published") action = `<a href="../student/exam.html?examId=${esc(exam.id)}" class="d-btn d-btn-primary">পরীক্ষা শুরু করুন</a>`;
 
     return `
-      <div class="glass-float-card mt-2">
-        <div class="flex justify-between items-center">
-          <h3 style="font-size:1.1rem; font-weight:800;">${exam.name}</h3>
-          <span class="badge badge-upcoming" style="background:rgba(37, 99, 235, 0.1); color:var(--color-accent);">${exam.status === "published" ? "প্রকাশিত" : "আসন্ন"}</span>
+      <div class="d-card d-exam ${special ? "d-exam-special" : ""}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+          <h3 class="d-exam-title">${esc(exam.name)}</h3>
+          <span class="d-tag">${special ? "স্পেশাল" : (exam.status === "published" ? "প্রকাশিত" : "আসন্ন")}</span>
         </div>
-        <div class="grid-2 mt-3 gap-2">
-          <div style="background:rgba(128,128,128,0.05); padding:8px; border-radius:8px;"><p class="text-xs text-muted">তারিখ</p><p class="text-sm font-bold">${dateStr || "—"}</p></div>
-          <div style="background:rgba(128,128,128,0.05); padding:8px; border-radius:8px;"><p class="text-xs text-muted">সময়</p><p class="text-sm font-bold">${exam.informationalTime || "—"}</p></div>
-          <div style="background:rgba(128,128,128,0.05); padding:8px; border-radius:8px;"><p class="text-xs text-muted">সময়কাল</p><p class="text-sm font-bold">${exam.durationMinutes ? exam.durationMinutes + " মিনিট" : "—"}</p></div>
-          <div style="background:rgba(128,128,128,0.05); padding:8px; border-radius:8px;"><p class="text-xs text-muted">মোট নম্বর</p><p class="text-sm font-bold">${exam.totalMarks ?? "—"}</p></div>
+        <div class="d-facts">
+          <div class="d-fact"><p>তারিখ</p><p>${dateStr}</p></div>
+          <div class="d-fact"><p>সময়</p><p class="num">${exam.durationMinutes ? exam.durationMinutes + " মি." : "—"}</p></div>
+          <div class="d-fact"><p>প্রশ্ন</p><p class="num">${qCount || "—"}</p></div>
         </div>
-        ${actionHtml}
-      </div>
-    `;
+        <div class="d-xp-line">
+          <p>এই পরীক্ষায় সর্বোচ্চ XP<br><span class="d-sub">উন্নতি ও ধারাবাহিকতা বোনাস আলাদা</span></p>
+          <strong>${fmt(maxXP)}</strong>
+        </div>
+        ${action}
+      </div>`;
   }).join("");
 }
-// ==========================================
 
-async function loadMotivation() {
-  const el = document.getElementById("motivationSection");
+/* ---------------- main data ---------------- */
+async function loadMain() {
   try {
-    const [rank, results, subjects] = await Promise.all([
-      getStudentRank(student.studentId),
-      getApprovedResults(student.studentId),
-      getSubjects()
+    const [results, allStudents, subjects, topics] = await Promise.all([
+      getApprovedResults(student.studentId), getActiveStudents(), getSubjects(), getTopics()
     ]);
-    if (results.length === 0) return; 
-
-    const overall = computeOverallStats(results);
-    const subjectStats = computeSubjectStats(results, buildNameMap(subjects));
-    let weakest = null, strongest = null;
-    (subjectStats || []).forEach(s => {
-      if (!weakest || s.accuracy < weakest.accuracy) weakest = s;
-      if (!strongest || s.accuracy > strongest.accuracy) strongest = s;
-    });
-
-    const advice = generateMotivation({
-      overallPercentage: overall?.avgPercentage,
-      rank: rank?.rank,
-      totalStudents: rank?.totalStudents,
-      examsTaken: overall?.examsTaken ?? results.length,
-      weakestSubjectName: weakest?.name,
-      weakestSubjectAccuracy: weakest?.accuracy,
-      strongestSubjectName: strongest?.name !== weakest?.name ? strongest?.name : null,
-      strongestSubjectAccuracy: strongest?.accuracy
-    });
-
-    el.innerHTML = `
-      <div class="glass-float-card mt-2">
-        <p class="text-sm" style="font-weight:800; color: var(--text-primary); margin-bottom:6px;">বিশ্লেষণ ও পরামর্শ</p>
-        <p class="text-sm" style="line-height:1.6; color: var(--text-secondary);">${advice}</p>
-      </div>
-    `;
-  } catch (err) { console.error(err); }
-}
-
-async function loadPerformanceAndLeaderboard() {
-  const ptsEl = document.getElementById("pointsHeroSection");
-  const pointListEl = document.getElementById("pointListSection");
-  const statsEl = document.getElementById("statsSection");
-  const subjEl = document.getElementById("subjectSection");
-  const weakEl = document.getElementById("weakTopicSection");
-  
-  ptsEl.innerHTML = `<div class="glass-float-card skeleton" style="height:140px;"></div>`;
-  statsEl.innerHTML = `<div class="glass-float-card skeleton mt-2" style="height:120px;"></div>`;
-
-  try {
-    const [results, rank, allStudents] = await Promise.all([
-      getApprovedResults(student.studentId),
-      getStudentRank(student.studentId),
-      getActiveStudents()
-    ]);
-    
     const leaderboard = await getLeaderboardData(allStudents);
-    const overall = computeOverallStats(results);
-    const totalPoints = rank?.totalPoints || 0;
-    const rankText = rank ? `${rank.rank} / ${rank.totalStudents}` : "—";
-    const totalQuestions = (overall?.totalCorrect || 0) + (overall?.totalWrong || 0) + (overall?.totalUnanswered || 0);
 
-    if (!overall) {
-      ptsEl.innerHTML = ""; pointListEl.innerHTML = "";
-      statsEl.innerHTML = `<p class="eyebrow">পরিসংখ্যান</p>`;
-      const box = document.createElement("div"); box.className = "mt-2";
-      renderState(box, "empty", "এখনো কোনো অনুমোদিত ফলাফল নেই।");
-      statsEl.appendChild(box);
-      return;
+    const myRefs = allStudents.filter(s => s.referredBy === student.studentId && s.studentId !== student.studentId);
+    const xp = computeStudentXP(results, { referralCount: myRefs.length });
+    const myIdx = leaderboard.findIndex(r => r.studentId === student.studentId);
+    const rank = myIdx >= 0 ? { rank: myIdx + 1, total: leaderboard.length } : null;
+
+    const ctx = {
+      results, allStudents, leaderboard, xp, rank, myRefs,
+      overall: computeOverallStats(results),
+      subjectMap: buildNameMap(subjects), topicMap: buildNameMap(topics),
+      resultById: Object.fromEntries(results.map(r => [r.id, r]))
+    };
+
+    for (const fn of [renderHero, renderReferral, renderXPBreakdown, renderRecent, renderMotivation, renderRank, renderStats, renderSubjects, renderWeak]) {
+      try { fn(ctx); } catch (e) { console.error(fn.name, e); }
     }
-
-    const topScorer = leaderboard.length > 0 ? leaderboard[0] : null;
-    let topScorerText = "";
-    if (topScorer) {
-      const isMeTop = topScorer.studentId === student.studentId;
-      topScorerText = `<div class="top-scorer-badge">শীর্ষস্থান: ${isMeTop ? "তুমি" : topScorer.name} (${topScorer.totalPoints} পয়েন্ট)</div>`;
-    }
-
-    const cleanTrophySvg = `
-      <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#713f12" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
-        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
-        <path d="M4 22h16"></path>
-        <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
-        <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
-        <path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path>
-      </svg>
-    `;
-
-    ptsEl.innerHTML = `
-      <div class="hero-points-card">
-        <div>
-          <p style="font-size: 0.85rem; font-weight: 700; opacity: 0.85; margin-bottom: 2px;">সর্বমোট অর্জিত পয়েন্ট</p>
-          <h2 style="font-size: 2.8rem; font-weight: 900; line-height: 1.1; margin: 0; letter-spacing: -1px;">
-            <span class="num" id="heroTotalPoints">0</span>
-          </h2>
-          <p style="font-size: 0.8rem; font-weight: 700; opacity: 0.9; margin-top: 4px;">
-            বর্তমান র‍্যাঙ্ক: <span style="font-family:var(--font-num);">${rankText}</span>
-          </p>
-          ${topScorerText}
-        </div>
-        <div class="hero-icon-container">${cleanTrophySvg}</div>
-      </div>
-    `;
-
-    const byClass = {};
-    leaderboard.forEach(r => {
-       const c = r.className || "অনির্ধারিত ক্লাস";
-       if (!byClass[c]) byClass[c] = [];
-       byClass[c].push(r);
-    });
-
-    let classListHtml = `<p class="eyebrow mb-2">ক্লাস র‍্যাঙ্কিং (Top 3)</p>`;
-    for (const [cls, classStudents] of Object.entries(byClass)) {
-      const top3 = classStudents.slice(0, 3);
-      classListHtml += `
-        <div class="glass-float-card mb-3">
-          <p style="font-size:0.9rem; font-weight:800; border-bottom:1px solid rgba(128,128,128,0.1); padding-bottom:8px; margin-bottom:4px; color:var(--color-accent);">${cls}</p>
-          ${top3.map((s, idx) => `
-            <div class="point-list-row">
-              <div class="flex items-center gap-2">
-                <span class="rank-number">${idx + 1}.</span>
-                <span style="font-size:0.9rem; font-weight:${s.studentId === student.studentId ? '800; color:var(--text-primary)' : '600; color:var(--text-secondary)'};">${s.name}${s.studentId === student.studentId ? ' (তুমি)' : ''}</span>
-              </div>
-              <span class="num" style="font-size:0.85rem; font-weight:800; color:var(--text-primary);">${s.totalPoints}</span>
-            </div>
-          `).join("")}
-          ${classStudents.length > 3 ? `<div style="text-align:center; margin-top:12px;"><a href="../student/leaderboard.html" class="btn-glass" style="font-size:0.75rem; padding:6px 12px; border-radius:6px; display:inline-block; width:auto;">সম্পূর্ণ তালিকা দেখুন</a></div>` : ''}
-        </div>
-      `;
-    }
-    pointListEl.innerHTML = classListHtml;
-
-    statsEl.innerHTML = `
-      <p class="eyebrow">বিস্তারিত পরিসংখ্যান</p>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px;">
-        <div class="glass-float-card" style="text-align:center; padding:12px;">
-           <p class="text-xs text-muted">মোট পরীক্ষা</p>
-           <p class="num" style="font-size:1.5rem;font-weight:800; margin-top:4px;" id="statExams">0</p>
-        </div>
-        <div class="glass-float-card" style="text-align:center; padding:12px;">
-           <p class="text-xs text-muted">মোট প্রশ্ন ফেস করা</p>
-           <p class="num" style="font-size:1.5rem;font-weight:800; margin-top:4px;">${totalQuestions}</p>
-        </div>
-        <div class="glass-float-card" style="text-align:center; padding:12px;">
-           <p class="text-xs text-muted">সঠিক উত্তর</p>
-           <p class="num" style="font-size:1.5rem;font-weight:800; color:var(--color-success); margin-top:4px;">${overall.totalCorrect}</p>
-        </div>
-        <div class="glass-float-card" style="text-align:center; padding:12px;">
-           <p class="text-xs text-muted">ভুল উত্তর</p>
-           <p class="num" style="font-size:1.5rem;font-weight:800; color:var(--color-danger); margin-top:4px;">${overall.totalWrong}</p>
-        </div>
-        <div class="glass-float-card" style="text-align:center; padding:12px;">
-           <p class="text-xs text-muted">গড় শতাংশ</p>
-           <p style="font-size:1.5rem;font-weight:800; margin-top:4px;"><span class="num" id="statAvgPct">0</span>%</p>
-        </div>
-        <div class="glass-float-card" style="text-align:center; padding:12px;">
-           <p class="text-xs text-muted">গড় সঠিকতা</p>
-           <p style="font-size:1.5rem;font-weight:800; margin-top:4px;"><span class="num" id="statAvgAcc">0</span>%</p>
-        </div>
-      </div>
-      ${overall.trend ? `
-        <div class="glass-float-card mt-3">
-          <p class="text-xs text-muted mb-3" style="font-weight:700;">পারফরম্যান্স গ্রাফ</p>
-          <div class="flex items-end gap-2" style="height:60px;">
-            ${overall.trend.map(t => `<div class="trend-bar" data-h="${Math.max(6, (t.value || 0))}" title="${t.value ?? '—'}%"></div>`).join("")}
-          </div>
-        </div>` : ""}
-    `;
-
-    const subjects = await getSubjects();
-    const subjectMap = buildNameMap(subjects);
-    const subjectStats = computeSubjectStats(results, subjectMap);
-    
-    if (subjectStats.length === 0) {
-      subjEl.innerHTML = `<p class="eyebrow">বিষয়ভিত্তিক পারফরম্যান্স</p><p class="text-xs text-muted mt-2">তথ্য নেই।</p>`;
-    } else {
-      subjEl.innerHTML = `
-        <p class="eyebrow">বিষয়ভিত্তিক পারফরম্যান্স</p>
-        <div class="subject-scroller">
-          ${subjectStats.map(s => `
-            <div class="glass-float-card subject-mini-card">
-              <div class="flex justify-between items-center mb-2">
-                <p style="font-weight:700; font-size:0.95rem;">${s.name}</p>
-                <p style="font-weight:800; font-family:var(--font-num); color:var(--color-accent);">${s.accuracy ?? "—"}%</p>
-              </div>
-              <div class="progress-track"><div class="progress-fill subj-progress" data-w="${s.accuracy ?? 0}"></div></div>
-              <div class="grid-2 mt-3" style="gap:6px;">
-                 <div style="background:rgba(128,128,128,0.08); padding:6px; border-radius:8px; text-align:center;">
-                    <span style="font-size:0.65rem; color:var(--text-muted); display:block;">সঠিক</span>
-                    <span class="num" style="font-size:0.9rem; font-weight:800; color:var(--color-success);">${s.correct}</span>
-                 </div>
-                 <div style="background:rgba(128,128,128,0.08); padding:6px; border-radius:8px; text-align:center;">
-                    <span style="font-size:0.65rem; color:var(--text-muted); display:block;">ভুল</span>
-                    <span class="num" style="font-size:0.9rem; font-weight:800; color:var(--color-danger);">${s.wrong}</span>
-                 </div>
-              </div>
-            </div>
-          `).join("")}
-        </div>
-      `;
-    }
-
-    const { getTopics } = await import("../js/utils/syllabus-utils.js");
-    const topics = await getTopics();
-    const topicMap = buildNameMap(topics);
-    const topicStats = computeTopicStats(results, topicMap);
-    const weakTopics = topicStats.filter(t => t.isWeak);
-
-    weakEl.innerHTML = `<p class="eyebrow">দুর্বল টপিক নির্দেশক</p>` + (weakTopics.length === 0
-      ? `<p class="text-xs text-muted mt-2">${topicStats.length === 0 ? "পর্যাপ্ত তথ্য নেই।" : "কোনো ধারাবাহিক দুর্বল টপিক পাওয়া যায়নি।"}</p>`
-      : weakTopics.map(t => `
-        <div class="glass-float-card weak-anim mt-3" style="border: 1px solid rgba(239, 68, 68, 0.2);">
-          <div class="flex items-center gap-3">
-            <span class="icon-btn" style="color:var(--color-danger); background:rgba(239,68,68,0.1); border:none;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-  style="width:20px;height:20px;">
-  <path d="M12 3L2.8 20h18.4L12 3z"></path>
-  <path d="M12 9v5"></path>
-  <path d="M12 17h.01"></path>
-</svg></span>
-            <div>
-              <p style="font-weight:800; font-size:0.95rem;">${t.name ?? "—"}</p>
-              <p class="text-xs text-muted mt-1">সঠিকতার হার মাত্র <span class="num" style="color:var(--color-danger); font-weight:700;">${t.accuracy}%</span></p>
-            </div>
-          </div>
-        </div>
-      `).join(""));
-
-    requestAnimationFrame(() => {
-      animateCountUp(document.getElementById("heroTotalPoints"), totalPoints, 1200);
-      animateCountUp(document.getElementById("statExams"), Number(overall.examsTaken) || 0, 700);
-      if (overall.avgPercentage != null) animateCountUp(document.getElementById("statAvgPct"), Number(overall.avgPercentage) || 0, 800);
-      if (overall.avgAccuracy != null) animateCountUp(document.getElementById("statAvgAcc"), Number(overall.avgAccuracy) || 0, 800);
-      document.querySelectorAll(".trend-bar").forEach(bar => {
-        const h = bar.dataset.h || 6;
-        requestAnimationFrame(() => { bar.style.height = `${h}%`; });
-      });
-      document.querySelectorAll(".subj-progress").forEach(bar => {
-        const w = bar.dataset.w || 0;
-        requestAnimationFrame(() => { bar.style.width = `${w}%`; });
-      });
-    });
-
+    animateBars();
   } catch (err) {
     console.error(err);
-    renderState(statsEl, "error", "পারফরম্যান্স তথ্য লোড করা যায়নি।");
+    renderState($("heroSection"), "error", "তথ্য লোড করা যায়নি। ইন্টারনেট দেখে আবার চেষ্টা করো।");
+    $("referralSection").innerHTML = "";
   }
+}
+
+/* ---------------- hero ---------------- */
+function renderHero({ xp, rank, leaderboard }) {
+  const lv = getLevelInfo(xp.totalXP);
+  const R = 50, C = 2 * Math.PI * R;
+  const last = xp.exams[0];
+  const top = leaderboard[0];
+  const iAmTop = top && top.studentId === student.studentId;
+
+  let footTop = "";
+  if (iAmTop) footTop = "তুমিই এখন লিডারবোর্ডের শীর্ষে।";
+  else if (top && xp.totalXP > 0) footTop = `শীর্ষে আছে ${esc(top.name)} — তার থেকে <b>${fmt(Math.max(0, top.totalPoints - xp.totalXP))}</b> XP পিছিয়ে।`;
+
+  $("heroSection").innerHTML = `
+    <section class="d-hero" aria-label="তোমার XP ও লেভেল">
+      <div>
+        <p class="d-hero-label">সর্বমোট XP</p>
+        <p class="d-hero-xp"><span id="heroXp">0</span><small>XP</small></p>
+        <div class="d-chips">
+          <span class="d-chip">র‍্যাঙ্ক <b>${rank ? rank.rank : "—"}</b>${rank ? ` / ${rank.total}` : ""}</span>
+          ${last ? `<span class="d-chip d-chip-gain">শেষ পরীক্ষায় +<b>${fmt(last.xp)}</b></span>` : ""}
+        </div>
+      </div>
+      <div class="d-seal" role="img" aria-label="লেভেল ${lv.level}, পরের লেভেলের ${lv.percentage}% সম্পন্ন">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <defs><linearGradient id="sealGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0cf8a"/><stop offset="1" stop-color="#c9973f"/></linearGradient></defs>
+          <circle cx="60" cy="60" r="57" fill="none" stroke="rgba(226,181,104,0.28)" stroke-width="1.5" stroke-dasharray="2 5"/>
+          <circle cx="60" cy="60" r="${R}" fill="rgba(0,0,0,0.18)" stroke="rgba(241,236,224,0.12)" stroke-width="8"/>
+          <circle class="d-seal-ring" id="sealRing" cx="60" cy="60" r="${R}" fill="none" stroke="url(#sealGrad)" stroke-width="8" stroke-linecap="round"
+                  stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${C.toFixed(2)}" data-c="${C.toFixed(2)}" data-pct="${lv.percentage}"/>
+        </svg>
+        <div class="d-seal-center"><span>লেভেল</span><b>${lv.level}</b></div>
+      </div>
+      <p class="d-hero-foot">
+        ${lv.isMax ? "তুমি সর্বোচ্চ লেভেলে পৌঁছে গেছো।" : `লেভেল ${lv.nextLevel}-এ যেতে আর <b>${fmt(lv.xpNeeded)}</b> XP দরকার।`}
+        ${footTop ? `<br>${footTop}` : ""}
+      </p>
+    </section>`;
+
+  countUp($("heroXp"), xp.totalXP, 1200);
+}
+
+/* ---------------- referral ticket ---------------- */
+function renderReferral({ myRefs }) {
+  const count = myRefs.length;
+  const link = new URL(`../join.html?ref=${encodeURIComponent(student.studentId)}`, window.location.href).href;
+  const shareText = "আমার সাথে পরীক্ষার প্রস্তুতিতে যুক্ত হও:";
+  const steps = [1, 3, 5, 10];
+  const next = steps.find(n => n > count);
+
+  let msg;
+  if (count === 0) msg = `প্রথম বন্ধু যুক্ত হলেই <b>+${REFERRAL_XP} XP</b> তোমার।`;
+  else if (next) msg = `এখন পর্যন্ত <b>${fmt(count * REFERRAL_XP)} XP</b>। আর <b>${next - count}</b> জন এলে মোট <b>${fmt(next * REFERRAL_XP)} XP</b>।`;
+  else msg = `দারুণ! ${count} জনে মোট <b>${fmt(count * REFERRAL_XP)} XP</b> — প্রতি নতুন বন্ধুতে আরও +${REFERRAL_XP}।`;
+
+  const shown = myRefs.slice(0, 6);
+  $("referralSection").innerHTML = `
+    <p class="d-h">${svg("gift", 20)} বন্ধু রেফার করো, XP জেতো</p>
+    <div class="d-ticket-wrap">
+      <div class="d-ticket">
+        <div class="d-ticket-top">
+          <div class="d-ticket-amt">+${REFERRAL_XP}<small>XP</small></div>
+          <div>
+            <h3>প্রতি বন্ধু রেফারে</h3>
+            <p>বন্ধু তোমার লিংক দিয়ে যুক্ত হলেই XP তোমার অ্যাকাউন্টে জমা হবে।</p>
+          </div>
+        </div>
+        <div class="d-ticket-perf"></div>
+        <div class="d-ticket-body">
+          <div class="d-linkrow">
+            <input id="refLink" type="text" readonly value="${esc(link)}" aria-label="তোমার রেফার লিংক">
+            <button class="d-btn" id="copyRef" type="button">${svg("copy", 16)} কপি</button>
+          </div>
+          <div class="d-actions">
+            <button class="d-btn" id="waRef" type="button">${svg("msg", 16)} WhatsApp</button>
+            <button class="d-btn" id="shareRef" type="button">${svg("share", 16)} শেয়ার</button>
+          </div>
+
+          <div class="d-ladder">
+            ${steps.map(n => `<div class="d-step ${count >= n ? "d-step-done" : ""}"><p>${n} জন</p><p>+${fmt(n * REFERRAL_XP)}</p></div>`).join("")}
+          </div>
+          <p class="d-ladder-msg">${msg}</p>
+
+          <div class="d-joined">
+            <div class="d-joined-h"><span>তোমার মাধ্যমে যুক্ত</span><b>${count} জন</b></div>
+            ${count === 0
+              ? `<p class="d-foot" style="margin-top:6px;">এখনো কেউ যুক্ত হয়নি। লিংকটা গ্রুপে বা বন্ধুকে পাঠিয়ে দাও।</p>`
+              : `<div class="d-joined-list">${shown.map(s => `<span class="d-joined-pill"><i>${esc(String(s.name || "?").charAt(0))}</i>${esc(s.name)}</span>`).join("")}${count > shown.length ? `<span class="d-joined-pill" style="padding:3px 10px;">+${count - shown.length}</span>` : ""}</div>`}
+          </div>
+          <p class="d-foot">বন্ধুর আবেদন অ্যাডমিন অনুমোদন করলে সে তালিকায় আসবে এবং তোমার XP যুক্ত হবে।</p>
+        </div>
+      </div>
+    </div>`;
+
+  const copyBtn = $("copyRef");
+  copyBtn.addEventListener("click", async () => {
+    const ok = await copyText(link);
+    if (ok) {
+      copyBtn.innerHTML = `${svg("check", 16)} হয়েছে`;
+      setTimeout(() => { copyBtn.innerHTML = `${svg("copy", 16)} কপি`; }, 1600);
+      showToast("লিংক কপি হয়েছে", "success");
+    } else { $("refLink").select(); showToast("কপি করা যায়নি — লিংকটা সিলেক্ট করা আছে, ধরে কপি করো।", "error"); }
+  });
+  $("refLink").addEventListener("focus", (e) => e.target.select());
+  $("waRef").addEventListener("click", () => {
+    window.open(`https://wa.me/?text=${encodeURIComponent(shareText + " " + link)}`, "_blank", "noopener");
+  });
+  $("shareRef").addEventListener("click", async () => {
+    if (navigator.share) { try { await navigator.share({ title: "যুক্ত হও", text: shareText, url: link }); } catch {} return; }
+    const ok = await copyText(`${shareText} ${link}`);
+    showToast(ok ? "লিংক কপি হয়েছে — যেকোনো জায়গায় পেস্ট করো" : "শেয়ার সাপোর্ট নেই — লিংক কপি করো", ok ? "success" : "error");
+  });
+}
+
+/* ---------------- XP breakdown ---------------- */
+function renderXPBreakdown({ xp }) {
+  const el = $("xpSection");
+  const rows = XP_CATEGORIES.map(c => ({ ...c, value: xp.breakdown[c.key] || 0 })).filter(r => r.value > 0).sort((a, b) => b.value - a.value);
+  const total = rows.reduce((a, r) => a + r.value, 0);
+
+  el.innerHTML = `
+    <p class="d-h">${svg("bolt", 20)} XP কোথা থেকে এলো</p>
+    <div class="d-card">
+      ${total === 0
+        ? `<p class="d-sub" style="text-align:center;padding:10px 0;">প্রথম পরীক্ষা দিলেই XP জমতে শুরু করবে।</p>`
+        : `<div class="d-stack" role="img" aria-label="XP ভাগ">${rows.map(r => `<i style="width:${(r.value / total * 100).toFixed(2)}%;background:${CAT_COLORS[r.key]}"></i>`).join("")}</div>
+           <div style="margin-top:8px;">
+             ${rows.map(r => `
+               <div class="d-xrow">
+                 <span class="d-dot" style="background:${CAT_COLORS[r.key]}"></span>
+                 <div class="d-xrow-name">${r.label}<span>${r.hint}</span></div>
+                 <span class="d-xrow-val">+${fmt(r.value)}</span>
+               </div>`).join("")}
+           </div>`}
+      <details class="d-rules">
+        <summary>কীভাবে আরও XP পাবো? ${svg("down", 18)}</summary>
+        <ul>
+          <li><b>বড় পরীক্ষা, বেশি XP।</b> প্রশ্ন যত বেশি, অংশগ্রহণ ও সঠিক উত্তরের XP তত বেশি।</li>
+          <li><b>নির্ভুলতা দামি।</b> 90% নির্ভুলতা ও 70% নির্ভুলতার XP এক নয়।</li>
+          <li><b>নিজেকে ছাড়াও।</b> আগের গড়ের চেয়ে 10 বা 20 পয়েন্ট ভালো করলে বোনাস।</li>
+          <li><b>টানা সপ্তাহে পরীক্ষা দাও।</b> ধারাবাহিকতার বোনাস প্রতি সপ্তাহে বাড়ে (সর্বোচ্চ 4 সপ্তাহ)।</li>
+          <li><b>বন্ধুকে ডাকো।</b> প্রতি বন্ধু যুক্ত হলেই +${REFERRAL_XP} XP।</li>
+          <li><b>ফাঁকা খাতা জমা দিলে</b> অংশগ্রহণের XP মেলে না।</li>
+        </ul>
+      </details>
+    </div>`;
+}
+
+/* ---------------- recent exams with XP ---------------- */
+function renderRecent({ xp, resultById }) {
+  const el = $("recentSection");
+  if (xp.exams.length === 0) { el.innerHTML = ""; return; }
+  const rows = xp.exams.slice(0, 5);
+  el.innerHTML = `
+    <p class="d-h">${svg("list", 20)} সাম্প্রতিক পরীক্ষা ও XP</p>
+    <div class="d-card">
+      ${rows.map(e => {
+        const r = resultById[e.resultId] || {};
+        const date = e.submittedAtMs ? new Date(e.submittedAtMs).toLocaleDateString("bn-BD", { day: "numeric", month: "short" }) : "";
+        return `
+          <a class="d-row-link" href="../student/result.html?resultId=${esc(e.resultId)}">
+            <div class="d-row-main">
+              <strong>${esc(e.examName)}</strong>
+              <span>${date} &nbsp;•&nbsp; ${e.percentage}% &nbsp;•&nbsp; ${r.totalQuestions || "—"} প্রশ্ন</span>
+            </div>
+            <span class="d-gain">+${fmt(e.xp)} XP</span>
+          </a>`;
+      }).join("")}
+    </div>`;
+}
+
+/* ---------------- motivation ---------------- */
+function renderMotivation({ results, overall, rank, subjectMap }) {
+  const el = $("motivationSection");
+  if (results.length === 0 || !overall) { el.innerHTML = ""; return; }
+  const stats = computeSubjectStats(results, subjectMap);
+  let weakest = null, strongest = null;
+  stats.forEach(s => {
+    if (s.accuracy == null) return;
+    if (!weakest || s.accuracy < weakest.accuracy) weakest = s;
+    if (!strongest || s.accuracy > strongest.accuracy) strongest = s;
+  });
+  const advice = generateMotivation({
+    overallPercentage: overall.avgPercentage, rank: rank?.rank, totalStudents: rank?.total, examsTaken: overall.examsTaken,
+    weakestSubjectName: weakest?.name, weakestSubjectAccuracy: weakest?.accuracy,
+    strongestSubjectName: strongest?.name !== weakest?.name ? strongest?.name : null, strongestSubjectAccuracy: strongest?.accuracy
+  });
+  el.innerHTML = `<div class="d-card"><div class="d-quote"><p>AI বিশ্লেষণ ও পরামর্শ</p><p>${advice}</p></div></div>`;
+}
+
+/* ---------------- class ranking ---------------- */
+function renderRank({ leaderboard }) {
+  const el = $("rankSection");
+  if (leaderboard.length === 0) { el.innerHTML = ""; return; }
+  const byClass = {};
+  leaderboard.forEach(r => { (byClass[r.className || "অনির্ধারিত ক্লাস"] ||= []).push(r); });
+  const myClass = student.className || "অনির্ধারিত ক্লাস";
+  const names = Object.keys(byClass).sort((a, b) => (a === myClass ? -1 : 0) - (b === myClass ? -1 : 0));
+
+  const row = (s, pos, me) => `
+    <div class="d-rank ${me ? "d-rank-me" : ""}">
+      <span class="d-pos d-pos-${pos}">${pos}</span>
+      <span class="d-rank-name">${esc(s.name)}${me ? " (তুমি)" : ""}</span>
+      <span class="d-rank-xp">${fmt(s.totalPoints)} XP</span>
+    </div>`;
+
+  el.innerHTML = `
+    <p class="d-h">${svg("users", 20)} ক্লাস র‍্যাঙ্কিং</p>
+    ${names.map(cls => {
+      const list = byClass[cls];
+      const top3 = list.slice(0, 3);
+      const myPos = list.findIndex(s => s.studentId === student.studentId);
+      return `
+        <div class="d-card d-class">
+          <p class="d-class-name">${esc(cls)}</p>
+          ${top3.map((s, i) => row(s, i + 1, s.studentId === student.studentId)).join("")}
+          ${myPos >= 3 ? `<p class="d-gap">• • •</p>${row(list[myPos], myPos + 1, true)}` : ""}
+        </div>`;
+    }).join("")}
+    <a href="../student/leaderboard.html" class="d-btn">সম্পূর্ণ লিডারবোর্ড দেখো</a>`;
+}
+
+/* ---------------- stats ---------------- */
+function renderStats({ overall }) {
+  const el = $("statsSection");
+  if (!overall) {
+    el.innerHTML = `<p class="d-h">${svg("chart", 20)} পরিসংখ্যান</p><div class="d-card"></div>`;
+    renderState(el.querySelector(".d-card"), "empty", "এখনো কোনো অনুমোদিত ফলাফল নেই।");
+    return;
+  }
+  const totalQ = overall.totalCorrect + overall.totalWrong + overall.totalUnanswered;
+  const cells = [
+    ["মোট পরীক্ষা", overall.examsTaken, ""], ["সঠিক", overall.totalCorrect, "color:var(--color-success)"], ["ভুল", overall.totalWrong, "color:var(--color-danger)"],
+    ["গড় স্কোর", overall.avgPercentage != null ? overall.avgPercentage + "%" : "—", ""], ["গড় নির্ভুলতা", overall.avgAccuracy != null ? overall.avgAccuracy + "%" : "—", ""], ["প্রশ্ন ফেস করা", totalQ, ""]
+  ];
+  const trend = overall.trend ? overall.trend.slice(-12) : null;
+  el.innerHTML = `
+    <p class="d-h">${svg("chart", 20)} পরিসংখ্যান</p>
+    <div class="d-card" style="padding:4px 12px;">
+      <div class="d-stats">${cells.map(c => `<div class="d-stat"><p>${c[0]}</p><p style="${c[2]}">${c[1]}</p></div>`).join("")}</div>
+    </div>
+    ${trend ? `
+      <div class="d-card" style="margin-top:10px;">
+        <p class="d-sub">স্কোরের ধারা (সর্বশেষ ${trend.length}টি পরীক্ষা)</p>
+        <div class="d-trend">${trend.map(t => `<i data-h="${Math.max(6, t.value || 0)}" title="${esc(t.label)}: ${t.value ?? "—"}%"></i>`).join("")}</div>
+      </div>` : ""}`;
+}
+
+/* ---------------- subjects ---------------- */
+function renderSubjects({ results, subjectMap }) {
+  const el = $("subjectSection");
+  const stats = computeSubjectStats(results, subjectMap);
+  if (stats.length === 0) { el.innerHTML = ""; return; }
+  el.innerHTML = `
+    <p class="d-h">${svg("grid", 20)} বিষয়ভিত্তিক পারফরম্যান্স</p>
+    <div class="d-card">
+      ${stats.map(s => `
+        <div class="d-subj">
+          <div class="d-subj-top"><strong>${esc(s.name)}</strong><span>${s.accuracy ?? "—"}%</span></div>
+          <div class="d-bar"><i data-w="${s.accuracy ?? 0}"></i></div>
+          <p class="d-subj-meta">সঠিক ${s.correct} &nbsp;•&nbsp; ভুল ${s.wrong}</p>
+        </div>`).join("")}
+    </div>`;
+}
+
+/* ---------------- weak topics ---------------- */
+function renderWeak({ results, topicMap }) {
+  const el = $("weakSection");
+  if (results.length === 0) { el.innerHTML = ""; return; }
+  const stats = computeTopicStats(results, topicMap);
+  const weak = stats.filter(t => t.isWeak);
+  el.innerHTML = `
+    <p class="d-h">${svg("alert", 20)} দুর্বল টপিক</p>
+    ${weak.length === 0
+      ? `<div class="d-card"><p class="d-sub" style="font-weight:700;">${stats.length === 0 ? "পর্যাপ্ত তথ্য নেই।" : "কোনো ধারাবাহিক দুর্বল টপিক পাওয়া যায়নি।"}</p></div>`
+      : weak.map(t => `<div class="d-weak"><div><strong>${esc(t.name ?? "—")}</strong><span>সঠিকতার হার মাত্র <em>${t.accuracy}%</em></span></div></div>`).join("")}`;
+}
+
+/* ---------------- one-time bar animations ---------------- */
+function animateBars() {
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const ring = $("sealRing");
+    if (ring) ring.style.strokeDashoffset = (Number(ring.dataset.c) * (1 - Number(ring.dataset.pct) / 100)).toFixed(2);
+    document.querySelectorAll(".d-trend i").forEach(b => { b.style.height = b.dataset.h + "%"; });
+    document.querySelectorAll(".d-bar i").forEach(b => { b.style.width = b.dataset.w + "%"; });
+  }));
 }
 </script>
 </body>

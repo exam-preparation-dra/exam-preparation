@@ -573,7 +573,7 @@ function getBadgeContext(results, gData, rank, subjectStats, chapterStats, topic
   let cleanRun=0,run=0; arr.slice().sort((a,b)=>new Date(a.submittedAt||0)-new Date(b.submittedAt||0)).forEach(r=>{if(Number(r.percentage||0)>=80&&Number(r.accuracy||0)>=80)run++;else run=0;cleanRun=Math.max(cleanRun,run)});
   const topicCoverage=topicStats?.length ? topicStats.filter(x=>x.attempts>0).length/topicStats.length*100 : 0;
   return {
-    examCount:arr.length,totalCorrect:nums("correctCount"),totalPoints:nums("obtainedMarks"),
+    examCount:arr.length,totalCorrect:nums("correctCount"),totalPoints:Number(rank?.totalPoints ?? nums("obtainedMarks")),
     avgAccuracy:accuracies.length?accuracies.reduce((a,b)=>a+b,0)/accuracies.length:0,
     avgPercentage:percentages.length?percentages.reduce((a,b)=>a+b,0)/percentages.length:0,
     bestPercentage:Math.max(0,...percentages),bestAccuracy:Math.max(0,...accuracies),
@@ -815,7 +815,32 @@ function renderReqsAndFriends() {
   const el = document.getElementById("reqAndFriendsSection");
   const nameOf = {}; allNetStudents.forEach(s => { nameOf[s.studentId] = s.name; });
 
-  let html = "";
+  // ---------- Referral card ----------
+  // Referral count is a plain in-memory count over allNetStudents (which
+  // getActiveStudents() already loaded) — no extra Firestore read needed.
+  const referredCount = allNetStudents.filter(s => s.referredBy === student.studentId).length;
+  const REFERRAL_XP = 250; // per friend — same value as xp-utils.js
+  const referralLink = new URL(`../join.html?ref=${encodeURIComponent(student.studentId)}`, window.location.href).href;
+
+  let html = `
+    <div class="glass-card" style="padding:16px; margin-bottom:16px;">
+      <p style="font-size:1rem; font-weight:900; color:var(--text-primary); margin-bottom:4px;">বন্ধুদের আমন্ত্রণ জানাও</p>
+      <p style="font-size:0.8rem; color:var(--text-secondary); font-weight:600; margin-bottom:14px;">লিংক শেয়ার করো — প্রতি বন্ধু যুক্ত হলেই তুমি পাবে ${REFERRAL_XP} XP।</p>
+      <div style="background:rgba(128,128,128,0.05); border:1px solid var(--surface-border); border-radius:10px; padding:10px 12px; font-size:0.75rem; color:var(--text-muted); font-weight:700; word-break:break-all; margin-bottom:12px;">${referralLink}</div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn-secondary btn-sm" id="copyReferralBtn" style="flex:1;">লিংক কপি করো</button>
+        <button class="btn-primary btn-sm" id="shareReferralBtn" style="flex:1;">শেয়ার করো</button>
+      </div>
+      <div style="margin-top:14px;">
+        <div style="display:flex; justify-content:space-between; font-size:0.75rem; font-weight:700; color:var(--text-muted); margin-bottom:6px;">
+          <span>${referredCount} জন যুক্ত হয়েছে তোমার মাধ্যমে</span>
+          <span>+${referredCount * REFERRAL_XP} XP</span>
+        </div>
+        <a href="dashboard.html" style="font-size:0.75rem; font-weight:800; color:var(--color-accent);">ড্যাশবোর্ডে রেফার রিওয়ার্ড দেখো</a>
+      </div>
+    </div>
+  `;
+
   if (incomingReqs.length > 0) {
     html += `
       <p style="font-size:1rem; font-weight:900; color:var(--text-primary); margin-bottom:12px;">বন্ধুত্বের অনুরোধ</p>
@@ -851,6 +876,28 @@ function renderReqsAndFriends() {
   el.querySelectorAll(".req-accept").forEach(b => b.addEventListener("click", async () => { try { await acceptFriendRequest(b.dataset.id, student.studentId); showToast("যুক্ত হলো", "success"); await loadNetworkData(); } catch (err) { showToast(friendlyError(err), "error"); } }));
   el.querySelectorAll(".req-reject").forEach(b => b.addEventListener("click", async () => { try { await rejectFriendRequest(b.dataset.id); await loadNetworkData(); } catch(e){} }));
   el.querySelectorAll(".friend-remove").forEach(b => b.addEventListener("click", async () => { if (!confirm("এই বন্ধুকে তালিকা থেকে সরাতে চাও?")) return; try { await removeFriend(student.studentId, b.dataset.id); showToast("সরানো হয়েছে", "success"); await loadNetworkData(); } catch(e){} }));
+
+  document.getElementById("copyReferralBtn")?.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(referralLink);
+      showToast("লিংক কপি হয়েছে!", "success");
+    } catch {
+      showToast("কপি করা যায়নি — লিংকটি ম্যানুয়ালি সিলেক্ট করো।", "error");
+    }
+  });
+  document.getElementById("shareReferralBtn")?.addEventListener("click", async () => {
+    const shareText = "আমার সাথে পরীক্ষার প্রস্তুতিতে যুক্ত হও:";
+    if (navigator.share) {
+      try { await navigator.share({ title: "যুক্ত হও", text: shareText, url: referralLink }); } catch { }
+    } else {
+      try {
+        await navigator.clipboard.writeText(`${shareText} ${referralLink}`);
+        showToast("লিংক কপি হয়েছে — এখন যেকোনো জায়গায় পেস্ট করো!", "success");
+      } catch {
+        showToast("শেয়ার সাপোর্ট নেই — লিংকটি ম্যানুয়ালি কপি করো।", "error");
+      }
+    }
+  });
 }
 
 function renderDirectoryFilters() {
