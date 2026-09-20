@@ -151,8 +151,10 @@ function buildStatsByStudent(results, studentsList) {
   return stats;
 }
 
-export async function getLeaderboardData(studentsList) {
-  const results = await getAllApprovedResults();
+// Pure version: builds the sorted leaderboard rows from an ALREADY-LOADED
+// results list. The leaderboard page uses it so it can read `results` once
+// and reuse them for weekly stats / rank movement instead of re-fetching.
+export function buildLeaderboardRows(results, studentsList) {
   const stats = buildStatsByStudent(results, studentsList);
 
   const infoOf = {};
@@ -166,6 +168,11 @@ export async function getLeaderboardData(studentsList) {
 
   rows.sort(compareRank);
   return rows;
+}
+
+export async function getLeaderboardData(studentsList) {
+  const results = await getAllApprovedResults();
+  return buildLeaderboardRows(results, studentsList);
 }
 
 // studentsList is optional — pass the already-loaded list (e.g. from
