@@ -32,37 +32,7 @@
     background: var(--color-accent-soft); opacity: 0.5; filter: blur(20px); z-index: -1;
   }
   .greeting-title { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 1.1rem; font-weight: 900; color: var(--text-primary); margin-bottom: 4px; }
-  .edit-icon-btn { color: var(--color-accent); background: rgba(37, 99, 235, 0.1); border-radius: 8px; padding: 6px; border: none; cursor: pointer; display: inline-flex; flex-shrink: 0; transition: 0.2s; }
-  .edit-icon-btn:hover { background: var(--color-accent); color: #fff; }
-
-  /* ===== Notification Bell & Badge ===== */
-  .noti-badge {
-    position: absolute; top: -4px; right: -4px;
-    background: #ef4444; color: #fff; font-size: 0.65rem; font-weight: 900; font-family: var(--font-num);
-    width: 18px; height: 18px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    border: 2px solid var(--surface);
-    animation: pulseRed 2s infinite; pointer-events: none;
-  }
-  @keyframes pulseRed {
-    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-    70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-  }
-
-  .noti-card {
-    background: rgba(128,128,128,0.05); border: 1px solid var(--surface-border);
-    border-radius: 12px; padding: 14px; margin-bottom: 12px;
-    display: flex; justify-content: space-between; align-items: center; gap: 12px;
-    transition: 0.2s;
-  }
-  .noti-card:hover { border-color: var(--color-accent); background: rgba(var(--color-accent-rgb), 0.05); }
-  .btn-approve {
-    background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);
-    padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: 0.2s;
-    flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px;
-  }
-  .btn-approve:hover { background: #10b981; color: #fff; border-color: #10b981; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
+  .edit-icon-btn { color: var(--color-accent); background: rgba(37, 99, 235, 0.1); border-radius: 8px; padding: 6px; border: none; cursor: pointer; display: inline-flex; flex-shrink: 0; }
 
   /* ===== App Menu Grid (Quick Actions) ===== */
   .section-title { font-size: 0.95rem; font-weight: 800; color: var(--text-secondary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
@@ -91,11 +61,10 @@
 
   /* ===== Modal Styles ===== */
   .modal-overlay { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
-  .custom-modal { width: 100%; max-width: 450px; padding: 24px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 20px; box-shadow: 0 12px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease; }
-  @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .custom-modal { width: 100%; max-width: 400px; padding: 20px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,0.1); }
   .input-glass { width: 100%; box-sizing: border-box; padding: 12px; background: rgba(128, 128, 128, 0.05); border: 1px solid var(--surface-border); border-radius: 10px; color: var(--text-primary); font-family: inherit; font-size: 0.9rem; font-weight: 600; outline: none; margin-bottom: 16px; }
   .input-glass:focus { border-color: var(--color-accent); }
-  .btn-primary { background: var(--color-accent); color: #fff; border-color: var(--color-accent); font-weight: 800; padding: 12px; border-radius: 12px; }
+  .btn-primary { background: var(--color-accent); color: #fff; border-color: var(--color-accent); width: 100%; padding: 12px; border-radius: 10px; font-weight: 800; cursor: pointer; border: none; }
 </style>
 </head>
 <body>
@@ -114,20 +83,13 @@
         <p class="text-xs text-muted" style="margin:0; font-weight:600;" id="adminEmail">অ্যাডমিন প্যানেল</p>
       </div>
 
-      <!-- Action Buttons (Notification & Logout) -->
-      <div style="display: flex; gap: 8px;">
-        <button class="btn-glass" id="notiBtn" aria-label="নোটিফিকেশন" style="width:40px; height:40px; position:relative; color:var(--color-accent); border-color:rgba(var(--color-accent-rgb),0.2); background:rgba(var(--color-accent-rgb),0.08);">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-          <span class="noti-badge hidden" id="notiBadge">0</span>
-        </button>
-        <button class="btn-glass" id="logoutBtn" aria-label="লগআউট" style="width:40px; height:40px; flex-shrink:0; color:#ef4444; background:rgba(239,68,68,0.08); border-color:rgba(239,68,68,0.2);">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        </button>
-      </div>
+      <button class="btn-glass" id="logoutBtn" aria-label="লগআউট" style="width:40px; height:40px; flex-shrink:0; color:#ef4444; background:rgba(239,68,68,0.08); border-color:rgba(239,68,68,0.2);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
     </div>
   </div>
 
-  <!-- Menu Grid (Management) -->
+  <!-- Menu Grid -->
   <div class="section-title">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
     ব্যবস্থাপনা
@@ -157,13 +119,9 @@
       <div class="menu-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
       <span class="menu-label">ফলাফল</span>
     </a>
-    <a href="../admin/comparison.html" class="menu-item">
-      <div class="menu-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
-      <span class="menu-label">তুলনা</span>
-    </a>
   </div>
 
-  <!-- Stats Grid (Compact) -->
+  <!-- Stats Grid -->
   <div class="section-title">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
     পরিসংখ্যান
@@ -174,42 +132,21 @@
 
 </div>
 
-<!-- Real-time Notification Modal -->
-<div id="notiModal" class="modal-overlay hidden">
-  <div class="custom-modal" style="max-height: 85vh; display: flex; flex-direction: column;">
-    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--surface-border); padding-bottom: 12px; margin-bottom: 16px;">
-      <h3 style="margin:0; font-size:1.15rem; font-weight:900; color:var(--text-primary); display:flex; align-items:center; gap:8px;">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        নতুন সাবমিশন
-      </h3>
-      <button class="btn-glass" id="closeNotiBtn" style="border:none; padding:4px;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    
-    <div id="notiList" style="overflow-y: auto; padding-right: 4px; flex: 1;">
-      <p style="text-align:center; font-weight:700; color:var(--text-muted); padding:20px;">অপেক্ষা করুন...</p>
-    </div>
-  </div>
-</div>
-
 <script type="module">
 import { initTheme, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
 import { getPlatformSettings, canChangeTitle, setPlatformTitle } from "../js/utils/settings-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
-import { collection, getCountFromServer, query, where, onSnapshot, doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { computeMaxExamXP } from "../js/utils/xp-utils.js";
+import { collection, getCountFromServer, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 initTheme();
 document.getElementById("logoutBtn").addEventListener("click", adminLogout);
-
-let pendingResultsList = [];
 
 requireAdmin(async (user) => {
   document.getElementById("adminEmail").textContent = user.email;
   await loadStats();
   await loadPlatformTitle();
-  initRealtimeNotifications();
 });
 
 document.getElementById("editTitleBtn").addEventListener("click", () => openTitleModal(false));
@@ -229,7 +166,7 @@ function openTitleModal(mandatory) {
   if (!mandatory) {
     const check = canChangeTitle(currentTitleSettings.titleUpdatedAt);
     if (!check.allowed) {
-      showToast(`পরবর্তী পরিবর্তনের জন্য আরও ${check.daysRemaining} দিন অপেক্ষা করতে হবে (মাসে ১ বার বদলানো যায়)।`, "error");
+      showToast(`পরবর্তী পরিবর্তনের জন্য আরও ${check.daysRemaining} দিন অপেক্ষা করতে হবে।`, "error");
       return;
     }
   }
@@ -239,11 +176,10 @@ function openTitleModal(mandatory) {
   overlay.innerHTML = `
     <div class="custom-modal">
       <p style="font-weight:900; font-size:1.1rem; margin-bottom:6px;">${mandatory ? "প্ল্যাটফর্মের নাম দিন" : "নাম পরিবর্তন করুন"}</p>
-      <p class="text-xs text-muted mb-3" style="line-height:1.5;">${mandatory ? "এটাই হোম পেজে বড় করে হেডিং হিসেবে দেখাবে। একবার সেট করার পর মাসে মাত্র একবার বদলানো যাবে।" : "মাসে একবারই বদলানো যায়, তাই ভেবে দিন।"}</p>
-      <input type="text" id="platformTitleInput" class="input-glass" placeholder="যেমন: NMMS PREPARATION" value="${(currentTitleSettings.platformTitle || "").replace(/"/g, "&quot;")}">
+      <input type="text" id="platformTitleInput" class="input-glass" placeholder="যেমন: Physics Lover" value="${(currentTitleSettings.platformTitle || "").replace(/"/g, "&quot;")}">
       <div class="flex gap-2" style="justify-content:flex-end;">
         ${mandatory ? "" : `<button type="button" class="btn-glass" id="titleCancelBtn" style="flex:1;">বাতিল</button>`}
-        <button type="button" class="btn-glass btn-primary" id="titleSaveBtn" style="flex:1;">সেভ করুন</button>
+        <button type="button" class="btn-primary" id="titleSaveBtn" style="flex:1;">সেভ করুন</button>
       </div>
     </div>
   `;
@@ -253,7 +189,6 @@ function openTitleModal(mandatory) {
 
   if (!mandatory) {
     overlay.querySelector("#titleCancelBtn").addEventListener("click", () => overlay.remove());
-    overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.remove(); });
   }
 
   overlay.querySelector("#titleSaveBtn").addEventListener("click", async () => {
@@ -265,106 +200,9 @@ function openTitleModal(mandatory) {
       document.getElementById("platformTitleDisplay").textContent = value;
       overlay.remove();
       showToast("প্ল্যাটফর্মের নাম সংরক্ষণ করা হয়েছে।", "success");
-    } catch (err) {
-      showToast(friendlyError(err), "error");
-    }
+    } catch (err) { showToast(friendlyError(err), "error"); }
   });
 }
-
-// ===== Real-time Notification Logic =====
-function initRealtimeNotifications() {
-  const notiBtn = document.getElementById("notiBtn");
-  const notiBadge = document.getElementById("notiBadge");
-  const notiModal = document.getElementById("notiModal");
-  const closeNotiBtn = document.getElementById("closeNotiBtn");
-  
-  // Toggle Modal
-  notiBtn.addEventListener("click", () => {
-    notiModal.classList.remove("hidden");
-    renderNotiList();
-  });
-  closeNotiBtn.addEventListener("click", () => notiModal.classList.add("hidden"));
-  notiModal.addEventListener("click", (e) => { if(e.target === notiModal) notiModal.classList.add("hidden"); });
-
-  // Listen to Firestore 'results' where status is 'pending'
-  const q = query(collection(db, "results"), where("status", "==", "pending"));
-  onSnapshot(q, (snapshot) => {
-    pendingResultsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    
-    // Update Badge (Red Light)
-    if (pendingResultsList.length > 0) {
-      notiBadge.textContent = pendingResultsList.length;
-      notiBadge.classList.remove("hidden");
-    } else {
-      notiBadge.classList.add("hidden");
-    }
-    
-    // Auto-update list if modal is open
-    if (!notiModal.classList.contains("hidden")) {
-      renderNotiList();
-    }
-    
-    // Update stats grid dynamically if it's already loaded
-    loadStats();
-  });
-}
-
-function renderNotiList() {
-  const listEl = document.getElementById("notiList");
-  
-  if(pendingResultsList.length === 0) {
-    listEl.innerHTML = `
-      <div style="text-align:center; padding: 40px 20px; background:rgba(128,128,128,0.03); border-radius:16px; border:2px dashed rgba(128,128,128,0.1);">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="margin-bottom:12px; opacity:0.5;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        <p style="font-weight:800; font-size:0.95rem; color:var(--text-secondary);">কোনো নতুন সাবমিশন নেই!</p>
-      </div>`;
-    return;
-  }
-
-  // Sort by time (oldest first, to clear backlog)
-  pendingResultsList.sort((a, b) => (a.submittedAt?.toMillis?.() || 0) - (b.submittedAt?.toMillis?.() || 0));
-
-  listEl.innerHTML = pendingResultsList.map(r => {
-    const studentName = r.studentName || "একজন শিক্ষার্থী";
-    const examName = r.examName || "একটি পরীক্ষা";
-    
-    return `
-      <div class="noti-card">
-        <div style="flex:1; min-width:0;">
-          <p style="font-size:0.95rem; font-weight:800; color:var(--text-primary); margin-bottom:4px; line-height:1.4;">
-            <span style="color:var(--color-accent);">${studentName}</span> 
-            <span style="color:var(--text-secondary);">"${examName}"</span> জমা দিয়েছে।
-          </p>
-          <p style="font-size:0.75rem; font-weight:600; color:var(--text-muted);">অপেক্ষায় আছে...</p>
-        </div>
-        <button class="btn-approve" onclick="approveResultRapid('${r.id}', this)">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-          Approve
-        </button>
-      </div>
-    `;
-  }).join("");
-}
-
-// Make globally accessible for the inline onclick
-window.approveResultRapid = async (resultId, btnEl) => {
-  try {
-    btnEl.disabled = true;
-    btnEl.innerHTML = `<span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px;"></span> হচ্ছে...`;
-    
-    await updateDoc(doc(db, "results", resultId), {
-      status: "approved",
-      approvedAt: serverTimestamp()
-    });
-    
-    showToast("ফলাফল সফলভাবে প্রকাশিত হয়েছে!", "success");
-    // List automatically updates via onSnapshot
-  } catch (err) {
-    btnEl.disabled = false;
-    btnEl.innerHTML = `Approve`;
-    showToast("অনুমোদন করতে সমস্যা হয়েছে।", "error");
-  }
-};
 
 async function safeCount(colName, ...whereClauses) {
   try {
@@ -377,23 +215,38 @@ async function safeCount(colName, ...whereClauses) {
 
 async function loadStats() {
   const grid = document.getElementById("statsGrid");
+  
+  // ক্যালকুলেট গ্লোবাল ম্যাক্স XP
+  let globalMaxXP = 0;
+  try {
+    const examsSnap = await getDocs(query(collection(db, "exams"), where("status", "in", ["published", "completed", "archived"])));
+    examsSnap.docs.forEach(doc => {
+      const d = doc.data();
+      // শুধুমাত্র 'all' ব্যাচের পরীক্ষাগুলোই গ্লোবাল বেসলাইন হিসেবে ধরা হবে
+      if (d.targetBatch === "all" || !d.targetBatch) {
+        const marks = Number(d.totalMarks) || 0;
+        const qCount = d.questionIds ? d.questionIds.length : marks;
+        globalMaxXP += computeMaxExamXP({ questionCount: qCount, totalMarks: marks });
+      }
+    });
+  } catch(e) { console.error("XP Calculation Error:", e); }
+
   const [
-    activeStudents, subjects, chapters, topics, questions,
-    upcomingExams, completedExams, activeAttempts, pendingResults, approvedResults
+    activeStudents, subjects, chapters, questions,
+    upcomingExams, completedExams, pendingResults, approvedResults
   ] = await Promise.all([
     safeCount("students", where("isActive", "==", true)),
     safeCount("subjects"),
     safeCount("chapters"),
-    safeCount("topics"),
     safeCount("questions"),
     safeCount("exams", where("status", "in", ["upcoming", "published"])),
     safeCount("exams", where("status", "in", ["completed", "archived"])),
-    safeCount("attempts", where("status", "==", "in-progress")),
     safeCount("results", where("status", "==", "pending")),
     safeCount("results", where("status", "==", "approved")),
   ]);
 
   const cards = [
+    { label: "গ্লোবাল ম্যাক্স XP (টার্গেট)", val: globalMaxXP + " XP", icon: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>', color: "#d97706", bg: "rgba(245, 158, 11, 0.15)" },
     { label: "শিক্ষার্থী", val: activeStudents, icon: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>' },
     { label: "মোট বিষয়", val: subjects, icon: '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>' },
     { label: "অধ্যায়", val: chapters, icon: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>' },
@@ -401,14 +254,13 @@ async function loadStats() {
     { label: "আসন্ন পরীক্ষা", val: upcomingExams, icon: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>' },
     { label: "সম্পন্ন পরীক্ষা", val: completedExams, icon: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>' },
     { label: "পেন্ডিং ফলাফল", val: pendingResults, icon: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>' },
-    { label: "অনুমোদিত", val: approvedResults, icon: '<circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>' },
   ];
 
-  grid.innerHTML = cards.map(c => `
-    <div class="stat-card">
-      <div class="stat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${c.icon}</svg></div>
+  grid.innerHTML = cards.map((c, i) => `
+    <div class="stat-card" style="${c.color ? `border-color:${c.color};` : ''} ${i===0 ? 'grid-column: span 2;' : ''}">
+      <div class="stat-icon" style="${c.bg ? `background:${c.bg}; color:${c.color};` : ''}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${c.icon}</svg></div>
       <div class="stat-info">
-        <div class="stat-val">${c.val}</div>
+        <div class="stat-val" style="${c.color ? `color:${c.color};` : ''}">${c.val}</div>
         <div class="stat-label">${c.label}</div>
       </div>
     </div>

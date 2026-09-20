@@ -10,7 +10,6 @@
 <style>
   @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration:.001ms!important; transition-duration:.001ms!important; } }
   
-  /* ===== Premium Glassmorphism Theme ===== */
   .glass-float-card {
     background: rgba(128, 128, 128, 0.05); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 16px; padding: 16px;
@@ -27,7 +26,6 @@
   .btn-glass:active { transform: scale(0.96); }
   .btn-primary { background: var(--color-accent); color: #fff; border-color: var(--color-accent); box-shadow: 0 4px 15px rgba(var(--color-accent-rgb), 0.2); }
 
-  /* ===== Form Styles ===== */
   .field { margin-bottom: 12px; }
   .field label { display: block; font-size: 0.85rem; font-weight: 800; color: var(--text-secondary); margin-bottom: 6px; }
   .input-glass {
@@ -38,13 +36,11 @@
   }
   .input-glass:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.15); background: var(--surface); }
 
-  /* ===== Search & Filter Section ===== */
   .search-filter-container { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 20px; }
   .search-box { flex: 1; min-width: 220px; display: flex; align-items: center; gap: 10px; background: rgba(128,128,128,0.05); border: 1px solid var(--surface-border); border-radius: 12px; padding: 0 14px; }
   .search-box input { flex: 1; border: none; background: transparent; outline: none; font-family: inherit; font-size: 0.9rem; font-weight: 600; color: var(--text-primary); padding: 12px 0; }
   .filter-box { min-width: 150px; flex-shrink: 0; }
 
-  /* ===== Student Card Layout ===== */
   .student-row { display: flex; align-items: center; gap: 14px; padding: 16px 12px; border-bottom: 1px dashed rgba(128,128,128,0.15); flex-wrap: wrap; }
   .student-row:last-child { border-bottom: none; }
   .st-avatar {
@@ -58,19 +54,17 @@
   .st-name-wrapper { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
   .st-name { font-size: 1.05rem; font-weight: 900; color: var(--text-primary); }
   
-  /* Highlighted Batch Badge */
   .st-batch-highlight { background: rgba(var(--color-accent-rgb), 0.15); color: var(--color-accent); font-size: 0.75rem; padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(var(--color-accent-rgb), 0.3); font-weight: 900; white-space: nowrap; }
   
   .st-sub { font-size: 0.8rem; color: var(--text-muted); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-  .st-badge { background: rgba(128,128,128,0.08); padding: 3px 8px; border-radius: 6px; font-weight: 700; color: var(--text-secondary); }
-  .st-inactive { color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 3px 8px; border-radius: 6px; font-weight: 800; border: 1px solid rgba(239, 68, 68, 0.2); }
+  .st-badge { background: rgba(128,128,128,0.08); padding: 4px 8px; border-radius: 6px; font-weight: 800; color: var(--text-secondary); display: inline-flex; align-items: center; gap: 4px;}
+  .st-inactive { color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 4px 8px; border-radius: 6px; font-weight: 800; border: 1px solid rgba(239, 68, 68, 0.2); }
   
   .st-actions { display: flex; gap: 8px; flex-shrink: 0; }
   .action-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: rgba(128,128,128,0.08); color: var(--text-secondary); cursor: pointer; border: 1px solid rgba(128,128,128,0.1); transition: all 0.2s ease; }
   .action-icon:hover { background: var(--surface); color: var(--color-accent); border-color: var(--color-accent); box-shadow: 0 4px 12px rgba(var(--color-accent-rgb), 0.15); transform: translateY(-2px); }
   .action-icon.delete-btn:hover { background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: #ef4444; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15); }
 
-  /* ===== Modal Styles ===== */
   .modal-overlay { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); animation: fadeIn 0.2s ease; }
   .custom-modal { width: 100%; max-width: 420px; padding: 24px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease; }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -79,14 +73,11 @@
   .batch-select-wrap{position:relative;width:100%}
   .batch-select-wrap .batch-search-input{padding-right:46px}
   .batch-select-arrow{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:0;border-radius:9px;display:flex;align-items:center;justify-content:center;background:transparent;color:var(--text-muted);cursor:pointer;transition:.18s}
-  .batch-select-arrow svg{width:18px;height:18px;pointer-events:none}
-  .batch-select-arrow:hover{background:rgba(128,128,128,.1);color:var(--color-accent)}
   .batch-dropdown-portal{position:fixed;inset:0;z-index:10000;pointer-events:none}
   .batch-menu{position:fixed;pointer-events:auto;overflow:auto;max-height:min(310px,42vh);min-width:180px;padding:7px;background:var(--surface);border:1px solid var(--surface-border);border-radius:14px;box-shadow:0 18px 45px rgba(0,0,0,.18);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
   .batch-option{width:100%;border:0;background:transparent;color:var(--text-primary);text-align:left;padding:11px 12px;border-radius:9px;font:800 .88rem/1.2 inherit;cursor:pointer}
   .batch-option:hover,.batch-option:focus-visible{outline:none;background:rgba(var(--color-accent-rgb),.12);color:var(--color-accent)}
   .batch-empty{padding:12px;text-align:center;color:var(--text-muted);font-size:.82rem;font-weight:700}
-  @media(max-width:600px){.search-filter-container{gap:9px}.search-box{min-width:100%}.filter-box{width:100%}.filter-box .input-glass{width:100%}.batch-menu{max-height:42vh;border-radius:13px}.batch-option{padding:12px}}
 </style>
 </head>
 <body>
@@ -94,7 +85,6 @@
   <div class="state-block"><div class="spinner"></div></div>
 </div>
 
-<!-- Searchable Batch Dropdown Portal -->
 <div id="batchDropdownPortal" class="batch-dropdown-portal" aria-hidden="true"></div>
 
 <script type="module">
@@ -102,18 +92,16 @@ import { initTheme, toggleTheme, renderState, showToast, friendlyError } from ".
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
 import { getActiveStudents, createStudent, updateStudentPhoto } from "../js/utils/student-utils.js";
 import { getPendingRequests, deleteStudentRequest } from "../js/utils/student-requests-utils.js";
+import { getLeaderboardData } from "../js/utils/results-utils.js"; // Added Import for XP Calculation
 import { toDirectImageUrl } from "../js/utils/image-utils.js";
 import { uploadStudentPhoto, deleteStudentPhoto } from "../js/utils/storage-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { collection, getDocs, orderBy, query, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-import { computeGamificationData } from "../js/utils/gamification-utils.js";
 
 initTheme();
 const shell = document.getElementById("shell");
 
-// Global State for Search/Filter
 let allAdminStudentsList = [];
-let gamificationData = null;
 let currentEditDocId = null;
 let activeBatchDropdown = null;
 const BATCH_OPTIONS = ["Batch 7","Batch 8","Batch 9","Batch 10","Batch 11","Batch 12","Other"];
@@ -138,6 +126,7 @@ function setupBatchDropdowns(){
   window.addEventListener("resize",repositionBatchDropdown,{passive:true});
   window.addEventListener("scroll",repositionBatchDropdown,{passive:true});
 }
+
 function openBatchDropdown(input){
   const portal=document.getElementById("batchDropdownPortal"); if(!portal)return;
   closeBatchDropdown();
@@ -156,6 +145,7 @@ function openBatchDropdown(input){
   });
   activeBatchDropdown={input,menu}; input.setAttribute("aria-expanded","true"); repositionBatchDropdown();
 }
+
 function repositionBatchDropdown(){
   if(!activeBatchDropdown)return;
   const {input,menu}=activeBatchDropdown, r=input.getBoundingClientRect(), pad=10, gap=6;
@@ -164,6 +154,7 @@ function repositionBatchDropdown(){
   menu.style.top=(below>=150||below>=above)?`${Math.min(window.innerHeight-h-pad,r.bottom+gap)}px`:`${Math.max(pad,r.top-Math.min(h,above))}px`;
   menu.style.left=`${Math.max(pad,Math.min(r.left,window.innerWidth-width-pad))}px`;
 }
+
 function closeBatchDropdown(){
   if(!activeBatchDropdown)return;
   activeBatchDropdown.input.setAttribute("aria-expanded","false");
@@ -202,8 +193,7 @@ requireAdmin(() => {
         <div class="field" style="margin:0;">
           <label for="newClass">ব্যাচ</label>
           <div class="batch-select-wrap">
-            <input class="input-glass batch-search-input" id="newClass" required autocomplete="off"
-                   placeholder="ব্যাচ নির্বাচন করুন..." role="combobox" aria-expanded="false" aria-controls="newBatchOptions">
+            <input class="input-glass batch-search-input" id="newClass" required autocomplete="off" placeholder="ব্যাচ নির্বাচন করুন..." role="combobox" aria-expanded="false" aria-controls="newBatchOptions">
             <button type="button" class="batch-select-arrow" data-batch-target="newClass" aria-label="ব্যাচ তালিকা খুলুন">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
             </button>
@@ -216,7 +206,6 @@ requireAdmin(() => {
       </button>
     </form>
 
-    <!-- Pending Requests -->
     <div id="requestsSection" style="display:none; margin-bottom:24px;">
       <p style="font-size:1rem; font-weight:900; color:var(--text-primary); margin-bottom:12px; display:flex; align-items:center; gap:8px;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -259,8 +248,7 @@ requireAdmin(() => {
         <div class="field" style="margin-top:16px;">
           <label>ব্যাচ</label>
           <div class="batch-select-wrap">
-            <input type="text" id="editClassInput" class="input-glass batch-search-input" autocomplete="off"
-                   placeholder="ব্যাচ নির্বাচন করুন..." role="combobox" aria-expanded="false" aria-controls="editBatchOptions">
+            <input type="text" id="editClassInput" class="input-glass batch-search-input" autocomplete="off" placeholder="ব্যাচ নির্বাচন করুন..." role="combobox" aria-expanded="false" aria-controls="editBatchOptions">
             <button type="button" class="batch-select-arrow" data-batch-target="editClassInput" aria-label="ব্যাচ তালিকা খুলুন">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
             </button>
@@ -323,7 +311,13 @@ async function loadStudents() {
   const listEl = document.getElementById("studentList");
   try {
     allAdminStudentsList = await loadAllStudents();
-    try { gamificationData = await computeGamificationData(); } catch (err) {}
+    
+    // Fetch XP Data
+    try { 
+      const lb = await getLeaderboardData(allAdminStudentsList);
+      window.__studentXPMap = {};
+      lb.forEach(r => window.__studentXPMap[r.studentId] = r.totalPoints);
+    } catch (err) { console.error("XP Load Failed:", err); }
     
     updateBatchFilterDropdown();
     renderFilteredList();
@@ -336,8 +330,6 @@ async function loadStudents() {
 function updateBatchFilterDropdown() {
   const filterSelect = document.getElementById("filterBatch");
   const currentVal = filterSelect.value;
-  
-  // Get unique batches
   const batches = [...new Set(allAdminStudentsList.map(s => safeText(s.className, "ব্যাচ নেই")))].filter(b => b !== "ব্যাচ নেই").sort();
   
   filterSelect.innerHTML = `<option value="all">সব ব্যাচ</option>` + 
@@ -360,10 +352,8 @@ function renderFilteredList() {
     const sName = safeText(s.name).toLowerCase();
     const sId = safeText(s.studentId).toLowerCase();
     const sClass = safeText(s.className, "ব্যাচ নেই");
-    
     const matchSearch = sName.includes(searchTerm) || sId.includes(searchTerm);
     const matchBatch = filterBatch === "all" || sClass === filterBatch;
-    
     return matchSearch && matchBatch;
   });
 
@@ -381,9 +371,7 @@ function renderFilteredList() {
     const stId = safeText(s.studentId, docId);
     const stClass = safeText(s.className, "");
     
-    const counts = gamificationData?.badgeCounts?.[s.studentId];
-    const topperTotal = counts ? (counts.monthlyOverall + counts.monthlyClass + counts.weeklyOverall + counts.weeklyClass) : 0;
-    
+    const xp = window.__studentXPMap ? (window.__studentXPMap[stId] || 0) : 0;
     const avatar = s.photoURL ? `<img src="${s.photoURL}" alt="" onerror="this.style.display='none'">` : initial;
 
     return `
@@ -395,10 +383,15 @@ function renderFilteredList() {
             <span class="st-batch-highlight">${stClass || 'ব্যাচ দেওয়া নেই'}</span>
           </div>
           <div class="st-sub">
-            <span class="st-badge">${stId}</span>
+            <!-- 1-Click Copy ID Button -->
+            <span class="st-badge copy-id-btn" data-id="${stId}" style="cursor:pointer; background:rgba(var(--color-accent-rgb),0.05); color:var(--color-accent); border:1px solid rgba(var(--color-accent-rgb),0.3);" title="ক্লিক করে আইডি কপি করুন">
+              ${stId}
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </span>
+            <!-- Live XP Display -->
+            <span class="st-badge" style="background:rgba(234, 179, 8, 0.15); color:#a16207; border:1px solid rgba(234, 179, 8, 0.3);">⭐ ${xp} XP</span>
             ${s.isActive === false ? `<span class="st-inactive">নিষ্ক্রিয়</span>` : ""}
           </div>
-          ${topperTotal > 0 ? `<div style="margin-top:6px; font-size:0.75rem; color:#f59e0b; font-weight:800; display:flex; align-items:center; gap:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 5.4L20 8l-4.2 3.9L17 18l-5-3-5 3 1.2-6.1L4 8l5.6-.6z"/></svg> ${topperTotal} বার টপার</div>` : ""}
         </div>
         <div class="st-actions">
           <button class="action-icon photo-btn" title="ছবি পরিবর্তন"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
@@ -418,7 +411,14 @@ function bindStudentActions(students) {
     const docId = row.dataset.id;
     const student = students.find(s => s.docId === docId);
 
-    // Photo Update
+    // ID Copy Feature
+    row.querySelector(".copy-id-btn").addEventListener("click", (e) => {
+      const id = e.currentTarget.dataset.id;
+      navigator.clipboard.writeText(id).then(() => {
+        showToast("স্টুডেন্ট আইডি কপি করা হয়েছে!", "success");
+      });
+    });
+
     row.querySelector(".photo-btn").addEventListener("click", async () => {
       const currentUrl = student.photoURL || "";
       const input = await askForPhotoLink(currentUrl, docId);
@@ -433,7 +433,6 @@ function bindStudentActions(students) {
       } catch (err) { showToast(friendlyError(err), "error"); }
     });
 
-    // Edit Name & Class (Now opens the Modal)
     row.querySelector(".edit-btn").addEventListener("click", () => {
       currentEditDocId = docId;
       document.getElementById("editNameInput").value = safeText(student.name);
@@ -441,7 +440,6 @@ function bindStudentActions(students) {
       document.getElementById("editStudentModal").style.display = "flex";
     });
 
-    // Toggle Active Status
     row.querySelector(".toggle-btn").addEventListener("click", async () => {
       const willActivate = student.isActive === false ? true : false;
       const msg = willActivate ? `${student.name || 'শিক্ষার্থী'} কে সক্রিয় করবেন?` : `${student.name || 'শিক্ষার্থী'} কে নিষ্ক্রিয় করবেন?`;
@@ -453,7 +451,6 @@ function bindStudentActions(students) {
       } catch (err) { showToast(friendlyError(err), "error"); }
     });
 
-    // Delete Student
     row.querySelector(".delete-btn").addEventListener("click", async () => {
       const msg = `সতর্কতা: আপনি কি "${student.name || 'এই শিক্ষার্থী'}" কে স্থায়ীভাবে মুছে ফেলতে চান?\n\nএই কাজটি আর বাতিল (Undo) করা যাবে না এবং এই শিক্ষার্থীর সমস্ত তথ্য মুছে যাবে।`;
       if (!confirm(msg)) return;
@@ -490,7 +487,6 @@ async function handleAdd(e) {
   }
 }
 
-// Photo Link Modal (Remains Unchanged)
 function askForPhotoLink(currentUrl, studentIdHint) {
   return new Promise((resolve) => {
     const overlay = document.createElement("div");
@@ -540,7 +536,6 @@ function askForPhotoLink(currentUrl, studentIdHint) {
   });
 }
 
-// Pending Requests Logic
 async function loadPendingRequests() {
   const reqSection = document.getElementById("requestsSection");
   const el = document.getElementById("requestsList");
@@ -551,7 +546,7 @@ async function loadPendingRequests() {
     reqSection.style.display = "block";
     el.innerHTML = requests.map(r => `
       <div class="glass-float-card mb-3" data-req-id="${r.id}" style="border-left:4px solid #f59e0b;">
-        <p class="text-xs text-muted mb-3" style="font-weight:700;">আবেদনকারী: <span style="font-weight:900; color:var(--text-primary); font-size:0.95rem;">${safeText(r.rawName)}</span> <span style="background:rgba(128,128,128,0.1); padding:2px 8px; border-radius:6px; margin-left:6px;">${safeText(r.className)}</span></p>
+        <p class="text-xs text-muted mb-3" style="font-weight:700;">আবেদনকারী: <span style="font-weight:900; color:var(--text-primary); font-size:0.95rem;">${safeText(r.rawName)}</span> <span style="background:rgba(128,128,128,0.1); padding:2px 8px; border-radius:6px; margin-left:6px;">${safeText(r.className)}</span>${r.referredBy ? ` <span style="background:rgba(16,185,129,0.12); color:#10b981; padding:2px 8px; border-radius:6px; margin-left:6px; font-weight:800;">রেফার: ${safeText(r.referredBy)}</span>` : ""}</p>
         <div class="field" style="margin-bottom:12px;">
           <input class="input-glass req-name-input" value="${safeText(r.rawName)}" placeholder="অপ্রয়োজনে এডিট করুন">
         </div>
@@ -573,10 +568,10 @@ function wireRequestCard(request) {
 
   card.querySelector(".req-approve-btn").addEventListener("click", async () => {
     const finalName = nameInput.value.trim();
-    if (!finalName) { showToast("নাম খালি রাখা যাবে না।", "error"); return; }
+    if (!finalName) { showToast("নাম খালি রাখা যাবে বায় না।", "error"); return; }
     if (!confirm(`"${finalName}" কে অনুমোদন দেবেন?`)) return;
     try {
-      await createStudent(finalName, request.className);
+      await createStudent(finalName, request.className, request.referredBy || null);
       await deleteStudentRequest(request.id);
       showToast("শিক্ষার্থী যোগ করা হয়েছে।", "success");
       loadPendingRequests(); loadStudents();

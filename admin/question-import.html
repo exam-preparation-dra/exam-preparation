@@ -84,7 +84,7 @@
   <!-- Header -->
   <div class="page-header">
     <h1>AI প্রশ্ন ইম্পোর্ট</h1>
-    <p>Gemini AI দিয়ে মুহূর্তেই হাজারো প্রশ্ন সেট করুন</p>
+    <p>ChatGPT, Claude বা Gemini দিয়ে মুহূর্তেই হাজারো প্রশ্ন সেট করুন</p>
   </div>
 
   <!-- Main Wizard Entry Button -->
@@ -93,7 +93,7 @@
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
       নতুন প্রশ্ন ইম্পোর্ট উইজার্ড
     </button>
-    <p class="text-xs text-muted mt-3">ছবি থেকে, টপিক লিখে অথবা ম্যানুয়ালি পেস্ট করে প্রশ্ন যোগ করুন</p>
+    <p class="text-xs text-muted mt-3">ম্যানুয়ালি প্রম্পট কপি করে অথবা API এর মাধ্যমে প্রশ্ন যোগ করুন</p>
   </div>
 
   <!-- Preview Section (Loads dynamically) -->
@@ -108,22 +108,52 @@
       প্রশ্ন তৈরি করুন
     </div>
     
-    <!-- Location Selection -->
+    <!-- Location Selection (Always visible at top) -->
     <div class="field" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px;">
       <select id="wzBatch" class="input-glass" style="padding:10px 8px; font-size:0.8rem;"><option value="">ব্যাচ...</option></select>
       <select id="wzSubject" class="input-glass" style="padding:10px 8px; font-size:0.8rem;"><option value="">বিষয়...</option></select>
       <select id="wzTopic" class="input-glass" style="padding:10px 8px; font-size:0.8rem;"><option value="">টপিক...</option></select>
     </div>
 
-    <!-- Input Method Tabs (Simple Toggle) -->
+    <!-- Input Method Tabs -->
     <div style="display:flex; gap:8px; margin-bottom:16px; background:rgba(128,128,128,0.05); padding:6px; border-radius:12px;">
-      <button class="btn-glass active-tab" id="tabAi" style="flex:1; border:none; background:var(--surface); box-shadow:0 2px 8px rgba(0,0,0,0.05);">AI জেনারেট</button>
-      <button class="btn-glass" id="tabPaste" style="flex:1; border:none; background:transparent;">টেক্সট পেস্ট</button>
+      <button class="btn-glass active-tab" id="tabManual" style="flex:1; border:none; background:var(--surface); box-shadow:0 2px 8px rgba(0,0,0,0.05); position:relative;">
+        ম্যানুয়াল AI জেনারেটর
+        <span style="position:absolute; top:-8px; right:-5px; background:#ef4444; color:#fff; font-size:0.6rem; padding:3px 6px; border-radius:6px; font-weight:900; box-shadow:0 2px 5px rgba(239,68,68,0.3);">POPULAR</span>
+      </button>
+      <button class="btn-glass" id="tabApi" style="flex:1; border:none; background:transparent;">অটোমেটিক AI (API)</button>
     </div>
 
-    <!-- AI Generate View -->
-    <div id="viewAi">
-      <p class="text-xs text-muted mb-2">বইয়ের পাতার ছবি দিন অথবা টপিকের নাম লিখে দিন, AI নিজে থেকেই প্রশ্ন বানাবে।</p>
+    <!-- Manual AI Generate View (New Default) -->
+    <div id="viewManual">
+      <div class="field">
+        <label>কতটি প্রশ্ন বানাতে চান?</label>
+        <input type="number" id="manualPromptCount" class="input-glass" value="10" min="1" max="50">
+      </div>
+      
+      <div class="glass-card" style="padding:16px; background:rgba(37, 99, 235, 0.05); border-color:rgba(37, 99, 235, 0.2);">
+         <p style="font-size:0.85rem; font-weight:900; color:#1e40af; margin-bottom:8px;">ধাপ ১: প্রম্পট কপি করুন</p>
+         <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:12px; font-weight:600;">নিচের বাটনে ক্লিক করলে একটি নির্দেশিকা কপি হবে। সেটি ChatGPT, Claude বা Gemini-তে পেস্ট করুন।</p>
+         <button class="btn-glass btn-primary" id="copyPromptBtn" style="width:100%; background:#2563eb; border-color:#2563eb; box-shadow:0 4px 15px rgba(37,99,235,0.25);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            AI প্রম্পট কপি করুন
+         </button>
+      </div>
+
+      <div class="glass-card" style="padding:16px; margin-top:12px; background:rgba(16, 185, 129, 0.05); border-color:rgba(16, 185, 129, 0.2);">
+         <p style="font-size:0.85rem; font-weight:900; color:#065f46; margin-bottom:8px;">ধাপ ২: AI-এর উত্তর পেস্ট করুন</p>
+         <textarea id="manualPasteArea" class="input-glass" rows="6" placeholder="AI যে উত্তরগুলো দেবে, তা হুবহু এখানে পেস্ট করুন..."></textarea>
+      </div>
+      
+      <div style="display:flex; gap:8px; margin-top:20px;">
+        <button class="btn-glass close-modal" style="flex:1;">বাতিল</button>
+        <button class="btn-glass btn-primary" id="manualParseBtn" style="flex:2; background:#10b981; border-color:#10b981; box-shadow:0 4px 15px rgba(16,185,129,0.3);">প্রিভিউ দেখুন</button>
+      </div>
+    </div>
+
+    <!-- Automatic AI (API) View -->
+    <div id="viewApi" style="display:none;">
+      <p class="text-xs text-muted mb-2">বইয়ের পাতার ছবি দিন অথবা টপিকের নাম লিখে দিন, API নিজে থেকেই প্রশ্ন বানাবে।</p>
       <label for="imageInput" class="dropzone">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
         <span class="text-sm font-bold text-secondary">বই/নোটসের ছবি দিন (ঐচ্ছিক)</span>
@@ -131,7 +161,7 @@
       <input type="file" id="imageInput" accept="image/*" multiple style="display:none;">
       <div id="imagePreview" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"></div>
 
-      <textarea id="aiInstructions" class="input-glass mt-3" rows="3" placeholder="যেমন: কোষ বিভাজন নিয়ে ১০টি মাঝারি মানের প্রশ্ন বানাও, মার্কস ২ করে। (ছবি না দিলে এটা লিখলেই হবে)"></textarea>
+      <textarea id="aiInstructions" class="input-glass mt-3" rows="3" placeholder="যেমন: কোষ বিভাজন নিয়ে মাঝারি মানের প্রশ্ন বানাও..."></textarea>
       
       <div class="field mt-3">
         <label>কতটি প্রশ্ন চাই?</label>
@@ -148,18 +178,7 @@
 
       <div style="display:flex; gap:8px; margin-top:20px;">
         <button class="btn-glass close-modal" style="flex:1;">বাতিল</button>
-        <button class="btn-glass btn-primary" id="generateBtn" style="flex:2;">AI দিয়ে জেনারেট করুন</button>
-      </div>
-    </div>
-
-    <!-- Paste View -->
-    <div id="viewPaste" style="display:none;">
-      <p class="text-xs text-muted mb-2">Claude বা ChatGPT থেকে পাওয়া নির্দিষ্ট ফরম্যাটের টেক্সট এখানে পেস্ট করুন।</p>
-      <textarea id="pasteArea" class="input-glass" rows="10" placeholder="Question:\n...\nবাংলা প্রশ্ন:\n...\n\nA:\n...\n\nCorrect Answer:\nA..."></textarea>
-      
-      <div style="display:flex; gap:8px; margin-top:20px;">
-        <button class="btn-glass close-modal" style="flex:1;">বাতিল</button>
-        <button class="btn-glass btn-primary" id="parseBtn" style="flex:2;">প্রিভিউ দেখুন</button>
+        <button class="btn-glass btn-primary" id="generateBtn" style="flex:2;">API দিয়ে জেনারেট করুন</button>
       </div>
     </div>
   </div>
@@ -170,10 +189,10 @@
   <div class="custom-modal" style="max-width:400px;">
     <div class="modal-title">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7a4 4 0 100 8 4 4 0 000-8zM3 21l6-6m-2-2l2 2"/></svg>
-      Gemini API Key সেটআপ
+      API Key সেটআপ
     </div>
-    <p class="text-xs text-muted mb-3" style="line-height:1.5;">আপনার Google AI Studio থেকে পাওয়া ফ্রি API Key এখানে দিন। এটি শুধুমাত্র আপনার ব্রাউজারের Local Storage-এ সেভ থাকবে, কোথাও আপলোড হবে না।</p>
-    <input type="password" id="apiKeyInput" class="input-glass" placeholder="AIzaSy...">
+    <p class="text-xs text-muted mb-3" style="line-height:1.5;">অটোমেটিক ফিচারের জন্য আপনার API Key এখানে দিন। এটি শুধুমাত্র আপনার ব্রাউজারে সেভ থাকবে।</p>
+    <input type="password" id="apiKeyInput" class="input-glass" placeholder="API Key দিন...">
     <div style="display:flex; gap:8px; margin-top:20px;">
       <button class="btn-glass" id="closeApiBtn" style="flex:1;">বাতিল</button>
       <button class="btn-glass btn-primary" id="saveApiBtn" style="flex:1;">সেভ করুন</button>
@@ -189,10 +208,8 @@
       কীভাবে প্রশ্ন ইম্পোর্ট করবেন?
     </div>
     <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.6; margin-bottom:20px;">
-      <p><strong>১. API Key:</strong> প্রথমে উপরের "API Key" বাটনে ক্লিক করে আপনার জেমিনি কী সেভ করে নিন।</p>
-      <p class="mt-2"><strong>২. লোকেশন:</strong> উইজার্ড খুলে কোন ব্যাচ, বিষয় ও টপিকের প্রশ্ন বানাচ্ছেন তা সিলেক্ট করুন।</p>
-      <p class="mt-2"><strong>৩. ছবি থেকে প্রশ্ন (AI):</strong> বইয়ের পাতার ছবি আপলোড করুন এবং কতগুলো প্রশ্ন লাগবে তা লিখে দিন। AI নিজে থেকেই প্রশ্ন, অপশন ও ব্যাখ্যা বানিয়ে দেবে।</p>
-      <p class="mt-2"><strong>৪. টেক্সট পেস্ট:</strong> যদি আগে থেকেই ফরম্যাট করা প্রশ্ন থাকে, তবে "টেক্সট পেস্ট" অপশনে গিয়ে পেস্ট করে প্রিভিউ দেখুন।</p>
+      <p><strong>১. ম্যানুয়াল AI (সেরা পদ্ধতি):</strong> ব্যাচ ও বিষয় সিলেক্ট করে "প্রম্পট কপি" করুন। সেটি ChatGPT-তে পেস্ট করুন এবং উত্তরটি কপি করে নিচের বক্সে বসিয়ে প্রিভিউ দেখুন।</p>
+      <p class="mt-2"><strong>২. অটোমেটিক (API):</strong> API Key সেভ করা থাকলে সরাসরি বইয়ের ছবি আপলোড করে এক ক্লিকেই প্রশ্ন বানিয়ে নিতে পারবেন।</p>
     </div>
     <button class="btn-glass btn-primary" id="closeGuideBtn" style="width:100%;">বুঝতে পেরেছি</button>
   </div>
@@ -202,12 +219,13 @@
 import { initTheme, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { requireAdmin } from "../js/utils/auth.js";
 import { getFullSyllabusTree } from "../js/utils/syllabus-utils.js";
-import { parseAiImportText, generateQuestionsFromImage, fileToImagePart } from "../js/utils/ai-import-utils.js";
+import { parseAiImportText, buildAiPromptTemplate, generateQuestionsFromImage, fileToImagePart } from "../js/utils/ai-import-utils.js";
 import { addQuestion } from "../js/utils/question-utils.js";
 
-const GEMINI_KEY_STORAGE = "gemini_api_key";
+const GEMINI_KEY_STORAGE = "universal_api_key";
 let tree = [];
 let parsedResults = [];
+let pendingTabSwitch = false;
 
 initTheme();
 
@@ -226,13 +244,20 @@ function setupEventListeners() {
     document.getElementById("apiKeyInput").value = localStorage.getItem(GEMINI_KEY_STORAGE) || "";
     document.getElementById("apiModal").style.display = "flex";
   });
-  document.getElementById("closeApiBtn").addEventListener("click", () => document.getElementById("apiModal").style.display = "none");
+  document.getElementById("closeApiBtn").addEventListener("click", () => {
+    document.getElementById("apiModal").style.display = "none";
+    pendingTabSwitch = false;
+  });
   document.getElementById("saveApiBtn").addEventListener("click", () => {
     const key = document.getElementById("apiKeyInput").value.trim();
     if(key) {
       localStorage.setItem(GEMINI_KEY_STORAGE, key);
       showToast("API Key সফলভাবে সেভ হয়েছে!", "success");
       document.getElementById("apiModal").style.display = "none";
+      if(pendingTabSwitch) {
+         switchTab(document.getElementById("tabApi"), "viewApi");
+         pendingTabSwitch = false;
+      }
     } else {
       showToast("API Key ফাঁকা রাখা যাবে না", "error");
     }
@@ -242,14 +267,25 @@ function setupEventListeners() {
   document.getElementById("openWizardBtn").addEventListener("click", () => document.getElementById("wizardModal").style.display = "flex");
   document.querySelectorAll(".close-modal").forEach(btn => btn.addEventListener("click", () => document.getElementById("wizardModal").style.display = "none"));
 
-  // Tabs Toggle
-  document.getElementById("tabAi").addEventListener("click", (e) => switchTab(e.target, "viewAi"));
-  document.getElementById("tabPaste").addEventListener("click", (e) => switchTab(e.target, "viewPaste"));
+  // Tabs Toggle (with API Check)
+  document.getElementById("tabManual").addEventListener("click", (e) => switchTab(e.target, "viewManual"));
+  document.getElementById("tabApi").addEventListener("click", (e) => {
+     const apiKey = localStorage.getItem(GEMINI_KEY_STORAGE);
+     if(!apiKey) {
+         pendingTabSwitch = true;
+         document.getElementById("apiModal").style.display = "flex";
+         return;
+     }
+     switchTab(e.target, "viewApi");
+  });
 
-  // Form Logic
+  // Manual Flow Logic
+  document.getElementById("copyPromptBtn").addEventListener("click", handleCopyPrompt);
+  document.getElementById("manualParseBtn").addEventListener("click", handleManualParse);
+
+  // Auto/API Flow Logic
   document.getElementById("imageInput").addEventListener("change", renderImagePreview);
   document.getElementById("generateBtn").addEventListener("click", handleGenerate);
-  document.getElementById("parseBtn").addEventListener("click", handleParseBtn);
 
   // Dropdown Logic
   document.getElementById("wzBatch").addEventListener("change", updateSubjects);
@@ -257,16 +293,16 @@ function setupEventListeners() {
 }
 
 function switchTab(btnElement, viewId) {
-  document.getElementById("tabAi").style.background = "transparent";
-  document.getElementById("tabAi").style.boxShadow = "none";
-  document.getElementById("tabPaste").style.background = "transparent";
-  document.getElementById("tabPaste").style.boxShadow = "none";
+  document.getElementById("tabManual").style.background = "transparent";
+  document.getElementById("tabManual").style.boxShadow = "none";
+  document.getElementById("tabApi").style.background = "transparent";
+  document.getElementById("tabApi").style.boxShadow = "none";
   
   btnElement.style.background = "var(--surface)";
   btnElement.style.boxShadow = "0 2px 8px rgba(0,0,0,0.05)";
   
-  document.getElementById("viewAi").style.display = viewId === "viewAi" ? "block" : "none";
-  document.getElementById("viewPaste").style.display = viewId === "viewPaste" ? "block" : "none";
+  document.getElementById("viewManual").style.display = viewId === "viewManual" ? "block" : "none";
+  document.getElementById("viewApi").style.display = viewId === "viewApi" ? "block" : "none";
 }
 
 // Tree (Syllabus) Initialization & Logic
@@ -295,9 +331,9 @@ function updateTopics() {
 
 function getSelectedTarget() {
   return {
-    subjectId: document.getElementById("wzBatch").value || null, // Batch -> DB Subject
-    chapterId: document.getElementById("wzSubject").value || null, // Subject -> DB Chapter
-    topicId: document.getElementById("wzTopic").value || null     // Topic -> DB Topic
+    subjectId: document.getElementById("wzBatch").value || null, 
+    chapterId: document.getElementById("wzSubject").value || null, 
+    topicId: document.getElementById("wzTopic").value || null    
   };
 }
 
@@ -310,6 +346,45 @@ function getSelectedNames() {
     subjectName: sSel.options[sSel.selectedIndex]?.text,
     topicName: tSel.options[tSel.selectedIndex]?.text
   };
+}
+
+// Manual Flow
+function handleCopyPrompt() {
+  const names = getSelectedNames();
+  const count = document.getElementById("manualPromptCount").value;
+  
+  if(!names.batchName || !names.subjectName || !names.topicName) {
+     showToast("প্রথমে ব্যাচ, বিষয় এবং টপিক সিলেক্ট করুন", "error");
+     return;
+  }
+  
+  const promptText = buildAiPromptTemplate({
+     subjectName: names.batchName, 
+     chapterName: names.subjectName, 
+     topicName: names.topicName,
+     count: count
+  });
+  
+  navigator.clipboard.writeText(promptText).then(() => {
+     showToast("প্রম্পট কপি হয়েছে! এবার ChatGPT/Claude-এ পেস্ট করুন।", "success");
+  }).catch(() => {
+     showToast("কপি করতে সমস্যা হয়েছে।", "error");
+  });
+}
+
+function handleManualParse() {
+  const target = getSelectedTarget();
+  if (!target.subjectId || !target.chapterId || !target.topicId) {
+    showToast("প্রথমে ব্যাচ, বিষয় এবং টপিক নির্বাচন করুন", "error"); return;
+  }
+  
+  const text = document.getElementById("manualPasteArea").value;
+  if (!text.trim()) { showToast("এখনে AI-এর দেওয়া উত্তর পেস্ট করুন", "error"); return; }
+  
+  parsedResults = parseAiImportText(text, target);
+  document.getElementById("wizardModal").style.display = "none";
+  renderPreview();
+  showToast("টেক্সট প্রসেস করা হয়েছে!", "success");
 }
 
 // Image Preview Logic
@@ -347,7 +422,7 @@ function stopProgress() {
   setTimeout(() => document.getElementById("generateProgress").style.display = "none", 500);
 }
 
-// Generate & Parse Logic
+// Generate Logic
 async function handleGenerate() {
   const apiKey = localStorage.getItem(GEMINI_KEY_STORAGE);
   if (!apiKey) {
@@ -376,15 +451,13 @@ async function handleGenerate() {
     const imageParts = files ? await Promise.all(Array.from(files).map(fileToImagePart)) : [];
     const text = await generateQuestionsFromImage({
       apiKey, imageParts,
-      subjectName: names.subjectName, chapterName: names.subjectName, topicName: names.topicName,
+      subjectName: names.batchName, chapterName: names.subjectName, topicName: names.topicName,
       count: document.getElementById("promptCount").value,
       extraInstructions: extra
     });
     
-    document.getElementById("pasteArea").value = text;
-    document.getElementById("wizardModal").style.display = "none";
-    
     parsedResults = parseAiImportText(text, target);
+    document.getElementById("wizardModal").style.display = "none";
     renderPreview();
     showToast("সফলভাবে জেনারেট হয়েছে! নিচে প্রিভিউ দেখুন।", "success");
   } catch (err) {
@@ -393,21 +466,6 @@ async function handleGenerate() {
     stopProgress();
     btn.disabled = false;
   }
-}
-
-function handleParseBtn() {
-  const target = getSelectedTarget();
-  if (!target.subjectId || !target.chapterId || !target.topicId) {
-    showToast("প্রথমে ব্যাচ, বিষয় এবং টপিক নির্বাচন করুন", "error"); return;
-  }
-  
-  const text = document.getElementById("pasteArea").value;
-  if (!text.trim()) { showToast("টেক্সট পেস্ট করুন", "error"); return; }
-  
-  parsedResults = parseAiImportText(text, target);
-  document.getElementById("wizardModal").style.display = "none";
-  renderPreview();
-  showToast("টেক্সট প্রসেস করা হয়েছে!", "success");
 }
 
 function renderPreview() {
@@ -481,7 +539,7 @@ async function handleImportAll() {
     showToast(`${validOnes.length} টি প্রশ্ন সফলভাবে যোগ হয়েছে!`, "success");
     parsedResults = [];
     document.getElementById("previewSection").innerHTML = "";
-    document.getElementById("pasteArea").value = "";
+    document.getElementById("manualPasteArea").value = "";
   } catch (err) {
     showToast(friendlyError(err), "error");
   } finally {

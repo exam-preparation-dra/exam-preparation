@@ -74,15 +74,24 @@
   .close-modal-btn { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; border-radius: 12px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
   .close-modal-btn:hover { background: #ef4444; color: #fff; }
 
-  /* ===== AI Guide Box ===== */
-  .ai-guide-box { background: rgba(139,92,246,0.08); border: 1px dashed rgba(139,92,246,0.3); border-radius: 14px; padding: 16px; margin-bottom: 20px; }
-  .ai-guide-box p { font-size: 0.9rem; font-weight: 900; color: #8b5cf6; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
-  .ai-guide-box ul { font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; margin: 0; padding-left: 20px; line-height: 1.6; }
+  /* ===== Option Builder Cards ===== */
+  .builder-option-card { background: var(--surface); border: 2px solid rgba(128,128,128,0.15); border-radius: 16px; padding: 20px; text-align: center; transition: 0.3s; position: relative; overflow: hidden; display: flex; flex-direction: column; height: 100%; }
+  .builder-option-card:hover { border-color: var(--color-accent); transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.05); }
+  .builder-option-card.popular { border-color: rgba(16, 185, 129, 0.4); background: linear-gradient(180deg, rgba(16,185,129,0.03) 0%, transparent 100%); }
+  
+  /* Animated Popular Badge */
+  .popular-badge {
+    position: absolute; top: 12px; right: -28px; background: #10b981; color: #fff; font-size: 0.65rem; font-weight: 900; padding: 4px 30px; transform: rotate(45deg); box-shadow: 0 2px 10px rgba(16,185,129,0.4);
+    animation: badgePulse 2s infinite; letter-spacing: 0.5px;
+  }
+  @keyframes badgePulse { 0% { filter: brightness(1); } 50% { filter: brightness(1.2); } 100% { filter: brightness(1); } }
 
-  /* ===== AI Rows (Responsive) ===== */
-  .ai-row { background: rgba(128,128,128,0.02); border: 1px solid rgba(128,128,128,0.1); border-radius: 16px; padding: 20px; margin-bottom: 16px; position: relative; }
-  .remove-ai-btn { position: absolute; top: 16px; right: 16px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; border-radius: 10px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-  .remove-ai-btn:hover { background: #ef4444; color: #fff; box-shadow: 0 4px 12px rgba(239,68,68,0.2); }
+  .guide-trigger { font-size: 0.75rem; color: var(--text-muted); text-decoration: underline; cursor: pointer; margin-top: 12px; font-weight: 700; transition: 0.2s; }
+  .guide-trigger:hover { color: var(--color-accent); }
+
+  /* ===== Guide Modal Content ===== */
+  .guide-content-box { background: rgba(128,128,128,0.05); border: 1px dashed rgba(128,128,128,0.2); border-radius: 14px; padding: 16px; margin-bottom: 20px; font-size: 0.9rem; line-height: 1.6; color: var(--text-secondary); font-weight: 600; }
+  .guide-content-box strong { color: var(--color-accent); }
 
   /* ===== Selected Questions List ===== */
   .sel-question-card { display: flex; justify-content: space-between; align-items: center; gap: 16px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 16px; padding: 16px; margin-bottom: 12px; transition: 0.2s; flex-wrap: wrap; }
@@ -91,12 +100,12 @@
   .action-icon:hover { background: var(--surface); color: var(--color-accent); border-color: var(--color-accent); box-shadow: 0 4px 12px rgba(var(--color-accent-rgb),0.15); transform: translateY(-2px); }
   .action-icon.delete:hover { background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: #ef4444; box-shadow: 0 4px 12px rgba(239,68,68,0.15); }
 
-  /* ===== Topbar (FIXED THEME COLOR) ===== */
+  /* ===== Topbar ===== */
   .topbar {
     position: sticky; top: 0; z-index: 50;
     margin: calc(var(--space-5) * -1) calc(var(--space-4) * -1) var(--space-4);
     padding: 16px 20px; 
-    background: var(--surface); /* Fixed to match natural theme */
+    background: var(--surface); 
     backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid rgba(128,128,128,0.1);
     display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.02);
@@ -108,25 +117,47 @@
   <div class="state-block"><div class="spinner"></div></div>
 </div>
 
-<!-- Modal 1: AI Question Generator -->
+<!-- Modal: Magic Auto-Select -->
+<div class="modal-overlay" id="autoSelectModalOverlay">
+  <div class="custom-modal">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <p style="font-size:1.2rem; font-weight:900; color:#10b981; display:flex; align-items:center; gap:8px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        ম্যাজিক অটো-সিলেক্ট
+      </p>
+      <button class="close-modal-btn" id="closeAutoSelectModalBtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+
+    <form id="autoSelectForm">
+      <div class="field"><label>ব্যাচ</label><select class="input-glass" id="autoSubject" required></select></div>
+      <div class="field"><label>বিষয়</label><select class="input-glass" id="autoChapter" required></select></div>
+      <div class="field"><label>টপিক (ঐচ্ছিক)</label><select class="input-glass" id="autoTopic"><option value="">যেকোনো টপিক (সব)</option></select></div>
+      
+      <!-- Live Availability Check -->
+      <div id="availabilityStatusBox" style="background:rgba(128,128,128,0.05); border:1px dashed rgba(128,128,128,0.3); border-radius:12px; padding:12px; margin-bottom:16px; text-align:center;">
+        <div class="spinner hidden" id="availabilitySpinner" style="width:16px; height:16px; display:inline-block; vertical-align:middle;"></div>
+        <span id="availabilityText" style="font-size:0.85rem; font-weight:800; color:var(--text-secondary);">প্রশ্ন চেক করা হচ্ছে...</span>
+      </div>
+
+      <div class="field mt-3"><label>কতগুলো প্রশ্ন লাগবে?</label><input class="input-glass" type="number" min="1" id="autoCount" value="10" required></div>
+      
+      <button type="submit" class="btn-premium mt-4" style="width:100%; background:linear-gradient(135deg, #10b981, #059669);" id="autoSelectSubmitBtn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+        র‍্যান্ডম প্রশ্ন সিলেক্ট করুন
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: AI Question Generator -->
 <div class="modal-overlay" id="aiGeneratorModal">
   <div class="custom-modal">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
       <p style="font-size:1.2rem; font-weight:900; color:#8b5cf6; display:flex; align-items:center; gap:8px;">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        AI প্রশ্ন জেনারেটর
+        AI দিয়ে নতুন প্রশ্ন তৈরি করুন
       </p>
       <button class="close-modal-btn" id="closeAiModalBtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-    </div>
-
-    <!-- AI Guide Box -->
-    <div class="ai-guide-box">
-      <p>💡 AI গাইডলাইন</p>
-      <ul>
-        <li>নির্দিষ্ট টপিক থেকে প্রশ্ন চাইলে "নির্দেশনা" বক্সে লিখে দিন (যেমন: "নিউটনের ৩টা সূত্র")।</li>
-        <li>বইয়ের পৃষ্ঠার ছবি আপলোড করলে AI সরাসরি সেই পৃষ্ঠা থেকেই প্রশ্ন তৈরি করবে।</li>
-        <li>একসাথে একাধিক ব্যাচ বা বিষয়ের প্রশ্ন তৈরি করতে "আরেকটি বিষয় যোগ করুন" বাটনে ক্লিক করুন।</li>
-      </ul>
     </div>
 
     <div id="aiRowsContainer"></div>
@@ -148,52 +179,50 @@
   </div>
 </div>
 
-<!-- Modal 2: Quick Add Manual Question -->
-<div class="modal-overlay" id="quickAddModalOverlay">
-  <div class="custom-modal">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-      <p style="font-size:1.2rem; font-weight:900; color:var(--text-primary); display:flex; align-items:center; gap:8px;">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-        ম্যানুয়ালি নতুন প্রশ্ন যোগ করুন
-      </p>
-      <button class="close-modal-btn" id="closeQuickAddModalBtn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+<!-- Guide Modals -->
+<div class="modal-overlay" id="guideMagicModal">
+  <div class="custom-modal" style="max-width:400px; text-align:center;">
+    <h3 style="margin-bottom:16px; color:#10b981;">ম্যাজিক অটো-সিলেক্ট কীভাবে কাজ করে?</h3>
+    <div class="guide-content-box text-left">
+      এটি আপনার আগে থেকে তৈরি করা <strong>'প্রশ্ন ব্যাংক'</strong> থেকে প্রশ্ন সংগ্রহ করে। 
+      <br><br>আপনি শুধু ব্যাচ, বিষয় ও টপিক সিলেক্ট করে প্রশ্নের সংখ্যা বলে দেবেন, সিস্টেম নিজে থেকেই প্রশ্ন ব্যাংক থেকে র‍্যান্ডম (Random) প্রশ্ন বেছে নিয়ে আপনার প্রশ্নপত্র তৈরি করে দেবে।
+      <br><br><em>টিপস: আপনি চাইলে বারবার এই অপশনটি ব্যবহার করে আলাদা আলাদা চ্যাপ্টার বা টপিক থেকে প্রশ্ন মিলিয়ে একটি বড় পরীক্ষা তৈরি করতে পারেন!</em>
     </div>
-
-    <form id="quickAddForm">
-      <div class="field"><label>বাংলা প্রশ্ন</label><input class="input-glass" id="qaBn" required placeholder="প্রশ্নটি লিখুন..."></div>
-      <div class="field"><label>ইংরেজি প্রশ্ন (ঐচ্ছিক)</label><input class="input-glass" id="qaEn" placeholder="Optional translation..."></div>
-      
-      <div class="responsive-grid-2 mt-3">
-        <input class="input-glass" id="qaA" placeholder="অপশন A" required>
-        <input class="input-glass" id="qaB" placeholder="অপশন B" required>
-        <input class="input-glass" id="qaC" placeholder="অপশন C" required>
-        <input class="input-glass" id="qaD" placeholder="অপশন D" required>
-      </div>
-      
-      <div class="responsive-grid-4 mt-4">
-        <div class="field"><label>সঠিক উত্তর</label><select class="input-glass" id="qaCorrect" style="border-color:#10b981;"><option>A</option><option>B</option><option>C</option><option>D</option></select></div>
-        <div class="field"><label>ব্যাচ</label><select class="input-glass" id="qaSubject"></select></div>
-        <div class="field"><label>বিষয়</label><select class="input-glass" id="qaChapter"></select></div>
-        <div class="field"><label>টপিক</label><select class="input-glass" id="qaTopic"></select></div>
-      </div>
-      
-      <button type="submit" class="btn-premium mt-4" style="width:100%;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        তালিকায় যুক্ত করুন
-      </button>
-    </form>
+    <button class="btn-outline close-guide-btn" style="width:100%;">বুঝতে পেরেছি</button>
   </div>
 </div>
 
+<div class="modal-overlay" id="guideBankModal">
+  <div class="custom-modal" style="max-width:400px; text-align:center;">
+    <h3 style="margin-bottom:16px; color:var(--color-accent);">প্রশ্ন ব্যাংক কীভাবে কাজ করে?</h3>
+    <div class="guide-content-box text-left">
+      এটি হলো আপনার নিজস্ব <strong>প্রধান প্রশ্ন ভাণ্ডার</strong>। 
+      <br><br>এই অপশনে ক্লিক করলে আপনাকে প্রশ্ন ব্যাংকের মূল পেজে নিয়ে যাওয়া হবে। সেখানে আপনি আপনার সেভ করা সমস্ত প্রশ্ন দেখতে পাবেন। আপনার পছন্দমতো বেছে বেছে টিক (Checkbox) দিয়ে সিলেক্ট করে প্রশ্নপত্রে যুক্ত করতে পারবেন।
+    </div>
+    <button class="btn-outline close-guide-btn" style="width:100%;">বুঝতে পেরেছি</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="guideAiModal">
+  <div class="custom-modal" style="max-width:400px; text-align:center;">
+    <h3 style="margin-bottom:16px; color:#8b5cf6;">AI জেনারেটর কীভাবে কাজ করে?</h3>
+    <div class="guide-content-box text-left">
+      এটি আপনার প্রশ্ন ব্যাংক থেকে <strong>কোনো প্রশ্ন নেয় না</strong>। এটি সম্পূর্ণ নতুন প্রশ্ন তৈরি করে।
+      <br><br>এর জন্য আপনার একটি AI API Key প্রয়োজন হবে। আপনি সিলেবাস সিলেক্ট করে বইয়ের ছবি দিলে বা টপিক লিখে দিলে, এটি ইন্টারনেট (API) ব্যবহার করে নিজে থেকে নতুন প্রশ্ন বানিয়ে সরাসরি আপনার পরীক্ষা ও প্রশ্ন ব্যাংকে যুক্ত করে দেবে।
+    </div>
+    <button class="btn-outline close-guide-btn" style="width:100%;">বুঝতে পেরেছি</button>
+  </div>
+</div>
 
 <script type="module">
-import { initTheme, toggleTheme, icons, showToast, friendlyError, aiBadge } from "../js/utils/ui-utils.js";
+import { initTheme, toggleTheme, icons, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
 import { initAdminPwaInstall } from "../pwa-install.js";
-import { getFullSyllabusTree, buildNameMap } from "../js/utils/syllabus-utils.js";
-import { getQuestionsByIds, addQuestion } from "../js/utils/question-utils.js";
+import { getFullSyllabusTree } from "../js/utils/syllabus-utils.js";
+import { getQuestionsByIds, getQuestionsPage, addQuestion } from "../js/utils/question-utils.js";
 import { createExam, updateExam, getExamById, calculateTotalMarks } from "../js/utils/exam-utils.js";
 import { generateQuestionsFromImage, parseAiImportText, promptForApiKey, fileToImagePart } from "../js/utils/ai-import-utils.js";
+import { getActiveStudents } from "../js/utils/student-utils.js"; 
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -203,6 +232,7 @@ const editId = params.get("id");
 let tree = [];
 let selectedQuestions = []; 
 let existingExam = null;
+let activeStudentsList = []; 
 
 requireAdmin(async () => {
   shell.innerHTML = template();
@@ -210,15 +240,17 @@ requireAdmin(async () => {
   document.getElementById("logoutBtn").addEventListener("click", adminLogout);
   initAdminPwaInstall("installBtn");
   
-  document.getElementById("examForm").addEventListener("submit", handleSubmit);
+  // UI Flow Logic
+  document.getElementById("examForm").addEventListener("submit", handleBasicDetailsSubmit);
   document.getElementById("marksPerQuestion").addEventListener("input", updateTotalMarks);
+  document.getElementById("finalSaveBtn").addEventListener("click", handleFinalSubmit);
   
   // Widget Modals Toggle Logic
+  document.getElementById("openAutoSelectModalBtn").addEventListener("click", () => document.getElementById("autoSelectModalOverlay").classList.add("active"));
+  document.getElementById("closeAutoSelectModalBtn").addEventListener("click", () => document.getElementById("autoSelectModalOverlay").classList.remove("active"));
+
   document.getElementById("openAiModalBtn").addEventListener("click", () => document.getElementById("aiGeneratorModal").classList.add("active"));
   document.getElementById("closeAiModalBtn").addEventListener("click", () => document.getElementById("aiGeneratorModal").classList.remove("active"));
-  
-  document.getElementById("openQuickAddModalBtn").addEventListener("click", () => document.getElementById("quickAddModalOverlay").classList.add("active"));
-  document.getElementById("closeQuickAddModalBtn").addEventListener("click", () => document.getElementById("quickAddModalOverlay").classList.remove("active"));
   
   document.getElementById("goToBank").addEventListener("click", () => {
     persistCart();
@@ -226,13 +258,22 @@ requireAdmin(async () => {
     window.location.href = `../admin/questions.html?returnTo=${encodeURIComponent(returnUrl)}`;
   });
   
-  document.getElementById("quickAddForm").addEventListener("submit", handleQuickAdd);
+  // Guides Logic
+  document.getElementById("guideMagicBtn").addEventListener("click", () => document.getElementById("guideMagicModal").classList.add("active"));
+  document.getElementById("guideBankBtn").addEventListener("click", () => document.getElementById("guideBankModal").classList.add("active"));
+  document.getElementById("guideAiBtn").addEventListener("click", () => document.getElementById("guideAiModal").classList.add("active"));
+  document.querySelectorAll(".close-guide-btn").forEach(b => b.addEventListener("click", (e) => e.target.closest(".modal-overlay").classList.remove("active")));
+  
+  document.getElementById("autoSelectForm").addEventListener("submit", handleAutoSelect);
   document.getElementById("addAiRowBtn").addEventListener("click", addAiRow);
   document.getElementById("aiGenerateBtn").addEventListener("click", handleAiGenerate);
 
+  // Load Syllabus Tree & Dynamic Batches
   tree = await getFullSyllabusTree();
-  populateTargetBatch();
-  populateQuickAddSyllabus();
+  activeStudentsList = await getActiveStudents();
+  
+  populateTargetBatch(); 
+  populateAutoSelectSyllabus();
   addAiRow();
 
   const cartContext = localStorage.getItem("examBuilderContext");
@@ -260,6 +301,11 @@ requireAdmin(async () => {
   }
   renderSelectedList();
   updateTotalMarks();
+  
+  // If editing or cart has items, open step 2 automatically
+  if(editId || selectedQuestions.length > 0) {
+     revealStep2();
+  }
 });
 
 function template() {
@@ -273,16 +319,15 @@ function template() {
       </div>
       <div style="display:flex; gap:10px;">
         <button class="theme-toggle" id="themeToggle" style="margin:0;"><span class="theme-toggle-thumb"></span></button>
-        <button class="btn-outline hidden" id="installBtn" style="width:42px;height:42px;padding:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M12 3v13m0 0l-4-4m4 4l4-4M5 21h14"/></svg></button>
         <button class="btn-outline" id="logoutBtn" style="width:42px;height:42px;padding:0;border-color:rgba(239,68,68,0.3);color:#ef4444;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:18px;height:18px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
       </div>
     </div>
 
-    <!-- Exam Basic Info (Default Shown) -->
+    <!-- Step 1: Exam Basic Info -->
     <form id="examForm" class="glass-card">
       <div class="section-title">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-        পরীক্ষার সাধারণ তথ্য
+        ধাপ ১: পরীক্ষার সাধারণ তথ্য
       </div>
       
       <div class="responsive-grid-2">
@@ -293,13 +338,12 @@ function template() {
         <div class="field">
           <label>লক্ষ্য ব্যাচ (Target Batch)</label>
           <select class="input-glass" id="examTargetBatch" required>
-            <option value="all">সকল ব্যাচ (সবার জন্য উন্মুক্ত)</option>
-            <!-- Batches populated by JS -->
+            <option value="all">লোড হচ্ছে...</option>
           </select>
         </div>
       </div>
       
-            <div class="field mt-2">
+      <div class="field mt-2">
         <label>বিবরণ / নির্দেশনা (ঐচ্ছিক)</label>
         <textarea class="input-glass" id="examDesc" placeholder="পরীক্ষার্থীদের জন্য কোনো বিশেষ নির্দেশনা থাকলে লিখুন..."></textarea>
       </div>
@@ -307,59 +351,116 @@ function template() {
       <div class="responsive-grid-4 mt-3">
         <div class="field"><label>পরীক্ষার তারিখ</label><input class="input-glass" type="date" id="examDate" required></div>
         <div class="field"><label>সময়কাল (মিনিট)</label><input class="input-glass" type="number" min="1" id="examDuration" placeholder="যেমন: 30" required></div>
-        <div class="field"><label>তথ্যগত সময় (ঐচ্ছিক)</label><input class="input-glass" id="examTime" placeholder="যেমন: সকাল ১০:০০"></div>
+        <div class="field"><label>তথ্যগত সময়</label><input class="input-glass" id="examTime" placeholder="যেমন: সকাল ১০:০০"></div>
         <div class="field"><label>প্রতি প্রশ্নে নম্বর</label><input class="input-glass" type="number" min="1" id="marksPerQuestion" value="1" required></div>
       </div>
-      
-      <div style="background:linear-gradient(135deg, rgba(var(--color-accent-rgb),0.1), rgba(var(--color-accent-rgb),0.02)); border:1px solid rgba(var(--color-accent-rgb), 0.2); padding:20px; border-radius:16px; text-align:center; margin-top:20px;">
-        <p style="font-size:0.95rem; font-weight:800; color:var(--text-secondary);">মোট নম্বর</p>
-        <p style="font-size:2.5rem; font-weight:900; color:var(--color-accent); font-family:var(--font-num); line-height:1; margin-top:8px;" id="totalMarksDisplay">0</p>
-      </div>
-      
-      <p id="formError" class="text-sm hidden mt-3" style="color:#ef4444; font-weight:800; text-align:center;"></p>
-      
-      <button type="submit" class="btn-premium mt-4" id="submitBtn" style="width:100%;">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-        খসড়া হিসেবে সংরক্ষণ করুন
-      </button>
-    </form>
 
-    <!-- Selected Questions & Addition Hub -->
-    <div class="glass-card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:16px;">
-        <div class="section-title" style="margin:0; border:none; padding:0;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-          নির্বাচিত প্রশ্ন (<span id="selCount">0</span>)
+      <div class="responsive-grid-2 mt-3" style="background:rgba(128,128,128,0.05); padding:16px; border-radius:12px; border:1px dashed var(--surface-border);">
+        <div class="field" style="margin:0;">
+           <label style="color:var(--color-accent);">পাবলিশ হওয়ার সময় (কবে থেকে দেখতে পাবে)</label>
+           <input class="input-glass" type="datetime-local" id="publishDate" required>
+        </div>
+        <div class="field" style="margin:0;">
+           <label>নির্দিষ্ট স্টুডেন্ট আইডি (ঐচ্ছিক)</label>
+           <input class="input-glass" id="allowedStudents" placeholder="আইডি কমা (,) দিয়ে লিখুন">
+           <small style="color:var(--text-muted); font-size:0.75rem; font-weight:600;">ফাঁকা রাখলে ব্যাচের সবাই দেখতে পাবে।</small>
         </div>
       </div>
       
-      <!-- Clean Widget Opening Buttons -->
-      <div class="responsive-grid-3" style="margin-bottom:20px; border-bottom:1px dashed var(--surface-border); padding-bottom:20px;">
-        <button type="button" class="btn-outline" id="openAiModalBtn" style="color:#8b5cf6; border-color:rgba(139,92,246,0.3); background:rgba(139,92,246,0.05);">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-          AI দিয়ে তৈরি করুন
-        </button>
-        <button type="button" class="btn-outline" id="openQuickAddModalBtn" style="color:var(--color-accent); border-color:rgba(var(--color-accent-rgb),0.3); background:rgba(var(--color-accent-rgb),0.05);">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-          ম্যানুয়ালি যোগ করুন
-        </button>
-        <button type="button" class="btn-outline" id="goToBank">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          প্রশ্ন ব্যাংক থেকে খুঁজুন
-        </button>
-      </div>
+      <button type="submit" class="btn-premium mt-4" id="proceedStep2Btn" style="width:100%; background:linear-gradient(135deg, #10b981, #059669);">
+        পরবর্তী ধাপ: প্রশ্নপত্র সেট করুন
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+      </button>
+    </form>
 
-      <div id="selectedList"></div>
+    <!-- Step 2: Question Builder (Hidden Initially) -->
+    <div id="questionBuilderSection" class="hidden">
+       <div class="glass-card">
+         <div class="section-title">
+           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+           ধাপ ২: প্রশ্ন যুক্ত করুন
+         </div>
+         
+         <div class="responsive-grid-3" style="margin-bottom:24px;">
+           
+           <!-- Card 1: Magic Select -->
+           <div class="builder-option-card popular">
+             <span class="popular-badge">POPULAR</span>
+             <div style="width:48px; height:48px; border-radius:12px; background:rgba(16,185,129,0.1); color:#10b981; display:flex; align-items:center; justify-content:center; margin:0 auto 12px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+             </div>
+             <h3 style="font-size:1.05rem; font-weight:900; color:var(--text-primary); margin-bottom:6px;">ম্যাজিক অটো-সিলেক্ট</h3>
+             <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:16px; font-weight:600; flex:1;">প্রশ্ন ব্যাংক থেকে অটোমেটিক ও র‍্যান্ডমলি প্রশ্ন বেছে নিন।</p>
+             <button type="button" class="btn-premium" id="openAutoSelectModalBtn" style="background:#10b981; box-shadow:0 4px 15px rgba(16,185,129,0.3); font-size:0.9rem; padding:10px;">সিলেক্ট করুন</button>
+             <span class="guide-trigger" id="guideMagicBtn">কীভাবে কাজ করে?</span>
+           </div>
+
+           <!-- Card 2: Question Bank -->
+           <div class="builder-option-card popular" style="border-color:rgba(245,158,11,0.4); background:linear-gradient(180deg, rgba(245,158,11,0.03) 0%, transparent 100%);">
+             <span class="popular-badge" style="background:#f59e0b; box-shadow:0 2px 10px rgba(245,158,11,0.4);">POPULAR</span>
+             <div style="width:48px; height:48px; border-radius:12px; background:rgba(245,158,11,0.1); color:#f59e0b; display:flex; align-items:center; justify-content:center; margin:0 auto 12px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+             </div>
+             <h3 style="font-size:1.05rem; font-weight:900; color:var(--text-primary); margin-bottom:6px;">প্রশ্ন ব্যাংক</h3>
+             <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:16px; font-weight:600; flex:1;">আপনার সেভ করা সব প্রশ্ন থেকে ম্যানুয়ালি খুঁজে টিক দিয়ে যুক্ত করুন।</p>
+             <button type="button" class="btn-premium" id="goToBank" style="background:#f59e0b; box-shadow:0 4px 15px rgba(245,158,11,0.3); font-size:0.9rem; padding:10px;">খুঁজুন</button>
+             <span class="guide-trigger" id="guideBankBtn">কীভাবে কাজ করে?</span>
+           </div>
+
+           <!-- Card 3: AI Generator -->
+           <div class="builder-option-card" style="border-color:rgba(139,92,246,0.2);">
+             <div style="width:48px; height:48px; border-radius:12px; background:rgba(139,92,246,0.1); color:#8b5cf6; display:flex; align-items:center; justify-content:center; margin:0 auto 12px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+             </div>
+             <h3 style="font-size:1.05rem; font-weight:900; color:var(--text-primary); margin-bottom:6px;">AI জেনারেটর</h3>
+             <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:16px; font-weight:600; flex:1;">ইন্টারনেট থেকে সম্পূর্ণ নতুন প্রশ্ন তৈরি করে যুক্ত করুন।</p>
+             <button type="button" class="btn-outline" id="openAiModalBtn" style="color:#8b5cf6; border-color:rgba(139,92,246,0.3); background:rgba(139,92,246,0.05); font-size:0.9rem; padding:10px;">তৈরি করুন</button>
+             <span class="guide-trigger" id="guideAiBtn">কীভাবে কাজ করে?</span>
+           </div>
+
+         </div>
+
+         <div style="background:linear-gradient(135deg, rgba(var(--color-accent-rgb),0.1), rgba(var(--color-accent-rgb),0.02)); border:1px solid rgba(var(--color-accent-rgb), 0.2); padding:20px; border-radius:16px; text-align:center; margin-bottom:20px;">
+           <p style="font-size:0.95rem; font-weight:800; color:var(--text-secondary);">মোট নম্বর</p>
+           <p style="font-size:2.5rem; font-weight:900; color:var(--color-accent); font-family:var(--font-num); line-height:1; margin-top:8px;" id="totalMarksDisplay">0</p>
+         </div>
+
+         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--surface-border); padding-bottom:12px;">
+           <h3 style="font-size:1.05rem; font-weight:900; color:var(--text-primary); margin:0;">নির্বাচিত প্রশ্ন তালিকা (<span id="selCount">0</span>)</h3>
+         </div>
+         <div id="selectedList"></div>
+
+         <p id="formError" class="text-sm hidden mt-3" style="color:#ef4444; font-weight:800; text-align:center;"></p>
+         
+         <button type="button" class="btn-premium mt-4" id="finalSaveBtn" style="width:100%; padding:18px; font-size:1.15rem;">
+           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+           ফাইনাল সেভ করুন (খসড়া)
+         </button>
+
+       </div>
     </div>
   `;
 }
 
+// ===== Form Steps Logic =====
+function handleBasicDetailsSubmit(e) {
+  e.preventDefault();
+  revealStep2();
+}
+
+function revealStep2() {
+  document.getElementById("proceedStep2Btn").style.display = "none";
+  document.getElementById("questionBuilderSection").classList.remove("hidden");
+  document.getElementById("questionBuilderSection").scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ===== Dynamic Batch Loading =====
 function populateTargetBatch() {
-  const targetBatchSel = document.getElementById("examTargetBatch");
-  const batches = [...new Set(tree.map(b => b.name_bn))].sort();
-  batches.forEach(b => {
-    targetBatchSel.innerHTML += `<option value="${b}">${b}</option>`;
-  });
+  const targetBatchDropdown = document.getElementById("examTargetBatch");
+  const registeredBatches = [...new Set(activeStudentsList.map(s => s.className).filter(Boolean))].sort();
+  
+  targetBatchDropdown.innerHTML = `<option value="all">সকল ব্যাচ (সবার জন্য উন্মুক্ত)</option>` + 
+      registeredBatches.map(b => `<option value="${b}">${b}</option>`).join("");
 }
 
 function fillFormFromExisting() {
@@ -368,28 +469,88 @@ function fillFormFromExisting() {
   if (existingExam.examDate?.toDate) {
     document.getElementById("examDate").value = existingExam.examDate.toDate().toISOString().slice(0, 10);
   }
+  
+  if (existingExam.publishDate?.toDate) {
+    const pd = existingExam.publishDate.toDate();
+    pd.setMinutes(pd.getMinutes() - pd.getTimezoneOffset());
+    document.getElementById("publishDate").value = pd.toISOString().slice(0, 16);
+  }
+
   document.getElementById("examTime").value = existingExam.informationalTime || "";
   document.getElementById("examDuration").value = existingExam.durationMinutes || "";
   document.getElementById("marksPerQuestion").value = existingExam.marksPerQuestion || 1;
   document.getElementById("examTargetBatch").value = existingExam.targetBatch || "all";
+  
+  document.getElementById("allowedStudents").value = (existingExam.allowedStudents || []).join(", ");
 }
 
-function populateQuickAddSyllabus() {
-  const subjSel = document.getElementById("qaSubject");
+// Auto Select Syllabus Populator & Checker
+function populateAutoSelectSyllabus() {
+  const subjSel = document.getElementById("autoSubject");
   subjSel.innerHTML = tree.map(s => `<option value="${s.id}">${s.name_bn}</option>`).join("");
-  subjSel.addEventListener("change", updateQaChapters);
-  document.getElementById("qaChapter").addEventListener("change", updateQaTopics);
-  if (tree[0]) updateQaChapters();
+  subjSel.addEventListener("change", updateAutoChapters);
+  document.getElementById("autoChapter").addEventListener("change", updateAutoTopics);
+  document.getElementById("autoTopic").addEventListener("change", checkAvailableQuestions);
+  if (tree[0]) updateAutoChapters();
 }
-function updateQaChapters() {
-  const subject = tree.find(s => s.id === document.getElementById("qaSubject").value);
-  document.getElementById("qaChapter").innerHTML = (subject?.chapters || []).map(c => `<option value="${c.id}">${c.name_bn}</option>`).join("");
-  updateQaTopics();
+function updateAutoChapters() {
+  const subject = tree.find(s => s.id === document.getElementById("autoSubject").value);
+  document.getElementById("autoChapter").innerHTML = (subject?.chapters || []).map(c => `<option value="${c.id}">${c.name_bn}</option>`).join("");
+  updateAutoTopics();
 }
-function updateQaTopics() {
-  const subject = tree.find(s => s.id === document.getElementById("qaSubject").value);
-  const chapter = subject?.chapters.find(c => c.id === document.getElementById("qaChapter").value);
-  document.getElementById("qaTopic").innerHTML = (chapter?.topics || []).map(t => `<option value="${t.id}">${t.name_bn}</option>`).join("");
+function updateAutoTopics() {
+  const subject = tree.find(s => s.id === document.getElementById("autoSubject").value);
+  const chapter = subject?.chapters.find(c => c.id === document.getElementById("autoChapter").value);
+  document.getElementById("autoTopic").innerHTML = `<option value="">যেকোনো টপিক (সব)</option>` + (chapter?.topics || []).map(t => `<option value="${t.id}">${t.name_bn}</option>`).join("");
+  checkAvailableQuestions();
+}
+
+let checkTimeout = null;
+async function checkAvailableQuestions() {
+  const req = {
+    subjectId: document.getElementById("autoSubject").value,
+    chapterId: document.getElementById("autoChapter").value,
+    topicId: document.getElementById("autoTopic").value || null,
+    limit: 500 
+  };
+  
+  const statusBox = document.getElementById("availabilityStatusBox");
+  const spinner = document.getElementById("availabilitySpinner");
+  const textEl = document.getElementById("availabilityText");
+  const submitBtn = document.getElementById("autoSelectSubmitBtn");
+  
+  spinner.classList.remove("hidden");
+  textEl.textContent = "উপলব্ধ প্রশ্ন খোঁজা হচ্ছে...";
+  textEl.style.color = "var(--text-secondary)";
+  statusBox.style.borderColor = "rgba(128,128,128,0.3)";
+  statusBox.style.background = "rgba(128,128,128,0.05)";
+  submitBtn.disabled = true;
+
+  clearTimeout(checkTimeout);
+  checkTimeout = setTimeout(async () => {
+     try {
+       const { items } = await getQuestionsPage(req);
+       spinner.classList.add("hidden");
+       
+       if(items && items.length > 0) {
+          textEl.textContent = `এই ক্যাটাগরিতে মোট ${items.length} টি প্রশ্ন উপলব্ধ আছে।`;
+          textEl.style.color = "#10b981";
+          statusBox.style.borderColor = "rgba(16,185,129,0.4)";
+          statusBox.style.background = "rgba(16,185,129,0.05)";
+          submitBtn.disabled = false;
+       } else {
+          textEl.textContent = `দুঃখিত, এই ক্যাটাগরিতে কোনো প্রশ্ন তৈরি করা হয়নি (উপলব্ধ নেই)।`;
+          textEl.style.color = "#ef4444";
+          statusBox.style.borderColor = "rgba(239,68,68,0.4)";
+          statusBox.style.background = "rgba(239,68,68,0.05)";
+          submitBtn.disabled = true;
+       }
+     } catch(err) {
+       spinner.classList.add("hidden");
+       textEl.textContent = "প্রশ্ন গুনতে সমস্যা হয়েছে।";
+       submitBtn.disabled = false;
+     }
+  }, 500);
 }
 
 // AI QUESTION PAPER MAKER 
@@ -533,8 +694,53 @@ async function handleAiGenerate() {
 
   if (totalAdded > 0) {
     showToast(`${totalAdded} টি প্রশ্ন তৈরি হয়েছে${totalFailed > 0 ? ` (${totalFailed} টি ব্যর্থ)` : ""} — নিচে রিভিউ করুন।`, "success");
-    document.getElementById("aiGeneratorModal").classList.remove("active"); // Auto close on success
+    document.getElementById("aiGeneratorModal").classList.remove("active"); 
   } else { showToast("কোনো প্রশ্ন তৈরি করা যায়নি।", "error"); }
+}
+
+async function handleAutoSelect(e) {
+  e.preventDefault();
+  const btn = document.getElementById("autoSelectSubmitBtn");
+  btn.disabled = true; btn.innerHTML = `<span class="spinner" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:8px;"></span> খোঁজা হচ্ছে...`;
+  
+  try {
+    const req = {
+      subjectId: document.getElementById("autoSubject").value,
+      chapterId: document.getElementById("autoChapter").value,
+      topicId: document.getElementById("autoTopic").value || null,
+      limit: 500 
+    };
+    
+    const { items } = await getQuestionsPage(req);
+    if(!items || items.length === 0) {
+      showToast("এই ক্যাটাগরিতে কোনো প্রশ্ন পাওয়া যায়নি।", "error");
+      return;
+    }
+    
+    const count = parseInt(document.getElementById("autoCount").value) || 10;
+    
+    // যে প্রশ্নগুলো আগে থেকেই সিলেক্ট করা আছে, সেগুলো বাদ দিন
+    const available = items.filter(q => !selectedQuestions.find(sq => sq.id === q.id));
+    if(available.length === 0) {
+      showToast("সব প্রশ্ন আগেই সিলেক্ট করা হয়েছে!", "error"); return;
+    }
+    
+    // র‍্যান্ডমলি সিলেক্ট করা
+    available.sort(() => Math.random() - 0.5);
+    const picked = available.slice(0, count);
+    
+    selectedQuestions.push(...picked);
+    persistCart();
+    renderSelectedList();
+    updateTotalMarks();
+    
+    showToast(`${picked.length} টি প্রশ্ন র‍্যান্ডমলি সিলেক্ট করা হয়েছে!`, "success");
+    document.getElementById("autoSelectModalOverlay").classList.remove("active");
+  } catch (err) {
+    showToast(friendlyError(err), "error");
+  } finally {
+    btn.disabled = false; btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg> র‍্যান্ডম প্রশ্ন সিলেক্ট করুন`;
+  }
 }
 
 function nameFor(id, kind) {
@@ -552,7 +758,7 @@ function renderSelectedList() {
   const el = document.getElementById("selectedList");
   document.getElementById("selCount").textContent = selectedQuestions.length;
   if (selectedQuestions.length === 0) {
-    el.innerHTML = `<div style="text-align:center; padding:40px 20px; background:rgba(128,128,128,0.02); border-radius:16px; border:2px dashed rgba(128,128,128,0.15);"><p style="font-size:0.95rem; font-weight:800; color:var(--text-muted);">এখনো কোনো প্রশ্ন নির্বাচিত হয়নি। ওপরের বাটনগুলো ব্যবহার করে প্রশ্ন যোগ করুন।</p></div>`;
+    el.innerHTML = `<div style="text-align:center; padding:40px 20px; background:rgba(128,128,128,0.02); border-radius:16px; border:2px dashed rgba(128,128,128,0.15);"><p style="font-size:0.95rem; font-weight:800; color:var(--text-muted);">এখনো কোনো প্রশ্ন নির্বাচিত হয়নি। ওপরের অপশনগুলো থেকে প্রশ্ন যোগ করুন।</p></div>`;
     return;
   }
   
@@ -595,43 +801,21 @@ function persistCart() {
 function updateTotalMarks() {
   const marksPerQ = Number(document.getElementById("marksPerQuestion").value) || 0;
   document.getElementById("totalMarksDisplay").textContent = calculateTotalMarks(selectedQuestions.length, marksPerQ);
-    }
-
-  async function handleQuickAdd(e) {
-  e.preventDefault();
-  const payload = {
-    question_en: document.getElementById("qaEn").value.trim(),
-    question_bn: document.getElementById("qaBn").value.trim(),
-    options_bn: {
-      A: document.getElementById("qaA").value.trim(),
-      B: document.getElementById("qaB").value.trim(),
-      C: document.getElementById("qaC").value.trim(),
-      D: document.getElementById("qaD").value.trim(),
-    },
-    correctAnswer: document.getElementById("qaCorrect").value,
-    marks: Number(document.getElementById("marksPerQuestion").value) || 1,
-    subjectId: document.getElementById("qaSubject").value,
-    chapterId: document.getElementById("qaChapter").value,
-    topicId: document.getElementById("qaTopic").value,
-  };
-  if (!payload.subjectId || !payload.chapterId || !payload.topicId) {
-    showToast("ব্যাচ/বিষয়/টপিক নির্বাচন করুন।", "error"); return;
-  }
-  try {
-    const ref = await addQuestion(payload);
-    selectedQuestions.push({ id: ref.id, ...payload });
-    persistCart(); renderSelectedList(); updateTotalMarks();
-    e.target.reset();
-    showToast("প্রশ্ন তৈরি হয়ে তালিকায় যুক্ত হয়েছে।", "success");
-    // Purposely not closing modal here so teacher can rapidly add multiple questions
-  } catch (err) { showToast(friendlyError(err), "error"); }
 }
 
-async function handleSubmit(e) {
+async function handleFinalSubmit(e) {
   e.preventDefault();
+  
+  // Validation Check before manual triggering
+  const form = document.getElementById("examForm");
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+  
   const errorEl = document.getElementById("formError");
   errorEl.classList.add("hidden");
-  const submitBtn = document.getElementById("submitBtn");
+  const submitBtn = document.getElementById("finalSaveBtn");
 
   if (selectedQuestions.length === 0) {
     errorEl.textContent = "অন্তত একটি প্রশ্ন নির্বাচন করুন।";
@@ -642,19 +826,27 @@ async function handleSubmit(e) {
   const subjectIds = [...new Set(selectedQuestions.map(q => q.subjectId))];
   const chapterIds = [...new Set(selectedQuestions.map(q => q.chapterId))];
 
+  const allowedStudentsStr = document.getElementById("allowedStudents").value.trim();
+  const allowedStudentsArray = allowedStudentsStr ? allowedStudentsStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+
   const data = {
     name: document.getElementById("examName").value.trim(),
     description: document.getElementById("examDesc").value.trim(),
     examDate: document.getElementById("examDate").value,
+    
+    publishDate: document.getElementById("publishDate").value,
+    allowedStudents: allowedStudentsArray,
+    
     informationalTime: document.getElementById("examTime").value.trim(),
     durationMinutes: Number(document.getElementById("examDuration").value),
     marksPerQuestion: Number(document.getElementById("marksPerQuestion").value),
-    targetBatch: document.getElementById("examTargetBatch").value, // Target Batch Save Logic
+    targetBatch: document.getElementById("examTargetBatch").value,
     subjectIds, chapterIds,
     questionIds: selectedQuestions.map(q => q.id)
   };
 
-  submitBtn.disabled = true; submitBtn.innerHTML = `<span class="spinner" style="width:20px;height:20px;border-width:2.5px;border-color:#fff;border-top-color:transparent;display:inline-block;vertical-align:middle;margin-right:10px;"></span> সংরক্ষণ হচ্ছে...`;
+  submitBtn.disabled = true; 
+  submitBtn.innerHTML = `<span class="spinner" style="width:20px;height:20px;border-width:2.5px;border-color:#fff;border-top-color:transparent;display:inline-block;vertical-align:middle;margin-right:10px;"></span> সংরক্ষণ হচ্ছে...`;
   
   try {
     if (editId) {
@@ -672,7 +864,7 @@ async function handleSubmit(e) {
     errorEl.classList.remove("hidden");
   } finally {
     submitBtn.disabled = false;
-    submitBtn.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> খসড়া হিসেবে সংরক্ষণ করুন`;
+    submitBtn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> ফাইনাল সেভ করুন (খসড়া)`;
   }
 }
 </script>
