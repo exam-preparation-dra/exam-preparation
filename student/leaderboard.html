@@ -119,6 +119,7 @@
   .pill-batch { color:var(--gold-deep); background:rgba(234,179,8,.14); border:1px solid rgba(234,179,8,.3); }
   .pill-target { color:#a16207; background:rgba(234,179,8,.18); }
   .pill-streak { color:var(--color-accent); background:rgba(var(--color-accent-rgb),.1); }
+  .pill-rival { color:#dc2626; background:rgba(220,38,38,.1); }
   .pill-up { color:#16a34a; background:rgba(34,197,94,.1); }
   .pill-down { color:#dc2626; background:rgba(239,68,68,.1); }
   .pill-same { color:var(--text-muted); background:rgba(128,128,128,.09); }
@@ -295,7 +296,7 @@
 import { initTheme, renderState, renderStudentHeader, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { getActiveStudent, refreshActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
 import { buildLeaderboardRows, getUpcomingExams, getAllApprovedResults } from "../js/utils/results-utils.js";
-import { getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS } from "../js/utils/friend-utils.js";
+import { getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival, setRival, clearRival } from "../js/utils/friend-utils.js";
 import { getIncomingChallenges, getOutgoingChallenges, sendChallenge, acceptChallenge, rejectChallenge, resolveCompletedChallenges, getChallengeBonusMap } from "../js/utils/challenge-utils.js";
 import { buildStudentExtras, computeRankMovement, getHeadToHeadMap, toMillis, DAY_MS } from "../js/utils/friend-stats-utils.js";
 import { getLevelInfo } from "../js/utils/xp-utils.js";
@@ -324,6 +325,7 @@ const S = {
   h2h: {},
   challengeBonusMap: {},
   studentMap: {},
+  rivalId: null,
   inboxTab: null              // "requests" | "challenges" — set on first render
 };
 let upcomingExamsCache = null;
@@ -445,7 +447,7 @@ async function loadAll({ soft = false } = {}) {
   // win/loss + bonus XP stop sitting stuck on "accepted" forever.
   await resolveCompletedChallenges(id).catch(() => []);
 
-  const [results, friendIds, incoming, outgoing, outChalls, incomingChalls, h2h, challengeBonusMap] = await Promise.all([
+  const [results, friendIds, incoming, outgoing, outChalls, incomingChalls, h2h, challengeBonusMap, rival] = await Promise.all([
     getAllApprovedResults(),
     getMyFriendIds(id),
     getIncomingRequests(id).catch(() => []),
@@ -453,7 +455,8 @@ async function loadAll({ soft = false } = {}) {
     getOutgoingChallenges(id).catch(() => []),
     getIncomingChallenges(id).catch(() => []),
     getHeadToHeadMap(id).catch(() => ({})),
-    getChallengeBonusMap().catch(() => ({}))
+    getChallengeBonusMap().catch(() => ({})),
+    getRival(id).catch(() => null)
   ]);
 
   S.results = results;
@@ -461,6 +464,7 @@ async function loadAll({ soft = false } = {}) {
   S.incoming = incoming; S.outgoing = outgoing; S.outChalls = outChalls; S.h2h = h2h;
   S.incomingChalls = incomingChalls.filter(c => c.status === "pending");
   S.challengeBonusMap = challengeBonusMap;
+  S.rivalId = S.friendIds.includes(rival?.rivalId) ? rival.rivalId : null;
 
   computeDerived();
 
@@ -501,6 +505,7 @@ function render() {
       <div id="inboxCard"></div>
 
       <div id="topperStrip"></div>
+      <div id="rivalCard"></div>
 
       <section class="lb-section">
         <div class="lb-section-title" id="listTitle"></div>
@@ -546,6 +551,7 @@ function renderAll() {
   renderTabs();
   renderInbox();
   renderToppers();
+  renderRivalCard();
   renderList();
   renderInsights();
   renderLive();
@@ -601,7 +607,7 @@ function renderTabs() {
   tabs.innerHTML = defs.map(d => `<button type="button" class="lb-tab ${S.scope === d.key ? "active" : ""}" data-scope="${d.key}">${d.icon}${d.label}</button>`).join("");
   tabs.querySelectorAll(".lb-tab").forEach(b => b.addEventListener("click", () => {
     S.scope = b.dataset.scope;
-    renderTabs(); renderToppers(); renderInsights(); renderList();
+    renderTabs(); renderToppers(); renderRivalCard(); renderInsights(); renderList();
   }));
 
   if (S.scope === "batch") {
@@ -612,7 +618,7 @@ function renderTabs() {
       : `<span style="font-size:.75rem; color:var(--text-muted); font-weight:700;">কোনো ব্যাচ পাওয়া যায়নি।</span>`;
     chips.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
       S.batch = b.dataset.batch;
-      renderTabs(); renderToppers(); renderInsights(); renderList();
+      renderTabs(); renderToppers(); renderRivalCard(); renderInsights(); renderList();
     }));
   } else {
     chips.classList.add("hidden");
@@ -688,6 +694,42 @@ function renderToppers() {
   }
 
   el.innerHTML = podium + strip;
+}
+
+/* ---------------- rival spotlight ---------------- */
+function renderRivalCard() {
+  const el = document.getElementById("rivalCard");
+  if (!el) return;
+  if (S.scope !== "friends" || !S.rivalId) { el.innerHTML = ""; return; }
+
+  const row = S.rows.find(r => r.studentId === S.rivalId);
+  const info = S.studentMap[S.rivalId];
+  const rec = S.h2h[S.rivalId] || { wins: 0, losses: 0, draws: 0 };
+  const name = row?.name || info?.name || S.rivalId;
+  const total = Math.max(1, rec.wins + rec.losses + rec.draws);
+
+  el.innerHTML = `
+    <section class="lb-card rival-card">
+      <div class="lb-card-head">
+        <div class="lb-card-title">${ICON.swords}তোমার রাইভাল</div>
+        <button type="button" class="btn-glass action-btn" id="rivalOpenBtn" title="বিস্তারিত">${ICON.chevron}</button>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px; margin:6px 0 12px;">
+        ${avatar({ name, photoURL: info?.photoURL }, 48)}
+        <div style="min-width:0;">
+          <div style="font-weight:900; font-size:1rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(name)}</div>
+          <div style="font-size:.68rem; color:var(--text-muted); font-weight:700;">${safeNum(row?.totalPoints)} pts · #${S.overallRank[S.rivalId] || "—"}</div>
+        </div>
+      </div>
+      <div class="h2h">
+        <div><b style="color:#16a34a;">${rec.wins}</b><small>তোমার জয়</small></div>
+        <div><b>${rec.draws}</b><small>ড্র</small></div>
+        <div><b style="color:#dc2626;">${rec.losses}</b><small>তোমার হার</small></div>
+      </div>
+      ${total > 1 ? `<div class="rank-strip" style="margin-top:11px; background:rgba(220,38,38,.06); border-color:rgba(220,38,38,.2);"><div class="rs-bar" style="flex:1; margin:0;"><i style="width:${Math.round(rec.wins / total * 100)}%; background:#dc2626;"></i></div></div>` : ""}
+    </section>`;
+
+  document.getElementById("rivalOpenBtn")?.addEventListener("click", () => openFriendSheet(S.rivalId));
 }
 
 /* ---------------- insights: my position + weekly race, now BELOW the list ---------------- */
@@ -820,6 +862,7 @@ function renderList() {
     const mv = movementChip(S.movement[r.studentId]);
     if (mv) pills.push(mv);
     if (ex && ex.streak >= 2) pills.push(`<span class="pill pill-streak">${ICON.flame}${ex.streak} সপ্তাহ</span>`);
+    if (S.scope === "friends" && r.studentId === S.rivalId) pills.push(`<span class="pill pill-rival">${ICON.swords}রাইভাল</span>`);
 
     let actions = "";
     if (!me) {
@@ -1041,11 +1084,23 @@ function renderFriendSheet(friendId) {
       ${challenged
         ? `<span class="btn-glass" style="color:var(--text-muted); cursor:default;">${ICON.clock}চ্যালেঞ্জ অপেক্ষমান</span>`
         : `<button type="button" class="btn-glass btn-danger" id="sheetChallengeBtn">${ICON.swords}চ্যালেঞ্জ করো</button>`}
+      <button type="button" class="btn-glass full" id="sheetRivalBtn">${ICON.swords}${S.rivalId === friendId ? "রাইভাল সরাও" : "রাইভাল বানাও"}</button>
       <button type="button" class="btn-glass full" id="sheetRemoveBtn" style="color:var(--text-muted);">${ICON.userMinus}বন্ধুত্ব শেষ করো</button>
     </div>`;
 
   document.getElementById("sheetCloseBtn").addEventListener("click", closeFriendSheet);
   document.getElementById("sheetChallengeBtn")?.addEventListener("click", () => openChallengeModal(friendId));
+  document.getElementById("sheetRivalBtn").addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    try {
+      if (S.rivalId === friendId) { await clearRival(student.studentId); S.rivalId = null; }
+      else { await setRival(student.studentId, friendId); S.rivalId = friendId; }
+      renderFriendSheet(friendId);
+      renderRivalCard();
+      renderList();
+    } catch (err) { showToast(err.message || friendlyError(err), "error"); btn.disabled = false; }
+  });
   document.getElementById("sheetRemoveBtn").addEventListener("click", async () => {
     if (!confirm("এই বন্ধুকে তালিকা থেকে সরাতে চাও?")) return;
     try {
