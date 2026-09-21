@@ -222,7 +222,7 @@
 <script type="module">
 import { initTheme, toggleTheme, renderState, renderStudentHeader, showToast } from "../js/utils/ui-utils.js";
 import { getActiveStudent, refreshActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
-import { subscribeToUpcomingExams, getApprovedResults, getStudentResultStatusMap, getLeaderboardData } from "../js/utils/results-utils.js";
+import { subscribeToUpcomingExams, getApprovedResults, getStudentResultStatusMap, getLeaderboardData, isExamAvailableNow } from "../js/utils/results-utils.js";
 import { getSubjects, getTopics, buildNameMap } from "../js/utils/syllabus-utils.js";
 import { computeOverallStats, computeSubjectStats, computeTopicStats } from "../js/utils/analytics-utils.js";
 import { generateMotivation } from "../js/utils/motivation-utils.js";
@@ -336,8 +336,11 @@ async function loadUpcoming() {
 function renderUpcoming(el, exams, resultMap) {
   const now = Date.now();
   const list = exams.filter(exam => {
-    const pub = exam.publishDate?.toDate ? exam.publishDate.toDate().getTime() : 0;
-    if (pub > now) return false;
+    // isExamAvailableNow already encodes the intended rule (both
+    // publishDate AND examDate must have arrived) — it just wasn't being
+    // used here, so an exam published today but scheduled for next week
+    // was showing up immediately instead of waiting for its date.
+    if (!isExamAvailableNow(exam, now)) return false;
     const target = exam.targetBatch || "all";
     if (target !== "all" && target !== student.className) return false;
     const allowed = exam.allowedStudents || [];
