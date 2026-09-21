@@ -17,28 +17,13 @@ import {
 import { getUpcomingExams } from "./results-utils.js";
 
 // ---------- Theme (light/dark) ----------
-// Student side (dashboard, exam, result, login…) is permanently light —
-// there is no theme toggle there any more. Only the admin panel keeps
-// its dark/light switch.
-function isAdminPage() {
-  return window.location.pathname.includes("/admin/");
-}
-
 export function initTheme() {
-  let saved = "light";
-  if (isAdminPage()) {
-    try { saved = localStorage.getItem("theme") || "light"; } catch { saved = "light"; }
-  }
+  const saved = localStorage.getItem("theme") || "light";
   document.documentElement.setAttribute("data-theme", saved);
   return saved;
 }
 
 export function toggleTheme() {
-  // Student side has no toggle — theme stays light.
-  if (!isAdminPage()) {
-    document.documentElement.setAttribute("data-theme", "light");
-    return "light";
-  }
   const current =
     document.documentElement.getAttribute("data-theme") || "light";
 
@@ -377,33 +362,25 @@ function injectNotificationStyles() {
       position: relative;
       display: inline-flex;
       align-items: center;
-      margin-right: 6px;
     }
 
     .global-notification-btn {
       position: relative;
-      width: 40px;
-      height: 40px;
-      padding: 0;
-      border: 1px solid var(--surface-border, rgba(0,0,0,.08));
-      border-radius: var(--radius-sm, 12px);
-      background: var(--surface-solid, #fff);
-      color: var(--text-secondary, currentColor);
+      width: 42px;
+      height: 42px;
+      border: 0;
+      border-radius: 12px;
+      background: var(--card-bg, rgba(255,255,255,.65));
+      color: var(--text, currentColor);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: transform .2s ease, box-shadow .2s ease;
-      -webkit-tap-highlight-color: transparent;
+      transition: .2s ease;
     }
 
     .global-notification-btn:hover {
       transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(0,0,0,.08);
-    }
-
-    .global-notification-btn:active {
-      transform: scale(.94);
     }
 
     .global-notification-btn svg {
@@ -448,9 +425,9 @@ function injectNotificationStyles() {
       width: min(360px, calc(100vw - 24px));
       max-height: min(560px, 75vh);
       overflow-y: auto;
-      background: #fffdf6;
-      color: var(--text-primary, #111);
-      border: 1px solid rgba(0,0,0,.08);
+      background: var(--card-bg, #fff);
+      color: var(--text, #111);
+      border: 1px solid var(--border, rgba(0,0,0,.08));
       border-radius: 18px;
       box-shadow: 0 18px 50px rgba(0,0,0,.16);
       padding: 10px;
@@ -481,7 +458,7 @@ function injectNotificationStyles() {
       justify-content: space-between;
       gap: 10px;
       padding: 8px 8px 12px;
-      border-bottom: 1px solid var(--surface-border, rgba(0,0,0,.07));
+      border-bottom: 1px solid var(--border, rgba(0,0,0,.07));
     }
 
     .global-notification-head strong {
@@ -505,10 +482,10 @@ function injectNotificationStyles() {
     }
 
     .global-notification-item {
-      border: 1px solid var(--surface-border, rgba(0,0,0,.07));
+      border: 1px solid var(--border, rgba(0,0,0,.07));
       border-radius: 14px;
       padding: 11px;
-      background: rgba(128,128,128,.05);
+      background: var(--surface, rgba(0,0,0,.02));
     }
 
     .global-notification-item-title {
@@ -573,14 +550,12 @@ function injectNotificationStyles() {
       font-weight: 700;
     }
 
-    .global-notif-accept,
-    [class*="global-notif-accept-"] {
+    .global-notif-accept {
       background: var(--color-accent, #2563eb);
       color: #fff;
     }
 
-    .global-notif-reject,
-    [class*="global-notif-reject-"] {
+    .global-notif-reject {
       background: rgba(239,68,68,.1);
       color: #dc2626;
     }
@@ -588,7 +563,7 @@ function injectNotificationStyles() {
     .global-notif-hide {
       background: transparent;
       color: var(--text-muted, #777);
-      border: 1px solid var(--surface-border, rgba(0,0,0,.08)) !important;
+      border: 1px solid var(--border, rgba(0,0,0,.08)) !important;
     }
 
     .global-notification-empty {
@@ -601,10 +576,9 @@ function injectNotificationStyles() {
     @media (max-width: 600px) {
       .global-notification-panel {
         position: fixed;
-        top: 72px;
-        left: 12px;
+        top: 70px;
         right: 12px;
-        width: auto;
+        width: calc(100vw - 24px);
         max-height: 70vh;
       }
     }
@@ -1567,24 +1541,11 @@ export function renderStudentHeader(
       <!-- Student identity -->
 
       <div
-        class="brand"
-        style="
-          min-width:0;
-          display:flex;
-          align-items:center;
-          gap:10px;
-        "
+        class="brand hdr-brand"
       >
 
         <div
-          class="brand-mark"
-          style="
-            overflow:hidden;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            flex-shrink:0;
-          "
+          class="brand-mark hdr-avatar"
         >
 
           ${
@@ -1610,28 +1571,16 @@ export function renderStudentHeader(
         <div style="min-width:0;">
 
           <h1
-            style="
-              font-size:1.05rem;
-              margin:0;
-              white-space:nowrap;
-              overflow:hidden;
-              text-overflow:ellipsis;
-            "
+            class="hdr-name"
           >
             ${safeName}
           </h1>
 
-          <p
-            class="text-xs text-muted"
-            style="
-              margin:0;
-              white-space:nowrap;
-              overflow:hidden;
-              text-overflow:ellipsis;
-            "
+          <span
+            class="hdr-id-pill"
           >
             ${safeStudentId}
-          </p>
+          </span>
 
         </div>
 
@@ -1643,8 +1592,8 @@ export function renderStudentHeader(
            ================================================= -->
 
       <div
-        class="flex items-center"
-        style="position:relative; gap:10px;"
+        class="hdr-actions"
+        style="position:relative;"
       >
 
         <!-- Global Notification -->
@@ -1655,7 +1604,7 @@ export function renderStudentHeader(
         >
 
           <button
-            class="global-notification-btn"
+            class="global-notification-btn hdr-icon"
             id="globalNotificationBtn"
             type="button"
             aria-label="Notifications"
@@ -1720,11 +1669,28 @@ export function renderStudentHeader(
         </div>
 
 
+        <!-- Theme -->
+
+        <button
+          class="theme-toggle hdr-icon"
+          id="themeToggle"
+          type="button"
+          aria-label="থিম পরিবর্তন"
+          title="থিম পরিবর্তন"
+        >
+
+          <span
+            class="theme-toggle-thumb"
+          ></span>
+
+        </button>
+
+
         <!-- Student switch -->
 
         <a
           href="../index.html"
-          class="icon-btn"
+          class="icon-btn hdr-icon"
           title="শিক্ষার্থী পরিবর্তন"
           aria-label="শিক্ষার্থী পরিবর্তন"
         >
@@ -1743,12 +1709,7 @@ export function renderStudentHeader(
          ================================================= -->
 
     <div
-      class="glass card"
-      style="
-        display:flex;
-        padding:6px;
-        margin-bottom:var(--space-5);
-      "
+      class="glass card hdr-nav"
     >
 
       ${
@@ -1758,29 +1719,7 @@ export function renderStudentHeader(
 
               <a
                 href="${tab.href}"
-                style="
-                  flex:1;
-                  display:flex;
-                  flex-direction:column;
-                  align-items:center;
-                  gap:4px;
-                  padding:10px 4px;
-                  border-radius:12px;
-
-                  ${
-                    tab.key === activeKey
-                      ? `
-                        background:
-                          var(--color-accent-soft);
-                        color:
-                          var(--color-accent);
-                      `
-                      : `
-                        color:
-                          var(--text-muted);
-                      `
-                  }
-                "
+                class="hdr-nav-tab ${tab.key === activeKey ? "active" : ""}"
               >
 
                 <span
