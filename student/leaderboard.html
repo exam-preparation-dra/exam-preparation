@@ -59,10 +59,27 @@
   .lb-kicker { display:flex; align-items:center; gap:8px; color:var(--color-accent); font-size:.75rem; font-weight:900; letter-spacing:.05em; text-transform:uppercase; }
   .lb-hero h1 { margin:6px 0 6px; font-size:1.6rem; line-height:1.15; font-weight:950; }
   .lb-hero p { margin:0; color:var(--text-secondary); font-size:.83rem; line-height:1.5; }
-  .friend-count { display:inline-flex; align-items:center; gap:6px; margin-top:12px; padding:5px 11px; border-radius:99px; font-size:.68rem; font-weight:900; color:var(--color-accent); background:rgba(var(--color-accent-rgb),.1); border:1px solid rgba(var(--color-accent-rgb),.2); }
+  .friend-count { display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:99px; font-size:.68rem; font-weight:900; color:var(--color-accent); background:rgba(var(--color-accent-rgb),.1); border:1px solid rgba(var(--color-accent-rgb),.2); white-space:nowrap; }
+
+  /* ===== Compact topbar (title + tabs + my-rank snapshot, all in one card) ===== */
+  .lb-topbar { margin-top:16px; padding:16px 16px 10px; }
+  .lb-topbar-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .lb-topbar-row h1 { margin:0; font-size:1.2rem; font-weight:950; display:flex; align-items:center; gap:8px; }
+  .lb-topbar-row h1 svg { color:var(--color-accent); width:20px; height:20px; }
+
+  .rank-strip { display:flex; align-items:center; gap:12px; margin-top:14px; padding:12px 13px; border-radius:15px; background:linear-gradient(135deg,rgba(var(--color-accent-rgb),.13),rgba(var(--color-accent-rgb),.03)); border:1px solid rgba(var(--color-accent-rgb),.25); }
+  .rank-strip .rs-rank { flex-shrink:0; width:44px; height:44px; border-radius:13px; background:rgba(var(--color-accent-rgb),.16); color:var(--color-accent); display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:var(--font-num); }
+  .rank-strip .rs-rank b { font-size:1.05rem; font-weight:950; line-height:1; }
+  .rank-strip .rs-rank span { font-size:.5rem; font-weight:800; opacity:.8; }
+  .rank-strip .rs-main { flex:1; min-width:0; }
+  .rank-strip .rs-level { font-size:.78rem; font-weight:900; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .rank-strip .rs-bar { height:6px; border-radius:99px; background:rgba(128,128,128,.15); overflow:hidden; margin-top:7px; }
+  .rank-strip .rs-bar i { display:block; height:100%; border-radius:99px; background:var(--color-accent); }
+  .rank-strip .rs-sub { margin-top:5px; font-size:.6rem; color:var(--text-muted); font-weight:700; }
+  .rank-strip .rs-move { flex-shrink:0; text-align:center; font-size:.62rem; font-weight:900; }
 
   /* ===== Scope tabs (Total / Batch / Friends) ===== */
-  .lb-tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:18px; padding:5px; border-radius:16px; background:var(--lb-glass); border:1px solid var(--lb-border); }
+  .lb-tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:14px; padding:5px; border-radius:16px; background:var(--lb-glass); border:1px solid var(--lb-border); }
   .lb-tab { appearance:none; border:0; background:transparent; color:var(--text-secondary); font:inherit; font-size:.78rem; font-weight:900; min-height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; gap:7px; cursor:pointer; transition:all .18s ease; -webkit-tap-highlight-color:transparent; }
   .lb-tab.active { background:var(--color-accent); color:#fff; box-shadow:0 6px 16px rgba(var(--color-accent-rgb),.28); }
   .lb-tab .lb-icon { width:16px; height:16px; }
@@ -71,6 +88,19 @@
   .lb-filter-row::-webkit-scrollbar { display:none; }
   .filter-btn { min-height:34px; padding:6px 14px; font-size:.74rem; flex-shrink:0; border-radius:99px; }
   .filter-btn.active { background:var(--color-accent); color:#fff; border-color:var(--color-accent); box-shadow:0 4px 12px rgba(var(--color-accent-rgb),.2); }
+
+  /* ===== Unified inbox (friend requests + challenges, one card, internal tabs) ===== */
+  .inbox-card { margin-top:14px; padding:0; overflow:hidden; }
+  .inbox-tabs { display:flex; }
+  .inbox-tab { flex:1; border:0; background:transparent; padding:12px 10px; font:inherit; font-size:.74rem; font-weight:900; color:var(--text-muted); display:flex; align-items:center; justify-content:center; gap:6px; cursor:pointer; border-bottom:2px solid transparent; -webkit-tap-highlight-color:transparent; }
+  .inbox-tab.active { color:var(--color-accent); border-bottom-color:var(--color-accent); }
+  .inbox-count { display:inline-flex; align-items:center; justify-content:center; min-width:17px; height:17px; padding:0 4px; border-radius:99px; background:var(--color-accent); color:#fff; font-size:.6rem; font-weight:900; }
+  .inbox-body { padding:12px 14px 14px; }
+
+  /* ===== h2h mini chip (on friend rows) ===== */
+  .h2h-mini { display:inline-flex; align-items:center; gap:3px; border-radius:99px; padding:2px 8px; font-size:.6rem; font-weight:900; background:rgba(128,128,128,.09); color:var(--text-muted); }
+  .h2h-mini b { color:#16a34a; }
+  .h2h-mini em { font-style:normal; color:#dc2626; }
 
   /* ===== Rank badge / crown / topper pills ===== */
   .rank-badge { width:28px; height:28px; flex-shrink:0; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--font-num); font-size:.78rem; font-weight:950; color:var(--text-muted); }
@@ -268,6 +298,7 @@ import { buildLeaderboardRows, getUpcomingExams, getAllApprovedResults } from ".
 import { getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS } from "../js/utils/friend-utils.js";
 import { getIncomingChallenges, getOutgoingChallenges, sendChallenge, acceptChallenge, rejectChallenge, resolveCompletedChallenges, getChallengeBonusMap } from "../js/utils/challenge-utils.js";
 import { buildStudentExtras, computeRankMovement, getHeadToHeadMap, toMillis, DAY_MS } from "../js/utils/friend-stats-utils.js";
+import { getLevelInfo } from "../js/utils/xp-utils.js";
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -289,9 +320,11 @@ const S = {
   incoming: [],
   outgoing: [],
   outChalls: [],
+  incomingChalls: [],
   h2h: {},
   challengeBonusMap: {},
-  studentMap: {}
+  studentMap: {},
+  inboxTab: null              // "requests" | "challenges" — set on first render
 };
 let upcomingExamsCache = null;
 let selectedFriendIdForChallenge = null;
@@ -305,9 +338,8 @@ let refreshTimer = null;
 if (!student) {
   window.location.href = "../index.html";
 } else {
-  refreshActiveStudent(student.docId).then(async fresh => {
+  refreshActiveStudent(student.docId).then(fresh => {
     if (fresh) student = fresh;
-    await handleIncomingFriendLink().catch(() => {});
     render();
   });
 }
@@ -413,12 +445,13 @@ async function loadAll({ soft = false } = {}) {
   // win/loss + bonus XP stop sitting stuck on "accepted" forever.
   await resolveCompletedChallenges(id).catch(() => []);
 
-  const [results, friendIds, incoming, outgoing, outChalls, h2h, challengeBonusMap] = await Promise.all([
+  const [results, friendIds, incoming, outgoing, outChalls, incomingChalls, h2h, challengeBonusMap] = await Promise.all([
     getAllApprovedResults(),
     getMyFriendIds(id),
     getIncomingRequests(id).catch(() => []),
     getOutgoingRequests(id).catch(() => []),
     getOutgoingChallenges(id).catch(() => []),
+    getIncomingChallenges(id).catch(() => []),
     getHeadToHeadMap(id).catch(() => ({})),
     getChallengeBonusMap().catch(() => ({}))
   ]);
@@ -426,6 +459,7 @@ async function loadAll({ soft = false } = {}) {
   S.results = results;
   S.friendIds = Array.isArray(friendIds) ? friendIds : [];
   S.incoming = incoming; S.outgoing = outgoing; S.outChalls = outChalls; S.h2h = h2h;
+  S.incomingChalls = incomingChalls.filter(c => c.status === "pending");
   S.challengeBonusMap = challengeBonusMap;
 
   computeDerived();
@@ -436,7 +470,6 @@ async function loadAll({ soft = false } = {}) {
     S.batch = (mine && batchOf(mine) !== NO_BATCH ? batchOf(mine) : null) || student.className || batches[0] || null;
   }
   renderAll();
-  await renderIncomingChallenges();
 }
 
 function allBatches() {
@@ -455,28 +488,26 @@ function render() {
     <div class="lb-page">
       ${renderStudentHeader(student, "leaderboard")}
 
-      <section class="glass-float-card lb-hero">
-        <div class="lb-kicker">${ICON.trophy} স্টুডেন্ট পারফরম্যান্স</div>
-        <h1>লিডারবোর্ড</h1>
-        <p>সর্বমোট, ব্যাচ অনুযায়ী আর বন্ধুদের মধ্যে — কে কোথায় আছে এক জায়গায় দেখো।</p>
-        <div class="friend-count" id="friendCount"></div>
+      <section class="glass-float-card lb-topbar">
+        <div class="lb-topbar-row">
+          <h1>${ICON.trophy}লিডারবোর্ড</h1>
+          <div class="friend-count" id="friendCount"></div>
+        </div>
+        <div id="rankStrip"></div>
+        <div class="lb-tabs" id="scopeTabs"></div>
+        <div class="lb-filter-row hidden" id="batchChips"></div>
       </section>
 
-      <div id="friendLinkCard"></div>
-      <div id="requestsCard"></div>
-      <div id="incomingChallengesCard"></div>
-
-      <div class="lb-tabs" id="scopeTabs"></div>
-      <div class="lb-filter-row hidden" id="batchChips"></div>
+      <div id="inboxCard"></div>
 
       <div id="topperStrip"></div>
-      <div id="lbHighlights" class="lb-extra-grid"></div>
-      <div id="weeklyRace"></div>
 
       <section class="lb-section">
         <div class="lb-section-title" id="listTitle"></div>
         <div class="glass-float-card lb-list-card"><div id="leaderboardList"><div class="spinner" style="margin:24px auto;"></div></div></div>
       </section>
+
+      <div id="lbInsights" class="lb-extra-grid"></div>
 
       <section class="live-section">
         <div class="live-head">
@@ -511,20 +542,49 @@ function render() {
 
 function renderAll() {
   renderHeroCount();
-  renderFriendLinkCard();
-  renderRequests();
+  renderRankStrip();
   renderTabs();
+  renderInbox();
   renderToppers();
-  renderHighlights();
-  renderWeeklyRace();
   renderList();
+  renderInsights();
   renderLive();
   if (openFriendId) renderFriendSheet(openFriendId);
 }
 
 function renderHeroCount() {
   const el = document.getElementById("friendCount");
-  if (el) el.innerHTML = `${ICON.users} বন্ধু ${S.friendIds.length}/${MAX_FRIENDS}`;
+  if (el) el.innerHTML = `${ICON.users} ${S.friendIds.length}/${MAX_FRIENDS}`;
+}
+
+/* ---------------- my rank snapshot strip ---------------- */
+function renderRankStrip() {
+  const el = document.getElementById("rankStrip");
+  if (!el) return;
+
+  const rows = S.rows;
+  const myPos = rows.findIndex(r => r.studentId === student.studentId);
+  if (myPos < 0) { el.innerHTML = ""; return; }
+
+  const me = rows[myPos];
+  const level = getLevelInfo(safeNum(me.totalPoints));
+  const mv = S.movement[student.studentId];
+  const moveHtml = mv === null || mv === undefined
+    ? `<span style="color:var(--text-muted);">নতুন</span>`
+    : mv > 0 ? `<span style="color:#16a34a;">${ICON.up}+${mv}</span>`
+    : mv < 0 ? `<span style="color:#dc2626;">${ICON.down}${mv}</span>`
+    : `<span style="color:var(--text-muted);">${ICON.minus}</span>`;
+
+  el.innerHTML = `
+    <div class="rank-strip">
+      <div class="rs-rank"><b class="num">#${myPos + 1}</b><span>সর্বমোট</span></div>
+      <div class="rs-main">
+        <div class="rs-level">লেভেল ${level.level} <span class="num" style="color:var(--color-accent);">${safeNum(me.totalPoints)} pts</span></div>
+        <div class="rs-bar"><i style="width:${level.percentage}%"></i></div>
+        <div class="rs-sub">${level.isMax ? "সর্বোচ্চ লেভেল!" : `পরের লেভেলের জন্য আরও ${level.xpNeeded} XP লাগবে`}</div>
+      </div>
+      <div class="rs-move">${moveHtml}<div style="color:var(--text-muted); font-weight:700; margin-top:2px;">৭ দিনে</div></div>
+    </div>`;
 }
 
 /* ---------------- scope tabs ---------------- */
@@ -541,7 +601,7 @@ function renderTabs() {
   tabs.innerHTML = defs.map(d => `<button type="button" class="lb-tab ${S.scope === d.key ? "active" : ""}" data-scope="${d.key}">${d.icon}${d.label}</button>`).join("");
   tabs.querySelectorAll(".lb-tab").forEach(b => b.addEventListener("click", () => {
     S.scope = b.dataset.scope;
-    renderTabs(); renderToppers(); renderHighlights(); renderWeeklyRace(); renderList();
+    renderTabs(); renderToppers(); renderInsights(); renderList();
   }));
 
   if (S.scope === "batch") {
@@ -552,7 +612,7 @@ function renderTabs() {
       : `<span style="font-size:.75rem; color:var(--text-muted); font-weight:700;">কোনো ব্যাচ পাওয়া যায়নি।</span>`;
     chips.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
       S.batch = b.dataset.batch;
-      renderTabs(); renderToppers(); renderHighlights(); renderList();
+      renderTabs(); renderToppers(); renderInsights(); renderList();
     }));
   } else {
     chips.classList.add("hidden");
@@ -630,9 +690,9 @@ function renderToppers() {
   el.innerHTML = podium + strip;
 }
 
-/* ---------------- my position card ---------------- */
-function renderHighlights() {
-  const el = document.getElementById("lbHighlights");
+/* ---------------- insights: my position + weekly race, now BELOW the list ---------------- */
+function renderInsights() {
+  const el = document.getElementById("lbInsights");
   if (!el) return;
 
   const rows = scopeRows();
@@ -641,88 +701,85 @@ function renderHighlights() {
   const target = myPos > 0 ? rows[myPos - 1] : null;
   const ex = S.extras[student.studentId] || { streak: 0, weeklyXP: 0 };
 
-  if (!rows.length) { el.innerHTML = ""; return; }
-
-  const gap = target && me ? Math.max(0, safeNum(target.totalPoints) - safeNum(me.totalPoints)) : 0;
-  const progress = target && me && safeNum(target.totalPoints) > 0
-    ? Math.min(100, Math.max(8, safeNum(me.totalPoints) / safeNum(target.totalPoints) * 100)) : 0;
-
-  const mv = S.movement[student.studentId];
-  const mvHtml = mv === null || mv === undefined ? `<span style="color:var(--text-muted);">নতুন</span>`
-    : mv > 0 ? `<span style="color:#16a34a; display:flex; align-items:center; gap:3px;">${ICON.up}${mv} ধাপ</span>`
-    : mv < 0 ? `<span style="color:#dc2626; display:flex; align-items:center; gap:3px;">${ICON.down}${Math.abs(mv)} ধাপ</span>`
-    : `<span style="color:var(--text-muted); display:flex; align-items:center; gap:3px;">${ICON.minus}অপরিবর্তিত</span>`;
-
-  let body;
-  if (!me) {
-    body = `<div class="target-name">${S.scope === "batch" ? "তুমি এই ব্যাচে নেই" : "র‍্যাঙ্ক পাওয়া যায়নি"}</div>
-            <div class="target-gap">${S.scope === "batch" ? "নিজের ব্যাচ বেছে নিলে তোমার অবস্থান দেখা যাবে।" : "পরীক্ষা দিলে এখানে তোমার অবস্থান দেখা যাবে।"}</div>`;
-  } else if (target) {
-    body = `
-      <div class="target-row">
-        <div style="min-width:0;">
-          <div class="target-name">${escapeHtml(target.name || target.studentId)}</div>
-          <div class="target-gap">আরও <b>${gap}</b> পয়েন্ট পেলে এই র‍্যাঙ্কে পৌঁছাবে।</div>
-        </div>
-        <div class="target-score"><strong>${safeNum(me.totalPoints)}</strong><span>তোমার পয়েন্ট</span></div>
-      </div>
-      <div class="target-bar"><i style="width:${progress}%"></i></div>`;
+  let positionCard = "";
+  if (!rows.length) {
+    positionCard = "";
   } else {
-    body = `<div class="target-name">তুমি এই তালিকার সবার উপরে</div>
-            <div class="target-gap">${safeNum(me.totalPoints)} পয়েন্ট নিয়ে শীর্ষে আছো।</div>`;
+    const gap = target && me ? Math.max(0, safeNum(target.totalPoints) - safeNum(me.totalPoints)) : 0;
+    const progress = target && me && safeNum(target.totalPoints) > 0
+      ? Math.min(100, Math.max(8, safeNum(me.totalPoints) / safeNum(target.totalPoints) * 100)) : 0;
+
+    const mv = S.movement[student.studentId];
+    const mvHtml = mv === null || mv === undefined ? `<span style="color:var(--text-muted);">নতুন</span>`
+      : mv > 0 ? `<span style="color:#16a34a; display:flex; align-items:center; gap:3px;">${ICON.up}${mv} ধাপ</span>`
+      : mv < 0 ? `<span style="color:#dc2626; display:flex; align-items:center; gap:3px;">${ICON.down}${Math.abs(mv)} ধাপ</span>`
+      : `<span style="color:var(--text-muted); display:flex; align-items:center; gap:3px;">${ICON.minus}অপরিবর্তিত</span>`;
+
+    let body;
+    if (!me) {
+      body = `<div class="target-name">${S.scope === "batch" ? "তুমি এই ব্যাচে নেই" : "র‍্যাঙ্ক পাওয়া যায়নি"}</div>
+              <div class="target-gap">${S.scope === "batch" ? "নিজের ব্যাচ বেছে নিলে তোমার অবস্থান দেখা যাবে।" : "পরীক্ষা দিলে এখানে তোমার অবস্থান দেখা যাবে।"}</div>`;
+    } else if (target) {
+      body = `
+        <div class="target-row">
+          <div style="min-width:0;">
+            <div class="target-name">${escapeHtml(target.name || target.studentId)}</div>
+            <div class="target-gap">আরও <b>${gap}</b> পয়েন্ট পেলে এই র‍্যাঙ্কে পৌঁছাবে।</div>
+          </div>
+          <div class="target-score"><strong>${safeNum(me.totalPoints)}</strong><span>তোমার পয়েন্ট</span></div>
+        </div>
+        <div class="target-bar"><i style="width:${progress}%"></i></div>`;
+    } else {
+      body = `<div class="target-name">তুমি এই তালিকার সবার উপরে</div>
+              <div class="target-gap">${safeNum(me.totalPoints)} পয়েন্ট নিয়ে শীর্ষে আছো।</div>`;
+    }
+
+    positionCard = `
+      <section class="lb-card">
+        <div class="lb-card-head">
+          <div class="lb-card-title">${ICON.target}${target ? "পরের টার্গেট" : "তোমার অবস্থান"}</div>
+          <span class="lb-card-sub">${me ? `${myPos + 1} নম্বর` : "—"}</span>
+        </div>
+        ${body}
+        <div class="hl-grid">
+          <div class="hl"><small>গত ৭ দিনে র‍্যাঙ্ক</small><strong>${mvHtml}</strong></div>
+          <div class="hl"><small>সাপ্তাহিক স্ট্রিক</small><strong style="color:var(--color-accent);">${ICON.flame}${ex.streak} সপ্তাহ</strong></div>
+        </div>
+      </section>`;
   }
 
-  el.innerHTML = `
-    <section class="lb-card">
-      <div class="lb-card-head">
-        <div class="lb-card-title">${ICON.target}${target ? "পরের টার্গেট" : "তোমার অবস্থান"}</div>
-        <span class="lb-card-sub">${me ? `${myPos + 1} নম্বর` : "—"}</span>
-      </div>
-      ${body}
-      <div class="hl-grid">
-        <div class="hl"><small>গত ৭ দিনে র‍্যাঙ্ক</small><strong>${mvHtml}</strong></div>
-        <div class="hl"><small>সাপ্তাহিক স্ট্রিক</small><strong style="color:var(--color-accent);">${ICON.flame}${ex.streak} সপ্তাহ</strong></div>
-      </div>
-    </section>`;
-}
-
-/* ---------------- weekly race (friends) ---------------- */
-function renderWeeklyRace() {
-  const el = document.getElementById("weeklyRace");
-  if (!el) return;
-  if (S.scope !== "friends") { el.innerHTML = ""; return; }
-
+  let raceCard = "";
   const people = S.rows.filter(r => isFriend(r.studentId) || r.studentId === student.studentId)
     .map(r => ({ r, xp: (S.extras[r.studentId]?.weeklyXP) || 0 }))
     .sort((a, b) => b.xp - a.xp);
 
   if (people.length < 2) {
-    el.innerHTML = `
-      <section class="lb-card" style="margin-top:12px;">
+    raceCard = `
+      <section class="lb-card">
         <div class="lb-card-head"><div class="lb-card-title">${ICON.flame}সাপ্তাহিক রেস</div></div>
         <div class="empty-note">বন্ধু যোগ করলে এখানে এই সপ্তাহে কে বেশি পয়েন্ট পেল তা দেখা যাবে।</div>
       </section>`;
-    return;
+  } else {
+    const max = Math.max(1, ...people.map(p => p.xp));
+    const leader = people[0].xp > 0 ? people[0] : null;
+    raceCard = `
+      <section class="lb-card">
+        <div class="lb-card-head">
+          <div class="lb-card-title">${ICON.flame}সাপ্তাহিক রেস</div>
+          <span class="lb-card-sub">সোমবার থেকে এই পর্যন্ত</span>
+        </div>
+        ${leader ? `<div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;"><span class="pill pill-topper">${ICON.crownSm}সপ্তাহের সেরা</span><b style="font-size:.78rem;">${escapeHtml(leader.r.name || leader.r.studentId)}${leader.r.studentId === student.studentId ? " (তুমি)" : ""}</b></div>` : ""}
+        ${people.map(p => `
+          <div class="race-row">
+            <div class="race-name">${escapeHtml(p.r.studentId === student.studentId ? "তুমি" : (p.r.name || p.r.studentId))}</div>
+            <div class="race-bar"><i style="width:${p.xp > 0 ? Math.max(4, Math.round(p.xp / max * 100)) : 0}%"></i></div>
+            <div class="race-val">+${p.xp}</div>
+          </div>`).join("")}
+        ${leader ? "" : `<div class="empty-note" style="padding:10px 0 0;">এই সপ্তাহে এখনো কেউ পরীক্ষা দেয়নি।</div>`}
+      </section>`;
   }
 
-  const max = Math.max(1, ...people.map(p => p.xp));
-  const leader = people[0].xp > 0 ? people[0] : null;
-
-  el.innerHTML = `
-    <section class="lb-card" style="margin-top:12px;">
-      <div class="lb-card-head">
-        <div class="lb-card-title">${ICON.flame}সাপ্তাহিক রেস</div>
-        <span class="lb-card-sub">সোমবার থেকে এই পর্যন্ত</span>
-      </div>
-      ${leader ? `<div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;"><span class="pill pill-topper">${ICON.crownSm}সপ্তাহের সেরা</span><b style="font-size:.78rem;">${escapeHtml(leader.r.name || leader.r.studentId)}${leader.r.studentId === student.studentId ? " (তুমি)" : ""}</b></div>` : ""}
-      ${people.map(p => `
-        <div class="race-row">
-          <div class="race-name">${escapeHtml(p.r.studentId === student.studentId ? "তুমি" : (p.r.name || p.r.studentId))}</div>
-          <div class="race-bar"><i style="width:${p.xp > 0 ? Math.max(4, Math.round(p.xp / max * 100)) : 0}%"></i></div>
-          <div class="race-val">+${p.xp}</div>
-        </div>`).join("")}
-      ${leader ? "" : `<div class="empty-note" style="padding:10px 0 0;">এই সপ্তাহে এখনো কেউ পরীক্ষা দেয়নি।</div>`}
-    </section>`;
+  el.innerHTML = positionCard + raceCard;
 }
 
 /* ---------------- ranking list ---------------- */
@@ -780,6 +837,10 @@ function renderList() {
     const showBatchLine = S.scope !== "batch";
     const overallLine = S.scope === "batch" ? `<span class="lb-sub">সর্বমোট #${S.overallRank[r.studentId]}</span>` : (showBatchLine ? `<span class="lb-sub">${escapeHtml(batchOf(r))}</span>` : "");
 
+    const rec = S.scope === "friends" && !me ? S.h2h[r.studentId] : null;
+    const h2hLine = rec && (rec.wins + rec.losses + rec.draws) > 0
+      ? `<div class="h2h-mini" style="margin-top:5px;">চ্যালেঞ্জে <b>${rec.wins} জয়</b> · <em>${rec.losses} পরাজয়</em> · ${rec.draws} ড্র</div>` : "";
+
     return `
       <div class="lb-row ${me ? "is-me" : ""} ${isScopeTop && !me ? "is-top" : ""} ${friend ? "tappable" : ""}" ${friend ? `data-open="${escapeHtml(r.studentId)}"` : ""}>
         ${rankBadge(pos)}
@@ -791,6 +852,7 @@ function renderList() {
             <span class="num">${safeNum(r.totalPoints)}</span> pts
             <span style="opacity:.75; font-weight:700;">(${escapeHtml(r.avgPercentage)}%)</span>
           </div>
+          ${h2hLine}
         </div>
         <div class="lb-actions">${actions}</div>
       </div>`;
@@ -812,90 +874,55 @@ function renderList() {
   el.querySelectorAll("[data-open]").forEach(row => row.addEventListener("click", () => openFriendSheet(row.dataset.open)));
 }
 
-/* ---------------- friend link (share -> auto friend request) ---------------- */
-function myFriendLink() {
-  return new URL(`./leaderboard.html?addFriend=${encodeURIComponent(student.studentId)}`, window.location.href).href;
-}
-
-function renderFriendLinkCard() {
-  const el = document.getElementById("friendLinkCard");
-  if (!el) return;
-
-  const link = myFriendLink();
-  const full = S.friendIds.length >= MAX_FRIENDS;
-
-  el.innerHTML = `
-    <div class="glass-float-card req-card" style="border-left:4px solid var(--color-accent);">
-      <div class="req-head" style="color:var(--color-accent);">${ICON.userPlus} আমার বন্ধু-লিংক</div>
-      <p style="margin:2px 0 10px; font-size:.72rem; color:var(--text-muted); font-weight:700; line-height:1.55;">
-        ${full ? `তোমার বন্ধু তালিকা পূর্ণ (${MAX_FRIENDS}/${MAX_FRIENDS}) — নতুন কাউকে যোগ করতে আগে কাউকে সরাও।` : "এই লিংক যাকে পাঠাবে, সে খুললেই সরাসরি তোমাকে বন্ধুর অনুরোধ পাঠিয়ে দেবে — আইডি খুঁজে বের করার দরকার নেই।"}
-      </p>
-      <div style="background:rgba(128,128,128,0.05); border:1px solid var(--surface-border); border-radius:10px; padding:10px 12px; font-size:0.72rem; color:var(--text-muted); font-weight:700; word-break:break-all; margin-bottom:12px;">${escapeHtml(link)}</div>
-      <div style="display:flex; gap:8px;">
-        <button type="button" class="btn-glass action-btn" id="copyFriendLinkBtn" style="flex:1;">কপি করো</button>
-        <button type="button" class="btn-glass action-btn" id="shareFriendLinkBtn" style="flex:1;">শেয়ার করো</button>
-      </div>
-    </div>`;
-
-  document.getElementById("copyFriendLinkBtn")?.addEventListener("click", async () => {
-    try { await navigator.clipboard.writeText(link); showToast("লিংক কপি হয়েছে!", "success"); }
-    catch { showToast("কপি করা যায়নি।", "error"); }
-  });
-
-  document.getElementById("shareFriendLinkBtn")?.addEventListener("click", async () => {
-    const shareText = "আমার সাথে বন্ধু হয়ে যাও:";
-    if (navigator.share) {
-      try { await navigator.share({ title: "বন্ধু হও", text: shareText, url: link }); return; } catch { return; }
-    }
-    try { await navigator.clipboard.writeText(`${shareText} ${link}`); showToast("লিংক কপি হয়েছে!", "success"); }
-    catch { showToast("শেয়ার করা যায়নি।", "error"); }
-  });
-}
-
-// A friend's link lands back here with ?addFriend=<their studentId>. If
-// I'm logged in as someone else, that's an automatic friend request to
-// them — no ID typing needed. Runs once, then the param is scrubbed from
-// the URL so refreshing the page never re-sends it.
-async function handleIncomingFriendLink() {
-  const params = new URLSearchParams(window.location.search);
-  const targetId = params.get("addFriend");
-  if (!targetId) return;
-
-  window.history.replaceState({}, "", window.location.pathname);
-  if (targetId === student.studentId) return;
-
-  try {
-    await sendFriendRequest(student.studentId, targetId);
-    showToast("বন্ধুর অনুরোধ পাঠানো হয়েছে!", "success");
-  } catch (err) {
-    showToast(err.message || friendlyError(err), "error");
-  }
-}
-
 /* ---------------- incoming friend requests ---------------- */
-function renderRequests() {
-  const el = document.getElementById("requestsCard");
+/* ---------------- unified inbox: friend requests + incoming challenges ---------------- */
+function renderInbox() {
+  const el = document.getElementById("inboxCard");
   if (!el) return;
-  if (!S.incoming.length) { el.innerHTML = ""; return; }
+
+  const reqCount = S.incoming.length;
+  const chalCount = S.incomingChalls.length;
+
+  if (!reqCount && !chalCount) { el.innerHTML = ""; return; }
+
+  // Default to whichever tab actually has something waiting.
+  if (!S.inboxTab) S.inboxTab = chalCount > 0 && !reqCount ? "challenges" : "requests";
+
+  const reqBody = !reqCount ? `<div class="empty-note">কোনো বন্ধুর অনুরোধ নেই।</div>` : S.incoming.map(req => {
+    const from = S.studentMap[req.fromStudentId] || {};
+    const row = S.rows.find(r => r.studentId === req.fromStudentId) || from;
+    return `
+      <div class="req-row">
+        ${avatar({ name: from.name, photoURL: from.photoURL }, 40)}
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:.88rem; font-weight:900; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(from.name || req.fromStudentId)}</div>
+          <div style="font-size:.66rem; color:var(--text-muted); font-weight:700;">${escapeHtml(batchOf(from))}${row.totalPoints !== undefined ? ` · ${safeNum(row.totalPoints)} pts` : ""}</div>
+        </div>
+        <button type="button" class="btn-glass action-btn btn-danger req-reject" data-id="${escapeHtml(req.id)}" title="বাতিল">${ICON.close}</button>
+        <button type="button" class="btn-glass action-btn btn-ok req-accept" data-id="${escapeHtml(req.id)}" title="গ্রহণ">${ICON.check}</button>
+      </div>`;
+  }).join("");
+
+  const chalBody = !chalCount ? `<div class="empty-note">কোনো নতুন চ্যালেঞ্জ নেই।</div>` : S.incomingChalls.map(c => `
+    <div class="req-row">
+      <div style="flex:1; min-width:0;">
+        <div style="font-size:.92rem; font-weight:900;">${escapeHtml(S.studentMap[c.fromStudentId]?.name || "বন্ধু")}</div>
+        <div style="margin-top:3px; font-size:.72rem; color:var(--text-secondary);">পরীক্ষা: <b>${escapeHtml(c.examName || "পরীক্ষা")}</b></div>
+      </div>
+      <button type="button" class="btn-glass action-btn btn-danger chall-reject" data-id="${escapeHtml(c.id)}" title="বাতিল">${ICON.close}</button>
+      <button type="button" class="btn-glass action-btn btn-ok chall-accept" data-id="${escapeHtml(c.id)}" title="গ্রহণ">${ICON.check}</button>
+    </div>`).join("");
 
   el.innerHTML = `
-    <div class="glass-float-card req-card" style="border-left:4px solid var(--color-accent);">
-      <div class="req-head" style="color:var(--color-accent);">${ICON.userPlus} বন্ধুর অনুরোধ (${S.incoming.length})</div>
-      ${S.incoming.map(req => {
-        const from = S.studentMap[req.fromStudentId] || {};
-        const row = S.rows.find(r => r.studentId === req.fromStudentId) || from;
-        return `
-          <div class="req-row">
-            ${avatar({ name: from.name, photoURL: from.photoURL }, 40)}
-            <div style="flex:1; min-width:0;">
-              <div style="font-size:.88rem; font-weight:900; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(from.name || req.fromStudentId)}</div>
-              <div style="font-size:.66rem; color:var(--text-muted); font-weight:700;">${escapeHtml(batchOf(from))}${row.totalPoints !== undefined ? ` · ${safeNum(row.totalPoints)} pts` : ""}</div>
-            </div>
-            <button type="button" class="btn-glass action-btn btn-danger req-reject" data-id="${escapeHtml(req.id)}" title="বাতিল">${ICON.close}</button>
-            <button type="button" class="btn-glass action-btn btn-ok req-accept" data-id="${escapeHtml(req.id)}" title="গ্রহণ">${ICON.check}</button>
-          </div>`;
-      }).join("")}
+    <div class="glass-float-card inbox-card">
+      <div class="inbox-tabs">
+        <button type="button" class="inbox-tab ${S.inboxTab === "requests" ? "active" : ""}" data-tab="requests">${ICON.userPlus}বন্ধুর অনুরোধ${reqCount ? `<span class="inbox-count">${reqCount}</span>` : ""}</button>
+        <button type="button" class="inbox-tab ${S.inboxTab === "challenges" ? "active" : ""}" data-tab="challenges">${ICON.swords}চ্যালেঞ্জ${chalCount ? `<span class="inbox-count">${chalCount}</span>` : ""}</button>
+      </div>
+      <div class="inbox-body">${S.inboxTab === "requests" ? reqBody : chalBody}</div>
     </div>`;
+
+  el.querySelectorAll(".inbox-tab").forEach(b => b.addEventListener("click", () => { S.inboxTab = b.dataset.tab; renderInbox(); }));
 
   el.querySelectorAll(".req-accept").forEach(b => b.addEventListener("click", async () => {
     b.disabled = true;
@@ -906,6 +933,16 @@ function renderRequests() {
     b.disabled = true;
     try { await rejectFriendRequest(b.dataset.id); await loadAll(); }
     catch (err) { showToast(err.message || friendlyError(err), "error"); b.disabled = false; }
+  }));
+  el.querySelectorAll(".chall-accept").forEach(btn => btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    try { await acceptChallenge(btn.dataset.id, student.studentId); showToast("চ্যালেঞ্জ গৃহীত!", "success"); await loadAll(); }
+    catch (err) { showToast(err.message || friendlyError(err), "error"); btn.disabled = false; }
+  }));
+  el.querySelectorAll(".chall-reject").forEach(btn => btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    try { await rejectChallenge(btn.dataset.id, student.studentId); await loadAll(); }
+    catch (err) { showToast(err.message || friendlyError(err), "error"); btn.disabled = false; }
   }));
 }
 
@@ -1018,43 +1055,6 @@ function renderFriendSheet(friendId) {
       await loadAll();
     } catch (err) { showToast(err.message || friendlyError(err), "error"); }
   });
-}
-
-/* ---------------- challenges ---------------- */
-async function renderIncomingChallenges() {
-  const card = document.getElementById("incomingChallengesCard");
-  if (!card) return;
-  try {
-    const all = await getIncomingChallenges(student.studentId);
-    // Only still-pending challenges belong on this "respond to it" card —
-    // once accepted/completed/etc. it has nothing left for the recipient
-    // to decide, so it must disappear from here.
-    const incoming = all.filter(c => c.status === "pending");
-    if (!incoming.length) { card.innerHTML = ""; return; }
-
-    card.innerHTML = `
-      <div class="glass-float-card req-card" style="border-left:4px solid #ef4444;">
-        <div class="req-head" style="color:#ef4444;">${ICON.swords} নতুন চ্যালেঞ্জ!</div>
-        ${incoming.map(c => `
-          <div class="req-row">
-            <div style="flex:1; min-width:0;">
-              <div style="font-size:.92rem; font-weight:900;">${escapeHtml(S.studentMap[c.fromStudentId]?.name || "বন্ধু")}</div>
-              <div style="margin-top:3px; font-size:.72rem; color:var(--text-secondary);">পরীক্ষা: <b>${escapeHtml(c.examName || "পরীক্ষা")}</b></div>
-            </div>
-            <button type="button" class="btn-glass action-btn btn-danger chall-reject" data-id="${escapeHtml(c.id)}" title="বাতিল">${ICON.close}</button>
-            <button type="button" class="btn-glass action-btn btn-ok chall-accept" data-id="${escapeHtml(c.id)}" title="গ্রহণ">${ICON.check}</button>
-          </div>`).join("")}
-      </div>`;
-
-    card.querySelectorAll(".chall-accept").forEach(btn => btn.addEventListener("click", async () => {
-      try { await acceptChallenge(btn.dataset.id, student.studentId); showToast("চ্যালেঞ্জ গৃহীত!", "success"); await loadAll(); }
-      catch (err) { showToast(err.message || friendlyError(err), "error"); }
-    }));
-    card.querySelectorAll(".chall-reject").forEach(btn => btn.addEventListener("click", async () => {
-      try { await rejectChallenge(btn.dataset.id, student.studentId); await loadAll(); }
-      catch (err) { showToast(err.message || friendlyError(err), "error"); }
-    }));
-  } catch (err) { console.error("Incoming challenges failed:", err); }
 }
 
 async function openChallengeModal(friendId) {
