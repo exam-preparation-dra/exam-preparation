@@ -112,9 +112,28 @@ export async function sendChallenge({
     ...receivedSnap.docs.map(d => ({ id: d.id, ...d.data() }))
   ];
 
-  const activeExisting = existingChallenges.find(challenge =>
-    ["pending", "accepted"].includes(challenge.status)
-  );
+  // A challenge nobody ever responded to (still "pending"), or one that
+  // was accepted but whose exam never got taken, would otherwise sit
+  // there forever and silently block every future challenge attempt
+  // between the same two people — the sender just sees "active challenge
+  // already exists" with no obvious way out. Auto-expire those instead.
+  const STALE_PENDING_MS = 3 * 24 * 60 * 60 * 1000;   // 3 days unanswered
+  const STALE_ACCEPTED_MS = 14 * 24 * 60 * 60 * 1000; // 14 days un-resolved
+
+  const stillActive = [];
+  for (const c of existingChallenges) {
+    if (!["pending", "accepted"].includes(c.status)) continue;
+    const createdMs = c.createdAt?.toMillis?.() ?? 0;
+    const age = Date.now() - createdMs;
+    const staleLimit = c.status === "pending" ? STALE_PENDING_MS : STALE_ACCEPTED_MS;
+    if (createdMs && age > staleLimit) {
+      await updateDoc(doc(db, "examChallenges", c.id), { status: "expired", resolvedAt: serverTimestamp() }).catch(() => {});
+    } else {
+      stillActive.push(c);
+    }
+  }
+
+  const activeExisting = stillActive[0];
 
   if (activeExisting) {
     throw new Error("এই বন্ধুর সঙ্গে একটি active challenge ইতিমধ্যেই আছে।");

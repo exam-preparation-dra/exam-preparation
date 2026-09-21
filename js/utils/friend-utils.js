@@ -85,3 +85,48 @@ export async function removeFriend(studentId, friendStudentId) {
   const docs = [...asFrom.docs, ...asTo.docs];
   await Promise.all(docs.map(d => deleteDoc(doc(db, "friendRequests", d.id))));
 }
+
+/* =========================================================
+   RIVAL — a student can mark exactly ONE friend as their "rival".
+   Just a spotlight on top of data that already exists (friendship +
+   head-to-head challenge record) — it doesn't change scoring, it just
+   pins one friend to the top of the friends tab with their h2h record
+   front and center.
+
+   Collection `rivals`, one doc per student: { studentId, rivalId, createdAt }.
+   NOTE: this is a NEW collection — add this to firestore.rules (same
+   open pattern as friendRequests/examChallenges) for it to work:
+
+     match /rivals/{id} {
+       allow read, write: if true;
+     }
+   ========================================================= */
+
+export async function getRival(studentId) {
+  if (!studentId) return null;
+  const snap = await getDocs(query(collection(db, "rivals"), where("studentId", "==", studentId)));
+  if (snap.empty) return null;
+  const d = snap.docs[0];
+  return { id: d.id, ...d.data() };
+}
+
+// Set (or replace) my rival. Only friends can be set as a rival.
+export async function setRival(studentId, rivalId) {
+  if (!studentId || !rivalId) throw new Error("রাইভাল বেছে নেওয়া যায়নি।");
+  if (studentId === rivalId) throw new Error("নিজেকে রাইভাল বানানো যাবে না।");
+
+  const friendIds = await getMyFriendIds(studentId);
+  if (!friendIds.includes(rivalId)) throw new Error("শুধু বন্ধুদেরই রাইভাল বানানো যায়।");
+
+  const existing = await getRival(studentId);
+  if (existing) {
+    await updateDoc(doc(db, "rivals", existing.id), { rivalId, createdAt: serverTimestamp() });
+  } else {
+    await addDoc(collection(db, "rivals"), { studentId, rivalId, createdAt: serverTimestamp() });
+  }
+}
+
+export async function clearRival(studentId) {
+  const existing = await getRival(studentId);
+  if (existing) await deleteDoc(doc(db, "rivals", existing.id));
+}
