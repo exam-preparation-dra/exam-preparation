@@ -115,31 +115,40 @@ export function getLevelInfo(xp) {
 export function computeExamXP(result, { prevAvgPct = null, streakRun = 0 } = {}) {
   const R = XP_RULES;
   const totalQ = Math.max(0, num(result.totalQuestions));
-  const attempted = Math.max(0, num(result.attempted, num(result.correctCount) + num(result.wrongCount)));
   const correctCount = Math.max(0, num(result.correctCount));
   const wrongCount = Math.max(0, num(result.wrongCount));
+  // attempted should be >= correct+wrong (a question can't be "correct"
+  // without being attempted); trust whichever source is larger, but never
+  // let it exceed the exam's actual question count.
+  let attempted = Math.max(0, num(result.attempted, correctCount + wrongCount));
+  attempted = Math.max(attempted, correctCount + wrongCount);
+  if (totalQ > 0) attempted = Math.min(attempted, totalQ);
   const obtained = Math.max(0, num(result.obtainedMarks));
   const pct = num(result.percentage, num(result.totalMarks) > 0 ? (obtained / num(result.totalMarks)) * 100 : 0);
 
   const parts = { correct: 0, participation: 0, effort: 0, accuracy: 0, tier: 0, flawless: 0, mastery: 0, improvement: 0, streak: 0 };
 
-  parts.correct = Math.round(obtained * R.perMark);
-  parts.effort = Math.round(attempted * R.perAttempted);
+  parts.correct = obtained * R.perMark;
+  parts.effort = attempted * R.perAttempted;
 
   // A blank paper earns nothing for "showing up"; touching half the paper earns it all.
   const touchRatio = totalQ > 0 ? Math.min(1, (attempted / totalQ) * 2) : (attempted > 0 ? 1 : 0);
-  parts.participation = Math.round((R.participationBase + R.participationPerQuestion * totalQ) * touchRatio);
+  parts.participation = (R.participationBase + R.participationPerQuestion * totalQ) * touchRatio;
 
   if (attempted > 0) {
     const acc = correctCount / attempted;
     const sample = Math.min(1, attempted / R.accuracyFullSample);
-    parts.accuracy = Math.round(R.accuracyMax * acc * acc * sample);
+    parts.accuracy = R.accuracyMax * acc * acc * sample;
   }
 
   parts.tier = tierBonus(pct);
 
+  // "Perfect"/"clean" are judged from the actual answer counts, not the
+  // stored percentage — a fractional marking scheme (e.g. partial credit,
+  // negative marking) can leave `percentage` a hair under 100 by floating-
+  // point rounding even when every question was answered correctly.
   if (totalQ >= R.minQuestionsForFlawless) {
-    if (pct >= 100) parts.flawless = R.perfect;
+    if (wrongCount === 0 && correctCount >= totalQ) parts.flawless = R.perfect;
     else if (wrongCount === 0 && correctCount >= R.minQuestionsForFlawless) parts.flawless = R.clean;
   }
 
@@ -162,7 +171,7 @@ export function computeExamXP(result, { prevAvgPct = null, streakRun = 0 } = {})
 
   if (streakRun > 1) parts.streak = R.streakPerWeek * Math.min(streakRun - 1, R.streakCapWeeks);
 
-  const xp = Object.values(parts).reduce((a, b) => a + b, 0);
+  const xp = Math.round(Object.values(parts).reduce((a, b) => a + num(b), 0));
   return { xp, parts };
 }
 
@@ -238,6 +247,8 @@ export function computeStudentXP(results, { referralCount = 0, challengeBonusXP 
 
   const challengeXP = Math.max(0, Math.round(num(challengeBonusXP)));
   breakdown.challenge = challengeXP;
+
+  Object.keys(breakdown).forEach(k => { breakdown[k] = Math.round(breakdown[k]); });
 
   const examXP = exams.reduce((a, e) => a + e.xp, 0);
   const totalXP = examXP + referralXP + challengeXP;
