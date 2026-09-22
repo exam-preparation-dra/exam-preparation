@@ -51,7 +51,19 @@ export const XP_RULES = {
   improvementSmall: 15,
   improvementBig: 30,
   streakPerWeek: 8,
-  streakCapWeeks: 4
+  streakCapWeeks: 4,
+
+  // Improvement Practice XP. This is intentionally separate from official-exam XP.
+  // A completed practice can earn XP, but repeated submissions of the same
+  // practice are capped so students cannot farm XP indefinitely.
+  practiceBase: 8,
+  practicePerQuestion: 1,
+  practiceCorrect: 3,
+  practiceAccuracyMax: 20,
+  practiceTargetBonus: 15,
+  practiceImprovementBonus: 10,
+  practiceMaxXP: 80,
+  practiceRepeatMultiplier: 0.25
 };
 
 // Bengali labels + display order for every category (used by the UI).
@@ -66,7 +78,8 @@ export const XP_CATEGORIES = [
   { key: "improvement",   label: "উন্নতি বোনাস",           hint: "নিজের গড়ের চেয়ে ভালো করলে" },
   { key: "streak",        label: "সাপ্তাহিক ধারাবাহিকতা",   hint: "টানা সপ্তাহে পরীক্ষা দিলে" },
   { key: "referral",      label: "বন্ধু রেফার",             hint: "প্রতি বন্ধুতে 250 XP" },
-  { key: "challenge",     label: "চ্যালেঞ্জ বোনাস",         hint: "বন্ধুর সাথে challenge জিতলে/হারলে বোনাস XP" }
+  { key: "challenge",     label: "চ্যালেঞ্জ বোনাস",         hint: "বন্ধুর সাথে challenge জিতলে/হারলে বোনাস XP" },
+  { key: "improvementPractice", label: "উন্নতি প্র্যাকটিস", hint: "দুর্বল জায়গা ঠিক করার প্র্যাকটিসে XP" }
 ];
 
 export const LEVEL_THRESHOLDS = [0, 1000, 3000, 6000, 10000, 15000, 25000, 40000, 60000];
@@ -205,9 +218,56 @@ export function computeMaxExamXP({ questionCount = 0, totalMarks = 0 } = {}) {
   return Math.round(total);
 }
 
+// ---------- improvement practice ----------
+// Practice XP is deliberately independent from official exam XP.
+// Expected result fields: totalQuestions, attempted, correctCount, percentage,
+// targetReached, improvementPoints, attemptNumber.
+// The first completed attempt gets full XP; later repeats of the SAME practice
+// should pass attemptNumber > 1 and receive only the repeat multiplier.
+export function computeImprovementPracticeXP(practice = {}) {
+  const R = XP_RULES;
+  const totalQ = Math.max(0, num(practice.totalQuestions));
+  const correct = Math.max(0, num(practice.correctCount));
+  const attempted = Math.min(totalQ || correct, Math.max(correct, num(practice.attempted, correct)));
+  const pct = Math.max(0, Math.min(100, num(practice.percentage, attempted > 0 ? (correct / attempted) * 100 : 0)));
+  const attemptNumber = Math.max(1, Math.floor(num(practice.attemptNumber, 1)));
+
+  if (totalQ <= 0 || attempted <= 0) return { xp: 0, parts: { improvementPractice: 0 }, percentage: pct };
+
+  let xp = R.practiceBase + Math.min(totalQ, attempted) * R.practicePerQuestion;
+  xp += correct * R.practiceCorrect;
+
+  const accuracySample = Math.min(1, attempted / 10);
+  xp += R.practiceAccuracyMax * (pct / 100) * accuracySample;
+
+  if (practice.targetReached === true) xp += R.practiceTargetBonus;
+  if (num(practice.improvementPoints) >= 20) xp += R.practiceImprovementBonus;
+
+  xp = Math.min(R.practiceMaxXP, Math.round(xp));
+  if (attemptNumber > 1) xp = Math.round(xp * R.practiceRepeatMultiplier);
+
+  return {
+    xp,
+    parts: { improvementPractice: xp },
+    percentage: Math.round(pct * 10) / 10,
+    targetReached: practice.targetReached === true,
+    attemptNumber
+  };
+}
+
+// Computes the total XP contributed by completed improvement practices.
+// Only records explicitly marked completed/approved are counted.
+export function computeImprovementPracticeTotalXP(practiceResults = []) {
+  return (practiceResults || []).reduce((total, practice) => {
+    const status = String(practice.status || "completed").toLowerCase();
+    if (!["completed", "approved", "published"].includes(status)) return total;
+    return total + computeImprovementPracticeXP(practice).xp;
+  }, 0);
+}
+
 // ---------- whole student ----------
 // results: this student's counted (approved / auto-approved) results, any order.
-export function computeStudentXP(results, { referralCount = 0, challengeBonusXP = 0 } = {}) {
+export function computeStudentXP(results, { referralCount = 0, challengeBonusXP = 0, improvementPracticeResults = [] } = {}) {
   const sorted = [...(results || [])].sort((a, b) => toMillis(a.submittedAt) - toMillis(b.submittedAt));
 
   const weeksAttended = new Set(sorted.map(r => weekIndex(toMillis(r.submittedAt))));
@@ -248,14 +308,17 @@ export function computeStudentXP(results, { referralCount = 0, challengeBonusXP 
   const challengeXP = Math.max(0, Math.round(num(challengeBonusXP)));
   breakdown.challenge = challengeXP;
 
+  const improvementPracticeXP = computeImprovementPracticeTotalXP(improvementPracticeResults);
+  breakdown.improvementPractice = improvementPracticeXP;
+
   Object.keys(breakdown).forEach(k => { breakdown[k] = Math.round(breakdown[k]); });
 
   const examXP = exams.reduce((a, e) => a + e.xp, 0);
-  const totalXP = examXP + referralXP + challengeXP;
+  const totalXP = examXP + referralXP + challengeXP + improvementPracticeXP;
   const avgPercentage = sorted.length ? Math.round((pctSum / sorted.length) * 10) / 10 : 0;
 
   return {
-    totalXP, examXP, referralXP, referralCount: refCount, challengeXP,
+    totalXP, examXP, referralXP, referralCount: refCount, challengeXP, improvementPracticeXP,
     breakdown, exams: exams.reverse(),   // newest first
     examsTaken: sorted.length, perfectExams, avgPercentage,
     ...getLevelInfo(totalXP), levelInfo: getLevelInfo(totalXP)
