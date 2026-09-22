@@ -98,38 +98,144 @@ export async function getQuestionPoolForImprovement({subjectId=null,chapterId=nu
   return snap.docs.map(d=>({id:d.id,...d.data()})).filter(q=>!excluded.has(q.id));
 }
 
-export async function buildImprovementTestDraft({requestIds=[],studentIds=[],subjectId=null,chapterId=null,topicId=null,questionCount=10,previousWrongQuestionIds=[],adminSelectedQuestionIds=[]}={}) {
+export async function buildImprovementTestDraft({request=null, questionPool=null, requestIds=[], studentIds=[], subjectId=null, chapterId=null, topicId=null, questionCount=10, previousWrongQuestionIds=[], adminSelectedQuestionIds=[]}={}) {
   requireAdmin();
-  const requests=[];
-  for (const rid of uniq(requestIds)) { const s=await getDoc(doc(db,"improvementRequests",rid)); if(s.exists()) requests.push({id:s.id,...s.data()}); }
-  const students=uniq([...studentIds,...requests.map(r=>r.studentId)]);
-  const wrong=uniq([...previousWrongQuestionIds,...requests.flatMap(r=>Array.isArray(r.wrongQuestionIds)?r.wrongQuestionIds:[])]);
-  const subject=subjectId || requests.find(r=>r.subjectId)?.subjectId || null;
-  const chapter=chapterId || requests.find(r=>r.chapterId)?.chapterId || null;
-  const topic=topicId || requests.find(r=>r.topicId)?.topicId || null;
-  const selected=uniq(adminSelectedQuestionIds);
-  const load=async ids=>Promise.all(ids.map(async qid=>{const s=await getDoc(doc(db,"questions",qid));return s.exists()?{id:s.id,...s.data()}:null;}));
-  const adminQ=(await load(selected)).filter(Boolean);
-  const wrongQ=(await load(wrong.slice(0,Math.max(1,n(questionCount,10))))).filter(Boolean);
-  const excluded=uniq([...adminQ.map(q=>q.id),...wrongQ.map(q=>q.id)]);
-  const related=await getQuestionPoolForImprovement({subjectId:subject,chapterId:chapter,topicId:topic,excludeQuestionIds:excluded,maxResults:Math.max(n(questionCount,10)*4,40)});
-  const map=new Map(); [...adminQ,...wrongQ,...related].forEach(q=>{if(q&&!map.has(q.id)&&map.size<Math.max(1,Math.min(50,n(questionCount,10)))) map.set(q.id,q);});
-  const questions=[...map.values()];
-  return {type:"improvement_practice",studentIds:students,requestIds:uniq(requestIds),subjectId:subject,chapterId:chapter,topicId:topic,questionIds:questions.map(q=>q.id),questions,questionCount:questions.length,sourceBreakdown:{adminSelected:adminQ.length,previousMistakes:wrongQ.length,relatedQuestionBank:Math.max(0,questions.length-adminQ.length-wrongQ.length)}};
-}
+  const reqs=[];
+  for (const rid of uniq([...(requestIds||[]), ...(request?.id ? [request.id] : [])])) {
+    const s=await getDoc(doc(db,"improvementRequests",rid));
+    if(s.exists()) reqs.push({id:s.id,...s.data()});
+  }
+  if (request && !reqs.some(r => r.id === request.id)) reqs.push(request);
 
-export async function createImprovementTest({draft,title="উন্নতির অনুশীলন",description="",publish=false,expiresAt=null,xpEnabled=true}={}) {
+  const students=uniq([...(studentIds||[]), ...(request?.studentId ? [request.studentId] : []), ...reqs.map(r=>r.studentId)]);
+  const subject=subjectId || request?.subjectId || reqs.find(r=>r.subjectId)?.subjectId || null;
+  const chapter=chapterId || request?.chapterId || reqs.find(r=>r.chapterId)?.chapterId || null;
+  const topic=topicId || request?.topicId || reqs.find(r=>r.topicId)?.topicId || null;
+  const count=Math.max(1,Math.min(50,n(questionCount,10)));
+
+  const selected=uniq([...(adminSelectedQuestionIds||[]) ]);
+  const load=async ids=>Promise.all(ids.map(async qid=>{const s=await getDoc(doc(db,"questions",qid));return s.exists()?{id:s.id,...s.data(),source:"admin_selected"}:null;}));
+  const adminQ=(await load(selected)).filter(Boolean);
+
+  const wrong=uniq([
+    ...(previousWrongQuestionIds||[]),
+    ...reqs.flatMap(r=>Array.isArray(r.wrongQuestionIds)?r.wrongQuestionIds:[])
+  ]);
+  const wrongQ=(await load(wrong.slice(0,count))).filter(Boolean).map(q=>({...q,source:"previous_mistake"}));
+
+  let related=[];
+  if (Array.isArray(questionPool) && questionPool.length) {
+    related=questionPool.map(q=>({...q,source:q.source||"related_question"}));
+  } else {
+    const excluded=uniq([...adminQ.map(q=>q.id),...wrongQ.map(q=>q.id)]);
+    related=await getQuestionPoolForImprovement({subjectId:subject,chapterId:chapter,topicId:topic,excludeQuestionIds:excluded,maxResults:Math.max(count*4,40)});
+    related=related.map(q=>({...q,source:"related_question"}));
+  }
+
+  const map=new Map();
+  [...wrongQ,...adminQ,...related].forEach(q=>{if(q&&!map.has(q.id)&&map.size<count) map.set(q.id,q);});
+  const questions=[...map.values()];
+  return {
+    type:"improvement_practice",
+    studentIds:students,
+    requestIds:uniq(reqs.map(r=>r.id)),
+    subjectId:subject, chapterId:chapter, topicId:topic,
+    questionIds:questions.map(q=>q.id),
+    questions,
+    questionCount:questions.length,
+    sourceBreakdown:{
+      adminSelected:questions.filter(q=>q.source==="admin_selected").length,
+      previousMistakes:questions.filter(q=>q.source==="previous_mistake").length,
+      relatedQuestionBank:questions.filter(q=>q.source==="related_question").length
+    }
+  };
+}
+export async function createImprovementTest({draft,request=null,title="উন্নতির অনুশীলন",description="",publish=false,expiresAt=null,xpEnabled=true}={}) {
   const admin=requireAdmin();
   if (!draft?.questionIds?.length) throw new Error("Improvement test-এর জন্য অন্তত একটি প্রশ্ন প্রয়োজন।");
-  const data={type:"improvement_practice",title:String(title).trim(),description:String(description||"").trim(),studentIds:uniq(draft.studentIds),requestIds:uniq(draft.requestIds),subjectId:draft.subjectId||null,chapterId:draft.chapterId||null,topicId:draft.topicId||null,questionIds:uniq(draft.questionIds),questionCount:uniq(draft.questionIds).length,sourceBreakdown:draft.sourceBreakdown||{},xpEnabled:Boolean(xpEnabled),status:publish?"published":"draft",createdBy:admin.uid,createdAt:serverTimestamp(),updatedAt:serverTimestamp(),expiresAt:expiresAt||null};
+
+  const questionIds = uniq(draft.questionIds);
+  const requestIds = uniq([...(draft.requestIds || []), ...(request?.id ? [request.id] : [])]);
+  const studentIds = uniq([...(draft.studentIds || []), ...(request?.studentId ? [request.studentId] : [])]);
+  const snapshotQuestions = (Array.isArray(draft.questions) ? draft.questions : []).map(q => ({
+    questionId: q.id || q.questionId,
+    question_bn: q.question_bn || "",
+    question_en: q.question_en || "",
+    question: q.question || "",
+    options_bn: Array.isArray(q.options_bn) ? q.options_bn : [],
+    options_en: Array.isArray(q.options_en) ? q.options_en : [],
+    options: Array.isArray(q.options) ? q.options : [],
+    correctAnswer: q.correctAnswer || null,
+    explanation_bn: q.explanation_bn || null,
+    imageUrl: q.imageUrl || null,
+    marks: Number(q.marks) > 0 ? Number(q.marks) : 1,
+    subjectId: q.subjectId || null,
+    chapterId: q.chapterId || null,
+    topicId: q.topicId || null,
+    source: q.source || "admin_selected"
+  })).filter(q => q.questionId && q.correctAnswer);
+
+  if (!snapshotQuestions.length) throw new Error("Improvement test-এর জন্য বৈধ প্রশ্ন snapshot পাওয়া যায়নি।");
+
+  const firstRequestId = requestIds.length === 1 ? requestIds[0] : null;
+  const firstRequest = firstRequestId ? await getDoc(doc(db, "improvementRequests", firstRequestId)) : null;
+  const requestData = firstRequest?.exists?.() ? firstRequest.data() : {};
+
+  const data={
+    type:"improvement_practice",
+    title:String(title).trim(),
+    description:String(description||"").trim(),
+    studentIds,
+    requestIds,
+    requestId:firstRequestId,
+    subjectId:draft.subjectId||requestData.subjectId||null,
+    chapterId:draft.chapterId||requestData.chapterId||null,
+    topicId:draft.topicId||requestData.topicId||null,
+    baselineAccuracy:Number(requestData.currentAccuracy||0),
+    targetAccuracy:Number(requestData.targetAccuracy||65),
+    questionIds,
+    questionCount:snapshotQuestions.length,
+    sourceBreakdown:draft.sourceBreakdown||{},
+    xpEnabled:Boolean(xpEnabled),
+    status:publish?"published":"draft",
+    published:Boolean(publish),
+    createdBy:admin.uid,
+    createdAt:serverTimestamp(),
+    updatedAt:serverTimestamp(),
+    expiresAt:expiresAt||null
+  };
+
   const ref=await addDoc(collection(db,"improvementTests"),data);
-  if(publish) for(const rid of data.requestIds) await updateDoc(doc(db,"improvementRequests",rid),{status:IMPROVEMENT_STATUS.ASSIGNED,improvementTestId:ref.id,assignedAt:serverTimestamp(),updatedAt:serverTimestamp()});
-  return {id:ref.id,...data};
+  await setDoc(doc(db,"improvementTestSnapshots",ref.id),{
+    testId:ref.id,
+    type:"improvement_practice",
+    title:data.title,
+    description:data.description,
+    subjectId:data.subjectId,
+    chapterId:data.chapterId,
+    topicId:data.topicId,
+    requestIds,
+    questions:snapshotQuestions,
+    questionCount:snapshotQuestions.length,
+    createdBy:admin.uid,
+    createdAt:serverTimestamp()
+  });
+
+  if(publish) {
+    for(const rid of requestIds) {
+      await updateDoc(doc(db,"improvementRequests",rid),{status:IMPROVEMENT_STATUS.TEST_CREATED,improvementTestId:ref.id,updatedAt:serverTimestamp()});
+    }
+  }
+  return {id:ref.id,...data,questionCount:snapshotQuestions.length};
 }
 
 export async function setImprovementTestPublished(testId,published=true) {
   const admin=requireAdmin(); const ref=doc(db,"improvementTests",id(testId)); const s=await getDoc(ref);
   if(!s.exists()) throw new Error("Improvement test পাওয়া যায়নি।");
+  const snapshot=await getDoc(doc(db,"improvementTestSnapshots",id(testId)));
+  if(published && (!snapshot.exists() || !Array.isArray(snapshot.data().questions) || !snapshot.data().questions.length)) {
+    throw new Error("Publish করার আগে Improvement Test snapshot তৈরি থাকতে হবে।");
+  }
   await updateDoc(ref,{status:published?"published":"draft",published:Boolean(published),publishedBy:published?admin.uid:null,publishedAt:published?serverTimestamp():null,updatedAt:serverTimestamp()});
   return {id:ref.id,...s.data(),status:published?"published":"draft",published:Boolean(published)};
 }
@@ -137,9 +243,14 @@ export async function setImprovementTestPublished(testId,published=true) {
 export async function assignImprovementTest(testId,studentIds=[]) {
   requireAdmin(); const ref=doc(db,"improvementTests",id(testId)); const s=await getDoc(ref);
   if(!s.exists()) throw new Error("Improvement test পাওয়া যায়নি।");
-  const merged=uniq([...(s.data().studentIds||[]),...studentIds]);
+  const data=s.data();
+  if(data.status !== "published" || data.published !== true) throw new Error("আগে Improvement Test publish করতে হবে।");
+  const merged=uniq([...(data.studentIds||[]),...studentIds]);
   await updateDoc(ref,{studentIds:merged,assignedAt:serverTimestamp(),updatedAt:serverTimestamp()});
-  return {id:ref.id,...s.data(),studentIds:merged};
+  for (const rid of (Array.isArray(data.requestIds) ? data.requestIds : [])) {
+    await updateDoc(doc(db,"improvementRequests",rid),{status:IMPROVEMENT_STATUS.ASSIGNED,improvementTestId:ref.id,assignedTestId:ref.id,assignedAt:serverTimestamp(),updatedAt:serverTimestamp()});
+  }
+  return {id:ref.id,...data,studentIds:merged};
 }
 
 export function buildImprovementAlerts(rows=[]) {

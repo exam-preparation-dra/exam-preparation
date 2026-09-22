@@ -32,7 +32,7 @@ export async function getImprovementEarnedXP(studentId) {
 
   snap.forEach((item) => {
     const data = item.data();
-    total += Math.max(0, num(data.xpEarned));
+    total += Math.max(0, num(data.xpEarned ?? data.xp));
   });
 
   return total;

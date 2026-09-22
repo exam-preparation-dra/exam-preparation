@@ -26,6 +26,7 @@ import {
   addDoc,
   updateDoc
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { getApprovedResults } from "./results-utils.js";
 
 const NUM = (value, fallback = 0) => {
   const n = Number(value);
@@ -339,15 +340,117 @@ export async function createImprovementRequest(payload) {
   return { id: ref.id, ...payload };
 }
 
+function normalizeImprovementRequest(request = {}) {
+  const entityType = request.entityType || (request.topicId ? "topic" : request.chapterId ? "chapter" : request.subjectId ? "subject" : null);
+  const entityId = request.entityId || (entityType === "topic" ? request.topicId : entityType === "chapter" ? request.chapterId : entityType === "subject" ? request.subjectId : null);
+  const entityName = request.entityName || request.topicName || request.chapterName || request.subjectName || entityId || "উন্নতির ক্ষেত্র";
+  const wrongQuestionIds = Array.isArray(request.wrongQuestionIds)
+    ? request.wrongQuestionIds.filter(Boolean)
+    : (Array.isArray(request.wrongQuestionSources) ? request.wrongQuestionSources.map(x => typeof x === "string" ? x : x?.questionId).filter(Boolean) : []);
+  return {
+    ...request,
+    entityType, entityId, entityName,
+    subjectId: request.subjectId || (entityType === "subject" ? entityId : null),
+    chapterId: request.chapterId || (entityType === "chapter" ? entityId : null),
+    topicId: request.topicId || (entityType === "topic" ? entityId : null),
+    subjectName: request.subjectName || (entityType === "subject" ? entityName : ""),
+    chapterName: request.chapterName || (entityType === "chapter" ? entityName : ""),
+    topicName: request.topicName || (entityType === "topic" ? entityName : ""),
+    wrongQuestionIds,
+    wrongQuestionCount: wrongQuestionIds.length
+  };
+}
+
 export async function getImprovementRequests({ status = null, studentId = null, limitCount = 100 } = {}) {
   const constraints = [];
   if (status) constraints.push(where("status", "==", status));
   if (studentId) constraints.push(where("studentId", "==", studentId));
-  constraints.push(orderBy("createdAt", "desc"));
-  constraints.push(limit(Math.max(1, Math.min(200, Number(limitCount) || 100))));
-
   const snap = await getDocs(query(collection(db, "improvementRequests"), ...constraints));
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return snap.docs
+    .map(d => normalizeImprovementRequest({ id: d.id, ...d.data() }))
+    .sort((a, b) => {
+      const am = a.createdAt?.toMillis?.() || 0;
+      const bm = b.createdAt?.toMillis?.() || 0;
+      return bm - am;
+    })
+    .slice(0, Math.max(1, Math.min(200, Number(limitCount) || 100)));
+}
+
+// Backwards-compatible API used by the Profile and Admin modules.
+export async function getImprovementRequestsForStudent(studentId) {
+  return getImprovementRequests({ studentId, limitCount: 100 });
+}
+
+// Canonical Admin analyzer. It uses the same Improvement Engine as Profile,
+// then enriches the result with stable subject/chapter/topic fields.
+export async function detectWeakAreas(studentId, options = {}) {
+  if (!studentId) return [];
+  const results = await getApprovedResults(studentId);
+
+  const [subjectsSnap, chaptersSnap, topicsSnap] = await Promise.all([
+    getDocs(collection(db, "subjects")),
+    getDocs(collection(db, "chapters")),
+    getDocs(collection(db, "topics"))
+  ]);
+  const subjects = {}, chapters = {}, topics = {};
+  subjectsSnap.forEach(d => { const x = d.data(); subjects[d.id] = x.name_bn || x.name_en || d.id; });
+  chaptersSnap.forEach(d => { const x = d.data(); chapters[d.id] = x.name_bn || x.name_en || d.id; });
+  topicsSnap.forEach(d => { const x = d.data(); topics[d.id] = x.name_bn || x.name_en || d.id; });
+
+  const analysis = analyzeStudentImprovement(results, { subjects, chapters, topics });
+  const selected = Array.isArray(options.entityTypes) && options.entityTypes.length
+    ? analysis.all.filter(x => options.entityTypes.includes(x.entityType))
+    : analysis.all;
+
+  // Recover the actual previous-mistake question IDs from immutable exam snapshots.
+  // The result stores answers; the snapshot stores question metadata + correct answer.
+  const mistakeCache = new Map();
+  for (const result of results) {
+    if (!result?.examId || !result?.answers) continue;
+    try {
+      let questions = mistakeCache.get(result.examId);
+      if (!questions) {
+        const snap = await getDoc(doc(db, "examSnapshots", result.examId));
+        questions = snap.exists() && Array.isArray(snap.data().questions) ? snap.data().questions : [];
+        mistakeCache.set(result.examId, questions);
+      }
+      for (const w of selected) {
+        const ids = [];
+        for (const q of questions) {
+          const answer = result.answers?.[q.questionId];
+          const wrong = answer && answer !== q.correctAnswer;
+          if (!wrong) continue;
+          const matches = w.entityType === "subject" ? q.subjectId === w.entityId
+            : w.entityType === "chapter" ? q.chapterId === w.entityId
+            : q.topicId === w.entityId;
+          if (matches) ids.push(q.questionId);
+        }
+        if (!w.__wrongIds) w.__wrongIds = new Set();
+        ids.forEach(qid => w.__wrongIds.add(qid));
+      }
+    } catch (error) {
+      console.warn("Improvement wrong-question enrichment skipped:", error);
+    }
+  }
+
+  return selected.map(w => {
+    const wrongQuestionIds = [...(w.__wrongIds || new Set())];
+    const { __wrongIds, ...cleanWeakness } = w;
+    const subjectId = w.entityType === "subject" ? w.entityId : null;
+    const chapterId = w.entityType === "chapter" ? w.entityId : null;
+    const topicId = w.entityType === "topic" ? w.entityId : null;
+    return {
+      ...cleanWeakness,
+      subjectId, chapterId, topicId,
+      subjectName: subjectId ? subjects[subjectId] || subjectId : "",
+      chapterName: chapterId ? chapters[chapterId] || chapterId : "",
+      topicName: topicId ? topics[topicId] || topicId : "",
+      wrongQuestionIds,
+      wrongQuestionCount: wrongQuestionIds.length,
+      relevantAttempts: w.attempts,
+      testRequired: true
+    };
+  });
 }
 
 export async function getImprovementRequest(requestId) {

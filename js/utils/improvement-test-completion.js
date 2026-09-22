@@ -10,6 +10,7 @@ import {
   getDoc,
   setDoc,
   updateDoc,
+  deleteDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
@@ -45,17 +46,24 @@ export async function completeImprovementAttempt({
 
   const completedAt = serverTimestamp();
 
-  await updateDoc(attemptRef, {
+  const completedId = `${testId}_${studentId}_${Date.now()}`;
+  const completedRef = doc(db, "improvementAttempts", completedId);
+  const completedData = {
+    ...attempt,
     status: "completed",
     completedAt,
     correct: Number(result.correct ?? attempt.correct ?? 0),
     total: Number(result.total ?? attempt.total ?? 0),
     accuracy: Number(result.accuracy ?? attempt.accuracy ?? 0),
-    improvementPercent: Number(
-      result.improvementPercent ?? attempt.improvementPercent ?? 0
-    ),
-    xpEarned: Number(result.xpEarned ?? attempt.xpEarned ?? 0)
-  });
+    improvementPercent: Number(result.improvementPercent ?? attempt.improvementPercent ?? 0),
+    xpEarned: Number(result.xpEarned ?? attempt.xpEarned ?? 0),
+    targetReached: Boolean(result.targetReached),
+    submittedAt: completedAt
+  };
+  await setDoc(completedRef, completedData);
+  if (attemptId.endsWith("_active")) {
+    await deleteDoc(attemptRef);
+  }
 
   let resolvedRequestId = requestId || attempt.requestId || null;
 
@@ -71,7 +79,7 @@ export async function completeImprovementAttempt({
   }
 
   return {
-    attemptId,
+    attemptId: completedId,
     testId,
     studentId,
     requestId: resolvedRequestId,

@@ -731,7 +731,7 @@ async function handleBuildTest(request) {
           });
 
           if (created?.id) {
-            await setImprovementTestPublished(created.id, false);
+            await setImprovementTestPublished(created.id, true);
             await assignImprovementTest(created.id, request.studentId);
           }
 

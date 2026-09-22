@@ -13,7 +13,8 @@ import {
   where,
   serverTimestamp,
   setDoc,
-  updateDoc
+  updateDoc,
+  deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 function activeAttemptId(testId, studentId) {
@@ -60,6 +61,10 @@ export async function createOrResumeImprovementAttempt({
   if (existing.exists()) {
     const data = existing.data();
 
+    if (data.status === "in-progress") {
+      await updateDoc(ref, { status: "in_progress", updatedAt: serverTimestamp() });
+      data.status = "in_progress";
+    }
     if (data.status !== "closed" && data.status !== "completed") {
       return { id, ...data, resumed: true };
     }
@@ -151,9 +156,5 @@ export async function closeActiveImprovementAttempt(testId, studentId) {
   const snap = await getDoc(ref);
   if (!snap.exists()) return;
 
-  await updateDoc(ref, {
-    status: "closed",
-    closedAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
-  });
+  await deleteDoc(ref);
 }

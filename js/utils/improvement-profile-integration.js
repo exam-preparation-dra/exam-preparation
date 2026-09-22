@@ -24,14 +24,14 @@
    No emoji is used.
    ========================================================= */
 
-import { getActiveStudent } from "../js/utils/student-utils.js";
+import { getActiveStudent } from "./student-utils.js";
 
 import {
   loadStudentImprovementJourney,
   renderImprovementJourney,
   renderImprovementHistory,
   injectImprovementJourneyStyles
-} from "../js/utils/improvement-profile-utils.js";
+} from "./improvement-profile-utils.js";
 
 const INTEGRATION_STYLE_ID = "improvement-journey-integration-style";
 const JOURNEY_ID = "studentImprovementJourney";

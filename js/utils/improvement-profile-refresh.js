@@ -24,22 +24,16 @@ export async function refreshImprovementProfile({
     return { refreshed: false, reason: "student_not_found" };
   }
 
-  const journey = await loadStudentImprovementJourney(activeStudent);
+  const journey = await loadStudentImprovementJourney(activeStudent.studentId);
 
   const journeyRoot = document.querySelector("#studentImprovementJourney");
   if (journeyRoot) {
-    journeyRoot.innerHTML = renderImprovementJourney(
-      journey,
-      activeStudent
-    );
+    renderImprovementJourney(journeyRoot, journey);
   }
 
   const historyRoot = document.querySelector("#studentImprovementHistory");
   if (historyRoot) {
-    historyRoot.innerHTML = renderImprovementHistory(
-      journey?.history || [],
-      activeStudent
-    );
+    renderImprovementHistory(historyRoot, journey);
   }
 
   window.dispatchEvent(
