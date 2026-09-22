@@ -1208,7 +1208,7 @@ async function buildProfileCardHtml(studentData) {
     "চ্যালেঞ্জ চ্যাম্পিয়ন": "Challenge Champion",
     "রাতজাগা": "Night Owl",
     "নিখুঁত শুরু": "Perfect Start"
-  }[name] || name);
+  }[name] || name));
   const photoURL = studentData.photoURL || null;
   const badgeColor = "#d4a244";
   const rankText = rank?.rank ? `#${rank.rank}${rank.totalStudents ? ` / ${rank.totalStudents}` : ""}` : "—";
