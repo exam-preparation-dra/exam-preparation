@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin CMS | Physics Lover 2.0</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* =========================================
+           VARIABLES & THEME
+           ========================================= */
+        :root {
+            --bg-deep: #030712;
+            --bg-panel: rgba(15, 23, 42, 0.6);
+            --bg-sidebar: rgba(11, 17, 32, 0.95);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            
+            --primary-admin: #EF4444; 
+            --accent-purple: #8B5CF6;
+            --accent-cyan: #06B6D4;
+            --accent-blue: #3B82F6;
+            
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --text-dark: #64748B;
+            
+            --sidebar-width: 280px;
+            --header-height: 70px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            overflow: hidden;
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Ambient Background */
+        .ambient-bg {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1; overflow: hidden; background: #030712;
+            pointer-events: none;
+        }
+        .glow-orb {
+            position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.2;
+        }
+        .orb-1 { width: 40vw; height: 40vw; background: var(--accent-purple); top: -10%; left: -10%; }
+        .orb-2 { width: 30vw; height: 30vw; background: var(--accent-cyan); bottom: 10%; right: -5%; }
+
+        /* Loader Overlay */
+        #app-loader {
+            position: fixed; inset: 0; background: var(--bg-deep); z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.3s;
+        }
+        .spinner {
+            width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1);
+            border-top-color: var(--accent-purple); border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* =========================================
+           SIDEBAR NAVIGATION
+           ========================================= */
+        .admin-sidebar {
+            width: var(--sidebar-width); height: 100vh;
+            background: var(--bg-sidebar); border-right: 1px solid var(--border-glass);
+            display: flex; flex-direction: column;
+            backdrop-filter: blur(20px); z-index: 100;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .sidebar-header {
+            height: var(--header-height); padding: 0 20px;
+            display: flex; align-items: center; gap: 12px;
+            border-bottom: 1px solid var(--border-glass); flex-shrink: 0;
+        }
+        .sidebar-header h2 {
+            font-family: 'Poppins', sans-serif; font-size: 1.1rem; font-weight: 700;
+            background: linear-gradient(90deg, #fff, var(--accent-cyan));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .sidebar-scroll {
+            flex: 1; overflow-y: auto; padding: 20px 10px;
+        }
+        .sidebar-scroll::-webkit-scrollbar { width: 5px; }
+        .sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+        .nav-group { margin-bottom: 24px; }
+        .nav-group-title {
+            font-size: 0.75rem; font-weight: 600; color: var(--text-dark);
+            text-transform: uppercase; letter-spacing: 1px;
+            margin: 0 0 8px 12px;
+        }
+        .nav-link {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 12px; color: var(--text-muted); text-decoration: none;
+            border-radius: 8px; font-size: 0.9rem; font-weight: 500;
+            transition: all 0.2s; cursor: pointer; border: 1px solid transparent;
+        }
+        .nav-link:hover {
+            background: rgba(255,255,255,0.05); color: #fff;
+        }
+        .nav-link.active {
+            background: rgba(139, 92, 246, 0.15); color: var(--accent-purple);
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+        .nav-link svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+        /* =========================================
+           MAIN CONTENT AREA
+           ========================================= */
+        .admin-main {
+            flex: 1; display: flex; flex-direction: column;
+            height: 100vh; overflow: hidden; position: relative;
+        }
+
+        /* Header */
+        .admin-header {
+            height: var(--header-height); background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-glass);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 24px; flex-shrink: 0; z-index: 10;
+        }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .mobile-menu-btn {
+            display: none; background: none; border: none; color: #fff; cursor: pointer;
+        }
+        .page-title { font-size: 1.1rem; font-weight: 600; font-family: 'Poppins', sans-serif; }
+        .page-subtitle { font-size: 0.8rem; color: var(--text-muted); font-weight: 400; margin-left: 10px; display: none; }
+        
+        .header-right { display: flex; align-items: center; gap: 20px; }
+        .admin-profile { display: flex; align-items: center; gap: 10px; }
+        .admin-avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; border: 2px solid rgba(255,255,255,0.1);
+        }
+        .btn-logout {
+            background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #FCA5A5; padding: 6px 12px; border-radius: 8px;
+            font-size: 0.85rem; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .btn-logout:hover { background: rgba(239, 68, 68, 0.2); color: #fff; }
+
+        /* Content Canvas */
+        .content-canvas {
+            flex: 1; overflow-y: auto; padding: 30px; position: relative;
+        }
+        .content-canvas::-webkit-scrollbar { width: 6px; }
+        .content-canvas::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 6px; }
+
+        /* Module Containers */
+        .module-view { display: none; animation: fadeIn 0.3s ease; }
+        .module-view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* =========================================
+           DASHBOARD COMPONENTS
+           ========================================= */
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px; margin-bottom: 30px;
+        }
+        .stat-card {
+            background: var(--bg-panel); border: 1px solid var(--border-glass);
+            border-radius: 16px; padding: 20px; backdrop-filter: blur(12px);
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .stat-card h4 { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
+        .stat-value { font-size: 2rem; font-weight: 700; font-family: 'Poppins', sans-serif; color: #fff; }
+        .stat-loading { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.1); border-top-color: var(--accent-cyan); border-radius: 50%; animation: spin 1s linear infinite; margin-top: 5px; }
+
+        /* =========================================
+           OFFLINE REQUESTS MODULE CSS
+           ========================================= */
+        .module-header { margin-bottom: 24px; }
+        .module-header h2 { font-family: 'Poppins', sans-serif; font-size: 1.5rem; margin-bottom: 4px; }
+        .module-header p { color: var(--text-muted); font-size: 0.9rem; }
+
+        .tabs-container {
+            display: flex; gap: 10px; margin-bottom: 24px; border-bottom: 1px solid var(--border-glass); padding-bottom: 12px;
+        }
+        .tab-btn {
+            background: transparent; border: 1px solid transparent; color: var(--text-muted);
+            padding: 8px 16px; border-radius: 8px; font-size: 0.9rem; font-weight: 500;
+            cursor: pointer; transition: 0.2s;
+        }
+        .tab-btn:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .tab-btn.active { background: rgba(255,255,255,0.1); border-color: var(--border-glass); color: #fff; }
+
+        .requests-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        
+        .request-card {
+            background: var(--bg-panel); border: 1px solid var(--border-glass);
+            border-radius: 16px; padding: 20px; backdrop-filter: blur(12px);
+            display: flex; flex-direction: column; gap: 12px; transition: transform 0.2s;
+        }
+        .request-card:hover { border-color: rgba(255,255,255,0.2); transform: translateY(-2px); }
+        
+        .req-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .req-name { font-weight: 600; font-size: 1.1rem; color: #fff; margin-bottom: 2px;}
+        .req-email { font-size: 0.8rem; color: var(--text-muted); }
+        
+        .req-details { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.85rem; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; margin-top: 5px;}
+        .req-label { color: var(--text-dark); font-size: 0.75rem; text-transform: uppercase; }
+        
+        .req-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; }
+        .req-date { font-size: 0.8rem; color: var(--text-muted); }
+        
+        .btn-view {
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1);
+            color: #fff; padding: 6px 16px; border-radius: 6px; font-size: 0.85rem;
+            cursor: pointer; transition: 0.2s;
+        }
+        .btn-view:hover { background: rgba(255,255,255,0.2); }
+
+        /* Badges */
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge-pending { background: rgba(245, 158, 11, 0.15); color: #FCD34D; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .badge-approved { background: rgba(16, 185, 129, 0.15); color: #6EE7B7; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .badge-rejected { background: rgba(239, 68, 68, 0.15); color: #FCA5A5; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        /* Modal styling */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
+            z-index: 1000; display: none; align-items: center; justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-card {
+            background: var(--bg-sidebar); border: 1px solid var(--border-glass);
+            border-radius: 16px; width: 90%; max-width: 500px; padding: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5); position: relative;
+        }
+        .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-muted); cursor: pointer; }
+        .modal-close:hover { color: #fff; }
+        .modal-title { font-family: 'Poppins', sans-serif; font-size: 1.25rem; margin-bottom: 20px; border-bottom: 1px solid var(--border-glass); padding-bottom: 12px; }
+        
+        .modal-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.9rem; border-bottom: 1px dashed rgba(255,255,255,0.05); padding-bottom: 8px;}
+        .modal-label { color: var(--text-muted); }
+        .modal-value { color: #fff; font-weight: 500; text-align: right; word-break: break-all; margin-left: 10px;}
+        
+        .modal-actions { display: flex; gap: 12px; margin-top: 24px; }
+        .btn-modal { flex: 1; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px;}
+        .btn-modal:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-approve { background: #10B981; color: #000; }
+        .btn-approve:hover:not(:disabled) { background: #059669; }
+        .btn-reject { background: transparent; border: 1px solid #EF4444; color: #EF4444; }
+        .btn-reject:hover:not(:disabled) { background: rgba(239, 68, 68, 0.1); }
+
+        /* Notification Toast */
+        .toast {
+            position: fixed; bottom: 30px; right: 30px; background: var(--bg-sidebar);
+            border: 1px solid var(--border-glass); padding: 16px 24px; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 12px;
+            transform: translateY(100px); opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast-icon.success { color: #10B981; }
+        .toast-icon.error { color: #EF4444; }
+
+        /* =========================================
+           COMING SOON STATE
+           ========================================= */
+        .coming-soon-container {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 60vh; text-align: center;
+        }
+        .cs-icon {
+            width: 80px; height: 80px; background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 24px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--accent-purple); margin-bottom: 24px;
+        }
+        .cs-title { font-size: 1.5rem; font-family: 'Poppins', sans-serif; margin-bottom: 8px; }
+        .cs-desc { color: var(--text-muted); max-width: 400px; font-size: 0.95rem; line-height: 1.5; }
+
+        /* =========================================
+           RESPONSIVE DESIGN
+           ========================================= */
+        @media (max-width: 1024px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-menu-btn { display: block; }
+            .page-subtitle { display: inline-block; }
+            .admin-sidebar {
+                position: fixed; left: 0; top: 0;
+                transform: translateX(-100%); box-shadow: 20px 0 50px rgba(0,0,0,0.5);
+            }
+            .admin-sidebar.mobile-open { transform: translateX(0); }
+            .header-right .admin-profile span { display: none; }
+            .content-canvas { padding: 20px; }
+            .requests-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ambient Background -->
+    <div class="ambient-bg">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+    </div>
+
+    <!-- Global Loader -->
+    <div id="app-loader">
+        <div class="spinner"></div>
+        <p style="margin-top: 20px; color: var(--text-muted); font-size: 0.9rem;">Verifying Secure Connection...</p>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="app-toast" class="toast">
+        <div id="toast-icon" class="toast-icon"></div>
+        <div id="toast-message" style="font-size: 0.9rem; font-weight: 500;"></div>
+    </div>
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="admin-sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <svg width="24" height="24" fill="none" stroke="var(--accent-cyan)" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            <h2>PL2.0 CMS</h2>
+        </div>
+        
+        <div class="sidebar-scroll" id="nav-container">
+            <!-- Dashboard -->
+            <a class="nav-link active" data-module="dashboard">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Dashboard Overview
+            </a>
+
+            <!-- STUDENTS -->
+            <div class="nav-group" style="margin-top: 20px;">
+                <h3 class="nav-group-title">Students</h3>
+                <a class="nav-link" data-module="all-students"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg> All Students</a>
+                <a class="nav-link" data-module="offline-requests"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg> Offline Requests</a>
+                <a class="nav-link" data-module="offline-students"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Offline Students</a>
+                <a class="nav-link" data-module="content-approval"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Content Approval</a>
+            </div>
+
+            <!-- ACADEMIC -->
+                    <div class="nav-group">
+                <h3 class="nav-group-title">Academic</h3>
+                <a class="nav-link" data-module="classes"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg> Classes & Subjects</a>
+                <a class="nav-link" data-module="chapters"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg> Chapters</a>
+                <a class="nav-link" data-module="notes-library"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Notes / PDF Library</a>
+                <a class="nav-link" data-module="lectures"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 00-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.42a2.78 2.78 0 00-1.94 2C1 8.16 1 12 1 12s0 3.84.46 5.58a2.78 2.78 0 001.94 2C5.12 20 12 20 12 20s6.88 0 8.6-.42a2.78 2.78 0 001.94-2C23 15.84 23 12 23 12s0-3.84-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg> YouTube Lectures</a>
+            </div>
+
+            <!-- OFFLINE SYSTEM -->
+            <div class="nav-group">
+                <h3 class="nav-group-title">Offline System</h3>
+                <a class="nav-link" data-module="attendance"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> QR Attendance</a>
+                <a class="nav-link" data-module="exams"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg> Offline Exams</a>
+                <a class="nav-link" data-module="results"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> Results & Leaderboard</a>
+            </div>
+
+            <!-- COMMUNICATION -->
+            <div class="nav-group">
+                <h3 class="nav-group-title">Communication</h3>
+                <a href="admin-chat.html" class="nav-link external"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg> Teacher-Student Chat</a>
+                <a class="nav-link" data-module="announcements"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg> Announcements</a>
+            </div>
+
+            <!-- ENGAGEMENT -->
+            <div class="nav-group">
+                <h3 class="nav-group-title">Engagement</h3>
+                <a class="nav-link" data-module="badges"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> Badges & Rewards</a>
+                <a class="nav-link" data-module="calendar"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Study Calendar</a>
+            </div>
+
+            <!-- SYSTEM -->
+            <div class="nav-group">
+                <h3 class="nav-group-title">System & AI</h3>
+                <a class="nav-link" data-module="ai-settings"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg> AI Configuration</a>
+                <a class="nav-link" data-module="settings"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg> App Settings</a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="admin-main">
+        
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="header-left">
+                <button class="mobile-menu-btn" id="menu-toggle">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+                <h1 class="page-title" id="top-bar-title">Dashboard Overview</h1>
+                <span class="page-subtitle" id="top-bar-subtitle"></span>
+            </div>
+            
+            <div class="header-right">
+                <div class="admin-profile">
+                    <span id="admin-display-name" style="font-size: 0.9rem; font-weight: 500;">Admin</span>
+                    <div class="admin-avatar">A</div>
+                </div>
+                <button class="btn-logout" id="logout-btn">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Logout
+                </button>
+            </div>
+        </header>
+
+        <!-- Dynamic Content Canvas -->
+        <div class="content-canvas" id="content-canvas">
+            
+            <!-- MODULE: Dashboard (Default) -->
+                    <div class="module-view active" id="view-dashboard">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h4>Total Students</h4>
+                        <div class="stat-value" id="stat-students"><div class="stat-loading"></div></div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Offline Requests</h4>
+                        <div class="stat-value" id="stat-offline-req"><div class="stat-loading"></div></div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Pending Questions</h4>
+                        <div class="stat-value" id="stat-questions"><div class="stat-loading"></div></div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Published Notes</h4>
+                        <div class="stat-value" id="stat-notes"><div class="stat-loading"></div></div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Upcoming Exams</h4>
+                        <div class="stat-value" id="stat-exams"><div class="stat-loading"></div></div>
+                    </div>
+                </div>
+                <div style="background: var(--bg-panel); border: 1px solid var(--border-glass); border-radius: 16px; padding: 40px; text-align: center; color: var(--text-muted); backdrop-filter: blur(12px);">
+                    <svg width="48" height="48" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2" viewBox="0 0 24 24" style="margin-bottom:16px;"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
+                    <p>Activity overview charts will populate here.</p>
+                </div>
+            </div>
+
+            <!-- MODULE: Offline Requests (NEW MODULE) -->
+            <div class="module-view" id="view-offline-requests">
+                <div class="module-header">
+                    <h2>Offline Student Requests</h2>
+                    <p>Review students who requested access to the Offline Student system.</p>
+                </div>
+
+                <div class="tabs-container">
+                    <button class="tab-btn active" data-req-tab="pending">Pending</button>
+                    <button class="tab-btn" data-req-tab="approved">Approved</button>
+                    <button class="tab-btn" data-req-tab="rejected">Rejected</button>
+                </div>
+
+                <!-- List Container -->
+                <div id="requests-list-container" class="requests-grid">
+                    <!-- Cards will be injected here via JS -->
+                </div>
+                
+                <!-- Loading State inside module -->
+                <div id="requests-loader" style="display: flex; justify-content: center; padding: 40px; display: none;">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+
+            <!-- MODULE: Coming Soon -->
+            <div class="module-view" id="view-coming-soon">
+                <div class="coming-soon-container">
+                    <div class="cs-icon">
+                        <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                    </div>
+                    <h2 class="cs-title">Module In Development</h2>
+                    <p class="cs-desc">The <strong id="cs-module-name" style="color:#fff;">Selected Module</strong> architecture is prepared. Feature logic and database integrations will be deployed in an upcoming update.</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+
+  
+    <!-- Request Details Modal -->
+    <div class="modal-overlay" id="req-modal">
+        <div class="modal-card">
+            <button class="modal-close" id="close-modal-btn">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+            <h3 class="modal-title">Request Details</h3>
+            
+            <div id="modal-details">
+                <div class="modal-row"><span class="modal-label">Student Name</span> <span class="modal-value" id="mdl-name">--</span></div>
+                <div class="modal-row"><span class="modal-label">Email</span> <span class="modal-value" id="mdl-email">--</span></div>
+                <div class="modal-row"><span class="modal-label">UID</span> <span class="modal-value" id="mdl-uid" style="font-size:0.75rem;">--</span></div>
+                <div class="modal-row"><span class="modal-label">Current Type</span> <span class="modal-value" id="mdl-curr" style="text-transform: capitalize;">--</span></div>
+                <div class="modal-row"><span class="modal-label">Requested Type</span> <span class="modal-value" id="mdl-req" style="text-transform: capitalize;">--</span></div>
+                <div class="modal-row"><span class="modal-label">Date</span> <span class="modal-value" id="mdl-date">--</span></div>
+                <div class="modal-row"><span class="modal-label">Status</span> <span class="modal-value status-badge" id="mdl-status">--</span></div>
+            </div>
+
+            <!-- Actions (Only visible if pending) -->
+            <div class="modal-actions" id="modal-actions-container" style="display: none;">
+                <button class="btn-modal btn-reject" id="btn-reject-req">Reject</button>
+                <button class="btn-modal btn-approve" id="btn-approve-req">Approve as Offline</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK & Application Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, query, orderBy, onSnapshot, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // ==========================================
+        // 1. FIREBASE INITIALIZATION
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAZJ9igQg3NYgKdw5aBevtmgMwZrAVyeIg",
+            authDomain: "physicslover2-0.firebaseapp.com",
+            projectId: "physicslover2-0",
+            storageBucket: "physicslover2-0.firebasestorage.app",
+            messagingSenderId: "4807154836",
+            appId: "1:4807154836:web:57bc49204dbffba8fea881"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // ==========================================
+        // 2. AUTHENTICATION & AUTHORIZATION
+        // ==========================================
+        let currentAdminData = null;
+
+        async function verifyAdmin(uid) {
+            try {
+                const userDoc = await getDoc(doc(db, 'users', uid));
+                if (userDoc.exists() && userDoc.data().role === 'admin') {
+                    return userDoc.data();
+                }
+                return null;
+            } catch (error) {
+                console.error("Authorization check failed:", error);
+                return null;
+            }
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentAdminData = await verifyAdmin(user.uid);
+                if (currentAdminData) {
+                    initializeAdminApp(currentAdminData);
+                } else {
+                    await logoutAdmin();
+                }
+            } else {
+                window.location.href = 'admin-login.html';
+            }
+        });
+
+        async function logoutAdmin() {
+            await signOut(auth);
+            window.location.href = 'admin-login.html';
+        }
+
+        document.getElementById('logout-btn').addEventListener('click', logoutAdmin);
+
+      // ==========================================
+        // 3. ARCHITECTURE: MODULAR CMS CONTROLLER
+        // ==========================================
+        const ui = {
+            loader: document.getElementById('app-loader'),
+            sidebar: document.getElementById('sidebar'),
+            menuToggle: document.getElementById('menu-toggle'),
+            navLinks: document.querySelectorAll('.nav-link:not(.external)'),
+            topTitle: document.getElementById('top-bar-title'),
+            topSubtitle: document.getElementById('top-bar-subtitle'),
+            adminName: document.getElementById('admin-display-name'),
+            views: document.querySelectorAll('.module-view'),
+            csModuleName: document.getElementById('cs-module-name')
+        };
+
+        function initializeAdminApp(adminData) {
+            if (adminData.name) ui.adminName.textContent = adminData.name;
+
+            ui.navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    const moduleName = link.getAttribute('data-module');
+                    const moduleTitle = link.textContent.trim();
+                    navigateToModule(moduleName, moduleTitle, link);
+                });
+            });
+
+            ui.menuToggle.addEventListener('click', () => {
+                ui.sidebar.classList.toggle('mobile-open');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth <= 768 && !ui.sidebar.contains(e.target) && !ui.menuToggle.contains(e.target)) {
+                    ui.sidebar.classList.remove('mobile-open');
+                }
+            });
+
+            renderDashboard();
+
+            setTimeout(() => {
+                ui.loader.style.opacity = '0';
+                setTimeout(() => ui.loader.style.display = 'none', 300);
+            }, 500);
+        }
+
+        function navigateToModule(moduleName, moduleTitle, activeElement) {
+            ui.navLinks.forEach(l => l.classList.remove('active'));
+            if(activeElement) activeElement.classList.add('active');
+            ui.sidebar.classList.remove('mobile-open');
+            ui.topTitle.textContent = moduleTitle;
+            ui.topSubtitle.style.display = 'none';
+
+            ui.views.forEach(v => v.classList.remove('active'));
+
+            if (moduleName === 'dashboard') {
+                document.getElementById('view-dashboard').classList.add('active');
+                renderDashboard();
+            } else if (moduleName === 'offline-requests') {
+                document.getElementById('view-offline-requests').classList.add('active');
+                initOfflineRequestsModule();
+            } else {
+                showComingSoon(moduleTitle);
+            }
+        }
+
+        function renderDashboard() {
+            const stats = ['stat-students', 'stat-offline-req', 'stat-questions', 'stat-notes', 'stat-exams'];
+            stats.forEach(id => {
+                const el = document.getElementById(id);
+                if(el.innerHTML !== '—') setTimeout(() => el.innerHTML = '—', 800);
+            });
+        }
+
+        function showComingSoon(moduleTitle) {
+            document.getElementById('view-coming-soon').classList.add('active');
+            ui.csModuleName.textContent = moduleTitle;
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('app-toast');
+            const icon = document.getElementById('toast-icon');
+            const msg = document.getElementById('toast-message');
+            
+            icon.className = `toast-icon ${isError ? 'error' : 'success'}`;
+            icon.innerHTML = isError 
+                ? '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+                : '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+            
+            msg.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+             // ==========================================
+        // 4. OFFLINE REQUESTS MODULE
+        // ==========================================
+        let or_allRequests = [];
+        let or_currentTab = 'pending';
+        let or_unsub = null;
+        let or_selectedRequest = null;
+
+        // DOM Elements
+        const or_tabs = document.querySelectorAll('.tab-btn');
+        const or_container = document.getElementById('requests-list-container');
+        const or_loader = document.getElementById('requests-loader');
+        
+        // Modal DOM
+        const mdlOverlay = document.getElementById('req-modal');
+        const mdlClose = document.getElementById('close-modal-btn');
+        const mdlActions = document.getElementById('modal-actions-container');
+        const btnApprove = document.getElementById('btn-approve-req');
+        const btnReject = document.getElementById('btn-reject-req');
+
+        function initOfflineRequestsModule() {
+            if (or_unsub) return; // Already listening
+
+            or_loader.style.display = 'flex';
+            
+            // Tab listeners
+            or_tabs.forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    or_tabs.forEach(t => t.classList.remove('active'));
+                    e.target.classList.add('active');
+                    or_currentTab = e.target.getAttribute('data-req-tab');
+                    renderOfflineRequestsList();
+                });
+            });
+
+            // Real-time Firestore Listener
+            const reqRef = collection(db, 'offlineRequests');
+            const q = query(reqRef, orderBy('createdAt', 'desc'));
+
+            or_unsub = onSnapshot(q, (snapshot) => {
+                or_loader.style.display = 'none';
+                or_allRequests = [];
+                snapshot.forEach(doc => {
+                    or_allRequests.push({ id: doc.id, ...doc.data() });
+                });
+                renderOfflineRequestsList();
+            }, (error) => {
+                console.error("Error fetching requests:", error);
+                or_loader.style.display = 'none';
+                or_container.innerHTML = `<p style="color:#ef4444; padding:20px;">Failed to load data. Please check permissions.</p>`;
+            });
+
+            // Modal Listeners
+            mdlClose.addEventListener('click', closeReqModal);
+            btnApprove.addEventListener('click', handleApproveRequest);
+            btnReject.addEventListener('click', handleRejectRequest);
+        }
+
+        function renderOfflineRequestsList() {
+            or_container.innerHTML = '';
+            
+            const filtered = or_allRequests.filter(req => req.status === or_currentTab);
+
+            if (filtered.length === 0) {
+                let msg = "No pending offline student requests.";
+                if(or_currentTab === 'approved') msg = "No approved requests yet.";
+                if(or_currentTab === 'rejected') msg = "No rejected requests yet.";
+                
+                or_container.innerHTML = `<p style="color:var(--text-muted); padding:20px; font-size:0.9rem;">${msg}</p>`;
+                return;
+            }
+
+            filtered.forEach(req => {
+                const dateStr = req.createdAt ? req.createdAt.toDate().toLocaleDateString() : 'Unknown';
+                let badgeClass = req.status === 'pending' ? 'badge-pending' : (req.status === 'approved' ? 'badge-approved' : 'badge-rejected');
+
+                const card = document.createElement('div');
+                card.className = 'request-card';
+                card.innerHTML = `
+                    <div class="req-header">
+                        <div>
+                            <div class="req-name">${escapeHTML(req.name || 'Unknown')}</div>
+                            <div class="req-email">${escapeHTML(req.email || 'No email')}</div>
+                        </div>
+                        <span class="status-badge ${badgeClass}">${escapeHTML(req.status)}</span>
+                    </div>
+                    <div class="req-details">
+                        <div>
+                            <div class="req-label">Current</div>
+                            <div style="text-transform:capitalize;">${escapeHTML(req.currentStudentType || 'online')}</div>
+                        </div>
+                        <div>
+                            <div class="req-label">Requested</div>
+                            <div style="text-transform:capitalize; color:var(--accent-cyan);">${escapeHTML(req.requestedStudentType || 'offline')}</div>
+                        </div>
+                    </div>
+                    <div class="req-footer">
+                        <span class="req-date">${dateStr}</span>
+                        <button class="btn-view" data-id="${req.id}">View Details</button>
+                    </div>
+                `;
+                or_container.appendChild(card);
+            });
+
+            // Bind view buttons
+            document.querySelectorAll('.btn-view').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const reqId = e.target.getAttribute('data-id');
+                    openReqModal(reqId);
+                });
+            });
+        }
+
+      function openReqModal(reqId) {
+            const req = or_allRequests.find(r => r.id === reqId);
+            if (!req) return;
+            or_selectedRequest = req;
+
+            document.getElementById('mdl-name').textContent = req.name || 'Unknown';
+            document.getElementById('mdl-email').textContent = req.email || 'N/A';
+            document.getElementById('mdl-uid').textContent = req.userId || 'N/A';
+            document.getElementById('mdl-curr').textContent = req.currentStudentType || 'online';
+            document.getElementById('mdl-req').textContent = req.requestedStudentType || 'offline';
+            document.getElementById('mdl-date').textContent = req.createdAt ? req.createdAt.toDate().toLocaleString() : 'N/A';
+            
+            const statusEl = document.getElementById('mdl-status');
+            statusEl.textContent = req.status;
+            statusEl.className = 'modal-value status-badge ' + (req.status === 'pending' ? 'badge-pending' : (req.status === 'approved' ? 'badge-approved' : 'badge-rejected'));
+
+            if (req.status === 'pending') {
+                mdlActions.style.display = 'flex';
+                btnApprove.disabled = false;
+                btnReject.disabled = false;
+            } else {
+                mdlActions.style.display = 'none';
+            }
+
+            mdlOverlay.classList.add('active');
+        }
+
+        function closeReqModal() {
+            mdlOverlay.classList.remove('active');
+            or_selectedRequest = null;
+        }
+
+        async function handleApproveRequest() {
+            if (!or_selectedRequest) return;
+            if (or_selectedRequest.status !== 'pending') {
+                showToast("This request has already been reviewed.", true);
+                closeReqModal();
+                return;
+            }
+
+            const confirmAction = confirm(`Approve ${or_selectedRequest.name} as an Offline Student?`);
+            if (!confirmAction) return;
+
+            setModalButtonsState(true, "Approving...");
+
+            try {
+                // 1. Update Request Doc
+                const reqRef = doc(db, 'offlineRequests', or_selectedRequest.id);
+                await updateDoc(reqRef, {
+                    status: 'approved',
+                    reviewedAt: serverTimestamp(),
+                    reviewedBy: auth.currentUser.uid
+                });
+
+                // 2. Update Student Doc
+                const userRef = doc(db, 'users', or_selectedRequest.userId);
+                await updateDoc(userRef, {
+                    studentType: 'offline'
+                });
+
+                showToast("Student successfully approved as Offline.");
+                closeReqModal();
+            } catch (error) {
+                console.error("Approval failed:", error);
+                showToast("Failed to approve request. Check permissions.", true);
+                setModalButtonsState(false);
+            }
+        }
+
+        async function handleRejectRequest() {
+            if (!or_selectedRequest) return;
+            if (or_selectedRequest.status !== 'pending') {
+                showToast("This request has already been reviewed.", true);
+                closeReqModal();
+                return;
+            }
+
+            const confirmAction = confirm(`Reject this offline student request?`);
+            if (!confirmAction) return;
+
+            setModalButtonsState(true, "Rejecting...", true);
+
+            try {
+                // Update Request Doc ONLY
+                const reqRef = doc(db, 'offlineRequests', or_selectedRequest.id);
+                await updateDoc(reqRef, {
+                    status: 'rejected',
+                    reviewedAt: serverTimestamp(),
+                    reviewedBy: auth.currentUser.uid
+                });
+
+                showToast("Request rejected successfully.");
+                closeReqModal();
+            } catch (error) {
+                console.error("Rejection failed:", error);
+                showToast("Failed to reject request.", true);
+                setModalButtonsState(false);
+            }
+        }
+
+        function setModalButtonsState(isDisabled, btnText = "", isRejecting = false) {
+            btnApprove.disabled = isDisabled;
+            btnReject.disabled = isDisabled;
+            if (isDisabled) {
+                if(isRejecting) btnReject.innerHTML = `<div class="spinner" style="width:16px;height:16px;border-width:2px;border-top-color:#ef4444;"></div> ${btnText}`;
+                else btnApprove.innerHTML = `<div class="spinner" style="width:16px;height:16px;border-width:2px;border-top-color:#000;"></div> ${btnText}`;
+            } else {
+                btnApprove.textContent = "Approve as Offline";
+                btnReject.textContent = "Reject";
+            }
+        }
+
+        // Utility
+        function escapeHTML(str) {
+            return (str || "").toString().replace(/[&<>'"]/g, tag => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'}[tag]));
+        }
+
+    </script>
+
+<script type="module">
+  import "/js/utils/admin-improvement-integration.js";
+</script>
+
+</body>
+</html>
