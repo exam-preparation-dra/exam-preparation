@@ -601,19 +601,53 @@ async function initAdvancedBadges() {
 const shell = document.getElementById("shell");
 let student = getActiveStudent();
 
-if (!student) {
-  window.location.href = "../index.html";
-} else {
-  renderPage();
-  initAdvancedBadges();
-  refreshActiveStudent(student.docId).then(fresh => {
-    if (fresh) {
-      student = fresh;
-      renderPage();
-      initAdvancedBadges();
-    }
-  }).catch(err => console.warn("Student refresh skipped", err));
+/*
+ * PROFILE BOOT FIX
+ * ----------------
+ * The old boot path fired renderPage() twice without awaiting either call.
+ * If any synchronous render error happened (especially while the new social/
+ * challenge modules were being initialized), the original page-level spinner
+ * could remain forever and there was no visible error.
+ *
+ * We now:
+ *  1. refresh the cached student first (best effort),
+ *  2. render the page exactly once,
+ *  3. use Promise.allSettled for independent sections,
+ *  4. always replace the initial loading spinner with either the page or
+ *     an actionable error message.
+ */
+async function bootProfile() {
+  if (!student) {
+    window.location.href = "../index.html";
+    return;
+  }
+
+  try {
+    const fresh = await Promise.race([
+      refreshActiveStudent(student.docId),
+      new Promise(resolve => setTimeout(() => resolve(null), 5000))
+    ]);
+
+    if (fresh) student = fresh;
+
+    await renderPage();
+
+    // Badges are supplementary; never let them prevent the profile itself
+    // from opening.
+    initAdvancedBadges().catch(err =>
+      console.warn("Advanced badges skipped:", err)
+    );
+  } catch (err) {
+    console.error("Profile boot failed:", err);
+    renderState(
+      shell,
+      "error",
+      "প্রোফাইল লোড করা যায়নি। পেজটি আবার রিফ্রেশ করুন।"
+    );
+  }
 }
+
+bootProfile();
 
 window.switchTab = function(tabId) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -626,6 +660,8 @@ let allNetStudents = [], friendIds = [], incomingReqs = [], outgoingReqs = [];
 let dirBatchFilter = "all", dirSearchTerm = "";
 
 async function renderPage() {
+  // Render the shell first. Section data loads are independent and must not
+  // be able to keep the whole page in a loading state.
   shell.innerHTML = `
     ${renderStudentHeader(student, "profile")}
     
@@ -667,17 +703,23 @@ async function renderPage() {
     </div>
   `;
 
-  await Promise.all([
+  // These four sections are independent. Promise.all() made one unexpected
+  // rejection abort the whole renderPage() call. allSettled() keeps the
+  // profile usable even if Firestore/rules/indexes temporarily fail.
+  await Promise.allSettled([
     loadIdentity(),
     loadGamification(),
     loadStats(),
     loadNetworkData()
   ]);
 
-  document.getElementById("dirSearch").addEventListener("input", (e) => {
-    dirSearchTerm = e.target.value.trim().toLowerCase();
-    renderDirectory();
-  });
+  const search = document.getElementById("dirSearch");
+  if (search) {
+    search.addEventListener("input", (e) => {
+      dirSearchTerm = e.target.value.trim().toLowerCase();
+      renderDirectory();
+    });
+  }
 }
 
 async function loadIdentity() {
