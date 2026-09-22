@@ -303,6 +303,7 @@
   function showProfileError(title, details) {
     const shell = document.getElementById("shell");
     if (!shell) return;
+    window.__profileErrorShown = true;
 
     shell.innerHTML = `
       <div style="
@@ -419,20 +420,58 @@
       ].join("\n")
     );
   });
+
+  window.__showProfileError = showProfileError;
 })();
 </script>
 
 <script type="module">
-import { initTheme, toggleTheme, renderState, renderStudentHeader, showToast, friendlyError } from "../js/utils/ui-utils.js";
-import { getActiveStudent, refreshActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
-import { getApprovedResults, getStudentRank } from "../js/utils/results-utils.js";
-import { computeOverallStats, computeSubjectStats, computeChapterStats, computeTopicStats } from "../js/utils/analytics-utils.js";
-import { computeGamificationData, attendanceBadgesEarned } from "../js/utils/gamification-utils.js";
-import { db } from "../js/firebase/firebase-config.js";
-import { doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-import { getSubjects, buildNameMap } from "../js/utils/syllabus-utils.js";
-import { getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival } from "../js/utils/friend-utils.js";
-import { getChallengeWinCount } from "../js/utils/চ্যালেঞ্জ-utils.js";
+let initTheme, toggleTheme, renderState, renderStudentHeader, showToast, friendlyError;
+let getActiveStudent, refreshActiveStudent, getActiveStudents;
+let getApprovedResults, getStudentRank;
+let computeOverallStats, computeSubjectStats, computeChapterStats, computeTopicStats;
+let computeGamificationData, attendanceBadgesEarned;
+let db;
+let doc, getDoc, collection, getDocs;
+let getSubjects, buildNameMap;
+let getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival;
+let getChallengeWinCount;
+
+async function loadModule(path, run) {
+  try {
+    const mod = await import(path);
+    run(mod);
+    return true;
+  } catch (err) {
+    const shell = document.getElementById("shell");
+    if (shell && window.__showProfileError) {
+      window.__showProfileError(
+        "মডিউল ইম্পোর্ট ত্রুটি (ফাইল লোড হয়নি)",
+        "ফাইল: " + path + "\nত্রুটি: " + (err && err.message ? err.message : String(err)) +
+        "\n\nএই path-এ ফাইলটি GitHub repo-তে নেই, নাম ভুল আছে, অথবা ফাইলের ভেতরেই সিন্ট্যাক্স এরর আছে।"
+      );
+    }
+    return false;
+  }
+}
+
+const __ok = (
+  await loadModule("../js/utils/ui-utils.js", m => ({ initTheme, toggleTheme, renderState, renderStudentHeader, showToast, friendlyError } = m)) &&
+  await loadModule("../js/utils/student-utils.js", m => ({ getActiveStudent, refreshActiveStudent, getActiveStudents } = m)) &&
+  await loadModule("../js/utils/results-utils.js", m => ({ getApprovedResults, getStudentRank } = m)) &&
+  await loadModule("../js/utils/analytics-utils.js", m => ({ computeOverallStats, computeSubjectStats, computeChapterStats, computeTopicStats } = m)) &&
+  await loadModule("../js/utils/gamification-utils.js", m => ({ computeGamificationData, attendanceBadgesEarned } = m)) &&
+  await loadModule("../js/firebase/firebase-config.js", m => ({ db } = m)) &&
+  await loadModule("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js", m => ({ doc, getDoc, collection, getDocs } = m)) &&
+  await loadModule("../js/utils/syllabus-utils.js", m => ({ getSubjects, buildNameMap } = m)) &&
+  await loadModule("../js/utils/friend-utils.js", m => ({ getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival } = m)) &&
+  await loadModule("../js/utils/চ্যালেঞ্জ-utils.js", m => ({ getChallengeWinCount } = m))
+);
+
+if (!__ok) {
+  // stop here — one of the files above is missing/broken, and the red box
+  // above already shows exactly which one and why.
+} else {
 
 initTheme();
 
@@ -1317,6 +1356,8 @@ async function buildProfileCardHtml(studentData) {
     btn.disabled = false; btn.innerHTML = originalText;
   }
 }
+
+} // end else (imports all loaded successfully)
 </script>
 
 <script type="module">
