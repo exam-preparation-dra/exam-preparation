@@ -4,7 +4,7 @@
  * while providing one safe profile-level XP total.
  */
 
-import { db } from "/js/firebase/firebase-config.js";
+import { db } from "../firebase/firebase-config.js";
 import {
   collection,
   getDocs,

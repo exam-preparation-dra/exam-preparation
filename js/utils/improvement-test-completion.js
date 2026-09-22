@@ -4,7 +4,7 @@
  * Does not change official exam results.
  */
 
-import { db, auth } from "/js/firebase/firebase-config.js";
+import { db, auth } from "../firebase/firebase-config.js";
 import {
   doc,
   getDoc,

@@ -3,7 +3,7 @@
  * Handles active-attempt lifecycle and reliable attempt counting.
  */
 
-import { db } from "/js/firebase/firebase-config.js";
+import { db } from "../firebase/firebase-config.js";
 import {
   collection,
   doc,

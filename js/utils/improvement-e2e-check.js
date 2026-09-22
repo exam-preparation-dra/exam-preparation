@@ -1,7 +1,7 @@
 /* Physics Lover 2.0 — Improvement End-to-End Diagnostic
  * Read-only checker. It does not create, delete, publish, assign, or alter data.
  */
-import { db } from "/js/firebase/firebase-config.js";
+import { db } from "../firebase/firebase-config.js";
 import {
   doc, getDoc
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";

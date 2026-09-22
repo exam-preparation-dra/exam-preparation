@@ -1,7 +1,7 @@
 /* Physics Lover 2.0 — Final Admin Improvement Workflow
  * One clear flow: review -> create draft -> publish -> assign.
  */
-import { db, auth } from "/js/firebase/firebase-config.js";
+import { db, auth } from "../firebase/firebase-config.js";
 import {
   doc, getDoc, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";

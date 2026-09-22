@@ -2,7 +2,7 @@
  * Official exam XP remains the existing XP source.
  * Improvement Practice XP is added exactly once from completed attempts.
  */
-import { db } from "/js/firebase/firebase-config.js";
+import { db } from "../firebase/firebase-config.js";
 import {
   collection, getDocs, query, where
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
