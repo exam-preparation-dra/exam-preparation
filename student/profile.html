@@ -227,6 +227,124 @@
 
 <div id="shareCardArea" style="position:fixed;left:-9999px;top:0;"></div>
 
+<script>
+(function () {
+  function esc(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function showProfileError(title, details) {
+    const shell = document.getElementById("shell");
+    if (!shell) return;
+
+    shell.innerHTML = `
+      <div style="
+        min-height:100vh;
+        box-sizing:border-box;
+        padding:24px;
+        display:flex;
+        align-items:flex-start;
+        justify-content:center;
+        background:#fff;
+        font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      ">
+        <div style="
+          width:100%;
+          max-width:760px;
+          margin-top:20px;
+          padding:22px;
+          box-sizing:border-box;
+          border:2px solid #ef4444;
+          border-radius:18px;
+          background:#fff1f2;
+          color:#7f1d1d;
+          box-shadow:0 8px 30px rgba(0,0,0,.08);
+        ">
+          <div style="
+            font-size:22px;
+            font-weight:900;
+            margin-bottom:10px;
+          ">PROFILE ERROR</div>
+
+          <div style="
+            font-size:16px;
+            font-weight:800;
+            margin-bottom:14px;
+          ">${esc(title)}</div>
+
+          <pre style="
+            margin:0;
+            padding:14px;
+            box-sizing:border-box;
+            white-space:pre-wrap;
+            word-break:break-word;
+            overflow:auto;
+            border-radius:12px;
+            background:#fff;
+            color:#111827;
+            font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+          ">${esc(details)}</pre>
+
+          <div style="
+            margin-top:14px;
+            font-size:13px;
+            line-height:1.5;
+            color:#991b1b;
+          ">
+            এই error-এর screenshot পাঠাও। এতে কোন file/import/line-এ
+            সমস্যা হচ্ছে সেটা সরাসরি ধরা যাবে।
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  window.addEventListener("error", function (event) {
+    showProfileError(
+      "JavaScript / Module Error",
+      [
+        "Message: " + (event.message || "Unknown error"),
+        "File: " + (event.filename || "Unknown file"),
+        "Line: " + (event.lineno || "?"),
+        "Column: " + (event.colno || "?"),
+        "",
+        "Stack: " + (event.error && event.error.stack
+          ? event.error.stack
+          : "No stack available")
+      ].join("\n")
+    );
+  });
+
+  window.addEventListener("unhandledrejection", function (event) {
+    const reason = event.reason;
+
+    showProfileError(
+      "Unhandled Promise Error",
+      reason && reason.stack
+        ? reason.stack
+        : String(reason || "Unknown promise rejection")
+    );
+  });
+
+  window.addEventListener("securitypolicyviolation", function (event) {
+    showProfileError(
+      "Security / CSP Error",
+      [
+        "Blocked URI: " + (event.blockedURI || "Unknown"),
+        "Directive: " + (event.effectiveDirective || "Unknown"),
+        "Source: " + (event.sourceFile || "Unknown"),
+        "Line: " + (event.lineNumber || "?")
+      ].join("\n")
+    );
+  });
+})();
+</script>
+
 <script type="module">
 import { initTheme, renderState, renderStudentHeader, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { getActiveStudent, refreshActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
@@ -601,53 +719,19 @@ async function initAdvancedBadges() {
 const shell = document.getElementById("shell");
 let student = getActiveStudent();
 
-/*
- * PROFILE BOOT FIX
- * ----------------
- * The old boot path fired renderPage() twice without awaiting either call.
- * If any synchronous render error happened (especially while the new social/
- * challenge modules were being initialized), the original page-level spinner
- * could remain forever and there was no visible error.
- *
- * We now:
- *  1. refresh the cached student first (best effort),
- *  2. render the page exactly once,
- *  3. use Promise.allSettled for independent sections,
- *  4. always replace the initial loading spinner with either the page or
- *     an actionable error message.
- */
-async function bootProfile() {
-  if (!student) {
-    window.location.href = "../index.html";
-    return;
-  }
-
-  try {
-    const fresh = await Promise.race([
-      refreshActiveStudent(student.docId),
-      new Promise(resolve => setTimeout(() => resolve(null), 5000))
-    ]);
-
-    if (fresh) student = fresh;
-
-    await renderPage();
-
-    // Badges are supplementary; never let them prevent the profile itself
-    // from opening.
-    initAdvancedBadges().catch(err =>
-      console.warn("Advanced badges skipped:", err)
-    );
-  } catch (err) {
-    console.error("Profile boot failed:", err);
-    renderState(
-      shell,
-      "error",
-      "প্রোফাইল লোড করা যায়নি। পেজটি আবার রিফ্রেশ করুন।"
-    );
-  }
+if (!student) {
+  window.location.href = "../index.html";
+} else {
+  renderPage();
+  initAdvancedBadges();
+  refreshActiveStudent(student.docId).then(fresh => {
+    if (fresh) {
+      student = fresh;
+      renderPage();
+      initAdvancedBadges();
+    }
+  }).catch(err => console.warn("Student refresh skipped", err));
 }
-
-bootProfile();
 
 window.switchTab = function(tabId) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -660,8 +744,6 @@ let allNetStudents = [], friendIds = [], incomingReqs = [], outgoingReqs = [];
 let dirBatchFilter = "all", dirSearchTerm = "";
 
 async function renderPage() {
-  // Render the shell first. Section data loads are independent and must not
-  // be able to keep the whole page in a loading state.
   shell.innerHTML = `
     ${renderStudentHeader(student, "profile")}
     
@@ -703,23 +785,17 @@ async function renderPage() {
     </div>
   `;
 
-  // These four sections are independent. Promise.all() made one unexpected
-  // rejection abort the whole renderPage() call. allSettled() keeps the
-  // profile usable even if Firestore/rules/indexes temporarily fail.
-  await Promise.allSettled([
+  await Promise.all([
     loadIdentity(),
     loadGamification(),
     loadStats(),
     loadNetworkData()
   ]);
 
-  const search = document.getElementById("dirSearch");
-  if (search) {
-    search.addEventListener("input", (e) => {
-      dirSearchTerm = e.target.value.trim().toLowerCase();
-      renderDirectory();
-    });
-  }
+  document.getElementById("dirSearch").addEventListener("input", (e) => {
+    dirSearchTerm = e.target.value.trim().toLowerCase();
+    renderDirectory();
+  });
 }
 
 async function loadIdentity() {
