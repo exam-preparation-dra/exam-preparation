@@ -48,12 +48,12 @@
 </div>
 
 <script type="module">
-import { initTheme } from "/js/utils/ui-utils.js";
-import { getActiveStudent } from "/js/utils/student-utils.js";
-import { getAssignedImprovementTest } from "/js/utils/improvement-test-utils.js";
-import { calculateImprovement } from "/js/utils/improvement-utils.js";
-import { computeImprovementPracticeXP } from "/js/utils/xp-utils.js";
-import { db } from "/js/firebase/firebase-config.js";
+import { initTheme } from "../js/utils/ui-utils.js";
+import { getActiveStudent } from "../js/utils/student-utils.js";
+import { getAssignedImprovementTest } from "../js/utils/improvement-test-utils.js";
+import { calculateImprovement } from "../js/utils/improvement-utils.js";
+import { computeImprovementPracticeXP } from "../js/utils/xp-utils.js";
+import { db } from "../js/firebase/firebase-config.js";
 import {
   collection, doc, getDocs, query, where, setDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
@@ -353,7 +353,7 @@ async function submit(auto=false){
 
 async function boot(){
   if(!student){
-    location.href="/index.html";
+    location.href="../index.html";
     return;
   }
   if(!testId){

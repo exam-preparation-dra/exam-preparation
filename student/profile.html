@@ -465,7 +465,7 @@ const __ok = (
   await loadModule("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js", m => ({ doc, getDoc, collection, getDocs } = m)) &&
   await loadModule("../js/utils/syllabus-utils.js", m => ({ getSubjects, buildNameMap } = m)) &&
   await loadModule("../js/utils/friend-utils.js", m => ({ getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival } = m)) &&
-  await loadModule("../js/utils/চ্যালেঞ্জ-utils.js", m => ({ getChallengeWinCount } = m))
+  await loadModule("../js/utils/challenge-utils.js", m => ({ getChallengeWinCount } = m))
 );
 
 if (!__ok) {
