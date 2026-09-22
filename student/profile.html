@@ -80,6 +80,68 @@
   .badge-art.epic{background:linear-gradient(145deg,#9333ea,#581c87)}
   .badge-art.legendary{background:linear-gradient(145deg,#d97706,#78350f)}
   .badge-art.secret{background:linear-gradient(145deg,#0f172a,#020617)}
+
+/* ==========================================================
+   PREMIUM STUDENT PROFILE — no emoji, icon-only interface
+   ========================================================== */
+.profile-premium { display:grid; gap:16px; }
+.profile-hero { position:relative; overflow:hidden; padding:24px; border-radius:24px; border:1px solid rgba(var(--color-accent-rgb),.18); background:linear-gradient(135deg,rgba(var(--color-accent-rgb),.12),rgba(128,128,128,.035) 55%,rgba(59,130,246,.08)); box-shadow:0 18px 50px rgba(0,0,0,.08); }
+.profile-hero:before { content:""; position:absolute; width:220px; height:220px; right:-90px; top:-110px; border-radius:50%; background:var(--color-accent); opacity:.08; filter:blur(8px); }
+.profile-hero-grid { position:relative; display:grid; grid-template-columns:auto 1fr auto; gap:18px; align-items:center; }
+.profile-avatar-xl { width:96px; height:96px; border-radius:28px; overflow:hidden; border:2px solid rgba(var(--color-accent-rgb),.35); background:linear-gradient(135deg,var(--color-accent),#3b82f6); box-shadow:0 12px 28px rgba(0,0,0,.12); display:grid; place-items:center; color:#fff; font-size:2rem; font-weight:900; }
+.profile-avatar-xl img { width:100%; height:100%; object-fit:cover; }
+.profile-eyebrow { font-size:.7rem; text-transform:uppercase; letter-spacing:.14em; font-weight:900; color:var(--color-accent); margin-bottom:5px; }
+.profile-title { margin:0; font-size:clamp(1.55rem,5vw,2.25rem); font-weight:950; color:var(--text-primary); letter-spacing:-.03em; }
+.profile-subtitle { margin-top:5px; color:var(--text-secondary); font-size:.85rem; font-weight:700; }
+.profile-title-pill { display:inline-flex; align-items:center; gap:7px; margin-top:10px; padding:7px 10px; border-radius:999px; background:rgba(var(--color-accent-rgb),.1); border:1px solid rgba(var(--color-accent-rgb),.18); color:var(--color-accent); font-size:.75rem; font-weight:900; }
+.profile-hero-actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+.profile-icon-btn { width:42px; height:42px; border-radius:13px; display:grid; place-items:center; border:1px solid var(--surface-border); background:var(--surface); color:var(--text-secondary); cursor:pointer; }
+.profile-icon-btn:hover { color:var(--color-accent); border-color:rgba(var(--color-accent-rgb),.35); }
+.profile-metrics { position:relative; display:grid; grid-template-columns:repeat(4,1fr); gap:9px; margin-top:18px; }
+.profile-metric { padding:13px; border-radius:16px; background:rgba(255,255,255,.45); border:1px solid rgba(128,128,128,.12); backdrop-filter:blur(10px); }
+.profile-metric-label { color:var(--text-muted); font-size:.68rem; font-weight:800; margin-bottom:4px; }
+.profile-metric-value { color:var(--text-primary); font-size:1.1rem; font-weight:950; font-family:var(--font-num); }
+.profile-section { padding:18px; border-radius:20px; border:1px solid var(--surface-border); background:var(--surface); box-shadow:0 10px 35px rgba(0,0,0,.035); }
+.profile-section-head { display:flex; justify-content:space-between; align-items:flex-end; gap:12px; margin-bottom:14px; }
+.profile-section-title { margin:0; color:var(--text-primary); font-size:1.02rem; font-weight:950; }
+.profile-section-note { color:var(--text-muted); font-size:.7rem; font-weight:700; }
+.identity-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.identity-card { padding:14px; border-radius:16px; background:rgba(128,128,128,.045); border:1px solid rgba(128,128,128,.1); }
+.identity-icon { width:34px; height:34px; border-radius:11px; display:grid; place-items:center; color:var(--color-accent); background:rgba(var(--color-accent-rgb),.09); margin-bottom:9px; }
+.identity-label { color:var(--text-muted); font-size:.68rem; font-weight:800; }
+.identity-value { margin-top:3px; color:var(--text-primary); font-size:1rem; font-weight:950; }
+.journey { position:relative; display:grid; gap:12px; }
+.journey:before { content:""; position:absolute; left:10px; top:10px; bottom:10px; width:2px; background:linear-gradient(var(--color-accent),rgba(var(--color-accent-rgb),.08)); }
+.journey-item { position:relative; display:grid; grid-template-columns:22px 1fr; gap:10px; align-items:start; }
+.journey-dot { width:20px; height:20px; border-radius:50%; background:var(--surface); border:2px solid var(--color-accent); z-index:1; display:grid; place-items:center; }
+.journey-dot svg { width:10px; height:10px; }
+.journey-card { padding:11px 13px; border-radius:14px; background:rgba(128,128,128,.045); border:1px solid rgba(128,128,128,.1); }
+.journey-card strong { color:var(--text-primary); font-size:.8rem; }
+.journey-card span { display:block; margin-top:3px; color:var(--text-muted); font-size:.68rem; font-weight:700; }
+.strength-list { display:grid; gap:12px; }
+.strength-row { display:grid; grid-template-columns:105px 1fr 48px; gap:10px; align-items:center; }
+.strength-name { color:var(--text-secondary); font-size:.74rem; font-weight:850; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.strength-bar { height:8px; background:rgba(128,128,128,.13); border-radius:999px; overflow:hidden; }
+.strength-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--color-accent),#3b82f6); }
+.strength-score { color:var(--color-accent); font-size:.75rem; font-weight:950; text-align:right; font-family:var(--font-num); }
+.records-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:9px; }
+.record-card { padding:13px; border-radius:15px; background:rgba(128,128,128,.045); border:1px solid rgba(128,128,128,.1); }
+.record-value { color:var(--text-primary); font-size:1.15rem; font-weight:950; font-family:var(--font-num); }
+.record-label { margin-top:3px; color:var(--text-muted); font-size:.68rem; font-weight:800; }
+.activity-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+.activity-cell { aspect-ratio:1; border-radius:5px; background:rgba(128,128,128,.1); border:1px solid rgba(128,128,128,.06); }
+.activity-cell.active-1 { background:rgba(var(--color-accent-rgb),.25); }
+.activity-cell.active-2 { background:rgba(var(--color-accent-rgb),.48); }
+.activity-cell.active-3 { background:rgba(var(--color-accent-rgb),.72); }
+.rival-card { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:12px; padding:16px; border-radius:18px; background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(var(--color-accent-rgb),.06)); border:1px solid rgba(var(--color-accent-rgb),.16); }
+.rival-person { text-align:center; }
+.rival-name { color:var(--text-primary); font-weight:950; font-size:.85rem; }
+.rival-meta { color:var(--text-muted); font-size:.65rem; font-weight:750; margin-top:2px; }
+.rival-score { font-size:1.4rem; font-weight:950; color:var(--text-primary); font-family:var(--font-num); }
+.rival-vs { color:var(--text-muted); font-size:.65rem; font-weight:900; }
+.profile-empty { padding:22px; text-align:center; color:var(--text-muted); font-size:.78rem; font-weight:750; }
+@media(max-width:640px){ .profile-hero-grid{grid-template-columns:auto 1fr}.profile-hero-actions{grid-column:1/-1;justify-content:flex-start}.profile-metrics{grid-template-columns:repeat(2,1fr)}.identity-grid{grid-template-columns:repeat(2,1fr)}.strength-row{grid-template-columns:86px 1fr 42px}.records-grid{grid-template-columns:repeat(2,1fr)} }
+@media(min-width:900px){ .profile-premium{grid-template-columns:1.15fr .85fr;align-items:start}.profile-hero,.profile-tabs-wrap{grid-column:1/-1}.profile-section.full{grid-column:1/-1}.profile-section.tall{grid-row:span 2} }
 </style>
 
 <style id="badge-polish-fix">
@@ -557,7 +619,7 @@ function renderBadgeCollection(state) {
         ${x.earned
           ? `<small class="claimed-label">CLAIMED</small>`
           : x.rarity === "Secret"
-            ? `<small>🔒 গোপন ব্যাজ — শর্ত অজানা</small>`
+            ? `<small>গোপন ব্যাজ — শর্ত অজানা</small>`
             : `<small>${x.requirement}</small>`}
         ${!x.earned && x.progress ? `<div class="mini-progress">
           <i style="width:${Math.min(100,(x.progress.value / x.progress.max) * 100)}%"></i>
@@ -746,99 +808,108 @@ let dirBatchFilter = "all", dirSearchTerm = "";
 async function renderPage() {
   shell.innerHTML = `
     ${renderStudentHeader(student, "profile")}
-    
-    <div id="identitySection" class="glass-card profile-header mt-4"><div class="spinner" style="margin: 20px auto;"></div></div>
-    <!-- Tab Navigation -->
-    <div class="tab-nav">
-      <button class="tab-btn active" onclick="switchTab('tab-overview')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        ওভারভিউ
-      </button>
-      <button class="tab-btn" onclick="switchTab('tab-stats')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 9l-5 5-3-3-5 5"/></svg>
-        স্ট্যাটস
-      </button>
-      <button class="tab-btn" onclick="switchTab('tab-network')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        নেটওয়ার্ক
-      </button>
-    </div>
+    <main class="profile-premium mt-4">
+      <section id="premiumHero" class="profile-hero"><div class="spinner" style="margin:20px auto"></div></section>
 
-    <div id="tab-overview" class="tab-content active">
-      <div id="topperSection"></div>
-      <div id="badgeCollectionAdvanced"></div>
-    </div>
-    <div id="tab-stats" class="tab-content">
-      <div id="statsSection"></div>
-    </div>
-    <div id="tab-network" class="tab-content">
-      <div id="reqAndFriendsSection"></div>
-      <div class="glass-card mt-4" style="padding:16px;">
-        <p style="font-size:1.05rem; font-weight:900; color:var(--text-primary); margin-bottom:12px;">শিক্ষার্থী ডিরেক্টরি</p>
-        <div class="batch-filters" id="dirFilters"></div>
-        <div class="search-box">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="dirSearch" placeholder="নাম দিয়ে খুঁজুন...">
+      <div class="profile-tabs-wrap">
+        <div class="tab-nav">
+          <button class="tab-btn active" onclick="switchTab('tab-overview')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Overview</button>
+          <button class="tab-btn" onclick="switchTab('tab-stats')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M3 3v18h18"/><path d="M7 16l4-5 3 3 5-7"/></svg>Statistics</button>
+          <button class="tab-btn" onclick="switchTab('tab-network')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2"/><path d="M16 3.5a4 4 0 0 1 0 7"/></svg>Network</button>
         </div>
-        <div id="dirList"></div>
       </div>
-    </div>
+
+      <section id="tab-overview" class="tab-content active">
+        <div id="identitySection" class="profile-section full"></div>
+        <div id="topperSection" class="profile-section full mt-4"></div>
+        <div id="journeySection" class="profile-section mt-4"></div>
+        <div id="strengthSection" class="profile-section mt-4"></div>
+        <div id="recordsSection" class="profile-section mt-4"></div>
+        <div id="activitySection" class="profile-section mt-4"></div>
+        <div id="rivalSection" class="profile-section mt-4"></div>
+        <div id="badgeCollectionAdvanced" class="profile-section full mt-4"></div>
+      </section>
+
+      <section id="tab-stats" class="tab-content">
+        <div id="statsSection"></div>
+      </section>
+
+      <section id="tab-network" class="tab-content">
+        <div id="reqAndFriendsSection"></div>
+        <div class="glass-card mt-4" style="padding:16px;">
+          <p style="font-size:1.05rem;font-weight:900;color:var(--text-primary);margin-bottom:12px;">Student Directory</p>
+          <div class="batch-filters" id="dirFilters"></div>
+          <div class="search-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="dirSearch" placeholder="Search students..."></div>
+          <div id="dirList"></div>
+        </div>
+      </section>
+    </main>
   `;
 
-  await Promise.all([
-    loadIdentity(),
-    loadGamification(),
-    loadStats(),
-    loadNetworkData()
-  ]);
+  await Promise.allSettled([loadIdentity(), loadGamification(), loadStats(), loadNetworkData(), loadPremiumInsights()]);
 
-  document.getElementById("dirSearch").addEventListener("input", (e) => {
-    dirSearchTerm = e.target.value.trim().toLowerCase();
-    renderDirectory();
-  });
+  const search = document.getElementById("dirSearch");
+  if (search) search.addEventListener("input", e => { dirSearchTerm=e.target.value.trim().toLowerCase(); renderDirectory(); });
 }
 
 async function loadIdentity() {
+  const hero = document.getElementById("premiumHero");
   const el = document.getElementById("identitySection");
   try {
     const snap = await getDoc(doc(db, "students", student.docId));
     const data = snap.exists() ? snap.data() : {};
-    const myBatch = data.className || student.className || "অজানা ব্যাচ";
+    const myBatch = data.className || student.className || "Batch not set";
+    const rank = await getStudentRank(student.studentId).catch(()=>null);
+    const points = Number(rank?.totalPoints || 0);
+    const level = Math.max(1, Math.floor(points / 500) + 1);
+    const title = points >= 10000 ? "Physics Legend" : points >= 5000 ? "Physics Master" : points >= 2500 ? "Problem Solver" : points >= 1000 ? "Concept Builder" : "Physics Explorer";
+    const avatar = data.photoURL ? `<img src="${data.photoURL}" alt="Profile">` : `<span>${(student.name || "S").charAt(0).toUpperCase()}</span>`;
+
+    hero.innerHTML = `
+      <div class="profile-hero-grid">
+        <div class="profile-avatar-xl">${avatar}</div>
+        <div>
+          <div class="profile-eyebrow">Student Profile</div>
+          <h1 class="profile-title">${student.name || "Student"}</h1>
+          <div class="profile-subtitle">${myBatch} <span style="opacity:.45">•</span> ID ${student.studentId || "—"}</div>
+          <div class="profile-title-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3z"/></svg>${title}</div>
+        </div>
+        <div class="profile-hero-actions">
+          <button class="profile-icon-btn" id="shareProfileBtn" title="Share profile"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4"/><path d="m15.4 6.5-6.8 4"/></svg></button>
+        </div>
+      </div>
+      <div class="profile-metrics">
+        <div class="profile-metric"><div class="profile-metric-label">LEVEL</div><div class="profile-metric-value">${level}</div></div>
+        <div class="profile-metric"><div class="profile-metric-label">RANK</div><div class="profile-metric-value">${rank?.rank ? "#"+rank.rank : "—"}</div></div>
+        <div class="profile-metric"><div class="profile-metric-label">POINTS</div><div class="profile-metric-value">${points.toLocaleString()}</div></div>
+        <div class="profile-metric"><div class="profile-metric-label">STUDENTS</div><div class="profile-metric-value">${rank?.totalStudents || "—"}</div></div>
+      </div>`;
+    document.getElementById("shareProfileBtn").addEventListener("click", () => openShareChoice(data));
 
     el.innerHTML = `
-      <div class="img-container">
-        ${data.photoURL 
-          ? `<img src="${data.photoURL}" alt="Profile">` 
-          : `<div class="fallback-avatar">${student.name.charAt(0)}</div>`
-        }
-        <div class="img-shield"></div>
-      </div>
-      <div class="st-name">${student.name}</div>
-      <div class="st-meta">
-        <span class="batch-badge">${myBatch}</span>
-        <span>ID: ${student.studentId}</span>
-      </div>
-      <button class="btn-primary mt-4" id="shareProfileBtn" style="padding:12px;">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-        রিপোর্ট কার্ড শেয়ার বা ডাউনলোড
-      </button>
-    `;
-    document.getElementById("shareProfileBtn").addEventListener("click", () => openShareChoice(data));
+      <div class="profile-section-head"><div><h2 class="profile-section-title">Academic Identity</h2><div class="profile-section-note">A quick snapshot of your learning profile</div></div></div>
+      <div class="identity-grid">
+        <div class="identity-card"><div class="identity-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><div class="identity-label">CLASS</div><div class="identity-value">${myBatch}</div></div>
+        <div class="identity-card"><div class="identity-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M4 19V5"/><path d="M4 19h17"/><path d="m7 15 4-5 3 3 5-7"/></svg></div><div class="identity-label">RANK</div><div class="identity-value">${rank?.rank ? "#"+rank.rank : "Not ranked"}</div></div>
+        <div class="identity-card"><div class="identity-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div class="identity-label">PROFILE ID</div><div class="identity-value" style="font-size:.82rem">${student.studentId || "—"}</div></div>
+      </div>`;
   } catch (err) {
-    el.innerHTML = `<div class="text-center text-muted">প্রোফাইল লোড করা যায়নি।</div>`;
+    hero.innerHTML = `<div class="profile-empty">Profile identity could not be loaded.</div>`;
+    el.innerHTML = `<div class="profile-empty">Profile information could not be loaded.</div>`;
   }
 }
 
 async function loadGamification() {
-  const topperEl = document.getElementById("topperSection");
+  const el = document.getElementById("topperSection");
   try {
     const rank = await getStudentRank(student.studentId).catch(()=>null);
-    topperEl.innerHTML = rank ? `
-      <div style="background:linear-gradient(135deg,rgba(var(--color-accent-rgb),.1),rgba(var(--color-accent-rgb),.02));border:1px solid rgba(var(--color-accent-rgb),.2);border-radius:16px;padding:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
-        <div style="display:flex;align-items:center;gap:12px;"><div style="width:48px;height:48px;border-radius:50%;background:var(--color-accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:900;">#${rank.rank}</div><div><p style="font-weight:900;font-size:1rem;color:var(--text-primary);">ওভারঅল র‍্যাঙ্ক</p><p style="font-size:.75rem;color:var(--text-secondary);font-weight:600;">${rank.totalStudents} জনের মধ্যে</p></div></div>
-        <div style="text-align:right;"><p style="font-size:1.1rem;font-weight:900;color:var(--color-accent);font-family:var(--font-num);">${rank.totalPoints}</p><p style="font-size:.7rem;color:var(--text-muted);font-weight:700;">মোট পয়েন্ট</p></div>
-      </div>` : `<div class="glass-card text-center text-muted text-sm font-bold">র‍্যাঙ্কের জন্য আরও পরীক্ষা দাও।</div>`;
-  } catch { topperEl.innerHTML=""; }
+    if (!rank) { el.innerHTML = `<div class="profile-empty">Complete an approved exam to unlock your ranking.</div>`; return; }
+    el.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">Current Standing</h2><div class="profile-section-note">Your position is calculated from approved results</div></div></div>
+      <div class="records-grid">
+        <div class="record-card"><div class="record-value">#${rank.rank}</div><div class="record-label">Overall Rank</div></div>
+        <div class="record-card"><div class="record-value">${Number(rank.totalPoints||0).toLocaleString()}</div><div class="record-label">Total Points</div></div>
+      </div>`;
+  } catch { el.innerHTML=""; }
 }
 
 async function loadStats() {
@@ -894,6 +965,63 @@ async function loadStats() {
 
   } catch (err) {
     statsEl.innerHTML = `<div class="text-center text-muted">তথ্য লোড করা যায়নি।</div>`;
+  }
+}
+
+async function loadPremiumInsights() {
+  const journey = document.getElementById("journeySection");
+  const strength = document.getElementById("strengthSection");
+  const records = document.getElementById("recordsSection");
+  const activity = document.getElementById("activitySection");
+  const rivalEl = document.getElementById("rivalSection");
+  try {
+    const [results, subjects, rank, rival, challengeWins] = await Promise.all([
+      getApprovedResults(student.studentId).catch(()=>[]),
+      getSubjects().catch(()=>[]),
+      getStudentRank(student.studentId).catch(()=>null),
+      getRival(student.studentId).catch(()=>null),
+      getChallengeWinCount(student.studentId).catch(()=>0)
+    ]);
+    const overall = computeOverallStats(results);
+    const subjectStats = computeSubjectStats(results, buildNameMap(subjects)).filter(x=>x.accuracy!=null).sort((a,b)=>b.accuracy-a.accuracy);
+    const best = results.reduce((m,r)=>Math.max(m,Number(r.percentage||0)),0);
+    const totalCorrect = overall?.totalCorrect || 0;
+    const examCount = overall?.examsTaken || 0;
+    const avg = overall?.avgPercentage;
+
+    const milestones = [];
+    if (examCount >= 1) milestones.push(["First approved exam","Your academic journey has started."]);
+    if (examCount >= 5) milestones.push(["Five exams completed","You have built a consistent exam record."]);
+    if (Number(rank?.totalPoints||0) >= 1000) milestones.push(["1,000 points reached","Your points total crossed the first major milestone."]);
+    if (challengeWins > 0) milestones.push(["First challenge win","You have started competing with peers."]);
+    if (rank?.rank) milestones.push([`Rank #${rank.rank} achieved`,`Current standing among ${rank.totalStudents || "all"} students.`]);
+    const journeyItems = milestones.slice(0,4);
+    if (journeyItems.length===0) journeyItems.push(["Your journey starts here","Complete an approved exam to create your first milestone."]);
+    journey.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">My Journey</h2><div class="profile-section-note">Milestones built from your real activity</div></div></div><div class="journey">${journeyItems.map(([a,b])=>`<div class="journey-item"><div class="journey-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m6 12 4 4 8-9"/></svg></div><div class="journey-card"><strong>${a}</strong><span>${b}</span></div></div>`).join("")}</div>`;
+
+    const topSubjects = subjectStats.slice(0,4);
+    strength.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">My Strengths</h2><div class="profile-section-note">Subject accuracy from approved results</div></div></div>${topSubjects.length ? `<div class="strength-list">${topSubjects.map(s=>`<div class="strength-row"><div class="strength-name">${s.name}</div><div class="strength-bar"><div class="strength-fill" style="width:${Math.min(100,Math.max(0,s.accuracy))}%"></div></div><div class="strength-score">${s.accuracy}%</div></div>`).join("")}</div>` : `<div class="profile-empty">Subject insights will appear after enough approved results are available.</div>`}`;
+
+    records.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">Personal Records</h2><div class="profile-section-note">Your best measurable results</div></div></div><div class="records-grid">
+      <div class="record-card"><div class="record-value">${examCount}</div><div class="record-label">Approved Exams</div></div>
+      <div class="record-card"><div class="record-value">${avg==null?"—":avg+"%"}</div><div class="record-label">Average Score</div></div>
+      <div class="record-card"><div class="record-value">${best ? best+"%" : "—"}</div><div class="record-label">Best Score</div></div>
+      <div class="record-card"><div class="record-value">${totalCorrect}</div><div class="record-label">Correct Answers</div></div>
+    </div>`;
+
+    const counts = Array.from({length:28},()=>0);
+    const today = new Date(); today.setHours(0,0,0,0);
+    results.forEach(r=>{ const raw=r.submittedAt?.toDate ? r.submittedAt.toDate() : (r.submittedAt ? new Date(r.submittedAt) : null); if(!raw||isNaN(raw)) return; raw.setHours(0,0,0,0); const d=Math.round((today-raw)/86400000); if(d>=0&&d<28) counts[27-d]++; });
+    activity.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">Study Activity</h2><div class="profile-section-note">Approved exam activity over the last 28 days</div></div></div><div class="activity-grid">${counts.map(c=>`<div class="activity-cell ${c>=3?'active-3':c===2?'active-2':c===1?'active-1':''}" title="${c} approved exam${c===1?'':'s'}"></div>`).join("")}</div><div style="display:flex;justify-content:space-between;margin-top:9px;color:var(--text-muted);font-size:.65rem;font-weight:750"><span>28 days ago</span><span>Today</span></div>`;
+
+    if (rival) {
+      rivalEl.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">Rival Challenge</h2><div class="profile-section-note">Your current competitive connection</div></div></div><div class="rival-card"><div class="rival-person"><div class="rival-name">${student.name}</div><div class="rival-meta">You</div></div><div><div class="rival-score">${challengeWins}</div><div class="rival-vs">Wins</div></div><div class="rival-person"><div class="rival-name">${rival.name || rival.studentId || "Rival"}</div><div class="rival-meta">Current rival</div></div></div>`;
+    } else {
+      rivalEl.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">Rival Challenge</h2><div class="profile-section-note">Choose a rival from your network to start comparing challenge wins.</div></div></div><div class="profile-empty">No rival selected yet.</div>`;
+    }
+  } catch (err) {
+    console.warn("Premium profile insights skipped", err);
+    [journey,strength,records,activity,rivalEl].forEach(el=>{ if(el && !el.innerHTML) el.innerHTML=`<div class="profile-empty">Additional profile insights are unavailable right now.</div>`; });
   }
 }
 
