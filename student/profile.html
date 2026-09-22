@@ -82,7 +82,7 @@
   .badge-art.secret{background:linear-gradient(145deg,#0f172a,#020617)}
 
 /* ==========================================================
-   PREMIUM STUDENT PROFILE — no emoji, icon-only interface
+   STUDENT PROFILE — no emoji, icon-only interface
    ========================================================== */
 .profile-premium { display:grid; gap:16px; }
 .profile-hero { position:relative; overflow:hidden; padding:24px; border-radius:24px; border:1px solid rgba(var(--color-accent-rgb),.18); background:linear-gradient(135deg,rgba(var(--color-accent-rgb),.12),rgba(128,128,128,.035) 55%,rgba(59,130,246,.08)); box-shadow:0 18px 50px rgba(0,0,0,.08); }
@@ -130,14 +130,14 @@
 .record-label { margin-top:3px; color:var(--text-muted); font-size:.68rem; font-weight:800; }
 .activity-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
 .activity-cell { aspect-ratio:1; border-radius:5px; background:rgba(128,128,128,.1); border:1px solid rgba(128,128,128,.06); }
-.activity-cell.active-1 { background:rgba(var(--color-accent-rgb),.25); }
-.activity-cell.active-2 { background:rgba(var(--color-accent-rgb),.48); }
-.activity-cell.active-3 { background:rgba(var(--color-accent-rgb),.72); }
+.activity-cell.active-1 { background:rgba(212,162,68,.30); border-color:rgba(212,162,68,.22); }
+.activity-cell.active-2 { background:rgba(212,162,68,.58); border-color:rgba(212,162,68,.35); }
+.activity-cell.active-3 { background:#d4a244; border-color:#d4a244; box-shadow:0 0 0 1px rgba(212,162,68,.18),0 4px 10px rgba(212,162,68,.14); }
 .rival-card { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:12px; padding:16px; border-radius:18px; background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(var(--color-accent-rgb),.06)); border:1px solid rgba(var(--color-accent-rgb),.16); }
 .rival-person { text-align:center; }
 .rival-name { color:var(--text-primary); font-weight:950; font-size:.85rem; }
 .rival-meta { color:var(--text-muted); font-size:.65rem; font-weight:750; margin-top:2px; }
-.rival-score { font-size:1.4rem; font-weight:950; color:var(--text-primary); font-family:var(--font-num); }
+.rival-স্কোর { font-size:1.4rem; font-weight:950; color:var(--text-primary); font-family:var(--font-num); }
 .rival-vs { color:var(--text-muted); font-size:.65rem; font-weight:900; }
 .profile-empty { padding:22px; text-align:center; color:var(--text-muted); font-size:.78rem; font-weight:750; }
 @media(max-width:640px){ .profile-hero-grid{grid-template-columns:auto 1fr}.profile-hero-actions{grid-column:1/-1;justify-content:flex-start}.profile-metrics{grid-template-columns:repeat(2,1fr)}.identity-grid{grid-template-columns:repeat(2,1fr)}.strength-row{grid-template-columns:86px 1fr 42px}.records-grid{grid-template-columns:repeat(2,1fr)} }
@@ -331,7 +331,7 @@
             font-size:22px;
             font-weight:900;
             margin-bottom:10px;
-          ">PROFILE ERROR</div>
+          ">প্রোফাইল ত্রুটি</div>
 
           <div style="
             font-size:16px;
@@ -368,16 +368,16 @@
 
   window.addEventListener("error", function (event) {
     showProfileError(
-      "JavaScript / Module Error",
+      "জাভাস্ক্রিপ্ট / মডিউল ত্রুটি",
       [
-        "Message: " + (event.message || "Unknown error"),
-        "File: " + (event.filename || "Unknown file"),
-        "Line: " + (event.lineno || "?"),
-        "Column: " + (event.colno || "?"),
+        "বার্তা: " + (event.message || "অজানা ত্রুটি"),
+        "ফাইল: " + (event.filename || "অজানা ফাইল"),
+        "লাইন: " + (event.lineno || "?"),
+        "কলাম: " + (event.colno || "?"),
         "",
-        "Stack: " + (event.error && event.error.stack
+        "স্ট্যাক: " + (event.error && event.error.stack
           ? event.error.stack
-          : "No stack available")
+          : "স্ট্যাক পাওয়া যায়নি")
       ].join("\n")
     );
   });
@@ -386,21 +386,21 @@
     const reason = event.reason;
 
     showProfileError(
-      "Unhandled Promise Error",
+      "অসম্পূর্ণ Promise ত্রুটি",
       reason && reason.stack
         ? reason.stack
-        : String(reason || "Unknown promise rejection")
+        : String(reason || "অজানা Promise ত্রুটি")
     );
   });
 
   window.addEventListener("securitypolicyviolation", function (event) {
     showProfileError(
-      "Security / CSP Error",
+      "নিরাপত্তা / CSP ত্রুটি",
       [
-        "Blocked URI: " + (event.blockedURI || "Unknown"),
-        "Directive: " + (event.effectiveDirective || "Unknown"),
-        "Source: " + (event.sourceFile || "Unknown"),
-        "Line: " + (event.lineNumber || "?")
+        "ব্লক করা URI: " + (event.blockedURI || "অজানা"),
+        "নির্দেশনা: " + (event.effectiveDirective || "অজানা"),
+        "উৎস: " + (event.sourceFile || "অজানা"),
+        "লাইন: " + (event.lineNumber || "?")
       ].join("\n")
     );
   });
@@ -408,7 +408,7 @@
 </script>
 
 <script type="module">
-import { initTheme, renderState, renderStudentHeader, showToast, friendlyError } from "../js/utils/ui-utils.js";
+import { initTheme, toggleTheme, renderState, renderStudentHeader, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { getActiveStudent, refreshActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
 import { getApprovedResults, getStudentRank } from "../js/utils/results-utils.js";
 import { computeOverallStats, computeSubjectStats, computeChapterStats, computeTopicStats } from "../js/utils/analytics-utils.js";
@@ -417,7 +417,7 @@ import { db } from "../js/firebase/firebase-config.js";
 import { doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { getSubjects, buildNameMap } from "../js/utils/syllabus-utils.js";
 import { getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival } from "../js/utils/friend-utils.js";
-import { getChallengeWinCount } from "../js/utils/challenge-utils.js";
+import { getChallengeWinCount } from "../js/utils/চ্যালেঞ্জ-utils.js";
 
 initTheme();
 
@@ -428,14 +428,14 @@ initTheme();
    existing approved-result/gamification/syllabus data.
    No per-badge Firestore reads.
    ========================================================== */
-const BADGE_CATEGORIES = ["সব","পরীক্ষা","Accuracy","সঠিক উত্তর","পয়েন্ট","উন্নতি","Consistency","Speed","Perfect Score","Leaderboard","বিষয়","অধ্যায়","টপিক","Coverage","All-Rounder","সামাজিক","Special"];
+const BADGE_CATEGORIES = ["সব","পরীক্ষা","নির্ভুলতা","সঠিক উত্তর","পয়েন্ট","উন্নতি","ধারাবাহিকতা","গতি","পূর্ণ নম্বর","লিডারবোর্ড","বিষয়","অধ্যায়","টপিক","Coverage","সর্বগুণসম্পন্ন","সামাজিক","বিশেষ"];
 let badgeFilter = "সব", badgeSearch = "";
 
 function makeTierBadges(prefix, category, thresholds, nameFn, descFn, checkFn, rarityFn){
   return thresholds.map((n,i)=>({
     id:`${prefix}-${n}`, name:nameFn(n), category, threshold:n, metric:prefix,
     desc:descFn(n), check:c=>checkFn(c,n),
-    rarity:rarityFn ? rarityFn(n,i,thresholds) : (i===thresholds.length-1?"Legendary":i>=thresholds.length-2?"Epic":i>=2?"Rare":"Uncommon")
+    rarity:rarityFn ? rarityFn(n,i,thresholds) : (i===thresholds.length-1?"অতি বিরল":i>=thresholds.length-2?"বিশেষ":i>=2?"বিরল":"অসাধারণ")
   }));
 }
 
@@ -458,66 +458,66 @@ function buildBadgeCatalog(ctx) {
   const examMilestones = [1,3,5,10,15,20,25,30];
   examMilestones.forEach(n => add(
     `exam-${n}`, `Exam Warrior ${n}`, "পরীক্ষা",
-    `মোট ${n}টি approved পরীক্ষা সম্পূর্ণ করো।`, n>=25?"Legendary":n>=15?"Epic":n>=10?"Rare":"Common",
+    `মোট ${n}টি অনুমোদিত পরীক্ষা সম্পূর্ণ করো।`, n>=25?"অতি বিরল":n>=15?"বিশেষ":n>=10?"বিরল":"সাধারণ",
     "M8", c => c.examCount >= n, c => ({value:Math.min(c.examCount,n), max:n, text:`${Math.min(c.examCount,n)} / ${n}`})
   ));
 
-  add("accuracy-master","Accuracy Master","Accuracy","কমপক্ষে 10টি approved পরীক্ষায় গড় accuracy 90% বা তার বেশি রাখো।","Epic","M1",
+  add("accuracy-master","নির্ভুলতার মাস্টার","নির্ভুলতা","কমপক্ষে 10টি অনুমোদিত পরীক্ষায় গড় নির্ভুলতা 90% বা তার বেশি রাখো।","Epic","M1",
     c=>c.highAccuracyExamCount>=10,c=>({value:Math.min(c.highAccuracyExamCount,10),max:10,text:`${Math.min(c.highAccuracyExamCount,10)} / 10`}));
-  add("correct-master","Correct Answer Master","সঠিক উত্তর","মোট 500টি সঠিক উত্তর দাও।","Epic","M2",
+  add("correct-master","সঠিক উত্তরের মাস্টার","সঠিক উত্তর","মোট 500টি সঠিক উত্তর দাও।","Epic","M2",
     c=>c.totalCorrect>=500,c=>({value:Math.min(c.totalCorrect,500),max:500,text:`${Math.min(c.totalCorrect,500)} / 500`}));
-  add("point-master","Point Collector","পয়েন্ট","মোট 5000 points অর্জন করো।","Rare","M3",
+  add("point-master","পয়েন্ট সংগ্রাহক","পয়েন্ট","মোট 5000 পয়েন্ট অর্জন করো।","Rare","M3",
     c=>c.totalPoints>=5000,c=>({value:Math.min(c.totalPoints,5000),max:5000,text:`${Math.min(c.totalPoints,5000)} / 5000`}));
-  add("comeback","Comeback Champion","উন্নতি","আগের performance-এর তুলনায় অন্তত 20 percentage-point improvement অর্জন করো।","Legendary","M4",
+  add("comeback","ঘুরে দাঁড়ানোর চ্যাম্পিয়ন","উন্নতি","আগের পারফরম্যান্স-এর তুলনায় অন্তত 20 শতাংশ-পয়েন্ট উন্নতি অর্জন করো।","Legendary","M4",
     c=>c.maxImprovement>=20,c=>({value:Math.min(Math.max(c.maxImprovement,0),20),max:20,text:`${Math.round(Math.max(c.maxImprovement,0))} / 20%`}));
-  add("consistency","Consistency Champion","Consistency","কমপক্ষে 8টি পরীক্ষায় ধারাবাহিকভাবে 80%+ score রাখো।","Epic","M5",
+  add("consistency","ধারাবাহিকতার চ্যাম্পিয়ন","ধারাবাহিকতা","কমপক্ষে 8টি পরীক্ষায় ধারাবাহিকভাবে 80%+ স্কোর রাখো।","Epic","M5",
     c=>c.highScoreExamCount>=8,c=>({value:Math.min(c.highScoreExamCount,8),max:8,text:`${Math.min(c.highScoreExamCount,8)} / 8`}));
-  add("speed","Speed Solver","Speed","Accuracy অন্তত 80% রেখে 5টি পরীক্ষায় নির্ধারিত সময়ের মধ্যে দ্রুত solve করো।","Rare","M6",
+  add("speed","দ্রুত সমাধানকারী","গতি","নির্ভুলতা অন্তত 80% রেখে 5টি পরীক্ষায় নির্ধারিত সময়ের মধ্যে দ্রুত সমাধান করো।","Rare","M6",
     c=>c.fastAccurateExams>=5,c=>({value:Math.min(c.fastAccurateExams,5),max:5,text:`${Math.min(c.fastAccurateExams,5)} / 5`}));
-  add("perfect","Perfect Score","Perfect Score","কমপক্ষে 3টি পরীক্ষায় 100% score অর্জন করো।","Legendary","M7",
+  add("perfect","পূর্ণ নম্বর","পূর্ণ নম্বর","কমপক্ষে 3টি পরীক্ষায় 100% স্কোর অর্জন করো।","Legendary","M7",
     c=>c.perfectExams>=3,c=>({value:Math.min(c.perfectExams,3),max:3,text:`${Math.min(c.perfectExams,3)} / 3`}));
-  add("zero-wrong","Zero Wrong","Accuracy","কমপক্ষে 5টি পরীক্ষায় একটিও ভুল উত্তর দিও না।","Epic","M9",
+  add("zero-wrong","ভুলহীন পরীক্ষা","নির্ভুলতা","কমপক্ষে 5টি পরীক্ষায় একটিও ভুল উত্তর দিও না।","Epic","M9",
     c=>c.zeroWrongExams>=5,c=>({value:Math.min(c.zeroWrongExams,5),max:5,text:`${Math.min(c.zeroWrongExams,5)} / 5`}));
-  add("attempt-discipline","Attempt Master","Consistency","কমপক্ষে 10টি পরীক্ষায় 90%+ প্রশ্ন attempt করো।","Rare","M10",
+  add("attempt-discipline","প্রচেষ্টার মাস্টার","ধারাবাহিকতা","কমপক্ষে 10টি পরীক্ষায় 90%+ প্রশ্ন চেষ্টা করো।","Rare","M10",
     c=>c.highAttemptExams>=10,c=>({value:Math.min(c.highAttemptExams,10),max:10,text:`${Math.min(c.highAttemptExams,10)} / 10`}));
-  add("clean-run","Clean Run","Special","টানা 5টি approved পরীক্ষায় 80%+ score এবং 80%+ accuracy রাখো।","Epic","M11",
+  add("clean-run","ধারাবাহিক নিখুঁত দৌড়","বিশেষ","টানা 5টি অনুমোদিত পরীক্ষায় 80%+ স্কোর এবং 80%+ নির্ভুলতা রাখো।","Epic","M11",
     c=>c.cleanRun>=5,c=>({value:Math.min(c.cleanRun,5),max:5,text:`${Math.min(c.cleanRun,5)} / 5`}));
-  add("weekly-topper","Weekly Topper","Leaderboard","একটি সপ্তাহে overall leaderboard-এ 1st হও।","Legendary","M12",
-    c=>c.weeklyOverall>0,c=>({value:c.weeklyOverall?1:0,max:1,text:c.weeklyOverall?"Unlocked":"1 বার দরকার"}));
-  add("class-weekly-topper","Class Weekly Topper","Leaderboard","নিজের class-এর weekly leaderboard-এ 1st হও।","Epic","M13",
-    c=>c.weeklyClass>0,c=>({value:c.weeklyClass?1:0,max:1,text:c.weeklyClass?"Unlocked":"1 বার দরকার"}));
-  add("monthly-topper","Monthly Topper","Leaderboard","একটি মাসে overall leaderboard-এ 1st হও।","Legendary","M14",
-    c=>c.monthlyOverall>0,c=>({value:c.monthlyOverall?1:0,max:1,text:c.monthlyOverall?"Unlocked":"1 বার দরকার"}));
-  add("class-monthly-topper","Class Monthly Topper","Leaderboard","নিজের class-এর monthly leaderboard-এ 1st হও।","Legendary","M15",
-    c=>c.monthlyClass>0,c=>({value:c.monthlyClass?1:0,max:1,text:c.monthlyClass?"Unlocked":"1 বার দরকার"}));
-  add("subject-master","Subject Master","বিষয়","যেকোনো একটি subject-এ অন্তত 5টি approved attempt এবং 90%+ accuracy অর্জন করো।","Epic","M16",
-    c=>(c.subjectStats||[]).some(x=>x.attempts>=5&&x.accuracy>=90),c=>({value:c.bestSubjectMaster?1:0,max:1,text:c.bestSubjectMaster?"Unlocked":"5 attempts + 90%"}));
-  add("chapter-master","Chapter Master","অধ্যায়","নিজের class-এর যেকোনো chapter-এ অন্তত 5টি attempt এবং 90%+ accuracy অর্জন করো।","Rare","M17",
-    c=>(c.chapterStats||[]).some(x=>x.attempts>=5&&x.accuracy>=90),c=>({value:c.bestChapterMaster?1:0,max:1,text:c.bestChapterMaster?"Unlocked":"5 attempts + 90%"}));
-  add("topic-master","Topic Master","টপিক","নিজের class-এর যেকোনো topic-এ অন্তত 5টি attempt এবং 90%+ accuracy অর্জন করো।","Rare","M18",
-    c=>(c.topicStats||[]).some(x=>x.attempts>=5&&x.accuracy>=90),c=>({value:c.bestTopicMaster?1:0,max:1,text:c.bestTopicMaster?"Unlocked":"5 attempts + 90%"}));
-  add("syllabus-master","Syllabus Master","Special","নিজের applicable syllabus-এর অন্তত 80% topic-এ performance record তৈরি করো।","Legendary","M19",
+  add("weekly-topper","সাপ্তাহিক শীর্ষস্থান","লিডারবোর্ড","একটি সপ্তাহে সার্বিক লিডারবোর্ড-এ ১ম হও।","Legendary","M12",
+    c=>c.weeklyOverall>0,c=>({value:c.weeklyOverall?1:0,max:1,text:c.weeklyOverall?"অর্জিত":"১ বার দরকার"}));
+  add("class-weekly-topper","শ্রেণির সাপ্তাহিক শীর্ষস্থান","লিডারবোর্ড","নিজের শ্রেণির সাপ্তাহিক লিডারবোর্ড-এ ১ম হও।","Epic","M13",
+    c=>c.weeklyClass>0,c=>({value:c.weeklyClass?1:0,max:1,text:c.weeklyClass?"অর্জিত":"১ বার দরকার"}));
+  add("monthly-topper","মাসিক শীর্ষস্থান","লিডারবোর্ড","একটি মাসে সার্বিক লিডারবোর্ড-এ ১ম হও।","Legendary","M14",
+    c=>c.monthlyOverall>0,c=>({value:c.monthlyOverall?1:0,max:1,text:c.monthlyOverall?"অর্জিত":"১ বার দরকার"}));
+  add("class-monthly-topper","শ্রেণির মাসিক শীর্ষস্থান","লিডারবোর্ড","নিজের শ্রেণির মাসিক লিডারবোর্ড-এ ১ম হও।","Legendary","M15",
+    c=>c.monthlyClass>0,c=>({value:c.monthlyClass?1:0,max:1,text:c.monthlyClass?"অর্জিত":"১ বার দরকার"}));
+  add("subject-master","বিষয় মাস্টার","বিষয়","যেকোনো একটি বিষয়-এ অন্তত 5টি অনুমোদিত চেষ্টা এবং 90%+ নির্ভুলতা অর্জন করো।","Epic","M16",
+    c=>(c.subjectStats||[]).some(x=>x.attempts>=5&&x.accuracy>=90),c=>({value:c.bestSubjectMaster?1:0,max:1,text:c.bestSubjectMaster?"অর্জিত":"৫ বার চেষ্টা + ৯০%"}));
+  add("chapter-master","অধ্যায় মাস্টার","অধ্যায়","নিজের শ্রেণির যেকোনো অধ্যায়-এ অন্তত 5টি চেষ্টা এবং 90%+ নির্ভুলতা অর্জন করো।","Rare","M17",
+    c=>(c.chapterStats||[]).some(x=>x.attempts>=5&&x.accuracy>=90),c=>({value:c.bestChapterMaster?1:0,max:1,text:c.bestChapterMaster?"অর্জিত":"৫ বার চেষ্টা + ৯০%"}));
+  add("topic-master","টপিক মাস্টার","টপিক","নিজের শ্রেণির যেকোনো টপিক-এ অন্তত 5টি চেষ্টা এবং 90%+ নির্ভুলতা অর্জন করো।","Rare","M18",
+    c=>(c.topicStats||[]).some(x=>x.attempts>=5&&x.accuracy>=90),c=>({value:c.bestTopicMaster?1:0,max:1,text:c.bestTopicMaster?"অর্জিত":"৫ বার চেষ্টা + ৯০%"}));
+  add("syllabus-master","সিলেবাস মাস্টার","বিশেষ","নিজের প্রযোজ্য সিলেবাস-এর অন্তত 80% টপিক-এ পারফরম্যান্স রেকর্ড তৈরি করো।","Legendary","M19",
     c=>c.topicCoverage>=80,c=>({value:Math.min(c.topicCoverage,80),max:80,text:`${Math.round(c.topicCoverage)}% / 80%`}));
-  add("all-rounder","All-Rounder","Special","কমপক্ষে 3টি subject-এ 5+ attempt এবং 80%+ accuracy অর্জন করো।","Legendary","M20",
+  add("all-rounder","সর্বগুণসম্পন্ন","বিশেষ","কমপক্ষে 3টি বিষয়-এ 5+ চেষ্টা এবং 80%+ নির্ভুলতা অর্জন করো।","Legendary","M20",
     c=>(c.subjectStats||[]).filter(x=>x.attempts>=5&&x.accuracy>=80).length>=3,c=>({value:Math.min(c.strongSubjects,3),max:3,text:`${Math.min(c.strongSubjects,3)} / 3`}));
 
-  add("weekly-streak","Weekly Streak","Consistency","টানা ৪ সপ্তাহ ধরে অন্তত ১টি করে পরীক্ষা দাও।","Rare","M5",
+  add("weekly-streak","সাপ্তাহিক ধারাবাহিকতা","ধারাবাহিকতা","টানা ৪ সপ্তাহ ধরে অন্তত ১টি করে পরীক্ষা দাও।","Rare","M5",
     c=>c.longestStreak>=4,c=>({value:Math.min(c.longestStreak,4),max:4,text:`${Math.min(c.longestStreak,4)} / 4 সপ্তাহ`}));
 
-  // ---- Social (friends / rival / challenges) ----
-  add("first-friend","First Friend","সামাজিক","কমপক্ষে ১ জন বন্ধু যোগ করো।","Common","M21",
-    c=>c.friendCount>=1,c=>({value:Math.min(c.friendCount,1),max:1,text:c.friendCount>=1?"Unlocked":"0 / 1"}));
-  add("social-circle","Social Circle","সামাজিক","কমপক্ষে ১০ জন বন্ধু যোগ করো।","Rare","M21",
+  // ---- Social (friends / rival / চ্যালেঞ্জs) ----
+  add("first-friend","প্রথম বন্ধু","সামাজিক","কমপক্ষে ১ জন বন্ধু যোগ করো।","Common","M21",
+    c=>c.friendCount>=1,c=>({value:Math.min(c.friendCount,1),max:1,text:c.friendCount>=1?"অর্জিত":"0 / 1"}));
+  add("social-circle","সামাজিক বৃত্ত","সামাজিক","কমপক্ষে ১০ জন বন্ধু যোগ করো।","Rare","M21",
     c=>c.friendCount>=10,c=>({value:Math.min(c.friendCount,10),max:10,text:`${Math.min(c.friendCount,10)} / 10`}));
-  add("rival-marked","Rival Marked","সামাজিক","কোনো একজন বন্ধুকে তোমার \"রাইভাল\" হিসেবে বেছে নাও।","Uncommon","M22",
-    c=>c.hasRival,c=>({value:c.hasRival?1:0,max:1,text:c.hasRival?"Unlocked":"রাইভাল বেছে নাও"}));
-  add("challenge-champion","Challenge Champion","সামাজিক","বন্ধুদের বিরুদ্ধে কমপক্ষে ৫টি challenge জিতো।","Epic","M23",
+  add("rival-marked","প্রতিদ্বন্দ্বী নির্ধারিত","সামাজিক","কোনো একজন বন্ধুকে তোমার \"রাইভাল\" হিসেবে বেছে নাও।","Uncommon","M22",
+    c=>c.hasRival,c=>({value:c.hasRival?1:0,max:1,text:c.hasRival?"অর্জিত":"রাইভাল বেছে নাও"}));
+  add("challenge-champion","চ্যালেঞ্জ চ্যাম্পিয়ন","সামাজিক","বন্ধুদের বিরুদ্ধে কমপক্ষে ৫টি চ্যালেঞ্জ জিতো।","Epic","M23",
     c=>c.challengeWins>=5,c=>({value:Math.min(c.challengeWins,5),max:5,text:`${Math.min(c.challengeWins,5)} / 5`}));
 
-  // ---- Secret (no visible requirement until earned — a surprise) ----
-  add("night-owl","Night Owl","Special","গোপন ব্যাজ।","Secret","M24",
+  // ---- গোপন (no visible requirement until earned — a surprise) ----
+  add("night-owl","রাতজাগা","বিশেষ","গোপন ব্যাজ।","Secret","M24",
     c=>c.nightOwl,null);
-  add("perfect-start","Perfect Start","Special","গোপন ব্যাজ।","Secret","M25",
+  add("perfect-start","নিখুঁত শুরু","বিশেষ","গোপন ব্যাজ।","Secret","M25",
     c=>c.perfectFirstExam,null);
 
   return catalog;
@@ -556,13 +556,13 @@ function badgeIconSvg(code) {
 
 function badgeVisual(badge, earned) {
   const themes = {
-    Common:["#94a3b8","#e2e8f0"], Uncommon:["#0ea5e9","#dbeafe"], Rare:["#8b5cf6","#ede9fe"],
-    Epic:["#ec4899","#fce7f3"], Legendary:["#f59e0b","#fef3c7"], Secret:["#14b8a6","#ccfbf1"]
+    সাধারণ:["#94a3b8","#e2e8f0"], অসাধারণ:["#0ea5e9","#dbeafe"], বিরল:["#8b5cf6","#ede9fe"],
+    বিশেষ:["#ec4899","#fce7f3"], অতি বিরল:["#f59e0b","#fef3c7"], গোপন:["#14b8a6","#ccfbf1"]
   };
   const [accent,soft] = themes[badge.rarity] || themes.Rare;
   return `<div class="premium-badge ${earned?"is-earned":"is-locked"}" style="--badge-accent:${accent};--badge-soft:${soft}">
     <div class="badge-orbit"></div><div class="badge-core">${badgeIconSvg(badge.icon)}</div>
-    <div class="badge-rarity">${badge.rarity}</div>
+    <div class="badge-rarity">${({Common:"সাধারণ",Uncommon:"অসাধারণ",Rare:"বিরল",Epic:"বিশেষ",Legendary:"অতি বিরল",Secret:"গোপন"}[badge.rarity] || "গোপন") }</div>
   </div>`;
 }
 
@@ -570,7 +570,7 @@ function renderBadgeCollection(state) {
   const host = document.getElementById("badgeCollectionAdvanced");
   if (!host) return;
 
-  const claimed = state.filter(x => x.earned);
+  const অর্জিত = state.filter(x => x.earned);
   const locked = state.filter(x => !x.earned);
   const almost = locked
     .filter(x => x.progress && x.progress.max > 1)
@@ -580,19 +580,19 @@ function renderBadgeCollection(state) {
   host.innerHTML = `<section class="glass-card advanced-badges">
     <div class="badge-head">
       <div>
-        <div class="badge-kicker">ACHIEVEMENTS</div>
-        <h2>My Badge Collection</h2>
-        <p>${claimed.length} / ${state.length} claimed</p>
+        <div class="badge-kicker">অর্জনসমূহ</div>
+        <h2>আমার ব্যাজ সংগ্রহ</h2>
+        <p>${অর্জিত.length} / ${state.length} অর্জিত</p>
       </div>
-      <div class="badge-total">${claimed.length}<span>/${state.length}</span></div>
+      <div class="badge-total">${অর্জিত.length}<span>/${state.length}</span></div>
     </div>
 
     <div class="badge-progress">
-      <i style="width:${state.length ? (claimed.length / state.length) * 100 : 0}%"></i>
+      <i style="width:${state.length ? (অর্জিত.length / state.length) * 100 : 0}%"></i>
     </div>
 
     ${almost.length ? `<div class="almost-box">
-      <div class="almost-title"><span>Closest to unlock</span><small>আর একটু এগোলেই</small></div>
+      <div class="almost-title"><span>পরবর্তী অর্জন</span><small>আর একটু এগোলেই</small></div>
       ${almost.map(x => `<button class="almost-item" type="button" data-badge-id="${x.id}">
         ${badgeVisual(x,false)}
         <span>
@@ -604,9 +604,9 @@ function renderBadgeCollection(state) {
     </div>` : ""}
 
     <div class="badge-filter">
-      <button type="button" class="active" data-filter="claimed">Claimed <b>${claimed.length}</b></button>
-      <button type="button" data-filter="locked">Locked <b>${locked.length}</b></button>
-      <button type="button" data-filter="all">All <b>${state.length}</b></button>
+      <button type="button" class="active" data-filter="অর্জিত">অর্জিত <b>${অর্জিত.length}</b></button>
+      <button type="button" data-filter="locked">লক করা <b>${locked.length}</b></button>
+      <button type="button" data-filter="all">সব <b>${state.length}</b></button>
     </div>
 
     <div class="badge-grid">
@@ -617,8 +617,8 @@ function renderBadgeCollection(state) {
         <strong>${x.title}</strong>
         <span>${x.category}</span>
         ${x.earned
-          ? `<small class="claimed-label">CLAIMED</small>`
-          : x.rarity === "Secret"
+          ? `<small class="অর্জিত-label">অর্জিত</small>`
+          : x.rarity === "গোপন"
             ? `<small>গোপন ব্যাজ — শর্ত অজানা</small>`
             : `<small>${x.requirement}</small>`}
         ${!x.earned && x.progress ? `<div class="mini-progress">
@@ -631,7 +631,7 @@ function renderBadgeCollection(state) {
   const applyFilter = f => {
     host.querySelectorAll(".badge-item").forEach(el => {
       const earned = el.dataset.earned === "true";
-      el.style.display = f === "all" || (f === "claimed" && earned) || (f === "locked" && !earned) ? "" : "none";
+      el.style.display = f === "all" || (f === "অর্জিত" && earned) || (f === "locked" && !earned) ? "" : "none";
     });
   };
 
@@ -647,15 +647,15 @@ function renderBadgeCollection(state) {
     el.onclick = () => showBadgeDetail(state.find(x => x.id === el.dataset.badgeId));
   });
 
-  applyFilter("claimed");
+  applyFilter("অর্জিত");
 }
 
 function showBadgeDetail(b) {
   if (!b) return;
   const old=document.getElementById("badgeDetailModal"); if(old) old.remove();
   const div=document.createElement("div"); div.id="badgeDetailModal"; div.className="badge-modal";
-  const hideReq = !b.earned && b.rarity === "Secret";
-  div.innerHTML=`<div class="badge-modal-card">${badgeVisual(b,b.earned)}<div class="badge-modal-rarity">${b.rarity}</div><h3>${b.title}</h3><p class="how-to"><b>কীভাবে অর্জন করবে?</b><br>${hideReq ? "এটা একটা গোপন ব্যাজ — শর্ত জানা নেই। ধরে নিজে খুঁজে বের করো!" : b.requirement}</p>${b.progress && !hideReq?`<div class="detail-progress"><i style="width:${Math.min(100,b.progress.value/b.progress.max*100)}%"></i></div><p>${b.progress.text}</p>`:""}<button class="badge-close">Close</button></div>`;
+  const hideReq = !b.earned && b.rarity === "গোপন";
+  div.innerHTML=`<div class="badge-modal-card">${badgeVisual(b,b.earned)}<div class="badge-modal-rarity">${b.rarity}</div><h3>${b.title}</h3><p class="how-to"><b>কীভাবে অর্জন করবে?</b><br>${hideReq ? "এটা একটা গোপন ব্যাজ — শর্ত জানা নেই। ধরে নিজে খুঁজে বের করো!" : b.requirement}</p>${b.progress && !hideReq?`<div class="detail-progress"><i style="width:${Math.min(100,b.progress.value/b.progress.max*100)}%"></i></div><p>${b.progress.text}</p>`:""}<button class="badge-close">বন্ধ</button></div>`;
   document.body.appendChild(div); div.onclick=e=>{if(e.target===div||e.target.classList.contains("badge-close"))div.remove()};
 }
 
@@ -675,10 +675,10 @@ function showBadgeUnlocks(state) {
     overlay.innerHTML = `<div class="badge-unlock-card">
       <div class="unlock-spark"></div>
       ${badgeVisual(b,true)}
-      <div class="unlock-label">BADGE CLAIMED</div>
+      <div class="unlock-label">ব্যাজ অর্জিত</div>
       <h3>${b.title}</h3>
       <p>${b.requirement}</p>
-      <button type="button">Continue</button>
+      <button type="button">চালিয়ে যাও</button>
     </div>`;
     document.body.appendChild(overlay);
     const close = () => overlay.remove();
@@ -700,10 +700,10 @@ function getBadgeContext(results, gData, rank, subjectStats, chapterStats, topic
   let cleanRun=0,run=0; arr.slice().sort((a,b)=>new Date(a.submittedAt||0)-new Date(b.submittedAt||0)).forEach(r=>{if(Number(r.percentage||0)>=80&&Number(r.accuracy||0)>=80)run++;else run=0;cleanRun=Math.max(cleanRun,run)});
   const topicCoverage=topicStats?.length ? topicStats.filter(x=>x.attempts>0).length/topicStats.length*100 : 0;
 
-  // Secret badges + a couple of real fixes — computed straight from raw
+  // গোপন badges + a couple of real fixes — computed straight from raw
   // results, no extra fetch. (computeGamificationData() has no
   // maxImprovement/longestStreak field at all — those two lines below
-  // used to always read as 0, so "Comeback Champion" could never
+  // used to always read as 0, so "ঘুরে দাঁড়ানোর চ্যাম্পিয়ন" could never
   // actually be earned by anyone. Computed here from the student's own
   // exam history instead, the same way xp-utils.js judges improvement:
   // each exam vs. the running average of exams before it.)
@@ -756,7 +756,7 @@ async function initAdvancedBadges() {
       computeGamificationData().catch(()=>({})),
       getDocs(collection(db, "subjects")),
       getDocs(collection(db, "chapters")),
-      getDocs(collection(db, "topics")),
+      getDocs(collection(db, "টপিকs")),
       getMyFriendIds(student.studentId).catch(()=>[]),
       getRival(student.studentId).catch(()=>null),
       getChallengeWinCount(student.studentId).catch(()=>0)
@@ -813,9 +813,9 @@ async function renderPage() {
 
       <div class="profile-tabs-wrap">
         <div class="tab-nav">
-          <button class="tab-btn active" onclick="switchTab('tab-overview')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Overview</button>
-          <button class="tab-btn" onclick="switchTab('tab-stats')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M3 3v18h18"/><path d="M7 16l4-5 3 3 5-7"/></svg>Statistics</button>
-          <button class="tab-btn" onclick="switchTab('tab-network')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2"/><path d="M16 3.5a4 4 0 0 1 0 7"/></svg>Network</button>
+          <button class="tab-btn active" onclick="switchTab('tab-overview')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>ওভারভিউ</button>
+          <button class="tab-btn" onclick="switchTab('tab-stats')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M3 3v18h18"/><path d="M7 16l4-5 3 3 5-7"/></svg>পরিসংখ্যান</button>
+          <button class="tab-btn" onclick="switchTab('tab-network')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2"/><path d="M16 3.5a4 4 0 0 1 0 7"/></svg>নেটওয়ার্ক</button>
         </div>
       </div>
 
@@ -837,14 +837,21 @@ async function renderPage() {
       <section id="tab-network" class="tab-content">
         <div id="reqAndFriendsSection"></div>
         <div class="glass-card mt-4" style="padding:16px;">
-          <p style="font-size:1.05rem;font-weight:900;color:var(--text-primary);margin-bottom:12px;">Student Directory</p>
+          <p style="font-size:1.05rem;font-weight:900;color:var(--text-primary);margin-bottom:12px;">শিক্ষার্থী তালিকা</p>
           <div class="batch-filters" id="dirFilters"></div>
-          <div class="search-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="dirSearch" placeholder="Search students..."></div>
+          <div class="search-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="dirSearch" placeholder="নাম দিয়ে খুঁজুন..."></div>
           <div id="dirList"></div>
         </div>
       </section>
     </main>
   `;
+
+  const themeToggle = document.getElementById("themeToggle");
+  if (themeToggle) {
+    themeToggle.addEventListener("click", () => {
+      toggleTheme();
+    });
+  }
 
   await Promise.allSettled([loadIdentity(), loadGamification(), loadStats(), loadNetworkData(), loadPremiumInsights()]);
 
@@ -858,19 +865,19 @@ async function loadIdentity() {
   try {
     const snap = await getDoc(doc(db, "students", student.docId));
     const data = snap.exists() ? snap.data() : {};
-    const myBatch = data.className || student.className || "Batch not set";
+    const myBatch = data.className || student.className || "শ্রেণি নির্ধারিত নয়";
     const rank = await getStudentRank(student.studentId).catch(()=>null);
-    const points = Number(rank?.totalPoints || 0);
-    const level = Math.max(1, Math.floor(points / 500) + 1);
-    const title = points >= 10000 ? "Physics Legend" : points >= 5000 ? "Physics Master" : points >= 2500 ? "Problem Solver" : points >= 1000 ? "Concept Builder" : "Physics Explorer";
+    const পয়েন্ট = Number(rank?.totalPoints || 0);
+    const level = Math.max(1, Math.floor(পয়েন্ট / 500) + 1);
+    const title = পয়েন্ট >= 10000 ? "Physics Legend" : পয়েন্ট >= 5000 ? "Physics Master" : পয়েন্ট >= 2500 ? "Problem Solver" : পয়েন্ট >= 1000 ? "Concept Builder" : "Physics Explorer";
     const avatar = data.photoURL ? `<img src="${data.photoURL}" alt="Profile">` : `<span>${(student.name || "S").charAt(0).toUpperCase()}</span>`;
 
     hero.innerHTML = `
       <div class="profile-hero-grid">
         <div class="profile-avatar-xl">${avatar}</div>
         <div>
-          <div class="profile-eyebrow">Student Profile</div>
-          <h1 class="profile-title">${student.name || "Student"}</h1>
+          <div class="profile-eyebrow">শিক্ষার্থী প্রোফাইল</div>
+          <h1 class="profile-title">${student.name || "শিক্ষার্থী"}</h1>
           <div class="profile-subtitle">${myBatch} <span style="opacity:.45">•</span> ID ${student.studentId || "—"}</div>
           <div class="profile-title-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3z"/></svg>${title}</div>
         </div>
@@ -879,23 +886,23 @@ async function loadIdentity() {
         </div>
       </div>
       <div class="profile-metrics">
-        <div class="profile-metric"><div class="profile-metric-label">LEVEL</div><div class="profile-metric-value">${level}</div></div>
-        <div class="profile-metric"><div class="profile-metric-label">RANK</div><div class="profile-metric-value">${rank?.rank ? "#"+rank.rank : "—"}</div></div>
-        <div class="profile-metric"><div class="profile-metric-label">POINTS</div><div class="profile-metric-value">${points.toLocaleString()}</div></div>
-        <div class="profile-metric"><div class="profile-metric-label">STUDENTS</div><div class="profile-metric-value">${rank?.totalStudents || "—"}</div></div>
+        <div class="profile-metric"><div class="profile-metric-label">লেভেল</div><div class="profile-metric-value">${level}</div></div>
+        <div class="profile-metric"><div class="profile-metric-label">র‍্যাঙ্ক</div><div class="profile-metric-value">${rank?.rank ? "#"+rank.rank : "—"}</div></div>
+        <div class="profile-metric"><div class="profile-metric-label">পয়েন্ট</div><div class="profile-metric-value">${পয়েন্ট.toLocaleString()}</div></div>
+        <div class="profile-metric"><div class="profile-metric-label">শিক্ষার্থী</div><div class="profile-metric-value">${rank?.totalStudents || "—"}</div></div>
       </div>`;
     document.getElementById("shareProfileBtn").addEventListener("click", () => openShareChoice(data));
 
     el.innerHTML = `
-      <div class="profile-section-head"><div><h2 class="profile-section-title">Academic Identity</h2><div class="profile-section-note">A quick snapshot of your learning profile</div></div></div>
+      <div class="profile-section-head"><div><h2 class="profile-section-title">শিক্ষাগত পরিচয়</h2><div class="profile-section-note">তোমার পড়াশোনার সংক্ষিপ্ত পরিচয়</div></div></div>
       <div class="identity-grid">
-        <div class="identity-card"><div class="identity-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><div class="identity-label">CLASS</div><div class="identity-value">${myBatch}</div></div>
-        <div class="identity-card"><div class="identity-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M4 19V5"/><path d="M4 19h17"/><path d="m7 15 4-5 3 3 5-7"/></svg></div><div class="identity-label">RANK</div><div class="identity-value">${rank?.rank ? "#"+rank.rank : "Not ranked"}</div></div>
-        <div class="identity-card"><div class="identity-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div class="identity-label">PROFILE ID</div><div class="identity-value" style="font-size:.82rem">${student.studentId || "—"}</div></div>
+        <div class="identity-card"><div class="identity-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><div class="identity-label">শ্রেণি</div><div class="identity-value">${myBatch}</div></div>
+        <div class="identity-card"><div class="identity-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M4 19V5"/><path d="M4 19h17"/><path d="m7 15 4-5 3 3 5-7"/></svg></div><div class="identity-label">র‍্যাঙ্ক</div><div class="identity-value">${rank?.rank ? "#"+rank.rank : "র‍্যাঙ্ক নেই"}</div></div>
+        <div class="identity-card"><div class="identity-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div class="identity-label">প্রোফাইল আইডি</div><div class="identity-value" style="font-size:.82rem">${student.studentId || "—"}</div></div>
       </div>`;
   } catch (err) {
-    hero.innerHTML = `<div class="profile-empty">Profile identity could not be loaded.</div>`;
-    el.innerHTML = `<div class="profile-empty">Profile information could not be loaded.</div>`;
+    hero.innerHTML = `<div class="profile-empty">প্রোফাইলের তথ্য লোড করা যায়নি।</div>`;
+    el.innerHTML = `<div class="profile-empty">প্রোফাইলের তথ্য লোড করা যায়নি।</div>`;
   }
 }
 
@@ -903,11 +910,11 @@ async function loadGamification() {
   const el = document.getElementById("topperSection");
   try {
     const rank = await getStudentRank(student.studentId).catch(()=>null);
-    if (!rank) { el.innerHTML = `<div class="profile-empty">Complete an approved exam to unlock your ranking.</div>`; return; }
-    el.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">Current Standing</h2><div class="profile-section-note">Your position is calculated from approved results</div></div></div>
+    if (!rank) { el.innerHTML = `<div class="profile-empty">র‍্যাঙ্ক দেখতে একটি অনুমোদিত পরীক্ষা সম্পূর্ণ করো।</div>`; return; }
+    el.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">বর্তমান অবস্থান</h2><div class="profile-section-note">অনুমোদিত পরীক্ষার ফলাফল থেকে হিসাব করা</div></div></div>
       <div class="records-grid">
-        <div class="record-card"><div class="record-value">#${rank.rank}</div><div class="record-label">Overall Rank</div></div>
-        <div class="record-card"><div class="record-value">${Number(rank.totalPoints||0).toLocaleString()}</div><div class="record-label">Total Points</div></div>
+        <div class="রেকর্ড-card"><div class="রেকর্ড-value">#${rank.rank}</div><div class="রেকর্ড-label">সার্বিক র‍্যাঙ্ক</div></div>
+        <div class="রেকর্ড-card"><div class="রেকর্ড-value">${Number(rank.totalPoints||0).toLocaleString()}</div><div class="রেকর্ড-label">মোট পয়েন্ট</div></div>
       </div>`;
   } catch { el.innerHTML=""; }
 }
@@ -991,37 +998,37 @@ async function loadPremiumInsights() {
 
     const milestones = [];
     if (examCount >= 1) milestones.push(["First approved exam","Your academic journey has started."]);
-    if (examCount >= 5) milestones.push(["Five exams completed","You have built a consistent exam record."]);
-    if (Number(rank?.totalPoints||0) >= 1000) milestones.push(["1,000 points reached","Your points total crossed the first major milestone."]);
-    if (challengeWins > 0) milestones.push(["First challenge win","You have started competing with peers."]);
+    if (examCount >= 5) milestones.push(["Five exams completed","You have built a consistent exam রেকর্ড."]);
+    if (Number(rank?.totalPoints||0) >= 1000) milestones.push(["1,000 পয়েন্ট reached","Your পয়েন্ট total crossed the first major milestone."]);
+    if (challengeWins > 0) milestones.push(["First চ্যালেঞ্জ win","You have started competing with peers."]);
     if (rank?.rank) milestones.push([`Rank #${rank.rank} achieved`,`Current standing among ${rank.totalStudents || "all"} students.`]);
     const journeyItems = milestones.slice(0,4);
     if (journeyItems.length===0) journeyItems.push(["Your journey starts here","Complete an approved exam to create your first milestone."]);
-    journey.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">My Journey</h2><div class="profile-section-note">Milestones built from your real activity</div></div></div><div class="journey">${journeyItems.map(([a,b])=>`<div class="journey-item"><div class="journey-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m6 12 4 4 8-9"/></svg></div><div class="journey-card"><strong>${a}</strong><span>${b}</span></div></div>`).join("")}</div>`;
+    journey.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">আমার যাত্রা</h2><div class="profile-section-note">তোমার বাস্তব কার্যক্রম থেকে তৈরি অগ্রগতির ধাপ</div></div></div><div class="journey">${journeyItems.map(([a,b])=>`<div class="journey-item"><div class="journey-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m6 12 4 4 8-9"/></svg></div><div class="journey-card"><strong>${a}</strong><span>${b}</span></div></div>`).join("")}</div>`;
 
     const topSubjects = subjectStats.slice(0,4);
-    strength.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">My Strengths</h2><div class="profile-section-note">Subject accuracy from approved results</div></div></div>${topSubjects.length ? `<div class="strength-list">${topSubjects.map(s=>`<div class="strength-row"><div class="strength-name">${s.name}</div><div class="strength-bar"><div class="strength-fill" style="width:${Math.min(100,Math.max(0,s.accuracy))}%"></div></div><div class="strength-score">${s.accuracy}%</div></div>`).join("")}</div>` : `<div class="profile-empty">Subject insights will appear after enough approved results are available.</div>`}`;
+    strength.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">আমার শক্তির দিক</h2><div class="profile-section-note">অনুমোদিত পরীক্ষার ফলাফল থেকে বিষয়ভিত্তিক নির্ভুলতা</div></div></div>${topSubjects.length ? `<div class="strength-list">${topSubjects.map(s=>`<div class="strength-row"><div class="strength-name">${s.name}</div><div class="strength-bar"><div class="strength-fill" style="width:${Math.min(100,Math.max(0,s.accuracy))}%"></div></div><div class="strength-score">${s.accuracy}%</div></div>`).join("")}</div>` : `<div class="profile-empty">যথেষ্ট অনুমোদিত পরীক্ষার ফলাফল হলে বিষয়ভিত্তিক তথ্য এখানে দেখা যাবে।</div>`}`;
 
-    records.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">Personal Records</h2><div class="profile-section-note">Your best measurable results</div></div></div><div class="records-grid">
-      <div class="record-card"><div class="record-value">${examCount}</div><div class="record-label">Approved Exams</div></div>
-      <div class="record-card"><div class="record-value">${avg==null?"—":avg+"%"}</div><div class="record-label">Average Score</div></div>
-      <div class="record-card"><div class="record-value">${best ? best+"%" : "—"}</div><div class="record-label">Best Score</div></div>
-      <div class="record-card"><div class="record-value">${totalCorrect}</div><div class="record-label">Correct Answers</div></div>
+    records.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">ব্যক্তিগত রেকর্ড</h2><div class="profile-section-note">তোমার সেরা ফলাফলের রেকর্ড</div></div></div><div class="records-grid">
+      <div class="রেকর্ড-card"><div class="রেকর্ড-value">${examCount}</div><div class="রেকর্ড-label">অনুমোদিত পরীক্ষা</div></div>
+      <div class="রেকর্ড-card"><div class="রেকর্ড-value">${avg==null?"—":avg+"%"}</div><div class="রেকর্ড-label">গড় স্কোর</div></div>
+      <div class="রেকর্ড-card"><div class="রেকর্ড-value">${best ? best+"%" : "—"}</div><div class="রেকর্ড-label">সেরা স্কোর</div></div>
+      <div class="রেকর্ড-card"><div class="রেকর্ড-value">${totalCorrect}</div><div class="রেকর্ড-label">সঠিক উত্তর</div></div>
     </div>`;
 
     const counts = Array.from({length:28},()=>0);
     const today = new Date(); today.setHours(0,0,0,0);
     results.forEach(r=>{ const raw=r.submittedAt?.toDate ? r.submittedAt.toDate() : (r.submittedAt ? new Date(r.submittedAt) : null); if(!raw||isNaN(raw)) return; raw.setHours(0,0,0,0); const d=Math.round((today-raw)/86400000); if(d>=0&&d<28) counts[27-d]++; });
-    activity.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">Study Activity</h2><div class="profile-section-note">Approved exam activity over the last 28 days</div></div></div><div class="activity-grid">${counts.map(c=>`<div class="activity-cell ${c>=3?'active-3':c===2?'active-2':c===1?'active-1':''}" title="${c} approved exam${c===1?'':'s'}"></div>`).join("")}</div><div style="display:flex;justify-content:space-between;margin-top:9px;color:var(--text-muted);font-size:.65rem;font-weight:750"><span>28 days ago</span><span>Today</span></div>`;
+    activity.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">পড়াশোনার কার্যক্রম</h2><div class="profile-section-note">গত ২৮ দিনে অনুমোদিত পরীক্ষার কার্যক্রম</div></div></div><div class="activity-grid">${counts.map(c=>`<div class="activity-cell ${c>=3?'active-3':c===2?'active-2':c===1?'active-1':''}" title="${c} approved exam${c===1?'':'s'}"></div>`).join("")}</div><div style="display:flex;justify-content:space-between;margin-top:9px;color:var(--text-muted);font-size:.65rem;font-weight:750"><span>২৮ দিন আগে</span><span>আজ</span></div>`;
 
     if (rival) {
-      rivalEl.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">Rival Challenge</h2><div class="profile-section-note">Your current competitive connection</div></div></div><div class="rival-card"><div class="rival-person"><div class="rival-name">${student.name}</div><div class="rival-meta">You</div></div><div><div class="rival-score">${challengeWins}</div><div class="rival-vs">Wins</div></div><div class="rival-person"><div class="rival-name">${rival.name || rival.studentId || "Rival"}</div><div class="rival-meta">Current rival</div></div></div>`;
+      rivalEl.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">প্রতিদ্বন্দ্বী চ্যালেঞ্জ</h2><div class="profile-section-note">তোমার বর্তমান প্রতিদ্বন্দ্বী</div></div></div><div class="rival-card"><div class="rival-person"><div class="rival-name">${student.name}</div><div class="rival-meta">তুমি</div></div><div><div class="rival-স্কোর">${challengeWins}</div><div class="rival-vs">জয়</div></div><div class="rival-person"><div class="rival-name">${rival.name || rival.studentId || "Rival"}</div><div class="rival-meta">বর্তমান প্রতিদ্বন্দ্বী</div></div></div>`;
     } else {
-      rivalEl.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">Rival Challenge</h2><div class="profile-section-note">Choose a rival from your network to start comparing challenge wins.</div></div></div><div class="profile-empty">No rival selected yet.</div>`;
+      rivalEl.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">প্রতিদ্বন্দ্বী চ্যালেঞ্জ</h2><div class="profile-section-note">নেটওয়ার্ক থেকে একজন প্রতিদ্বন্দ্বী বেছে নিয়ে চ্যালেঞ্জ শুরু করো।</div></div></div><div class="profile-empty">এখনও কোনো প্রতিদ্বন্দ্বী বেছে নেওয়া হয়নি।</div>`;
     }
   } catch (err) {
-    console.warn("Premium profile insights skipped", err);
-    [journey,strength,records,activity,rivalEl].forEach(el=>{ if(el && !el.innerHTML) el.innerHTML=`<div class="profile-empty">Additional profile insights are unavailable right now.</div>`; });
+    console.warn("Profile insights skipped", err);
+    [journey,strength,records,activity,rivalEl].forEach(el=>{ if(el && !el.innerHTML) el.innerHTML=`<div class="profile-empty">এই মুহূর্তে অতিরিক্ত প্রোফাইল তথ্য পাওয়া যাচ্ছে না।</div>`; });
   }
 }
 
@@ -1150,13 +1157,13 @@ async function buildProfileCardHtml(studentData) {
   
   const gData = await computeGamificationData();
   const examCount = gData.examCounts?.[student.studentId] || 0;
-  let claimedBadgeNames = [];
+  let অর্জিতBadgeNames = [];
   try {
     const [results, subjectsSnap, chaptersSnap, topicsSnap] = await Promise.all([
       getApprovedResults(student.studentId),
       getDocs(collection(db, "subjects")),
       getDocs(collection(db, "chapters")),
-      getDocs(collection(db, "topics"))
+      getDocs(collection(db, "টপিকs"))
     ]);
     const subjectMap={}, chapterMap={}, topicMap={};
     subjectsSnap.forEach(d=>{const x=d.data();subjectMap[d.id]=x.name_bn||x.name_en||d.id});
@@ -1166,58 +1173,87 @@ async function buildProfileCardHtml(studentData) {
     const chapterStats=computeChapterStats(results,chapterMap).map(x=>({...x,id:x.chapterId}));
     const topicStats=computeTopicStats(results,topicMap).map(x=>({...x,id:x.topicId}));
     const ctx=getBadgeContext(results,gData,rank,subjectStats,chapterStats,topicStats);
-    claimedBadgeNames=buildBadgeCatalog(ctx).filter(b=>b.check(ctx)).map(b=>b.title);
+    অর্জিতBadgeNames=buildBadgeCatalog(ctx).filter(b=>b.check(ctx)).map(b=>b.title);
   } catch {}
-  const totalBadges = claimedBadgeNames.length;
+  const totalBadges = অর্জিতBadgeNames.length;
+  const cardBadgeNames = অর্জিতBadgeNames.map(name => ({
+    "পরীক্ষা যোদ্ধা": "Exam Warrior",
+    "নির্ভুলতার মাস্টার": "Accuracy Master",
+    "সঠিক উত্তরের মাস্টার": "Correct Answer Master",
+    "পয়েন্ট সংগ্রাহক": "Point Collector",
+    "ঘুরে দাঁড়ানোর চ্যাম্পিয়ন": "Comeback Champion",
+    "ধারাবাহিকতার চ্যাম্পিয়ন": "Consistency Champion",
+    "দ্রুত সমাধানকারী": "Speed Solver",
+    "পূর্ণ নম্বর": "Perfect Score",
+    "ভুলহীন পরীক্ষা": "Zero Wrong",
+    "প্রচেষ্টার মাস্টার": "Attempt Master",
+    "ধারাবাহিক নিখুঁত দৌড়": "Clean Run",
+    "সাপ্তাহিক শীর্ষস্থান": "Weekly Topper",
+    "শ্রেণির সাপ্তাহিক শীর্ষস্থান": "Class Weekly Topper",
+    "মাসিক শীর্ষস্থান": "Monthly Topper",
+    "শ্রেণির মাসিক শীর্ষস্থান": "Class Monthly Topper",
+    "বিষয় মাস্টার": "Subject Master",
+    "অধ্যায় মাস্টার": "Chapter Master",
+    "টপিক মাস্টার": "Topic Master",
+    "সিলেবাস মাস্টার": "Syllabus Master",
+    "সর্বগুণসম্পন্ন": "All-Rounder",
+    "সাপ্তাহিক ধারাবাহিকতা": "Weekly Streak",
+    "প্রথম বন্ধু": "First Friend",
+    "সামাজিক বৃত্ত": "Social Circle",
+    "প্রতিদ্বন্দ্বী নির্ধারিত": "Rival Marked",
+    "চ্যালেঞ্জ চ্যাম্পিয়ন": "Challenge Champion",
+    "রাতজাগা": "Night Owl",
+    "নিখুঁত শুরু": "Perfect Start"
+  }[name] || name);
   const photoURL = studentData.photoURL || null;
   const badgeColor = "#d4a244";
   const rankText = rank?.rank ? `#${rank.rank}${rank.totalStudents ? ` / ${rank.totalStudents}` : ""}` : "—";
-  const levelText = rank?.level != null ? `লেভেল ${rank.level}` : "";
+  const levelText = rank?.level != null ? `LEVEL ${rank.level}` : "";
 
   return `
     <div id="profileCardInner" style="width:400px;font-family:'Noto Sans Bengali',sans-serif;background:linear-gradient(160deg,#0c0a06 0%,#1c1509 55%,#0c0a06 100%);color:#ffffff;border-radius:26px;overflow:hidden;position:relative;">
       <div style="height:5px;background:linear-gradient(90deg,#8a6a2a,#e8c988,#8a6a2a);"></div>
       <div style="padding:30px 28px 20px;text-align:center;">
-        <p style="margin:0;line-height:1.4;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#e8c988;font-weight:800;">পরীক্ষা প্রস্তুতি — প্রিমিয়াম স্টুডেন্ট কার্ড</p>
+        <p style="margin:0;line-height:1.4;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#e8c988;font-weight:800;">EXAM PREPARATION • STUDENT CARD</p>
         ${photoURL ? `<img src="${photoURL}" crossorigin="anonymous" style="width:100px;height:100px;border-radius:50%;object-fit:cover;margin:16px auto 12px;display:block;border:3px solid ${badgeColor};box-shadow:0 0 0 5px rgba(212,162,68,0.15);">` : `<div style="width:100px;height:100px;border-radius:50%;margin:16px auto 12px;background:linear-gradient(145deg,#e8c988,${badgeColor});display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:800;color:#1c1509;box-shadow:0 0 0 5px rgba(212,162,68,0.15);">${(student.name || "?").charAt(0)}</div>`}
         <h1 style="margin:0;line-height:1.15;font-size:28px;font-weight:900;color:#ffffff;">${student.name}</h1>
         <div style="margin-top:9px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
-          <span style="display:inline-block;padding:4px 12px;border-radius:999px;background:rgba(255,255,255,0.08);color:#cbd5e1;font-size:11px;font-weight:700;">${studentData.className || "অজানা ব্যাচ"} • ${student.studentId}</span>
+          <span style="display:inline-block;padding:4px 12px;border-radius:999px;background:rgba(255,255,255,0.08);color:#cbd5e1;font-size:11px;font-weight:700;">${studentData.className || "CLASS NOT SET"} • ${student.studentId}</span>
           ${levelText ? `<span style="display:inline-block;padding:4px 12px;border-radius:999px;background:rgba(212,162,68,0.16);border:1px solid rgba(212,162,68,0.35);color:#e8c988;font-size:11px;font-weight:800;">${levelText}</span>` : ""}
         </div>
       </div>
 
       <div style="margin:0 20px;background:rgba(212,162,68,0.08);border-radius:18px;padding:20px;text-align:center;border:1px solid rgba(212,162,68,0.22);">
         <p style="margin:0;font-size:48px;font-weight:900;color:#e8c988;font-family:sans-serif;line-height:1;">${totalPoints}</p>
-        <p style="margin:6px 0 0;font-size:13px;color:#cbd5e1;font-weight:700;">সর্বমোট অর্জিত পয়েন্ট</p>
+        <p style="margin:6px 0 0;font-size:13px;color:#cbd5e1;font-weight:700;">TOTAL POINTS</p>
       </div>
 
       <div style="display:flex;gap:8px;margin:14px 20px 0;">
         <div style="flex:1;background:rgba(255,255,255,0.06);border-radius:16px;padding:12px 8px;text-align:center;">
           <p style="margin:0;line-height:1.3;font-size:18px;font-weight:800;color:#ffffff;">${rankText}</p>
-          <p style="margin:4px 0 0;line-height:1.3;font-size:11px;color:#94a3b8;font-weight:600;">র‍্যাঙ্ক</p>
+          <p style="margin:4px 0 0;line-height:1.3;font-size:11px;color:#94a3b8;font-weight:600;">RANK</p>
         </div>
         <div style="flex:1;background:rgba(255,255,255,0.06);border-radius:16px;padding:12px 8px;text-align:center;">
           <p style="margin:0;line-height:1.3;font-size:18px;font-weight:800;color:#ffffff;">${totalBadges} টি</p>
-          <p style="margin:4px 0 0;line-height:1.3;font-size:11px;color:#94a3b8;font-weight:600;">ব্যাজ</p>
+          <p style="margin:4px 0 0;line-height:1.3;font-size:11px;color:#94a3b8;font-weight:600;">BADGES</p>
         </div>
         <div style="flex:1;background:rgba(255,255,255,0.06);border-radius:16px;padding:12px 8px;text-align:center;">
           <p style="margin:0;line-height:1.3;font-size:18px;font-weight:800;color:#ffffff;">${examCount}</p>
-          <p style="margin:4px 0 0;line-height:1.3;font-size:11px;color:#94a3b8;font-weight:600;">পরীক্ষা</p>
+          <p style="margin:4px 0 0;line-height:1.3;font-size:11px;color:#94a3b8;font-weight:600;">EXAMS</p>
         </div>
       </div>
-      ${claimedBadgeNames.length ? `
+      ${অর্জিতBadgeNames.length ? `
       <div style="margin:14px 20px 0;padding:12px 14px;background:rgba(255,255,255,0.045);border:1px solid rgba(255,255,255,0.10);border-radius:16px;">
-        <p style="margin:0 0 9px;font-size:11px;color:#cbd5e1;font-weight:800;text-align:left;">অর্জিত ব্যাজ</p>
+        <p style="margin:0 0 9px;font-size:11px;color:#cbd5e1;font-weight:800;text-align:left;">অর্জিত BADGES</p>
         <div style="display:flex;flex-wrap:wrap;gap:7px;">
-          ${claimedBadgeNames.slice(0,8).map(name => `<span style="padding:6px 9px;border-radius:999px;background:rgba(212,162,68,.16);border:1px solid rgba(212,162,68,.32);color:#e8c988;font-size:10px;font-weight:800;">${name}</span>`).join("")}
-          ${claimedBadgeNames.length > 8 ? `<span style="padding:6px 9px;border-radius:999px;background:rgba(255,255,255,.06);color:#94a3b8;font-size:10px;font-weight:800;">+${claimedBadgeNames.length - 8} আরও</span>` : ""}
+          ${cardBadgeNames.slice(0,8).map(name => `<span style="padding:6px 9px;border-radius:999px;background:rgba(212,162,68,.16);border:1px solid rgba(212,162,68,.32);color:#e8c988;font-size:10px;font-weight:800;">${name}</span>`).join("")}
+          ${অর্জিতBadgeNames.length > 8 ? `<span style="padding:6px 9px;border-radius:999px;background:rgba(255,255,255,.06);color:#94a3b8;font-size:10px;font-weight:800;">+${অর্জিতBadgeNames.length - 8} আরও</span>` : ""}
         </div>
       </div>` : ""}
 
       <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin:22px 0 20px;">
         <span style="width:5px;height:5px;border-radius:50%;background:#8a6a2a;"></span>
-        <p style="margin:0;font-size:10px;color:#7d7362;font-weight:700;letter-spacing:.5px;">${new Date().toLocaleDateString("bn-BD")}</p>
+        <p style="margin:0;font-size:10px;color:#7d7362;font-weight:700;letter-spacing:.5px;">${new Date().toLocaleDateString("en-US", { year:"numeric", month:"short", day:"numeric" })}</p>
         <span style="width:5px;height:5px;border-radius:50%;background:#8a6a2a;"></span>
       </div>
     </div>
