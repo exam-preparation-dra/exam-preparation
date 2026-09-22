@@ -556,8 +556,12 @@ function badgeIconSvg(code) {
 
 function badgeVisual(badge, earned) {
   const themes = {
-    সাধারণ:["#94a3b8","#e2e8f0"], অসাধারণ:["#0ea5e9","#dbeafe"], বিরল:["#8b5cf6","#ede9fe"],
-    বিশেষ:["#ec4899","#fce7f3"], অতি বিরল:["#f59e0b","#fef3c7"], গোপন:["#14b8a6","#ccfbf1"]
+    "সাধারণ":["#94a3b8","#e2e8f0"],
+    "অসাধারণ":["#0ea5e9","#dbeafe"],
+    "বিরল":["#8b5cf6","#ede9fe"],
+    "বিশেষ":["#ec4899","#fce7f3"],
+    "অতি বিরল":["#f59e0b","#fef3c7"],
+    "গোপন":["#14b8a6","#ccfbf1"]
   };
   const [accent,soft] = themes[badge.rarity] || themes.Rare;
   return `<div class="premium-badge ${earned?"is-earned":"is-locked"}" style="--badge-accent:${accent};--badge-soft:${soft}">
