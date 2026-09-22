@@ -591,6 +591,19 @@ export async function updateNextExamChallenges(
 
 // Single student — 2 queries, used on pages that only need "my" XP
 // (dashboard, history, profile via getStudentRank).
+// Total completed-challenge wins for a student, across ALL opponents —
+// used by the "Challenge Champion" badge. (Per-friend breakdown is
+// friend-stats-utils.js's getHeadToHeadMap; this is just the sum.)
+export async function getChallengeWinCount(studentId) {
+  if (!studentId) return 0;
+  const snap = await getDocs(query(
+    collection(db, "examChallenges"),
+    where("winnerStudentId", "==", studentId),
+    where("status", "==", "completed")
+  ));
+  return snap.size;
+}
+
 export async function getChallengeBonusXP(studentId) {
   if (!studentId) return 0;
 
