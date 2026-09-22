@@ -104,6 +104,23 @@
         { "fieldPath": "isActive", "order": "ASCENDING" },
         { "fieldPath": "sequenceNumber", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "improvementRequests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "improvementRequests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "studentId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
     }
-  ]
+  ],
+  "fieldOverrides": []
 }
