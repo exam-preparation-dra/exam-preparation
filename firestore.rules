@@ -74,6 +74,32 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+
+    // ---- Improvement Journey ----
+    // Student-facing improvement data is readable by the app. Students have
+    // no Firebase Auth identity in this project, so student ownership is
+    // enforced by the application convention (active student ID). Admin
+    // writes remain authenticated. Improvement attempts need student writes
+    // because the Spark-plan runner saves progress from the browser.
+    match /improvementRequests/{id} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /improvementTests/{id} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /improvementTestSnapshots/{id} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /improvementAttempts/{id} {
+      allow read, create, update, delete: if true;
+    }
+
     // ---- Analytics: read-only derived data ----
     match /analytics/{id} {
       allow read: if true;
