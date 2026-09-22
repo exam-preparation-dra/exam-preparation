@@ -367,6 +367,21 @@
   }
 
   window.addEventListener("error", function (event) {
+    // Resource-load failures (e.g. a 404 on a <script>/module import) have
+    // no message/filename — they only show up via event.target. Handle both.
+    const target = event.target;
+    if (target && target !== window && (target.src || target.href)) {
+      showProfileError(
+        "রিসোর্স লোড ত্রুটি (ফাইল পাওয়া যায়নি)",
+        [
+          "ট্যাগ: " + (target.tagName || "অজানা"),
+          "URL: " + (target.src || target.href || "অজানা"),
+          "",
+          "সম্ভবত এই ফাইলের path ভুল আছে অথবা GitHub Pages-এ ফাইলটি ওই path-এ নেই।"
+        ].join("\n")
+      );
+      return;
+    }
     showProfileError(
       "জাভাস্ক্রিপ্ট / মডিউল ত্রুটি",
       [
@@ -380,7 +395,7 @@
           : "স্ট্যাক পাওয়া যায়নি")
       ].join("\n")
     );
-  });
+  }, true);
 
   window.addEventListener("unhandledrejection", function (event) {
     const reason = event.reason;
@@ -1305,8 +1320,8 @@ async function buildProfileCardHtml(studentData) {
 </script>
 
 <script type="module">
-  import { initFinalImprovementProfileIntegration } from "/js/utils/improvement-profile-final-integration.js";
-  import { initImprovementXPIntegration } from "/js/utils/improvement-xp-integration.js";
+  import { initFinalImprovementProfileIntegration } from "../js/utils/improvement-profile-final-integration.js";
+  import { initImprovementXPIntegration } from "../js/utils/improvement-xp-integration.js";
   initFinalImprovementProfileIntegration();
   initImprovementXPIntegration();
 </script>
