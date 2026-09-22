@@ -53,9 +53,10 @@ import { getActiveStudent } from "../js/utils/student-utils.js";
 import { getAssignedImprovementTest } from "../js/utils/improvement-test-utils.js";
 import { calculateImprovement } from "../js/utils/improvement-utils.js";
 import { computeImprovementPracticeXP } from "../js/utils/xp-utils.js";
+import { updateImprovementRequestAfterCompletion } from "../js/utils/improvement-test-completion.js";
 import { db } from "../js/firebase/firebase-config.js";
 import {
-  collection, doc, getDocs, query, where, setDoc, serverTimestamp
+  collection, doc, getDocs, query, where, setDoc, serverTimestamp, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 initTheme();
@@ -105,7 +106,7 @@ async function saveProgress(){
     const id = `${testId}_${student.studentId}_active`;
     await setDoc(doc(db,"improvementAttempts",id),{
       testId,studentId:student.studentId,answers,index,
-      startedAtMillis:startedAt,status:"in-progress",
+      startedAtMillis:startedAt,status:"in_progress",
       updatedAt:serverTimestamp()
     },{merge:true});
   }catch(err){
@@ -318,10 +319,24 @@ async function submit(auto=false){
       improvementPoints:improvement.improvementPoints,
       targetReached:improvement.targetReached,
       meaningfulImprovement:improvement.meaningfulImprovement,
-      xp:xp.xp,attemptNumber,
+      xp:xp.xp,
+      xpEarned:xp.xp,
+      attemptNumber,
       status:"completed",
       createdAt:serverTimestamp()
     });
+
+    const activeId = `${testId}_${student.studentId}_active`;
+    try { await deleteDoc(doc(db, "improvementAttempts", activeId)); } catch {}
+
+    const requestId = test.requestId || (Array.isArray(test.requestIds) ? test.requestIds[0] : null) || null;
+    if (requestId) {
+      await updateImprovementRequestAfterCompletion(requestId, {
+        accuracy,
+        improvementPercent: improvement.improvementPoints,
+        targetReached: improvement.targetReached
+      });
+    }
 
     localStorage.removeItem(`improvement:${testId}:${student.studentId}`);
 
@@ -338,7 +353,7 @@ async function submit(auto=false){
         <p>${improvement.targetReached
           ? "তোমার নির্ধারিত লক্ষ্য পূরণ হয়েছে।"
           : `লক্ষ্য: ${improvement.targetAccuracy}%`}</p>
-        <button class="btn primary" onclick="location.href='/profile-final.html'">প্রোফাইলে ফিরে যাও</button>
+        <button class="btn primary" onclick="location.href='./profile.html'">প্রোফাইলে ফিরে যাও</button>
       </div>`;
   }catch(err){
     console.error(err);

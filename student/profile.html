@@ -400,25 +400,13 @@
 
   window.addEventListener("unhandledrejection", function (event) {
     const reason = event.reason;
-
-    showProfileError(
-      "অসম্পূর্ণ Promise ত্রুটি",
-      reason && reason.stack
-        ? reason.stack
-        : String(reason || "অজানা Promise ত্রুটি")
-    );
+    console.error("Profile non-fatal Promise error:", reason);
+    // Do not replace the whole Profile shell for an optional feature failure.
+    // The feature itself is responsible for showing its own safe empty/error state.
   });
 
   window.addEventListener("securitypolicyviolation", function (event) {
-    showProfileError(
-      "নিরাপত্তা / CSP ত্রুটি",
-      [
-        "ব্লক করা URI: " + (event.blockedURI || "অজানা"),
-        "নির্দেশনা: " + (event.effectiveDirective || "অজানা"),
-        "উৎস: " + (event.sourceFile || "অজানা"),
-        "লাইন: " + (event.lineNumber || "?")
-      ].join("\n")
-    );
+    console.error("Profile CSP warning:", event.blockedURI || "unknown");
   });
 
   window.__showProfileError = showProfileError;
@@ -814,7 +802,7 @@ async function initAdvancedBadges() {
       computeGamificationData().catch(()=>({})),
       getDocs(collection(db, "subjects")),
       getDocs(collection(db, "chapters")),
-      getDocs(collection(db, "টপিকs")),
+      getDocs(collection(db, "topics")),
       getMyFriendIds(student.studentId).catch(()=>[]),
       getRival(student.studentId).catch(()=>null),
       getChallengeWinCount(student.studentId).catch(()=>0)
@@ -881,6 +869,7 @@ async function renderPage() {
         <div id="identitySection" class="profile-section full"></div>
         <div id="topperSection" class="profile-section full mt-4"></div>
         <div id="journeySection" class="profile-section mt-4"></div>
+        <div id="improvementSection" class="profile-section mt-4"></div>
         <div id="strengthSection" class="profile-section mt-4"></div>
         <div id="recordsSection" class="profile-section mt-4"></div>
         <div id="activitySection" class="profile-section mt-4"></div>
@@ -1221,7 +1210,7 @@ async function buildProfileCardHtml(studentData) {
       getApprovedResults(student.studentId),
       getDocs(collection(db, "subjects")),
       getDocs(collection(db, "chapters")),
-      getDocs(collection(db, "টপিকs"))
+      getDocs(collection(db, "topics"))
     ]);
     const subjectMap={}, chapterMap={}, topicMap={};
     subjectsSnap.forEach(d=>{const x=d.data();subjectMap[d.id]=x.name_bn||x.name_en||d.id});

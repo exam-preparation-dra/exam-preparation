@@ -111,7 +111,7 @@ async function saveProgress(){
     const id = `${testId}_${student.studentId}_active`;
     await setDoc(doc(db,"improvementAttempts",id),{
       testId,studentId:student.studentId,answers,index,
-      startedAtMillis:startedAt,status:"in-progress",
+      startedAtMillis:startedAt,status:"in_progress",
       updatedAt:serverTimestamp()
     },{merge:true});
   }catch(err){
@@ -144,7 +144,7 @@ function renderIntro(){
       await startImprovementRun({
         testId,
         studentId:student.studentId,
-        requestId:test.requestId || null,
+        requestId:test.requestId || (Array.isArray(test.requestIds) ? test.requestIds[0] : null) || null,
         total:questions.length,
         durationMinutes
       });
@@ -353,7 +353,7 @@ async function submit(auto=false){
         <p>${improvement.targetReached
           ? "তোমার নির্ধারিত লক্ষ্য পূরণ হয়েছে।"
           : `লক্ষ্য: ${improvement.targetAccuracy}%`}</p>
-        <button class="btn primary" onclick="location.href='/profile-final.html'">প্রোফাইলে ফিরে যাও</button>
+        <button class="btn primary" onclick="location.href='./profile.html'">প্রোফাইলে ফিরে যাও</button>
       </div>`;
   }catch(err){
     console.error(err);
