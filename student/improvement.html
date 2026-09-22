@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>উন্নতির অনুশীলন</title>
+  <style>
+    :root{
+      --bg:#f5f7fb;--card:#fff;--text:#172033;--muted:#657089;
+      --border:#e1e6ef;--accent:#5b5bd6;--accent-soft:#eeeeff;
+      --good:#16805c;--danger:#c43d4b
+    }
+    [data-theme="dark"]{
+      --bg:#0d111b;--card:#151b28;--text:#eef2f8;--muted:#9da8bb;
+      --border:#293346;--accent:#8b8bf0;--accent-soft:#252546;
+      --good:#45c596;--danger:#ff6f7c
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+    button{font:inherit}
+    .wrap{max-width:900px;margin:auto;padding:18px}
+    .top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+    .eyebrow{font-size:.76rem;font-weight:800;letter-spacing:.08em;color:var(--muted)}
+    .timer{font-weight:900;color:var(--accent)}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px;box-shadow:0 8px 30px #00000008}
+    .question{font-size:1.15rem;line-height:1.65;font-weight:700;margin:14px 0}
+    .options{display:grid;gap:10px}
+    .option{border:1.5px solid var(--border);background:transparent;color:var(--text);border-radius:14px;padding:13px;text-align:left;cursor:pointer}
+    .option.selected{border-color:var(--accent);background:var(--accent-soft)}
+    .nav{display:flex;gap:10px;margin-top:16px}
+    .btn{border:0;border-radius:12px;padding:11px 16px;cursor:pointer}
+    .primary{background:var(--accent);color:#fff}
+    .secondary{background:var(--accent-soft);color:var(--text)}
+    .danger{background:var(--danger);color:#fff}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+    .status{color:var(--muted);font-size:.9rem}
+    .result{text-align:center}
+    .big{font-size:2.4rem;font-weight:950;margin:8px 0}
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}
+    .stat{border:1px solid var(--border);border-radius:14px;padding:13px}
+    .stat b{display:block;font-size:1.2rem;margin-top:4px}
+    @media(max-width:600px){.wrap{padding:12px}.grid{grid-template-columns:1fr}.card{padding:16px}}
+  </style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <div class="card">লোড করা হচ্ছে...</div>
+</div>
+
+<script type="module">
+import { initTheme } from "/js/utils/ui-utils.js";
+import { getActiveStudent } from "/js/utils/student-utils.js";
+import { getAssignedImprovementTest } from "/js/utils/improvement-test-utils.js";
+import { calculateImprovement } from "/js/utils/improvement-utils.js";
+import { computeImprovementPracticeXP } from "/js/utils/xp-utils.js";
+import {
+  startImprovementRun,
+  submitImprovementRun,
+  getImprovementRunState
+} from "/js/utils/improvement-test-runner-integration.js";
+import { db } from "/js/firebase/firebase-config.js";
+import {
+  collection, doc, getDocs, query, where, setDoc, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+initTheme();
+
+const app = document.getElementById("app");
+const params = new URLSearchParams(location.search);
+const testId = params.get("testId");
+const student = getActiveStudent();
+
+let test = null;
+let questions = [];
+let answers = {};
+let index = 0;
+let startedAt = Date.now();
+let durationMinutes = 20;
+let timer = null;
+let submitting = false;
+
+function esc(value){
+  return String(value ?? "").replace(/[&<>"']/g,m=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[m]));
+}
+
+function getQuestionText(q){
+  return q.question_bn || q.question_en || q.question || "প্রশ্নের লেখা পাওয়া যায়নি।";
+}
+
+function getOptions(q){
+  if(Array.isArray(q.options_bn) && q.options_bn.length) return q.options_bn;
+  if(Array.isArray(q.options_en) && q.options_en.length) return q.options_en;
+  if(Array.isArray(q.options) && q.options.length) return q.options;
+  return [];
+}
+
+async function getAttemptCount(){
+  const snap = await getDocs(query(
+    collection(db,"improvementAttempts"),
+    where("testId","==",testId),
+    where("studentId","==",student.studentId),
+    where("status","==","completed")
+  ));
+  return snap.size;
+}
+
+async function saveProgress(){
+  try{
+    const id = `${testId}_${student.studentId}_active`;
+    await setDoc(doc(db,"improvementAttempts",id),{
+      testId,studentId:student.studentId,answers,index,
+      startedAtMillis:startedAt,status:"in-progress",
+      updatedAt:serverTimestamp()
+    },{merge:true});
+  }catch(err){
+    console.warn("Improvement progress sync failed",err);
+  }
+}
+
+function renderIntro(){
+  const title = test.title || "উন্নতির অনুশীলন";
+  const count = questions.length;
+  durationMinutes = Number(test.durationMinutes || Math.max(5,Math.ceil(count * 1.5)));
+
+  app.innerHTML = `
+    <div class="card">
+      <div class="eyebrow">IMPROVEMENT PRACTICE</div>
+      <h1>${esc(title)}</h1>
+      <p class="status">${esc(test.description || "তোমার নির্দিষ্ট দুর্বলতা উন্নত করার জন্য এই অনুশীলনটি তৈরি করা হয়েছে।")}</p>
+      <div class="grid">
+        <div class="stat">প্রশ্ন<b>${count}</b></div>
+        <div class="stat">সময়<b>${durationMinutes} মিনিট</b></div>
+        <div class="stat">ধরন<b>অনুশীলন</b></div>
+      </div>
+      <p class="status">এটি কোনো অফিসিয়াল পরীক্ষা নয়। তোমার উন্নতির হিসাব আলাদাভাবে সংরক্ষণ হবে।</p>
+      <button class="btn primary" id="start">অনুশীলন শুরু করো</button>
+    </div>`;
+
+  document.getElementById("start").onclick=async ()=>{
+    startedAt=Date.now();
+    try{
+      await startImprovementRun({
+        testId,
+        studentId:student.studentId,
+        requestId:test.requestId || null,
+        total:questions.length,
+        durationMinutes
+      });
+    }catch(err){
+      console.error("Improvement attempt start failed",err);
+    }
+    renderQuestion();
+    startTimer();
+  };
+}
+
+function startTimer(){
+  clearInterval(timer);
+  const end=startedAt+durationMinutes*60000;
+  timer=setInterval(()=>{
+    const left=Math.max(0,end-Date.now());
+    const el=document.getElementById("timer");
+    if(el){
+      const sec=Math.ceil(left/1000);
+      el.textContent=`${String(Math.floor(sec/60)).padStart(2,"0")}:${String(sec%60).padStart(2,"0")}`;
+    }
+    if(left<=0){
+      clearInterval(timer);
+      submit(true);
+    }
+  },1000);
+}
+
+function renderQuestion(){
+  const q=questions[index];
+  const opts=getOptions(q);
+
+  app.innerHTML=`
+    <div class="top">
+      <div>
+        <div class="eyebrow">উন্নতির অনুশীলন</div>
+        <div class="status">প্রশ্ন ${index+1} / ${questions.length}</div>
+      </div>
+      <div class="timer" id="timer">--:--</div>
+    </div>
+    <div class="card">
+      <div class="question">${esc(getQuestionText(q))}</div>
+      <div class="options">
+        ${opts.map((opt,i)=>{
+          const letter=String.fromCharCode(65+i);
+          const value=(typeof opt==="object" ? (opt.value||opt.key||letter) : letter);
+          const label=(typeof opt==="object" ? (opt.text_bn||opt.text||opt.label||value) : opt);
+          return `<button class="option ${answers[q.questionId]===value?"selected":""}" data-answer="${esc(value)}">
+            <b>${letter}.</b> ${esc(label)}
+          </button>`;
+        }).join("")}
+      </div>
+      <div class="nav">
+        <button class="btn secondary" id="prev" ${index===0?"disabled":""}>পূর্ববর্তী</button>
+        ${index<questions.length-1
+          ? `<button class="btn primary" id="next">পরবর্তী</button>`
+          : `<button class="btn danger" id="submit">অনুশীলন জমা দাও</button>`}
+      </div>
+      <p class="status" id="saveStatus">উত্তর ডিভাইসে রাখা হচ্ছে।</p>
+    </div>`;
+
+  document.querySelectorAll(".option").forEach(btn=>{
+    btn.onclick=async()=>{
+      answers[q.questionId]=btn.dataset.answer;
+      await saveLocal();
+      renderQuestion();
+    };
+  });
+
+  document.getElementById("prev").onclick=()=>{
+    if(index>0){index--;renderQuestion();}
+  };
+
+  const next=document.getElementById("next");
+  if(next) next.onclick=()=>{
+    if(index<questions.length-1){index++;renderQuestion();}
+  };
+
+  const submitBtn=document.getElementById("submit");
+  if(submitBtn) submitBtn.onclick=()=>submit(false);
+
+  const el=document.getElementById("timer");
+  if(el){
+    const left=Math.max(0,(startedAt+durationMinutes*60000)-Date.now());
+    const sec=Math.ceil(left/1000);
+    el.textContent=`${String(Math.floor(sec/60)).padStart(2,"0")}:${String(sec%60).padStart(2,"0")}`;
+  }
+}
+
+async function saveLocal(){
+  localStorage.setItem(
+    `improvement:${testId}:${student.studentId}`,
+    JSON.stringify({answers,index,startedAt})
+  );
+  await saveProgress();
+}
+
+function loadLocal(){
+  try{
+    const raw=localStorage.getItem(`improvement:${testId}:${student.studentId}`);
+    if(!raw)return false;
+    const data=JSON.parse(raw);
+    if(data && data.answers){
+      answers=data.answers;
+      index=Number(data.index)||0;
+      startedAt=Number(data.startedAt)||Date.now();
+      return true;
+    }
+  }catch{}
+  return false;
+}
+
+async function submit(auto=false){
+  if(submitting)return;
+  submitting=true;
+  clearInterval(timer);
+
+  const unanswered=questions.filter(q=>!answers[q.questionId]).length;
+  const ok=auto || unanswered===0 ||
+    confirm(`আরও ${unanswered}টি প্রশ্নের উত্তর দেওয়া হয়নি। তবুও জমা দেবে?`);
+  if(!ok){
+    submitting=false;
+    startTimer();
+    return;
+  }
+
+  app.innerHTML=`<div class="card">ফলাফল হিসাব করা হচ্ছে...</div>`;
+
+  try{
+    const snapshotQuestions=questions.map(q=>({
+      questionId:q.questionId,
+      question_bn:q.question_bn,
+      question_en:q.question_en,
+      options_bn:q.options_bn,
+      correctAnswer:q.correctAnswer,
+      marks:q.marks||1,
+      subjectId:q.subjectId,
+      chapterId:q.chapterId,
+      topicId:q.topicId
+    }));
+
+    let correct=0,attempted=0,totalMarks=0,obtainedMarks=0;
+    snapshotQuestions.forEach(q=>{
+      const marks=Number(q.marks)||1;
+      totalMarks+=marks;
+      const a=answers[q.questionId];
+      if(a){
+        attempted++;
+        if(a===q.correctAnswer){correct++;obtainedMarks+=marks;}
+      }
+    });
+
+    const percentage=totalMarks?
+      Math.round(obtainedMarks/totalMarks*1000)/10:0;
+    const accuracy=attempted?
+      Math.round(correct/attempted*1000)/10:0;
+
+    const previousAccuracy=Number(test.baselineAccuracy ?? test.currentAccuracy ?? 0);
+    const targetAccuracy=Number(test.targetAccuracy ?? 0);
+    const improvement=calculateImprovement({
+      previousAccuracy,
+      practiceAccuracy:accuracy,
+      targetAccuracy
+    });
+
+    const attemptNumber=(await getAttemptCount())+1;
+    const xp=computeImprovementPracticeXP({
+      totalQuestions:questions.length,
+      attempted,
+      correctCount:correct,
+      percentage,
+      targetReached:improvement.targetReached,
+      improvementPoints:improvement.improvementPoints,
+      attemptNumber
+    });
+
+    const integrated = getImprovementRunState();
+    const activeAttemptId = integrated?.id || `${testId}_${student.studentId}_active`;
+
+    await submitImprovementRun({
+      attemptId: activeAttemptId,
+      testId,
+      studentId: student.studentId,
+      requestId: test.requestId || null,
+      correct,
+      total: questions.length,
+      attempted,
+      previousAccuracy: improvement.previousAccuracy,
+      accuracy,
+      targetAccuracy: improvement.targetAccuracy,
+      attemptNumber
+    });
+
+    localStorage.removeItem(`improvement:${testId}:${student.studentId}`);
+
+    app.innerHTML=`
+      <div class="card result">
+        <div class="eyebrow">উন্নতির ফলাফল</div>
+        <div class="big">${accuracy}%</div>
+        <p class="status">এই অনুশীলনে তোমার accuracy</p>
+        <div class="grid">
+          <div class="stat">আগের accuracy<b>${improvement.previousAccuracy}%</b></div>
+          <div class="stat">উন্নতি<b>${improvement.improvementPoints >= 0 ? "+" : ""}${improvement.improvementPoints} পয়েন্ট</b></div>
+          <div class="stat">XP<b>+${xp.xp}</b></div>
+        </div>
+        <p>${improvement.targetReached
+          ? "তোমার নির্ধারিত লক্ষ্য পূরণ হয়েছে।"
+          : `লক্ষ্য: ${improvement.targetAccuracy}%`}</p>
+        <button class="btn primary" onclick="location.href='/profile-final.html'">প্রোফাইলে ফিরে যাও</button>
+      </div>`;
+  }catch(err){
+    console.error(err);
+    submitting=false;
+    app.innerHTML=`<div class="card">
+      <h2>ফলাফল সংরক্ষণ করা যায়নি</h2>
+      <p class="status">${esc(err.message || "আবার চেষ্টা করো।")}</p>
+      <button class="btn secondary" onclick="location.reload()">আবার চেষ্টা</button>
+    </div>`;
+  }
+}
+
+async function boot(){
+  if(!student){
+    location.href="/index.html";
+    return;
+  }
+  if(!testId){
+    app.innerHTML=`<div class="card">Improvement Test শনাক্ত করা যায়নি।</div>`;
+    return;
+  }
+
+  try{
+    test=await getAssignedImprovementTest(testId,student.studentId);
+    if(!test){
+      app.innerHTML=`<div class="card"><h2>এই অনুশীলনটি এখন উপলব্ধ নয়</h2>
+      <p class="status">এটি হয় প্রকাশিত হয়নি, অথবা তোমার জন্য বরাদ্দ করা হয়নি।</p></div>`;
+      return;
+    }
+
+    questions=Array.isArray(test.snapshot?.questions)?test.snapshot.questions:[];
+    questions=questions.filter(q=>q && q.questionId && q.correctAnswer);
+
+    if(!questions.length){
+      app.innerHTML=`<div class="card">এই অনুশীলনে এখন কোনো বৈধ প্রশ্ন নেই।</div>`;
+      return;
+    }
+
+    if(loadLocal()){
+      renderQuestion();
+      startTimer();
+    }else{
+      renderIntro();
+    }
+  }catch(err){
+    console.error(err);
+    app.innerHTML=`<div class="card"><h2>অনুশীলন লোড করা যায়নি</h2>
+      <p class="status">${esc(err.message || "ইন্টারনেট সংযোগ পরীক্ষা করো।")}</p></div>`;
+  }
+}
+
+boot();
+</script>
+</body>
+</html>
