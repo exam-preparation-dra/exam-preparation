@@ -279,6 +279,28 @@
 .badge-unlock-card button{border:0;border-radius:12px;padding:9px 20px;background:linear-gradient(135deg,#c99335,#aa7626);color:#fff;font-weight:900;cursor:pointer;box-shadow:0 8px 20px rgba(170,118,38,.22)}
 .unlock-spark{position:absolute!important;width:7px;height:7px;border-radius:50%;background:#f0b53e;top:28px;left:32px;box-shadow:225px 30px 0 #9b72d6,170px 230px 0 #62bfc5,35px 200px 0 #d984a7;animation:sparkFloat 1.8s ease-in-out infinite}
 @keyframes unlockFade{from{opacity:0}to{opacity:1}}@keyframes unlockPop{0%{opacity:0;transform:scale(.55) translateY(25px) rotate(-3deg)}55%{opacity:1;transform:scale(1.06) translateY(-3px) rotate(1deg)}100%{transform:scale(1)}}@keyframes unlockRotate{to{transform:rotate(360deg)}}@keyframes sparkFloat{50%{transform:scale(1.7) rotate(12deg);opacity:.7}}
+
+.improvement-list{display:grid;gap:12px}
+.improvement-card{padding:15px;border:1px solid rgba(var(--color-accent-rgb),.16);border-radius:17px;background:rgba(var(--color-accent-rgb),.035)}
+.improvement-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.improvement-type{font-size:.62rem;color:var(--color-accent);font-weight:900;letter-spacing:.06em}
+.improvement-name{margin-top:3px;color:var(--text-primary);font-size:.95rem;font-weight:950}
+.improvement-priority{padding:5px 8px;border-radius:8px;font-size:.61rem;font-weight:900;white-space:nowrap}
+.priority-critical{background:rgba(239,68,68,.12);color:#dc2626}
+.priority-high{background:rgba(245,158,11,.12);color:#b45309}
+.priority-medium{background:rgba(59,130,246,.12);color:#2563eb}
+.priority-low{background:rgba(100,116,139,.12);color:#64748b}
+.improvement-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:13px}
+.improvement-stats>div{padding:9px;border-radius:11px;background:rgba(128,128,128,.05)}
+.improvement-stats small{display:block;color:var(--text-muted);font-size:.59rem;font-weight:750}
+.improvement-stats b{display:block;margin-top:3px;color:var(--text-primary);font-size:.82rem;font-weight:950}
+.improvement-progress{height:7px;margin-top:12px;background:rgba(128,128,128,.13);border-radius:99px;overflow:hidden}
+.improvement-progress div{height:100%;background:linear-gradient(90deg,var(--color-accent),#3b82f6);border-radius:inherit}
+.improvement-meta{display:flex;justify-content:space-between;gap:8px;margin-top:8px;color:var(--text-muted);font-size:.62rem;font-weight:750}
+.improvement-reason{margin-top:10px;padding-top:10px;border-top:1px solid rgba(128,128,128,.1);color:var(--text-secondary);font-size:.68rem;line-height:1.5;font-weight:650}
+.improvement-empty{padding:18px;border-radius:15px;background:rgba(128,128,128,.04);border:1px dashed rgba(128,128,128,.16);text-align:center;color:var(--text-muted);font-size:.72rem;line-height:1.55;font-weight:700}
+.improvement-empty-title{color:var(--text-primary);font-size:.82rem;font-weight:900;margin-bottom:4px}
+@media(max-width:600px){.improvement-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.improvement-stats>div{padding:8px 6px}.improvement-stats b{font-size:.76rem}.improvement-meta{font-size:.58rem}}
 </style>
 
 </head>
@@ -418,6 +440,7 @@ import { doc, getDoc, collection, getDocs } from "https://www.gstatic.com/fireba
 import { getSubjects, buildNameMap } from "../js/utils/syllabus-utils.js";
 import { getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival } from "../js/utils/friend-utils.js";
 import { getChallengeWinCount } from "../js/utils/challenge-utils.js";
+import { analyzeStudentImprovement, getPriorityLabel, getStatusLabel } from "../js/utils/improvement-utils.js";
 
 initTheme();
 
@@ -823,6 +846,7 @@ async function renderPage() {
         <div id="identitySection" class="profile-section full"></div>
         <div id="topperSection" class="profile-section full mt-4"></div>
         <div id="journeySection" class="profile-section mt-4"></div>
+        <div id="improvementJourneySection" class="profile-section full mt-4"></div>
         <div id="strengthSection" class="profile-section mt-4"></div>
         <div id="recordsSection" class="profile-section mt-4"></div>
         <div id="activitySection" class="profile-section mt-4"></div>
@@ -846,7 +870,7 @@ async function renderPage() {
     </main>
   `;
 
-  await Promise.allSettled([loadIdentity(), loadGamification(), loadStats(), loadNetworkData(), loadPremiumInsights()]);
+  await Promise.allSettled([loadIdentity(), loadGamification(), loadStats(), loadNetworkData(), loadPremiumInsights(), loadImprovementJourney()]);
 
   const search = document.getElementById("dirSearch");
   if (search) search.addEventListener("input", e => { dirSearchTerm=e.target.value.trim().toLowerCase(); renderDirectory(); });
@@ -1022,6 +1046,107 @@ async function loadPremiumInsights() {
   } catch (err) {
     console.warn("Premium profile insights skipped", err);
     [journey,strength,records,activity,rivalEl].forEach(el=>{ if(el && !el.innerHTML) el.innerHTML=`<div class="profile-empty">Additional profile insights are unavailable right now.</div>`; });
+  }
+}
+
+
+async function loadImprovementJourney() {
+  const el = document.getElementById("improvementJourneySection");
+  if (!el) return;
+
+  try {
+    const [results, subjects, chaptersSnap, topicsSnap] = await Promise.all([
+      getApprovedResults(student.studentId).catch(() => []),
+      getSubjects().catch(() => []),
+      getDocs(collection(db, "chapters")).catch(() => ({ forEach() {} })),
+      getDocs(collection(db, "topics")).catch(() => ({ forEach() {} }))
+    ]);
+
+    const subjectMap = buildNameMap(subjects);
+    const chapterMap = {};
+    const topicMap = {};
+
+    chaptersSnap.forEach(d => {
+      const x = d.data() || {};
+      chapterMap[d.id] = x.name_bn || x.name_en || d.id;
+    });
+    topicsSnap.forEach(d => {
+      const x = d.data() || {};
+      topicMap[d.id] = x.name_bn || x.name_en || d.id;
+    });
+
+    const analysis = analyzeStudentImprovement(results, {
+      subjects: subjectMap,
+      chapters: chapterMap,
+      topics: topicMap
+    });
+
+    const weaknesses = (analysis.all || []).slice(0, 5);
+
+    el.innerHTML = `
+      <div class="profile-section-head">
+        <div>
+          <h2 class="profile-section-title">আমার উন্নতির যাত্রা</h2>
+          <div class="profile-section-note">তোমার অনুমোদিত পরীক্ষার আসল ফলাফল থেকে দুর্বল জায়গা শনাক্ত করা হয়</div>
+        </div>
+      </div>
+
+      ${weaknesses.length ? `
+        <div class="improvement-list">
+          ${weaknesses.map(w => {
+            const priority = getPriorityLabel(w.priority);
+            const progress = Math.max(0, Math.min(100, Number(w.currentAccuracy || 0)));
+            const target = Number(w.targetAccuracy || 0);
+            return `
+              <div class="improvement-card">
+                <div class="improvement-card-top">
+                  <div>
+                    <div class="improvement-type">${w.entityType === "topic" ? "টপিক" : w.entityType === "chapter" ? "অধ্যায়" : "বিষয়"}</div>
+                    <div class="improvement-name">${w.name}</div>
+                  </div>
+                  <span class="improvement-priority priority-${w.priority}">${priority}</span>
+                </div>
+
+                <div class="improvement-stats">
+                  <div><small>বর্তমান সঠিকতা</small><b>${w.currentAccuracy}%</b></div>
+                  <div><small>লক্ষ্য</small><b>${target}%</b></div>
+                  <div><small>প্রয়োজন</small><b>${w.improvementNeeded} পয়েন্ট</b></div>
+                </div>
+
+                <div class="improvement-progress">
+                  <div style="width:${progress}%"></div>
+                </div>
+
+                <div class="improvement-meta">
+                  <span>${w.attempts}টি পরীক্ষার তথ্য</span>
+                  <span>${w.wrongQuestions}টি ভুল প্রশ্ন</span>
+                </div>
+
+                <div class="improvement-reason">
+                  এই জায়গায় একাধিক পরীক্ষায় প্রয়োজনীয় মানের নিচে ফল পাওয়া গেছে। তাই উন্নতির জন্য লক্ষ্য নির্ধারণ করা হয়েছে।
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      ` : `
+        <div class="improvement-empty">
+          <div class="improvement-empty-title">এখন কোনো উন্নতির লক্ষ্য শনাক্ত হয়নি</div>
+          <div>পর্যাপ্ত অনুমোদিত পরীক্ষার তথ্য পাওয়া গেলে সিস্টেম স্বয়ংক্রিয়ভাবে দুর্বল জায়গা শনাক্ত করবে।</div>
+        </div>
+      `}
+    `;
+  } catch (err) {
+    console.warn("Improvement journey skipped", err);
+    el.innerHTML = `
+      <div class="profile-section-head">
+        <div>
+          <h2 class="profile-section-title">আমার উন্নতির যাত্রা</h2>
+          <div class="profile-section-note">উন্নতির তথ্য এখন লোড করা যাচ্ছে না</div>
+        </div>
+      </div>
+      <div class="improvement-empty">কিছুক্ষণ পরে আবার চেষ্টা করো।</div>
+    `;
   }
 }
 
