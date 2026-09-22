@@ -660,8 +660,8 @@ function getBadgeContext(results, gData, rank, subjectStats, chapterStats, topic
     const ms = submittedMs(r); if (ms) weeksSeen.add(weekOf(ms));
   });
   const weeksSorted = [...weeksSeen].sort((a, b) => a - b);
-  let realLongestStreak = 0, run = 0, prevWeek = null;
-  weeksSorted.forEach(w => { run = (prevWeek !== null && w === prevWeek + 1) ? run + 1 : 1; realLongestStreak = Math.max(realLongestStreak, run); prevWeek = w; });
+  let realLongestStreak = 0, streakRun = 0, prevWeek = null;
+  weeksSorted.forEach(w => { streakRun = (prevWeek !== null && w === prevWeek + 1) ? streakRun + 1 : 1; realLongestStreak = Math.max(realLongestStreak, streakRun); prevWeek = w; });
 
   return {
     friendCount: Number(social.friendCount || 0),
