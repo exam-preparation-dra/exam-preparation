@@ -6,7 +6,7 @@
 import { db, auth } from "../firebase/firebase-config.js";
 import {
   collection, doc, getDoc, getDocs, query, where, orderBy, limit,
-  addDoc, setDoc, updateDoc, serverTimestamp, writeBatch
+  addDoc, setDoc, updateDoc, deleteDoc, serverTimestamp, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import {
   IMPROVEMENT_CONFIG, IMPROVEMENT_STATUS, IMPROVEMENT_PRIORITY,
@@ -40,6 +40,63 @@ const IMPROVEMENT_EXAM_MARKS_PER_QUESTION = 1; // uniform -- never mixed marks
 function autoImprovementTitle(request) {
   const area = request?.topicName || request?.chapterName || request?.subjectName || request?.entityName || "সাধারণ";
   return `Improvement Exam — ${area}`;
+}
+
+
+// ---- Improvement Exam Management ----------------------------------------
+// Loads published/draft Improvement Exams for the Admin management panel.
+// Uses a simple collection read + client-side sort so no extra composite
+// Firestore index is required.
+export async function getAllImprovementTests({maxResults=250}={}) {
+  requireAdmin();
+  const snap = await getDocs(query(collection(db, "improvementTests"), limit(maxResults)));
+  return snap.docs
+    .map(d => ({ id:d.id, ...d.data() }))
+    .sort((a,b) => ts(b.createdAt) - ts(a.createdAt));
+}
+
+// Permanently removes the Improvement Exam and every Firestore record that
+// belongs to it: snapshot, attempts, and linked improvement requests.
+// This mirrors the permanent-delete behavior of the normal Exam Manager.
+export async function deleteImprovementTestPermanently(testId) {
+  requireAdmin();
+  const testIdValue = id(testId);
+  if (!testIdValue) throw new Error("Improvement Exam ID পাওয়া যায়নি।");
+
+  const testRef = doc(db, "improvementTests", testIdValue);
+  const testSnap = await getDoc(testRef);
+  if (!testSnap.exists()) return { deleted:false, testId:testIdValue };
+
+  const [attemptsSnap, requestByTestSnap, requestByAssignedSnap] = await Promise.all([
+    getDocs(query(collection(db, "improvementAttempts"), where("testId", "==", testIdValue))),
+    getDocs(query(collection(db, "improvementRequests"), where("improvementTestId", "==", testIdValue))),
+    getDocs(query(collection(db, "improvementRequests"), where("assignedTestId", "==", testIdValue)))
+  ]);
+
+  const refs = new Map();
+  const addRef = ref => { if (ref?.path) refs.set(ref.path, ref); };
+
+  attemptsSnap.docs.forEach(d => addRef(d.ref));
+  requestByTestSnap.docs.forEach(d => addRef(d.ref));
+  requestByAssignedSnap.docs.forEach(d => addRef(d.ref));
+  addRef(doc(db, "improvementTestSnapshots", testIdValue));
+  addRef(testRef);
+
+  // Firestore batch writes are limited to 500 operations. Delete in chunks
+  // so a test with many student attempts can still be removed safely.
+  const allRefs = [...refs.values()];
+  for (let i = 0; i < allRefs.length; i += 450) {
+    const batch = writeBatch(db);
+    allRefs.slice(i, i + 450).forEach(ref => batch.delete(ref));
+    await batch.commit();
+  }
+
+  return {
+    deleted:true,
+    testId:testIdValue,
+    deletedAttempts:attemptsSnap.size,
+    deletedRequests:refs.size - attemptsSnap.size - 2
+  };
 }
 
 export async function getImprovementRequestQueue({status=null, priority=null, studentId=null, chapterId=null, maxResults=100}={}) {

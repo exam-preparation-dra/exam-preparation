@@ -27,7 +27,9 @@ import {
   autoBuildAndPublishImprovementTest,
   autoPublishOverdueImprovementRequests,
   generateAndPublishImprovementForAllStudents,
-  createImprovementRequestsForStudent
+  createImprovementRequestsForStudent,
+  getAllImprovementTests,
+  deleteImprovementTestPermanently
 } from "./improvement-admin-utils.js";
 
 import { getActiveStudents } from "./student-utils.js";
@@ -45,6 +47,7 @@ let state = {
   requests: [],
   summary: null,
   alerts: [],
+  tests: [],
   selectedRequest: null,
   loading: false
 };
@@ -236,6 +239,31 @@ function injectStyles() {
       font-weight: 900;
       color: var(--iac-text);
     }
+
+
+    .iac-exam-section { margin-top: 16px; }
+    .iac-exam-list { display: grid; gap: 14px; }
+    .iac-exam-card {
+      border: 1px solid var(--iac-border);
+      background: var(--iac-card);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 8px 28px rgba(0,0,0,.025);
+      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    .iac-exam-card:hover { transform: translateY(-2px); box-shadow: 0 12px 34px rgba(0,0,0,.055); }
+    .iac-exam-top { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+    .iac-exam-title { margin:0; font-size:17px; line-height:1.45; font-weight:950; color:var(--iac-text); }
+    .iac-exam-subtitle { margin:5px 0 0; color:var(--iac-muted); font-size:11px; line-height:1.5; }
+    .iac-exam-meta { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+    .iac-exam-meta-item { display:inline-flex; align-items:center; gap:6px; padding:7px 10px; border:1px solid var(--iac-border); border-radius:10px; background:rgba(128,128,128,.04); color:var(--iac-muted); font-size:10px; font-weight:800; }
+    .iac-exam-status { display:inline-flex; align-items:center; padding:6px 11px; border-radius:999px; font-size:10px; font-weight:900; border:1px solid rgba(16,185,129,.2); background:rgba(16,185,129,.09); color:#10b981; white-space:nowrap; }
+    .iac-exam-status.draft { border-color:rgba(128,128,128,.2); background:rgba(128,128,128,.08); color:var(--iac-muted); }
+    .iac-exam-actions { display:flex; flex-wrap:wrap; gap:9px; margin-top:16px; padding-top:14px; border-top:1px dashed var(--iac-border); }
+    .iac-exam-delete { border:1px solid rgba(239,68,68,.2); background:rgba(239,68,68,.08); color:#ef4444; border-radius:12px; padding:10px 14px; font:inherit; font-size:11px; font-weight:900; cursor:pointer; display:inline-flex; align-items:center; gap:7px; transition:.18s ease; }
+    .iac-exam-delete:hover { background:#ef4444; color:#fff; transform:translateY(-1px); box-shadow:0 7px 18px rgba(239,68,68,.2); }
+    .iac-exam-delete:disabled { opacity:.55; cursor:wait; transform:none; }
+    .iac-exam-empty { border:1px dashed var(--iac-border); border-radius:16px; padding:24px; text-align:center; color:var(--iac-muted); font-size:12px; font-weight:750; }
 
     .iac-layout {
       display: grid;
@@ -541,6 +569,21 @@ function renderShell(root) {
         <div class="iac-bulk-result" id="iacBulkResult"></div>
       </section>
 
+
+      <section class="iac-card iac-exam-section">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div>
+            <p class="iac-eyebrow">EXAM MANAGEMENT</p>
+            <h3 class="iac-section-title">Improvement Exam ব্যবস্থাপনা</h3>
+            <p class="iac-section-note" style="margin-bottom:0;">
+              তৈরি হওয়া Improvement Exam এখানে দেখা যাবে। স্থায়ীভাবে মুছলে Exam, Snapshot, Attempt এবং সংশ্লিষ্ট Request-এর Firestore record-ও মুছে যাবে।
+            </p>
+          </div>
+          <button class="iac-btn" id="iacRefreshTestsBtn" type="button">তালিকা রিফ্রেশ</button>
+        </div>
+        <div id="iacExamList" class="iac-exam-list" style="margin-top:14px;"></div>
+      </section>
+
       <div class="iac-grid">
         <div class="iac-stat">
           <div class="iac-stat-label">মোট অনুরোধ</div>
@@ -596,6 +639,7 @@ function renderShell(root) {
   );
 
   root.querySelector("#iacGenerateAllBtn")?.addEventListener("click", handleGenerateAll);
+  root.querySelector("#iacRefreshTestsBtn")?.addEventListener("click", () => load());
 }
 
 async function handleGenerateAll() {
@@ -650,6 +694,85 @@ async function handleGenerateAll() {
   } finally {
     button.disabled = false;
     button.textContent = "সকলের জন্য Generate + Publish";
+  }
+}
+
+
+function formatDate(value) {
+  const ms = ts(value);
+  if (!ms) return "—";
+  try { return new Date(ms).toLocaleDateString("bn-BD", { day:"numeric", month:"short", year:"numeric" }); }
+  catch { return "—"; }
+}
+
+function renderImprovementTests() {
+  const list = document.getElementById("iacExamList");
+  if (!list) return;
+
+  if (!state.tests.length) {
+    list.innerHTML = `<div class="iac-exam-empty">এখনো কোনো Improvement Exam তৈরি হয়নি।</div>`;
+    return;
+  }
+
+  list.innerHTML = state.tests.map(test => {
+    const students = Array.isArray(test.studentIds) ? test.studentIds.length : 0;
+    const published = test.published === true || test.status === "published";
+    return `
+      <article class="iac-exam-card">
+        <div class="iac-exam-top">
+          <div style="min-width:0;flex:1;">
+            <h4 class="iac-exam-title">${esc(test.title || "Improvement Exam")}</h4>
+            <p class="iac-exam-subtitle">Test ID: ${esc(test.id)}</p>
+          </div>
+          <span class="iac-exam-status ${published ? "" : "draft"}">${published ? "প্রকাশিত" : "খসড়া"}</span>
+        </div>
+
+        <div class="iac-exam-meta">
+          <span class="iac-exam-meta-item">${num(test.questionCount)} টি প্রশ্ন</span>
+          <span class="iac-exam-meta-item">${num(test.durationMinutes)} মিনিট</span>
+          <span class="iac-exam-meta-item">${students} জন শিক্ষার্থী</span>
+          <span class="iac-exam-meta-item">${formatDate(test.createdAt)}</span>
+        </div>
+
+        <div class="iac-exam-actions">
+          <button class="iac-exam-delete" type="button" data-delete-improvement-test="${esc(test.id)}" data-test-title="${esc(test.title || "Improvement Exam")}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v5M14 11v5"/></svg>
+            স্থায়ীভাবে মুছুন
+          </button>
+        </div>
+      </article>
+    `;
+  }).join("");
+
+  list.querySelectorAll("[data-delete-improvement-test]").forEach(button => {
+    button.addEventListener("click", () => handleDeleteImprovementTest(button));
+  });
+}
+
+async function handleDeleteImprovementTest(button) {
+  const testId = button?.dataset?.deleteImprovementTest;
+  const title = button?.dataset?.testTitle || "Improvement Exam";
+  if (!testId) return;
+
+  const first = window.confirm(`"${title}" স্থায়ীভাবে মুছে ফেলবে? Exam-এর Snapshot, সব Student Attempt এবং সংশ্লিষ্ট Improvement Request-ও মুছে যাবে।`);
+  if (!first) return;
+  const second = window.confirm("শেষবার নিশ্চিত করো: এই record আর ফেরত আনা যাবে না। সত্যিই মুছবে?");
+  if (!second) return;
+
+  button.disabled = true;
+  button.textContent = "মুছে ফেলা হচ্ছে…";
+
+  try {
+    await deleteImprovementTestPermanently(testId);
+    await load();
+  } catch (error) {
+    console.error("Improvement Exam permanent delete:", error);
+    alert(error?.message || "Improvement Exam স্থায়ীভাবে মুছে ফেলা যায়নি।");
+    button.disabled = false;
+    button.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v5M14 11v5"/></svg>
+      স্থায়ীভাবে মুছুন
+    `;
   }
 }
 
@@ -927,13 +1050,14 @@ async function load() {
   state.loading = true;
 
   try {
-    const [requests, summary, alerts] = await Promise.all([
+    const [requests, summary, alerts, tests] = await Promise.all([
       getImprovementRequestQueue({
         status: null,
-        limitCount: 100
+        maxResults: 100
       }),
       getImprovementQueueSummary(),
-      buildImprovementAlerts()
+      buildImprovementAlerts(),
+      getAllImprovementTests({ maxResults: 250 })
     ]);
 
     const selectedId = state.selectedRequest?.id || null;
@@ -941,6 +1065,7 @@ async function load() {
     state.requests = Array.isArray(requests) ? requests : [];
     state.summary = summary || {};
     state.alerts = Array.isArray(alerts) ? alerts : [];
+    state.tests = Array.isArray(tests) ? tests : [];
 
     // Always replace the selected request with the freshly-read Firestore
     // version. Without this, the UI kept the old object after Publish/Assign,
@@ -952,6 +1077,7 @@ async function load() {
 
     const root = ensureRoot();
     renderShell(root);
+    renderImprovementTests();
     renderRequests();
     renderDetail();
     renderAlerts();
