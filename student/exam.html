@@ -208,11 +208,19 @@ import {
   syncToFirestoreDebounced, submitAttempt, getExistingResult
 } from "../js/utils/attempt-utils.js";
 import { formatHms } from "../js/utils/grading-utils.js";
+import { getAssignedImprovementTest } from "../js/utils/improvement-test-utils.js";
+import { calculateImprovement } from "../js/utils/improvement-utils.js";
+import { computeImprovementPracticeXP } from "../js/utils/xp-utils.js";
+import { updateImprovementRequestAfterCompletion } from "../js/utils/improvement-test-completion.js";
+import { db } from "../js/firebase/firebase-config.js";
+import { collection, doc, getDoc, getDocs, query, where, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 initTheme();
 const shell = document.getElementById("shell");
 const params = new URLSearchParams(window.location.search);
 const examId = params.get("examId");
+const improvementTestId = params.get("improvementTestId");
+const isImprovementMode = !!improvementTestId;
 const student = getActiveStudent();
 
 let exam = null;
@@ -225,14 +233,17 @@ const firedMinuteCheckpoints = new Set();
 let motivationGiven = false; 
 let lastWarnedInterval = 0; 
 let examInProgress = false;
+let improvementTest = null;
+let improvementRequestId = null;
+let improvementDurationMinutes = 20;
 
 if (!student) {
   window.location.href = "../index.html";
-} else if (!examId) {
+} else if (!examId && !improvementTestId) {
   shell.innerHTML = `<div class="state-block"><p class="text-sm">পরীক্ষা শনাক্ত করা যায়নি।</p></div>`;
 } else {
   refreshActiveStudent(student.docId).then(fresh => {
-    if (fresh) Object.assign(student, fresh); 
+    if (fresh) Object.assign(student, fresh);
     boot();
   });
 }
@@ -240,6 +251,11 @@ if (!student) {
 async function boot() {
   shell.innerHTML = `<div class="state-block"><div class="spinner"></div><p class="text-sm text-muted mt-3">পরীক্ষা লোড করা হচ্ছে...</p></div>`;
   try {
+    if (isImprovementMode) {
+      await bootImprovementMode();
+      return;
+    }
+
     const existingResult = await getExistingResult(examId, student.studentId);
     if (existingResult) {
       window.location.href = `../student/result.html?resultId=${examId}_${student.studentId}`;
@@ -255,8 +271,6 @@ async function boot() {
       renderState(shell, "error", "পরীক্ষার প্রশ্ন এখনো প্রস্তুত হয়নি।"); return;
     }
 
-    // Do not allow a published exam to be opened before its scheduled date
-    // or after its 7-day availability window.
     if (!isExamAvailableNow(exam)) {
       renderState(shell, "error", "এই পরীক্ষা এখনো শুরু হয়নি অথবা এর সময়সীমা শেষ হয়ে গেছে।"); return;
     }
@@ -281,13 +295,128 @@ async function boot() {
   }
 }
 
+async function bootImprovementMode() {
+  improvementTest = await getAssignedImprovementTest(improvementTestId, student.studentId);
+  if (!improvementTest) {
+    renderState(shell, "error", "এই Improvement Exam এখন উপলব্ধ নয় অথবা তোমার জন্য বরাদ্দ করা হয়নি।");
+    return;
+  }
+
+  snapshot = improvementTest.snapshot || { questions: [] };
+  snapshot.questions = Array.isArray(snapshot.questions) ? snapshot.questions.filter(q => q && q.questionId) : [];
+  if (!snapshot.questions.length) {
+    renderState(shell, "error", "এই Improvement Exam-এ কোনো প্রশ্ন পাওয়া যায়নি।");
+    return;
+  }
+
+  improvementRequestId = improvementTest.requestId || (Array.isArray(improvementTest.requestIds) ? improvementTest.requestIds[0] : null) || null;
+  improvementDurationMinutes = Number(improvementTest.durationMinutes || Math.max(5, Math.ceil(snapshot.questions.length * 1.5)));
+
+  exam = {
+    id: improvementTestId,
+    name: improvementTest.title || "Improvement Exam",
+    description: improvementTest.description || "তোমার দুর্বল বিষয়/অধ্যায় উন্নত করার জন্য তৈরি করা Improvement Exam।",
+    durationMinutes: improvementDurationMinutes,
+    totalMarks: snapshot.questions.reduce((sum, q) => sum + (Number(q.marks) || 1), 0),
+    status: "published",
+    examDate: null,
+    informationalTime: "Improvement Exam"
+  };
+
+  const activeRef = doc(db, "improvementAttempts", `${improvementTestId}_${student.studentId}_active`);
+  const activeSnap = await getDoc(activeRef);
+  if (activeSnap.exists() && !["closed", "completed"].includes(activeSnap.data().status)) {
+    const a = activeSnap.data();
+    const started = Number(a.startedAtMillis || 0) || Date.now();
+    attemptState = normalizeImprovementAttempt(a, started);
+    if (attemptState.endAtMillis <= Date.now()) {
+      await doSubmit(true);
+      return;
+    }
+    renderExamShell();
+    startTimer();
+    return;
+  }
+
+  const localKey = `improvement:${improvementTestId}:${student.studentId}`;
+  try {
+    const local = JSON.parse(localStorage.getItem(localKey) || "null");
+    if (local && local.startedAtMillis && local.endAtMillis > Date.now()) {
+      attemptState = normalizeImprovementAttempt(local, local.startedAtMillis);
+      renderExamShell();
+      startTimer();
+      return;
+    }
+  } catch {}
+
+  renderIntro();
+}
+
+function normalizeImprovementAttempt(data, startedAtMillis) {
+  const started = Number(startedAtMillis || data.startedAtMillis || Date.now());
+  const end = Number(data.endAtMillis || (started + improvementDurationMinutes * 60000));
+  return {
+    id: data.id || `${improvementTestId}_${student.studentId}_active`,
+    answers: data.answers || {},
+    currentIndex: Number(data.currentIndex || data.index || 0),
+    questionTimes: data.questionTimes || {},
+    markedForReview: data.markedForReview || {},
+    startedAtMillis: started,
+    endAtMillis: end,
+    attemptNumber: Number(data.attemptNumber || 1)
+  };
+}
+
+async function startImprovementAttempt() {
+  const id = `${improvementTestId}_${student.studentId}_active`;
+  const ref = doc(db, "improvementAttempts", id);
+  const existing = await getDoc(ref);
+  let attemptNumber = 1;
+
+  if (existing.exists()) {
+    const data = existing.data();
+    if (!["closed", "completed"].includes(data.status)) {
+      attemptState = normalizeImprovementAttempt(data, data.startedAtMillis || Date.now());
+      return;
+    }
+  }
+
+  const q = query(collection(db, "improvementAttempts"), where("testId", "==", improvementTestId), where("studentId", "==", student.studentId));
+  const all = await getDocs(q);
+  all.forEach(s => {
+    if (s.id.endsWith("_active")) return;
+    attemptNumber = Math.max(attemptNumber, Number(s.data().attemptNumber || 0) + 1);
+  });
+
+  const started = Date.now();
+  const end = started + improvementDurationMinutes * 60000;
+  const payload = {
+    testId: improvementTestId,
+    studentId: student.studentId,
+    requestId: improvementRequestId,
+    attemptNumber,
+    total: snapshot.questions.length,
+    answers: {},
+    currentIndex: 0,
+    questionTimes: {},
+    markedForReview: {},
+    startedAtMillis: started,
+    endAtMillis: end,
+    status: "in_progress",
+    startedAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  };
+  await setDoc(ref, payload);
+  attemptState = normalizeImprovementAttempt(payload, started);
+}
+
 async function renderIntro() {
   const [subjects, chapters] = await Promise.all([getSubjects(), getChapters()]);
   const subjectMap = buildNameMap(subjects);
   const chapterMap = buildNameMap(chapters);
   const subjNames = (exam.subjectIds || []).map(id => subjectMap[id]).filter(Boolean).join(", ");
   const chapNames = (exam.chapterIds || []).map(id => chapterMap[id]).filter(Boolean).join(", ");
-  const dateStr = exam.examDate?.toDate ? exam.examDate.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" }) : "—";
+  const dateStr = isImprovementMode ? "উন্নতির জন্য নির্ধারিত" : (exam.examDate?.toDate ? exam.examDate.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "long", year: "numeric" }) : "—");
 
   shell.innerHTML = `
     <div class="topbar">
@@ -314,8 +443,9 @@ async function renderIntro() {
       </div>
       
       <div style="margin-top:16px; font-size:0.85rem; color:var(--text-secondary); font-weight:600; line-height:1.6;">
-        <p><strong>তারিখ:</strong> ${dateStr} • ${exam.informationalTime || "—"}</p>
+        <p><strong>${isImprovementMode ? "ধরন" : "তারিখ"}:</strong> ${dateStr} ${isImprovementMode ? "" : `• ${exam.informationalTime || "—"}`}</p>
         <p><strong>মোট নম্বর:</strong> ${exam.totalMarks ?? "—"}</p>
+        ${isImprovementMode ? `<p><strong>উদ্দেশ্য:</strong> তোমার দুর্বলতা উন্নত করার জন্য এই পরীক্ষা তৈরি করা হয়েছে।</p>` : ""}
         ${subjNames ? `<p><strong>বিষয়:</strong> ${subjNames}</p>` : ""}
       </div>
     </div>
@@ -339,7 +469,8 @@ async function renderIntro() {
   document.getElementById("startBtn").addEventListener("click", async () => {
     const btn = document.getElementById("startBtn");
     btn.disabled = true; btn.textContent = "শুরু করা হচ্ছে...";
-    attemptState = await getOrStartAttempt(examId, student.studentId, exam.durationMinutes);
+    if (isImprovementMode) await startImprovementAttempt();
+    else attemptState = await getOrStartAttempt(examId, student.studentId, exam.durationMinutes);
     attemptState.questionTimes = attemptState.questionTimes || {};
     attemptState.markedForReview = attemptState.markedForReview || {};
     renderExamShell();
@@ -488,12 +619,20 @@ function renderQuestion() {
     ${imageHtml}
     
     <div style="margin-top:24px;">
-      ${["A", "B", "C", "D"].map(letter => `
-        <button class="option-card ${selected === letter ? "selected" : ""}" data-letter="${letter}">
+      ${["A", "B", "C", "D"].map((letter, i) => {
+        let label = "";
+        if (isImprovementMode) {
+          const source = Array.isArray(q.options_bn) && q.options_bn.length ? q.options_bn : (Array.isArray(q.options_en) ? q.options_en : []);
+          const raw = source[i];
+          label = typeof raw === "object" ? (raw.text_bn || raw.text || raw.label || raw.value || "") : (raw ?? "");
+        } else {
+          label = q.options_bn?.[letter] ?? "";
+        }
+        return `<button class="option-card ${selected === letter ? "selected" : ""}" data-letter="${letter}">
           <span class="option-letter">${letter}</span>
-          <span style="flex:1; line-height:1.4;">${q.options_bn?.[letter] ?? ""}</span>
-        </button>
-      `).join("")}
+          <span style="flex:1; line-height:1.4;">${label}</span>
+        </button>`;
+      }).join("")}
     </div>
     
     <button type="button" class="review-toggle ${isMarked ? "active" : ""}" id="markReviewBtn" style="margin-top:16px; padding:10px 18px; border-radius:12px; font-weight:800; display:flex; align-items:center; gap:8px; background:rgba(128,128,128,0.05); border:1px solid rgba(128,128,128,0.2); cursor:pointer;">
@@ -583,6 +722,27 @@ function recordElapsed() {
 }
 
 function persistState() {
+  if (isImprovementMode) {
+    const payload = {
+      answers: attemptState.answers,
+      currentIndex: attemptState.currentIndex,
+      questionTimes: attemptState.questionTimes,
+      markedForReview: attemptState.markedForReview,
+      startedAtMillis: attemptState.startedAtMillis,
+      endAtMillis: attemptState.endAtMillis,
+      updatedAt: serverTimestamp()
+    };
+    localStorage.setItem(`improvement:${improvementTestId}:${student.studentId}`, JSON.stringify({
+      answers: attemptState.answers,
+      currentIndex: attemptState.currentIndex,
+      questionTimes: attemptState.questionTimes,
+      markedForReview: attemptState.markedForReview,
+      startedAtMillis: attemptState.startedAtMillis,
+      endAtMillis: attemptState.endAtMillis
+    }));
+    setDoc(doc(db, "improvementAttempts", `${improvementTestId}_${student.studentId}_active`), payload, { merge: true }).catch(err => console.warn("Improvement sync failed", err));
+    return;
+  }
   saveLocalAttempt(examId, student.studentId, attemptState);
   syncToFirestoreDebounced(examId, student.studentId, {
     answers: attemptState.answers, currentIndex: attemptState.currentIndex,
@@ -627,7 +787,7 @@ function tick() {
     display.classList.toggle("timer-warning", remaining <= 5 * 60 * 1000 && remaining > 60 * 1000);
   }
   
-  const totalMinutes = exam?.durationMinutes || 0;
+  const totalMinutes = isImprovementMode ? improvementDurationMinutes : (exam?.durationMinutes || 0);
   const remainingMinutes = remaining / 60000;
   const MIN_WORDS = { 20: "বিশ", 10: "দশ", 5: "পাঁচ", 1: "এক" };
   [20, 10, 5, 1].filter(m => m < totalMinutes).forEach(m => {
@@ -677,6 +837,11 @@ async function doSubmit(isAutoSubmit) {
   shell.innerHTML = `<div class="state-block"><div class="spinner"></div><p class="text-sm text-muted mt-3" style="font-weight:800;">${isAutoSubmit ? "সময় শেষ — পরীক্ষা জমা দেওয়া হচ্ছে..." : "জমা দেওয়া হচ্ছে..."}</p></div>`;
 
   try {
+    if (isImprovementMode) {
+      await submitImprovementAttempt(isAutoSubmit);
+      return;
+    }
+
     const result = await submitAttempt({
       examId, studentId: student.studentId, examName: exam.name,
       snapshotQuestions: snapshot.questions, answers: attemptState.answers,
@@ -691,6 +856,110 @@ async function doSubmit(isAutoSubmit) {
     renderExamShell(); startTimer();
   }
 }
+
+async function submitImprovementAttempt(isAutoSubmit = false) {
+  const unanswered = snapshot.questions.filter(q => !attemptState.answers[q.questionId]).length;
+  if (!isAutoSubmit && unanswered > 0) {
+    const proceed = confirm(`আরও ${unanswered}টি প্রশ্নের উত্তর দেওয়া হয়নি। তবুও জমা দিতে চাও?`);
+    if (!proceed) {
+      submitting = false;
+      startTimer();
+      renderExamShell();
+      return;
+    }
+  }
+
+  const answers = attemptState.answers || {};
+  let correct = 0, attempted = 0, totalMarks = 0, obtainedMarks = 0;
+  snapshot.questions.forEach(q => {
+    const marks = Number(q.marks) || 1;
+    totalMarks += marks;
+    const answer = answers[q.questionId];
+    if (answer) {
+      attempted++;
+      if (answer === q.correctAnswer) {
+        correct++;
+        obtainedMarks += marks;
+      }
+    }
+  });
+
+  const percentage = totalMarks ? Math.round(obtainedMarks / totalMarks * 1000) / 10 : 0;
+  const accuracy = attempted ? Math.round(correct / attempted * 1000) / 10 : 0;
+  const previousAccuracy = Number(improvementTest.baselineAccuracy ?? improvementTest.currentAccuracy ?? 0);
+  const targetAccuracy = Number(improvementTest.targetAccuracy ?? 0);
+  const improvement = calculateImprovement({ previousAccuracy, practiceAccuracy: accuracy, targetAccuracy });
+  const xp = computeImprovementPracticeXP({
+    totalQuestions: snapshot.questions.length,
+    attempted,
+    correctCount: correct,
+    percentage,
+    targetReached: improvement.targetReached,
+    improvementPoints: improvement.improvementPoints,
+    attemptNumber: Number(attemptState.attemptNumber || 1)
+  });
+
+  const resultId = `${improvementTestId}_${student.studentId}_${Date.now()}`;
+  await setDoc(doc(db, "improvementAttempts", resultId), {
+    testId: improvementTestId,
+    studentId: student.studentId,
+    requestId: improvementRequestId,
+    answers,
+    startedAtMillis: attemptState.startedAtMillis,
+    submittedAtMillis: Date.now(),
+    totalQuestions: snapshot.questions.length,
+    attempted,
+    correctCount: correct,
+    wrongCount: attempted - correct,
+    unansweredCount: snapshot.questions.length - attempted,
+    obtainedMarks,
+    totalMarks,
+    percentage,
+    accuracy,
+    previousAccuracy: improvement.previousAccuracy,
+    targetAccuracy: improvement.targetAccuracy,
+    improvementPoints: improvement.improvementPoints,
+    targetReached: improvement.targetReached,
+    meaningfulImprovement: improvement.meaningfulImprovement,
+    xp: xp.xp,
+    xpEarned: xp.xp,
+    attemptNumber: Number(attemptState.attemptNumber || 1),
+    status: "completed",
+    createdAt: serverTimestamp()
+  });
+
+  try { await deleteDoc(doc(db, "improvementAttempts", `${improvementTestId}_${student.studentId}_active`)); } catch {}
+  try { localStorage.removeItem(`improvement:${improvementTestId}:${student.studentId}`); } catch {}
+  if (improvementRequestId) {
+    await updateImprovementRequestAfterCompletion(improvementRequestId, {
+      accuracy,
+      improvementPercent: improvement.improvementPoints,
+      targetReached: improvement.targetReached
+    });
+  }
+
+  examInProgress = false;
+  window.removeEventListener("beforeunload", leaveGuard);
+  submitting = false;
+  shell.innerHTML = `
+    <div class="state-block" style="max-width:720px;margin:auto;padding:24px;">
+      <div class="glass card" style="padding:28px;text-align:center;">
+        <p style="font-weight:900;color:var(--color-accent);font-size:.8rem;letter-spacing:.08em;">IMPROVEMENT RESULT</p>
+        <h2 style="margin:8px 0 6px;">${improvementTest.title || "Improvement Exam"}</h2>
+        <div style="font-size:3rem;font-weight:950;margin:18px 0 4px;">${accuracy}%</div>
+        <p class="text-muted">এই পরীক্ষায় তোমার accuracy</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0;">
+          <div class="glass" style="padding:14px;border-radius:14px;"><small>সঠিক</small><strong style="display:block;font-size:1.3rem;">${correct}</strong></div>
+          <div class="glass" style="padding:14px;border-radius:14px;"><small>উন্নতি</small><strong style="display:block;font-size:1.3rem;">${improvement.improvementPoints >= 0 ? "+" : ""}${improvement.improvementPoints}</strong></div>
+          <div class="glass" style="padding:14px;border-radius:14px;"><small>XP</small><strong style="display:block;font-size:1.3rem;">+${xp.xp}</strong></div>
+        </div>
+        <p class="text-muted">${improvement.targetReached ? "তোমার নির্ধারিত লক্ষ্য পূরণ হয়েছে।" : `লক্ষ্য: ${improvement.targetAccuracy}%`}</p>
+        <button class="btn btn-primary" id="backImprovementBtn" style="margin-top:12px;">উন্নতি পাতায় ফিরে যাও</button>
+      </div>
+    </div>`;
+  document.getElementById("backImprovementBtn")?.addEventListener("click", () => location.href = "./improvement.html");
+}
+
 </script>
 </body>
 </html>
