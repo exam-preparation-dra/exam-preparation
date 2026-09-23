@@ -20,7 +20,10 @@
 
 const NAV_MODULE = "improvement-control";
 const VIEW_ID = "view-improvement-control";
-const ROOT_ID = "improvement-control-center";
+// Must match the root element id that improvement-admin-control-center.js
+// actually creates (ROOT_ID in that file), or moveControlCenterIntoModule()
+// can never find it and the panel renders outside its own admin tab.
+const ROOT_ID = "improvementAdminControlCenter";
 
 function addImprovementStyles() {
   if (document.getElementById("improvement-admin-integration-styles")) return;

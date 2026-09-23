@@ -6,7 +6,8 @@ import {
   loadStudentImprovementJourney,
   renderImprovementJourney,
   renderImprovementHistory,
-  injectImprovementJourneyStyles
+  injectImprovementJourneyStyles,
+  getImprovementExplanation
 } from "./improvement-profile-utils.js";
 
 function ensureContainers() {
@@ -34,14 +35,14 @@ async function refresh() {
   const journeyEl = document.querySelector("#studentImprovementJourney");
   if (journeyEl) {
     renderImprovementJourney(journeyEl, journey, {
-      onPractice: (request) => {
-        const testId = request?.improvementTestId || request?.assignedTestId;
-        if (testId) location.href = `./improvement-test.html?testId=${encodeURIComponent(testId)}`;
+      // renderImprovementJourney calls onPractice(testIdString, activeRequestObject) —
+      // the first argument is already the test id, not a request object.
+      onPractice: (testId, request) => {
+        const resolvedTestId = testId || request?.improvementTestId || request?.assignedTestId;
+        if (resolvedTestId) location.href = `./improvement-test.html?testId=${encodeURIComponent(resolvedTestId)}`;
       },
-      onDetails: (request) => {
-        window.dispatchEvent(new CustomEvent("improvement:details", {
-          detail: { request }
-        }));
+      onDetails: (_id, request) => {
+        window.alert(getImprovementExplanation(request));
       }
     });
   }

@@ -1415,6 +1415,20 @@ export const icons = {
     </svg>
   `,
 
+  improvement: `
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.7"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M3 17l6-6 4 4 8-8"/>
+      <path d="M15 7h6v6"/>
+    </svg>
+  `,
+
   arrowLeft: `
     <svg
       viewBox="0 0 24 24"
@@ -1500,6 +1514,13 @@ export function renderStudentHeader(
       href: "../student/leaderboard.html",
       icon: icons.chart,
       label: "লিডারবোর্ড"
+    },
+
+    {
+      key: "improvement",
+      href: "../student/improvement.html",
+      icon: icons.improvement,
+      label: "উন্নতি"
     },
 
     {
