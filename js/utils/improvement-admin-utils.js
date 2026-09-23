@@ -494,3 +494,62 @@ export async function autoPublishOverdueImprovementRequests() {
   }
   return results;
 }
+
+// ---- Remove an Improvement Exam -------------------------------------------
+// Deletes the test + its question snapshot and any half-finished (in-progress)
+// student attempt on it. COMPLETED attempts are kept on purpose so XP a
+// student already earned is never taken away.
+//
+// The linked request is NOT sent back to "detected": the 24-hour overdue
+// sweep would immediately rebuild the exam the moment an admin page opens.
+// Instead an open request becomes "dismissed" (the 7-day cooldown in
+// createImprovementRequestsForStudent then also blocks a duplicate), while a
+// request that was already completed/resolved keeps its status.
+export async function deleteImprovementTest(testId) {
+  requireAdmin();
+  const tid = id(testId);
+  if (!tid) throw new Error("Test ID প্রয়োজন।");
+
+  const testRef = doc(db, "improvementTests", tid);
+  const testSnap = await getDoc(testRef);
+
+  const requestIds = new Set();
+  if (testSnap.exists()) {
+    const t = testSnap.data();
+    (Array.isArray(t.requestIds) ? t.requestIds : []).forEach(r => r && requestIds.add(r));
+    if (t.requestId) requestIds.add(t.requestId);
+  }
+  const linked = await getDocs(query(collection(db, "improvementRequests"), where("improvementTestId", "==", tid)));
+  linked.docs.forEach(d => requestIds.add(d.id));
+
+  const attempts = await getDocs(query(collection(db, "improvementAttempts"), where("testId", "==", tid)));
+
+  const batch = writeBatch(db);
+  batch.delete(testRef);
+  batch.delete(doc(db, "improvementTestSnapshots", tid));
+
+  for (const d of attempts.docs) {
+    if (["in_progress", "in-progress"].includes(d.data().status)) batch.delete(d.ref);
+  }
+
+  for (const rid of requestIds) {
+    const rRef = doc(db, "improvementRequests", rid);
+    const rSnap = await getDoc(rRef);
+    if (!rSnap.exists()) continue;
+    const finished = [IMPROVEMENT_STATUS.COMPLETED, IMPROVEMENT_STATUS.RESOLVED].includes(rSnap.data().status);
+    const patch = {
+      improvementTestId: null,
+      assignedTestId: null,
+      assignedAt: null,
+      updatedAt: serverTimestamp()
+    };
+    if (!finished) {
+      patch.status = IMPROVEMENT_STATUS.DISMISSED;
+      patch.adminNote = "অ্যাডমিন Improvement Exam মুছে ফেলেছেন।";
+    }
+    batch.update(rRef, patch);
+  }
+
+  await batch.commit();
+  return { id: tid, requestIds: [...requestIds] };
+}

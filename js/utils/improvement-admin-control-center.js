@@ -1,1030 +1,474 @@
 /* =========================================================
-   ADMIN — IMPROVEMENT CONTROL CENTER
+   ADMIN — IMPROVEMENT CONTROL CENTER (clean card layout)
    ---------------------------------------------------------
-   UI/integration layer for the Improvement Engine.
+   One card per Improvement Request. Every action lives on the
+   card itself (no side panel to open):
+     - Exam না থাকলে  -> "Exam তৈরি ও Publish" + "বাতিল"
+     - Exam থাকলে      -> "Exam মুছুন"
 
-   Connects:
-   - improvement-admin-utils.js
-   - improvement-utils.js
-   - existing Admin page
-   - Firestore improvementRequests / improvementTests
-
-   This file does not replace the existing Admin page.
-   It creates a self-contained Control Center section that can
-   be mounted into any Admin page.
-
-   Bengali UI only.
-   No fake student data.
-   No emoji.
+   Embeddable: admin.html loads this through
+   admin-improvement-integration.js, admin/improvement.html mounts
+   it directly. Root id + exported init are unchanged.
+   Bengali UI only. No fake data. No emoji.
    ========================================================= */
 
 import {
   getImprovementRequestQueue,
-  getImprovementQueueSummary,
-  reviewImprovementRequest,
-  dismissImprovementRequest,
-  buildImprovementAlerts,
   autoBuildAndPublishImprovementTest,
   autoPublishOverdueImprovementRequests,
   generateAndPublishImprovementForAllStudents,
-  createImprovementRequestsForStudent
+  createImprovementRequestsForStudent,
+  dismissImprovementRequest,
+  deleteImprovementTest
 } from "./improvement-admin-utils.js";
 
 import { getActiveStudents } from "./student-utils.js";
-
-import {
-  getPriorityLabel,
-  getStatusLabel,
-  IMPROVEMENT_STATUS
-} from "./improvement-utils.js";
+import { getPriorityLabel, getStatusLabel } from "./improvement-utils.js";
+import { showToast } from "./ui-utils.js";
 
 const ROOT_ID = "improvementAdminControlCenter";
 const STYLE_ID = "improvement-admin-control-center-style";
 
-let state = {
+const FILTERS = [
+  { key: "all",     label: "সব" },
+  { key: "pending", label: "অপেক্ষমাণ" },
+  { key: "exam",    label: "Exam আছে" },
+  { key: "done",    label: "সম্পন্ন" },
+  { key: "closed",  label: "বাতিল" }
+];
+
+const state = {
   requests: [],
-  summary: null,
-  alerts: [],
-  selectedRequest: null,
-  loading: false
+  students: {},
+  filter: "all",
+  bulkHtml: "",
+  busyId: null,
+  loading: false,
+  reloadQueued: false
 };
 
+/* ---------- helpers ---------- */
 function esc(value) {
   return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+    .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+}
+const num = (v, d = 0) => (Number.isFinite(Number(v)) ? Number(v) : d);
+const pct = v => Math.max(0, Math.min(100, Math.round(num(v))));
+
+function kindOf(r) {
+  if (r.status === "dismissed") return "closed";
+  if (r.status === "completed" || r.status === "resolved") return "done";
+  if (r.improvementTestId) return "exam";
+  return "pending";
 }
 
-function num(value, fallback = 0) {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : fallback;
+function studentName(r) {
+  return state.students[r.studentId]?.name || r.studentName || r.studentId || "অজানা শিক্ষার্থী";
 }
 
+function areaName(r) {
+  return r.topicName || r.chapterName || r.subjectName || r.entityName || r.entityId || "সাধারণ";
+}
+
+function areaPath(r) {
+  const parts = [r.subjectName, r.chapterName, r.topicName].filter(Boolean);
+  return parts.length > 1 ? parts.join(" › ") : "";
+}
+
+function priorityClass(p) {
+  return ({ critical: "p-critical", high: "p-high", medium: "p-medium" })[p] || "p-low";
+}
+
+/* ---------- styles (app tokens: glass card, gold accent) ---------- */
 function injectStyles() {
   if (document.getElementById(STYLE_ID)) return;
-
   const style = document.createElement("style");
   style.id = STYLE_ID;
-
   style.textContent = `
-    #${ROOT_ID} {
-      --iac-border: var(--surface-border, rgba(127,127,127,.18));
-      --iac-card: var(--surface, rgba(255,255,255,.04));
-      --iac-muted: var(--text-muted, #7c8494);
-      --iac-text: var(--text-primary, #171a21);
-      width: 100%;
+    #${ROOT_ID} { --iac-rgb: 201,151,63; width:100%; display:grid; gap:16px; }
+
+    #${ROOT_ID} .iac-card {
+      background: rgba(128,128,128,.03);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(128,128,128,.12); border-radius: 20px; padding: 18px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.02);
     }
 
-    .iac-wrap {
-      display: grid;
-      gap: 16px;
+    /* stats */
+    #${ROOT_ID} .iac-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; }
+    #${ROOT_ID} .iac-stat { padding:14px 10px; border-radius:16px; text-align:center;
+      background: rgba(128,128,128,.03); border:1px solid rgba(128,128,128,.12); }
+    #${ROOT_ID} .iac-stat b { display:block; font-family:var(--font-num); font-size:1.5rem; font-weight:900; color:var(--text-primary); line-height:1.15; }
+    #${ROOT_ID} .iac-stat span { display:block; margin-top:3px; font-size:.68rem; font-weight:800; color:var(--text-muted); }
+    #${ROOT_ID} .iac-stat.accent { background: rgba(var(--iac-rgb),.08); border-color: rgba(var(--iac-rgb),.28); }
+    #${ROOT_ID} .iac-stat.accent b { color: var(--color-accent); }
+
+    /* bulk automation */
+    #${ROOT_ID} .iac-bulk { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:14px;
+      border-color: rgba(var(--iac-rgb),.25); background: rgba(var(--iac-rgb),.06); }
+    #${ROOT_ID} .iac-bulk h3 { margin:0; font-size:.98rem; font-weight:900; color:var(--text-primary); }
+    #${ROOT_ID} .iac-bulk p { margin:4px 0 0; font-size:.74rem; font-weight:600; line-height:1.55; color:var(--text-muted); }
+    #${ROOT_ID} .iac-bulk-result { flex:1 1 100%; }
+
+    /* buttons */
+    #${ROOT_ID} .iac-btn {
+      display:inline-flex; align-items:center; justify-content:center; gap:7px;
+      padding:10px 16px; border-radius:12px; cursor:pointer; white-space:nowrap;
+      font:inherit; font-size:.82rem; font-weight:800; color:var(--text-primary);
+      background: rgba(128,128,128,.05); border:1px solid rgba(128,128,128,.15);
+      transition: transform .18s ease, background .18s ease, box-shadow .18s ease;
     }
+    #${ROOT_ID} .iac-btn:hover { background: rgba(128,128,128,.1); transform: translateY(-1px); }
+    #${ROOT_ID} .iac-btn:active { transform: scale(.97); }
+    #${ROOT_ID} .iac-btn:disabled { opacity:.55; cursor:wait; transform:none; }
+    #${ROOT_ID} .iac-btn.primary { color:#fff; border:none; background: linear-gradient(135deg, var(--color-accent), #f59e0b);
+      box-shadow: 0 4px 15px rgba(var(--iac-rgb),.3); }
+    #${ROOT_ID} .iac-btn.primary:hover { box-shadow: 0 6px 20px rgba(var(--iac-rgb),.4); }
+    #${ROOT_ID} .iac-btn.danger { color:#ef4444; background: rgba(239,68,68,.08); border-color: rgba(239,68,68,.22); }
+    #${ROOT_ID} .iac-btn.danger:hover { background:#ef4444; color:#fff; }
 
-    .iac-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
+    /* list header + filters */
+    #${ROOT_ID} .iac-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    #${ROOT_ID} .iac-head h2 { margin:0; font-size:1rem; font-weight:900; color:var(--text-primary); }
+    #${ROOT_ID} .iac-chips { display:flex; gap:8px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
+    #${ROOT_ID} .iac-chips::-webkit-scrollbar { display:none; }
+    #${ROOT_ID} .iac-chip { flex:0 0 auto; padding:8px 14px; border-radius:99px; cursor:pointer; font:inherit;
+      font-size:.78rem; font-weight:800; color:var(--text-muted);
+      background: rgba(128,128,128,.04); border:1px solid rgba(128,128,128,.14); }
+    #${ROOT_ID} .iac-chip.active { color:var(--color-accent); background: rgba(var(--iac-rgb),.1); border-color: rgba(var(--iac-rgb),.35); }
+    #${ROOT_ID} .iac-chip small { font-family:var(--font-num); font-weight:800; opacity:.8; margin-left:4px; }
 
-    .iac-eyebrow {
-      margin: 0 0 5px;
-      font-size: 10px;
-      letter-spacing: .14em;
-      font-weight: 850;
-      color: var(--iac-muted);
-      text-transform: uppercase;
-    }
+    /* request card */
+    #${ROOT_ID} .iac-list { display:grid; gap:12px; }
+    #${ROOT_ID} .iac-req { display:grid; gap:12px; }
+    #${ROOT_ID} .iac-req.is-closed { opacity:.6; }
+    #${ROOT_ID} .iac-req-top { display:flex; align-items:center; gap:12px; }
+    #${ROOT_ID} .iac-avatar { flex:0 0 auto; width:40px; height:40px; border-radius:12px; display:grid; place-items:center;
+      font-weight:900; font-size:.95rem; color:var(--color-accent); background: rgba(var(--iac-rgb),.12); border:1px solid rgba(var(--iac-rgb),.28); }
+    #${ROOT_ID} .iac-who { min-width:0; flex:1; }
+    #${ROOT_ID} .iac-who b { display:block; font-size:.95rem; font-weight:900; color:var(--text-primary);
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    #${ROOT_ID} .iac-who span { display:block; margin-top:2px; font-size:.74rem; font-weight:700; color:var(--text-muted);
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    #${ROOT_ID} .iac-area { font-size:.95rem; font-weight:900; color:var(--text-primary); line-height:1.4; }
+    #${ROOT_ID} .iac-path { margin-top:2px; font-size:.72rem; font-weight:700; color:var(--text-muted); }
 
-    .iac-title {
-      margin: 0;
-      font-size: clamp(20px, 3vw, 28px);
-      font-weight: 900;
-      color: var(--iac-text);
-    }
+    #${ROOT_ID} .iac-badge { display:inline-block; padding:4px 11px; border-radius:99px; font-size:.68rem; font-weight:900; white-space:nowrap;
+      border:1px solid transparent; }
+    #${ROOT_ID} .p-critical { color:#ef4444; background:rgba(239,68,68,.1); border-color:rgba(239,68,68,.25); }
+    #${ROOT_ID} .p-high     { color:#f59e0b; background:rgba(245,158,11,.1); border-color:rgba(245,158,11,.25); }
+    #${ROOT_ID} .p-medium   { color:var(--color-accent); background:rgba(var(--iac-rgb),.1); border-color:rgba(var(--iac-rgb),.28); }
+    #${ROOT_ID} .p-low      { color:var(--text-secondary); background:rgba(128,128,128,.1); border-color:rgba(128,128,128,.2); }
+    #${ROOT_ID} .k-pending  { color:#3b82f6; background:rgba(59,130,246,.1); border-color:rgba(59,130,246,.2); }
+    #${ROOT_ID} .k-exam     { color:#10b981; background:rgba(16,185,129,.1); border-color:rgba(16,185,129,.22); }
+    #${ROOT_ID} .k-done     { color:#8b5cf6; background:rgba(139,92,246,.1); border-color:rgba(139,92,246,.22); }
+    #${ROOT_ID} .k-closed   { color:var(--text-secondary); background:rgba(128,128,128,.1); border-color:rgba(128,128,128,.2); }
 
-    .iac-subtitle {
-      margin: 7px 0 0;
-      color: var(--iac-muted);
-      font-size: 13px;
-      line-height: 1.6;
-      max-width: 680px;
-    }
+    /* accuracy bar */
+    #${ROOT_ID} .iac-acc { display:grid; gap:6px; }
+    #${ROOT_ID} .iac-acc-row { display:flex; justify-content:space-between; font-size:.74rem; font-weight:800; color:var(--text-muted); }
+    #${ROOT_ID} .iac-acc-row b { font-family:var(--font-num); color:var(--text-primary); }
+    #${ROOT_ID} .iac-bar { position:relative; height:8px; border-radius:99px; background:rgba(128,128,128,.14); overflow:visible; }
+    #${ROOT_ID} .iac-bar i { position:absolute; left:0; top:0; bottom:0; border-radius:99px;
+      background: linear-gradient(90deg, var(--color-accent), #f59e0b); }
+    #${ROOT_ID} .iac-bar em { position:absolute; top:-3px; bottom:-3px; width:2px; border-radius:2px; background:var(--text-primary); opacity:.55; }
 
-    .iac-btn {
-      border: 1px solid var(--iac-border);
-      background: var(--iac-card);
-      color: var(--iac-text);
-      border-radius: 12px;
-      padding: 10px 14px;
-      font: inherit;
-      font-size: 12px;
-      font-weight: 800;
-      cursor: pointer;
-      transition: transform .15s ease, border-color .15s ease;
-    }
+    #${ROOT_ID} .iac-foot { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+      padding-top:12px; border-top:1px dashed rgba(128,128,128,.2); }
+    #${ROOT_ID} .iac-facts { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+    #${ROOT_ID} .iac-actions { display:flex; gap:8px; flex-wrap:wrap; }
+    #${ROOT_ID} .iac-note { font-size:.74rem; font-weight:700; color:var(--text-muted); }
 
-    .iac-btn:hover {
-      transform: translateY(-1px);
-      border-color: currentColor;
-    }
+    #${ROOT_ID} .iac-msg { padding:12px 14px; border-radius:14px; font-size:.78rem; font-weight:700; line-height:1.6;
+      color:var(--text-primary); background: rgba(16,185,129,.08); border:1px solid rgba(16,185,129,.3); }
+    #${ROOT_ID} .iac-msg.err { background: rgba(239,68,68,.07); border-color: rgba(239,68,68,.25); }
+    #${ROOT_ID} .iac-msg span { display:block; color:var(--text-muted); font-weight:600; }
+    #${ROOT_ID} .iac-empty { padding:32px 12px; text-align:center; font-size:.85rem; font-weight:700; color:var(--text-muted); line-height:1.7; }
 
-    .iac-btn-primary {
-      background: var(--text-primary, #171a21);
-      color: var(--surface, #fff);
-      border-color: transparent;
-    }
-
-    .iac-bulk {
-      position: relative;
-      overflow: hidden;
-      border: 1px solid rgba(109,93,252,.20);
-      border-radius: 20px;
-      padding: 18px;
-      background: linear-gradient(135deg, rgba(109,93,252,.10), rgba(109,93,252,.035));
-      box-shadow: 0 12px 34px rgba(15,23,42,.055);
-    }
-
-    .iac-bulk::after {
-      content: "";
-      position: absolute;
-      width: 180px;
-      height: 180px;
-      right: -75px;
-      top: -90px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(109,93,252,.18), transparent 70%);
-      pointer-events: none;
-    }
-
-    .iac-bulk-inner {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-    }
-
-    .iac-bulk-copy { min-width: 0; }
-    .iac-bulk-title {
-      margin: 0;
-      font-size: 16px;
-      font-weight: 950;
-      color: var(--iac-text);
-    }
-    .iac-bulk-note {
-      margin: 5px 0 0;
-      color: var(--iac-muted);
-      font-size: 11px;
-      line-height: 1.6;
-      max-width: 650px;
-    }
-
-    .iac-bulk-btn {
-      flex: 0 0 auto;
-      min-height: 48px;
-      padding: 12px 17px;
-      border: 0;
-      border-radius: 14px;
-      background: linear-gradient(135deg, var(--imp-accent, #6d5dfc), var(--imp-accent-2, #8b7cff));
-      color: #fff;
-      font: inherit;
-      font-size: 12px;
-      font-weight: 950;
-      cursor: pointer;
-      box-shadow: 0 12px 28px rgba(109,93,252,.22);
-      transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
-    }
-    .iac-bulk-btn:hover { transform: translateY(-2px); box-shadow: 0 16px 34px rgba(109,93,252,.28); }
-    .iac-bulk-btn:active { transform: translateY(0) scale(.98); }
-    .iac-bulk-btn:disabled { opacity: .62; cursor: wait; transform: none; }
-
-    .iac-bulk-result {
-      margin-top: 12px;
-      display: none;
-    }
-    .iac-bulk-result.show { display: block; }
-
-    .iac-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    .iac-stat,
-    .iac-card {
-      border: 1px solid var(--iac-border);
-      background: var(--iac-card);
-      border-radius: 18px;
-      padding: 16px;
-    }
-
-    .iac-stat-label {
-      color: var(--iac-muted);
-      font-size: 11px;
-      font-weight: 800;
-    }
-
-    .iac-stat-value {
-      margin-top: 7px;
-      font-size: 25px;
-      font-weight: 900;
-      color: var(--iac-text);
-    }
-
-    .iac-layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1.5fr) minmax(300px, .8fr);
-      gap: 16px;
-      align-items: start;
-    }
-
-    .iac-section-title {
-      margin: 0;
-      font-size: 15px;
-      font-weight: 900;
-      color: var(--iac-text);
-    }
-
-    .iac-section-note {
-      margin: 4px 0 14px;
-      color: var(--iac-muted);
-      font-size: 11px;
-      line-height: 1.5;
-    }
-
-    .iac-list {
-      display: grid;
-      gap: 9px;
-    }
-
-    .iac-request {
-      width: 100%;
-      text-align: left;
-      border: 1px solid var(--iac-border);
-      background: transparent;
-      color: inherit;
-      border-radius: 15px;
-      padding: 13px;
-      cursor: pointer;
-    }
-
-    .iac-request.active {
-      border-color: currentColor;
-    }
-
-    .iac-request-top {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      align-items: flex-start;
-    }
-
-    .iac-request-name {
-      font-weight: 900;
-      font-size: 13px;
-      color: var(--iac-text);
-    }
-
-    .iac-request-meta {
-      margin-top: 4px;
-      font-size: 11px;
-      color: var(--iac-muted);
-    }
-
-    .iac-badges {
-      display: flex;
-      gap: 5px;
-      flex-wrap: wrap;
-      margin-top: 9px;
-    }
-
-    .iac-badge {
-      display: inline-flex;
-      align-items: center;
-      border: 1px solid var(--iac-border);
-      border-radius: 999px;
-      padding: 4px 8px;
-      font-size: 10px;
-      font-weight: 800;
-      color: var(--iac-muted);
-    }
-
-    .iac-detail {
-      position: sticky;
-      top: 16px;
-    }
-
-    .iac-detail-empty {
-      color: var(--iac-muted);
-      font-size: 12px;
-      line-height: 1.7;
-    }
-
-    .iac-detail-name {
-      font-size: 20px;
-      font-weight: 900;
-      color: var(--iac-text);
-      margin: 0;
-    }
-
-    .iac-metrics {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 9px;
-      margin: 14px 0;
-    }
-
-    .iac-metric {
-      border: 1px solid var(--iac-border);
-      border-radius: 13px;
-      padding: 11px;
-    }
-
-    .iac-metric-label {
-      font-size: 10px;
-      color: var(--iac-muted);
-      font-weight: 750;
-    }
-
-    .iac-metric-value {
-      margin-top: 3px;
-      font-size: 17px;
-      font-weight: 900;
-      color: var(--iac-text);
-    }
-
-    .iac-actions {
-      display: grid;
-      gap: 8px;
-      margin-top: 14px;
-    }
-
-    .iac-alert {
-      border-left: 3px solid currentColor;
-      border-radius: 10px;
-      padding: 10px 12px;
-      border-top: 1px solid var(--iac-border);
-      border-right: 1px solid var(--iac-border);
-      border-bottom: 1px solid var(--iac-border);
-      font-size: 11px;
-      color: var(--iac-text);
-      line-height: 1.55;
-    }
-
-    .iac-empty {
-      padding: 22px 10px;
-      text-align: center;
-      color: var(--iac-muted);
-      font-size: 12px;
-      line-height: 1.7;
-    }
-
-    .iac-error {
-      border: 1px solid var(--iac-border);
-      border-radius: 16px;
-      padding: 15px;
-      color: var(--iac-muted);
-      font-size: 12px;
-    }
-
-    .iac-success-state {
-      display: grid;
-      gap: 4px;
-      padding: 12px 13px;
-      border: 1px solid rgba(16,185,129,.35);
-      border-radius: 13px;
-      background: rgba(16,185,129,.08);
-      color: var(--iac-text);
-      font-size: 11px;
-      line-height: 1.5;
-    }
-
-    .iac-success-state strong {
-      font-size: 12px;
-      font-weight: 900;
-    }
-
-    .iac-success-state span {
-      color: var(--iac-muted);
-      overflow-wrap: anywhere;
-    }
-
-    .iac-loading {
-      opacity: .65;
-      pointer-events: none;
-      cursor: wait;
-    }
-
-    .iac-divider {
-      height: 1px;
-      background: var(--iac-border);
-      margin: 14px 0;
-    }
-
-    .iac-question-list {
-      display: grid;
-      gap: 7px;
-      margin-top: 9px;
-    }
-
-    .iac-question {
-      border: 1px solid var(--iac-border);
-      border-radius: 10px;
-      padding: 9px;
-      font-size: 11px;
-      color: var(--iac-muted);
-    }
-
-    @media (max-width: 700px) {
-      .iac-bulk-inner { align-items: stretch; flex-direction: column; }
-      .iac-bulk-btn { width: 100%; }
-    }
-
-    @media (max-width: 900px) {
-      .iac-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      .iac-layout {
-        grid-template-columns: 1fr;
-      }
-
-      .iac-detail {
-        position: static;
-      }
-    }
-
-    @media (max-width: 560px) {
-      .iac-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .iac-stat,
-      .iac-card {
-        padding: 13px;
-        border-radius: 15px;
-      }
-
-      .iac-header {
-        display: grid;
-      }
+    @media (max-width:600px) {
+      #${ROOT_ID} .iac-stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      #${ROOT_ID} .iac-bulk { flex-direction:column; flex-wrap:nowrap; align-items:stretch; }
+      #${ROOT_ID} .iac-card { padding:15px; border-radius:18px; }
+      #${ROOT_ID} .iac-actions { width:100%; }
+      #${ROOT_ID} .iac-actions .iac-btn { flex:1; }
     }
   `;
-
   document.head.appendChild(style);
 }
 
 function ensureRoot() {
   let root = document.getElementById(ROOT_ID);
   if (root) return root;
-
   root = document.createElement("section");
   root.id = ROOT_ID;
-  root.className = "mt-4";
-
-  const adminMain =
-    document.querySelector("main") ||
-    document.querySelector(".app-shell") ||
-    document.body;
-
-  adminMain.appendChild(root);
+  (document.querySelector("main") || document.querySelector(".app-shell") || document.body).appendChild(root);
   return root;
 }
 
-function priorityText(priority) {
-  return getPriorityLabel(priority) || "পর্যবেক্ষণ";
+/* ---------- render ---------- */
+function counts() {
+  const c = { all: state.requests.length, pending: 0, exam: 0, done: 0, closed: 0, urgent: 0 };
+  for (const r of state.requests) {
+    const k = kindOf(r);
+    c[k]++;
+    if (k === "pending" && ["critical", "high"].includes(r.priority)) c.urgent++;
+  }
+  return c;
 }
 
-function statusText(status) {
-  return getStatusLabel(status) || "অজানা";
+function requestCard(r) {
+  const kind = kindOf(r);
+  const busy = state.busyId === r.id;
+  const name = studentName(r);
+  const cur = pct(r.currentAccuracy);
+  const target = pct(r.targetAccuracy);
+
+  let actions = "";
+  if (kind === "pending") {
+    actions = `
+      <button class="iac-btn primary" data-action="build" data-id="${esc(r.id)}" ${busy ? "disabled" : ""}>
+        ${busy ? "তৈরি হচ্ছে…" : "Exam তৈরি ও Publish"}
+      </button>
+      <button class="iac-btn danger" data-action="dismiss" data-id="${esc(r.id)}" ${busy ? "disabled" : ""}>বাতিল</button>`;
+  } else if (r.improvementTestId) {
+    actions = `
+      <button class="iac-btn danger" data-action="delete-exam" data-id="${esc(r.id)}" data-test="${esc(r.improvementTestId)}" ${busy ? "disabled" : ""}>
+        ${busy ? "মুছে ফেলা হচ্ছে…" : "Exam মুছুন"}
+      </button>`;
+  }
+
+  const note = kind === "exam"
+    ? `<span class="iac-note">${r.status === "assigned" ? "শিক্ষার্থীকে বরাদ্দ করা হয়েছে" : "Publish করা হয়েছে"}</span>`
+    : kind === "done" ? `<span class="iac-note">শিক্ষার্থী অনুশীলন সম্পন্ন করেছে</span>` : "";
+
+  return `
+    <article class="iac-card iac-req ${kind === "closed" ? "is-closed" : ""}">
+      <div class="iac-req-top">
+        <div class="iac-avatar">${esc(name.trim().charAt(0).toUpperCase() || "?")}</div>
+        <div class="iac-who">
+          <b>${esc(name)}</b>
+          <span>${esc(state.students[r.studentId]?.className || r.studentId || "")}</span>
+        </div>
+        <span class="iac-badge ${priorityClass(r.priority)}">${esc(getPriorityLabel(r.priority) || "পর্যবেক্ষণ")}</span>
+      </div>
+
+      <div>
+        <div class="iac-area">${esc(areaName(r))}</div>
+        ${areaPath(r) ? `<div class="iac-path">${esc(areaPath(r))}</div>` : ""}
+      </div>
+
+      <div class="iac-acc">
+        <div class="iac-acc-row"><span>বর্তমান <b>${cur}%</b></span><span>লক্ষ্য <b>${target}%</b></span></div>
+        <div class="iac-bar"><i style="width:${cur}%"></i><em style="left:calc(${target}% - 1px)"></em></div>
+      </div>
+
+      <div class="iac-foot">
+        <div class="iac-facts">
+          <span class="iac-badge k-${kind}">${esc(kind === "closed" ? "বাতিল" : kind === "pending" ? "Exam বাকি" : getStatusLabel(r.status))}</span>
+          <span class="iac-note">চেষ্টা ${num(r.attempts)} · ভুল ${num(r.wrongQuestions)}</span>
+          ${note}
+        </div>
+        ${actions ? `<div class="iac-actions">${actions}</div>` : ""}
+      </div>
+    </article>`;
 }
 
-function renderShell(root) {
-  const summary = state.summary || {};
+function render() {
+  const root = ensureRoot();
+  const c = counts();
+  const rows = state.requests
+    .filter(r => state.filter === "all" || kindOf(r) === state.filter)
+    .sort((a, b) => (kindOf(a) === "closed") - (kindOf(b) === "closed"));
 
   root.innerHTML = `
-    <div class="iac-wrap">
-      <div class="iac-header">
-        <div>
-          <p class="iac-eyebrow">IMPROVEMENT CONTROL CENTER</p>
-          <h2 class="iac-title">শিক্ষার্থীদের উন্নতি ব্যবস্থাপনা</h2>
-          <p class="iac-subtitle">
-            বাস্তব পরীক্ষার ফলাফল থেকে শনাক্ত হওয়া দুর্বল জায়গাগুলো এখানে দেখা,
-            পর্যালোচনা এবং Improvement Test-এর জন্য নিয়ন্ত্রণ করা যাবে।
-          </p>
-        </div>
+    <div class="iac-stats">
+      <div class="iac-stat"><b>${c.all}</b><span>মোট অনুরোধ</span></div>
+      <div class="iac-stat accent"><b>${c.urgent}</b><span>জরুরি</span></div>
+      <div class="iac-stat"><b>${c.exam}</b><span>Exam চলছে</span></div>
+      <div class="iac-stat"><b>${c.done}</b><span>সম্পন্ন</span></div>
+    </div>
 
-        <button class="iac-btn" data-iac-refresh>
-          তথ্য রিফ্রেশ
-        </button>
+    <section class="iac-card iac-bulk">
+      <div>
+        <h3>সবার জন্য একবারে Exam</h3>
+        <p>সক্রিয় সব শিক্ষার্থীর দুর্বলতা ধরে Exam তৈরি, Publish ও Assign হবে। যাদের Exam আছে তাদের আবার হবে না।</p>
       </div>
+      <button class="iac-btn primary" id="iacGenerateAllBtn" type="button">Generate + Publish</button>
+      ${state.bulkHtml ? `<div class="iac-bulk-result">${state.bulkHtml}</div>` : ""}
+    </section>
 
-      <section class="iac-bulk">
-        <div class="iac-bulk-inner">
-          <div class="iac-bulk-copy">
-            <p class="iac-eyebrow">ONE-CLICK AUTOMATION</p>
-            <h3 class="iac-bulk-title">সকল শিক্ষার্থীর Improvement Exam তৈরি করুন</h3>
-            <p class="iac-bulk-note">
-              সক্রিয় শিক্ষার্থীদের ফলাফল থেকে দুর্বলতা শনাক্ত করে eligible Improvement Request-এর জন্য প্রশ্ন বাছাই করবে, Exam তৈরি করবে, Publish করবে এবং সরাসরি শিক্ষার্থীকে Assign করবে। আলাদা করে Generate ও Publish চাপতে হবে না।
-            </p>
-          </div>
-          <button class="iac-bulk-btn" id="iacGenerateAllBtn" type="button">
-            সকলের জন্য Generate + Publish
-          </button>
-        </div>
-        <div class="iac-bulk-result" id="iacBulkResult"></div>
-      </section>
+    <div class="iac-head">
+      <h2>Improvement Queue</h2>
+      <button class="iac-btn" data-action="refresh" type="button">রিফ্রেশ</button>
+    </div>
 
-      <div class="iac-grid">
-        <div class="iac-stat">
-          <div class="iac-stat-label">মোট অনুরোধ</div>
-          <div class="iac-stat-value">${num(summary.total)}</div>
-        </div>
+    <div class="iac-chips">
+      ${FILTERS.map(f => `
+        <button class="iac-chip ${state.filter === f.key ? "active" : ""}" data-filter="${f.key}" type="button">
+          ${f.label}<small>${c[f.key]}</small>
+        </button>`).join("")}
+    </div>
 
-        <div class="iac-stat">
-          <div class="iac-stat-label">জরুরি</div>
-          <div class="iac-stat-value">${num(summary.highPriority)}</div>
-        </div>
-
-        <div class="iac-stat">
-          <div class="iac-stat-label">পরীক্ষা প্রয়োজন</div>
-          <div class="iac-stat-value">${num(summary.testRequired)}</div>
-        </div>
-
-        <div class="iac-stat">
-          <div class="iac-stat-label">সম্পন্ন</div>
-          <div class="iac-stat-value">${num(summary.completed)}</div>
-        </div>
-      </div>
-
-      <div class="iac-layout">
-        <div class="iac-card">
-          <h3 class="iac-section-title">Improvement Queue</h3>
-          <p class="iac-section-note">
-            প্রতিটি অনুরোধ শিক্ষার্থীর বাস্তব ফলাফল ও repeated performance evidence-এর ভিত্তিতে এসেছে।
-          </p>
-
-          <div id="iacRequestList" class="iac-list"></div>
-        </div>
-
-        <aside class="iac-card iac-detail" id="iacDetail">
-          <div class="iac-detail-empty">
-            বাম দিক থেকে একটি Improvement Request নির্বাচন করো।
-          </div>
-        </aside>
-      </div>
-
-      <div class="iac-card">
-        <h3 class="iac-section-title">সতর্কতা</h3>
-        <p class="iac-section-note">
-          গুরুত্বপূর্ণ Improvement Request বা workflow পরিবর্তন এখানে দেখা যাবে।
-        </p>
-        <div id="iacAlerts" class="iac-list"></div>
-      </div>
+    <div class="iac-list">
+      ${rows.length ? rows.map(requestCard).join("") : `<div class="iac-empty">এই ফিল্টারে কোনো অনুরোধ নেই।</div>`}
     </div>
   `;
-
-  root.querySelector("[data-iac-refresh]")?.addEventListener(
-    "click",
-    load
-  );
-
-  root.querySelector("#iacGenerateAllBtn")?.addEventListener("click", handleGenerateAll);
 }
 
-async function handleGenerateAll() {
-  const button = document.getElementById("iacGenerateAllBtn");
-  const result = document.getElementById("iacBulkResult");
-  if (!button || !result) return;
-
-  const confirmed = window.confirm(
-    "সকল সক্রিয় শিক্ষার্থীর eligible Improvement Request থেকে Exam তৈরি, Publish এবং Assign করা হবে। ইতিমধ্যে Exam তৈরি হওয়া Request আবার তৈরি হবে না। চালিয়ে যেতে চাও?"
-  );
-  if (!confirmed) return;
-
-  button.disabled = true;
-  button.textContent = "সব শিক্ষার্থীর Exam তৈরি ও Publish হচ্ছে…";
-  result.className = "iac-bulk-result show";
-  result.innerHTML = `
-    <div class="iac-success-state">
-      <strong>Bulk automation চলছে</strong>
-      <span>দুর্বলতা শনাক্ত করা, প্রশ্ন বাছাই, Exam তৈরি, Publish ও Assign—সব ধাপ সম্পন্ন করা হচ্ছে।</span>
-    </div>
-  `;
-
+/* ---------- actions ---------- */
+async function handleBuild(request) {
+  state.busyId = request.id; render();
   try {
-    const summary = await generateAndPublishImprovementForAllStudents({
-      maxRequests: 500,
-      concurrency: 4
-    });
-
-    const failedDetails = (summary.results || [])
-      .filter(r => !r.ok)
-      .slice(0, 5)
-      .map(r => `${esc(r.studentId || "অজানা")}: ${esc(r.error || "সমস্যা")}`)
-      .join("<br>");
-
-    result.innerHTML = `
-      <div class="iac-success-state">
-        <strong>${summary.published}টি Improvement Exam সফলভাবে Publish ও Assign হয়েছে</strong>
-        <span>সক্রিয় শিক্ষার্থী: ${num(summary.students)} · নতুন Request: ${num(summary.createdRequests)} · Eligible Request: ${num(summary.eligibleRequests)} · সফল: ${num(summary.published)} · ব্যর্থ: ${num(summary.failed)}</span>
-        ${failedDetails ? `<span style="margin-top:4px">যেগুলো হয়নি:<br>${failedDetails}</span>` : ""}
-      </div>
-    `;
-
-    await load();
+    const created = await autoBuildAndPublishImprovementTest(request);
+    showToast(`Exam তৈরি ও Publish হয়েছে (${num(created.questionCount)}টি প্রশ্ন)।`, "success");
   } catch (error) {
-    console.error("Bulk Improvement Exam automation:", error);
-    result.innerHTML = `
-      <div class="iac-error">
-        <strong>Bulk generation সম্পন্ন করা যায়নি</strong><br>
-        ${esc(error?.message || "অজানা সমস্যা হয়েছে।")}
-      </div>
-    `;
+    console.error("Improvement Exam create/publish:", error);
+    showToast(error?.message || "Exam তৈরি করা যায়নি।", "error");
   } finally {
-    button.disabled = false;
-    button.textContent = "সকলের জন্য Generate + Publish";
+    state.busyId = null; await load();
   }
 }
 
-function renderRequests() {
-  const list = document.getElementById("iacRequestList");
-  if (!list) return;
+async function handleDeleteExam(request) {
+  const ok = window.confirm(
+    `"${studentName(request)}" এর "${areaName(request)}" Improvement Exam মুছে ফেলবে?\n\n` +
+    "Exam ও প্রশ্নের Snapshot মুছে যাবে, শিক্ষার্থীর চলমান চেষ্টা বাদ যাবে। আগে অর্জন করা XP ঠিক থাকবে।"
+  );
+  if (!ok) return;
 
-  if (!state.requests.length) {
-    list.innerHTML = `
-      <div class="iac-empty">
-        এই মুহূর্তে কোনো Improvement Request নেই।
-      </div>
-    `;
-    return;
-  }
-
-  list.innerHTML = state.requests.map((request) => `
-    <button
-      class="iac-request ${state.selectedRequest?.id === request.id ? "active" : ""}"
-      data-request-id="${esc(request.id)}"
-    >
-      <div class="iac-request-top">
-        <div>
-          <div class="iac-request-name">
-            ${esc(request.entityName || request.entityId)}
-          </div>
-          <div class="iac-request-meta">
-            Student: ${esc(request.studentId || "অজানা")}
-          </div>
-        </div>
-
-        <div class="iac-badge">
-          ${esc(priorityText(request.priority))}
-        </div>
-      </div>
-
-      <div class="iac-badges">
-        <span class="iac-badge">
-          বর্তমান ${Math.round(num(request.currentAccuracy))}%
-        </span>
-
-        <span class="iac-badge">
-          লক্ষ্য ${Math.round(num(request.targetAccuracy))}%
-        </span>
-
-        <span class="iac-badge">
-          ${esc(statusText(request.status))}
-        </span>
-      </div>
-    </button>
-  `).join("");
-
-  list.querySelectorAll("[data-request-id]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const id = button.dataset.requestId;
-      state.selectedRequest =
-        state.requests.find((x) => x.id === id) || null;
-
-      renderRequests();
-      renderDetail();
-    });
-  });
-}
-
-function renderAlerts() {
-  const el = document.getElementById("iacAlerts");
-  if (!el) return;
-
-  if (!state.alerts.length) {
-    el.innerHTML = `
-      <div class="iac-empty">
-        এখন কোনো গুরুত্বপূর্ণ সতর্কতা নেই।
-      </div>
-    `;
-    return;
-  }
-
-  el.innerHTML = state.alerts.slice(0, 8).map((alert) => `
-    <div class="iac-alert">
-      ${esc(alert.message || alert.text || "গুরুত্বপূর্ণ Improvement পরিবর্তন শনাক্ত হয়েছে।")}
-    </div>
-  `).join("");
-}
-
-function renderDetail() {
-  const el = document.getElementById("iacDetail");
-  const request = state.selectedRequest;
-
-  if (!el) return;
-
-  if (!request) {
-    el.innerHTML = `
-      <div class="iac-detail-empty">
-        বাম দিক থেকে একটি Improvement Request নির্বাচন করো।
-      </div>
-    `;
-    return;
-  }
-
-  el.innerHTML = `
-    <p class="iac-eyebrow">REQUEST DETAILS</p>
-    <h3 class="iac-detail-name">
-      ${esc(request.entityName || request.entityId)}
-    </h3>
-
-    <div class="iac-badges">
-      <span class="iac-badge">
-        ${esc(request.entityType || "learning area")}
-      </span>
-
-      <span class="iac-badge">
-        ${esc(priorityText(request.priority))}
-      </span>
-
-      <span class="iac-badge">
-        ${esc(statusText(request.status))}
-      </span>
-    </div>
-
-    <div class="iac-metrics">
-      <div class="iac-metric">
-        <div class="iac-metric-label">বর্তমান Accuracy</div>
-        <div class="iac-metric-value">${Math.round(num(request.currentAccuracy))}%</div>
-      </div>
-
-      <div class="iac-metric">
-        <div class="iac-metric-label">লক্ষ্য Accuracy</div>
-        <div class="iac-metric-value">${Math.round(num(request.targetAccuracy))}%</div>
-      </div>
-
-      <div class="iac-metric">
-        <div class="iac-metric-label">চেষ্টা</div>
-        <div class="iac-metric-value">${num(request.attempts)}</div>
-      </div>
-
-      <div class="iac-metric">
-        <div class="iac-metric-label">ভুল প্রশ্ন</div>
-        <div class="iac-metric-value">${num(request.wrongQuestions)}</div>
-      </div>
-    </div>
-
-    <div class="iac-divider"></div>
-
-    <div class="iac-section-note">
-      <strong>কেন Request এসেছে?</strong><br>
-      ${esc(request.reason === "repeated_low_performance"
-        ? "একাধিক পরীক্ষায় একই learning area-তে কম performance পাওয়া গেছে।"
-        : request.reason || "Performance evidence অনুযায়ী improvement প্রয়োজন।")}
-    </div>
-
-    <div class="iac-actions">
-      ${request.improvementTestId ? `
-        <div class="iac-success-state">
-          <strong>Improvement Exam তৈরি হয়েছে</strong>
-          <span>Test ID: ${esc(request.improvementTestId)}</span>
-          <span>${request.status === "assigned" ? "শিক্ষার্থীকে বরাদ্দ করা হয়েছে" : "Publish করা হয়েছে"}</span>
-        </div>
-      ` : `
-        <button class="iac-btn iac-btn-primary" data-action="build-test">
-          Improvement Exam তৈরি ও Publish করুন
-        </button>
-      `}
-
-      ${request.status !== "dismissed" && request.status !== "assigned" && !request.improvementTestId ? `
-        <button class="iac-btn" data-action="review">
-          Request পর্যালোচনা
-        </button>
-        <button class="iac-btn" data-action="dismiss">
-          Request বাতিল
-        </button>
-      ` : ""}
-    </div>
-
-    <div id="iacTestPreview"></div>
-  `;
-
-  el.querySelector('[data-action="review"]')
-    ?.addEventListener("click", () => handleReview(request));
-
-  el.querySelector('[data-action="build-test"]')
-    ?.addEventListener("click", () => handleBuildTest(request));
-
-  el.querySelector('[data-action="dismiss"]')
-    ?.addEventListener("click", () => handleDismiss(request));
-}
-
-async function handleReview(request) {
+  state.busyId = request.id; render();
   try {
-    await reviewImprovementRequest(request.id);
-    await load();
+    await deleteImprovementTest(request.improvementTestId);
+    showToast("Improvement Exam মুছে ফেলা হয়েছে।", "success");
   } catch (error) {
-    console.error(error);
-    alert("Improvement Request পর্যালোচনা করা যায়নি।");
+    console.error("Improvement Exam delete:", error);
+    showToast(error?.message || "Exam মুছে ফেলা যায়নি।", "error");
+  } finally {
+    state.busyId = null; await load();
   }
 }
 
 async function handleDismiss(request) {
-  const ok = window.confirm(
-    "এই Improvement Request কি বাতিল করতে চাও?"
-  );
-
-  if (!ok) return;
-
+  if (!window.confirm("এই Improvement Request বাতিল করবে?")) return;
+  state.busyId = request.id; render();
   try {
     await dismissImprovementRequest(request.id);
-    await load();
+    showToast("Request বাতিল করা হয়েছে।", "success");
   } catch (error) {
     console.error(error);
-    alert("Request বাতিল করা যায়নি।");
+    showToast("Request বাতিল করা যায়নি।", "error");
+  } finally {
+    state.busyId = null; await load();
   }
 }
 
-async function handleBuildTest(request) {
-  const preview = document.getElementById("iacTestPreview");
-  const button = document.querySelector('[data-action="build-test"]');
-  if (!preview) return;
+async function handleGenerateAll() {
+  const btn = document.getElementById("iacGenerateAllBtn");
+  if (!btn) return;
+  if (!window.confirm("সব সক্রিয় শিক্ষার্থীর eligible Request থেকে Exam তৈরি, Publish ও Assign হবে। যাদের Exam আছে তাদের আবার হবে না। চালাবে?")) return;
 
-  if (request.improvementTestId) {
-    preview.innerHTML = `
-      <div class="iac-success-state">
-        <strong>এই Request-এর Improvement Exam ইতিমধ্যেই তৈরি হয়েছে।</strong>
-        <span>Test ID: ${esc(request.improvementTestId)}</span>
-      </div>
-    `;
-    return;
-  }
-
-  if (button) {
-    button.disabled = true;
-    button.classList.add("iac-loading");
-    button.textContent = "Exam তৈরি হচ্ছে… প্রশ্ন ও Snapshot সংরক্ষণ করা হচ্ছে";
-  }
-
-  preview.innerHTML = `
-    <div class="iac-divider"></div>
-    <div class="iac-section-note">
-      Improvement Exam তৈরি হচ্ছে। এই সময় পেজ বন্ধ কোরো না।
-    </div>
-  `;
+  btn.disabled = true;
+  btn.textContent = "চলছে…";
+  state.bulkHtml = `<div class="iac-msg"><strong>Bulk automation চলছে</strong><span>পেজ বন্ধ কোরো না।</span></div>`;
+  render();
 
   try {
-    const created = await autoBuildAndPublishImprovementTest(request);
+    const s = await generateAndPublishImprovementForAllStudents({ maxRequests: 500, concurrency: 4 });
+    const failed = (s.results || []).filter(r => r && !r.ok).slice(0, 5)
+      .map(r => `${esc(state.students[r.studentId]?.name || r.studentId || "অজানা")}: ${esc(r.error || "সমস্যা")}`).join("<br>");
 
-    preview.innerHTML = `
-      <div class="iac-success-state">
-        <strong>Improvement Exam সফলভাবে তৈরি ও Publish হয়েছে</strong>
-        <span>Test ID: ${esc(created.id)}</span>
-        <span>প্রশ্ন: ${num(created.questionCount)} · সময়: ${num(created.durationMinutes)} মিনিট · প্রতি প্রশ্ন: ১ নম্বর</span>
-        <span>শিক্ষার্থীকে স্বয়ংক্রিয়ভাবে বরাদ্দ করা হয়েছে।</span>
-      </div>
-    `;
-
-    await load();
+    state.bulkHtml = `
+      <div class="iac-msg ${s.failed ? "err" : ""}">
+        <strong>${num(s.published)}টি Exam Publish ও Assign হয়েছে</strong>
+        <span>শিক্ষার্থী ${num(s.students)} · নতুন Request ${num(s.createdRequests)} · সফল ${num(s.published)} · ব্যর্থ ${num(s.failed)}</span>
+        ${failed ? `<span>যেগুলো হয়নি:<br>${failed}</span>` : ""}
+      </div>`;
   } catch (error) {
-    console.error("Improvement Exam create/publish:", error);
+    console.error("Bulk Improvement Exam automation:", error);
+    state.bulkHtml = `<div class="iac-msg err"><strong>Bulk generation সম্পন্ন হয়নি</strong><span>${esc(error?.message || "অজানা সমস্যা")}</span></div>`;
+  }
+  await load();
+}
 
-    preview.innerHTML = `
-      <div class="iac-error">
-        <strong>Improvement Exam তৈরি করা যায়নি</strong><br>
-        ${esc(error?.message || "অজানা সমস্যা হয়েছে।")}
-      </div>
-    `;
+function onClick(event) {
+  const chip = event.target.closest("[data-filter]");
+  if (chip) { state.filter = chip.dataset.filter; render(); return; }
 
-    if (button) {
-      button.disabled = false;
-      button.classList.remove("iac-loading");
-      button.textContent = "আবার চেষ্টা করুন";
-    }
+  if (event.target.closest("#iacGenerateAllBtn")) { handleGenerateAll(); return; }
+
+  const btn = event.target.closest("[data-action]");
+  if (!btn) return;
+  if (btn.dataset.action === "refresh") { load(true); return; }
+
+  const request = state.requests.find(r => r.id === btn.dataset.id);
+  if (!request) return;
+  if (btn.dataset.action === "build") handleBuild(request);
+  else if (btn.dataset.action === "delete-exam") handleDeleteExam(request);
+  else if (btn.dataset.action === "dismiss") handleDismiss(request);
+}
+
+/* ---------- data ---------- */
+async function loadStudents() {
+  try {
+    const list = await getActiveStudents();
+    state.students = Object.fromEntries(
+      list.map(s => [s.studentId, { name: s.name || "", className: s.className || "" }])
+    );
+  } catch (error) {
+    console.warn("Improvement Control Center: student names skipped:", error);
   }
 }
 
-async function load() {
-  if (state.loading) return;
-
+async function load(refreshStudents = false) {
+  if (state.loading) { state.reloadQueued = true; return; }
   state.loading = true;
-
   try {
-    const [requests, summary, alerts] = await Promise.all([
-      getImprovementRequestQueue({
-        status: null,
-        limitCount: 100
-      }),
-      getImprovementQueueSummary(),
-      buildImprovementAlerts()
-    ]);
-
-    const selectedId = state.selectedRequest?.id || null;
-
-    state.requests = Array.isArray(requests) ? requests : [];
-    state.summary = summary || {};
-    state.alerts = Array.isArray(alerts) ? alerts : [];
-
-    // Always replace the selected request with the freshly-read Firestore
-    // version. Without this, the UI kept the old object after Publish/Assign,
-    // so the same "Publish" button stayed visible even though Firestore had
-    // already changed the request status.
-    state.selectedRequest = selectedId
-      ? state.requests.find((x) => x.id === selectedId) || null
-      : null;
-
-    const root = ensureRoot();
-    renderShell(root);
-    renderRequests();
-    renderDetail();
-    renderAlerts();
+    if (refreshStudents || !Object.keys(state.students).length) await loadStudents();
+    const rows = await getImprovementRequestQueue({ maxResults: 250 });
+    state.requests = Array.isArray(rows) ? rows : [];
+    render();
   } catch (error) {
     console.error("Improvement Control Center:", error);
-
-    const root = ensureRoot();
-
-    root.innerHTML = `
-      <div class="iac-error">
-        Improvement Control Center-এর তথ্য লোড করা যায়নি।
-        Firestore rules এবং improvement-admin-utils.js সংযোগ পরীক্ষা করো।
-      </div>
-    `;
+    ensureRoot().innerHTML = `<div class="iac-card iac-msg err"><strong>তথ্য লোড করা যায়নি</strong><span>Firestore rules ও improvement-admin-utils.js সংযোগ পরীক্ষা করো।</span></div>`;
   } finally {
     state.loading = false;
+    if (state.reloadQueued) { state.reloadQueued = false; load(); }
   }
 }
 
-// THE MISSING STEP: nothing in this codebase ever actually scanned a
-// student's results and created improvementRequests -- createImprovementRequestsForStudent()
-// existed but was never called from anywhere, so the queue above always
-// stayed empty no matter how badly a student performed. This runs it for
-// every active student (each student is independent -- one failing does
-// not stop the rest), same "opportunistic, next admin page load" pattern
-// as runOverdueSweep below (Spark plan, no cron).
-async function runDetectionSweep() {
+// Detection + overdue auto-publish run in the BACKGROUND now. The list
+// paints straight away instead of waiting for every student to be scanned.
+// (Spark plan has no cron, so this still only runs while an admin page is open.)
+async function runBackgroundSweeps() {
   try {
     const students = await getActiveStudents();
     for (const s of students) {
-      try {
-        await createImprovementRequestsForStudent(s.studentId);
-      } catch (error) {
-        console.warn(`Improvement Control Center: detection skipped for ${s.studentId}:`, error);
-      }
+      try { await createImprovementRequestsForStudent(s.studentId); }
+      catch (error) { console.warn(`Improvement detection skipped for ${s.studentId}:`, error); }
     }
   } catch (error) {
-    console.warn("Improvement Control Center: detection sweep skipped:", error);
+    console.warn("Improvement detection sweep skipped:", error);
   }
-}
-
-// SPARK-PLAN LIMITATION: there is no server/cron here, so a request that
-// crosses 24 hours unpublished cannot fire on its own the instant the
-// deadline hits. This runs the same auto-build-and-publish used by the
-// manual button, but sweeps every overdue request at once -- it just needs
-// an admin to have this page open (any time after the 24 hours) to trigger.
-async function runOverdueSweep() {
   try {
     const results = await autoPublishOverdueImprovementRequests();
-    const okCount = results.filter(r => r.ok).length;
-    if (okCount > 0) {
-      console.info(`Improvement Control Center: ${okCount} overdue request(s) auto-published.`);
-    }
     const failed = results.filter(r => !r.ok);
-    if (failed.length) {
-      console.warn("Improvement Control Center: overdue auto-publish failed for", failed);
-    }
+    if (failed.length) console.warn("Overdue auto-publish failed for", failed);
   } catch (error) {
-    console.warn("Improvement Control Center: overdue sweep skipped:", error);
+    console.warn("Improvement overdue sweep skipped:", error);
   }
 }
 
 export function initImprovementAdminControlCenter() {
   injectStyles();
-  runDetectionSweep().then(runOverdueSweep).finally(load);
+  const root = ensureRoot();
+  if (!root.dataset.bound) { root.dataset.bound = "1"; root.addEventListener("click", onClick); }
+  root.innerHTML = `<div class="iac-empty">লোড হচ্ছে…</div>`;
+  load(true).then(runBackgroundSweeps).then(() => load());
 }
 
 if (document.readyState === "loading") {
-  document.addEventListener(
-    "DOMContentLoaded",
-    initImprovementAdminControlCenter,
-    { once: true }
-  );
+  document.addEventListener("DOMContentLoaded", initImprovementAdminControlCenter, { once: true });
 } else {
   initImprovementAdminControlCenter();
 }
