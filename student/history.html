@@ -81,6 +81,7 @@ import { getApprovedResults, getStudentRank } from "../js/utils/results-utils.js
 import { computeStudentXP, getExamXPLines } from "../js/utils/xp-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { getCompletedImprovementAttempts } from "../js/utils/improvement-xp-integration.js";
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -109,9 +110,10 @@ async function renderPage() {
 
   try {
     // Fetch user results & Exact Leaderboard Points
-    const [results, rankData] = await Promise.all([
+    const [results, rankData, improvementResults] = await Promise.all([
       getApprovedResults(student.studentId),
-      getStudentRank(student.studentId)
+      getStudentRank(student.studentId),
+      getCompletedImprovementAttempts(student.studentId).catch(() => [])
     ]);
     
     // Fetch all exams to calculate total exams conducted for this batch
@@ -137,7 +139,7 @@ async function renderPage() {
 
     // Points: computed by the SAME engine the leaderboard and dashboard use, so
     // every exam's number below adds up to the total shown in the summary.
-    const xp = computeStudentXP(results, { referralCount: rankData?.referralCount || 0, challengeBonusXP: rankData?.challengeXP || 0 });
+    const xp = computeStudentXP(results, { referralCount: rankData?.referralCount || 0, challengeBonusXP: rankData?.challengeXP || 0, improvementPracticeResults: improvementResults });
     const totalPoints = xp.totalXP;
     const xpByResult = {};
     xp.exams.forEach(e => { if (e.resultId) xpByResult[e.resultId] = e; });
@@ -164,7 +166,13 @@ async function renderPage() {
             <span class="sum-lbl">সর্বমোট পয়েন্ট</span>
           </div>
         </div>
-        ${xp.referralXP > 0 ? `<p class="sum-breakdown">পরীক্ষা থেকে ${xp.examXP} + বন্ধু রেফার ${xp.referralXP} = ${totalPoints} পয়েন্ট</p>` : ""}
+        ${(() => {
+          const parts = [`পরীক্ষা থেকে ${xp.examXP}`];
+          if (xp.referralXP > 0) parts.push(`বন্ধু রেফার ${xp.referralXP}`);
+          if (xp.improvementPracticeXP > 0) parts.push(`উন্নতি অনুশীলন ${xp.improvementPracticeXP}`);
+          if (xp.challengeXP > 0) parts.push(`চ্যালেঞ্জ ${xp.challengeXP}`);
+          return parts.length > 1 ? `<p class="sum-breakdown">${parts.join(" + ")} = ${totalPoints} পয়েন্ট</p>` : "";
+        })()}
       </div>
     `;
 

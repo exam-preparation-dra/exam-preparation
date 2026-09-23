@@ -228,6 +228,7 @@ import { computeOverallStats, computeSubjectStats, computeTopicStats } from "../
 import { generateMotivation } from "../js/utils/motivation-utils.js";
 import { computeStudentXP, computeMaxExamXP, getLevelInfo, XP_CATEGORIES, REFERRAL_XP } from "../js/utils/xp-utils.js";
 import { resolveCompletedChallenges, getChallengeBonusXP } from "../js/utils/challenge-utils.js";
+import { getCompletedImprovementAttempts } from "../js/utils/improvement-xp-integration.js";
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -392,14 +393,15 @@ async function loadMain() {
     // get settled into "completed" (win/loss/draw + bonus XP decided).
     await resolveCompletedChallenges(student.studentId).catch(() => []);
 
-    const [results, allStudents, subjects, topics, challengeBonusXP] = await Promise.all([
+    const [results, allStudents, subjects, topics, challengeBonusXP, improvementResults] = await Promise.all([
       getApprovedResults(student.studentId), getActiveStudents(), getSubjects(), getTopics(),
-      getChallengeBonusXP(student.studentId).catch(() => 0)
+      getChallengeBonusXP(student.studentId).catch(() => 0),
+      getCompletedImprovementAttempts(student.studentId).catch(() => [])
     ]);
     const leaderboard = await getLeaderboardData(allStudents);
 
     const myRefs = allStudents.filter(s => s.referredBy === student.studentId && s.studentId !== student.studentId);
-    const xp = computeStudentXP(results, { referralCount: myRefs.length, challengeBonusXP });
+    const xp = computeStudentXP(results, { referralCount: myRefs.length, challengeBonusXP, improvementPracticeResults: improvementResults });
     const myIdx = leaderboard.findIndex(r => r.studentId === student.studentId);
     const rank = myIdx >= 0 ? { rank: myIdx + 1, total: leaderboard.length } : null;
 
