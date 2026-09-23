@@ -110,7 +110,7 @@ export async function getQuestionPoolForImprovement({subjectId=null,chapterId=nu
   return snap.docs.map(d=>({id:d.id,...d.data()})).filter(q=>!excluded.has(q.id));
 }
 
-export async function buildImprovementTestDraft({request=null, questionPool=null, requestIds=[], studentIds=[], subjectId=null, chapterId=null, topicId=null, questionCount=10, previousWrongQuestionIds=[], adminSelectedQuestionIds=[]}={}) {
+export async function buildImprovementTestDraft({request=null, questionPool=null, requestIds=[], studentIds=[], subjectId=null, chapterId=null, topicId=null, questionCount=10, previousWrongQuestionIds=[], adminSelectedQuestionIds=[], emphasizeFreshQuestions=false}={}) {
   requireAdmin();
   const reqs=[];
   for (const rid of uniq([...(requestIds||[]), ...(request?.id ? [request.id] : [])])) {
@@ -145,7 +145,15 @@ export async function buildImprovementTestDraft({request=null, questionPool=null
   }
 
   const map=new Map();
-  [...wrongQ,...adminQ,...related].forEach(q=>{if(q&&!map.has(q.id)&&map.size<count) map.set(q.id,q);});
+  // ADAPTIVE DIFFICULTY: normally previous mistakes fill the test first (best
+  // for a first attempt -- practice exactly what went wrong). Once a student
+  // has already cleared this same weak area once before (reopenImprovementRequest
+  // sets reopenedAt), repeating the identical wrong questions risks testing
+  // memorisation rather than real understanding -- so on that repeat round,
+  // fresh related-question-bank items fill first instead, and old mistakes
+  // only fill remaining seats.
+  const ordered = emphasizeFreshQuestions ? [...related,...wrongQ,...adminQ] : [...wrongQ,...adminQ,...related];
+  ordered.forEach(q=>{if(q&&!map.has(q.id)&&map.size<count) map.set(q.id,q);});
   const questions=[...map.values()];
   return {
     type:"improvement_practice",
@@ -155,6 +163,7 @@ export async function buildImprovementTestDraft({request=null, questionPool=null
     questionIds:questions.map(q=>q.id),
     questions,
     questionCount:questions.length,
+    adaptiveMode: emphasizeFreshQuestions ? "fresh_questions" : "focused_mistakes",
     sourceBreakdown:{
       adminSelected:questions.filter(q=>q.source==="admin_selected").length,
       previousMistakes:questions.filter(q=>q.source==="previous_mistake").length,
@@ -303,7 +312,11 @@ export async function autoBuildAndPublishImprovementTest(request) {
     subjectId: request?.subjectId || null,
     chapterId: request?.chapterId || null,
     topicId: request?.topicId || null,
-    questionCount: IMPROVEMENT_EXAM_QUESTION_COUNT
+    questionCount: IMPROVEMENT_EXAM_QUESTION_COUNT,
+    // A request carries reopenedAt only when it was already resolved once
+    // before and the student is back for another round on the same weak
+    // area -- give them fresh questions instead of the same repeated ones.
+    emphasizeFreshQuestions: Boolean(request?.reopenedAt)
   });
 
   if (!draft.questionIds.length) {

@@ -829,16 +829,25 @@ async function renderGlobalNotifications(student) {
         .map(d => ({ id: d.id, ...d.data() }))
         .filter(data => data.status === "assigned")
         .map(
-          data => ({
-            key: `improvement:${data.id}`,
-            type: "improvement",
-            id: data.id,
-            testId: data.improvementTestId || data.assignedTestId || "",
-            topicName: data.topicName || data.chapterName || data.subjectName || data.entityName || "একটি বিষয়",
-            currentAccuracy: Math.round(Number(data.currentAccuracy) || 0),
-            targetAccuracy: Math.round(Number(data.targetAccuracy) || 0),
-            createdAt: data.assignedAt || data.updatedAt || data.createdAt
-          })
+          data => {
+            const assignedAt = data.assignedAt || data.updatedAt || data.createdAt;
+            const ageDays = Math.floor((Date.now() - notificationMillis(assignedAt)) / (24 * 60 * 60 * 1000));
+            return {
+              key: `improvement:${data.id}`,
+              type: "improvement",
+              id: data.id,
+              testId: data.improvementTestId || data.assignedTestId || "",
+              topicName: data.topicName || data.chapterName || data.subjectName || data.entityName || "একটি বিষয়",
+              currentAccuracy: Math.round(Number(data.currentAccuracy) || 0),
+              targetAccuracy: Math.round(Number(data.targetAccuracy) || 0),
+              // Spark plan, no cron -- this is the reminder: the same
+              // notification just gets more urgent wording the longer an
+              // assigned test sits untouched, checked opportunistically
+              // whenever the student opens any page with this header.
+              ageDays: Math.max(0, ageDays),
+              createdAt: assignedAt
+            };
+          }
         ),
 
       ...improvementSnap.docs
@@ -1063,11 +1072,12 @@ async function renderGlobalNotifications(student) {
                   <div class="global-notification-main">
 
                     <strong>
-                      ${escapeNotification(item.topicName)} অংশে Improvement Exam প্রস্তুত
+                      ${item.ageDays >= 2 ? "এখনও শুরু করোনি — " : ""}${escapeNotification(item.topicName)} অংশে Improvement Exam প্রস্তুত
                     </strong>
 
                     <p>
-                      বর্তমান accuracy ${item.currentAccuracy}% — লক্ষ্য ${item.targetAccuracy}%। অনুশীলন করে উন্নতি করো।
+                      বর্তমান accuracy ${item.currentAccuracy}% — লক্ষ্য ${item.targetAccuracy}%।
+                      ${item.ageDays >= 2 ? `${item.ageDays} দিন ধরে অপেক্ষা করছে, আজই অনুশীলন করো।` : "অনুশীলন করে উন্নতি করো।"}
                     </p>
 
                     <div class="global-notification-time">
