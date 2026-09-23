@@ -7,96 +7,64 @@
 <link rel="stylesheet" href="../css/style.css">
 <style>
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
-  body { overflow-x: hidden; background: var(--bg); }
+  body { overflow-x: hidden; }
   .app-shell { max-width: 600px; padding-bottom: 40px; margin: 0 auto; }
+  .acc { --acc-rgb: 201,151,63; }
 
-  .glass-card {
-    background: rgba(128, 128, 128, 0.04); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 20px; padding: 20px; margin-bottom: 20px;
+  .sec-title { display:flex; align-items:center; justify-content:space-between; margin: 20px 4px 10px;
+    font-weight: 900; font-size: 1.02rem; color: var(--text-primary); }
+  .sec-title span { font-family: var(--font-num); font-size: .78rem; font-weight: 800; color: var(--text-muted); }
+
+  .card {
+    background: rgba(128,128,128,0.04); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(128,128,128,0.12); border-radius: 20px; padding: 18px; margin-bottom: 12px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.02);
   }
 
-  .xp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
-  .xp-box {
-    background: rgba(128, 128, 128, 0.03); border: 1px solid rgba(128, 128, 128, 0.12);
-    border-radius: 16px; padding: 16px 10px; text-align: center;
-    display: flex; flex-direction: column; justify-content: center; align-items: center;
+  /* ---- Exam card ---- */
+  .ex-area { font-size: 1.05rem; font-weight: 900; color: var(--text-primary); line-height: 1.4; }
+  .ex-path { margin-top: 2px; font-size: .74rem; font-weight: 700; color: var(--text-muted); }
+  .ex-acc { margin-top: 14px; }
+  .ex-acc-row { display:flex; justify-content:space-between; font-size:.76rem; font-weight:800; color:var(--text-muted); margin-bottom:6px; }
+  .ex-acc-row b { font-family: var(--font-num); color: var(--text-primary); }
+  .bar { position:relative; height:8px; border-radius:99px; background: rgba(128,128,128,.15); }
+  .bar i { position:absolute; left:0; top:0; bottom:0; border-radius:99px; background: linear-gradient(90deg, var(--color-accent), #f59e0b); }
+  .bar em { position:absolute; top:-3px; bottom:-3px; width:2px; border-radius:2px; background: var(--text-primary); opacity:.5; }
+  .ex-meta { margin-top: 12px; font-size: .78rem; font-weight: 700; color: var(--text-muted); }
+  .start-btn {
+    width:100%; margin-top: 14px; padding: 14px; border:none; border-radius:14px; cursor:pointer;
+    font: inherit; font-size:.95rem; font-weight:900; color:#fff;
+    background: linear-gradient(135deg, var(--color-accent), #f59e0b);
+    box-shadow: 0 4px 15px rgba(201,151,63,.3); transition: transform .18s ease;
   }
-  .xp-val { font-size: 1.5rem; font-weight: 900; color: var(--text-primary); font-family: var(--font-num); line-height: 1.2; }
-  .xp-lbl { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); margin-top: 4px; }
-  .xp-box-highlight { background: rgba(var(--color-accent-rgb), 0.05); border-color: rgba(var(--color-accent-rgb), 0.2); }
-  .xp-box-highlight .xp-val { color: var(--color-accent); }
+  .start-btn:active { transform: scale(.97); }
 
-  .section-title { font-weight: 900; font-size: 1.05rem; color: var(--text-primary); margin: 4px 0 12px; padding-left: 4px; }
+  /* ---- History row ---- */
+  .hi { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .hi-main { min-width:0; }
+  .hi-main b { display:block; font-size:.92rem; font-weight:900; color:var(--text-primary); }
+  .hi-main span { display:block; margin-top:2px; font-size:.74rem; font-weight:700; color:var(--text-muted); }
+  .hi-score { text-align:right; flex-shrink:0; }
+  .hi-score strong { display:block; font-family:var(--font-num); font-size:1.15rem; font-weight:900; color:var(--text-primary); }
+  .chip { display:inline-block; margin-top:3px; padding:3px 9px; border-radius:99px; font-size:.68rem; font-weight:900; }
+  .chip.up   { color:#10b981; background:rgba(16,185,129,.1); }
+  .chip.down { color:#ef4444; background:rgba(239,68,68,.1); }
+  .chip.flat { color:var(--text-muted); background:rgba(128,128,128,.1); }
 
-  /* ---- Badge ---- */
-  .badge-row { display: flex; align-items: center; gap: 12px; }
-  .badge-chip {
-    display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px;
-    font-weight: 800; font-size: 0.85rem; flex-shrink: 0;
-  }
-  .badge-bronze { background: rgba(180,120,60,0.12); color: #b4783c; border: 1px solid rgba(180,120,60,0.3); }
-  .badge-silver { background: rgba(148,163,184,0.15); color: #64748b; border: 1px solid rgba(148,163,184,0.35); }
-  .badge-gold { background: rgba(234,179,8,0.15); color: #b58a05; border: 1px solid rgba(234,179,8,0.35); }
-  .badge-none { background: rgba(128,128,128,0.08); color: var(--text-muted); border: 1px solid rgba(128,128,128,0.15); }
-  .badge-caption { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
-
-  /* ---- Trend chart ---- */
-  .trend-wrap { width: 100%; }
-  .trend-chart { width: 100%; height: auto; display: block; }
-  .trend-caption { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); font-weight: 700; margin-top: 6px; }
-  .empty-mini { font-size: 0.82rem; color: var(--text-muted); font-weight: 600; text-align: center; padding: 20px 8px; }
-
-  /* ---- Class average ---- */
-  .compare-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; }
-  .compare-item { flex: 1; text-align: center; padding: 10px 6px; border-radius: 14px; background: rgba(128,128,128,0.03); border: 1px solid rgba(128,128,128,0.1); }
-  .compare-item strong { display: block; font-size: 1.1rem; font-family: var(--font-num); }
-  .compare-item span { font-size: 0.7rem; color: var(--text-muted); font-weight: 700; }
-
-  /* ---- Self request ---- */
-  .self-request-toggle {
-    width: 100%; padding: 12px; border-radius: 14px; border: 1px dashed rgba(128,128,128,0.3);
-    background: transparent; color: var(--text-primary); font-weight: 800; font-size: 0.88rem; cursor: pointer;
-  }
-  .self-request-form { margin-top: 14px; display: none; flex-direction: column; gap: 10px; }
-  .self-request-form.show { display: flex; }
-  .self-request-form select, .self-request-form textarea {
-    width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(128,128,128,0.2);
-    background: var(--bg); color: var(--text-primary); font-size: 0.88rem; font-family: inherit;
-  }
-  .self-request-form textarea { resize: vertical; min-height: 60px; }
-  .self-request-submit {
-    padding: 12px; border-radius: 14px; border: none; background: var(--color-accent); color: #fff;
-    font-weight: 800; font-size: 0.9rem; cursor: pointer;
-  }
-  .self-request-submit:disabled { opacity: 0.6; }
-  .self-request-msg { font-size: 0.8rem; font-weight: 700; margin-top: 4px; }
-  .self-request-msg.ok { color: #16a34a; }
-  .self-request-msg.err { color: #dc2626; }
+  .empty { text-align:center; padding: 28px 12px; font-size:.86rem; font-weight:700; line-height:1.7; color:var(--text-muted); }
 </style>
 </head>
 <body>
-<div class="app-shell" id="shell">
+<div class="app-shell acc" id="shell">
   <div class="state-block"><div class="spinner"></div></div>
 </div>
 
 <script type="module">
 import { initTheme, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
 import { getActiveStudent } from "../js/utils/student-utils.js";
-import {
-  injectImprovementJourneyStyles,
-  loadStudentImprovementJourney
-} from "../js/utils/improvement-profile-utils.js";
-import { initFinalImprovementProfileIntegration } from "../js/utils/improvement-profile-final-integration.js";
-import { getProfileXPBreakdown, getCompletedImprovementAttempts } from "../js/utils/improvement-xp-integration.js";
-import {
-  createImprovementRequest,
-  IMPROVEMENT_STATUS,
-  IMPROVEMENT_CONFIG
-} from "../js/utils/improvement-utils.js";
-import { getSubjects, getChapters, getTopics } from "../js/utils/syllabus-utils.js";
+import { getImprovementRequestsForStudent } from "../js/utils/improvement-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
-import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -108,261 +76,82 @@ if (!student) {
   renderPage();
 }
 
-function esc(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+const esc = v => String(v ?? "")
+  .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+  .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+const num = (v, d = 0) => (Number.isFinite(Number(v)) ? Number(v) : d);
+const pct = v => Math.max(0, Math.min(100, Math.round(num(v))));
+
+const areaName = r => r.topicName || r.chapterName || r.subjectName || r.entityName || "উন্নতির ক্ষেত্র";
+const areaPath = r => {
+  const p = [r.subjectName, r.chapterName, r.topicName].filter(Boolean);
+  return p.length > 1 ? p.join(" › ") : "";
+};
+
+// A request only counts as a ready exam if its test still exists and is published.
+// (An admin may have deleted the exam.)
+async function loadReadyExams(requests) {
+  const candidates = requests.filter(r =>
+    ["test_created", "assigned"].includes(r.status) && (r.improvementTestId || r.assignedTestId));
+
+  const checked = await Promise.all(candidates.map(async r => {
+    const testId = r.improvementTestId || r.assignedTestId;
+    try {
+      const snap = await getDoc(doc(db, "improvementTests", testId));
+      if (!snap.exists()) return null;
+      const t = snap.data();
+      if (t.published !== true) return null;
+      if (Array.isArray(t.studentIds) && t.studentIds.length && !t.studentIds.includes(student.studentId)) return null;
+      return { request: r, testId, questionCount: num(t.questionCount), durationMinutes: num(t.durationMinutes) };
+    } catch (err) {
+      console.warn("Improvement test check failed:", err);
+      return null;
+    }
+  }));
+
+  return checked.filter(Boolean);
 }
 
-/* ---------------- Badge (streak) ---------------- */
-function renderBadge(journey) {
-  const resolvedCount = (journey?.completed || []).filter(r => r.status === "resolved").length;
-  let tier = { cls: "badge-none", label: "এখনও কোনো লক্ষ্য পূর্ণ হয়নি", text: "শুরু করো" };
-  if (resolvedCount >= 5) tier = { cls: "badge-gold", label: `${resolvedCount}টি লক্ষ্য পূর্ণ`, text: "গোল্ড" };
-  else if (resolvedCount >= 3) tier = { cls: "badge-silver", label: `${resolvedCount}টি লক্ষ্য পূর্ণ`, text: "সিলভার" };
-  else if (resolvedCount >= 1) tier = { cls: "badge-bronze", label: `${resolvedCount}টি লক্ষ্য পূর্ণ`, text: "ব্রোঞ্জ" };
+function examCard({ request: r, testId, questionCount, durationMinutes }) {
+  const cur = pct(r.currentAccuracy);
+  const target = Math.max(cur, pct(r.targetAccuracy || 65));
+  const meta = [questionCount ? `${questionCount}টি প্রশ্ন` : "", durationMinutes ? `${durationMinutes} মিনিট` : ""].filter(Boolean).join(" · ");
 
   return `
-    <div class="glass-card">
-      <div class="section-title" style="margin:0 0 10px;">উন্নতির ব্যাজ</div>
-      <div class="badge-row">
-        <span class="badge-chip ${tier.cls}">${tier.text}</span>
-        <span class="badge-caption">${esc(tier.label)}</span>
+    <div class="card">
+      <div class="ex-area">${esc(areaName(r))}</div>
+      ${areaPath(r) ? `<div class="ex-path">${esc(areaPath(r))}</div>` : ""}
+      <div class="ex-acc">
+        <div class="ex-acc-row"><span>এখন <b>${cur}%</b></span><span>লক্ষ্য <b>${target}%</b></span></div>
+        <div class="bar"><i style="width:${cur}%"></i><em style="left:calc(${target}% - 1px)"></em></div>
       </div>
-    </div>
-  `;
+      ${meta ? `<div class="ex-meta">${esc(meta)}</div>` : ""}
+      <button type="button" class="start-btn" data-test="${esc(testId)}">অনুশীলন শুরু করো</button>
+    </div>`;
 }
 
-/* ---------------- Progress trend chart ---------------- */
-function renderTrendChart(attempts) {
-  const sorted = [...(attempts || [])]
-    .filter(a => Number.isFinite(Number(a.accuracy)))
-    .sort((a, b) => (Number(a.submittedAtMillis) || 0) - (Number(b.submittedAtMillis) || 0));
+function historyRow(r) {
+  const before = pct(r.currentAccuracy);
+  const hasResult = r.lastAccuracy !== undefined && r.lastAccuracy !== null;
+  const after = hasResult ? pct(r.lastAccuracy) : null;
+  const delta = hasResult ? Math.round(num(r.lastImprovementPercent ?? (after - before))) : 0;
 
-  let inner;
-  if (sorted.length < 2) {
-    inner = `<div class="empty-mini">কমপক্ষে ২টি অনুশীলন সম্পন্ন করলে অগ্রগতির গ্রাফ দেখানো হবে।</div>`;
-  } else {
-    const values = sorted.map(a => Number(a.accuracy));
-    const w = 520, h = 160, padX = 24, padY = 20;
-    const minV = Math.max(0, Math.min(...values, 0));
-    const maxV = Math.min(100, Math.max(...values, 100));
-    const range = Math.max(1, maxV - minV);
-    const points = sorted.map((a, i) => {
-      const v = Number(a.accuracy);
-      const x = padX + (i * (w - padX * 2)) / Math.max(1, sorted.length - 1);
-      const y = h - padY - ((v - minV) / range) * (h - padY * 2);
-      return { x, y, v };
-    });
-    const d = points.map((p, i) => `${i ? "L" : "M"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
-    inner = `
-      <div class="trend-wrap">
-        <svg viewBox="0 0 ${w} ${h}" class="trend-chart" aria-label="উন্নতির অগ্রগতি">
-          <line x1="${padX}" y1="${h - padY}" x2="${w - padX}" y2="${h - padY}" stroke="var(--surface-border)" />
-          <path d="${d}" fill="none" stroke="var(--color-accent)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-          ${points.map(p => `<circle cx="${p.x}" cy="${p.y}" r="5" fill="var(--bg)" stroke="var(--color-accent)" stroke-width="3"><title>${p.v}%</title></circle>`).join("")}
-        </svg>
-        <div class="trend-caption">
-          <span>পুরনো → নতুন (মোট ${sorted.length}টি অনুশীলন)</span>
-          <strong>সর্বশেষ ${Math.round(values[values.length - 1])}%</strong>
-        </div>
-      </div>
-    `;
-  }
+  const chip = !hasResult ? `<span class="chip flat">ফলাফল অপেক্ষমাণ</span>`
+    : delta > 0 ? `<span class="chip up">+${delta}%${r.targetReached ? " · লক্ষ্য পূর্ণ" : ""}</span>`
+    : delta < 0 ? `<span class="chip down">${delta}%</span>`
+    : `<span class="chip flat">কোনো পরিবর্তন নেই</span>`;
 
   return `
-    <div class="glass-card">
-      <div class="section-title" style="margin:0 0 6px;">অগ্রগতির ধারা</div>
-      ${inner}
-    </div>
-  `;
-}
-
-/* ---------------- Class average compare ---------------- */
-async function renderClassAverage(active) {
-  if (!active?.entityId) return "";
-  try {
-    const snap = await getDocs(query(
-      collection(db, "improvementRequests"),
-      where("entityId", "==", active.entityId)
-    ));
-    const others = snap.docs
-      .map(d => d.data())
-      .filter(r => r.studentId && r.studentId !== student.studentId && Number.isFinite(Number(r.currentAccuracy)));
-
-    if (!others.length) return "";
-
-    const avg = others.reduce((sum, r) => sum + Number(r.currentAccuracy), 0) / others.length;
-
-    return `
-      <div class="glass-card">
-        <div class="section-title" style="margin:0 0 4px;">ক্লাসের সাথে তুলনা</div>
-        <p style="font-size:0.8rem; color:var(--text-muted); font-weight:600; margin:0 0 4px;">
-          একই বিষয়ে (${esc(active.topicName || active.chapterName || active.subjectName || "")}) অন্যান্য শিক্ষার্থীদের গড়
-        </p>
-        <div class="compare-row">
-          <div class="compare-item">
-            <strong>${Math.round(Number(active.currentAccuracy) || 0)}%</strong>
-            <span>তোমার accuracy</span>
-          </div>
-          <div class="compare-item">
-            <strong>${Math.round(avg)}%</strong>
-            <span>ক্লাসের গড় (${others.length} জন)</span>
-          </div>
-        </div>
+    <div class="card hi">
+      <div class="hi-main">
+        <b>${esc(areaName(r))}</b>
+        <span>${hasResult ? `আগে ${before}%` : esc(areaPath(r) || "সম্পন্ন")}</span>
       </div>
-    `;
-  } catch (err) {
-    console.warn("Class average compare skipped:", err);
-    return "";
-  }
-}
-
-/* ---------------- Self-request form ---------------- */
-async function renderSelfRequestSection() {
-  const wrap = document.createElement("div");
-  wrap.className = "glass-card";
-  wrap.innerHTML = `
-    <button type="button" class="self-request-toggle" id="selfReqToggle">নিজে একটি Improvement Exam অনুরোধ করো</button>
-    <div class="self-request-form" id="selfReqForm">
-      <select id="selfReqSubject"><option value="">বিষয় বেছে নাও</option></select>
-      <select id="selfReqChapter"><option value="">অধ্যায় (ঐচ্ছিক)</option></select>
-      <select id="selfReqTopic"><option value="">টপিক (ঐচ্ছিক)</option></select>
-      <textarea id="selfReqNote" maxlength="200" placeholder="কেন মনে হচ্ছে এখানে দুর্বলতা আছে? (ঐচ্ছিক)"></textarea>
-      <button type="button" class="self-request-submit" id="selfReqSubmit">জমা দাও</button>
-      <div class="self-request-msg" id="selfReqMsg"></div>
-    </div>
-  `;
-
-  const toggleBtn = wrap.querySelector("#selfReqToggle");
-  const form = wrap.querySelector("#selfReqForm");
-  const subjectSel = wrap.querySelector("#selfReqSubject");
-  const chapterSel = wrap.querySelector("#selfReqChapter");
-  const topicSel = wrap.querySelector("#selfReqTopic");
-  const noteEl = wrap.querySelector("#selfReqNote");
-  const submitBtn = wrap.querySelector("#selfReqSubmit");
-  const msgEl = wrap.querySelector("#selfReqMsg");
-
-  toggleBtn.onclick = async () => {
-    const opening = !form.classList.contains("show");
-    form.classList.toggle("show");
-    if (opening && !subjectSel.dataset.loaded) {
-      subjectSel.dataset.loaded = "1";
-      try {
-        const subjects = await getSubjects(true);
-        subjectSel.innerHTML = `<option value="">বিষয় বেছে নাও</option>` +
-          subjects.map(s => `<option value="${esc(s.id)}">${esc(s.name_bn || s.name_en || s.id)}</option>`).join("");
-      } catch (err) {
-        console.warn("Subjects load failed:", err);
-      }
-    }
-  };
-
-  subjectSel.onchange = async () => {
-    chapterSel.innerHTML = `<option value="">অধ্যায় (ঐচ্ছিক)</option>`;
-    topicSel.innerHTML = `<option value="">টপিক (ঐচ্ছিক)</option>`;
-    if (!subjectSel.value) return;
-    try {
-      const chapters = await getChapters(subjectSel.value, true);
-      chapterSel.innerHTML += chapters.map(c => `<option value="${esc(c.id)}">${esc(c.name_bn || c.name_en || c.id)}</option>`).join("");
-    } catch (err) {
-      console.warn("Chapters load failed:", err);
-    }
-  };
-
-  chapterSel.onchange = async () => {
-    topicSel.innerHTML = `<option value="">টপিক (ঐচ্ছিক)</option>`;
-    if (!chapterSel.value) return;
-    try {
-      const topics = await getTopics(chapterSel.value, true);
-      topicSel.innerHTML += topics.map(t => `<option value="${esc(t.id)}">${esc(t.name_bn || t.name_en || t.id)}</option>`).join("");
-    } catch (err) {
-      console.warn("Topics load failed:", err);
-    }
-  };
-
-  submitBtn.onclick = async () => {
-    msgEl.className = "self-request-msg";
-    msgEl.textContent = "";
-
-    const subjectId = subjectSel.value || null;
-    if (!subjectId) {
-      msgEl.className = "self-request-msg err";
-      msgEl.textContent = "অন্তত একটি বিষয় বেছে নাও।";
-      return;
-    }
-    const chapterId = chapterSel.value || null;
-    const topicId = topicSel.value || null;
-
-    const entityType = topicId ? "topic" : chapterId ? "chapter" : "subject";
-    const entityId = topicId || chapterId || subjectId;
-    const entityName =
-      (topicId && topicSel.options[topicSel.selectedIndex]?.text) ||
-      (chapterId && chapterSel.options[chapterSel.selectedIndex]?.text) ||
-      subjectSel.options[subjectSel.selectedIndex]?.text || "";
-
-    submitBtn.disabled = true;
-    submitBtn.textContent = "জমা হচ্ছে...";
-
-    try {
-      // Don't let a student pile up duplicate requests for the same area.
-      const existingSnap = await getDocs(query(
-        collection(db, "improvementRequests"),
-        where("studentId", "==", student.studentId),
-        where("entityId", "==", entityId)
-      ));
-      const activeExisting = existingSnap.docs
-        .map(d => d.data())
-        .some(r => !["resolved", "dismissed"].includes(r.status));
-
-      if (activeExisting) {
-        msgEl.className = "self-request-msg err";
-        msgEl.textContent = "এই বিষয়ে তোমার ইতিমধ্যে একটি চলমান অনুরোধ আছে।";
-        submitBtn.disabled = false;
-        submitBtn.textContent = "জমা দাও";
-        return;
-      }
-
-      await createImprovementRequest({
-        studentId: student.studentId,
-        entityType, entityId, entityName,
-        subjectId,
-        subjectName: subjectSel.options[subjectSel.selectedIndex]?.text || "",
-        chapterId,
-        chapterName: chapterId ? (chapterSel.options[chapterSel.selectedIndex]?.text || "") : "",
-        topicId,
-        topicName: topicId ? (topicSel.options[topicSel.selectedIndex]?.text || "") : "",
-        priority: "low",
-        priorityRank: 1,
-        reason: "self_requested",
-        currentAccuracy: 0,
-        targetAccuracy: IMPROVEMENT_CONFIG.defaultTarget,
-        improvementNeeded: 0,
-        attempts: 0,
-        relevantQuestions: 0,
-        wrongQuestions: 0,
-        trend: 0,
-        studentNote: String(noteEl.value || "").trim().slice(0, 200),
-        status: IMPROVEMENT_STATUS.DETECTED,
-        testRequired: true,
-        source: "student_request"
-      });
-
-      msgEl.className = "self-request-msg ok";
-      msgEl.textContent = "অনুরোধ জমা হয়েছে। অ্যাডমিন পর্যালোচনা করার পর পরীক্ষা প্রস্তুত হবে।";
-      noteEl.value = "";
-      subjectSel.value = ""; chapterSel.innerHTML = `<option value="">অধ্যায় (ঐচ্ছিক)</option>`; topicSel.innerHTML = `<option value="">টপিক (ঐচ্ছিক)</option>`;
-    } catch (err) {
-      console.error(err);
-      msgEl.className = "self-request-msg err";
-      msgEl.textContent = "অনুরোধ জমা করা যায়নি। আবার চেষ্টা করো।";
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = "জমা দাও";
-    }
-  };
-
-  return wrap;
+      <div class="hi-score">
+        <strong>${hasResult ? `${after}%` : "—"}</strong>
+        ${chip}
+      </div>
+    </div>`;
 }
 
 async function renderPage() {
@@ -370,78 +159,33 @@ async function renderPage() {
     ${renderStudentHeader(student, "improvement")}
     <div id="bodyContent" class="mt-4"><div class="spinner" style="margin:40px auto;"></div></div>
   `;
-
-  const bodyContent = document.getElementById("bodyContent");
+  const body = document.getElementById("bodyContent");
 
   try {
-    injectImprovementJourneyStyles();
+    const requests = await getImprovementRequestsForStudent(student.studentId);
+    const exams = await loadReadyExams(requests);
+    const history = requests.filter(r => ["completed", "resolved"].includes(r.status));
 
-    const [xpBreakdown, journey, attempts] = await Promise.all([
-      getProfileXPBreakdown(student),
-      loadStudentImprovementJourney(student.studentId),
-      getCompletedImprovementAttempts(student.studentId).catch(() => [])
-    ]);
+    body.innerHTML = `
+      <div class="sec-title">তোমার Exam <span>${exams.length}</span></div>
+      ${exams.length
+        ? exams.map(examCard).join("")
+        : `<div class="card empty">এখন কোনো Improvement Exam নেই।<br>অ্যাডমিন তৈরি করলে এখানে দেখা যাবে।</div>`}
 
-    const classAverageHtml = await renderClassAverage(journey.active);
-
-    bodyContent.innerHTML = `
-      <div class="glass-card" style="padding: 20px 16px;">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>
-          <span style="font-size:1.1rem; font-weight:900; color:var(--text-primary);">তোমার উন্নতির যাত্রা</span>
-        </div>
-        <p style="font-size:0.85rem; color:var(--text-muted); font-weight:600; margin:8px 0 0;">
-          তোমার দুর্বলতা চিহ্নিত করে এখানে নির্দিষ্ট অনুশীলন পরীক্ষা দেওয়া হয়, যাতে সেই অংশে তুমি উন্নতি করতে পারো।
-        </p>
-        <div class="xp-grid">
-          <div class="xp-box">
-            <span class="xp-val">${xpBreakdown.officialXP}</span>
-            <span class="xp-lbl">পরীক্ষার XP</span>
-          </div>
-          <div class="xp-box xp-box-highlight">
-            <span class="xp-val">${xpBreakdown.improvementXP}</span>
-            <span class="xp-lbl">উন্নতির XP</span>
-          </div>
-          <div class="xp-box">
-            <span class="xp-val">${xpBreakdown.totalXP}</span>
-            <span class="xp-lbl">সর্বমোট XP</span>
-          </div>
-        </div>
-      </div>
-
-      ${renderBadge(journey)}
-
-      <div id="improvementSection"></div>
-
-      ${classAverageHtml}
-
-      ${renderTrendChart(attempts)}
-
-      <div id="selfRequestHost"></div>
+      <div class="sec-title">সম্পন্ন <span>${history.length}</span></div>
+      ${history.length
+        ? history.slice(0, 10).map(historyRow).join("")
+        : `<div class="card empty">এখনও কোনো Exam সম্পন্ন হয়নি।</div>`}
     `;
 
-    document.getElementById("selfRequestHost").appendChild(await renderSelfRequestSection());
-
-    // Renders the active mission + practice/details buttons and the
-    // completed-history list into #improvementSection, and refreshes
-    // itself whenever an "improvement:completed" event fires.
-    initFinalImprovementProfileIntegration();
-
-    // Keep the XP summary above in sync after a practice run completes.
-    window.addEventListener("improvement:completed", async () => {
-      try {
-        const fresh = await getProfileXPBreakdown(student);
-        const totalEl = document.querySelector(".xp-box-highlight + .xp-box .xp-val");
-        const improvementEl = document.querySelector(".xp-box-highlight .xp-val");
-        if (improvementEl) improvementEl.textContent = fresh.improvementXP;
-        if (totalEl) totalEl.textContent = fresh.totalXP;
-      } catch (err) {
-        console.warn("XP summary refresh failed:", err);
-      }
+    body.querySelectorAll("[data-test]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        location.href = `./exam.html?improvementTestId=${encodeURIComponent(btn.dataset.test)}`;
+      });
     });
   } catch (err) {
     console.error(err);
-    renderState(bodyContent, "error", "উন্নতির তথ্য লোড করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করো।");
+    renderState(body, "error", "উন্নতির তথ্য লোড করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করো।");
   }
 }
 </script>
