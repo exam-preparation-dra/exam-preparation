@@ -39,7 +39,7 @@ async function refresh() {
       // the first argument is already the test id, not a request object.
       onPractice: (testId, request) => {
         const resolvedTestId = testId || request?.improvementTestId || request?.assignedTestId;
-        if (resolvedTestId) location.href = `./improvement-test.html?testId=${encodeURIComponent(resolvedTestId)}`;
+        if (resolvedTestId) location.href = `./exam.html?improvementTestId=${encodeURIComponent(resolvedTestId)}`;
       },
       onDetails: (_id, request) => {
         window.alert(getImprovementExplanation(request));

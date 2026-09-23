@@ -1198,7 +1198,7 @@ async function renderGlobalNotifications(student) {
             event.stopPropagation();
             const testId = button.dataset.testId;
             if (testId) {
-              window.location.href = `../student/improvement-test.html?testId=${encodeURIComponent(testId)}`;
+              window.location.href = `../student/exam.html?improvementTestId=${encodeURIComponent(testId)}`;
             }
           };
         }
