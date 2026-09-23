@@ -321,6 +321,34 @@ function injectStyles() {
       font-size: 12px;
     }
 
+    .iac-success-state {
+      display: grid;
+      gap: 4px;
+      padding: 12px 13px;
+      border: 1px solid rgba(16,185,129,.35);
+      border-radius: 13px;
+      background: rgba(16,185,129,.08);
+      color: var(--iac-text);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .iac-success-state strong {
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .iac-success-state span {
+      color: var(--iac-muted);
+      overflow-wrap: anywhere;
+    }
+
+    .iac-loading {
+      opacity: .65;
+      pointer-events: none;
+      cursor: wait;
+    }
+
     .iac-divider {
       height: 1px;
       background: var(--iac-border);
@@ -623,17 +651,26 @@ function renderDetail() {
     </div>
 
     <div class="iac-actions">
-      <button class="iac-btn iac-btn-primary" data-action="review">
-        Request পর্যালোচনা
-      </button>
+      ${request.improvementTestId ? `
+        <div class="iac-success-state">
+          <strong>Improvement Exam তৈরি হয়েছে</strong>
+          <span>Test ID: ${esc(request.improvementTestId)}</span>
+          <span>${request.status === "assigned" ? "শিক্ষার্থীকে বরাদ্দ করা হয়েছে" : "Publish করা হয়েছে"}</span>
+        </div>
+      ` : `
+        <button class="iac-btn iac-btn-primary" data-action="build-test">
+          Improvement Exam তৈরি ও Publish করুন
+        </button>
+      `}
 
-      <button class="iac-btn" data-action="build-test">
-        Improvement Exam পাবলিশ করুন
-      </button>
-
-      <button class="iac-btn" data-action="dismiss">
-        Request বাতিল
-      </button>
+      ${request.status !== "dismissed" && request.status !== "assigned" && !request.improvementTestId ? `
+        <button class="iac-btn" data-action="review">
+          Request পর্যালোচনা
+        </button>
+        <button class="iac-btn" data-action="dismiss">
+          Request বাতিল
+        </button>
+      ` : ""}
     </div>
 
     <div id="iacTestPreview"></div>
@@ -676,18 +713,30 @@ async function handleDismiss(request) {
 }
 
 async function handleBuildTest(request) {
-  // Fully automated: no title/marks/time input, no manual question picking.
-  // Admin's only action is this one click. Questions come from the
-  // student's own previous mistakes first, then the related question bank
-  // for that exact chapter/topic -- always 20 questions, 20 minutes, 1 mark
-  // each, title auto-generated, published and assigned to this one student.
   const preview = document.getElementById("iacTestPreview");
+  const button = document.querySelector('[data-action="build-test"]');
   if (!preview) return;
+
+  if (request.improvementTestId) {
+    preview.innerHTML = `
+      <div class="iac-success-state">
+        <strong>এই Request-এর Improvement Exam ইতিমধ্যেই তৈরি হয়েছে।</strong>
+        <span>Test ID: ${esc(request.improvementTestId)}</span>
+      </div>
+    `;
+    return;
+  }
+
+  if (button) {
+    button.disabled = true;
+    button.classList.add("iac-loading");
+    button.textContent = "Exam তৈরি হচ্ছে… প্রশ্ন ও Snapshot সংরক্ষণ করা হচ্ছে";
+  }
 
   preview.innerHTML = `
     <div class="iac-divider"></div>
     <div class="iac-section-note">
-      Improvement Exam স্বয়ংক্রিয়ভাবে তৈরি ও পাবলিশ করা হচ্ছে...
+      Improvement Exam তৈরি হচ্ছে। এই সময় পেজ বন্ধ কোরো না।
     </div>
   `;
 
@@ -695,24 +744,30 @@ async function handleBuildTest(request) {
     const created = await autoBuildAndPublishImprovementTest(request);
 
     preview.innerHTML = `
-      <div class="iac-divider"></div>
-      <div class="iac-section-note">
-        <strong>Improvement Exam পাবলিশ হয়েছে</strong><br>
-        ${esc(created.title)}<br>
-        প্রশ্ন: ${num(created.questionCount)} · সময়: ${num(created.durationMinutes)} মিনিট
+      <div class="iac-success-state">
+        <strong>Improvement Exam সফলভাবে তৈরি ও Publish হয়েছে</strong>
+        <span>Test ID: ${esc(created.id)}</span>
+        <span>প্রশ্ন: ${num(created.questionCount)} · সময়: ${num(created.durationMinutes)} মিনিট · প্রতি প্রশ্ন: ১ নম্বর</span>
+        <span>শিক্ষার্থীকে স্বয়ংক্রিয়ভাবে বরাদ্দ করা হয়েছে।</span>
       </div>
     `;
 
     await load();
   } catch (error) {
-    console.error(error);
+    console.error("Improvement Exam create/publish:", error);
 
     preview.innerHTML = `
-      <div class="iac-divider"></div>
       <div class="iac-error">
-        ${esc(error?.message || "Improvement Exam পাবলিশ করা যায়নি।")}
+        <strong>Improvement Exam তৈরি করা যায়নি</strong><br>
+        ${esc(error?.message || "অজানা সমস্যা হয়েছে।")}
       </div>
     `;
+
+    if (button) {
+      button.disabled = false;
+      button.classList.remove("iac-loading");
+      button.textContent = "আবার চেষ্টা করুন";
+    }
   }
 }
 
@@ -731,16 +786,19 @@ async function load() {
       buildImprovementAlerts()
     ]);
 
+    const selectedId = state.selectedRequest?.id || null;
+
     state.requests = Array.isArray(requests) ? requests : [];
     state.summary = summary || {};
     state.alerts = Array.isArray(alerts) ? alerts : [];
 
-    if (
-      state.selectedRequest &&
-      !state.requests.some((x) => x.id === state.selectedRequest.id)
-    ) {
-      state.selectedRequest = null;
-    }
+    // Always replace the selected request with the freshly-read Firestore
+    // version. Without this, the UI kept the old object after Publish/Assign,
+    // so the same "Publish" button stayed visible even though Firestore had
+    // already changed the request status.
+    state.selectedRequest = selectedId
+      ? state.requests.find((x) => x.id === selectedId) || null
+      : null;
 
     const root = ensureRoot();
     renderShell(root);
