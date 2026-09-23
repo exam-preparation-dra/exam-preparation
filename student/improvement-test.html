@@ -309,7 +309,7 @@ async function submit(auto=false){
 
     await setDoc(doc(db,"improvementAttempts",resultId),{
       testId,studentId:student.studentId,
-      answers,startedAtMillis,submittedAtMillis:Date.now(),
+      answers,startedAtMillis:startedAt,submittedAtMillis:Date.now(),
       totalQuestions:questions.length,attempted,
       correctCount:correct,wrongCount:attempted-correct,
       unansweredCount:questions.length-attempted,
@@ -340,6 +340,10 @@ async function submit(auto=false){
 
     localStorage.removeItem(`improvement:${testId}:${student.studentId}`);
 
+    window.dispatchEvent(new CustomEvent("improvement:completed", {
+      detail: { testId, studentId: student.studentId, accuracy, xp: xp.xp }
+    }));
+
     app.innerHTML=`
       <div class="card result">
         <div class="eyebrow">উন্নতির ফলাফল</div>
@@ -353,7 +357,7 @@ async function submit(auto=false){
         <p>${improvement.targetReached
           ? "তোমার নির্ধারিত লক্ষ্য পূরণ হয়েছে।"
           : `লক্ষ্য: ${improvement.targetAccuracy}%`}</p>
-        <button class="btn primary" onclick="location.href='./profile.html'">প্রোফাইলে ফিরে যাও</button>
+        <button class="btn primary" onclick="location.href='./improvement.html'">উন্নতি পাতায় ফিরে যাও</button>
       </div>`;
   }catch(err){
     console.error(err);
