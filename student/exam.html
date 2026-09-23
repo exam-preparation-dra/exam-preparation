@@ -602,6 +602,19 @@ function renderQuestion() {
   void body.offsetWidth; 
   body.classList.add("q-enter");
   
+  const getOptionText = (field, letter, index) => {
+    const value = q?.[field];
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      const raw = value[letter] ?? value[letter.toLowerCase()] ?? "";
+      return typeof raw === "object" ? String(raw.text_bn ?? raw.text ?? raw.label ?? raw.value ?? "") : String(raw);
+    }
+    if (Array.isArray(value)) {
+      const raw = value[index];
+      return typeof raw === "object" ? String(raw.text_bn ?? raw.text ?? raw.label ?? raw.value ?? "") : String(raw ?? "");
+    }
+    return "";
+  };
+
   const imageHtml = q.imageUrl ? `
     <div class="protected-img-wrapper">
       <img src="${q.imageUrl}" class="q-figure" draggable="false" oncontextmenu="return false;" onerror="this.src=''; this.style.display='none';">
@@ -620,14 +633,10 @@ function renderQuestion() {
     
     <div style="margin-top:24px;">
       ${["A", "B", "C", "D"].map((letter, i) => {
-        let label = "";
-        if (isImprovementMode) {
-          const source = Array.isArray(q.options_bn) && q.options_bn.length ? q.options_bn : (Array.isArray(q.options_en) ? q.options_en : []);
-          const raw = source[i];
-          label = typeof raw === "object" ? (raw.text_bn || raw.text || raw.label || raw.value || "") : (raw ?? "");
-        } else {
-          label = q.options_bn?.[letter] ?? "";
-        }
+        const preferred = getOptionText("options_bn", letter, i);
+        const fallback = getOptionText("options_en", letter, i);
+        const generic = getOptionText("options", letter, i);
+        const label = preferred || fallback || generic;
         return `<button class="option-card ${selected === letter ? "selected" : ""}" data-letter="${letter}">
           <span class="option-letter">${letter}</span>
           <span style="flex:1; line-height:1.4;">${label}</span>
@@ -877,7 +886,7 @@ async function submitImprovementAttempt(isAutoSubmit = false) {
     const answer = answers[q.questionId];
     if (answer) {
       attempted++;
-      if (answer === q.correctAnswer) {
+      if (String(answer).trim().toUpperCase() === String(q.correctAnswer ?? "").trim().toUpperCase()) {
         correct++;
         obtainedMarks += marks;
       }
@@ -930,12 +939,20 @@ async function submitImprovementAttempt(isAutoSubmit = false) {
 
   try { await deleteDoc(doc(db, "improvementAttempts", `${improvementTestId}_${student.studentId}_active`)); } catch {}
   try { localStorage.removeItem(`improvement:${improvementTestId}:${student.studentId}`); } catch {}
+  // Students are intentionally not allowed to update improvementRequests in Firestore.
+  // The completion record is the source of truth here; admin-side reconciliation can
+  // update the request status later. Never turn a successful submission into a
+  // fake "internet error" because that protected admin-only write was rejected.
   if (improvementRequestId) {
-    await updateImprovementRequestAfterCompletion(improvementRequestId, {
-      accuracy,
-      improvementPercent: improvement.improvementPoints,
-      targetReached: improvement.targetReached
-    });
+    try {
+      await updateImprovementRequestAfterCompletion(improvementRequestId, {
+        accuracy,
+        improvementPercent: improvement.improvementPoints,
+        targetReached: improvement.targetReached
+      });
+    } catch (requestUpdateError) {
+      console.warn("Improvement request status sync skipped (student is not admin):", requestUpdateError);
+    }
   }
 
   examInProgress = false;
