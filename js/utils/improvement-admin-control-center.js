@@ -26,6 +26,7 @@ import {
   buildImprovementAlerts,
   autoBuildAndPublishImprovementTest,
   autoPublishOverdueImprovementRequests,
+  generateAndPublishImprovementForAllStudents,
   createImprovementRequestsForStudent
 } from "./improvement-admin-utils.js";
 
@@ -137,6 +138,77 @@ function injectStyles() {
       color: var(--surface, #fff);
       border-color: transparent;
     }
+
+    .iac-bulk {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(109,93,252,.20);
+      border-radius: 20px;
+      padding: 18px;
+      background: linear-gradient(135deg, rgba(109,93,252,.10), rgba(109,93,252,.035));
+      box-shadow: 0 12px 34px rgba(15,23,42,.055);
+    }
+
+    .iac-bulk::after {
+      content: "";
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      right: -75px;
+      top: -90px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(109,93,252,.18), transparent 70%);
+      pointer-events: none;
+    }
+
+    .iac-bulk-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .iac-bulk-copy { min-width: 0; }
+    .iac-bulk-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 950;
+      color: var(--iac-text);
+    }
+    .iac-bulk-note {
+      margin: 5px 0 0;
+      color: var(--iac-muted);
+      font-size: 11px;
+      line-height: 1.6;
+      max-width: 650px;
+    }
+
+    .iac-bulk-btn {
+      flex: 0 0 auto;
+      min-height: 48px;
+      padding: 12px 17px;
+      border: 0;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--imp-accent, #6d5dfc), var(--imp-accent-2, #8b7cff));
+      color: #fff;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 950;
+      cursor: pointer;
+      box-shadow: 0 12px 28px rgba(109,93,252,.22);
+      transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+    }
+    .iac-bulk-btn:hover { transform: translateY(-2px); box-shadow: 0 16px 34px rgba(109,93,252,.28); }
+    .iac-bulk-btn:active { transform: translateY(0) scale(.98); }
+    .iac-bulk-btn:disabled { opacity: .62; cursor: wait; transform: none; }
+
+    .iac-bulk-result {
+      margin-top: 12px;
+      display: none;
+    }
+    .iac-bulk-result.show { display: block; }
 
     .iac-grid {
       display: grid;
@@ -369,6 +441,11 @@ function injectStyles() {
       color: var(--iac-muted);
     }
 
+    @media (max-width: 700px) {
+      .iac-bulk-inner { align-items: stretch; flex-direction: column; }
+      .iac-bulk-btn { width: 100%; }
+    }
+
     @media (max-width: 900px) {
       .iac-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -448,6 +525,22 @@ function renderShell(root) {
         </button>
       </div>
 
+      <section class="iac-bulk">
+        <div class="iac-bulk-inner">
+          <div class="iac-bulk-copy">
+            <p class="iac-eyebrow">ONE-CLICK AUTOMATION</p>
+            <h3 class="iac-bulk-title">সকল শিক্ষার্থীর Improvement Exam তৈরি করুন</h3>
+            <p class="iac-bulk-note">
+              সক্রিয় শিক্ষার্থীদের ফলাফল থেকে দুর্বলতা শনাক্ত করে eligible Improvement Request-এর জন্য প্রশ্ন বাছাই করবে, Exam তৈরি করবে, Publish করবে এবং সরাসরি শিক্ষার্থীকে Assign করবে। আলাদা করে Generate ও Publish চাপতে হবে না।
+            </p>
+          </div>
+          <button class="iac-bulk-btn" id="iacGenerateAllBtn" type="button">
+            সকলের জন্য Generate + Publish
+          </button>
+        </div>
+        <div class="iac-bulk-result" id="iacBulkResult"></div>
+      </section>
+
       <div class="iac-grid">
         <div class="iac-stat">
           <div class="iac-stat-label">মোট অনুরোধ</div>
@@ -501,6 +594,63 @@ function renderShell(root) {
     "click",
     load
   );
+
+  root.querySelector("#iacGenerateAllBtn")?.addEventListener("click", handleGenerateAll);
+}
+
+async function handleGenerateAll() {
+  const button = document.getElementById("iacGenerateAllBtn");
+  const result = document.getElementById("iacBulkResult");
+  if (!button || !result) return;
+
+  const confirmed = window.confirm(
+    "সকল সক্রিয় শিক্ষার্থীর eligible Improvement Request থেকে Exam তৈরি, Publish এবং Assign করা হবে। ইতিমধ্যে Exam তৈরি হওয়া Request আবার তৈরি হবে না। চালিয়ে যেতে চাও?"
+  );
+  if (!confirmed) return;
+
+  button.disabled = true;
+  button.textContent = "সব শিক্ষার্থীর Exam তৈরি ও Publish হচ্ছে…";
+  result.className = "iac-bulk-result show";
+  result.innerHTML = `
+    <div class="iac-success-state">
+      <strong>Bulk automation চলছে</strong>
+      <span>দুর্বলতা শনাক্ত করা, প্রশ্ন বাছাই, Exam তৈরি, Publish ও Assign—সব ধাপ সম্পন্ন করা হচ্ছে।</span>
+    </div>
+  `;
+
+  try {
+    const summary = await generateAndPublishImprovementForAllStudents({
+      maxRequests: 500,
+      concurrency: 4
+    });
+
+    const failedDetails = (summary.results || [])
+      .filter(r => !r.ok)
+      .slice(0, 5)
+      .map(r => `${esc(r.studentId || "অজানা")}: ${esc(r.error || "সমস্যা")}`)
+      .join("<br>");
+
+    result.innerHTML = `
+      <div class="iac-success-state">
+        <strong>${summary.published}টি Improvement Exam সফলভাবে Publish ও Assign হয়েছে</strong>
+        <span>সক্রিয় শিক্ষার্থী: ${num(summary.students)} · নতুন Request: ${num(summary.createdRequests)} · Eligible Request: ${num(summary.eligibleRequests)} · সফল: ${num(summary.published)} · ব্যর্থ: ${num(summary.failed)}</span>
+        ${failedDetails ? `<span style="margin-top:4px">যেগুলো হয়নি:<br>${failedDetails}</span>` : ""}
+      </div>
+    `;
+
+    await load();
+  } catch (error) {
+    console.error("Bulk Improvement Exam automation:", error);
+    result.innerHTML = `
+      <div class="iac-error">
+        <strong>Bulk generation সম্পন্ন করা যায়নি</strong><br>
+        ${esc(error?.message || "অজানা সমস্যা হয়েছে।")}
+      </div>
+    `;
+  } finally {
+    button.disabled = false;
+    button.textContent = "সকলের জন্য Generate + Publish";
+  }
 }
 
 function renderRequests() {

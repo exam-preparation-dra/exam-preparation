@@ -396,6 +396,84 @@ export async function autoBuildAndPublishImprovementTest(request) {
 // passed. Any request still sitting at "detected"/"reviewed" a day after it
 // was created gets auto-built and auto-published from the question bank
 // exactly like the manual button does, with the same fixed 20/20/1 format.
+
+// ---- One-click bulk automation for Admin ---------------------------------
+// Detects fresh weaknesses for every active student, then creates, publishes,
+// and assigns every eligible Improvement Exam in one operation. Existing
+// requests that already have a test are never duplicated.
+export async function generateAndPublishImprovementForAllStudents({
+  maxRequests = 500,
+  concurrency = 4
+} = {}) {
+  requireAdmin();
+
+  const { getActiveStudents } = await import("./student-utils.js");
+  const students = await getActiveStudents();
+  const detection = { students: students.length, createdRequests: 0, failedStudents: [] };
+
+  // First refresh the weakness queue for all active students.
+  for (const student of students) {
+    const sid = id(student.studentId || student.docId);
+    if (!sid) continue;
+    try {
+      const created = await createImprovementRequestsForStudent(sid);
+      detection.createdRequests += Array.isArray(created) ? created.length : 0;
+    } catch (error) {
+      detection.failedStudents.push({ studentId: sid, error: error?.message || String(error) });
+    }
+  }
+
+  const rows = await getImprovementRequestQueue({ maxResults: maxRequests });
+  const eligible = rows.filter(r =>
+    !r.improvementTestId &&
+    [IMPROVEMENT_STATUS.DETECTED, IMPROVEMENT_STATUS.REVIEWED, IMPROVEMENT_STATUS.TEST_REQUIRED].includes(r.status)
+  );
+
+  const results = [];
+  let cursor = 0;
+  const worker = async () => {
+    while (cursor < eligible.length) {
+      const index = cursor++;
+      const request = eligible[index];
+      try {
+        const created = await autoBuildAndPublishImprovementTest(request);
+        results[index] = {
+          ok: true,
+          requestId: request.id,
+          studentId: request.studentId,
+          testId: created.id,
+          questionCount: created.questionCount || IMPROVEMENT_EXAM_QUESTION_COUNT
+        };
+      } catch (error) {
+        results[index] = {
+          ok: false,
+          requestId: request.id,
+          studentId: request.studentId,
+          error: error?.message || String(error)
+        };
+      }
+    }
+  };
+
+  const workers = Array.from({
+    length: Math.min(Math.max(1, Number(concurrency) || 4), Math.max(1, eligible.length))
+  }, worker);
+  await Promise.all(workers);
+
+  const successful = results.filter(r => r?.ok);
+  const failed = results.filter(r => r && !r.ok);
+
+  return {
+    ...detection,
+    eligibleRequests: eligible.length,
+    published: successful.length,
+    failed: failed.length,
+    results,
+    failedStudents: detection.failedStudents,
+    uniqueStudentsPublished: new Set(successful.map(r => r.studentId)).size
+  };
+}
+
 export async function autoPublishOverdueImprovementRequests() {
   requireAdmin();
   const cutoff = Date.now() - 24 * 60 * 60 * 1000;
