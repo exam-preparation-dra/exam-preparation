@@ -6,7 +6,7 @@
 import { db, auth } from "../firebase/firebase-config.js";
 import {
   collection, doc, getDoc, getDocs, query, where, orderBy, limit,
-  addDoc, setDoc, updateDoc, serverTimestamp
+  addDoc, setDoc, updateDoc, serverTimestamp, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import {
   IMPROVEMENT_CONFIG, IMPROVEMENT_STATUS, IMPROVEMENT_PRIORITY,
@@ -173,11 +173,14 @@ export async function buildImprovementTestDraft({request=null, questionPool=null
 }
 export async function createImprovementTest({draft,request=null,title=null,description="",publish=false,expiresAt=null,xpEnabled=true,durationMinutes=IMPROVEMENT_EXAM_DURATION_MINUTES}={}) {
   const admin=requireAdmin();
-  if (!draft?.questionIds?.length) throw new Error("Improvement test-এর জন্য অন্তত একটি প্রশ্ন প্রয়োজন।");
+  if (!draft?.questionIds?.length) {
+    throw new Error("Improvement test-এর জন্য প্রশ্ন পাওয়া যায়নি।");
+  }
 
   const questionIds = uniq(draft.questionIds);
   const requestIds = uniq([...(draft.requestIds || []), ...(request?.id ? [request.id] : [])]);
   const studentIds = uniq([...(draft.studentIds || []), ...(request?.studentId ? [request.studentId] : [])]);
+
   const snapshotQuestions = (Array.isArray(draft.questions) ? draft.questions : []).map(q => ({
     questionId: q.id || q.questionId,
     question_bn: q.question_bn || "",
@@ -186,50 +189,68 @@ export async function createImprovementTest({draft,request=null,title=null,descr
     options_bn: Array.isArray(q.options_bn) ? q.options_bn : [],
     options_en: Array.isArray(q.options_en) ? q.options_en : [],
     options: Array.isArray(q.options) ? q.options : [],
-    correctAnswer: q.correctAnswer || null,
+    correctAnswer: q.correctAnswer ?? null,
     explanation_bn: q.explanation_bn || null,
     imageUrl: q.imageUrl || null,
-    marks: IMPROVEMENT_EXAM_MARKS_PER_QUESTION, // uniform mark value on every Improvement Exam
+    marks: IMPROVEMENT_EXAM_MARKS_PER_QUESTION,
     subjectId: q.subjectId || null,
     chapterId: q.chapterId || null,
     topicId: q.topicId || null,
     source: q.source || "admin_selected"
-  })).filter(q => q.questionId && q.correctAnswer);
+  })).filter(q =>
+    q.questionId &&
+    q.correctAnswer !== null &&
+    q.correctAnswer !== undefined &&
+    String(q.correctAnswer).trim() !== ""
+  );
 
-  if (!snapshotQuestions.length) throw new Error("Improvement test-এর জন্য বৈধ প্রশ্ন snapshot পাওয়া যায়নি।");
+  if (snapshotQuestions.length < IMPROVEMENT_EXAM_QUESTION_COUNT) {
+    throw new Error(
+      `Improvement Exam-এর জন্য ${IMPROVEMENT_EXAM_QUESTION_COUNT}টি বৈধ প্রশ্ন দরকার, কিন্তু ${snapshotQuestions.length}টি পাওয়া গেছে।`
+    );
+  }
+
+  const finalQuestions = snapshotQuestions.slice(0, IMPROVEMENT_EXAM_QUESTION_COUNT);
+  const finalQuestionIds = finalQuestions.map(q => q.questionId);
 
   const firstRequestId = requestIds.length === 1 ? requestIds[0] : null;
   const firstRequest = firstRequestId ? await getDoc(doc(db, "improvementRequests", firstRequestId)) : null;
   const requestData = firstRequest?.exists?.() ? firstRequest.data() : {};
 
-  const data={
+  const data = {
     type:"improvement_practice",
-    title: String(title || autoImprovementTitle(request || requestData)).trim(),
-    description:String(description||"").trim(),
+    title:String(title || autoImprovementTitle(request || requestData)).trim(),
+    description:String(description || "").trim(),
     studentIds,
     requestIds,
     requestId:firstRequestId,
-    subjectId:draft.subjectId||requestData.subjectId||null,
-    chapterId:draft.chapterId||requestData.chapterId||null,
-    topicId:draft.topicId||requestData.topicId||null,
-    baselineAccuracy:Number(requestData.currentAccuracy||0),
-    targetAccuracy:Number(requestData.targetAccuracy||65),
-    questionIds,
-    questionCount:snapshotQuestions.length,
-    durationMinutes:Number(durationMinutes)>0?Number(durationMinutes):IMPROVEMENT_EXAM_DURATION_MINUTES,
-    sourceBreakdown:draft.sourceBreakdown||{},
+    subjectId:draft.subjectId || requestData.subjectId || null,
+    chapterId:draft.chapterId || requestData.chapterId || null,
+    topicId:draft.topicId || requestData.topicId || null,
+    baselineAccuracy:Number(requestData.currentAccuracy || 0),
+    targetAccuracy:Number(requestData.targetAccuracy || 65),
+    questionIds:finalQuestionIds,
+    questionCount:finalQuestions.length,
+    durationMinutes:Number(durationMinutes) > 0 ? Number(durationMinutes) : IMPROVEMENT_EXAM_DURATION_MINUTES,
+    sourceBreakdown:draft.sourceBreakdown || {},
     xpEnabled:Boolean(xpEnabled),
-    status:publish?"published":"draft",
+    status:publish ? "published" : "draft",
     published:Boolean(publish),
     createdBy:admin.uid,
     createdAt:serverTimestamp(),
     updatedAt:serverTimestamp(),
-    expiresAt:expiresAt||null
+    expiresAt:expiresAt || null
   };
 
-  const ref=await addDoc(collection(db,"improvementTests"),data);
-  await setDoc(doc(db,"improvementTestSnapshots",ref.id),{
-    testId:ref.id,
+  // Use one batch for the test + snapshot + request state update. This
+  // prevents a half-created Improvement Exam when one of the writes fails.
+  const testRef = doc(collection(db, "improvementTests"));
+  const snapshotRef = doc(db, "improvementTestSnapshots", testRef.id);
+  const batch = writeBatch(db);
+
+  batch.set(testRef, data);
+  batch.set(snapshotRef, {
+    testId:testRef.id,
     type:"improvement_practice",
     title:data.title,
     description:data.description,
@@ -237,18 +258,25 @@ export async function createImprovementTest({draft,request=null,title=null,descr
     chapterId:data.chapterId,
     topicId:data.topicId,
     requestIds,
-    questions:snapshotQuestions,
-    questionCount:snapshotQuestions.length,
+    questions:finalQuestions,
+    questionCount:finalQuestions.length,
     createdBy:admin.uid,
     createdAt:serverTimestamp()
   });
 
-  if(publish) {
-    for(const rid of requestIds) {
-      await updateDoc(doc(db,"improvementRequests",rid),{status:IMPROVEMENT_STATUS.TEST_CREATED,improvementTestId:ref.id,updatedAt:serverTimestamp()});
+  if (publish) {
+    for (const rid of requestIds) {
+      batch.update(doc(db, "improvementRequests", rid), {
+        status:IMPROVEMENT_STATUS.TEST_CREATED,
+        improvementTestId:testRef.id,
+        updatedAt:serverTimestamp()
+      });
     }
   }
-  return {id:ref.id,...data,questionCount:snapshotQuestions.length};
+
+  await batch.commit();
+
+  return {id:testRef.id,...data,questionCount:finalQuestions.length};
 }
 
 export async function setImprovementTestPublished(testId,published=true) {
@@ -332,7 +360,23 @@ export async function autoBuildAndPublishImprovementTest(request) {
   });
 
   await assignImprovementTest(created.id, [sid]);
-  return created;
+
+  // Read back the final Firestore state. The admin UI can now show a real
+  // success state only after the test is actually published and assigned.
+  const finalSnap = await getDoc(doc(db, "improvementTests", created.id));
+  if (!finalSnap.exists()) {
+    throw new Error("Exam তৈরি হওয়ার পরে Firestore-এ Test পাওয়া যায়নি।");
+  }
+
+  const finalData = finalSnap.data();
+  if (finalData.published !== true || finalData.status !== "published") {
+    throw new Error("Exam তৈরি হয়েছে, কিন্তু Publish state নিশ্চিত করা যায়নি।");
+  }
+  if (!Array.isArray(finalData.studentIds) || !finalData.studentIds.includes(sid)) {
+    throw new Error("Exam Publish হয়েছে, কিন্তু শিক্ষার্থীকে Assign নিশ্চিত করা যায়নি।");
+  }
+
+  return {id:finalSnap.id,...finalData,questionCount:finalData.questionCount || created.questionCount};
 }
 
 // ---- 24-hour fallback: run this whenever an admin page loads (see
