@@ -75,14 +75,22 @@ async function getQuestionsForRequest(request) {
 }
 
 function makeSnapshotQuestions(questions) {
+  const normalizeOptions = (value) => {
+    if (value && typeof value === "object" && !Array.isArray(value)) return {
+      A: String(value.A ?? ""), B: String(value.B ?? ""),
+      C: String(value.C ?? ""), D: String(value.D ?? "")
+    };
+    if (Array.isArray(value)) return value;
+    return [];
+  };
   return questions.map(q => ({
     questionId: q.id,
     question_bn: q.question_bn || "",
     question_en: q.question_en || "",
     question: q.question || "",
-    options_bn: Array.isArray(q.options_bn) ? q.options_bn : [],
-    options_en: Array.isArray(q.options_en) ? q.options_en : [],
-    options: Array.isArray(q.options) ? q.options : [],
+    options_bn: normalizeOptions(q.options_bn),
+    options_en: normalizeOptions(q.options_en),
+    options: normalizeOptions(q.options),
     correctAnswer: q.correctAnswer,
     subjectId: q.subjectId || null,
     chapterId: q.chapterId || null,

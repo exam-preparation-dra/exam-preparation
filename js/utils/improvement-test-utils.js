@@ -40,13 +40,22 @@ function requireAdmin() {
   return auth.currentUser;
 }
 
+function normalizeOptions(value) {
+  if (value && typeof value === "object" && !Array.isArray(value)) return {
+    A: String(value.A ?? ""), B: String(value.B ?? ""),
+    C: String(value.C ?? ""), D: String(value.D ?? "")
+  };
+  if (Array.isArray(value)) return value;
+  return [];
+}
+
 function cleanQuestion(q = {}) {
   return {
     questionId: cleanId(q.id || q.questionId),
     question_en: String(q.question_en || ""),
     question_bn: String(q.question_bn || ""),
-    options_bn: Array.isArray(q.options_bn) ? q.options_bn : [],
-    options_en: Array.isArray(q.options_en) ? q.options_en : [],
+    options_bn: normalizeOptions(q.options_bn),
+    options_en: normalizeOptions(q.options_en),
     correctAnswer: q.correctAnswer || null,
     explanation_bn: q.explanation_bn || null,
     imageUrl: q.imageUrl || null,

@@ -181,14 +181,23 @@ export async function createImprovementTest({draft,request=null,title=null,descr
   const requestIds = uniq([...(draft.requestIds || []), ...(request?.id ? [request.id] : [])]);
   const studentIds = uniq([...(draft.studentIds || []), ...(request?.studentId ? [request.studentId] : [])]);
 
+  const normalizeOptions = (value) => {
+    if (value && typeof value === "object" && !Array.isArray(value)) return {
+      A: String(value.A ?? ""), B: String(value.B ?? ""),
+      C: String(value.C ?? ""), D: String(value.D ?? "")
+    };
+    if (Array.isArray(value)) return value;
+    return [];
+  };
+
   const snapshotQuestions = (Array.isArray(draft.questions) ? draft.questions : []).map(q => ({
     questionId: q.id || q.questionId,
     question_bn: q.question_bn || "",
     question_en: q.question_en || "",
     question: q.question || "",
-    options_bn: Array.isArray(q.options_bn) ? q.options_bn : [],
-    options_en: Array.isArray(q.options_en) ? q.options_en : [],
-    options: Array.isArray(q.options) ? q.options : [],
+    options_bn: normalizeOptions(q.options_bn),
+    options_en: normalizeOptions(q.options_en),
+    options: normalizeOptions(q.options),
     correctAnswer: q.correctAnswer ?? null,
     explanation_bn: q.explanation_bn || null,
     imageUrl: q.imageUrl || null,
