@@ -24,11 +24,8 @@ import {
   reviewImprovementRequest,
   dismissImprovementRequest,
   buildImprovementAlerts,
-  getQuestionPoolForImprovement,
-  buildImprovementTestDraft,
-  createImprovementTest,
-  setImprovementTestPublished,
-  assignImprovementTest
+  autoBuildAndPublishImprovementTest,
+  autoPublishOverdueImprovementRequests
 } from "./improvement-admin-utils.js";
 
 import {
@@ -628,7 +625,7 @@ function renderDetail() {
       </button>
 
       <button class="iac-btn" data-action="build-test">
-        Improvement Test তৈরি
+        Improvement Exam পাবলিশ করুন
       </button>
 
       <button class="iac-btn" data-action="dismiss">
@@ -676,82 +673,41 @@ async function handleDismiss(request) {
 }
 
 async function handleBuildTest(request) {
+  // Fully automated: no title/marks/time input, no manual question picking.
+  // Admin's only action is this one click. Questions come from the
+  // student's own previous mistakes first, then the related question bank
+  // for that exact chapter/topic -- always 20 questions, 20 minutes, 1 mark
+  // each, title auto-generated, published and assigned to this one student.
   const preview = document.getElementById("iacTestPreview");
   if (!preview) return;
 
   preview.innerHTML = `
     <div class="iac-divider"></div>
     <div class="iac-section-note">
-      Improvement Test-এর জন্য বাস্তব question pool তৈরি করা হচ্ছে...
+      Improvement Exam স্বয়ংক্রিয়ভাবে তৈরি ও পাবলিশ করা হচ্ছে...
     </div>
   `;
 
   try {
-    const pool = await getQuestionPoolForImprovement(request);
-
-    const draft = buildImprovementTestDraft({
-      request,
-      questionPool: pool
-    });
+    const created = await autoBuildAndPublishImprovementTest(request);
 
     preview.innerHTML = `
       <div class="iac-divider"></div>
-
       <div class="iac-section-note">
-        <strong>Test Draft প্রস্তুত</strong><br>
-        প্রশ্ন: ${num(draft.questionCount || draft.questions?.length)}
-      </div>
-
-      <div class="iac-question-list">
-        ${(draft.questions || []).slice(0, 8).map((question, index) => `
-          <div class="iac-question">
-            ${index + 1}. ${esc(
-              question.questionText ||
-              question.text ||
-              question.id ||
-              "প্রশ্ন"
-            )}
-          </div>
-        `).join("")}
-      </div>
-
-      <div class="iac-actions">
-        <button class="iac-btn iac-btn-primary" data-create-test>
-          Test তৈরি করে সংরক্ষণ
-        </button>
+        <strong>Improvement Exam পাবলিশ হয়েছে</strong><br>
+        ${esc(created.title)}<br>
+        প্রশ্ন: ${num(created.questionCount)} · সময়: ${num(created.durationMinutes)} মিনিট
       </div>
     `;
 
-    preview.querySelector("[data-create-test]")
-      ?.addEventListener("click", async () => {
-        try {
-          const created = await createImprovementTest({
-            request,
-            draft
-          });
-
-          if (created?.id) {
-            await setImprovementTestPublished(created.id, true);
-            await assignImprovementTest(created.id, request.studentId);
-          }
-
-          await load();
-
-          alert(
-            "Improvement Test তৈরি হয়েছে এবং শিক্ষার্থীর জন্য বরাদ্দ করা হয়েছে। Publish করার আগে Admin এটি যাচাই করতে পারবে।"
-          );
-        } catch (error) {
-          console.error(error);
-          alert("Improvement Test তৈরি করা যায়নি।");
-        }
-      });
+    await load();
   } catch (error) {
     console.error(error);
 
     preview.innerHTML = `
       <div class="iac-divider"></div>
       <div class="iac-error">
-        Question pool তৈরি করা যায়নি। আগে Firestore-এর বাস্তব question/exam data যাচাই করো।
+        ${esc(error?.message || "Improvement Exam পাবলিশ করা যায়নি।")}
       </div>
     `;
   }
@@ -804,9 +760,30 @@ async function load() {
   }
 }
 
+// SPARK-PLAN LIMITATION: there is no server/cron here, so a request that
+// crosses 24 hours unpublished cannot fire on its own the instant the
+// deadline hits. This runs the same auto-build-and-publish used by the
+// manual button, but sweeps every overdue request at once -- it just needs
+// an admin to have this page open (any time after the 24 hours) to trigger.
+async function runOverdueSweep() {
+  try {
+    const results = await autoPublishOverdueImprovementRequests();
+    const okCount = results.filter(r => r.ok).length;
+    if (okCount > 0) {
+      console.info(`Improvement Control Center: ${okCount} overdue request(s) auto-published.`);
+    }
+    const failed = results.filter(r => !r.ok);
+    if (failed.length) {
+      console.warn("Improvement Control Center: overdue auto-publish failed for", failed);
+    }
+  } catch (error) {
+    console.warn("Improvement Control Center: overdue sweep skipped:", error);
+  }
+}
+
 export function initImprovementAdminControlCenter() {
   injectStyles();
-  load();
+  runOverdueSweep().finally(load);
 }
 
 if (document.readyState === "loading") {

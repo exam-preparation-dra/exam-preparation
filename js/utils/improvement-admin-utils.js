@@ -6,7 +6,7 @@
 import { db, auth } from "../firebase/firebase-config.js";
 import {
   collection, doc, getDoc, getDocs, query, where, orderBy, limit,
-  addDoc, updateDoc, serverTimestamp
+  addDoc, setDoc, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import {
   IMPROVEMENT_CONFIG, IMPROVEMENT_STATUS, IMPROVEMENT_PRIORITY,
@@ -29,6 +29,18 @@ const requireAdmin = () => {
   if (!auth.currentUser) throw new Error("অ্যাডমিন হিসেবে লগইন করা প্রয়োজন।");
   return auth.currentUser;
 };
+
+// ---- Fixed format for every Improvement Exam: never editable, never
+// varies request-to-request. Title is always auto-generated from the
+// weak area's own name -- admin never types one in. ----
+const IMPROVEMENT_EXAM_QUESTION_COUNT = 20;
+const IMPROVEMENT_EXAM_DURATION_MINUTES = 20;
+const IMPROVEMENT_EXAM_MARKS_PER_QUESTION = 1; // uniform -- never mixed marks
+
+function autoImprovementTitle(request) {
+  const area = request?.topicName || request?.chapterName || request?.subjectName || request?.entityName || "সাধারণ";
+  return `Improvement Exam — ${area}`;
+}
 
 export async function getImprovementRequestQueue({status=null, priority=null, studentId=null, chapterId=null, maxResults=100}={}) {
   requireAdmin();
@@ -150,7 +162,7 @@ export async function buildImprovementTestDraft({request=null, questionPool=null
     }
   };
 }
-export async function createImprovementTest({draft,request=null,title="উন্নতির অনুশীলন",description="",publish=false,expiresAt=null,xpEnabled=true}={}) {
+export async function createImprovementTest({draft,request=null,title=null,description="",publish=false,expiresAt=null,xpEnabled=true,durationMinutes=IMPROVEMENT_EXAM_DURATION_MINUTES}={}) {
   const admin=requireAdmin();
   if (!draft?.questionIds?.length) throw new Error("Improvement test-এর জন্য অন্তত একটি প্রশ্ন প্রয়োজন।");
 
@@ -168,7 +180,7 @@ export async function createImprovementTest({draft,request=null,title="উন্
     correctAnswer: q.correctAnswer || null,
     explanation_bn: q.explanation_bn || null,
     imageUrl: q.imageUrl || null,
-    marks: Number(q.marks) > 0 ? Number(q.marks) : 1,
+    marks: IMPROVEMENT_EXAM_MARKS_PER_QUESTION, // uniform mark value on every Improvement Exam
     subjectId: q.subjectId || null,
     chapterId: q.chapterId || null,
     topicId: q.topicId || null,
@@ -183,7 +195,7 @@ export async function createImprovementTest({draft,request=null,title="উন্
 
   const data={
     type:"improvement_practice",
-    title:String(title).trim(),
+    title: String(title || autoImprovementTitle(request || requestData)).trim(),
     description:String(description||"").trim(),
     studentIds,
     requestIds,
@@ -195,6 +207,7 @@ export async function createImprovementTest({draft,request=null,title="উন্
     targetAccuracy:Number(requestData.targetAccuracy||65),
     questionIds,
     questionCount:snapshotQuestions.length,
+    durationMinutes:Number(durationMinutes)>0?Number(durationMinutes):IMPROVEMENT_EXAM_DURATION_MINUTES,
     sourceBreakdown:draft.sourceBreakdown||{},
     xpEnabled:Boolean(xpEnabled),
     status:publish?"published":"draft",
@@ -268,4 +281,72 @@ export async function createImprovementRequestsForStudent(studentId,options={}) 
     const ref=await addDoc(collection(db,"improvementRequests"),data); created.push({id:ref.id,...data});
   }
   return created;
+}
+
+// ---- One-click automation: builds the question set for this ONE student's
+// weak chapter/topic (previous wrong answers first, then the related
+// question bank -- never admin-typed questions), auto-titles it, forces the
+// fixed 20 question / 20 minute / 1-mark-each format, publishes it, and
+// assigns it straight to that student. Admin's only action is calling this
+// (a single "publish" click) -- there is no title/marks/time/question input
+// anywhere in this path. XP wiring is unchanged (computeImprovementPracticeXP
+// still fires when the student finishes it, same as any improvement test).
+export async function autoBuildAndPublishImprovementTest(request) {
+  requireAdmin();
+  const sid = id(request?.studentId);
+  if (!sid) throw new Error("Student ID প্রয়োজন।");
+
+  const draft = await buildImprovementTestDraft({
+    request,
+    studentIds: [sid],
+    requestIds: request?.id ? [request.id] : [],
+    subjectId: request?.subjectId || null,
+    chapterId: request?.chapterId || null,
+    topicId: request?.topicId || null,
+    questionCount: IMPROVEMENT_EXAM_QUESTION_COUNT
+  });
+
+  if (!draft.questionIds.length) {
+    throw new Error("এই দুর্বল অংশের জন্য প্রশ্ন ব্যাংকে যথেষ্ট প্রশ্ন নেই -- Improvement Exam তৈরি করা যায়নি।");
+  }
+
+  const created = await createImprovementTest({
+    draft,
+    request,
+    title: autoImprovementTitle(request),
+    publish: true,
+    durationMinutes: IMPROVEMENT_EXAM_DURATION_MINUTES
+  });
+
+  await assignImprovementTest(created.id, [sid]);
+  return created;
+}
+
+// ---- 24-hour fallback: run this whenever an admin page loads (see
+// admin-improvement-integration.js). There is no server/cron on this
+// project (Firebase Spark plan, no Cloud Functions), so this cannot fire on
+// a real background timer -- it only runs opportunistically, the next time
+// someone with admin access opens an admin page after the 24 hours have
+// passed. Any request still sitting at "detected"/"reviewed" a day after it
+// was created gets auto-built and auto-published from the question bank
+// exactly like the manual button does, with the same fixed 20/20/1 format.
+export async function autoPublishOverdueImprovementRequests() {
+  requireAdmin();
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  const rows = await getImprovementRequestQueue({ maxResults: 250 });
+  const overdue = rows.filter(r =>
+    [IMPROVEMENT_STATUS.DETECTED, IMPROVEMENT_STATUS.REVIEWED].includes(r.status) &&
+    ts(r.createdAt) > 0 && ts(r.createdAt) <= cutoff
+  );
+
+  const results = [];
+  for (const request of overdue) {
+    try {
+      const created = await autoBuildAndPublishImprovementTest(request);
+      results.push({ requestId: request.id, studentId: request.studentId, ok: true, testId: created.id });
+    } catch (error) {
+      results.push({ requestId: request.id, studentId: request.studentId, ok: false, error: error?.message || String(error) });
+    }
+  }
+  return results;
 }
