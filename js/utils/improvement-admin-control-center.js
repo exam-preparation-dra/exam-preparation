@@ -25,8 +25,11 @@ import {
   dismissImprovementRequest,
   buildImprovementAlerts,
   autoBuildAndPublishImprovementTest,
-  autoPublishOverdueImprovementRequests
+  autoPublishOverdueImprovementRequests,
+  createImprovementRequestsForStudent
 } from "./improvement-admin-utils.js";
+
+import { getActiveStudents } from "./student-utils.js";
 
 import {
   getPriorityLabel,
@@ -760,6 +763,28 @@ async function load() {
   }
 }
 
+// THE MISSING STEP: nothing in this codebase ever actually scanned a
+// student's results and created improvementRequests -- createImprovementRequestsForStudent()
+// existed but was never called from anywhere, so the queue above always
+// stayed empty no matter how badly a student performed. This runs it for
+// every active student (each student is independent -- one failing does
+// not stop the rest), same "opportunistic, next admin page load" pattern
+// as runOverdueSweep below (Spark plan, no cron).
+async function runDetectionSweep() {
+  try {
+    const students = await getActiveStudents();
+    for (const s of students) {
+      try {
+        await createImprovementRequestsForStudent(s.studentId);
+      } catch (error) {
+        console.warn(`Improvement Control Center: detection skipped for ${s.studentId}:`, error);
+      }
+    }
+  } catch (error) {
+    console.warn("Improvement Control Center: detection sweep skipped:", error);
+  }
+}
+
 // SPARK-PLAN LIMITATION: there is no server/cron here, so a request that
 // crosses 24 hours unpublished cannot fire on its own the instant the
 // deadline hits. This runs the same auto-build-and-publish used by the
@@ -783,7 +808,7 @@ async function runOverdueSweep() {
 
 export function initImprovementAdminControlCenter() {
   injectStyles();
-  runOverdueSweep().finally(load);
+  runDetectionSweep().then(runOverdueSweep).finally(load);
 }
 
 if (document.readyState === "loading") {

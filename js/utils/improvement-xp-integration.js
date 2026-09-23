@@ -17,8 +17,13 @@ function num(value) {
   return Number.isFinite(n) ? n : 0;
 }
 
-export async function getImprovementEarnedXP(studentId) {
-  if (!studentId) return 0;
+// Raw completed improvementAttempts docs for one student. This is the
+// shape computeStudentXP()'s `improvementPracticeResults` option expects
+// (totalQuestions, correctCount, attempted, percentage, attemptNumber,
+// targetReached, improvementPoints, status) — the same fields the test
+// runner (improvement-test.html) writes on submit.
+export async function getCompletedImprovementAttempts(studentId) {
+  if (!studentId) return [];
 
   const q = query(
     collection(db, "improvementAttempts"),
@@ -27,11 +32,35 @@ export async function getImprovementEarnedXP(studentId) {
   );
 
   const snap = await getDocs(q);
+  return snap.docs.map((item) => item.data());
+}
 
-  let total = 0;
+// Same, but grouped for every student at once — for the leaderboard and
+// rank calculations, which need every student's improvement XP together
+// rather than one query per student.
+export async function getCompletedImprovementAttemptsByStudent() {
+  const snap = await getDocs(
+    query(
+      collection(db, "improvementAttempts"),
+      where("status", "==", "completed")
+    )
+  );
 
+  const map = {};
   snap.forEach((item) => {
     const data = item.data();
+    if (!data.studentId) return;
+    (map[data.studentId] ||= []).push(data);
+  });
+
+  return map;
+}
+
+export async function getImprovementEarnedXP(studentId) {
+  const attempts = await getCompletedImprovementAttempts(studentId);
+
+  let total = 0;
+  attempts.forEach((data) => {
     total += Math.max(0, num(data.xpEarned ?? data.xp));
   });
 

@@ -716,14 +716,25 @@ async function renderGlobalNotifications(student) {
       )
     );
 
+    const improvementQuery = query(
+      collection(db, "improvementRequests"),
+      where(
+        "studentId",
+        "==",
+        student.studentId
+      )
+    );
+
     const [
       requestSnap,
       challengeSnap,
-      studentSnap
+      studentSnap,
+      improvementSnap
     ] = await Promise.all([
       getDocs(requestQuery),
       getDocs(challengeQuery),
-      getDocs(collection(db, "students"))
+      getDocs(collection(db, "students")),
+      getDocs(improvementQuery).catch(() => ({ docs: [] }))
     ]);
 
     // ---------- Student names ----------
@@ -812,7 +823,43 @@ async function renderGlobalNotifications(student) {
           createdAt:
             challenge.createdAt
         })
-      )
+      ),
+
+      ...improvementSnap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(data => data.status === "assigned")
+        .map(
+          data => ({
+            key: `improvement:${data.id}`,
+            type: "improvement",
+            id: data.id,
+            testId: data.improvementTestId || data.assignedTestId || "",
+            topicName: data.topicName || data.chapterName || data.subjectName || data.entityName || "একটি বিষয়",
+            currentAccuracy: Math.round(Number(data.currentAccuracy) || 0),
+            targetAccuracy: Math.round(Number(data.targetAccuracy) || 0),
+            createdAt: data.assignedAt || data.updatedAt || data.createdAt
+          })
+        ),
+
+      ...improvementSnap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(data =>
+          (data.status === "completed" || data.status === "resolved") &&
+          notificationMillis(data.completedAt) > (Date.now() - 3 * 24 * 60 * 60 * 1000)
+        )
+        .map(
+          data => ({
+            key: `improvement-result:${data.id}`,
+            type: "improvement-result",
+            id: data.id,
+            topicName: data.topicName || data.chapterName || data.subjectName || data.entityName || "একটি বিষয়",
+            previousAccuracy: Math.round(Number(data.currentAccuracy) || 0),
+            newAccuracy: Math.round(Number(data.lastAccuracy) || 0),
+            improvementPercent: Math.round(Number(data.lastImprovementPercent) || 0),
+            targetReached: data.targetReached === true,
+            createdAt: data.completedAt
+          })
+        )
     ]
       .filter(
         item =>
@@ -936,6 +983,125 @@ async function renderGlobalNotifications(student) {
             `;
           }
 
+          if (item.type === "improvement-result") {
+            const delta = item.improvementPercent;
+            return `
+              <div
+                class="global-notification-item"
+                data-notification-key="${escapeNotification(item.key)}"
+              >
+
+                <div class="global-notification-item-title">
+
+                  <div class="global-notification-icon">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                    >
+                      <path d="M3 17l6-6 4 4 8-8"/>
+                      <path d="M15 7h6v6"/>
+                    </svg>
+                  </div>
+
+                  <div class="global-notification-main">
+
+                    <strong>
+                      ${escapeNotification(item.topicName)}-এ ${delta > 0 ? `${delta}% উন্নতি হয়েছে` : "অনুশীলন সম্পন্ন হয়েছে"}
+                    </strong>
+
+                    <p>
+                      ${item.previousAccuracy}% থেকে ${item.newAccuracy}%${item.targetReached ? " — লক্ষ্য পূর্ণ হয়েছে" : ""}
+                    </p>
+
+                    <div class="global-notification-time">
+                      ${notificationAge(item.createdAt)}
+                    </div>
+
+                  </div>
+
+                </div>
+
+                <div class="global-notification-actions">
+
+                  <button
+                    type="button"
+                    class="global-notif-hide"
+                    data-key="${escapeNotification(item.key)}"
+                  >
+                    লুকান
+                  </button>
+
+                </div>
+
+              </div>
+            `;
+          }
+
+          if (item.type === "improvement") {
+            return `
+              <div
+                class="global-notification-item"
+                data-notification-key="${escapeNotification(item.key)}"
+              >
+
+                <div class="global-notification-item-title">
+
+                  <div class="global-notification-icon">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                    >
+                      <path d="M3 17l6-6 4 4 8-8"/>
+                      <path d="M15 7h6v6"/>
+                    </svg>
+                  </div>
+
+                  <div class="global-notification-main">
+
+                    <strong>
+                      ${escapeNotification(item.topicName)} অংশে Improvement Exam প্রস্তুত
+                    </strong>
+
+                    <p>
+                      বর্তমান accuracy ${item.currentAccuracy}% — লক্ষ্য ${item.targetAccuracy}%। অনুশীলন করে উন্নতি করো।
+                    </p>
+
+                    <div class="global-notification-time">
+                      ${notificationAge(item.createdAt)}
+                    </div>
+
+                  </div>
+
+                </div>
+
+                <div class="global-notification-actions">
+
+                  <button
+                    type="button"
+                    class="global-notif-start-improvement"
+                    data-test-id="${escapeNotification(item.testId)}"
+                  >
+                    শুরু করো
+                  </button>
+
+                  <button
+                    type="button"
+                    class="global-notif-hide"
+                    data-key="${escapeNotification(item.key)}"
+                  >
+                    লুকান
+                  </button>
+
+                </div>
+
+              </div>
+            `;
+          }
+
           return `
             <div
               class="global-notification-item"
@@ -1011,7 +1177,24 @@ async function renderGlobalNotifications(student) {
         })
         .join("");
 
-    // ---------- Hide notification ----------
+    // ---------- Start improvement exam ----------
+    list
+      .querySelectorAll(
+        ".global-notif-start-improvement"
+      )
+      .forEach(
+        button => {
+          button.onclick = event => {
+            event.stopPropagation();
+            const testId = button.dataset.testId;
+            if (testId) {
+              window.location.href = `../student/improvement-test.html?testId=${encodeURIComponent(testId)}`;
+            }
+          };
+        }
+      );
+
+
     list
       .querySelectorAll(
         ".global-notif-hide"

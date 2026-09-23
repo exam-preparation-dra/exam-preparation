@@ -133,11 +133,12 @@ export async function getResultById(resultId) {
 // gathers the data and turns it into leaderboard rows.
 export { REFERRAL_XP } from "./xp-utils.js";
 import { getChallengeBonusMap } from "./challenge-utils.js";
+import { getCompletedImprovementAttemptsByStudent } from "./improvement-xp-integration.js";
 
 // results (everyone's) + active students -> { studentId: computeStudentXP(...) }
 // A student appears if they have counted results, or if they are an active
 // student who referred someone (so the referral XP is never lost).
-function buildStatsByStudent(results, studentsList, challengeBonusMap = {}) {
+function buildStatsByStudent(results, studentsList, challengeBonusMap = {}, improvementResultsMap = {}) {
   const referralCounts = buildReferralCountMap(studentsList);
   const activeIds = new Set(studentsList.map(s => s.studentId));
   const grouped = {};
@@ -148,11 +149,15 @@ function buildStatsByStudent(results, studentsList, challengeBonusMap = {}) {
   Object.keys(challengeBonusMap).forEach(sid => {
     if (activeIds.has(sid) && !grouped[sid]) grouped[sid] = [];
   });
+  Object.keys(improvementResultsMap).forEach(sid => {
+    if (activeIds.has(sid) && !grouped[sid]) grouped[sid] = [];
+  });
   const stats = {};
   for (const [sid, list] of Object.entries(grouped)) {
     stats[sid] = computeStudentXP(list, {
       referralCount: referralCounts[sid] || 0,
-      challengeBonusXP: challengeBonusMap[sid] || 0
+      challengeBonusXP: challengeBonusMap[sid] || 0,
+      improvementPracticeResults: improvementResultsMap[sid] || []
     });
   }
   return stats;
@@ -163,9 +168,10 @@ function buildStatsByStudent(results, studentsList, challengeBonusMap = {}) {
 // and reuse them for weekly stats / rank movement instead of re-fetching.
 // challengeBonusMap is optional — pass it in (from getChallengeBonusMap())
 // so this function stays pure/sync; omit it (e.g. for a "last week" replay)
-// when challenge bonus shouldn't apply to that snapshot.
-export function buildLeaderboardRows(results, studentsList, challengeBonusMap = {}) {
-  const stats = buildStatsByStudent(results, studentsList, challengeBonusMap);
+// when challenge bonus shouldn't apply to that snapshot. Same for
+// improvementResultsMap (from getCompletedImprovementAttemptsByStudent()).
+export function buildLeaderboardRows(results, studentsList, challengeBonusMap = {}, improvementResultsMap = {}) {
+  const stats = buildStatsByStudent(results, studentsList, challengeBonusMap, improvementResultsMap);
 
   const infoOf = {};
   studentsList.forEach(s => { infoOf[s.studentId] = s; });
@@ -181,23 +187,25 @@ export function buildLeaderboardRows(results, studentsList, challengeBonusMap = 
 }
 
 export async function getLeaderboardData(studentsList) {
-  const [results, challengeBonusMap] = await Promise.all([
+  const [results, challengeBonusMap, improvementResultsMap] = await Promise.all([
     getAllApprovedResults(),
-    getChallengeBonusMap().catch(() => ({}))
+    getChallengeBonusMap().catch(() => ({})),
+    getCompletedImprovementAttemptsByStudent().catch(() => ({}))
   ]);
-  return buildLeaderboardRows(results, studentsList, challengeBonusMap);
+  return buildLeaderboardRows(results, studentsList, challengeBonusMap, improvementResultsMap);
 }
 
 // studentsList is optional — pass the already-loaded list (e.g. from
 // getActiveStudents()) to avoid a duplicate fetch when the caller has one;
 // otherwise this fetches it itself so referral counts are always included.
 export async function getStudentRank(studentId, classOf = null, studentsList = null) {
-  const [all, students, challengeBonusMap] = await Promise.all([
+  const [all, students, challengeBonusMap, improvementResultsMap] = await Promise.all([
     getAllApprovedResults(),
     studentsList || getActiveStudents(),
-    getChallengeBonusMap().catch(() => ({}))
+    getChallengeBonusMap().catch(() => ({})),
+    getCompletedImprovementAttemptsByStudent().catch(() => ({}))
   ]);
-  const byStudent = buildStatsByStudent(all, students, challengeBonusMap);
+  const byStudent = buildStatsByStudent(all, students, challengeBonusMap, improvementResultsMap);
   if (!byStudent[studentId]) return null;
 
   const nameOf = {};

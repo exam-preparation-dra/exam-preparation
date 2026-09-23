@@ -347,13 +347,14 @@ export function renderImprovementHistory(container, journey) {
 
       <div class="improvement-history-list">
         ${completed.slice(0, 8).map((item) => {
-          const before = NUM(item.previousAccuracy ?? item.currentAccuracy);
-          const after = NUM(
-            item.improvementAccuracy ??
-            item.currentAccuracy ??
-            before
-          );
-          const delta = after - before;
+          // updateImprovementRequestAfterCompletion() (improvement-test-completion.js)
+          // writes lastAccuracy / lastImprovementPercent / targetReached on
+          // completion -- "improvementAccuracy" was never a real field, which
+          // is why this always fell back to showing "pending" before.
+          const before = NUM(item.currentAccuracy);
+          const hasResult = item.lastAccuracy !== undefined && item.lastAccuracy !== null;
+          const after = hasResult ? NUM(item.lastAccuracy) : before;
+          const delta = hasResult ? NUM(item.lastImprovementPercent ?? (after - before)) : 0;
 
           return `
             <article class="improvement-history-item">
@@ -369,16 +370,21 @@ export function renderImprovementHistory(container, journey) {
                 <span>
                   ${esc(item.subjectName || "")}
                   ${item.chapterName ? ` / ${esc(item.chapterName)}` : ""}
+                  ${hasResult ? ` · আগে ${Math.round(before)}%` : ""}
                 </span>
               </div>
 
               <div class="improvement-history-score">
-                <strong>${Math.round(after)}%</strong>
+                <strong>${hasResult ? `${Math.round(after)}%` : "—"}</strong>
                 <span>
                   ${
-                    delta > 0
-                      ? `+${Math.round(delta)}%`
-                      : "উন্নতির data অপেক্ষমাণ"
+                    !hasResult
+                      ? "উন্নতির data অপেক্ষমাণ"
+                      : delta > 0
+                        ? `+${Math.round(delta)}% ${item.targetReached ? "· লক্ষ্য পূর্ণ" : ""}`
+                        : delta < 0
+                          ? `${Math.round(delta)}%`
+                          : "কোনো পরিবর্তন হয়নি"
                   }
                 </span>
               </div>
