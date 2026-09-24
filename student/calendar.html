@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>ক্যালেন্ডার — পরীক্ষা প্রস্তুতি</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
+
+  /* =========================================================
+     Exam calendar — same "honour roll" look as the dashboard:
+     one dark hero card, quiet glass cards, brass accent.
+     ========================================================= */
+  .d-sec { margin-top: 20px; }
+  .d-h { font-size: 1rem; font-weight: 800; color: var(--text-primary); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .d-h svg { color: var(--color-accent); flex-shrink: 0; }
+  .d-card {
+    background: var(--surface); border: 1px solid var(--surface-border); border-radius: 20px; padding: 16px;
+    backdrop-filter: blur(var(--blur-sm)); -webkit-backdrop-filter: blur(var(--blur-sm)); box-shadow: var(--shadow-soft);
+  }
+
+  /* ---------- hero (next exam) ---------- */
+  .d-hero {
+    position: relative; overflow: hidden; color: #f1ece0;
+    border-radius: 24px; padding: 20px 18px 16px; border: 1px solid rgba(201,151,63,0.3);
+    background:
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 30px),
+      linear-gradient(155deg, #0f1a12 0%, #1a2a1c 62%, #2a2413 100%);
+    box-shadow: 0 18px 40px -14px rgba(15,26,18,0.55);
+    display: grid; grid-template-columns: 1fr auto; column-gap: 12px; align-items: center;
+  }
+  .d-hero-label { font-size: 0.8rem; font-weight: 700; color: rgba(241,236,224,0.7); }
+  .cal-hero-name { margin: 4px 0 10px; font-size: 1.3rem; font-weight: 800; line-height: 1.35; color: #f0cf8a; }
+  .d-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .d-chip { font-size: 0.74rem; font-weight: 700; padding: 5px 10px; border-radius: 999px; background: rgba(241,236,224,0.09); border: 1px solid rgba(241,236,224,0.14); color: rgba(241,236,224,0.92); }
+  .d-seal { position: relative; width: 112px; height: 112px; }
+  .d-seal svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .d-seal-ring { transition: stroke-dashoffset 1.4s cubic-bezier(0.22, 1, 0.36, 1); }
+  .d-seal-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .d-seal-center span { font-size: 0.68rem; font-weight: 700; color: rgba(241,236,224,0.65); }
+  .d-seal-center b { font-family: var(--font-num); font-size: 2.2rem; line-height: 1; font-weight: 700; color: #f0cf8a; }
+  .d-seal-center b.word { font-family: var(--font-bn); font-size: 1.5rem; }
+  .d-hero-foot { grid-column: 1 / -1; margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(241,236,224,0.2); font-size: 0.8rem; font-weight: 600; color: rgba(241,236,224,0.82); line-height: 1.6; }
+  .d-hero-foot b { font-family: var(--font-num); color: #f0cf8a; font-weight: 700; }
+
+  .d-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 44px; margin-top: 10px;
+    border-radius: 14px; border: 1px solid var(--surface-border); font-weight: 800; font-size: 0.86rem; font-family: inherit; cursor: pointer;
+    background: var(--surface-solid); color: var(--text-primary); transition: transform var(--transition);
+  }
+  .d-btn:active { transform: scale(0.97); }
+  .d-btn-primary { background: linear-gradient(135deg, var(--color-accent), var(--color-accent-2)); color: #2b1d09; border: none; box-shadow: 0 8px 20px rgba(201,151,63,0.3); }
+  .d-btn-ok { color: var(--color-success); border-color: rgba(63,157,99,0.45); }
+
+  /* ---------- calendar ---------- */
+  .cal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .cal-title { font-size: 1.02rem; font-weight: 800; color: var(--text-primary); }
+  .cal-nav { display: flex; gap: 6px; }
+  .cal-btn {
+    min-width: 34px; height: 34px; padding: 0 8px; display: grid; place-items: center; cursor: pointer;
+    border-radius: 10px; border: 1px solid var(--surface-border); background: var(--surface-solid);
+    color: var(--text-primary); font: inherit; font-size: 0.72rem; font-weight: 800; transition: transform var(--transition);
+  }
+  .cal-btn:active { transform: scale(0.92); }
+  .cal-btn:focus-visible, .cal-cell:focus-visible, .cal-link:focus-visible, .d-btn:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 12px; }
+  .cal-dow { text-align: center; padding: 4px 0; font-size: 0.68rem; font-weight: 800; color: var(--text-muted); }
+  .cal-cell {
+    aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    border-radius: 12px; border: 1px solid transparent; background: transparent; color: var(--text-primary);
+    font: inherit; font-size: 0.86rem; font-weight: 700;
+  }
+  .cal-cell.muted { color: var(--text-muted); }
+  button.cal-cell { cursor: pointer; background: rgba(128,128,128,0.07); border-color: rgba(128,128,128,0.16); transition: transform var(--transition); }
+  button.cal-cell:active { transform: scale(0.93); }
+  .cal-cell.today { border-color: var(--color-accent); box-shadow: inset 0 0 0 1px var(--color-accent); }
+  .cal-cell.selected { background: var(--color-accent); border-color: var(--color-accent); color: #2b1d09; }
+  .cal-dots { display: flex; gap: 3px; height: 5px; }
+  .cal-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--color-accent); }
+  .cal-cell.past .cal-dot { background: var(--text-muted); }
+  .cal-cell.selected .cal-dot { background: #2b1d09; }
+  .cal-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; font-size: 0.7rem; font-weight: 700; color: var(--text-muted); }
+  .cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .cal-legend i { width: 7px; height: 7px; border-radius: 50%; background: var(--color-accent); }
+  .cal-legend i.past { background: var(--text-muted); }
+
+  .cal-list-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 16px 2px 8px; font-size: 0.86rem; font-weight: 800; color: var(--text-primary); }
+  .cal-link { background: none; border: none; padding: 4px 2px; cursor: pointer; font: inherit; font-size: 0.74rem; font-weight: 800; color: var(--color-accent); }
+  .cal-list { display: grid; gap: 10px; }
+  .cal-item { padding: 12px; border-radius: 16px; border: 1px solid var(--surface-border); background: var(--surface-solid); }
+  .cal-item.is-today { border-color: var(--color-accent); }
+  .cal-row { display: flex; align-items: center; gap: 12px; }
+  .cal-date { flex-shrink: 0; width: 54px; padding: 8px 0; text-align: center; border-radius: 13px; background: var(--color-accent-soft); border: 1px solid rgba(201,151,63,0.3); }
+  .cal-date b { display: block; font-size: 1.4rem; line-height: 1.15; font-weight: 800; color: var(--text-primary); }
+  .cal-date span { display: block; margin-top: 1px; font-size: 0.68rem; font-weight: 800; color: var(--text-secondary); }
+  .cal-info { min-width: 0; flex: 1; }
+  .cal-name { font-size: 0.95rem; font-weight: 800; line-height: 1.4; color: var(--text-primary); }
+  .cal-day { margin-top: 2px; font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); }
+  .cal-meta { margin-top: 2px; font-size: 0.72rem; font-weight: 600; color: var(--text-muted); }
+  .cal-chip { flex-shrink: 0; align-self: flex-start; padding: 4px 10px; border-radius: 999px; font-size: 0.7rem; font-weight: 800; white-space: nowrap; color: var(--color-accent); background: var(--color-accent-soft); }
+  .cal-chip.now { color: #2b1d09; background: var(--color-accent); }
+  .cal-chip.done { color: var(--color-success); background: rgba(63,157,99,0.14); }
+  .cal-empty { padding: 18px 10px; text-align: center; font-size: 0.82rem; font-weight: 700; line-height: 1.7; color: var(--text-muted); }
+</style>
+</head>
+<body>
+<div class="app-shell" id="shell">
+  <div class="state-block"><div class="spinner"></div></div>
+</div>
+
+<script type="module">
+import { initTheme, toggleTheme, renderStudentHeader } from "../js/utils/ui-utils.js";
+import { getActiveStudent, refreshActiveStudent } from "../js/utils/student-utils.js";
+import { subscribeToUpcomingExams, getStudentResultStatusMap, isExamAvailableNow } from "../js/utils/results-utils.js";
+
+initTheme();
+const shell = document.getElementById("shell");
+let student = getActiveStudent();
+
+if (!student) {
+  window.location.href = "../index.html";
+} else {
+  refreshActiveStudent(student.docId).then(fresh => {
+    if (fresh) student = fresh;
+    render();
+  });
+}
+
+/* ---------------- helpers ---------------- */
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const $ = (id) => document.getElementById(id);
+const svgClock = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.8v3.4M16 2.8v3.4"/></svg>`;
+
+/* ---------------- page skeleton ---------------- */
+function render() {
+  shell.innerHTML = `
+    ${renderStudentHeader(student, "calendar")}
+
+    <div id="nextSection" class="d-sec"><div class="skeleton" style="height:190px;border-radius:24px;"></div></div>
+    <div id="calendarSection" class="d-sec"><div class="skeleton" style="height:360px;border-radius:20px;"></div></div>
+  `;
+  $("themeToggle")?.addEventListener("click", toggleTheme);
+  loadExams();
+}
+
+/* ---------------- exam calendar (automatic) ----------------
+   Nothing is typed in for the calendar: every published exam already has the
+   date (and time text) the admin entered in the exam form, and this page reads
+   it live from the same exams feed the dashboard uses. Publish an exam and it
+   appears here on its date; edit/delete it and the calendar follows. */
+const BN_DIGITS = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+const bn = (n) => String(n).replace(/\d/g, d => BN_DIGITS[d]);
+const BN_DAYS = ["রবিবার", "সোমবার", "মঙ্গলবার", "বুধবার", "বৃহস্পতিবার", "শুক্রবার", "শনিবার"];
+const BN_DAYS_SHORT = ["রবি", "সোম", "মঙ্গল", "বুধ", "বৃহ", "শুক্র", "শনি"];
+const BN_MONTHS = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
+const BN_MONTHS_SHORT = ["জানু", "ফেব্রু", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টে", "অক্টো", "নভে", "ডিসে"];
+const DAY_MS = 86400000;
+const pad2 = (n) => String(n).padStart(2, "0");
+const keyOf = (y, m, d) => `${y}-${pad2(m + 1)}-${pad2(d)}`;
+
+function localToday() {
+  const t = new Date();
+  return { y: t.getFullYear(), m: t.getMonth(), d: t.getDate() };
+}
+
+// The admin picks a plain date (<input type="date">) which is stored as UTC
+// midnight. Read it back with UTC parts so the day never shifts with the
+// device's time zone.
+function examDay(exam) {
+  const dt = exam.examDate?.toDate ? exam.examDate.toDate() : null;
+  if (!dt || Number.isNaN(dt.getTime())) return null;
+  const y = dt.getUTCFullYear(), m = dt.getUTCMonth(), d = dt.getUTCDate();
+  return { y, m, d, dow: dt.getUTCDay(), key: keyOf(y, m, d), utc: Date.UTC(y, m, d) };
+}
+
+const cal = { items: [], resultMap: {}, y: null, m: null, selected: null };
+let unsubscribe = null;
+
+async function loadExams() {
+  try {
+    const resultMap = await getStudentResultStatusMap(student.studentId);
+    if (unsubscribe) unsubscribe();
+    unsubscribe = subscribeToUpcomingExams(
+      (exams) => {
+        try { renderCalendar(exams, resultMap); }
+        catch (e) { console.error("calendar", e); showError(); }
+      },
+      (err) => { console.error(err); showError(); }
+    );
+  } catch (err) { console.error(err); showError(); }
+}
+window.addEventListener("pagehide", () => { if (unsubscribe) unsubscribe(); });
+
+function showError() {
+  $("nextSection").innerHTML = "";
+  $("calendarSection").innerHTML = `<div class="d-card cal-empty">ক্যালেন্ডার লোড করা যায়নি। ইন্টারনেট দেখে আবার চেষ্টা করো।</div>`;
+}
+
+function calendarItems(exams) {
+  const now = Date.now();
+  return exams.map(exam => ({ exam, day: examDay(exam) })).filter(({ exam, day }) => {
+    if (!day) return false;
+    const pub = exam.publishDate?.toMillis?.();
+    if (Number.isFinite(pub) && pub > now) return false;            // not released to students yet
+    const target = exam.targetBatch || "all";
+    if (target !== "all" && target !== student.className) return false;
+    const allowed = exam.allowedStudents || [];
+    if (allowed.length > 0 && !allowed.includes(student.studentId)) return false;
+    return true;
+  }).sort((a, b) => a.day.utc - b.day.utc || String(a.exam.name).localeCompare(String(b.exam.name)));
+}
+
+function renderCalendar(exams, resultMap) {
+  cal.items = calendarItems(exams);
+  cal.resultMap = resultMap || {};
+  if (cal.y === null) { const t = localToday(); cal.y = t.y; cal.m = t.m; }
+  const el = $("calendarSection");
+  if (!el.dataset.bound) { el.dataset.bound = "1"; el.addEventListener("click", onCalendarClick); }
+  drawNext();
+  drawCalendar();
+}
+
+function daysFromToday(day) {
+  const t = localToday();
+  return Math.round((day.utc - Date.UTC(t.y, t.m, t.d)) / DAY_MS);
+}
+
+function countdownChip(diff, taken) {
+  if (taken) return `<span class="cal-chip done">জমা দেওয়া হয়েছে</span>`;
+  if (diff < 0) return `<span class="cal-chip">শেষ</span>`;
+  if (diff === 0) return `<span class="cal-chip now">আজ</span>`;
+  if (diff === 1) return `<span class="cal-chip">আগামীকাল</span>`;
+  return `<span class="cal-chip">আর ${bn(diff)} দিন</span>`;
+}
+
+function ownStatus(exam) {
+  const own = cal.resultMap[exam.id];
+  return { own, taken: own?.status === "approved" || own?.status === "pending" };
+}
+
+/* ---------- hero: the very next exam ---------- */
+function drawNext() {
+  const el = $("nextSection");
+  const next = cal.items.find(it => daysFromToday(it.day) >= 0);
+
+  if (!next) {
+    el.innerHTML = `<div class="d-card cal-empty">এখন কোনো আসন্ন পরীক্ষা নেই।<br>নতুন পরীক্ষা প্রকাশ হলে এখানে নিজে থেকেই দেখা যাবে।</div>`;
+    return;
+  }
+
+  const { exam, day } = next;
+  const diff = daysFromToday(day);
+  const time = String(exam.informationalTime || "").trim();
+  const later = cal.items.filter(it => it !== next && daysFromToday(it.day) >= 0).length;
+  const R = 50, C = 2 * Math.PI * R;
+  const fill = 1 - Math.min(diff, 30) / 30;          // ring fills up as the day gets closer
+  const foot = diff === 0 ? "আজই পরীক্ষা — প্রস্তুত থাকো।"
+    : diff === 1 ? "পরীক্ষা আগামীকাল।"
+    : `পরীক্ষার আর <b>${bn(diff)}</b> দিন বাকি।`;
+
+  el.innerHTML = `
+    <section class="d-hero" aria-label="পরবর্তী পরীক্ষা">
+      <div>
+        <p class="d-hero-label">পরবর্তী পরীক্ষা</p>
+        <p class="cal-hero-name">${esc(exam.name)}</p>
+        <div class="d-chips">
+          <span class="d-chip">${BN_DAYS[day.dow]}, ${bn(day.d)} ${BN_MONTHS[day.m]}</span>
+          ${time ? `<span class="d-chip">${esc(time)}</span>` : ""}
+        </div>
+      </div>
+      <div class="d-seal" role="img" aria-label="${diff === 0 ? "আজ" : `আর ${bn(diff)} দিন`}">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <defs><linearGradient id="sealGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0cf8a"/><stop offset="1" stop-color="#c9973f"/></linearGradient></defs>
+          <circle cx="60" cy="60" r="57" fill="none" stroke="rgba(226,181,104,0.28)" stroke-width="1.5" stroke-dasharray="2 5"/>
+          <circle cx="60" cy="60" r="${R}" fill="rgba(0,0,0,0.18)" stroke="rgba(241,236,224,0.12)" stroke-width="8"/>
+          <circle class="d-seal-ring" id="sealRing" cx="60" cy="60" r="${R}" fill="none" stroke="url(#sealGrad)" stroke-width="8" stroke-linecap="round"
+                  stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${C.toFixed(2)}" data-c="${C.toFixed(2)}" data-fill="${fill}"/>
+        </svg>
+        <div class="d-seal-center">
+          ${diff === 0 ? `<b class="word">আজ</b>` : `<b>${diff}</b><span>দিন বাকি</span>`}
+        </div>
+      </div>
+      <p class="d-hero-foot">
+        ${foot}
+        ${later ? `<br>এর পরে আরও <b>${bn(later)}</b>টি পরীক্ষা আছে।` : ""}
+      </p>
+    </section>`;
+
+  const ring = $("sealRing");
+  if (ring) requestAnimationFrame(() => requestAnimationFrame(() => {
+    ring.style.strokeDashoffset = (Number(ring.dataset.c) * (1 - Number(ring.dataset.fill))).toFixed(2);
+  }));
+}
+
+/* ---------- list item ---------- */
+function calendarItemHtml({ exam, day }) {
+  const diff = daysFromToday(day);
+  const { own, taken } = ownStatus(exam);
+  const special = exam.allowedStudents && exam.allowedStudents.length > 0;
+  const qCount = exam.questionIds ? exam.questionIds.length : 0;
+  const time = String(exam.informationalTime || "").trim();
+  const meta = [exam.durationMinutes ? `${bn(exam.durationMinutes)} মিনিট` : "", qCount ? `${bn(qCount)}টি প্রশ্ন` : "", special ? "স্পেশাল" : ""].filter(Boolean).join(" · ");
+
+  let action = "";
+  if (own?.status === "approved") action = `<a href="../student/result.html?resultId=${esc(own.resultId)}" class="d-btn d-btn-ok">ফলাফল দেখুন</a>`;
+  else if (!taken && exam.status === "published" && isExamAvailableNow(exam)) action = `<a href="../student/exam.html?examId=${esc(exam.id)}" class="d-btn d-btn-primary">পরীক্ষা শুরু করুন</a>`;
+
+  return `
+    <div class="cal-item ${diff === 0 ? "is-today" : ""}">
+      <div class="cal-row">
+        <div class="cal-date"><b>${bn(day.d)}</b><span>${BN_MONTHS_SHORT[day.m]}</span></div>
+        <div class="cal-info">
+          <p class="cal-name">${esc(exam.name)}</p>
+          <p class="cal-day">${BN_DAYS[day.dow]}${time ? ` · ${esc(time)}` : ""}</p>
+          ${meta ? `<p class="cal-meta">${esc(meta)}</p>` : ""}
+        </div>
+        ${countdownChip(diff, taken)}
+      </div>
+      ${action}
+    </div>`;
+}
+
+/* ---------- month grid + list ---------- */
+function drawCalendar() {
+  const el = $("calendarSection");
+  const { y, m } = cal;
+  const t = localToday();
+  const byDay = new Map();
+  cal.items.forEach(it => { if (!byDay.has(it.day.key)) byDay.set(it.day.key, []); byDay.get(it.day.key).push(it); });
+
+  const firstDow = new Date(Date.UTC(y, m, 1)).getUTCDay();
+  const daysInMonth = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+  const todayUtc = Date.UTC(t.y, t.m, t.d);
+
+  let cells = "";
+  for (let i = 0; i < firstDow; i++) cells += `<span class="cal-cell"></span>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const key = keyOf(y, m, d);
+    const list = byDay.get(key);
+    const isToday = y === t.y && m === t.m && d === t.d;
+    const past = Date.UTC(y, m, d) < todayUtc;
+    const cls = ["cal-cell", isToday ? "today" : "", past ? "past" : "", cal.selected === key ? "selected" : ""].filter(Boolean).join(" ");
+    if (list) {
+      const label = `${bn(d)} ${BN_MONTHS[m]}, ${BN_DAYS[new Date(Date.UTC(y, m, d)).getUTCDay()]} — ${bn(list.length)}টি পরীক্ষা`;
+      cells += `<button type="button" class="${cls}" data-cal-day="${key}" aria-label="${label}" aria-pressed="${cal.selected === key}">
+        <span>${bn(d)}</span><span class="cal-dots">${list.slice(0, 3).map(() => `<i class="cal-dot"></i>`).join("")}</span></button>`;
+    } else {
+      cells += `<span class="${cls} ${past ? "muted" : ""}"><span>${bn(d)}</span><span class="cal-dots"></span></span>`;
+    }
+  }
+
+  // list under the grid: one chosen day, or the next upcoming exams
+  let listTitle, listHtml, clear = "";
+  if (cal.selected && byDay.has(cal.selected)) {
+    const first = byDay.get(cal.selected)[0].day;
+    listTitle = `${bn(first.d)} ${BN_MONTHS[first.m]}, ${BN_DAYS[first.dow]}`;
+    listHtml = byDay.get(cal.selected).map(calendarItemHtml).join("");
+    clear = `<button type="button" class="cal-link" data-cal-clear>সব আসন্ন দেখুন</button>`;
+  } else {
+    const upcoming = cal.items.filter(it => daysFromToday(it.day) >= 0).slice(0, 8);
+    listTitle = "আসন্ন পরীক্ষা";
+    listHtml = upcoming.length
+      ? upcoming.map(calendarItemHtml).join("")
+      : `<div class="cal-empty">এখন কোনো আসন্ন পরীক্ষা নেই।</div>`;
+  }
+
+  const onThisMonth = y === t.y && m === t.m;
+  el.innerHTML = `
+    <p class="d-h">${svgClock} পরীক্ষার ক্যালেন্ডার</p>
+    <div class="d-card">
+      <div class="cal-head">
+        <p class="cal-title">${BN_MONTHS[m]} ${bn(y)}</p>
+        <div class="cal-nav">
+          ${onThisMonth ? "" : `<button type="button" class="cal-btn" data-cal-today>আজ</button>`}
+          <button type="button" class="cal-btn" data-cal-nav="-1" aria-label="আগের মাস"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <button type="button" class="cal-btn" data-cal-nav="1" aria-label="পরের মাস"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </div>
+      <div class="cal-grid" role="grid">
+        ${BN_DAYS_SHORT.map(n => `<span class="cal-dow">${n}</span>`).join("")}
+        ${cells}
+      </div>
+      <div class="cal-legend"><span><i></i> পরীক্ষা আছে</span><span><i class="past"></i> হয়ে গেছে</span></div>
+
+      <div class="cal-list-head"><span>${listTitle}</span>${clear}</div>
+      <div class="cal-list">${listHtml}</div>
+    </div>`;
+}
+
+function onCalendarClick(event) {
+  const nav = event.target.closest("[data-cal-nav]");
+  if (nav) {
+    let m = cal.m + Number(nav.dataset.calNav), y = cal.y;
+    if (m < 0) { m = 11; y--; } else if (m > 11) { m = 0; y++; }
+    cal.m = m; cal.y = y; cal.selected = null; drawCalendar(); return;
+  }
+  if (event.target.closest("[data-cal-today]")) { const t = localToday(); cal.y = t.y; cal.m = t.m; cal.selected = null; drawCalendar(); return; }
+  if (event.target.closest("[data-cal-clear]")) { cal.selected = null; drawCalendar(); return; }
+  const day = event.target.closest("[data-cal-day]");
+  if (day) { cal.selected = cal.selected === day.dataset.calDay ? null : day.dataset.calDay; drawCalendar(); }
+}
+</script>
+</body>
+</html>
