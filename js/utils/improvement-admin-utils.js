@@ -570,9 +570,9 @@ export async function autoPublishOverdueImprovementRequests() {
 //
 // The linked request is NOT sent back to "detected": the 24-hour overdue
 // sweep would immediately rebuild the exam the moment an admin page opens.
-// Instead an open request becomes "dismissed" (the 7-day cooldown in
-// createImprovementRequestsForStudent then also blocks a duplicate), while a
-// request that was already completed/resolved keeps its status.
+// It becomes "dismissed" instead. Dismissed requests are hidden everywhere
+// (admin list, student page), but the small record is kept on purpose so that
+// auto-detection (low-score exam / weak topic) never recreates it.
 export async function deleteImprovementTest(testId) {
   requireAdmin();
   const tid = id(testId);
@@ -604,18 +604,14 @@ export async function deleteImprovementTest(testId) {
     const rRef = doc(db, "improvementRequests", rid);
     const rSnap = await getDoc(rRef);
     if (!rSnap.exists()) continue;
-    const finished = [IMPROVEMENT_STATUS.COMPLETED, IMPROVEMENT_STATUS.RESOLVED].includes(rSnap.data().status);
-    const patch = {
+    batch.update(rRef, {
       improvementTestId: null,
       assignedTestId: null,
       assignedAt: null,
+      status: IMPROVEMENT_STATUS.DISMISSED,
+      adminNote: "অ্যাডমিন Improvement Exam মুছে ফেলেছেন।",
       updatedAt: serverTimestamp()
-    };
-    if (!finished) {
-      patch.status = IMPROVEMENT_STATUS.DISMISSED;
-      patch.adminNote = "অ্যাডমিন Improvement Exam মুছে ফেলেছেন।";
-    }
-    batch.update(rRef, patch);
+    });
   }
 
   await batch.commit();

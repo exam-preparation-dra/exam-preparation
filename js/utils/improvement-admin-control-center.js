@@ -33,8 +33,7 @@ const FILTERS = [
   { key: "all",     label: "সব" },
   { key: "pending", label: "অপেক্ষমাণ" },
   { key: "exam",    label: "Exam আছে" },
-  { key: "done",    label: "সম্পন্ন" },
-  { key: "closed",  label: "বাতিল" }
+  { key: "done",    label: "সম্পন্ন" }
 ];
 
 const state = {
@@ -233,7 +232,7 @@ function requestCard(r) {
       <button class="iac-btn primary" data-action="build" data-id="${esc(r.id)}" ${busy ? "disabled" : ""}>
         ${busy ? "তৈরি হচ্ছে…" : "Exam তৈরি ও Publish"}
       </button>
-      <button class="iac-btn danger" data-action="dismiss" data-id="${esc(r.id)}" ${busy ? "disabled" : ""}>বাতিল</button>`;
+      <button class="iac-btn danger" data-action="dismiss" data-id="${esc(r.id)}" ${busy ? "disabled" : ""}>মুছুন</button>`;
   } else if (r.improvementTestId) {
     actions = `
       <button class="iac-btn danger" data-action="delete-exam" data-id="${esc(r.id)}" data-test="${esc(r.improvementTestId)}" ${busy ? "disabled" : ""}>
@@ -280,9 +279,7 @@ function requestCard(r) {
 function render() {
   const root = ensureRoot();
   const c = counts();
-  const rows = state.requests
-    .filter(r => state.filter === "all" || kindOf(r) === state.filter)
-    .sort((a, b) => (kindOf(a) === "closed") - (kindOf(b) === "closed"));
+  const rows = state.requests.filter(r => state.filter === "all" || kindOf(r) === state.filter);
 
   root.innerHTML = `
     <div class="iac-stats">
@@ -336,7 +333,7 @@ async function handleBuild(request) {
 async function handleDeleteExam(request) {
   const ok = window.confirm(
     `"${studentName(request)}" এর "${areaName(request)}" Improvement Exam মুছে ফেলবে?\n\n` +
-    "Exam ও প্রশ্নের Snapshot মুছে যাবে, শিক্ষার্থীর চলমান চেষ্টা বাদ যাবে। আগে অর্জন করা XP ঠিক থাকবে।"
+    "Exam ও প্রশ্নের Snapshot চিরতরে মুছে যাবে, শিক্ষার্থীর চলমান চেষ্টা বাদ যাবে এবং এটি আর কোথাও দেখা যাবে না। আগে অর্জন করা XP ঠিক থাকবে।"
   );
   if (!ok) return;
 
@@ -353,14 +350,14 @@ async function handleDeleteExam(request) {
 }
 
 async function handleDismiss(request) {
-  if (!window.confirm("এই Improvement Request বাতিল করবে?")) return;
+  if (!window.confirm("এই Improvement Request মুছে ফেলবে? এটি আর তালিকায় দেখা যাবে না।")) return;
   state.busyId = request.id; render();
   try {
     await dismissImprovementRequest(request.id);
-    showToast("Request বাতিল করা হয়েছে।", "success");
+    showToast("Request মুছে ফেলা হয়েছে।", "success");
   } catch (error) {
     console.error(error);
-    showToast("Request বাতিল করা যায়নি।", "error");
+    showToast("Request মুছে ফেলা যায়নি।", "error");
   } finally {
     state.busyId = null; await load();
   }
@@ -429,7 +426,9 @@ async function load(refreshStudents = false) {
   try {
     if (refreshStudents || !Object.keys(state.students).length) await loadStudents();
     const rows = await getImprovementRequestQueue({ maxResults: 250 });
-    state.requests = Array.isArray(rows) ? rows : [];
+    // Removed (dismissed) requests are never shown. The record itself stays in
+    // Firestore as a hidden marker so auto-detection does not rebuild it.
+    state.requests = (Array.isArray(rows) ? rows : []).filter(r => r.status !== "dismissed");
     render();
   } catch (error) {
     console.error("Improvement Control Center:", error);
