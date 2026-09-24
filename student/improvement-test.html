@@ -1,59 +1,125 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="bn">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>উন্নতির অনুশীলন</title>
-  <style>
-    :root{
-      --bg:#f5f7fb;--card:#fff;--text:#172033;--muted:#657089;
-      --border:#e1e6ef;--accent:#5b5bd6;--accent-soft:#eeeeff;
-      --good:#16805c;--danger:#c43d4b
-    }
-    [data-theme="dark"]{
-      --bg:#0d111b;--card:#151b28;--text:#eef2f8;--muted:#9da8bb;
-      --border:#293346;--accent:#8b8bf0;--accent-soft:#252546;
-      --good:#45c596;--danger:#ff6f7c
-    }
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif}
-    button{font:inherit}
-    .wrap{max-width:900px;margin:auto;padding:18px}
-    .top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
-    .eyebrow{font-size:.76rem;font-weight:800;letter-spacing:.08em;color:var(--muted)}
-    .timer{font-weight:900;color:var(--accent)}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px;box-shadow:0 8px 30px #00000008}
-    .question{font-size:1.15rem;line-height:1.65;font-weight:700;margin:14px 0}
-    .options{display:grid;gap:10px}
-    .option{border:1.5px solid var(--border);background:transparent;color:var(--text);border-radius:14px;padding:13px;text-align:left;cursor:pointer}
-    .option.selected{border-color:var(--accent);background:var(--accent-soft)}
-    .nav{display:flex;gap:10px;margin-top:16px}
-    .btn{border:0;border-radius:12px;padding:11px 16px;cursor:pointer}
-    .primary{background:var(--accent);color:#fff}
-    .secondary{background:var(--accent-soft);color:var(--text)}
-    .danger{background:var(--danger);color:#fff}
-    .btn:disabled{opacity:.55;cursor:not-allowed}
-    .status{color:var(--muted);font-size:.9rem}
-    .result{text-align:center}
-    .big{font-size:2.4rem;font-weight:950;margin:8px 0}
-    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}
-    .stat{border:1px solid var(--border);border-radius:14px;padding:13px}
-    .stat b{display:block;font-size:1.2rem;margin-top:4px}
-    @media(max-width:600px){.wrap{padding:12px}.grid{grid-template-columns:1fr}.card{padding:16px}}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>উন্নতির অনুশীলন — পরীক্ষা প্রস্তুতি</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  /* Same look as student/exam.html. The accent RGB token is defined here
+     because style.css does not define it. */
+  :root { --color-accent-rgb: 201, 151, 63; }
+  body { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
+  #shell { padding-bottom: 100px; }
+
+  .glass.card { animation: cardRise 420ms cubic-bezier(.22,.9,.3,1) both; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 20px; box-shadow: 0 4px 24px rgba(0,0,0,0.03); }
+  @keyframes cardRise { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+  #questionBody.q-enter { animation: qSlideIn 320ms cubic-bezier(.22,.9,.3,1) both; }
+  @keyframes qSlideIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
+
+  .option-card {
+    position: relative; overflow: hidden; display: flex; align-items: center; gap: 14px;
+    width: 100%; min-height: 60px; padding: 14px 18px; border-radius: 16px;
+    border: 1px solid rgba(128,128,128,0.2); background: rgba(128,128,128,0.02);
+    color: var(--text-primary); font: inherit; font-size: 0.95rem; font-weight: 700; text-align: left;
+    transition: all 0.2s ease; margin-bottom: 12px; cursor: pointer;
+    animation: optRise 320ms cubic-bezier(.22,.9,.3,1) both;
+  }
+  .option-card:nth-of-type(1) { animation-delay: 20ms; } .option-card:nth-of-type(2) { animation-delay: 60ms; }
+  .option-card:nth-of-type(3) { animation-delay: 100ms; } .option-card:nth-of-type(4) { animation-delay: 140ms; }
+  @keyframes optRise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .option-card:active { transform: scale(0.98); }
+  .option-card.selected { border-color: var(--color-accent); background: rgba(var(--color-accent-rgb), 0.08); box-shadow: 0 4px 16px rgba(var(--color-accent-rgb), 0.15); }
+  .option-card.option-flash { animation: optPop 260ms cubic-bezier(.34,1.56,.64,1); }
+  @keyframes optPop { 0% { transform: scale(1); } 40% { transform: scale(1.03); } 100% { transform: scale(1); } }
+  .option-letter {
+    flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; background: rgba(128,128,128,0.1);
+    display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.95rem;
+    color: var(--text-secondary); transition: all 0.2s cubic-bezier(.34,1.56,.64,1);
+  }
+  .option-card.selected .option-letter { background: var(--color-accent); color: #fff; transform: scale(1.1); box-shadow: 0 4px 10px rgba(var(--color-accent-rgb), 0.3); }
+
+  .palette-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .palette-cell {
+    aspect-ratio: 1; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    font: inherit; font-weight: 800; font-size: 0.95rem; border: 1px solid rgba(128,128,128,0.2);
+    background: rgba(128,128,128,0.03); color: var(--text-secondary); transition: all 0.2s ease; cursor: pointer;
+  }
+  .palette-cell:active { transform: scale(0.92); }
+  .palette-cell.answered { background: rgba(16,185,129,0.15); color: #10b981; border-color: rgba(16,185,129,0.4); }
+  .palette-cell.marked { border-color: #f59e0b; box-shadow: inset 0 0 0 1.5px #f59e0b; }
+  .palette-cell.current { border-color: var(--color-accent); background: var(--color-accent); color: #fff; box-shadow: 0 4px 12px rgba(var(--color-accent-rgb), 0.4); }
+
+  #timerDisplay {
+    font-family: var(--font-num); font-variant-numeric: tabular-nums; font-weight: 900; font-size: 0.95rem;
+    letter-spacing: 0.5px; white-space: nowrap; padding: 6px 14px; border-radius: 99px;
+    background: rgba(128,128,128,0.08); border: 1px solid rgba(128,128,128,0.2); color: var(--text-primary); transition: all 0.2s ease;
+  }
+  #timerDisplay.timer-warning { color: #f59e0b; border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.1); }
+  #timerDisplay.timer-critical { color: #ef4444; border-color: rgba(239,68,68,0.5); background: rgba(239,68,68,0.1); animation: timerPulse 1s infinite; }
+  @keyframes timerPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+  .exam-progress-track { height: 8px; border-radius: 99px; background: rgba(128,128,128,0.15); overflow: hidden; }
+  .exam-progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--color-accent), var(--color-accent-2, #f59e0b)); transition: width 420ms cubic-bezier(.22,.9,.3,1); }
+
+  .lang-en-toggle summary {
+    display: inline-flex; align-items: center; gap: 4px; width: fit-content; list-style: none; cursor: pointer;
+    font-size: 0.75rem; font-weight: 800; color: var(--text-muted);
+    padding: 4px 12px; border-radius: 99px; border: 1px solid rgba(128,128,128,0.2); background: rgba(128,128,128,0.05);
+  }
+  .lang-en-toggle summary::-webkit-details-marker { display: none; }
+
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    margin: calc(var(--space-5) * -1) calc(var(--space-4) * -1) var(--space-4); padding: 16px;
+    background: var(--surface); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--surface-border);
+    display: flex; justify-content: space-between; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+  }
+  .exam-nav-bar {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 650px; z-index: 40;
+    padding: 14px 16px; padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    background: var(--surface); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--surface-border); display: flex; gap: 12px; box-shadow: 0 -4px 20px rgba(0,0,0,0.03);
+  }
+  .btn { transition: transform 140ms ease, box-shadow 180ms ease; flex: 1; display: flex; justify-content: center; align-items: center; gap: 8px; padding: 14px; border-radius: 14px; font: inherit; font-weight: 800; font-size: 1rem; border: none; cursor: pointer; }
+  .btn-primary { background: var(--color-accent); color: #fff; box-shadow: 0 4px 15px rgba(var(--color-accent-rgb), 0.2); }
+  .btn-secondary { background: rgba(128,128,128,0.1); color: var(--text-primary); border: 1px solid rgba(128,128,128,0.2); }
+  .btn:active:not(:disabled) { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 300; padding: 20px; }
+  .modal-overlay.hidden { display: none; }
+
+  .protected-img-wrapper { position: relative; display: inline-block; margin: 12px 0 20px; max-width: 100%; border: 1px solid rgba(128,128,128,0.15); border-radius: 12px; overflow: hidden; }
+  .q-figure { max-width: 100%; max-height: 220px; display: block; pointer-events: none; user-select: none; -webkit-user-drag: none; }
+  .img-shield { position: absolute; inset: 0; z-index: 10; cursor: zoom-in; }
+  #figurePreviewModal.hidden { display: none; }
+
+  .stat-box { background: rgba(128,128,128,0.03); border: 1px solid rgba(128,128,128,0.1); border-radius: 14px; padding: 16px 12px; text-align: center; }
+  .stat-box p:first-child { font-size: 0.8rem; color: var(--text-muted); font-weight: 800; margin-bottom: 4px; }
+  .stat-box p:last-child { font-size: 1.6rem; font-weight: 900; color: var(--text-primary); font-family: var(--font-num); }
+</style>
+<script>
+  window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] } };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
-<body>
-<div class="wrap" id="app">
-  <div class="card">লোড করা হচ্ছে...</div>
+<body oncontextmenu="return false;">
+<div class="app-shell" id="shell">
+  <div class="state-block"><div class="spinner"></div></div>
 </div>
 
 <script type="module">
-import { initTheme } from "../js/utils/ui-utils.js";
+import { initTheme, renderState, showToast } from "../js/utils/ui-utils.js";
 import { getActiveStudent } from "../js/utils/student-utils.js";
 import { getAssignedImprovementTest } from "../js/utils/improvement-test-utils.js";
 import { calculateImprovement } from "../js/utils/improvement-utils.js";
 import { computeImprovementPracticeXP } from "../js/utils/xp-utils.js";
 import { updateImprovementRequestAfterCompletion } from "../js/utils/improvement-test-completion.js";
+import { formatHms } from "../js/utils/grading-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
 import {
   collection, doc, getDocs, query, where, setDoc, serverTimestamp, deleteDoc
@@ -61,7 +127,7 @@ import {
 
 initTheme();
 
-const app = document.getElementById("app");
+const shell = document.getElementById("shell");
 const params = new URLSearchParams(location.search);
 const testId = params.get("testId");
 const student = getActiveStudent();
@@ -69,344 +135,486 @@ const student = getActiveStudent();
 let test = null;
 let questions = [];
 let answers = {};
+let marked = {};
 let index = 0;
 let startedAt = Date.now();
 let durationMinutes = 20;
-let timer = null;
+let timerHandle = null;
 let submitting = false;
+let inProgress = false;
+let earlierAttempts = 0;   // completed attempts of this test by this student (repeats earn no XP)
+const firedMinutes = new Set();
 
-function esc(value){
-  return String(value ?? "").replace(/[&<>"']/g,m=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  }[m]));
-}
+const esc = v => String(v ?? "").replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+const localKey = () => `improvement:${testId}:${student.studentId}`;
 
-function getQuestionText(q){
-  return q.question_bn || q.question_en || q.question || "প্রশ্নের লেখা পাওয়া যায়নি।";
-}
-
-function getOptions(q){
-  if(Array.isArray(q.options_bn) && q.options_bn.length) return q.options_bn;
-  if(Array.isArray(q.options_en) && q.options_en.length) return q.options_en;
-  if(Array.isArray(q.options) && q.options.length) return q.options;
-  return [];
-}
-
-async function getAttemptCount(){
-  const snap = await getDocs(query(
-    collection(db,"improvementAttempts"),
-    where("testId","==",testId),
-    where("studentId","==",student.studentId)
-  ));
-  return snap.size;
-}
-
-async function saveProgress(){
-  try{
-    const id = `${testId}_${student.studentId}_active`;
-    await setDoc(doc(db,"improvementAttempts",id),{
-      testId,studentId:student.studentId,answers,index,
-      startedAtMillis:startedAt,status:"in_progress",
-      updatedAt:serverTimestamp()
-    },{merge:true});
-  }catch(err){
-    console.warn("Improvement progress sync failed",err);
+/* ---------- question helpers (options may be {A,B,C,D} or an array) ---------- */
+function optionSource(q) {
+  for (const src of [q.options_bn, q.options_en, q.options]) {
+    if (src && typeof src === "object" && Object.keys(src).length) return src;
   }
+  return {};
 }
-
-function renderIntro(){
-  const title = test.title || "উন্নতির অনুশীলন";
-  const count = questions.length;
-  durationMinutes = Number(test.durationMinutes || Math.max(5,Math.ceil(count * 1.5)));
-
-  app.innerHTML = `
-    <div class="card">
-      <div class="eyebrow">IMPROVEMENT PRACTICE</div>
-      <h1>${esc(title)}</h1>
-      <p class="status">${esc(test.description || "তোমার নির্দিষ্ট দুর্বলতা উন্নত করার জন্য এই অনুশীলনটি তৈরি করা হয়েছে।")}</p>
-      <div class="grid">
-        <div class="stat">প্রশ্ন<b>${count}</b></div>
-        <div class="stat">সময়<b>${durationMinutes} মিনিট</b></div>
-        <div class="stat">ধরন<b>অনুশীলন</b></div>
-      </div>
-      <p class="status">এটি কোনো অফিসিয়াল পরীক্ষা নয়। তোমার উন্নতির হিসাব আলাদাভাবে সংরক্ষণ হবে।</p>
-      <button class="btn primary" id="start">অনুশীলন শুরু করো</button>
-    </div>`;
-
-  document.getElementById("start").onclick=()=>{
-    startedAt=Date.now();
-    renderQuestion();
-    startTimer();
-  };
+function optionLetters(q) {
+  const src = optionSource(q);
+  if (Array.isArray(src)) return src.map((_, i) => String.fromCharCode(65 + i));
+  const letters = ["A", "B", "C", "D"].filter(l => src[l] !== undefined);
+  return letters.length ? letters : ["A", "B", "C", "D"];
 }
-
-function startTimer(){
-  clearInterval(timer);
-  const end=startedAt+durationMinutes*60000;
-  timer=setInterval(()=>{
-    const left=Math.max(0,end-Date.now());
-    const el=document.getElementById("timer");
-    if(el){
-      const sec=Math.ceil(left/1000);
-      el.textContent=`${String(Math.floor(sec/60)).padStart(2,"0")}:${String(sec%60).padStart(2,"0")}`;
-    }
-    if(left<=0){
-      clearInterval(timer);
-      submit(true);
-    }
-  },1000);
+function optionText(q, letter) {
+  const src = optionSource(q);
+  const raw = Array.isArray(src) ? src[letter.charCodeAt(0) - 65] : src[letter];
+  if (raw && typeof raw === "object") return raw.text_bn || raw.text || raw.label || "";
+  return raw ?? "";
 }
+const sameAnswer = (a, b) => String(a ?? "").trim().toUpperCase() === String(b ?? "").trim().toUpperCase();
 
-function renderQuestion(){
-  const q=questions[index];
-  const opts=getOptions(q);
-
-  app.innerHTML=`
-    <div class="top">
-      <div>
-        <div class="eyebrow">উন্নতির অনুশীলন</div>
-        <div class="status">প্রশ্ন ${index+1} / ${questions.length}</div>
-      </div>
-      <div class="timer" id="timer">--:--</div>
-    </div>
-    <div class="card">
-      <div class="question">${esc(getQuestionText(q))}</div>
-      <div class="options">
-        ${opts.map((opt,i)=>{
-          const letter=String.fromCharCode(65+i);
-          const value=(typeof opt==="object" ? (opt.value||opt.key||letter) : letter);
-          const label=(typeof opt==="object" ? (opt.text_bn||opt.text||opt.label||value) : opt);
-          return `<button class="option ${answers[q.questionId]===value?"selected":""}" data-answer="${esc(value)}">
-            <b>${letter}.</b> ${esc(label)}
-          </button>`;
-        }).join("")}
-      </div>
-      <div class="nav">
-        <button class="btn secondary" id="prev" ${index===0?"disabled":""}>পূর্ববর্তী</button>
-        ${index<questions.length-1
-          ? `<button class="btn primary" id="next">পরবর্তী</button>`
-          : `<button class="btn danger" id="submit">অনুশীলন জমা দাও</button>`}
-      </div>
-      <p class="status" id="saveStatus">উত্তর ডিভাইসে রাখা হচ্ছে।</p>
-    </div>`;
-
-  document.querySelectorAll(".option").forEach(btn=>{
-    btn.onclick=async()=>{
-      answers[q.questionId]=btn.dataset.answer;
-      await saveLocal();
-      renderQuestion();
-    };
-  });
-
-  document.getElementById("prev").onclick=()=>{
-    if(index>0){index--;renderQuestion();}
-  };
-
-  const next=document.getElementById("next");
-  if(next) next.onclick=()=>{
-    if(index<questions.length-1){index++;renderQuestion();}
-  };
-
-  const submitBtn=document.getElementById("submit");
-  if(submitBtn) submitBtn.onclick=()=>submit(false);
-
-  const el=document.getElementById("timer");
-  if(el){
-    const left=Math.max(0,(startedAt+durationMinutes*60000)-Date.now());
-    const sec=Math.ceil(left/1000);
-    el.textContent=`${String(Math.floor(sec/60)).padStart(2,"0")}:${String(sec%60).padStart(2,"0")}`;
-  }
+/* ---------- persistence ---------- */
+let syncTimer = null;
+function persist() {
+  try { localStorage.setItem(localKey(), JSON.stringify({ answers, marked, index, startedAt })); } catch {}
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(async () => {
+    try {
+      await setDoc(doc(db, "improvementAttempts", `${testId}_${student.studentId}_active`), {
+        testId, studentId: student.studentId, answers, index,
+        startedAtMillis: startedAt, status: "in_progress", updatedAt: serverTimestamp()
+      }, { merge: true });
+    } catch (err) { console.warn("Improvement progress sync failed", err); }
+  }, 800);
 }
-
-async function saveLocal(){
-  localStorage.setItem(
-    `improvement:${testId}:${student.studentId}`,
-    JSON.stringify({answers,index,startedAt})
-  );
-  await saveProgress();
-}
-
-function loadLocal(){
-  try{
-    const raw=localStorage.getItem(`improvement:${testId}:${student.studentId}`);
-    if(!raw)return false;
-    const data=JSON.parse(raw);
-    if(data && data.answers){
-      answers=data.answers;
-      index=Number(data.index)||0;
-      startedAt=Number(data.startedAt)||Date.now();
+function loadLocal() {
+  try {
+    const data = JSON.parse(localStorage.getItem(localKey()) || "null");
+    if (data && data.answers) {
+      answers = data.answers; marked = data.marked || {};
+      index = Math.min(Math.max(0, Number(data.index) || 0), questions.length - 1);
+      startedAt = Number(data.startedAt) || Date.now();
       return true;
     }
-  }catch{}
+  } catch {}
   return false;
 }
 
-async function submit(auto=false){
-  if(submitting)return;
-  submitting=true;
-  clearInterval(timer);
+/* ---------- boot ---------- */
+async function boot() {
+  if (!student) { location.href = "../index.html"; return; }
+  if (!testId) { renderState(shell, "error", "Improvement Test শনাক্ত করা যায়নি।"); return; }
 
-  const unanswered=questions.filter(q=>!answers[q.questionId]).length;
-  const ok=auto || unanswered===0 ||
-    confirm(`আরও ${unanswered}টি প্রশ্নের উত্তর দেওয়া হয়নি। তবুও জমা দেবে?`);
-  if(!ok){
-    submitting=false;
-    startTimer();
-    return;
-  }
+  try {
+    test = await getAssignedImprovementTest(testId, student.studentId);
+    if (!test) { renderState(shell, "error", "এই অনুশীলনটি এখন উপলব্ধ নয়। এটি হয় প্রকাশিত হয়নি, মুছে ফেলা হয়েছে, অথবা তোমার জন্য বরাদ্দ করা হয়নি।"); return; }
 
-  app.innerHTML=`<div class="card">ফলাফল হিসাব করা হচ্ছে...</div>`;
+    questions = (Array.isArray(test.snapshot?.questions) ? test.snapshot.questions : [])
+      .filter(q => q && q.questionId && q.correctAnswer);
+    if (!questions.length) { renderState(shell, "error", "এই অনুশীলনে এখন কোনো বৈধ প্রশ্ন নেই।"); return; }
 
-  try{
-    const snapshotQuestions=questions.map(q=>({
-      questionId:q.questionId,
-      question_bn:q.question_bn,
-      question_en:q.question_en,
-      options_bn:q.options_bn,
-      correctAnswer:q.correctAnswer,
-      marks:q.marks||1,
-      subjectId:q.subjectId,
-      chapterId:q.chapterId,
-      topicId:q.topicId
-    }));
+    durationMinutes = Number(test.durationMinutes || Math.max(5, Math.ceil(questions.length * 1.5)));
+    try { earlierAttempts = await getAttemptCount(); } catch (err) { console.warn("Attempt count skipped:", err); }
 
-    let correct=0,attempted=0,totalMarks=0,obtainedMarks=0;
-    snapshotQuestions.forEach(q=>{
-      const marks=Number(q.marks)||1;
-      totalMarks+=marks;
-      const a=answers[q.questionId];
-      if(a){
-        attempted++;
-        if(a===q.correctAnswer){correct++;obtainedMarks+=marks;}
-      }
-    });
-
-    const percentage=totalMarks?
-      Math.round(obtainedMarks/totalMarks*1000)/10:0;
-    const accuracy=attempted?
-      Math.round(correct/attempted*1000)/10:0;
-
-    const previousAccuracy=Number(test.baselineAccuracy ?? test.currentAccuracy ?? 0);
-    const targetAccuracy=Number(test.targetAccuracy ?? 0);
-    const improvement=calculateImprovement({
-      previousAccuracy,
-      practiceAccuracy:accuracy,
-      targetAccuracy
-    });
-
-    const attemptNumber=(await getAttemptCount())+1;
-    const xp=computeImprovementPracticeXP({
-      totalQuestions:questions.length,
-      attempted,
-      correctCount:correct,
-      percentage,
-      targetReached:improvement.targetReached,
-      improvementPoints:improvement.improvementPoints,
-      attemptNumber
-    });
-
-    const resultId=`${testId}_${student.studentId}_${Date.now()}`;
-
-    await setDoc(doc(db,"improvementAttempts",resultId),{
-      testId,studentId:student.studentId,
-      answers,startedAtMillis:startedAt,submittedAtMillis:Date.now(),
-      totalQuestions:questions.length,attempted,
-      correctCount:correct,wrongCount:attempted-correct,
-      unansweredCount:questions.length-attempted,
-      obtainedMarks,totalMarks,percentage,accuracy,
-      previousAccuracy:improvement.previousAccuracy,
-      targetAccuracy:improvement.targetAccuracy,
-      improvementPoints:improvement.improvementPoints,
-      targetReached:improvement.targetReached,
-      meaningfulImprovement:improvement.meaningfulImprovement,
-      xp:xp.xp,
-      xpEarned:xp.xp,
-      attemptNumber,
-      status:"completed",
-      createdAt:serverTimestamp()
-    });
-
-    const activeId = `${testId}_${student.studentId}_active`;
-    try { await deleteDoc(doc(db, "improvementAttempts", activeId)); } catch {}
-
-    const requestId = test.requestId || (Array.isArray(test.requestIds) ? test.requestIds[0] : null) || null;
-    if (requestId) {
-      await updateImprovementRequestAfterCompletion(requestId, {
-        accuracy,
-        improvementPercent: improvement.improvementPoints,
-        targetReached: improvement.targetReached
-      });
-    }
-
-    localStorage.removeItem(`improvement:${testId}:${student.studentId}`);
-
-    window.dispatchEvent(new CustomEvent("improvement:completed", {
-      detail: { testId, studentId: student.studentId, accuracy, xp: xp.xp }
-    }));
-
-    app.innerHTML=`
-      <div class="card result">
-        <div class="eyebrow">উন্নতির ফলাফল</div>
-        <div class="big">${accuracy}%</div>
-        <p class="status">এই অনুশীলনে তোমার accuracy</p>
-        <div class="grid">
-          <div class="stat">আগের accuracy<b>${improvement.previousAccuracy}%</b></div>
-          <div class="stat">উন্নতি<b>${improvement.improvementPoints >= 0 ? "+" : ""}${improvement.improvementPoints} পয়েন্ট</b></div>
-          <div class="stat">XP<b>+${xp.xp}</b></div>
-        </div>
-        <p>${improvement.targetReached
-          ? "তোমার নির্ধারিত লক্ষ্য পূরণ হয়েছে।"
-          : `লক্ষ্য: ${improvement.targetAccuracy}%`}</p>
-        <button class="btn primary" onclick="location.href='./improvement.html'">উন্নতি পাতায় ফিরে যাও</button>
-      </div>`;
-  }catch(err){
+    if (loadLocal()) { renderExamShell(); startTimer(); }
+    else renderIntro();
+  } catch (err) {
     console.error(err);
-    submitting=false;
-    app.innerHTML=`<div class="card">
-      <h2>ফলাফল সংরক্ষণ করা যায়নি</h2>
-      <p class="status">${esc(err.message || "আবার চেষ্টা করো।")}</p>
-      <button class="btn secondary" onclick="location.reload()">আবার চেষ্টা</button>
-    </div>`;
+    renderState(shell, "error", "অনুশীলন লোড করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করো।");
   }
 }
 
-async function boot(){
-  if(!student){
-    location.href="../index.html";
-    return;
+/* ---------- intro ---------- */
+function renderIntro() {
+  shell.innerHTML = `
+    <div class="topbar">
+      <a href="./improvement.html" style="background:rgba(128,128,128,0.1); border:1px solid rgba(128,128,128,0.2); border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; text-decoration:none; color:var(--text-primary);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+      </a>
+      <h2 style="font-size:1.1rem; font-weight:900; color:var(--text-primary);">অনুশীলন শুরুর আগে</h2>
+      <div style="width:40px;"></div>
+    </div>
+
+    <div class="glass card" style="padding:24px;">
+      <p style="font-size:1.2rem; font-weight:900; color:var(--color-accent); line-height:1.3; margin-bottom:8px;">${esc(test.title || "উন্নতির অনুশীলন")}</p>
+      <p class="text-sm text-muted mb-4">${esc(test.description || "তোমার নির্দিষ্ট দুর্বলতা উন্নত করার জন্য এই অনুশীলনটি তৈরি করা হয়েছে।")}</p>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px;">
+        <div class="stat-box"><p>মোট প্রশ্ন</p><p>${questions.length}</p></div>
+        <div class="stat-box"><p>সময়কাল</p><p>${durationMinutes} মি</p></div>
+      </div>
+    </div>
+
+    <div class="glass card" style="padding:20px;">
+      <p style="font-weight:900; font-size:0.95rem; color:var(--text-primary); margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        মনে রাখুন
+      </p>
+      <ul style="font-size:0.85rem; color:var(--text-muted); font-weight:600; line-height:1.8; padding-left:20px;">
+        <li>শুরু করার মুহূর্ত থেকেই সময় গণনা শুরু হবে।</li>
+        <li>সময় শেষ হলে অনুশীলনটি স্বয়ংক্রিয়ভাবে জমা হয়ে যাবে।</li>
+        <li>জমা দেওয়ার পর কোনো উত্তর পরিবর্তন করা যাবে না।</li>
+        ${earlierAttempts > 0
+          ? `<li><strong>এই অনুশীলন তুমি আগে দিয়েছ। আবার দিতে পারবে, তবে নতুন XP পাবে না।</strong></li>`
+          : `<li>এটি অফিসিয়াল পরীক্ষা নয়। প্রথমবার দিলে এর XP তোমার মোট XP-তে যোগ হবে, পরের বার দিলে XP বাড়বে না।</li>`}
+      </ul>
+    </div>
+
+    <button class="btn btn-primary" id="startBtn" style="width:100%; padding:16px; margin-top:20px;">অনুশীলন শুরু করো</button>
+  `;
+
+  document.getElementById("startBtn").addEventListener("click", () => {
+    startedAt = Date.now();
+    persist();
+    renderExamShell();
+    startTimer();
+  });
+}
+
+/* ---------- exam shell ---------- */
+function renderExamShell() {
+  const initial = esc((student.name || "?").trim().charAt(0));
+  shell.innerHTML = `
+    <div class="topbar">
+      <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+        ${student.photoURL
+          ? `<img src="${esc(student.photoURL)}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; pointer-events:none; -webkit-user-drag:none;">`
+          : `<div style="width:36px; height:36px; border-radius:50%; background:var(--color-accent); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1.1rem;">${initial}</div>`}
+        <span style="font-weight:800; font-size:0.95rem; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(student.name)}</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
+        <div style="display:flex; flex-direction:column; align-items:flex-end;">
+          <span style="font-size:0.65rem; font-weight:800; color:var(--text-muted);">বাকি সময়</span>
+          <span id="timerDisplay">--:--</span>
+        </div>
+        <button id="submitBtn" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); padding:8px 14px; border-radius:10px; font:inherit; font-weight:800; font-size:0.8rem; cursor:pointer;">জমা দিন</button>
+      </div>
+    </div>
+
+    <div class="glass card" style="padding:24px 20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <p style="font-weight:900; font-size:1.05rem; color:var(--text-primary); font-family:var(--font-num);" id="qCounter"></p>
+        <button id="paletteBtn" aria-label="প্রশ্ন তালিকা" style="background:rgba(128,128,128,0.08); border:1px solid rgba(128,128,128,0.2); width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-secondary);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+        </button>
+      </div>
+      <div class="exam-progress-track mt-3"><div class="exam-progress-fill" id="progressFill" style="width:0%;"></div></div>
+      <p style="font-size:0.75rem; color:var(--text-muted); font-weight:700; margin-top:8px; font-family:var(--font-num);" id="progressLabel"></p>
+      <div id="questionBody" class="mt-4"></div>
+    </div>
+
+    <div class="exam-nav-bar">
+      <button class="btn btn-secondary" id="prevBtn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        পূর্ববর্তী
+      </button>
+      <button class="btn btn-primary" id="nextBtn">
+        পরবর্তী
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+
+    <div id="paletteOverlay" class="modal-overlay hidden">
+      <div class="glass card" style="max-width:380px; width:100%; max-height:85vh; overflow-y:auto; padding:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <p style="font-weight:900; font-size:1.1rem; color:var(--text-primary);">প্রশ্ন তালিকা</p>
+          <button id="closePaletteBtn" aria-label="বন্ধ করো" style="background:rgba(239,68,68,0.1); color:#ef4444; border:none; width:36px; height:36px; border-radius:10px; cursor:pointer;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+        <div class="palette-grid" id="paletteGrid"></div>
+        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:24px; justify-content:center; font-size:0.8rem; font-weight:800; color:var(--text-muted);">
+          <span style="display:flex; align-items:center; gap:6px;"><span style="width:16px; height:16px; border-radius:4px; background:rgba(16,185,129,0.15); border:1px solid #10b981;"></span> উত্তরিত</span>
+          <span style="display:flex; align-items:center; gap:6px;"><span style="width:16px; height:16px; border-radius:4px; background:rgba(128,128,128,0.05); border:1px solid rgba(128,128,128,0.2);"></span> অনুত্তরিত</span>
+          <span style="display:flex; align-items:center; gap:6px;"><span style="width:16px; height:16px; border-radius:4px; background:rgba(128,128,128,0.05); border:1px solid #f59e0b;"></span> চিহ্নিত</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="submitModal" class="modal-overlay hidden">
+      <div class="glass card" style="max-width:380px; padding:24px; text-align:center;">
+        <div style="width:64px; height:64px; border-radius:50%; background:rgba(239,68,68,0.1); color:#ef4444; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <p style="font-weight:900; font-size:1.1rem; color:var(--text-primary); margin-bottom:8px;">নিশ্চিত করুন</p>
+        <p id="submitModalText" style="font-size:0.85rem; color:var(--text-muted); font-weight:600; line-height:1.5;"></p>
+        <div style="display:flex; gap:10px; margin-top:24px;">
+          <button class="btn btn-secondary" id="cancelSubmitBtn">ফিরে যান</button>
+          <button class="btn btn-primary" id="confirmSubmitBtn" style="background:#ef4444; box-shadow:0 4px 15px rgba(239,68,68,0.2);">চূড়ান্ত জমা</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="figurePreviewModal" class="hidden" style="position:fixed;inset:0;background:rgba(10,14,26,0.95);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;cursor:zoom-out;">
+      <img id="figurePreviewImg" style="max-width:100%;max-height:85vh;border-radius:16px;pointer-events:none;user-select:none;-webkit-user-drag:none;" draggable="false" oncontextmenu="return false;">
+    </div>
+  `;
+
+  document.getElementById("prevBtn").addEventListener("click", () => navigate(-1));
+  document.getElementById("nextBtn").addEventListener("click", () => navigate(1));
+  document.getElementById("paletteBtn").addEventListener("click", openPalette);
+  document.getElementById("closePaletteBtn").addEventListener("click", () => document.getElementById("paletteOverlay").classList.add("hidden"));
+  document.getElementById("submitBtn").addEventListener("click", openSubmitModal);
+  document.getElementById("cancelSubmitBtn").addEventListener("click", () => document.getElementById("submitModal").classList.add("hidden"));
+  document.getElementById("confirmSubmitBtn").addEventListener("click", () => doSubmit(false));
+  document.getElementById("figurePreviewModal").addEventListener("click", () => {
+    document.getElementById("figurePreviewModal").classList.add("hidden");
+    document.getElementById("figurePreviewImg").src = "";
+  });
+
+  if (!inProgress) {
+    inProgress = true;
+    window.addEventListener("beforeunload", leaveGuard);
   }
-  if(!testId){
-    app.innerHTML=`<div class="card">Improvement Test শনাক্ত করা যায়নি।</div>`;
-    return;
+  renderQuestion();
+}
+
+function leaveGuard(e) { if (!inProgress) return; e.preventDefault(); e.returnValue = ""; }
+
+function updateProgress() {
+  const answered = Object.keys(answers).length;
+  document.getElementById("progressFill").style.width = `${Math.round((answered / questions.length) * 100)}%`;
+  document.getElementById("progressLabel").textContent = `${answered} / ${questions.length} টি প্রশ্নের উত্তর দেওয়া হয়েছে`;
+}
+
+function renderQuestion() {
+  const q = questions[index];
+  document.getElementById("qCounter").innerHTML = `প্রশ্ন ${index + 1} / ${questions.length}`;
+  document.getElementById("prevBtn").disabled = index === 0;
+  document.getElementById("nextBtn").disabled = index === questions.length - 1;
+  updateProgress();
+
+  const selected = answers[q.questionId];
+  const isMarked = !!marked[q.questionId];
+  const body = document.getElementById("questionBody");
+  body.classList.remove("q-enter"); void body.offsetWidth; body.classList.add("q-enter");
+
+  const imageHtml = q.imageUrl ? `
+    <div class="protected-img-wrapper">
+      <img src="${esc(q.imageUrl)}" class="q-figure" draggable="false" oncontextmenu="return false;" onerror="this.style.display='none';">
+      <div class="img-shield" data-url="${esc(q.imageUrl)}"></div>
+    </div>` : "";
+
+  // Question and option text is admin-authored (may contain math/HTML), same as exam.html.
+  body.innerHTML = `
+    ${q.question_en ? `<details class="lang-en-toggle" style="margin-bottom:12px;">
+      <summary>English</summary>
+      <p style="margin-top:8px; font-size:0.9rem; color:var(--text-secondary); line-height:1.5;">${q.question_en}</p>
+    </details>` : ""}
+
+    <p style="font-weight:800; font-size:1.1rem; color:var(--text-primary); line-height:1.6;">${q.question_bn || q.question_en || q.question || "প্রশ্নের লেখা পাওয়া যায়নি।"}</p>
+    ${imageHtml}
+
+    <div style="margin-top:24px;">
+      ${optionLetters(q).map(letter => `
+        <button class="option-card ${selected === letter ? "selected" : ""}" data-letter="${letter}">
+          <span class="option-letter">${letter}</span>
+          <span style="flex:1; line-height:1.4;">${optionText(q, letter)}</span>
+        </button>`).join("")}
+    </div>
+
+    <button type="button" id="markReviewBtn" style="margin-top:16px; padding:10px 18px; border-radius:12px; font:inherit; font-weight:800; display:flex; align-items:center; gap:8px; cursor:pointer;
+      ${isMarked ? "border:1px solid #f59e0b; color:#f59e0b; background:rgba(245,158,11,0.1);" : "border:1px solid rgba(128,128,128,0.2); color:var(--text-primary); background:rgba(128,128,128,0.05);"}">
+      ${isMarked
+        ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> চিহ্নিত করা আছে`
+        : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> পর্যালোচনার জন্য চিহ্নিত করুন`}
+    </button>
+  `;
+
+  body.querySelectorAll(".option-card").forEach(btn => btn.addEventListener("click", () => selectAnswer(q.questionId, btn.dataset.letter)));
+  document.getElementById("markReviewBtn").addEventListener("click", () => { marked[q.questionId] = !marked[q.questionId]; persist(); renderQuestion(); });
+  const shield = body.querySelector(".img-shield");
+  if (shield) shield.addEventListener("click", () => {
+    document.getElementById("figurePreviewImg").src = shield.dataset.url;
+    document.getElementById("figurePreviewModal").classList.remove("hidden");
+  });
+
+  if (window.MathJax?.typesetPromise) MathJax.typesetPromise().catch(() => {});
+}
+
+function selectAnswer(questionId, letter) {
+  if (answers[questionId] === letter) delete answers[questionId]; else answers[questionId] = letter;
+  persist();
+
+  const body = document.getElementById("questionBody");
+  body.querySelectorAll(".option-card").forEach(btn => {
+    btn.classList.toggle("selected", btn.dataset.letter === answers[questionId]);
+    btn.classList.remove("option-flash");
+  });
+  if (answers[questionId]) {
+    const tapped = body.querySelector(`.option-card[data-letter="${answers[questionId]}"]`);
+    if (tapped) { void tapped.offsetWidth; tapped.classList.add("option-flash"); }
   }
+  updateProgress();
+}
 
-  try{
-    test=await getAssignedImprovementTest(testId,student.studentId);
-    if(!test){
-      app.innerHTML=`<div class="card"><h2>এই অনুশীলনটি এখন উপলব্ধ নয়</h2>
-      <p class="status">এটি হয় প্রকাশিত হয়নি, অথবা তোমার জন্য বরাদ্দ করা হয়নি।</p></div>`;
-      return;
+function navigate(delta) {
+  const next = index + delta;
+  if (next < 0 || next >= questions.length) return;
+  index = next; persist(); renderQuestion();
+}
+
+function openPalette() {
+  const grid = document.getElementById("paletteGrid");
+  grid.innerHTML = questions.map((q, i) => `
+    <button class="palette-cell ${answers[q.questionId] ? "answered" : ""} ${marked[q.questionId] ? "marked" : ""} ${i === index ? "current" : ""}" data-idx="${i}">${i + 1}</button>`).join("");
+  grid.querySelectorAll("[data-idx]").forEach(btn => btn.addEventListener("click", () => {
+    index = Number(btn.dataset.idx); persist(); renderQuestion();
+    document.getElementById("paletteOverlay").classList.add("hidden");
+  }));
+  document.getElementById("paletteOverlay").classList.remove("hidden");
+}
+
+function openSubmitModal() {
+  const unanswered = questions.filter(q => !answers[q.questionId]).length;
+  document.getElementById("submitModalText").textContent = unanswered
+    ? `এখনও ${unanswered}টি প্রশ্নের উত্তর দেওয়া হয়নি। জমা দেওয়ার পরে কোনো উত্তর পরিবর্তন করা যাবে না।`
+    : "জমা দেওয়ার পরে কোনো উত্তর পরিবর্তন করা যাবে না।";
+  document.getElementById("submitModal").classList.remove("hidden");
+}
+
+/* ---------- timer ---------- */
+function startTimer() { clearInterval(timerHandle); tick(); timerHandle = setInterval(tick, 1000); }
+function tick() {
+  const remaining = startedAt + durationMinutes * 60000 - Date.now();
+  const display = document.getElementById("timerDisplay");
+  if (display) {
+    display.textContent = formatHms(Math.max(0, remaining));
+    display.classList.toggle("timer-critical", remaining <= 60000 && remaining > 0);
+    display.classList.toggle("timer-warning", remaining <= 300000 && remaining > 60000);
+  }
+  const mins = remaining / 60000;
+  [5, 1].filter(m => m < durationMinutes).forEach(m => {
+    if (mins <= m && mins > m - 1 && !firedMinutes.has(m)) {
+      firedMinutes.add(m);
+      showToast(m === 1 ? "আর মাত্র ১ মিনিট বাকি — সময় শেষ হলে উত্তর স্বয়ংক্রিয়ভাবে জমা হয়ে যাবে।" : `আর মাত্র ${m} মিনিট বাকি আছে।`, "error");
+    }
+  });
+  if (remaining <= 0) { clearInterval(timerHandle); doSubmit(true); }
+}
+
+/* ---------- submit ---------- */
+async function getAttemptCount() {
+  const snap = await getDocs(query(
+    collection(db, "improvementAttempts"),
+    where("testId", "==", testId),
+    where("studentId", "==", student.studentId)
+  ));
+  return snap.docs.filter(d => d.data().status === "completed").length;
+}
+
+async function doSubmit(auto) {
+  if (submitting) return;
+  submitting = true;
+  clearInterval(timerHandle);
+  clearTimeout(syncTimer);
+  document.getElementById("submitModal")?.classList.add("hidden");
+  shell.innerHTML = `<div class="state-block"><div class="spinner"></div><p class="text-sm text-muted mt-3" style="font-weight:800;">${auto ? "সময় শেষ — জমা দেওয়া হচ্ছে..." : "জমা দেওয়া হচ্ছে..."}</p></div>`;
+
+  try {
+    let correct = 0, attempted = 0, totalMarks = 0, obtainedMarks = 0;
+    questions.forEach(q => {
+      const marks = Number(q.marks) || 1;
+      totalMarks += marks;
+      const a = answers[q.questionId];
+      if (a) {
+        attempted++;
+        if (sameAnswer(a, q.correctAnswer)) { correct++; obtainedMarks += marks; }
+      }
+    });
+
+    const percentage = totalMarks ? Math.round(obtainedMarks / totalMarks * 1000) / 10 : 0;
+    const accuracy = attempted ? Math.round(correct / attempted * 1000) / 10 : 0;
+
+    const previousAccuracy = Number(test.baselineAccuracy ?? test.currentAccuracy ?? 0);
+    const targetAccuracy = Number(test.targetAccuracy ?? 0);
+    // Exam based improvement is compared like-for-like with the original exam: score %.
+    const score = test.entityType === "exam" ? percentage : accuracy;
+    const improvement = calculateImprovement({ previousAccuracy, practiceAccuracy: score, targetAccuracy });
+
+    const attemptNumber = (await getAttemptCount()) + 1;
+    const xp = computeImprovementPracticeXP({
+      totalQuestions: questions.length, attempted, correctCount: correct, percentage,
+      targetReached: improvement.targetReached, improvementPoints: improvement.improvementPoints, attemptNumber
+    });
+
+    await setDoc(doc(db, "improvementAttempts", `${testId}_${student.studentId}_${Date.now()}`), {
+      testId, studentId: student.studentId,
+      answers, startedAtMillis: startedAt, submittedAtMillis: Date.now(),
+      totalQuestions: questions.length, attempted,
+      correctCount: correct, wrongCount: attempted - correct, unansweredCount: questions.length - attempted,
+      obtainedMarks, totalMarks, percentage, accuracy: score,
+      previousAccuracy: improvement.previousAccuracy, targetAccuracy: improvement.targetAccuracy,
+      improvementPoints: improvement.improvementPoints, targetReached: improvement.targetReached,
+      meaningfulImprovement: improvement.meaningfulImprovement,
+      xp: xp.xp, xpEarned: xp.xp, attemptNumber,
+      status: "completed", createdAt: serverTimestamp()
+    });
+
+    // Result is saved. Everything below is best-effort and must never turn a
+    // saved result into an error screen.
+    // Students cannot delete (Firestore rules), so close the in-progress document instead.
+    try {
+      await setDoc(doc(db, "improvementAttempts", `${testId}_${student.studentId}_active`),
+        { status: "submitted", updatedAt: serverTimestamp() }, { merge: true });
+    } catch {}
+
+    // Only the FIRST attempt settles the request; a repeat must not overwrite it.
+    const requestId = test.requestId || (Array.isArray(test.requestIds) ? test.requestIds[0] : null) || null;
+    if (requestId && attemptNumber === 1) {
+      try {
+        await updateImprovementRequestAfterCompletion(requestId, {
+          accuracy: score, improvementPercent: improvement.improvementPoints, targetReached: improvement.targetReached
+        });
+      } catch (err) { console.warn("Improvement request status update skipped:", err); }
     }
 
-    questions=Array.isArray(test.snapshot?.questions)?test.snapshot.questions:[];
-    questions=questions.filter(q=>q && q.questionId && q.correctAnswer);
+    try { localStorage.removeItem(localKey()); } catch {}
+    inProgress = false;
+    window.removeEventListener("beforeunload", leaveGuard);
+    window.dispatchEvent(new CustomEvent("improvement:completed", { detail: { testId, studentId: student.studentId, accuracy: score, xp: xp.xp } }));
 
-    if(!questions.length){
-      app.innerHTML=`<div class="card">এই অনুশীলনে এখন কোনো বৈধ প্রশ্ন নেই।</div>`;
-      return;
-    }
-
-    if(loadLocal()){
-      renderQuestion();
-      startTimer();
-    }else{
-      renderIntro();
-    }
-  }catch(err){
+    renderResult({ accuracy: score, improvement, xp: xp.xp, correct, total: questions.length, attempted, repeat: attemptNumber > 1 });
+  } catch (err) {
     console.error(err);
-    app.innerHTML=`<div class="card"><h2>অনুশীলন লোড করা যায়নি</h2>
-      <p class="status">${esc(err.message || "ইন্টারনেট সংযোগ পরীক্ষা করো।")}</p></div>`;
+    submitting = false;
+    showToast("জমা দেওয়া যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করে আবার চেষ্টা করো।", "error");
+    renderExamShell(); startTimer();
   }
+}
+
+function renderResult({ accuracy, improvement, xp, correct, total, attempted, repeat }) {
+  const gain = improvement.improvementPoints;
+  shell.innerHTML = `
+    <div class="topbar">
+      <div style="width:40px;"></div>
+      <h2 style="font-size:1.1rem; font-weight:900; color:var(--text-primary);">অনুশীলনের ফলাফল</h2>
+      <div style="width:40px;"></div>
+    </div>
+
+    <div class="glass card" style="padding:28px 20px; text-align:center;">
+      <p style="font-size:.8rem; font-weight:800; color:var(--text-muted);">${test.entityType === "exam" ? "এই অনুশীলনে তোমার স্কোর" : "এই অনুশীলনে তোমার accuracy"}</p>
+      <p style="font-size:3rem; font-weight:900; color:var(--color-accent); font-family:var(--font-num); line-height:1.2; margin:6px 0;">${accuracy}%</p>
+      <p style="font-size:.85rem; font-weight:700; color:var(--text-secondary);">${improvement.targetReached ? "তোমার নির্ধারিত লক্ষ্য পূরণ হয়েছে।" : `লক্ষ্য: ${improvement.targetAccuracy}%`}</p>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:20px;">
+        <div class="stat-box"><p>সঠিক</p><p>${correct}/${total}</p></div>
+        <div class="stat-box"><p>উত্তর দিয়েছ</p><p>${attempted}/${total}</p></div>
+        <div class="stat-box"><p>${test.entityType === "exam" ? "আগের স্কোর" : "আগের accuracy"}</p><p>${improvement.previousAccuracy}%</p></div>
+        <div class="stat-box"><p>উন্নতি</p><p>${gain >= 0 ? "+" : ""}${gain}</p></div>
+      </div>
+
+      ${repeat
+        ? `<div style="margin-top:16px; padding:14px; border-radius:14px; background:rgba(128,128,128,0.06); border:1px solid rgba(128,128,128,0.2);">
+            <p style="font-size:1.1rem; font-weight:900; color:var(--text-secondary); font-family:var(--font-num);">+0 XP</p>
+            <p style="font-size:.75rem; font-weight:700; color:var(--text-muted); margin-top:2px;">পুনরায় দেওয়া অনুশীলনে XP বাড়ে না</p>
+          </div>`
+        : `<div style="margin-top:16px; padding:14px; border-radius:14px; background:rgba(var(--color-accent-rgb),0.08); border:1px solid rgba(var(--color-accent-rgb),0.25);">
+            <p style="font-size:1.4rem; font-weight:900; color:var(--color-accent); font-family:var(--font-num);">+${xp} XP</p>
+            <p style="font-size:.75rem; font-weight:700; color:var(--text-muted); margin-top:2px;">তোমার মোট XP-তে যোগ হয়েছে</p>
+          </div>`}
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:20px;">
+      <a class="btn btn-secondary" href="./dashboard.html" style="text-decoration:none;">ড্যাশবোর্ড</a>
+      <a class="btn btn-primary" href="./improvement.html" style="text-decoration:none;">উন্নতি পাতা</a>
+    </div>
+  `;
 }
 
 boot();

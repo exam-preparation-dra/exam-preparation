@@ -52,6 +52,22 @@
   .chip.flat { color:var(--text-muted); background:rgba(128,128,128,.1); }
 
   .empty { text-align:center; padding: 28px 12px; font-size:.86rem; font-weight:700; line-height:1.7; color:var(--text-muted); }
+
+  .sec-note { margin: -4px 4px 10px; font-size: .74rem; font-weight: 700; line-height: 1.6; color: var(--text-muted); }
+  .row-btn {
+    flex-shrink: 0; padding: 9px 14px; border-radius: 12px; cursor: pointer; font: inherit; font-size: .78rem; font-weight: 800;
+    color: var(--color-accent); background: rgba(201,151,63,.1); border: 1px solid rgba(201,151,63,.35); transition: transform .18s ease;
+  }
+  .row-btn:active { transform: scale(.96); }
+  .row-btn:disabled { opacity: .55; cursor: wait; }
+  .row-btn.plain { color: var(--text-primary); background: rgba(128,128,128,.06); border-color: rgba(128,128,128,.2); }
+  .wait { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .wait-tag { flex-shrink:0; padding:4px 10px; border-radius:99px; font-size:.68rem; font-weight:900; color:#3b82f6; background:rgba(59,130,246,.1); }
+  details.apply > summary { list-style:none; cursor:pointer; display:flex; align-items:center; justify-content:space-between;
+    font-weight:900; font-size:1.02rem; color:var(--text-primary); margin: 20px 4px 10px; }
+  details.apply > summary::-webkit-details-marker { display:none; }
+  details.apply > summary span { font-family: var(--font-num); font-size:.78rem; font-weight:800; color:var(--text-muted); }
+  .hi-actions { display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
 </style>
 </head>
 <body>
@@ -60,15 +76,25 @@
 </div>
 
 <script type="module">
-import { initTheme, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
+import { initTheme, renderState, renderStudentHeader, showToast } from "../js/utils/ui-utils.js";
 import { getActiveStudent } from "../js/utils/student-utils.js";
 import { getImprovementRequestsForStudent } from "../js/utils/improvement-utils.js";
+import { getApprovedResults } from "../js/utils/results-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import {
+  doc, getDoc, setDoc, serverTimestamp, collection, getDocs, query, where
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 initTheme();
 const shell = document.getElementById("shell");
 const student = getActiveStudent();
+
+// A single exam below this % is turned into an Improvement Exam automatically.
+const LOW_SCORE = 50;
+const TARGET = 65;
+
+let requests = [];
+let examResults = [];
 
 if (!student) {
   window.location.href = "../index.html";
@@ -84,38 +110,53 @@ const pct = v => Math.max(0, Math.min(100, Math.round(num(v))));
 
 const areaName = r => r.topicName || r.chapterName || r.subjectName || r.entityName || "উন্নতির ক্ষেত্র";
 const areaPath = r => {
+  if (r.entityType === "exam") {
+    return r.source === "student_request" ? "তোমার আবেদন" : `পরীক্ষায় ${LOW_SCORE}% এর কম পেয়েছিলে`;
+  }
   const p = [r.subjectName, r.chapterName, r.topicName].filter(Boolean);
   return p.length > 1 ? p.join(" › ") : "";
 };
 
-// A request only counts as a ready exam if its test still exists and is published.
-// (An admin may have deleted the exam.)
-async function loadReadyExams(requests) {
-  const candidates = requests.filter(r =>
-    ["test_created", "assigned"].includes(r.status) && (r.improvementTestId || r.assignedTestId));
-
-  const checked = await Promise.all(candidates.map(async r => {
-    const testId = r.improvementTestId || r.assignedTestId;
-    try {
-      const snap = await getDoc(doc(db, "improvementTests", testId));
-      if (!snap.exists()) return null;
-      const t = snap.data();
-      if (t.published !== true) return null;
-      if (Array.isArray(t.studentIds) && t.studentIds.length && !t.studentIds.includes(student.studentId)) return null;
-      return { request: r, testId, questionCount: num(t.questionCount), durationMinutes: num(t.durationMinutes) };
-    } catch (err) {
-      console.warn("Improvement test check failed:", err);
-      return null;
-    }
-  }));
-
-  return checked.filter(Boolean);
+/* ---------- data ---------- */
+// Completed attempts are the source of truth for history. Students cannot
+// update improvementRequests (Firestore rules), so a request's status may
+// never change after an exam is finished -- the attempt document always exists.
+async function loadCompletedAttempts() {
+  const snap = await getDocs(query(
+    collection(db, "improvementAttempts"),
+    where("studentId", "==", student.studentId),
+    where("status", "==", "completed")
+  ));
+  return snap.docs.map(d => d.data()).sort((a, b) => num(b.submittedAtMillis) - num(a.submittedAtMillis));
 }
 
-function examCard({ request: r, testId, questionCount, durationMinutes }) {
+// One read per test: is it still there / published / mine? (An admin may have deleted it.)
+const testCache = new Map();
+async function loadTest(testId) {
+  if (testCache.has(testId)) return testCache.get(testId);
+  let info = null;
+  try {
+    const snap = await getDoc(doc(db, "improvementTests", testId));
+    if (snap.exists()) {
+      const t = snap.data();
+      const mine = !Array.isArray(t.studentIds) || !t.studentIds.length || t.studentIds.includes(student.studentId);
+      info = {
+        usable: t.published === true && mine,
+        title: String(t.title || "").replace(/^Improvement Exam\s*[—-]\s*/i, "").trim(),
+        questionCount: num(t.questionCount),
+        durationMinutes: num(t.durationMinutes)
+      };
+    }
+  } catch (err) { console.warn("Improvement test check failed:", err); }
+  testCache.set(testId, info);
+  return info;
+}
+
+/* ---------- cards ---------- */
+function examCard(r, testId, info) {
   const cur = pct(r.currentAccuracy);
-  const target = Math.max(cur, pct(r.targetAccuracy || 65));
-  const meta = [questionCount ? `${questionCount}টি প্রশ্ন` : "", durationMinutes ? `${durationMinutes} মিনিট` : ""].filter(Boolean).join(" · ");
+  const target = Math.max(cur, pct(r.targetAccuracy || TARGET));
+  const meta = [info.questionCount ? `${info.questionCount}টি প্রশ্ন` : "", info.durationMinutes ? `${info.durationMinutes} মিনিট` : ""].filter(Boolean).join(" · ");
 
   return `
     <div class="card">
@@ -130,30 +171,89 @@ function examCard({ request: r, testId, questionCount, durationMinutes }) {
     </div>`;
 }
 
-function historyRow(r) {
-  const before = pct(r.currentAccuracy);
-  const hasResult = r.lastAccuracy !== undefined && r.lastAccuracy !== null;
-  const after = hasResult ? pct(r.lastAccuracy) : null;
-  const delta = hasResult ? Math.round(num(r.lastImprovementPercent ?? (after - before))) : 0;
+function waitingRow(r) {
+  return `
+    <div class="card wait">
+      <div class="hi-main">
+        <b>${esc(areaName(r))}</b>
+        <span>${esc(areaPath(r) || "দুর্বল অংশ শনাক্ত হয়েছে")}</span>
+      </div>
+      <span class="wait-tag">Exam তৈরি হচ্ছে</span>
+    </div>`;
+}
 
-  const chip = !hasResult ? `<span class="chip flat">ফলাফল অপেক্ষমাণ</span>`
-    : delta > 0 ? `<span class="chip up">+${delta}%${r.targetReached ? " · লক্ষ্য পূর্ণ" : ""}</span>`
+function historyRow(a, info) {
+  const before = pct(a.previousAccuracy);
+  const after = pct(a.accuracy);
+  const delta = Math.round(num(a.improvementPoints, after - before));
+  const xp = Math.round(num(a.xpEarned ?? a.xp));
+
+  const chip = delta > 0 ? `<span class="chip up">+${delta}%${a.targetReached ? " · লক্ষ্য পূর্ণ" : ""}</span>`
     : delta < 0 ? `<span class="chip down">${delta}%</span>`
     : `<span class="chip flat">কোনো পরিবর্তন নেই</span>`;
+
+  const retake = info?.usable
+    ? `<button type="button" class="row-btn plain" data-test="${esc(a.testId)}">আবার দাও</button>` : "";
 
   return `
     <div class="card hi">
       <div class="hi-main">
-        <b>${esc(areaName(r))}</b>
-        <span>${hasResult ? `আগে ${before}%` : esc(areaPath(r) || "সম্পন্ন")}</span>
+        <b>${esc(info?.title || "উন্নতির অনুশীলন")}</b>
+        <span>আগে ${before}% · ${num(a.attemptNumber, 1) > 1 ? "পুনরায় · XP নেই" : `+${xp} XP`}</span>
       </div>
-      <div class="hi-score">
-        <strong>${hasResult ? `${after}%` : "—"}</strong>
-        ${chip}
+      <div class="hi-actions">
+        <div class="hi-score"><strong>${after}%</strong>${chip}</div>
+        ${retake}
       </div>
     </div>`;
 }
 
+function applyRow(r) {
+  const score = pct(r.percentage);
+  return `
+    <div class="card wait">
+      <div class="hi-main">
+        <b>${esc(r.examName || "পরীক্ষা")}</b>
+        <span>স্কোর ${score}%${score < LOW_SCORE ? " · দুর্বল" : ""}</span>
+      </div>
+      <button type="button" class="row-btn" data-apply="${esc(r.examId)}">আবেদন করো</button>
+    </div>`;
+}
+
+/* ---------- apply ---------- */
+async function applyForExam(examId, btn) {
+  const r = examResults.find(x => x.examId === examId);
+  if (!r) return;
+  btn.disabled = true; btn.textContent = "জমা হচ্ছে…";
+
+  const score = Math.round(num(r.percentage) * 10) / 10;
+  const priority = score < 30 ? "critical" : score < 40 ? "high" : score < LOW_SCORE ? "medium" : "low";
+  const rank = { critical: 4, high: 3, medium: 2, low: 1 }[priority];
+
+  try {
+    // Fixed id => one application per exam, and it lines up with the Firestore rule.
+    await setDoc(doc(db, "improvementRequests", `apply_${student.studentId}_${examId}`), {
+      studentId: student.studentId,
+      entityType: "exam", entityId: examId, entityName: r.examName || "পরীক্ষা",
+      examId, examName: r.examName || "",
+      currentAccuracy: score, targetAccuracy: TARGET,
+      priority, priorityRank: rank,
+      reason: "student_request", source: "student_request",
+      status: "detected", testRequired: true, improvementTestId: null, adminNote: "",
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    });
+    showToast("আবেদন জমা হয়েছে। অ্যাডমিন Exam তৈরি করলে এখানে দেখতে পাবে।", "success");
+    renderPage();
+  } catch (err) {
+    console.error(err);
+    showToast(err?.code === "permission-denied"
+      ? "আবেদন করা যায়নি। অ্যাডমিনকে Firestore rules আপডেট করতে বলো।"
+      : "আবেদন জমা দেওয়া যায়নি। আবার চেষ্টা করো।", "error");
+    btn.disabled = false; btn.textContent = "আবেদন করো";
+  }
+}
+
+/* ---------- page ---------- */
 async function renderPage() {
   shell.innerHTML = `
     ${renderStudentHeader(student, "improvement")}
@@ -162,26 +262,68 @@ async function renderPage() {
   const body = document.getElementById("bodyContent");
 
   try {
-    const requests = await getImprovementRequestsForStudent(student.studentId);
-    const exams = await loadReadyExams(requests);
-    const history = requests.filter(r => ["completed", "resolved"].includes(r.status));
+    let attempts;
+    [requests, attempts, examResults] = await Promise.all([
+      getImprovementRequestsForStudent(student.studentId),
+      loadCompletedAttempts(),
+      getApprovedResults(student.studentId).catch(() => [])
+    ]);
+
+    // Ready exams: a request whose exam still exists, and that has not been finished yet.
+    const doneTestIds = new Set(attempts.map(a => a.testId));
+    const ready = [];
+    for (const r of requests) {
+      const testId = r.improvementTestId || r.assignedTestId;
+      if (!testId || !["test_created", "assigned"].includes(r.status) || doneTestIds.has(testId)) continue;
+      const info = await loadTest(testId);
+      if (info?.usable) ready.push({ r, testId, info });
+    }
+
+    const waiting = requests.filter(r =>
+      !(r.improvementTestId || r.assignedTestId) &&
+      ["detected", "reviewed", "test_required"].includes(r.status));
+
+    const history = attempts.slice(0, 10);
+    const historyInfo = await Promise.all(history.map(a => loadTest(a.testId)));
+
+    // Apply list: exams this student has taken and has no improvement request for yet (latest 12).
+    const requested = new Set(requests.filter(r => r.entityType === "exam").map(r => r.entityId));
+    const seen = new Set();
+    const applicable = examResults.filter(r => {
+      if (!r.examId || requested.has(r.examId) || seen.has(r.examId)) return false;
+      seen.add(r.examId); return true;
+    }).slice(0, 12);
 
     body.innerHTML = `
-      <div class="sec-title">তোমার Exam <span>${exams.length}</span></div>
-      ${exams.length
-        ? exams.map(examCard).join("")
-        : `<div class="card empty">এখন কোনো Improvement Exam নেই।<br>অ্যাডমিন তৈরি করলে এখানে দেখা যাবে।</div>`}
+      <div class="sec-title">তোমার Exam <span>${ready.length}</span></div>
+      ${ready.length
+        ? ready.map(x => examCard(x.r, x.testId, x.info)).join("")
+        : `<div class="card empty">এখন কোনো Improvement Exam নেই।<br>কোনো পরীক্ষায় ${LOW_SCORE}% এর কম পেলে এখানে Exam আসবে।</div>`}
 
-      <div class="sec-title">সম্পন্ন <span>${history.length}</span></div>
+      ${waiting.length ? `
+        <div class="sec-title">অপেক্ষায় <span>${waiting.length}</span></div>
+        ${waiting.map(waitingRow).join("")}` : ""}
+
+      <details class="apply">
+        <summary>Exam এর জন্য আবেদন <span>${applicable.length}</span></summary>
+        <p class="sec-note">যে পরীক্ষার উপর অনুশীলন চাও, সেটিতে আবেদন করো। অ্যাডমিন তোমার জন্য Exam তৈরি করবে।</p>
+        ${applicable.length ? applicable.map(applyRow).join("") : `<div class="card empty">আবেদন করার মতো কোনো পরীক্ষা নেই।</div>`}
+      </details>
+
+      <div class="sec-title">সম্পন্ন <span>${attempts.length}</span></div>
       ${history.length
-        ? history.slice(0, 10).map(historyRow).join("")
+        ? `<p class="sec-note">প্রথমবার দিলে XP পাবে। আবার দিতে পারবে, তবে XP বাড়বে না।</p>` +
+          history.map((a, i) => historyRow(a, historyInfo[i])).join("")
         : `<div class="card empty">এখনও কোনো Exam সম্পন্ন হয়নি।</div>`}
     `;
 
     body.querySelectorAll("[data-test]").forEach(btn => {
       btn.addEventListener("click", () => {
-        location.href = `./exam.html?improvementTestId=${encodeURIComponent(btn.dataset.test)}`;
+        location.href = `./improvement-test.html?testId=${encodeURIComponent(btn.dataset.test)}`;
       });
+    });
+    body.querySelectorAll("[data-apply]").forEach(btn => {
+      btn.addEventListener("click", () => applyForExam(btn.dataset.apply, btn));
     });
   } catch (err) {
     console.error(err);
