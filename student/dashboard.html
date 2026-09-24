@@ -212,6 +212,57 @@
 
   .d-last { padding-bottom: 24px; }
   [hidden] { display: none !important; }
+  /* ---------- exam calendar ---------- */
+  .cal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .cal-title { font-size: 1.02rem; font-weight: 800; color: var(--text-primary); }
+  .cal-nav { display: flex; gap: 6px; }
+  .cal-btn {
+    min-width: 34px; height: 34px; padding: 0 8px; display: grid; place-items: center; cursor: pointer;
+    border-radius: 10px; border: 1px solid var(--surface-border); background: var(--surface-solid);
+    color: var(--text-primary); font: inherit; font-size: 0.72rem; font-weight: 800; transition: transform var(--transition);
+  }
+  .cal-btn:active { transform: scale(0.92); }
+  .cal-btn:focus-visible, .cal-cell:focus-visible, .cal-link:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 12px; }
+  .cal-dow { text-align: center; padding: 4px 0; font-size: 0.68rem; font-weight: 800; color: var(--text-muted); }
+  .cal-cell {
+    aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    border-radius: 12px; border: 1px solid transparent; background: transparent; color: var(--text-primary);
+    font: inherit; font-size: 0.86rem; font-weight: 700;
+  }
+  .cal-cell.muted { color: var(--text-muted); }
+  button.cal-cell { cursor: pointer; background: rgba(128,128,128,0.07); border-color: rgba(128,128,128,0.16); transition: transform var(--transition); }
+  button.cal-cell:active { transform: scale(0.93); }
+  .cal-cell.today { border-color: var(--color-accent); box-shadow: inset 0 0 0 1px var(--color-accent); }
+  .cal-cell.selected { background: var(--color-accent); border-color: var(--color-accent); color: #2b1d09; }
+  .cal-dots { display: flex; gap: 3px; height: 5px; }
+  .cal-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--color-accent); }
+  .cal-cell.past .cal-dot { background: var(--text-muted); }
+  .cal-cell.selected .cal-dot { background: #2b1d09; }
+  .cal-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; font-size: 0.7rem; font-weight: 700; color: var(--text-muted); }
+  .cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .cal-legend i { width: 7px; height: 7px; border-radius: 50%; background: var(--color-accent); }
+  .cal-legend i.past { background: var(--text-muted); }
+
+  .cal-list-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 16px 2px 8px; font-size: 0.86rem; font-weight: 800; color: var(--text-primary); }
+  .cal-link { background: none; border: none; padding: 4px 2px; cursor: pointer; font: inherit; font-size: 0.74rem; font-weight: 800; color: var(--color-accent); }
+  .cal-list { display: grid; gap: 10px; }
+  .cal-item {
+    display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 16px;
+    border: 1px solid var(--surface-border); background: var(--surface-solid);
+  }
+  .cal-item.is-today { border-color: var(--color-accent); }
+  .cal-date { flex-shrink: 0; width: 54px; padding: 8px 0; text-align: center; border-radius: 13px; background: var(--color-accent-soft); border: 1px solid rgba(201,151,63,0.3); }
+  .cal-date b { display: block; font-size: 1.4rem; line-height: 1.15; font-weight: 800; color: var(--text-primary); }
+  .cal-date span { display: block; margin-top: 1px; font-size: 0.68rem; font-weight: 800; color: var(--text-secondary); }
+  .cal-info { min-width: 0; flex: 1; }
+  .cal-name { font-size: 0.95rem; font-weight: 800; line-height: 1.4; color: var(--text-primary); }
+  .cal-day { margin-top: 2px; font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); }
+  .cal-meta { margin-top: 2px; font-size: 0.72rem; font-weight: 600; color: var(--text-muted); }
+  .cal-chip { flex-shrink: 0; align-self: flex-start; padding: 4px 10px; border-radius: 999px; font-size: 0.7rem; font-weight: 800; white-space: nowrap; color: var(--color-accent); background: var(--color-accent-soft); }
+  .cal-chip.now { color: #2b1d09; background: var(--color-accent); }
+  .cal-chip.done { color: var(--color-success); background: rgba(63,157,99,0.14); }
+  .cal-empty { padding: 18px 10px; text-align: center; font-size: 0.82rem; font-weight: 700; line-height: 1.7; color: var(--text-muted); }
 </style>
 </head>
 <body>
@@ -306,6 +357,7 @@ async function render() {
 
     <div id="heroSection" class="d-sec"><div class="skeleton" style="height:190px;border-radius:24px;"></div></div>
     <div id="upcomingSection" class="d-sec" hidden></div>
+    <div id="calendarSection" class="d-sec"><div class="skeleton" style="height:340px;border-radius:20px;"></div></div>
     <div id="referralSection" class="d-sec"><div class="skeleton" style="height:300px;border-radius:22px;"></div></div>
     <div id="xpSection" class="d-sec"></div>
     <div id="recentSection" class="d-sec"></div>
@@ -328,10 +380,13 @@ async function loadUpcoming() {
     const resultMap = await getStudentResultStatusMap(student.studentId);
     if (unsubscribeUpcoming) unsubscribeUpcoming();
     unsubscribeUpcoming = subscribeToUpcomingExams(
-      (exams) => renderUpcoming(el, exams, resultMap),
-      (err) => { console.error(err); el.hidden = true; }
+      (exams) => {
+        renderUpcoming(el, exams, resultMap);
+        try { renderCalendar(exams, resultMap); } catch (e) { console.error("calendar", e); $("calendarSection").hidden = true; }
+      },
+      (err) => { console.error(err); el.hidden = true; $("calendarSection").hidden = true; }
     );
-  } catch (err) { console.error(err); el.hidden = true; }
+  } catch (err) { console.error(err); el.hidden = true; $("calendarSection").hidden = true; }
 }
 
 function renderUpcoming(el, exams, resultMap) {
@@ -383,6 +438,175 @@ function renderUpcoming(el, exams, resultMap) {
         ${action}
       </div>`;
   }).join("");
+}
+
+/* ---------------- exam calendar (automatic) ----------------
+   Nothing is typed in for the calendar: every published exam already has the
+   date (and time text) the admin entered in the exam form, and this reads it
+   live from the same exams feed as "আসন্ন পরীক্ষা". Publish an exam and it
+   appears here on its date; edit/delete it and the calendar follows. */
+const BN_DIGITS = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+const bn = (n) => String(n).replace(/\d/g, d => BN_DIGITS[d]);
+const BN_DAYS = ["রবিবার", "সোমবার", "মঙ্গলবার", "বুধবার", "বৃহস্পতিবার", "শুক্রবার", "শনিবার"];
+const BN_DAYS_SHORT = ["রবি", "সোম", "মঙ্গল", "বুধ", "বৃহ", "শুক্র", "শনি"];
+const BN_MONTHS = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
+const BN_MONTHS_SHORT = ["জানু", "ফেব্রু", "মার্চ", "এপ্রিল", "মে", "জুন", "জুলাই", "আগস্ট", "সেপ্টে", "অক্টো", "নভে", "ডিসে"];
+const DAY_MS = 86400000;
+const pad2 = (n) => String(n).padStart(2, "0");
+const keyOf = (y, m, d) => `${y}-${pad2(m + 1)}-${pad2(d)}`;
+
+function localToday() {
+  const t = new Date();
+  return { y: t.getFullYear(), m: t.getMonth(), d: t.getDate() };
+}
+
+// The admin picks a plain date (<input type="date">) which is stored as UTC
+// midnight. Read it back with UTC parts so the day never shifts with the
+// device's time zone.
+function examDay(exam) {
+  const dt = exam.examDate?.toDate ? exam.examDate.toDate() : null;
+  if (!dt || Number.isNaN(dt.getTime())) return null;
+  const y = dt.getUTCFullYear(), m = dt.getUTCMonth(), d = dt.getUTCDate();
+  return { y, m, d, dow: dt.getUTCDay(), key: keyOf(y, m, d), utc: Date.UTC(y, m, d) };
+}
+
+const cal = { items: [], resultMap: {}, y: null, m: null, selected: null };
+
+function calendarItems(exams) {
+  const now = Date.now();
+  return exams.map(exam => ({ exam, day: examDay(exam) })).filter(({ exam, day }) => {
+    if (!day) return false;
+    const pub = exam.publishDate?.toMillis?.();
+    if (Number.isFinite(pub) && pub > now) return false;            // not released to students yet
+    const target = exam.targetBatch || "all";
+    if (target !== "all" && target !== student.className) return false;
+    const allowed = exam.allowedStudents || [];
+    if (allowed.length > 0 && !allowed.includes(student.studentId)) return false;
+    return true;
+  }).sort((a, b) => a.day.utc - b.day.utc || String(a.exam.name).localeCompare(String(b.exam.name)));
+}
+
+function renderCalendar(exams, resultMap) {
+  cal.items = calendarItems(exams);
+  cal.resultMap = resultMap || {};
+  if (cal.y === null) { const t = localToday(); cal.y = t.y; cal.m = t.m; }
+  const el = $("calendarSection");
+  el.hidden = false;
+  if (!el.dataset.bound) { el.dataset.bound = "1"; el.addEventListener("click", onCalendarClick); }
+  drawCalendar();
+}
+
+function daysFromToday(day) {
+  const t = localToday();
+  return Math.round((day.utc - Date.UTC(t.y, t.m, t.d)) / DAY_MS);
+}
+
+function countdownChip(diff, taken) {
+  if (taken) return `<span class="cal-chip done">জমা দেওয়া হয়েছে</span>`;
+  if (diff < 0) return `<span class="cal-chip">শেষ</span>`;
+  if (diff === 0) return `<span class="cal-chip now">আজ</span>`;
+  if (diff === 1) return `<span class="cal-chip">আগামীকাল</span>`;
+  return `<span class="cal-chip">আর ${bn(diff)} দিন</span>`;
+}
+
+function calendarItemHtml({ exam, day }) {
+  const diff = daysFromToday(day);
+  const own = cal.resultMap[exam.id];
+  const taken = own?.status === "approved" || own?.status === "pending";
+  const special = exam.allowedStudents && exam.allowedStudents.length > 0;
+  const qCount = exam.questionIds ? exam.questionIds.length : 0;
+  const time = String(exam.informationalTime || "").trim();
+  const meta = [exam.durationMinutes ? `${bn(exam.durationMinutes)} মিনিট` : "", qCount ? `${bn(qCount)}টি প্রশ্ন` : "", special ? "স্পেশাল" : ""].filter(Boolean).join(" · ");
+
+  return `
+    <div class="cal-item ${diff === 0 ? "is-today" : ""}">
+      <div class="cal-date"><b>${bn(day.d)}</b><span>${BN_MONTHS_SHORT[day.m]}</span></div>
+      <div class="cal-info">
+        <p class="cal-name">${esc(exam.name)}</p>
+        <p class="cal-day">${BN_DAYS[day.dow]}${time ? ` · ${esc(time)}` : ""}</p>
+        ${meta ? `<p class="cal-meta">${esc(meta)}</p>` : ""}
+      </div>
+      ${countdownChip(diff, taken)}
+    </div>`;
+}
+
+function drawCalendar() {
+  const el = $("calendarSection");
+  const { y, m } = cal;
+  const t = localToday();
+  const byDay = new Map();
+  cal.items.forEach(it => { if (!byDay.has(it.day.key)) byDay.set(it.day.key, []); byDay.get(it.day.key).push(it); });
+
+  const firstDow = new Date(Date.UTC(y, m, 1)).getUTCDay();
+  const daysInMonth = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+  const todayUtc = Date.UTC(t.y, t.m, t.d);
+
+  let cells = "";
+  for (let i = 0; i < firstDow; i++) cells += `<span class="cal-cell"></span>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const key = keyOf(y, m, d);
+    const list = byDay.get(key);
+    const isToday = y === t.y && m === t.m && d === t.d;
+    const past = Date.UTC(y, m, d) < todayUtc;
+    const cls = ["cal-cell", isToday ? "today" : "", past ? "past" : "", cal.selected === key ? "selected" : ""].filter(Boolean).join(" ");
+    if (list) {
+      const label = `${bn(d)} ${BN_MONTHS[m]}, ${BN_DAYS[new Date(Date.UTC(y, m, d)).getUTCDay()]} — ${bn(list.length)}টি পরীক্ষা`;
+      cells += `<button type="button" class="${cls}" data-cal-day="${key}" aria-label="${label}" aria-pressed="${cal.selected === key}">
+        <span>${bn(d)}</span><span class="cal-dots">${list.slice(0, 3).map(() => `<i class="cal-dot"></i>`).join("")}</span></button>`;
+    } else {
+      cells += `<span class="${cls} ${past ? "muted" : ""}"><span>${bn(d)}</span><span class="cal-dots"></span></span>`;
+    }
+  }
+
+  // list under the grid: one chosen day, or the next upcoming exams
+  let listTitle, listHtml, clear = "";
+  if (cal.selected && byDay.has(cal.selected)) {
+    const first = byDay.get(cal.selected)[0].day;
+    listTitle = `${bn(first.d)} ${BN_MONTHS[first.m]}, ${BN_DAYS[first.dow]}`;
+    listHtml = byDay.get(cal.selected).map(calendarItemHtml).join("");
+    clear = `<button type="button" class="cal-link" data-cal-clear>সব আসন্ন দেখুন</button>`;
+  } else {
+    const upcoming = cal.items.filter(it => daysFromToday(it.day) >= 0).slice(0, 6);
+    listTitle = "আসন্ন পরীক্ষা";
+    listHtml = upcoming.length
+      ? upcoming.map(calendarItemHtml).join("")
+      : `<div class="cal-empty">এখন কোনো আসন্ন পরীক্ষা নেই।<br>নতুন পরীক্ষা প্রকাশ হলে এখানে নিজে থেকেই দেখা যাবে।</div>`;
+  }
+
+  const onThisMonth = y === t.y && m === t.m;
+  el.innerHTML = `
+    <p class="d-h">${svg("clock", 20)} পরীক্ষার ক্যালেন্ডার</p>
+    <div class="d-card">
+      <div class="cal-head">
+        <p class="cal-title">${BN_MONTHS[m]} ${bn(y)}</p>
+        <div class="cal-nav">
+          ${onThisMonth ? "" : `<button type="button" class="cal-btn" data-cal-today>আজ</button>`}
+          <button type="button" class="cal-btn" data-cal-nav="-1" aria-label="আগের মাস"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <button type="button" class="cal-btn" data-cal-nav="1" aria-label="পরের মাস"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </div>
+      <div class="cal-grid" role="grid">
+        ${BN_DAYS_SHORT.map(n => `<span class="cal-dow">${n}</span>`).join("")}
+        ${cells}
+      </div>
+      <div class="cal-legend"><span><i></i> পরীক্ষা আছে</span><span><i class="past"></i> হয়ে গেছে</span></div>
+
+      <div class="cal-list-head"><span>${listTitle}</span>${clear}</div>
+      <div class="cal-list">${listHtml}</div>
+    </div>`;
+}
+
+function onCalendarClick(event) {
+  const nav = event.target.closest("[data-cal-nav]");
+  if (nav) {
+    let m = cal.m + Number(nav.dataset.calNav), y = cal.y;
+    if (m < 0) { m = 11; y--; } else if (m > 11) { m = 0; y++; }
+    cal.m = m; cal.y = y; cal.selected = null; drawCalendar(); return;
+  }
+  if (event.target.closest("[data-cal-today]")) { const t = localToday(); cal.y = t.y; cal.m = t.m; cal.selected = null; drawCalendar(); return; }
+  if (event.target.closest("[data-cal-clear]")) { cal.selected = null; drawCalendar(); return; }
+  const day = event.target.closest("[data-cal-day]");
+  if (day) { cal.selected = cal.selected === day.dataset.calDay ? null : day.dataset.calDay; drawCalendar(); }
 }
 
 /* ---------------- main data ---------------- */
