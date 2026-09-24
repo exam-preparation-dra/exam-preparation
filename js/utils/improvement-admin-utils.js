@@ -12,6 +12,10 @@ import {
   IMPROVEMENT_CONFIG, IMPROVEMENT_STATUS, IMPROVEMENT_PRIORITY,
   detectWeakAreas, getImprovementRequestsForStudent
 } from "./improvement-utils.js";
+import { getApprovedResults } from "./results-utils.js";
+
+// A single exam below this percentage automatically becomes an Improvement Exam.
+export const LOW_SCORE_EXAM_PERCENT = 50;
 
 const n = (v, d = 0) => Number.isFinite(Number(v)) ? Number(v) : d;
 const id = v => String(v || "").trim();
@@ -140,8 +144,21 @@ export async function buildImprovementTestDraft({request=null, questionPool=null
     related=questionPool.map(q=>({...q,source:q.source||"related_question"}));
   } else {
     const excluded=uniq([...adminQ.map(q=>q.id),...wrongQ.map(q=>q.id)]);
-    related=await getQuestionPoolForImprovement({subjectId:subject,chapterId:chapter,topicId:topic,excludeQuestionIds:excluded,maxResults:Math.max(count*4,40)});
-    related=related.map(q=>({...q,source:"related_question"}));
+    if (!subject && !chapter && !topic && wrongQ.length) {
+      // Exam based request: it has no chapter of its own, so practise the chapters
+      // (or subjects) of the questions the student actually got wrong.
+      const chapterIds=uniq(wrongQ.map(q=>q.chapterId)).slice(0,4);
+      const subjectIds=uniq(wrongQ.map(q=>q.subjectId)).slice(0,4);
+      const per=Math.max(count*2,20);
+      const pools=await Promise.all(chapterIds.length
+        ? chapterIds.map(c=>getQuestionPoolForImprovement({chapterId:c,excludeQuestionIds:excluded,maxResults:per}))
+        : subjectIds.map(s=>getQuestionPoolForImprovement({subjectId:s,excludeQuestionIds:excluded,maxResults:per})));
+      const seen=new Set();
+      related=pools.flat().filter(q=>q&&!seen.has(q.id)&&seen.add(q.id)).map(q=>({...q,source:"related_question"}));
+    } else {
+      related=await getQuestionPoolForImprovement({subjectId:subject,chapterId:chapter,topicId:topic,excludeQuestionIds:excluded,maxResults:Math.max(count*4,40)});
+      related=related.map(q=>({...q,source:"related_question"}));
+    }
   }
 
   const map=new Map();
@@ -236,6 +253,8 @@ export async function createImprovementTest({draft,request=null,title=null,descr
     subjectId:draft.subjectId || requestData.subjectId || null,
     chapterId:draft.chapterId || requestData.chapterId || null,
     topicId:draft.topicId || requestData.topicId || null,
+    entityType:requestData.entityType || null,
+    sourceExamId:requestData.examId || null,
     baselineAccuracy:Number(requestData.currentAccuracy || 0),
     targetAccuracy:Number(requestData.targetAccuracy || 65),
     questionIds:finalQuestionIds,
@@ -326,7 +345,55 @@ export async function createImprovementRequestsForStudent(studentId,options={}) 
     const data={...w,studentId:sid,status:IMPROVEMENT_STATUS.DETECTED,source:"improvement_engine",priorityRank:rank(w.priority),adminNote:"",reviewedBy:null,reviewedAt:null,improvementTestId:null,assignedAt:null,createdAt:serverTimestamp(),updatedAt:serverTimestamp()};
     const ref=await addDoc(collection(db,"improvementRequests"),data); created.push({id:ref.id,...data});
   }
+
+  // ---- Any single exam below LOW_SCORE_EXAM_PERCENT becomes an Improvement
+  // request of its own (one per exam, ever -- a dismissed/deleted one is not
+  // recreated). Wrong questions + exact score are filled in at build time. ----
+  try {
+    const results=await getApprovedResults(sid);
+    for(const r of results){
+      const score=n(r.percentage,NaN);
+      if(!r.examId||!Number.isFinite(score)||score>=LOW_SCORE_EXAM_PERCENT) continue;
+      if(existing.some(x=>x.entityType==="exam"&&x.entityId===r.examId)) continue;
+      const priority=score<30?IMPROVEMENT_PRIORITY.CRITICAL:score<40?IMPROVEMENT_PRIORITY.HIGH:IMPROVEMENT_PRIORITY.MEDIUM;
+      const data={
+        studentId:sid,entityType:"exam",entityId:r.examId,entityName:r.examName||"পরীক্ষা",examId:r.examId,examName:r.examName||"",
+        subjectId:null,chapterId:null,topicId:null,subjectName:"",chapterName:"",topicName:"",
+        priority,priorityRank:rank(priority),reason:"low_exam_score",source:"low_exam_score",
+        currentAccuracy:Math.round(score*10)/10,targetAccuracy:IMPROVEMENT_CONFIG.defaultTarget,
+        attempts:1,status:IMPROVEMENT_STATUS.DETECTED,testRequired:true,
+        adminNote:"",reviewedBy:null,reviewedAt:null,improvementTestId:null,assignedAt:null,
+        createdAt:serverTimestamp(),updatedAt:serverTimestamp()
+      };
+      const ref=await addDoc(collection(db,"improvementRequests"),data);
+      created.push({id:ref.id,...data}); existing.push({id:ref.id,...data});
+    }
+  } catch(error){ console.warn("Low-score exam detection skipped:",error); }
   return created;
+}
+
+// Exam based requests (auto-detected OR applied for by the student) carry only
+// the exam id. Read the real score and the wrong/skipped questions from the
+// immutable result + exam snapshot right before building, so nothing the
+// browser sent (e.g. a student's own request) is trusted.
+async function enrichExamRequest(request){
+  if(request?.entityType!=="exam"||!request.examId||!request.id) return request;
+  const rs=await getDoc(doc(db,"results",`${request.examId}_${request.studentId}`));
+  if(!rs.exists()) return request;
+  const result=rs.data();
+  const snap=await getDoc(doc(db,"examSnapshots",request.examId));
+  const questions=snap.exists()&&Array.isArray(snap.data().questions)?snap.data().questions:[];
+  const wrong=[],skipped=[];
+  for(const q of questions){
+    const a=result.answers?.[q.questionId];
+    if(!a) skipped.push(q.questionId); else if(a!==q.correctAnswer) wrong.push(q.questionId);
+  }
+  const patch={
+    currentAccuracy:Math.round(n(result.percentage,request.currentAccuracy)*10)/10,
+    wrongQuestionIds:[...wrong,...skipped],wrongQuestionCount:wrong.length+skipped.length
+  };
+  await updateDoc(doc(db,"improvementRequests",request.id),{...patch,updatedAt:serverTimestamp()});
+  return {...request,...patch};
 }
 
 // ---- One-click automation: builds the question set for this ONE student's
@@ -339,6 +406,7 @@ export async function createImprovementRequestsForStudent(studentId,options={}) 
 // still fires when the student finishes it, same as any improvement test).
 export async function autoBuildAndPublishImprovementTest(request) {
   requireAdmin();
+  request = await enrichExamRequest(request);
   const sid = id(request?.studentId);
   if (!sid) throw new Error("Student ID প্রয়োজন।");
 

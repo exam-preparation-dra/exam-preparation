@@ -63,7 +63,7 @@ export const XP_RULES = {
   practiceTargetBonus: 15,
   practiceImprovementBonus: 10,
   practiceMaxXP: 80,
-  practiceRepeatMultiplier: 0.25
+  practiceRepeatMultiplier: 0   // 2nd attempt onwards: exam can be retaken, but earns no XP
 };
 
 // Bengali labels + display order for every category (used by the UI).
@@ -222,8 +222,8 @@ export function computeMaxExamXP({ questionCount = 0, totalMarks = 0 } = {}) {
 // Practice XP is deliberately independent from official exam XP.
 // Expected result fields: totalQuestions, attempted, correctCount, percentage,
 // targetReached, improvementPoints, attemptNumber.
-// The first completed attempt gets full XP; later repeats of the SAME practice
-// should pass attemptNumber > 1 and receive only the repeat multiplier.
+// The first completed attempt of a practice gets full XP. Repeats of the SAME
+// practice (attemptNumber > 1) are allowed but earn 0 XP (practiceRepeatMultiplier).
 export function computeImprovementPracticeXP(practice = {}) {
   const R = XP_RULES;
   const totalQ = Math.max(0, num(practice.totalQuestions));

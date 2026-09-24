@@ -72,6 +72,9 @@ function areaName(r) {
 }
 
 function areaPath(r) {
+  if (r.entityType === "exam") {
+    return r.source === "student_request" ? "শিক্ষার্থীর আবেদন · পরীক্ষা" : "পরীক্ষায় ৫০% এর কম পেয়েছে";
+  }
   const parts = [r.subjectName, r.chapterName, r.topicName].filter(Boolean);
   return parts.length > 1 ? parts.join(" › ") : "";
 }
