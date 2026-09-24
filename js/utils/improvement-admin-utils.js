@@ -617,3 +617,80 @@ export async function deleteImprovementTest(testId) {
   await batch.commit();
   return { id: tid, requestIds: [...requestIds] };
 }
+
+
+// ---- PERMANENT delete of an Improvement Exam ------------------------------
+// Removes the exam AND everything students did on it:
+//   improvementTests + improvementTestSnapshots + EVERY improvementAttempts
+//   document of that test (completed ones too). So it disappears from the
+//   student's history as well, and the XP it gave is gone with it.
+//
+// The linked request(s) are not erased but wiped and marked "dismissed": that
+// hidden marker is what stops auto-detection (a weak topic / an exam under 50%)
+// from immediately building the same exam again. It is shown nowhere.
+export async function countImprovementTestAttempts(testId) {
+  requireAdmin();
+  const tid = id(testId);
+  if (!tid) return { completed: 0, inProgress: 0, students: 0 };
+  const snap = await getDocs(query(collection(db, "improvementAttempts"), where("testId", "==", tid)));
+  let completed = 0, inProgress = 0;
+  const students = new Set();
+  snap.docs.forEach(d => {
+    const a = d.data();
+    if (a.status === "completed") { completed++; students.add(a.studentId); }
+    else if (["in_progress", "in-progress"].includes(a.status)) inProgress++;
+  });
+  return { completed, inProgress, students: students.size };
+}
+
+export async function permanentlyDeleteImprovementTest(testId) {
+  requireAdmin();
+  const tid = id(testId);
+  if (!tid) throw new Error("Test ID প্রয়োজন।");
+
+  const testRef = doc(db, "improvementTests", tid);
+  const testSnap = await getDoc(testRef);
+
+  const requestIds = new Set();
+  if (testSnap.exists()) {
+    const t = testSnap.data();
+    (Array.isArray(t.requestIds) ? t.requestIds : []).forEach(r => r && requestIds.add(r));
+    if (t.requestId) requestIds.add(t.requestId);
+  }
+  const linked = await getDocs(query(collection(db, "improvementRequests"), where("improvementTestId", "==", tid)));
+  linked.docs.forEach(d => requestIds.add(d.id));
+
+  const attempts = await getDocs(query(collection(db, "improvementAttempts"), where("testId", "==", tid)));
+
+  // A Firestore batch holds at most 500 writes, so collect and commit in slices.
+  const ops = [];
+  ops.push(b => b.delete(testRef));
+  ops.push(b => b.delete(doc(db, "improvementTestSnapshots", tid)));
+  attempts.docs.forEach(d => ops.push(b => b.delete(d.ref)));
+
+  for (const rid of requestIds) {
+    const rRef = doc(db, "improvementRequests", rid);
+    const rSnap = await getDoc(rRef);
+    if (!rSnap.exists()) continue;
+    ops.push(b => b.update(rRef, {
+      improvementTestId: null,
+      assignedTestId: null,
+      assignedAt: null,
+      lastAccuracy: null,
+      lastImprovementPercent: null,
+      lastAttemptAt: null,
+      completedAt: null,
+      targetReached: false,
+      status: IMPROVEMENT_STATUS.DISMISSED,
+      adminNote: "অ্যাডমিন Improvement Exam চিরতরে মুছে ফেলেছেন।",
+      updatedAt: serverTimestamp()
+    }));
+  }
+
+  for (let i = 0; i < ops.length; i += 400) {
+    const batch = writeBatch(db);
+    ops.slice(i, i + 400).forEach(apply => apply(batch));
+    await batch.commit();
+  }
+  return { id: tid, attemptsDeleted: attempts.size, requestIds: [...requestIds] };
+}

@@ -19,7 +19,9 @@ import {
   generateAndPublishImprovementForAllStudents,
   createImprovementRequestsForStudent,
   dismissImprovementRequest,
-  deleteImprovementTest
+  deleteImprovementTest,
+  permanentlyDeleteImprovementTest,
+  countImprovementTestAttempts
 } from "./improvement-admin-utils.js";
 
 import { getActiveStudents } from "./student-utils.js";
@@ -235,8 +237,11 @@ function requestCard(r) {
       <button class="iac-btn danger" data-action="dismiss" data-id="${esc(r.id)}" ${busy ? "disabled" : ""}>মুছুন</button>`;
   } else if (r.improvementTestId) {
     actions = `
-      <button class="iac-btn danger" data-action="delete-exam" data-id="${esc(r.id)}" data-test="${esc(r.improvementTestId)}" ${busy ? "disabled" : ""}>
-        ${busy ? "মুছে ফেলা হচ্ছে…" : "Exam মুছুন"}
+      <button class="iac-btn" data-action="delete-exam" data-id="${esc(r.id)}" ${busy ? "disabled" : ""}>
+        ${busy ? "অপেক্ষা করো…" : "Exam সরান"}
+      </button>
+      <button class="iac-btn danger" data-action="perm-delete" data-id="${esc(r.id)}" ${busy ? "disabled" : ""}>
+        ${busy ? "অপেক্ষা করো…" : "Permanent Delete"}
       </button>`;
   }
 
@@ -332,17 +337,47 @@ async function handleBuild(request) {
 
 async function handleDeleteExam(request) {
   const ok = window.confirm(
-    `"${studentName(request)}" এর "${areaName(request)}" Improvement Exam মুছে ফেলবে?\n\n` +
-    "Exam ও প্রশ্নের Snapshot চিরতরে মুছে যাবে, শিক্ষার্থীর চলমান চেষ্টা বাদ যাবে এবং এটি আর কোথাও দেখা যাবে না। আগে অর্জন করা XP ঠিক থাকবে।"
+    `"${studentName(request)}" এর "${areaName(request)}" Improvement Exam সরাবে?\n\n` +
+    "Exam ও প্রশ্ন সরে যাবে এবং এটি আর অ্যাডমিন তালিকায় দেখা যাবে না।\n" +
+    "শিক্ষার্থীর আগে সম্পন্ন করা ফলাফল, ইতিহাস ও XP থাকবে।\n\n" +
+    "সবকিছু একেবারে মুছতে চাইলে \"Permanent Delete\" ব্যবহার করো।"
   );
   if (!ok) return;
 
   state.busyId = request.id; render();
   try {
     await deleteImprovementTest(request.improvementTestId);
-    showToast("Improvement Exam মুছে ফেলা হয়েছে।", "success");
+    showToast("Improvement Exam সরানো হয়েছে।", "success");
   } catch (error) {
     console.error("Improvement Exam delete:", error);
+    showToast(error?.message || "Exam সরানো যায়নি।", "error");
+  } finally {
+    state.busyId = null; await load();
+  }
+}
+
+async function handlePermanentDelete(request) {
+  state.busyId = request.id; render();
+
+  let counts = { completed: 0, inProgress: 0, students: 0 };
+  try { counts = await countImprovementTestAttempts(request.improvementTestId); }
+  catch (error) { console.warn("Attempt count skipped:", error); }
+
+  const ok = window.confirm(
+    `"${studentName(request)}" এর "${areaName(request)}" Improvement Exam চিরতরে মুছে ফেলবে?\n\n` +
+    "• Exam ও প্রশ্ন মুছে যাবে\n" +
+    `• ${counts.completed}টি সম্পন্ন ফলাফল মুছে যাবে (${counts.students} জন শিক্ষার্থী) এবং তাদের ইতিহাস থেকেও সরে যাবে\n` +
+    "• ওই ফলাফল থেকে পাওয়া XP-ও চলে যাবে\n" +
+    `• ${counts.inProgress}টি চলমান চেষ্টা বাদ যাবে\n\n` +
+    "এটি আর ফেরানো যাবে না।"
+  );
+  if (!ok) { state.busyId = null; render(); return; }
+
+  try {
+    await permanentlyDeleteImprovementTest(request.improvementTestId);
+    showToast("Improvement Exam চিরতরে মুছে ফেলা হয়েছে।", "success");
+  } catch (error) {
+    console.error("Improvement Exam permanent delete:", error);
     showToast(error?.message || "Exam মুছে ফেলা যায়নি।", "error");
   } finally {
     state.busyId = null; await load();
@@ -405,6 +440,7 @@ function onClick(event) {
   if (!request) return;
   if (btn.dataset.action === "build") handleBuild(request);
   else if (btn.dataset.action === "delete-exam") handleDeleteExam(request);
+  else if (btn.dataset.action === "perm-delete") handlePermanentDelete(request);
   else if (btn.dataset.action === "dismiss") handleDismiss(request);
 }
 
