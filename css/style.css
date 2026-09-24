@@ -416,9 +416,10 @@ p { color: var(--text-secondary); }
 .hdr-actions .icon-btn.hdr-icon:hover { background: var(--color-accent-soft); }
 
 /* Premium nav tabs */
-.hdr-nav { display: flex; padding: 6px; margin-bottom: var(--space-5); gap: 4px; }
+.hdr-nav { display: flex; padding: 6px; margin-bottom: var(--space-5); gap: 4px; overflow-x: auto; scrollbar-width: none; }
+.hdr-nav::-webkit-scrollbar { display: none; }
 .hdr-nav-tab {
-  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  flex: 1 0 auto; min-width: 58px; white-space: nowrap; display: flex; flex-direction: column; align-items: center; gap: 4px;
   padding: 10px 4px; border-radius: 13px; color: var(--text-muted);
   transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
 }
