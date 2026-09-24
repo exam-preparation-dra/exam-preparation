@@ -1636,6 +1636,22 @@ export const icons = {
     </svg>
   `,
 
+  calendar: `
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.7"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/>
+      <path d="M3 9.5h18"/>
+      <path d="M8 2.8v3.4M16 2.8v3.4"/>
+      <path d="M8 13.5h.01M12 13.5h.01M16 13.5h.01M8 17h.01M12 17h.01"/>
+    </svg>
+  `,
+
   bell: `
     <svg
       viewBox="0 0 24 24"
@@ -1693,6 +1709,13 @@ export function renderStudentHeader(
       href: "../student/dashboard.html",
       icon: icons.home,
       label: "ড্যাশবোর্ড"
+    },
+
+    {
+      key: "calendar",
+      href: "../student/calendar.html",
+      icon: icons.calendar,
+      label: "ক্যালেন্ডার"
     },
 
     {
@@ -1995,6 +2018,12 @@ export function renderStudentHeader(
         "globalNotificationClose"
       );
 
+
+    // With six tabs the row can scroll on small phones: keep the current tab in view.
+    const activeTab = document.querySelector(".hdr-nav-tab.active");
+    if (activeTab && activeTab.scrollIntoView) {
+      activeTab.scrollIntoView({ inline: "center", block: "nearest" });
+    }
 
     // ---------- Open / close notification ----------
 
