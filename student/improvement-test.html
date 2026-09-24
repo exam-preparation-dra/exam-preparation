@@ -5,109 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>উন্নতির অনুশীলন — পরীক্ষা প্রস্তুতি</title>
 <link rel="stylesheet" href="../css/style.css">
-<style>
-  /* Same look as student/exam.html. The accent RGB token is defined here
-     because style.css does not define it. */
-  :root { --color-accent-rgb: 201, 151, 63; }
-  body { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
-  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
-  #shell { padding-bottom: 100px; }
-
-  .glass.card { animation: cardRise 420ms cubic-bezier(.22,.9,.3,1) both; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 20px; box-shadow: 0 4px 24px rgba(0,0,0,0.03); }
-  @keyframes cardRise { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
-
-  #questionBody.q-enter { animation: qSlideIn 320ms cubic-bezier(.22,.9,.3,1) both; }
-  @keyframes qSlideIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
-
-  .option-card {
-    position: relative; overflow: hidden; display: flex; align-items: center; gap: 14px;
-    width: 100%; min-height: 60px; padding: 14px 18px; border-radius: 16px;
-    border: 1px solid rgba(128,128,128,0.2); background: rgba(128,128,128,0.02);
-    color: var(--text-primary); font: inherit; font-size: 0.95rem; font-weight: 700; text-align: left;
-    transition: all 0.2s ease; margin-bottom: 12px; cursor: pointer;
-    animation: optRise 320ms cubic-bezier(.22,.9,.3,1) both;
-  }
-  .option-card:nth-of-type(1) { animation-delay: 20ms; } .option-card:nth-of-type(2) { animation-delay: 60ms; }
-  .option-card:nth-of-type(3) { animation-delay: 100ms; } .option-card:nth-of-type(4) { animation-delay: 140ms; }
-  @keyframes optRise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-  .option-card:active { transform: scale(0.98); }
-  .option-card.selected { border-color: var(--color-accent); background: rgba(var(--color-accent-rgb), 0.08); box-shadow: 0 4px 16px rgba(var(--color-accent-rgb), 0.15); }
-  .option-card.option-flash { animation: optPop 260ms cubic-bezier(.34,1.56,.64,1); }
-  @keyframes optPop { 0% { transform: scale(1); } 40% { transform: scale(1.03); } 100% { transform: scale(1); } }
-  .option-letter {
-    flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; background: rgba(128,128,128,0.1);
-    display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.95rem;
-    color: var(--text-secondary); transition: all 0.2s cubic-bezier(.34,1.56,.64,1);
-  }
-  .option-card.selected .option-letter { background: var(--color-accent); color: #fff; transform: scale(1.1); box-shadow: 0 4px 10px rgba(var(--color-accent-rgb), 0.3); }
-
-  .palette-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
-  .palette-cell {
-    aspect-ratio: 1; border-radius: 12px; display: flex; align-items: center; justify-content: center;
-    font: inherit; font-weight: 800; font-size: 0.95rem; border: 1px solid rgba(128,128,128,0.2);
-    background: rgba(128,128,128,0.03); color: var(--text-secondary); transition: all 0.2s ease; cursor: pointer;
-  }
-  .palette-cell:active { transform: scale(0.92); }
-  .palette-cell.answered { background: rgba(16,185,129,0.15); color: #10b981; border-color: rgba(16,185,129,0.4); }
-  .palette-cell.marked { border-color: #f59e0b; box-shadow: inset 0 0 0 1.5px #f59e0b; }
-  .palette-cell.current { border-color: var(--color-accent); background: var(--color-accent); color: #fff; box-shadow: 0 4px 12px rgba(var(--color-accent-rgb), 0.4); }
-
-  #timerDisplay {
-    font-family: var(--font-num); font-variant-numeric: tabular-nums; font-weight: 900; font-size: 0.95rem;
-    letter-spacing: 0.5px; white-space: nowrap; padding: 6px 14px; border-radius: 99px;
-    background: rgba(128,128,128,0.08); border: 1px solid rgba(128,128,128,0.2); color: var(--text-primary); transition: all 0.2s ease;
-  }
-  #timerDisplay.timer-warning { color: #f59e0b; border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.1); }
-  #timerDisplay.timer-critical { color: #ef4444; border-color: rgba(239,68,68,0.5); background: rgba(239,68,68,0.1); animation: timerPulse 1s infinite; }
-  @keyframes timerPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
-
-  .exam-progress-track { height: 8px; border-radius: 99px; background: rgba(128,128,128,0.15); overflow: hidden; }
-  .exam-progress-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--color-accent), var(--color-accent-2, #f59e0b)); transition: width 420ms cubic-bezier(.22,.9,.3,1); }
-
-  .lang-en-toggle summary {
-    display: inline-flex; align-items: center; gap: 4px; width: fit-content; list-style: none; cursor: pointer;
-    font-size: 0.75rem; font-weight: 800; color: var(--text-muted);
-    padding: 4px 12px; border-radius: 99px; border: 1px solid rgba(128,128,128,0.2); background: rgba(128,128,128,0.05);
-  }
-  .lang-en-toggle summary::-webkit-details-marker { display: none; }
-
-  .topbar {
-    position: sticky; top: 0; z-index: 50;
-    margin: calc(var(--space-5) * -1) calc(var(--space-4) * -1) var(--space-4); padding: 16px;
-    background: var(--surface); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--surface-border);
-    display: flex; justify-content: space-between; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);
-  }
-  .exam-nav-bar {
-    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 650px; z-index: 40;
-    padding: 14px 16px; padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
-    background: var(--surface); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    border-top: 1px solid var(--surface-border); display: flex; gap: 12px; box-shadow: 0 -4px 20px rgba(0,0,0,0.03);
-  }
-  .btn { transition: transform 140ms ease, box-shadow 180ms ease; flex: 1; display: flex; justify-content: center; align-items: center; gap: 8px; padding: 14px; border-radius: 14px; font: inherit; font-weight: 800; font-size: 1rem; border: none; cursor: pointer; }
-  .btn-primary { background: var(--color-accent); color: #fff; box-shadow: 0 4px 15px rgba(var(--color-accent-rgb), 0.2); }
-  .btn-secondary { background: rgba(128,128,128,0.1); color: var(--text-primary); border: 1px solid rgba(128,128,128,0.2); }
-  .btn:active:not(:disabled) { transform: scale(0.97); }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 300; padding: 20px; }
-  .modal-overlay.hidden { display: none; }
-
-  .protected-img-wrapper { position: relative; display: inline-block; margin: 12px 0 20px; max-width: 100%; border: 1px solid rgba(128,128,128,0.15); border-radius: 12px; overflow: hidden; }
-  .q-figure { max-width: 100%; max-height: 220px; display: block; pointer-events: none; user-select: none; -webkit-user-drag: none; }
-  .img-shield { position: absolute; inset: 0; z-index: 10; cursor: zoom-in; }
-  #figurePreviewModal.hidden { display: none; }
-
-  .stat-box { background: rgba(128,128,128,0.03); border: 1px solid rgba(128,128,128,0.1); border-radius: 14px; padding: 16px 12px; text-align: center; }
-  .stat-box p:first-child { font-size: 0.8rem; color: var(--text-muted); font-weight: 800; margin-bottom: 4px; }
-  .stat-box p:last-child { font-size: 1.6rem; font-weight: 900; color: var(--text-primary); font-family: var(--font-num); }
-</style>
+<link rel="stylesheet" href="../css/exam-ui.css">
 <script>
   window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] } };
 </script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
-<body oncontextmenu="return false;">
+<body class="exam-page" oncontextmenu="return false;">
 <div class="app-shell" id="shell">
   <div class="state-block"><div class="spinner"></div></div>
 </div>
@@ -120,12 +24,17 @@ import { calculateImprovement } from "../js/utils/improvement-utils.js";
 import { computeImprovementPracticeXP } from "../js/utils/xp-utils.js";
 import { updateImprovementRequestAfterCompletion } from "../js/utils/improvement-test-completion.js";
 import { formatHms } from "../js/utils/grading-utils.js";
+import {
+  initExamPage, bindThemeButtons, themeButtonHtml, introHtml, runShellHtml, questionHtml,
+  setQuestionCounter, setProgress, fillPalette, submitMessage
+} from "../js/utils/exam-ui.js";
 import { db } from "../js/firebase/firebase-config.js";
 import {
   collection, doc, getDocs, query, where, setDoc, serverTimestamp, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 initTheme();
+initExamPage();
 
 const shell = document.getElementById("shell");
 const params = new URLSearchParams(location.search);
@@ -222,41 +131,26 @@ async function boot() {
 
 /* ---------- intro ---------- */
 function renderIntro() {
-  shell.innerHTML = `
-    <div class="topbar">
-      <a href="./improvement.html" style="background:rgba(128,128,128,0.1); border:1px solid rgba(128,128,128,0.2); border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; text-decoration:none; color:var(--text-primary);">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
-      </a>
-      <h2 style="font-size:1.1rem; font-weight:900; color:var(--text-primary);">অনুশীলন শুরুর আগে</h2>
-      <div style="width:40px;"></div>
-    </div>
-
-    <div class="glass card" style="padding:24px;">
-      <p style="font-size:1.2rem; font-weight:900; color:var(--color-accent); line-height:1.3; margin-bottom:8px;">${esc(test.title || "উন্নতির অনুশীলন")}</p>
-      <p class="text-sm text-muted mb-4">${esc(test.description || "তোমার নির্দিষ্ট দুর্বলতা উন্নত করার জন্য এই অনুশীলনটি তৈরি করা হয়েছে।")}</p>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px;">
-        <div class="stat-box"><p>মোট প্রশ্ন</p><p>${questions.length}</p></div>
-        <div class="stat-box"><p>সময়কাল</p><p>${durationMinutes} মি</p></div>
-      </div>
-    </div>
-
-    <div class="glass card" style="padding:20px;">
-      <p style="font-weight:900; font-size:0.95rem; color:var(--text-primary); margin-bottom:12px; display:flex; align-items:center; gap:6px;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        মনে রাখুন
-      </p>
-      <ul style="font-size:0.85rem; color:var(--text-muted); font-weight:600; line-height:1.8; padding-left:20px;">
-        <li>শুরু করার মুহূর্ত থেকেই সময় গণনা শুরু হবে।</li>
-        <li>সময় শেষ হলে অনুশীলনটি স্বয়ংক্রিয়ভাবে জমা হয়ে যাবে।</li>
-        <li>জমা দেওয়ার পর কোনো উত্তর পরিবর্তন করা যাবে না।</li>
-        ${earlierAttempts > 0
-          ? `<li><strong>এই অনুশীলন তুমি আগে দিয়েছ। আবার দিতে পারবে, তবে নতুন XP পাবে না।</strong></li>`
-          : `<li>এটি অফিসিয়াল পরীক্ষা নয়। প্রথমবার দিলে এর XP তোমার মোট XP-তে যোগ হবে, পরের বার দিলে XP বাড়বে না।</li>`}
-      </ul>
-    </div>
-
-    <button class="btn btn-primary" id="startBtn" style="width:100%; padding:16px; margin-top:20px;">অনুশীলন শুরু করো</button>
-  `;
+  shell.innerHTML = introHtml({
+    backHref: "./improvement.html",
+    title: "অনুশীলন শুরুর আগে",
+    name: esc(test.title || "উন্নতির অনুশীলন"),
+    description: esc(test.description || "তোমার নির্দিষ্ট দুর্বলতা উন্নত করার জন্য এই অনুশীলনটি তৈরি করা হয়েছে।"),
+    stats: [
+      { label: "মোট প্রশ্ন", value: questions.length },
+      { label: "সময়কাল", value: `${durationMinutes} মি` }
+    ],
+    notes: [
+      "শুরু করার মুহূর্ত থেকেই সময় গণনা শুরু হবে।",
+      "সময় শেষ হলে অনুশীলনটি স্বয়ংক্রিয়ভাবে জমা হয়ে যাবে।",
+      "জমা দেওয়ার পর কোনো উত্তর পরিবর্তন করা যাবে না।",
+      earlierAttempts > 0
+        ? "<strong>এই অনুশীলন তুমি আগে দিয়েছ। আবার দিতে পারবে, তবে নতুন XP পাবে না।</strong>"
+        : "এটি অফিসিয়াল পরীক্ষা নয়। প্রথমবার দিলে এর XP তোমার মোট XP-তে যোগ হবে, পরের বার দিলে XP বাড়বে না।"
+    ],
+    startLabel: "অনুশীলন শুরু করো"
+  });
+  bindThemeButtons(shell);
 
   document.getElementById("startBtn").addEventListener("click", () => {
     startedAt = Date.now();
@@ -268,94 +162,22 @@ function renderIntro() {
 
 /* ---------- exam shell ---------- */
 function renderExamShell() {
-  const initial = esc((student.name || "?").trim().charAt(0));
-  shell.innerHTML = `
-    <div class="topbar">
-      <div style="display:flex; align-items:center; gap:10px; min-width:0;">
-        ${student.photoURL
-          ? `<img src="${esc(student.photoURL)}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; pointer-events:none; -webkit-user-drag:none;">`
-          : `<div style="width:36px; height:36px; border-radius:50%; background:var(--color-accent); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1.1rem;">${initial}</div>`}
-        <span style="font-weight:800; font-size:0.95rem; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(student.name)}</span>
-      </div>
-      <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
-        <div style="display:flex; flex-direction:column; align-items:flex-end;">
-          <span style="font-size:0.65rem; font-weight:800; color:var(--text-muted);">বাকি সময়</span>
-          <span id="timerDisplay">--:--</span>
-        </div>
-        <button id="submitBtn" style="background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); padding:8px 14px; border-radius:10px; font:inherit; font-weight:800; font-size:0.8rem; cursor:pointer;">জমা দিন</button>
-      </div>
-    </div>
-
-    <div class="glass card" style="padding:24px 20px;">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <p style="font-weight:900; font-size:1.05rem; color:var(--text-primary); font-family:var(--font-num);" id="qCounter"></p>
-        <button id="paletteBtn" aria-label="প্রশ্ন তালিকা" style="background:rgba(128,128,128,0.08); border:1px solid rgba(128,128,128,0.2); width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-secondary);">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
-        </button>
-      </div>
-      <div class="exam-progress-track mt-3"><div class="exam-progress-fill" id="progressFill" style="width:0%;"></div></div>
-      <p style="font-size:0.75rem; color:var(--text-muted); font-weight:700; margin-top:8px; font-family:var(--font-num);" id="progressLabel"></p>
-      <div id="questionBody" class="mt-4"></div>
-    </div>
-
-    <div class="exam-nav-bar">
-      <button class="btn btn-secondary" id="prevBtn">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
-        পূর্ববর্তী
-      </button>
-      <button class="btn btn-primary" id="nextBtn">
-        পরবর্তী
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
-      </button>
-    </div>
-
-    <div id="paletteOverlay" class="modal-overlay hidden">
-      <div class="glass card" style="max-width:380px; width:100%; max-height:85vh; overflow-y:auto; padding:24px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-          <p style="font-weight:900; font-size:1.1rem; color:var(--text-primary);">প্রশ্ন তালিকা</p>
-          <button id="closePaletteBtn" aria-label="বন্ধ করো" style="background:rgba(239,68,68,0.1); color:#ef4444; border:none; width:36px; height:36px; border-radius:10px; cursor:pointer;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg>
-          </button>
-        </div>
-        <div class="palette-grid" id="paletteGrid"></div>
-        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:24px; justify-content:center; font-size:0.8rem; font-weight:800; color:var(--text-muted);">
-          <span style="display:flex; align-items:center; gap:6px;"><span style="width:16px; height:16px; border-radius:4px; background:rgba(16,185,129,0.15); border:1px solid #10b981;"></span> উত্তরিত</span>
-          <span style="display:flex; align-items:center; gap:6px;"><span style="width:16px; height:16px; border-radius:4px; background:rgba(128,128,128,0.05); border:1px solid rgba(128,128,128,0.2);"></span> অনুত্তরিত</span>
-          <span style="display:flex; align-items:center; gap:6px;"><span style="width:16px; height:16px; border-radius:4px; background:rgba(128,128,128,0.05); border:1px solid #f59e0b;"></span> চিহ্নিত</span>
-        </div>
-      </div>
-    </div>
-
-    <div id="submitModal" class="modal-overlay hidden">
-      <div class="glass card" style="max-width:380px; padding:24px; text-align:center;">
-        <div style="width:64px; height:64px; border-radius:50%; background:rgba(239,68,68,0.1); color:#ef4444; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        </div>
-        <p style="font-weight:900; font-size:1.1rem; color:var(--text-primary); margin-bottom:8px;">নিশ্চিত করুন</p>
-        <p id="submitModalText" style="font-size:0.85rem; color:var(--text-muted); font-weight:600; line-height:1.5;"></p>
-        <div style="display:flex; gap:10px; margin-top:24px;">
-          <button class="btn btn-secondary" id="cancelSubmitBtn">ফিরে যান</button>
-          <button class="btn btn-primary" id="confirmSubmitBtn" style="background:#ef4444; box-shadow:0 4px 15px rgba(239,68,68,0.2);">চূড়ান্ত জমা</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="figurePreviewModal" class="hidden" style="position:fixed;inset:0;background:rgba(10,14,26,0.95);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;cursor:zoom-out;">
-      <img id="figurePreviewImg" style="max-width:100%;max-height:85vh;border-radius:16px;pointer-events:none;user-select:none;-webkit-user-drag:none;" draggable="false" oncontextmenu="return false;">
-    </div>
-  `;
+  shell.innerHTML = runShellHtml({ name: student.name, photoURL: student.photoURL, total: questions.length });
+  bindThemeButtons(shell);
 
   document.getElementById("prevBtn").addEventListener("click", () => navigate(-1));
   document.getElementById("nextBtn").addEventListener("click", () => navigate(1));
   document.getElementById("paletteBtn").addEventListener("click", openPalette);
-  document.getElementById("closePaletteBtn").addEventListener("click", () => document.getElementById("paletteOverlay").classList.add("hidden"));
+  document.getElementById("closePaletteBtn").addEventListener("click", closePalette);
   document.getElementById("submitBtn").addEventListener("click", openSubmitModal);
-  document.getElementById("cancelSubmitBtn").addEventListener("click", () => document.getElementById("submitModal").classList.add("hidden"));
+  document.getElementById("cancelSubmitBtn").addEventListener("click", closeSubmitModal);
   document.getElementById("confirmSubmitBtn").addEventListener("click", () => doSubmit(false));
   document.getElementById("figurePreviewModal").addEventListener("click", () => {
     document.getElementById("figurePreviewModal").classList.add("hidden");
     document.getElementById("figurePreviewImg").src = "";
   });
+  document.getElementById("paletteOverlay").addEventListener("click", e => { if (e.target === e.currentTarget) closePalette(); });
+  document.getElementById("submitModal").addEventListener("click", e => { if (e.target === e.currentTarget) closeSubmitModal(); });
 
   if (!inProgress) {
     inProgress = true;
@@ -366,57 +188,28 @@ function renderExamShell() {
 
 function leaveGuard(e) { if (!inProgress) return; e.preventDefault(); e.returnValue = ""; }
 
-function updateProgress() {
-  const answered = Object.keys(answers).length;
-  document.getElementById("progressFill").style.width = `${Math.round((answered / questions.length) * 100)}%`;
-  document.getElementById("progressLabel").textContent = `${answered} / ${questions.length} টি প্রশ্নের উত্তর দেওয়া হয়েছে`;
-}
-
 function renderQuestion() {
   const q = questions[index];
-  document.getElementById("qCounter").innerHTML = `প্রশ্ন ${index + 1} / ${questions.length}`;
+  setQuestionCounter(index, questions.length);
   document.getElementById("prevBtn").disabled = index === 0;
   document.getElementById("nextBtn").disabled = index === questions.length - 1;
-  updateProgress();
+  setProgress(Object.keys(answers).length, questions.length);
 
   const selected = answers[q.questionId];
   const isMarked = !!marked[q.questionId];
   const body = document.getElementById("questionBody");
   body.classList.remove("q-enter"); void body.offsetWidth; body.classList.add("q-enter");
 
-  const imageHtml = q.imageUrl ? `
-    <div class="protected-img-wrapper">
-      <img src="${esc(q.imageUrl)}" class="q-figure" draggable="false" oncontextmenu="return false;" onerror="this.style.display='none';">
-      <div class="img-shield" data-url="${esc(q.imageUrl)}"></div>
-    </div>` : "";
-
   // Question and option text is admin-authored (may contain math/HTML), same as exam.html.
-  body.innerHTML = `
-    ${q.question_en ? `<details class="lang-en-toggle" style="margin-bottom:12px;">
-      <summary>English</summary>
-      <p style="margin-top:8px; font-size:0.9rem; color:var(--text-secondary); line-height:1.5;">${q.question_en}</p>
-    </details>` : ""}
+  body.innerHTML = questionHtml({
+    questionBn: q.question_bn || q.question_en || q.question || "প্রশ্নের লেখা পাওয়া যায়নি।",
+    questionEn: q.question_bn ? q.question_en : "",
+    imageUrl: q.imageUrl,
+    options: optionLetters(q).map(letter => ({ letter, text: optionText(q, letter) })),
+    selected, isMarked
+  });
 
-    <p style="font-weight:800; font-size:1.1rem; color:var(--text-primary); line-height:1.6;">${q.question_bn || q.question_en || q.question || "প্রশ্নের লেখা পাওয়া যায়নি।"}</p>
-    ${imageHtml}
-
-    <div style="margin-top:24px;">
-      ${optionLetters(q).map(letter => `
-        <button class="option-card ${selected === letter ? "selected" : ""}" data-letter="${letter}">
-          <span class="option-letter">${letter}</span>
-          <span style="flex:1; line-height:1.4;">${optionText(q, letter)}</span>
-        </button>`).join("")}
-    </div>
-
-    <button type="button" id="markReviewBtn" style="margin-top:16px; padding:10px 18px; border-radius:12px; font:inherit; font-weight:800; display:flex; align-items:center; gap:8px; cursor:pointer;
-      ${isMarked ? "border:1px solid #f59e0b; color:#f59e0b; background:rgba(245,158,11,0.1);" : "border:1px solid rgba(128,128,128,0.2); color:var(--text-primary); background:rgba(128,128,128,0.05);"}">
-      ${isMarked
-        ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> চিহ্নিত করা আছে`
-        : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> পর্যালোচনার জন্য চিহ্নিত করুন`}
-    </button>
-  `;
-
-  body.querySelectorAll(".option-card").forEach(btn => btn.addEventListener("click", () => selectAnswer(q.questionId, btn.dataset.letter)));
+  body.querySelectorAll(".ex-option").forEach(btn => btn.addEventListener("click", () => selectAnswer(q.questionId, btn.dataset.letter)));
   document.getElementById("markReviewBtn").addEventListener("click", () => { marked[q.questionId] = !marked[q.questionId]; persist(); renderQuestion(); });
   const shield = body.querySelector(".img-shield");
   if (shield) shield.addEventListener("click", () => {
@@ -432,41 +225,41 @@ function selectAnswer(questionId, letter) {
   persist();
 
   const body = document.getElementById("questionBody");
-  body.querySelectorAll(".option-card").forEach(btn => {
+  body.querySelectorAll(".ex-option").forEach(btn => {
     btn.classList.toggle("selected", btn.dataset.letter === answers[questionId]);
     btn.classList.remove("option-flash");
   });
   if (answers[questionId]) {
-    const tapped = body.querySelector(`.option-card[data-letter="${answers[questionId]}"]`);
+    const tapped = body.querySelector(`.ex-option[data-letter="${answers[questionId]}"]`);
     if (tapped) { void tapped.offsetWidth; tapped.classList.add("option-flash"); }
   }
-  updateProgress();
+  setProgress(Object.keys(answers).length, questions.length);
 }
 
 function navigate(delta) {
   const next = index + delta;
   if (next < 0 || next >= questions.length) return;
   index = next; persist(); renderQuestion();
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function openPalette() {
-  const grid = document.getElementById("paletteGrid");
-  grid.innerHTML = questions.map((q, i) => `
-    <button class="palette-cell ${answers[q.questionId] ? "answered" : ""} ${marked[q.questionId] ? "marked" : ""} ${i === index ? "current" : ""}" data-idx="${i}">${i + 1}</button>`).join("");
-  grid.querySelectorAll("[data-idx]").forEach(btn => btn.addEventListener("click", () => {
-    index = Number(btn.dataset.idx); persist(); renderQuestion();
-    document.getElementById("paletteOverlay").classList.add("hidden");
+  fillPalette(questions.map((q, i) => ({ answered: !!answers[q.questionId], marked: !!marked[q.questionId], current: i === index })));
+  document.getElementById("paletteGrid").querySelectorAll("[data-idx]").forEach(btn => btn.addEventListener("click", () => {
+    index = Number(btn.dataset.idx); persist(); renderQuestion(); closePalette();
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }));
   document.getElementById("paletteOverlay").classList.remove("hidden");
 }
+function closePalette() { document.getElementById("paletteOverlay").classList.add("hidden"); }
 
 function openSubmitModal() {
   const unanswered = questions.filter(q => !answers[q.questionId]).length;
-  document.getElementById("submitModalText").textContent = unanswered
-    ? `এখনও ${unanswered}টি প্রশ্নের উত্তর দেওয়া হয়নি। জমা দেওয়ার পরে কোনো উত্তর পরিবর্তন করা যাবে না।`
-    : "জমা দেওয়ার পরে কোনো উত্তর পরিবর্তন করা যাবে না।";
+  const flagged = questions.filter(q => marked[q.questionId]).length;
+  document.getElementById("submitModalText").textContent = submitMessage(unanswered, flagged);
   document.getElementById("submitModal").classList.remove("hidden");
 }
+function closeSubmitModal() { document.getElementById("submitModal").classList.add("hidden"); }
 
 /* ---------- timer ---------- */
 function startTimer() { clearInterval(timerHandle); tick(); timerHandle = setInterval(tick, 1000); }
@@ -580,41 +373,39 @@ async function doSubmit(auto) {
 
 function renderResult({ accuracy, improvement, xp, correct, total, attempted, repeat }) {
   const gain = improvement.improvementPoints;
+  const examBased = test.entityType === "exam";
   shell.innerHTML = `
-    <div class="topbar">
-      <div style="width:40px;"></div>
-      <h2 style="font-size:1.1rem; font-weight:900; color:var(--text-primary);">অনুশীলনের ফলাফল</h2>
-      <div style="width:40px;"></div>
-    </div>
+    <header class="ex-topbar"><div class="ex-topbar-in">
+      <div style="width:38px;"></div>
+      <h2 class="ex-page-title">অনুশীলনের ফলাফল</h2>
+      <div class="ex-actions">${themeButtonHtml()}</div>
+    </div></header>
 
-    <div class="glass card" style="padding:28px 20px; text-align:center;">
-      <p style="font-size:.8rem; font-weight:800; color:var(--text-muted);">${test.entityType === "exam" ? "এই অনুশীলনে তোমার স্কোর" : "এই অনুশীলনে তোমার accuracy"}</p>
-      <p style="font-size:3rem; font-weight:900; color:var(--color-accent); font-family:var(--font-num); line-height:1.2; margin:6px 0;">${accuracy}%</p>
-      <p style="font-size:.85rem; font-weight:700; color:var(--text-secondary);">${improvement.targetReached ? "তোমার নির্ধারিত লক্ষ্য পূরণ হয়েছে।" : `লক্ষ্য: ${improvement.targetAccuracy}%`}</p>
+    <main class="ex-main">
+      <section class="ex-card ex-score">
+        <small>${examBased ? "এই অনুশীলনে তোমার স্কোর" : "এই অনুশীলনে তোমার accuracy"}</small>
+        <p class="big">${accuracy}%</p>
+        <p class="sub">${improvement.targetReached ? "তোমার নির্ধারিত লক্ষ্য পূরণ হয়েছে।" : `লক্ষ্য: ${improvement.targetAccuracy}%`}</p>
 
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:20px;">
-        <div class="stat-box"><p>সঠিক</p><p>${correct}/${total}</p></div>
-        <div class="stat-box"><p>উত্তর দিয়েছ</p><p>${attempted}/${total}</p></div>
-        <div class="stat-box"><p>${test.entityType === "exam" ? "আগের স্কোর" : "আগের accuracy"}</p><p>${improvement.previousAccuracy}%</p></div>
-        <div class="stat-box"><p>উন্নতি</p><p>${gain >= 0 ? "+" : ""}${gain}</p></div>
+        <div class="ex-stats">
+          <div class="ex-stat"><small>সঠিক</small><b>${correct}/${total}</b></div>
+          <div class="ex-stat"><small>উত্তর দিয়েছ</small><b>${attempted}/${total}</b></div>
+          <div class="ex-stat"><small>${examBased ? "আগের স্কোর" : "আগের accuracy"}</small><b>${improvement.previousAccuracy}%</b></div>
+          <div class="ex-stat"><small>উন্নতি</small><b>${gain >= 0 ? "+" : ""}${gain}</b></div>
+        </div>
+
+        ${repeat
+          ? `<div class="ex-xp none"><b>+0 XP</b><span>পুনরায় দেওয়া অনুশীলনে XP বাড়ে না</span></div>`
+          : `<div class="ex-xp"><b>+${xp} XP</b><span>তোমার মোট XP-তে যোগ হয়েছে</span></div>`}
+      </section>
+
+      <div class="ex-link-row">
+        <a class="ex-btn ex-btn-ghost" href="./dashboard.html">ড্যাশবোর্ড</a>
+        <a class="ex-btn ex-btn-primary" href="./improvement.html">উন্নতি পাতা</a>
       </div>
-
-      ${repeat
-        ? `<div style="margin-top:16px; padding:14px; border-radius:14px; background:rgba(128,128,128,0.06); border:1px solid rgba(128,128,128,0.2);">
-            <p style="font-size:1.1rem; font-weight:900; color:var(--text-secondary); font-family:var(--font-num);">+0 XP</p>
-            <p style="font-size:.75rem; font-weight:700; color:var(--text-muted); margin-top:2px;">পুনরায় দেওয়া অনুশীলনে XP বাড়ে না</p>
-          </div>`
-        : `<div style="margin-top:16px; padding:14px; border-radius:14px; background:rgba(var(--color-accent-rgb),0.08); border:1px solid rgba(var(--color-accent-rgb),0.25);">
-            <p style="font-size:1.4rem; font-weight:900; color:var(--color-accent); font-family:var(--font-num);">+${xp} XP</p>
-            <p style="font-size:.75rem; font-weight:700; color:var(--text-muted); margin-top:2px;">তোমার মোট XP-তে যোগ হয়েছে</p>
-          </div>`}
-    </div>
-
-    <div style="display:flex; gap:10px; margin-top:20px;">
-      <a class="btn btn-secondary" href="./dashboard.html" style="text-decoration:none;">ড্যাশবোর্ড</a>
-      <a class="btn btn-primary" href="./improvement.html" style="text-decoration:none;">উন্নতি পাতা</a>
-    </div>
+    </main>
   `;
+  bindThemeButtons(shell);
 }
 
 boot();
