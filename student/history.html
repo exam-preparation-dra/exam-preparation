@@ -7,66 +7,69 @@
 <link rel="stylesheet" href="../css/style.css">
 <style>
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
-  body { overflow-x: hidden; background: var(--bg); }
-  .app-shell { max-width: 600px; padding-bottom: 40px; margin: 0 auto; }
+  body { overflow-x: hidden; }
+  .app-shell { max-width: 560px; padding-bottom: 36px; margin: 0 auto; }
 
-  /* ===== Premium Glass Cards (Uniform Borders) ===== */
-  .glass-card {
-    background: rgba(128, 128, 128, 0.04); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 20px; padding: 20px; margin-bottom: 20px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.02);
+  /* ===== Shared flat card — no blur, no translucency ===== */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    margin-bottom: var(--space-3);
   }
 
-  /* ===== Summary Grid ===== */
-  .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
-  .summary-box { 
-    background: rgba(128, 128, 128, 0.03); border: 1px solid rgba(128, 128, 128, 0.12); 
-    border-radius: 16px; padding: 16px 10px; text-align: center; 
-    display: flex; flex-direction: column; justify-content: center; align-items: center; 
+  /* ===== Summary grid ===== */
+  .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+  .summary-box {
+    background: var(--surface-highlight); border: 1px solid var(--surface-border);
+    border-radius: var(--radius-md); padding: 12px 6px; text-align: center;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
   }
-  .sum-val { font-size: 1.6rem; font-weight: 900; color: var(--text-primary); font-family: var(--font-num); line-height: 1.2; }
-  .sum-lbl { font-size: 0.7rem; font-weight: 800; color: var(--text-muted); margin-top: 4px; }
-  
-  .sum-box-highlight { 
-    background: rgba(var(--color-accent-rgb), 0.05); 
-    border-color: rgba(var(--color-accent-rgb), 0.2); 
-  }
+  .sum-val { font-size: 1.4rem; font-weight: 800; color: var(--text-primary); font-family: var(--font-num); line-height: 1.2; }
+  .sum-lbl { font-size: 0.68rem; font-weight: 700; color: var(--text-muted); margin-top: 3px; }
+
+  .sum-box-highlight { background: var(--color-accent-soft); border-color: rgba(var(--color-accent-rgb), 0.28); }
   .sum-box-highlight .sum-val { color: var(--color-accent); }
 
-  /* ===== History List Cards (Transparent Glassmorphism) ===== */
-  .history-card {
-    display: block; background: rgba(128, 128, 128, 0.03); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 16px; padding: 16px; margin-bottom: 12px; 
-    text-decoration: none; color: inherit; transition: transform 0.2s, box-shadow 0.2s;
+  .sum-breakdown { margin-top: 12px; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-align: center; }
+
+  /* ===== History list cards ===== */
+  .history-card { padding: 0; overflow: hidden; }
+  .hc-link { display: block; text-decoration: none; color: inherit; padding: var(--space-4); transition: background var(--transition); }
+  .hc-link:active { background: var(--surface-highlight); }
+
+  .hc-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+  .hc-title { font-size: 1rem; font-weight: 700; color: var(--text-primary); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .hc-points {
+    background: var(--color-accent-soft); color: var(--color-accent); border: 1px solid rgba(var(--color-accent-rgb), 0.25);
+    font-size: 0.74rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap;
+    font-family: var(--font-num); flex-shrink: 0;
   }
-  .history-card:active { transform: scale(0.99); }
-  .hc-link { display: block; text-decoration: none; color: inherit; }
-  .hc-link:active { opacity: 0.8; }
+
+  .hc-meta { font-size: 0.74rem; color: var(--text-muted); font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+
+  .hc-stats { display: flex; gap: 8px; border-top: 1px solid var(--surface-border); padding-top: 10px; }
+  .hc-stat-box { flex: 1; background: var(--surface-highlight); border-radius: var(--radius-sm); padding: 7px 6px; text-align: center; }
+  .hc-val { display: block; font-size: 0.95rem; font-weight: 800; color: var(--text-secondary); font-family: var(--font-num); }
+  .hc-lbl { display: block; font-size: 0.63rem; font-weight: 600; color: var(--text-muted); margin-top: 2px; }
+  .stat-pct .hc-val { color: var(--text-primary); }
+  .stat-correct .hc-val { color: var(--color-success); }
 
   /* ===== Per-exam point calculation ===== */
-  .hc-calc { margin-top: 12px; border-top: 1px dashed rgba(128,128,128,0.15); padding-top: 10px; }
-  .hc-calc summary { cursor: pointer; list-style: none; font-size: 0.78rem; font-weight: 800; color: var(--color-accent); display: flex; align-items: center; gap: 6px; -webkit-tap-highlight-color: transparent; }
+  .hc-calc { border-top: 1px solid var(--surface-border); }
+  .hc-calc summary {
+    cursor: pointer; list-style: none; padding: 10px var(--space-4); font-size: 0.78rem; font-weight: 700;
+    color: var(--color-accent); display: flex; align-items: center; gap: 6px; -webkit-tap-highlight-color: transparent;
+  }
   .hc-calc summary::-webkit-details-marker { display: none; }
   .hc-calc summary::before { content: "▸"; font-size: 0.7rem; transition: transform 150ms ease; }
   .hc-calc[open] summary::before { transform: rotate(90deg); }
-  .hc-calc-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 6px 2px; font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); border-bottom: 1px solid rgba(128,128,128,0.08); }
-  .hc-calc-row small { display: block; font-size: 0.65rem; font-weight: 600; color: var(--text-muted); }
-  .hc-calc-row .v { font-family: var(--font-num); font-weight: 900; color: var(--text-primary); white-space: nowrap; }
-  .hc-calc-total { display: flex; justify-content: space-between; padding: 8px 2px 0; font-size: 0.85rem; font-weight: 900; color: var(--color-accent); }
-  .sum-breakdown { margin-top: 12px; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-align: center; }
-  
-  .hc-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
-  .hc-title { font-size: 1.05rem; font-weight: 800; color: var(--text-primary); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .hc-points { background: rgba(var(--color-accent-rgb), 0.1); color: var(--color-accent); border: 1px solid rgba(var(--color-accent-rgb), 0.2); font-size: 0.75rem; font-weight: 800; padding: 4px 10px; border-radius: 99px; white-space: nowrap; font-family: var(--font-num); flex-shrink: 0; }
-
-  .hc-meta { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
-
-  .hc-stats { display: flex; gap: 10px; border-top: 1px dashed rgba(128,128,128,0.15); padding-top: 12px; }
-  .hc-stat-box { flex: 1; background: rgba(128,128,128,0.04); border-radius: 10px; padding: 8px 6px; text-align: center; }
-  .hc-val { display: block; font-size: 1rem; font-weight: 900; color: var(--text-secondary); font-family: var(--font-num); }
-  .hc-lbl { display: block; font-size: 0.65rem; font-weight: 700; color: var(--text-muted); margin-top: 2px; }
-  
-  .stat-pct .hc-val { color: var(--text-primary); }
+  .hc-calc-body { padding: 0 var(--space-4) 12px; }
+  .hc-calc-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 6px 0; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); border-bottom: 1px solid var(--surface-border); }
+  .hc-calc-row small { display: block; font-size: 0.65rem; font-weight: 500; color: var(--text-muted); }
+  .hc-calc-row .v { font-family: var(--font-num); font-weight: 800; color: var(--text-primary); white-space: nowrap; }
+  .hc-calc-total { display: flex; justify-content: space-between; padding: 8px 0 0; font-size: 0.85rem; font-weight: 800; color: var(--color-accent); }
 </style>
 </head>
 <body>
@@ -115,20 +118,20 @@ async function renderPage() {
       getStudentRank(student.studentId),
       getCompletedImprovementAttempts(student.studentId).catch(() => [])
     ]);
-    
+
     // Fetch all exams to calculate total exams conducted for this batch
     const examsSnap = await getDocs(collection(db, "exams"));
     let totalExamsConducted = 0;
-    
+
     examsSnap.forEach(doc => {
       const data = doc.data();
       const validStatus = ["published", "completed", "archived"].includes(data.status);
-      
+
       // Check if exam is for this student's batch (or open to all)
-      let isForMe = true; 
+      let isForMe = true;
       if (data.targetBatch && data.targetBatch !== "all" && data.targetBatch !== student.className) isForMe = false;
       if (data.targetBatches && data.targetBatches.length > 0 && !data.targetBatches.includes(student.className)) isForMe = false;
-      
+
       if (validStatus && isForMe) {
         totalExamsConducted++;
       }
@@ -146,12 +149,12 @@ async function renderPage() {
 
     // Header Summary
     const summaryHtml = `
-      <div class="glass-card" style="padding: 20px 16px;">
+      <div class="card">
         <div style="display:flex; align-items:center; gap:8px;">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-          <span style="font-size:1.1rem; font-weight:900; color:var(--text-primary);">আপনার রিপোর্ট কার্ড</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <span style="font-size:1.05rem; font-weight:800; color:var(--text-primary);">আপনার রিপোর্ট কার্ড</span>
         </div>
-        
+
         <div class="summary-grid">
           <div class="summary-box">
             <span class="sum-val">${totalExamsConducted}</span>
@@ -163,7 +166,7 @@ async function renderPage() {
           </div>
           <div class="summary-box sum-box-highlight">
             <span class="sum-val">${totalPoints}</span>
-            <span class="sum-lbl">সর্বমোট পয়েন্ট</span>
+            <span class="sum-lbl">সর্বমোট পয়েন্ট</span>
           </div>
         </div>
         ${(() => {
@@ -178,7 +181,7 @@ async function renderPage() {
 
     // Empty State Check
     if (results.length === 0) {
-      bodyContent.innerHTML = summaryHtml + `<div class="glass-card text-center" style="color:var(--text-muted); font-weight:700;">এখনো কোনো অনুমোদিত পরীক্ষার ফলাফল নেই।</div>`;
+      bodyContent.innerHTML = summaryHtml + `<div class="card text-center" style="color:var(--text-muted); font-weight:600;">এখনো কোনো অনুমোদিত পরীক্ষার ফলাফল নেই।</div>`;
       return;
     }
 
@@ -196,7 +199,7 @@ async function renderPage() {
       const calcHtml = lines.length ? `
         <details class="hc-calc">
           <summary>পয়েন্ট কীভাবে হলো</summary>
-          <div style="margin-top:6px;">
+          <div class="hc-calc-body">
             ${lines.map(l => `
               <div class="hc-calc-row">
                 <span>${l.label}<small>${l.hint}</small></span>
@@ -207,14 +210,14 @@ async function renderPage() {
         </details>` : "";
 
       return `
-        <div class="history-card">
+        <div class="card history-card">
           <a href="../student/result.html?resultId=${r.id}" class="hc-link">
             <div class="hc-header">
               <div class="hc-title">${r.examName || "অজানা পরীক্ষা"}</div>
               <div class="hc-points">+${pts} pts</div>
             </div>
             <div class="hc-meta">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
               ${fmtDate(r.submittedAt)}
             </div>
 
@@ -227,8 +230,8 @@ async function renderPage() {
                 <span class="hc-val">${r.accuracy ?? "—"}%</span>
                 <span class="hc-lbl">সঠিকতা</span>
               </div>
-              <div class="hc-stat-box">
-                <span class="hc-val" style="color:#10b981;">${r.correctCount || 0}/${totalQ > 0 ? totalQ : '-'}</span>
+              <div class="hc-stat-box stat-correct">
+                <span class="hc-val">${r.correctCount || 0}/${totalQ > 0 ? totalQ : '-'}</span>
                 <span class="hc-lbl">সঠিক উত্তর</span>
               </div>
             </div>
@@ -238,7 +241,7 @@ async function renderPage() {
       `;
     }).join("");
 
-    bodyContent.innerHTML = summaryHtml + `<div style="font-weight:900; font-size:1.05rem; color:var(--text-primary); margin-bottom:12px; padding-left:4px;">পরীক্ষার তালিকা</div>` + listHtml;
+    bodyContent.innerHTML = summaryHtml + `<div style="font-weight:800; font-size:1rem; color:var(--text-primary); margin-bottom:10px; padding-left:2px;">পরীক্ষার তালিকা</div>` + listHtml;
 
   } catch (err) {
     console.error(err);
