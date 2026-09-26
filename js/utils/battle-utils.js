@@ -4,16 +4,20 @@
    2 teams (1-4 members each) race through 4 levels of questions, picked
    automatically from /battleQuestions by topic. Per question: each team's
    members "buzz" to claim who answers for their side; first correct
-   answer (or the only correct one) wins the point for that team. 2 wrong
-   answers in the same level eliminates a member for THAT level only.
-   Whichever team wins Level 4 (best-of-N within the level) wins the
-   whole match.
+   answer (or the only correct one) wins the point for that team. Every
+   question carries a 1-minute clock (see TIME_LIMIT_MS) -- both teams see
+   it and answer it at the same time; whichever side hasn't locked in a
+   final answer when the clock runs out is simply scored as "no answer"
+   for that question (see checkTimeout). 2 wrong answers in the same level
+   eliminates a member for THAT level only. Whichever team wins Level 4
+   (best-of-N within the level) wins the whole match.
 
    No backend/Cloud Functions exist on this project (Spark plan), and
    students have no Firebase Auth -- so, exactly like every other
    student-facing write in this app, this trusts the client. The only
    server-side arbitration available is a Firestore transaction, which is
-   what resolves every buzz/answer here atomically (first write wins).
+   what resolves every buzz/answer/timeout/lobby-edit here atomically
+   (first write wins).
 
    XP is never written to /students directly (students can't write there
    -- admin-only). Instead, like challengeBonusXP and improvementPractice
@@ -37,6 +41,7 @@ export const WIN_XP_PER_MEMBER = 2000;
 export const WIN_MVP_BONUS_XP = 10000;
 export const LOSE_MVP_XP = 5000;
 export const LOSE_XP_CUT_FRACTION = 0.5; // losing team's match-earned XP is cut by this much
+export const TIME_LIMIT_MS = 60_000; // 1 minute per question, both teams share the same clock
 
 const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I confusion
 
@@ -104,6 +109,31 @@ export async function joinMatch(code, { studentId, name, team }) {
   });
 }
 
+/**
+ * Host-only: remove a joined member from the lobby before the match
+ * starts (e.g. someone joined by mistake or the wrong person tapped in).
+ * Only works while status is still "lobby"; the host can't remove
+ * themselves this way.
+ */
+export async function removeMember(code, { hostStudentId, team, studentId }) {
+  if (team !== "A" && team !== "B") throw new Error("team must be 'A' or 'B'");
+  const ref = doc(db, "battleMatches", code);
+  return runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new Error("MATCH_NOT_FOUND");
+    const m = snap.data();
+    if (m.status !== "lobby") throw new Error("MATCH_ALREADY_STARTED");
+    if (m.hostStudentId !== hostStudentId) throw new Error("NOT_HOST");
+    if (studentId === hostStudentId) throw new Error("CANNOT_REMOVE_HOST");
+
+    const teamKey = `team${team}`;
+    const current = m[teamKey]?.members || [];
+    const next = current.filter(mem => mem.studentId !== studentId);
+    if (next.length === current.length) throw new Error("MEMBER_NOT_FOUND");
+    tx.update(ref, { [`${teamKey}.members`]: next });
+  });
+}
+
 function buildQuestionObj(q) {
   return {
     questionId: q.id,
@@ -113,7 +143,8 @@ function buildQuestionObj(q) {
     marks: Number(q.marks) || 1,
     claim: { A: null, B: null },
     answers: { A: null, B: null },
-    startedAt: Date.now()
+    startedAt: Date.now(),
+    expiresAt: Date.now() + TIME_LIMIT_MS
   };
 }
 
@@ -199,6 +230,7 @@ export async function buzzIn(code, { studentId, team }) {
     if (m.eliminated?.[studentId]) throw new Error("ELIMINATED_THIS_LEVEL");
     const q = m.currentQuestion;
     if (!q) throw new Error("NO_ACTIVE_QUESTION");
+    if (q.expiresAt && Date.now() >= q.expiresAt) throw new Error("TIME_UP");
     if (q.claim?.[team]) throw new Error("ALREADY_CLAIMED"); // first tap wins, rest are too late
 
     const newQuestion = { ...q, claim: { ...q.claim, [team]: { studentId, claimedAt: Date.now() } } };
@@ -243,12 +275,69 @@ function buildResult(m, scoreBoard, winnerTeam) {
 }
 
 /**
+ * Shared "close out the current question and move the match forward"
+ * logic. Called once `answers` is final for both sides (either both
+ * actually answered, or the 1-minute clock ran out, or the other side
+ * can no longer answer at all because every member is eliminated this
+ * level). Returns the full patch object for tx.update.
+ */
+function resolveQuestion(m, answers, scoreBoard, eliminated, wrongCounts) {
+  const winner = decideQuestionWinner(answers);
+  const levelWins = { ...(m.levelWins || { A: 0, B: 0 }) };
+  const matchTotals = { ...(m.matchTotals || { A: 0, B: 0 }) };
+  if (winner) { levelWins[winner] += 1; matchTotals[winner] += 1; }
+
+  const levelQuestions = m.levels[m.currentLevel - 1];
+  const isLastOfLevel = m.currentQuestionIndex >= levelQuestions.length - 1;
+
+  let status = m.status, currentLevel = m.currentLevel, currentQuestionIndex = m.currentQuestionIndex;
+  let currentQuestion = null, result = null;
+  let nextEliminated = eliminated, nextWrongCounts = wrongCounts;
+
+  if (isLastOfLevel) {
+    if (currentLevel >= LEVEL_COUNT) {
+      // LEVEL 4 DECIDES THE WHOLE MATCH.
+      let winnerTeam;
+      if (levelWins.A === levelWins.B) {
+        // Tie-break: whoever has won more questions across the whole
+        // match; if still tied, Team A (documented v1 edge-case).
+        winnerTeam = matchTotals.A >= matchTotals.B ? "A" : "B";
+      } else {
+        winnerTeam = levelWins.A > levelWins.B ? "A" : "B";
+      }
+      status = "finished";
+      result = buildResult(m, scoreBoard, winnerTeam);
+    } else {
+      currentLevel += 1;
+      currentQuestionIndex = 0;
+      nextEliminated = {};
+      nextWrongCounts = {};
+      levelWins.A = 0; levelWins.B = 0;
+      currentQuestion = buildQuestionObj(m.levels[currentLevel - 1][0]);
+    }
+  } else {
+    currentQuestionIndex += 1;
+    currentQuestion = buildQuestionObj(levelQuestions[currentQuestionIndex]);
+  }
+
+  return {
+    scoreBoard,
+    eliminated: nextEliminated,
+    wrongCounts: nextWrongCounts,
+    levelWins, matchTotals,
+    status, currentLevel, currentQuestionIndex,
+    currentQuestion,
+    result
+  };
+}
+
+/**
  * The claimer for a team submits their chosen option. Resolves the
  * question the moment both teams have answered, or the moment the other
  * team is fully eliminated for this level (can no longer answer at all).
  * Whichever team's level/match progression this triggers happens in the
  * SAME transaction, so the whole engine only ever needs this one entry
- * point during play (plus buzzIn).
+ * point during play (plus buzzIn and the timeout watchdog below).
  */
 export async function submitAnswer(code, { studentId, team, option }) {
   const ref = doc(db, "battleMatches", code);
@@ -259,6 +348,7 @@ export async function submitAnswer(code, { studentId, team, option }) {
     if (m.status !== "active") throw new Error("MATCH_NOT_ACTIVE");
     const q = m.currentQuestion;
     if (!q) throw new Error("NO_ACTIVE_QUESTION");
+    if (q.expiresAt && Date.now() >= q.expiresAt) throw new Error("TIME_UP");
     if (!q.claim?.[team] || q.claim[team].studentId !== studentId) throw new Error("NOT_YOUR_CLAIM");
     if (q.answers?.[team]) throw new Error("ALREADY_ANSWERED");
 
@@ -282,62 +372,53 @@ export async function submitAnswer(code, { studentId, team, option }) {
     const otherMembers = m[`team${otherTeam}`]?.members || [];
     const otherFullyEliminated = otherMembers.length > 0 && otherMembers.every(mem => eliminated[mem.studentId]);
 
-    const patch = { scoreBoard, eliminated, wrongCounts };
-
     if (!otherAnswered && !otherFullyEliminated) {
       // Still waiting on the other team -- just record this team's answer.
-      tx.update(ref, { currentQuestion: { ...q, answers }, ...patch });
+      tx.update(ref, { currentQuestion: { ...q, answers }, scoreBoard, eliminated, wrongCounts });
       return;
     }
 
     // Both sides are in (or the other side can no longer answer) -- resolve.
-    const winner = decideQuestionWinner(answers);
-    const levelWins = { ...(m.levelWins || { A: 0, B: 0 }) };
-    const matchTotals = { ...(m.matchTotals || { A: 0, B: 0 }) };
-    if (winner) { levelWins[winner] += 1; matchTotals[winner] += 1; }
+    tx.update(ref, resolveQuestion(m, answers, scoreBoard, eliminated, wrongCounts));
+  });
+}
 
-    const levelQuestions = m.levels[m.currentLevel - 1];
-    const isLastOfLevel = m.currentQuestionIndex >= levelQuestions.length - 1;
+/**
+ * Timeout watchdog: every connected player's browser calls this on a
+ * tick (see battle-play.html) once a question's 1-minute clock has run
+ * out. Whichever call reaches Firestore first resolves it inside a
+ * transaction; any side that never locked in an answer is simply scored
+ * as "no answer" (no point) for that question -- it does NOT count as a
+ * wrong answer, so it never triggers the 2-strikes elimination on its
+ * own. Safe to call repeatedly from every client -- a no-op once the
+ * question has already been resolved or moved on.
+ */
+export async function checkTimeout(code) {
+  const ref = doc(db, "battleMatches", code);
+  return runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) return;
+    const m = snap.data();
+    if (m.status !== "active") return;
+    const q = m.currentQuestion;
+    if (!q?.expiresAt || Date.now() < q.expiresAt) return; // clock hasn't run out yet
+    if (q.answers?.A && q.answers?.B) return; // already fully answered, nothing to do
 
-    let status = m.status, currentLevel = m.currentLevel, currentQuestionIndex = m.currentQuestionIndex;
-    let currentQuestion = null, result = null;
-    let nextEliminated = eliminated, nextWrongCounts = wrongCounts;
-
-    if (isLastOfLevel) {
-      if (currentLevel >= LEVEL_COUNT) {
-        // LEVEL 4 DECIDES THE WHOLE MATCH.
-        let winnerTeam;
-        if (levelWins.A === levelWins.B) {
-          // Tie-break: whoever has won more questions across the whole
-          // match; if still tied, Team A (documented v1 edge-case).
-          winnerTeam = matchTotals.A >= matchTotals.B ? "A" : "B";
-        } else {
-          winnerTeam = levelWins.A > levelWins.B ? "A" : "B";
-        }
-        status = "finished";
-        result = buildResult(m, scoreBoard, winnerTeam);
-      } else {
-        currentLevel += 1;
-        currentQuestionIndex = 0;
-        nextEliminated = {};
-        nextWrongCounts = {};
-        levelWins.A = 0; levelWins.B = 0;
-        currentQuestion = buildQuestionObj(m.levels[currentLevel - 1][0]);
+    const answers = { ...q.answers };
+    for (const t of ["A", "B"]) {
+      if (!answers[t]) {
+        answers[t] = {
+          studentId: q.claim?.[t]?.studentId || null,
+          option: null, correct: false, answeredAt: Date.now(), timedOut: true
+        };
       }
-    } else {
-      currentQuestionIndex += 1;
-      currentQuestion = buildQuestionObj(levelQuestions[currentQuestionIndex]);
     }
 
-    tx.update(ref, {
-      ...patch,
-      eliminated: nextEliminated,
-      wrongCounts: nextWrongCounts,
-      levelWins, matchTotals,
-      status, currentLevel, currentQuestionIndex,
-      currentQuestion,
-      result
-    });
+    const scoreBoard = { ...(m.scoreBoard || {}) };
+    const eliminated = { ...(m.eliminated || {}) };
+    const wrongCounts = { ...(m.wrongCounts || {}) };
+
+    tx.update(ref, resolveQuestion(m, answers, scoreBoard, eliminated, wrongCounts));
   });
 }
 
