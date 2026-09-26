@@ -1,11 +1,12 @@
 /* =========================================================
    XP STORE — spend XP on real in-app perks.
 
-   First item: a Time Extend Card. Bought ahead of time from the store,
-   it can then be used any time DURING an exam to add +5 minutes to that
-   exam's original duration. More items will be added to STORE_ITEMS
-   later — the cart/purchase flow below is written generically so a new
-   item is just a new catalog entry, nothing else changes.
+   First item: a Time Card (৳1000 XP each). Bought ahead of time from the
+   store, one or more can then be used any time DURING an exam to add
+   +1:30 per card to that exam's original duration. More items will be
+   added to STORE_ITEMS later — the cart/purchase flow below is written
+   generically so a new item is just a new catalog entry, nothing else
+   changes.
 
    XP itself is never stored anywhere (computeStudentXP() in xp-utils.js
    always derives it fresh from results/battle/referral/etc). So there is
@@ -34,13 +35,12 @@ import {
 
 export const STORE_ITEMS = [
   {
-    id: "time_extend_5min",
-    name: "টাইম এক্সটেন্ড কার্ড",
-    tagline: "পরীক্ষায় +৫ মিনিট",
-    description: "পরীক্ষার মূল সময়ের সাথে বাড়তি ৫ মিনিট যোগ হবে। কেনার পর, পরীক্ষা চলাকালীন যেকোনো সময় ব্যবহার করা যাবে — কিন্তু আগে থেকে কিনে রাখতে হবে।",
-    minutesGranted: 5,
-    originalPriceXP: 15000,
-    priceXP: 10000,
+    id: "time_extend_card",
+    name: "টাইম কার্ড",
+    tagline: "প্রতি কার্ডে +১ মিনিট ৩০ সেকেন্ড",
+    description: "পরীক্ষা চলাকালীন যেকোনো সময় ব্যবহার করে মূল সময়ের সাথে বাড়তি দেড় মিনিট যোগ করা যাবে — কিন্তু আগে থেকে কিনে রাখতে হবে।",
+    secondsGranted: 90,
+    priceXP: 1000,
     maxPerOrder: 10
   }
   // আরও item এখানে যোগ হবে — বাকি সব কোড (cart/checkout/inventory) নতুন
@@ -137,13 +137,15 @@ export async function getPurchaseHistory(studentId) {
 }
 
 /**
- * Consume one purchased unit of an item (e.g. from inside exam.html when a
- * student taps "use time extend card"). Not wired into the exam page yet —
- * this is the plumbing for that, ready for when it is.
+ * Consume `qty` purchased units of an item at once (used from inside
+ * exam.html when a student taps "টাইম কার্ড ব্যবহার করো" during an exam).
+ * Re-checks availability inside a transaction so two taps (or two tabs)
+ * can't consume more cards than the student actually owns.
  */
-export async function useStoreItem(studentId, itemId) {
+export async function useStoreItem(studentId, itemId, qty = 1) {
   const item = getStoreItem(itemId);
   if (!item) throw new Error("UNKNOWN_ITEM");
+  qty = Math.max(1, Math.floor(Number(qty) || 0));
   const invRef = doc(db, "storeInventory", studentId);
   return runTransaction(db, async (tx) => {
     const snap = await tx.get(invRef);
@@ -152,9 +154,9 @@ export async function useStoreItem(studentId, itemId) {
     const items = { ...(data.items || {}) };
     const row = items[itemId] || { purchased: 0, used: 0 };
     const available = Number(row.purchased || 0) - Number(row.used || 0);
-    if (available <= 0) throw new Error("NOTHING_TO_USE");
-    items[itemId] = { ...row, used: Number(row.used || 0) + 1 };
+    if (available < qty) throw new Error("NOTHING_TO_USE");
+    items[itemId] = { ...row, used: Number(row.used || 0) + qty };
     tx.update(invRef, { items, updatedAt: Date.now() });
-    return { minutesGranted: item.minutesGranted };
+    return { secondsGranted: (item.secondsGranted || 0) * qty, qtyUsed: qty };
   });
 }

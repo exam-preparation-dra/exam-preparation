@@ -123,6 +123,20 @@ export function syncToFirestoreDebounced(examId, studentId, partialData, delayMs
   }, delayMs);
 }
 
+// ---------- Extend an in-progress attempt's end time (a "time card" used mid-exam).
+// Written immediately rather than through the debounced sync above — this is
+// infrequent and important, and the shared debounce timer would otherwise let
+// a later answers/currentIndex sync silently drop this field (last call wins). ----------
+export async function extendAttemptTime(examId, studentId, endAtMillis) {
+  try {
+    await updateDoc(doc(db, "attempts", attemptDocId(examId, studentId)), {
+      endAtMillis, lastSyncedAt: serverTimestamp()
+    });
+  } catch {
+    // Offline — the local copy (saved by the caller) is enough to resume from.
+  }
+}
+
 // ---------- Final submission: grade, write pending result, lock the attempt ----------
 export async function submitAttempt({ examId, studentId, examName, snapshotQuestions, answers, startedAtMillis, questionTimes, markedForReview }) {
   const submittedAtMillis = Date.now();

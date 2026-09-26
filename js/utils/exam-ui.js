@@ -48,7 +48,8 @@ const ICON = {
   close: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>`,
   info: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
   warn: `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
-  star: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`
+  star: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+  card: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>`
 };
 
 /* ---------- intro screen ---------- */
@@ -84,7 +85,7 @@ export function introHtml({ backHref, title, name, description, stats = [], fact
 }
 
 /* ---------- running exam shell ---------- */
-export function runShellHtml({ name, photoURL, total }) {
+export function runShellHtml({ name, photoURL, total, showCardBtn = false }) {
   const initial = esc(String(name || "?").trim().charAt(0));
   return `
     <header class="ex-topbar"><div class="ex-topbar-in">
@@ -93,6 +94,7 @@ export function runShellHtml({ name, photoURL, total }) {
         <span class="ex-user-name">${esc(name)}</span>
       </div>
       <div class="ex-actions">
+        ${showCardBtn ? `<button id="useCardBtn" class="ex-icon-btn ex-card-btn" type="button" aria-label="টাইম কার্ড ব্যবহার করো">${ICON.card}<span id="cardBadge" class="ex-card-badge hidden">0</span></button>` : ""}
         <div class="ex-timer"><small>বাকি সময়</small><span id="timerDisplay">--:--</span></div>
         ${themeButtonHtml()}
         <button id="submitBtn" class="ex-submit" type="button">জমা দিন</button>
@@ -148,7 +150,42 @@ export function runShellHtml({ name, photoURL, total }) {
     <div id="figurePreviewModal" class="hidden">
       <img id="figurePreviewImg" alt="" draggable="false" oncontextmenu="return false;">
     </div>
+
+    ${showCardBtn ? cardModalHtml() : ""}
   `;
+}
+
+/* ---------- "use a time card" sheet (shown when useCardBtn is tapped) ---------- */
+function cardModalHtml() {
+  return `
+    <div id="cardModal" class="ex-overlay hidden">
+      <div class="ex-sheet">
+        <div class="ex-sheet-head">
+          <p class="ex-sheet-title">টাইম কার্ড ব্যবহার করো</p>
+          <button id="closeCardModalBtn" class="ex-icon-btn" type="button" aria-label="বন্ধ করো">${ICON.close}</button>
+        </div>
+        <div class="ex-timecard">
+          <div class="ex-timecard-plus"><span id="cardPerUnitLabel">+০</span></div>
+          <div class="ex-timecard-info">
+            <span class="ex-timecard-name">টাইম কার্ড</span>
+            <span class="ex-timecard-avail">তোমার কাছে আছে <b id="cardAvailCount">0</b>টি</span>
+          </div>
+        </div>
+        <div class="ex-card-qty-row">
+          <span>কতগুলো ব্যবহার করবে</span>
+          <div class="ex-qty">
+            <button type="button" id="cardQtyDec" class="ex-qty-btn" aria-label="কমাও">−</button>
+            <span class="ex-qty-value num" id="cardQtyValue">1</span>
+            <button type="button" id="cardQtyInc" class="ex-qty-btn" aria-label="বাড়াও">+</button>
+          </div>
+        </div>
+        <p class="ex-sheet-sub" id="cardTotalNote" style="margin:14px 0 0;"></p>
+        <div class="ex-confirm-actions">
+          <button class="ex-btn ex-btn-ghost" id="cancelCardBtn" type="button">বাতিল</button>
+          <button class="ex-btn ex-btn-primary" id="confirmCardBtn" type="button">ব্যবহার করো</button>
+        </div>
+      </div>
+    </div>`;
 }
 
 /* ---------- one question ---------- */
