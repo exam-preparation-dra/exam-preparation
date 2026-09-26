@@ -268,7 +268,7 @@ export function computeImprovementPracticeTotalXP(practiceResults = []) {
 
 // ---------- whole student ----------
 // results: this student's counted (approved / auto-approved) results, any order.
-export function computeStudentXP(results, { referralCount = 0, challengeBonusXP = 0, improvementPracticeResults = [], battleXP = 0 } = {}) {
+export function computeStudentXP(results, { referralCount = 0, challengeBonusXP = 0, improvementPracticeResults = [], battleXP = 0, spentXP = 0 } = {}) {
   const sorted = [...(results || [])].sort((a, b) => toMillis(a.submittedAt) - toMillis(b.submittedAt));
 
   const weeksAttended = new Set(sorted.map(r => weekIndex(toMillis(r.submittedAt))));
@@ -321,8 +321,15 @@ export function computeStudentXP(results, { referralCount = 0, challengeBonusXP 
   const totalXP = examXP + referralXP + challengeXP + improvementPracticeXP + battleXPRounded;
   const avgPercentage = sorted.length ? Math.round((pctSum / sorted.length) * 10) / 10 : 0;
 
+  // Lifetime XP (totalXP, above) never shrinks -- it's what drives level and
+  // leaderboard rank. Spending XP in the store only reduces what's left to
+  // SPEND, tracked separately here as spendableXP; see store-utils.js.
+  const spentXPRounded = Math.max(0, Math.round(num(spentXP)));
+  const spendableXP = Math.max(0, totalXP - spentXPRounded);
+
   return {
     totalXP, examXP, referralXP, referralCount: refCount, challengeXP, improvementPracticeXP, battleXP: battleXPRounded,
+    spentXP: spentXPRounded, spendableXP,
     breakdown, exams: exams.reverse(),   // newest first
     examsTaken: sorted.length, perfectExams, avgPercentage,
     ...getLevelInfo(totalXP), levelInfo: getLevelInfo(totalXP)
