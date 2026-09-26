@@ -137,14 +137,38 @@ export async function removeMember(code, { hostStudentId, team, studentId }) {
 function buildQuestionObj(q) {
   return {
     questionId: q.id,
-    question_bn: q.question_bn || "",
-    options_bn: q.options_bn || {},
-    correctAnswer: q.correctAnswer,
+    question_bn: typeof q.question_bn === "string" ? q.question_bn : String(q.question_bn ?? ""),
+    options_bn: normalizeOptions(q.options_bn),
+    correctAnswer: typeof q.correctAnswer === "string" ? q.correctAnswer : String(q.correctAnswer ?? ""),
     marks: Number(q.marks) || 1,
     claim: { A: null, B: null },
     answers: { A: null, B: null },
     startedAt: Date.now(),
     expiresAt: Date.now() + TIME_LIMIT_MS
+  };
+}
+
+// Keep Battle question data strictly Firestore-safe.
+// We intentionally store only scalar/map fields here. This prevents a
+// question document containing an unexpected nested array from breaking the
+// whole battleMatches/{code} write with "Nested arrays are not supported".
+function normalizeOptions(options) {
+  const o = options && typeof options === "object" && !Array.isArray(options) ? options : {};
+  return {
+    A: typeof o.A === "string" ? o.A : String(o.A ?? ""),
+    B: typeof o.B === "string" ? o.B : String(o.B ?? ""),
+    C: typeof o.C === "string" ? o.C : String(o.C ?? ""),
+    D: typeof o.D === "string" ? o.D : String(o.D ?? "")
+  };
+}
+
+function sanitizeBattleQuestion(q) {
+  return {
+    id: q.id,
+    question_bn: typeof q.question_bn === "string" ? q.question_bn : String(q.question_bn ?? ""),
+    options_bn: normalizeOptions(q.options_bn),
+    correctAnswer: typeof q.correctAnswer === "string" ? q.correctAnswer : String(q.correctAnswer ?? ""),
+    marks: Number(q.marks) || 1
   };
 }
 
@@ -158,9 +182,23 @@ function shuffle(arr) {
 }
 
 /**
- * Host starts the match: locks the rosters, decides questions-per-level
- * from total player count, pulls a random question pool for the chosen
- * topics from /questions, and splits it into 4 levels.
+ * Host starts the match.
+ *
+ * Battle reads directly from the main /questions collection. The selected
+ * topic IDs are queried in chunks of 10, the combined pool is de-duplicated,
+ * shuffled, and exactly 20 or 40 questions are selected depending on the
+ * number of players.
+ *
+ * IMPORTANT FIRESTORE DESIGN:
+ * We do NOT store `levels` as an array of arrays, and we do not store the raw
+ * question documents inside the match. Instead the match stores:
+ *   - questionOrder: a flat array of question IDs
+ *   - battleQuestionMap: a map keyed by question ID containing only scalar /
+ *     map fields
+ *
+ * This means there is no nested array anywhere in the newly written match
+ * state, so Firestore cannot fail with the nested-array error because of the
+ * question pool structure.
  */
 export async function startMatch(code) {
   const ref = doc(db, "battleMatches", code);
@@ -174,65 +212,72 @@ export async function startMatch(code) {
   if (!teamAMembers.length || !teamBMembers.length) {
     throw new Error("BOTH_TEAMS_NEED_AT_LEAST_ONE_MEMBER");
   }
+
   const totalPlayers = teamAMembers.length + teamBMembers.length;
-  const questionsPerLevel = totalPlayers > 4 ? QUESTIONS_PER_LEVEL_LARGE : QUESTIONS_PER_LEVEL_SMALL;
+  const questionsPerLevel = totalPlayers > 4
+    ? QUESTIONS_PER_LEVEL_LARGE
+    : QUESTIONS_PER_LEVEL_SMALL;
   const totalNeeded = questionsPerLevel * LEVEL_COUNT;
 
-  // Firestore 'in' supports at most 10 values -- chunk the selected topics.
-  // Battle now uses the MAIN question bank directly, so there is no separate
-  // /battleQuestions copy to maintain. Only active questions are eligible.
   const topics = [...new Set((m.topics || []).filter(Boolean))];
-  const chunks = [];
-  for (let i = 0; i < topics.length; i += 10) chunks.push(topics.slice(i, i + 10));
+  if (!topics.length) throw new Error("NO_TOPICS_SELECTED");
 
-  let pool = [];
-  const seenIds = new Set();
+  // Firestore 'in' supports at most 10 values, so query selected topics in chunks.
+  const chunks = [];
+  for (let i = 0; i < topics.length; i += 10) {
+    chunks.push(topics.slice(i, i + 10));
+  }
+
+  const poolById = new Map();
   for (const chunk of chunks) {
     const q = query(
       collection(db, "questions"),
-      where("topicId", "in", chunk),
-      where("isActive", "==", true)
+      where("topicId", "in", chunk)
     );
-    const s = await getDocs(q);
-    s.forEach(d => {
-      // Defensive de-duplication in case the query strategy changes later.
-      if (!seenIds.has(d.id)) {
-        seenIds.add(d.id);
-        pool.push({ id: d.id, ...d.data() });
+    const result = await getDocs(q);
+    result.forEach(d => {
+      if (!poolById.has(d.id)) {
+        poolById.set(d.id, { id: d.id, ...d.data() });
       }
     });
   }
-  pool = shuffle(pool);
-  if (pool.length < totalNeeded) {
-    throw new Error(`NOT_ENOUGH_QUESTIONS: pool has ${pool.length}, needs ${totalNeeded}. Add more active questions for these topics or pick more topics.`);
-  }
 
-  // Firestore does not allow arrays nested inside arrays. Store the four
-  // levels as a map (1..4), with one question array per level.
-  const levels = {};
-  for (let lvl = 0; lvl < LEVEL_COUNT; lvl++) {
-    levels[String(lvl + 1)] = pool.slice(
-      lvl * questionsPerLevel,
-      (lvl + 1) * questionsPerLevel
+  const pool = shuffle([...poolById.values()]);
+  if (pool.length < totalNeeded) {
+    throw new Error(
+      `NOT_ENOUGH_QUESTIONS: pool has ${pool.length}, needs ${totalNeeded}. ` +
+      `Add more questions for these topics or pick more topics.`
     );
   }
 
+  // Select exactly the number needed. Extra questions are deliberately not stored.
+  const selected = pool.slice(0, totalNeeded).map(sanitizeBattleQuestion);
+  const questionOrder = selected.map(q => q.id);
+
+  // Map values contain NO arrays. options_bn is a plain map of strings.
+  const battleQuestionMap = Object.fromEntries(
+    selected.map(q => [q.id, q])
+  );
+
   const participantIds = [...teamAMembers, ...teamBMembers].map(x => x.studentId);
+  const firstQuestion = selected[0];
+  if (!firstQuestion) throw new Error("NO_FIRST_QUESTION");
 
   await setDoc(ref, {
     ...m,
     status: "active",
     questionsPerLevel,
-    levels,
+    questionOrder,
+    battleQuestionMap,
     currentLevel: 1,
     currentQuestionIndex: 0,
     levelWins: { A: 0, B: 0 },
-    matchTotals: { A: 0, B: 0 }, // total questions won across the whole match (tie-break signal)
+    matchTotals: { A: 0, B: 0 },
     eliminated: {},
     wrongCounts: {},
     scoreBoard: {},
     participantIds,
-    currentQuestion: buildQuestionObj(levels["1"][0]),
+    currentQuestion: buildQuestionObj(firstQuestion),
     startedAt: Date.now()
   }, { merge: true });
 }
@@ -303,22 +348,40 @@ function resolveQuestion(m, answers, scoreBoard, eliminated, wrongCounts) {
   const winner = decideQuestionWinner(answers);
   const levelWins = { ...(m.levelWins || { A: 0, B: 0 }) };
   const matchTotals = { ...(m.matchTotals || { A: 0, B: 0 }) };
-  if (winner) { levelWins[winner] += 1; matchTotals[winner] += 1; }
+  if (winner) {
+    levelWins[winner] += 1;
+    matchTotals[winner] += 1;
+  }
 
-  const levelQuestions = m.levels?.[String(m.currentLevel)] || [];
-  const isLastOfLevel = m.currentQuestionIndex >= levelQuestions.length - 1;
+  // questionOrder is a single flat array, so there is never an array-of-arrays
+  // anywhere in the match document.
+  const order = Array.isArray(m.questionOrder) ? m.questionOrder : [];
+  const questionsPerLevel = Number(m.questionsPerLevel) || QUESTIONS_PER_LEVEL_SMALL;
+  const levelStart = (m.currentLevel - 1) * questionsPerLevel;
+  const absoluteIndex = levelStart + m.currentQuestionIndex;
+  const isLastOfLevel = m.currentQuestionIndex >= questionsPerLevel - 1;
 
-  let status = m.status, currentLevel = m.currentLevel, currentQuestionIndex = m.currentQuestionIndex;
-  let currentQuestion = null, result = null;
-  let nextEliminated = eliminated, nextWrongCounts = wrongCounts;
+  let status = m.status;
+  let currentLevel = m.currentLevel;
+  let currentQuestionIndex = m.currentQuestionIndex;
+  let currentQuestion = null;
+  let result = null;
+  let nextEliminated = eliminated;
+  let nextWrongCounts = wrongCounts;
+
+  const getStoredQuestion = (index) => {
+    const id = order[index];
+    if (!id) return null;
+    const raw = m.battleQuestionMap?.[id];
+    if (!raw) return null;
+    return buildQuestionObj({ id, ...raw });
+  };
 
   if (isLastOfLevel) {
     if (currentLevel >= LEVEL_COUNT) {
-      // LEVEL 4 DECIDES THE WHOLE MATCH.
+      // Level 4 decides the whole match.
       let winnerTeam;
       if (levelWins.A === levelWins.B) {
-        // Tie-break: whoever has won more questions across the whole
-        // match; if still tied, Team A (documented v1 edge-case).
         winnerTeam = matchTotals.A >= matchTotals.B ? "A" : "B";
       } else {
         winnerTeam = levelWins.A > levelWins.B ? "A" : "B";
@@ -330,20 +393,24 @@ function resolveQuestion(m, answers, scoreBoard, eliminated, wrongCounts) {
       currentQuestionIndex = 0;
       nextEliminated = {};
       nextWrongCounts = {};
-      levelWins.A = 0; levelWins.B = 0;
-      currentQuestion = buildQuestionObj(m.levels?.[String(currentLevel)][0]);
+      levelWins.A = 0;
+      levelWins.B = 0;
+      currentQuestion = getStoredQuestion(currentLevel * questionsPerLevel - questionsPerLevel);
     }
   } else {
     currentQuestionIndex += 1;
-    currentQuestion = buildQuestionObj(levelQuestions[currentQuestionIndex]);
+    currentQuestion = getStoredQuestion(absoluteIndex + 1);
   }
 
   return {
     scoreBoard,
     eliminated: nextEliminated,
     wrongCounts: nextWrongCounts,
-    levelWins, matchTotals,
-    status, currentLevel, currentQuestionIndex,
+    levelWins,
+    matchTotals,
+    status,
+    currentLevel,
+    currentQuestionIndex,
     currentQuestion,
     result
   };
