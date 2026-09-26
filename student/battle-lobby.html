@@ -31,9 +31,6 @@ body{background:var(--bg-app);color:var(--text-primary);font-family:var(--font-b
 .topic-row input{width:18px;height:18px;accent-color:var(--battle-gold)}
 .primary-action{width:100%;border:0;border-radius:13px;padding:14px 16px;background:var(--battle-gold);color:#241a08;font-weight:800;font-size:.95rem;cursor:pointer;margin-top:6px}.primary-action:disabled{opacity:.5;cursor:not-allowed}
 .secondary-action{border:1px solid var(--surface-border);background:var(--surface-solid);color:var(--text-primary);border-radius:12px;padding:12px 15px;font-weight:700;cursor:pointer}
-.history-entry{display:flex;align-items:center;justify-content:center;gap:9px;min-height:50px;border:1px solid rgba(201,151,63,.45);background:linear-gradient(180deg,rgba(201,151,63,.10),rgba(201,151,63,.04));color:var(--text-primary);border-radius:15px;padding:12px 16px;font-weight:850;letter-spacing:.01em;box-shadow:0 8px 24px rgba(0,0,0,.06);transition:transform .16s ease,border-color .16s ease,background .16s ease;text-decoration:none}
-.history-entry:hover{transform:translateY(-1px);border-color:var(--battle-gold);background:rgba(201,151,63,.14)}
-.history-entry svg{width:19px;height:19px;color:var(--battle-gold);flex:0 0 auto}
 .join-wrap{max-width:460px;margin:0 auto}.join-code-input{text-align:center;font-family:var(--font-num);font-size:1.35rem;font-weight:800;letter-spacing:5px;text-transform:uppercase}
 .qr-tools{display:flex;gap:10px;margin-top:12px}.qr-tools button{flex:1}.scanner{margin-top:12px;border-radius:14px;overflow:hidden;background:#000;padding:8px}
 .lobby-head{text-align:center}.lobby-code{font-family:var(--font-num);font-size:2rem;font-weight:900;letter-spacing:7px;margin:8px 0 4px;color:var(--battle-gold)}
@@ -61,7 +58,7 @@ body{background:var(--bg-app);color:var(--text-primary);font-family:var(--font-b
       <button id="openCreateBtn" class="entry-btn" type="button"><span class="entry-label">Create</span><span class="entry-sub">নতুন Battle তৈরি করো</span></button>
       <button id="openJoinBtn" class="entry-btn" type="button"><span class="entry-label">Join</span><span class="entry-sub">Battle Code দিয়ে যোগ দাও</span></button>
     </div>
-    <a href="./battle-history.html" class="history-entry" style="width:100%;margin-top:14px;box-sizing:border-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 7v5l3 2"/></svg><span>Battle History</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a>
+    <a href="./battle-history.html" class="secondary-action" style="display:flex;align-items:center;justify-content:center;width:100%;margin-top:12px;box-sizing:border-box;text-decoration:none">Battle History</a>
   </main>
 
   <main id="createView" class="view hidden">
@@ -130,7 +127,7 @@ import { getActiveStudent } from "../js/utils/student-utils.js";
 import { getFullSyllabusTree } from "../js/utils/syllabus-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-import { createMatch, joinMatch, startMatch, removeMember, swapMember, syncLobbyTimer } from "../js/utils/battle-utils.js";
+import { createMatch, joinMatch, startMatch, removeMember, swapMember, syncLobbyTimer, deleteMatch } from "../js/utils/battle-utils.js";
 
 initTheme();
 const esc = v => String(v ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
@@ -291,6 +288,7 @@ function enterLobby(code){
     renderMembers(document.getElementById("teamBCol"),m.teamB?.members,"B",isHost,code);
     const ready=!!m.teamA?.members?.length&&!!m.teamB?.members?.length;
     const startBtn=document.getElementById("startBtn");startBtn.classList.toggle("hidden",!isHost||!ready);
+    const deleteBtn=document.getElementById("deleteBattleBtn"); if(deleteBtn) deleteBtn.classList.toggle("hidden",!isHost);
     document.getElementById("waitingNote").textContent=ready
       ? "দুই Team-এ অন্তত ১ জন করে আছে। ১০ মিনিটের countdown শুরু হয়েছে। Host চাইলে তার আগেই Battle শুরু করতে পারবে।"
       : "Battle শুরু করার জন্য Team A এবং Team B—দুই দলেই অন্তত ১ জন থাকতে হবে।";
@@ -299,6 +297,7 @@ function enterLobby(code){
     startLobbyTimer(m.startsAt,isHost,code,m);
   });
   document.getElementById("startBtn").onclick=async()=>{try{await startMatch(code,student.studentId);}catch(e){showErr(errorNote,e.message||"Battle শুরু করা যায়নি।");}};
+  document.getElementById("deleteBattleBtn")?.addEventListener("click",async()=>{ if(!confirm(`Battle ${code} permanently delete করতে চাও?\n\nBattle-এর XP/History থেকেও এটি বাদ যাবে।`)) return; try{await deleteMatch(code,student.studentId); unsub?.(); clearLobbyTimer(); showOnly("mode");}catch(e){showErr(errorNote,e.message==="NOT_HOST"?"শুধু Host এই Battle delete করতে পারবে।":"Battle delete করা যায়নি।");}});
   document.getElementById("shareCodeBtn").onclick=async()=>{
     const shareUrl=`${location.origin}${location.pathname}?code=${encodeURIComponent(code)}`;
     const shareText=`Battle Code: ${code}`;
