@@ -15,16 +15,38 @@
 
   .store-section-title { font-size: 0.98rem; font-weight: 700; color: var(--text-primary); margin-bottom: var(--space-3); display: flex; align-items: center; gap: 8px; }
 
+  /* ---- Ticket-style item card: a torn-stub coupon look ---- */
+  .store-ticket {
+    display: flex; padding: 0; overflow: hidden; margin-bottom: var(--space-4);
+    background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft);
+  }
+  .store-ticket-stub {
+    flex-shrink: 0; width: 88px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; text-align: center; background: var(--color-accent-soft); color: var(--color-accent); padding: var(--space-3);
+  }
+  .store-ticket-plus { font-size: 1.2rem; font-weight: 700; line-height: 1.15; }
+  .store-ticket-plus-label { font-size: 0.68rem; font-weight: 600; opacity: 0.85; }
+  .store-ticket-divider {
+    flex-shrink: 0; width: 1px; position: relative;
+    background-image: linear-gradient(var(--surface-border) 60%, transparent 0%);
+    background-position: left; background-size: 1px 10px; background-repeat: repeat-y;
+  }
+  .store-ticket-divider::before, .store-ticket-divider::after {
+    content: ""; position: absolute; left: 50%; transform: translateX(-50%); width: 16px; height: 16px;
+    border-radius: 50%; background: var(--bg-app); border: 1px solid var(--surface-border);
+  }
+  .store-ticket-divider::before { top: -9px; }
+  .store-ticket-divider::after { bottom: -9px; }
+  .store-ticket-body { flex: 1; min-width: 0; padding: var(--space-4); }
+
   .store-item-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
   .store-item-name { font-weight: 700; font-size: 1rem; color: var(--text-primary); }
-  .store-item-desc { margin: var(--space-3) 0; line-height: 1.6; }
-  .store-item-price { text-align: right; flex-shrink: 0; }
-  .store-item-price-original { display: block; font-size: 0.76rem; color: var(--text-muted); text-decoration: line-through; }
-  .store-item-price-offer { display: block; font-size: 1.25rem; font-weight: 700; color: var(--color-accent); white-space: nowrap; }
+  .store-item-desc { margin: var(--space-3) 0 0; line-height: 1.6; }
+  .store-item-price-offer { display: block; font-size: 1.15rem; font-weight: 700; color: var(--color-accent); white-space: nowrap; flex-shrink: 0; }
   .store-item-price-offer small { font-size: 0.68rem; font-weight: 600; color: var(--text-muted); margin-left: 2px; }
-  .store-discount-badge { margin-top: 4px; }
 
-  .store-item-footer { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--surface-border); flex-wrap: wrap; }
+  .store-item-footer { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px dashed var(--surface-border); flex-wrap: wrap; }
   .store-qty { display: flex; align-items: center; gap: 10px; }
   .store-qty-btn {
     width: 34px; height: 34px; border-radius: var(--radius-sm); border: 1px solid var(--surface-border);
@@ -106,6 +128,13 @@ if (!student) { window.location.href = "../index.html"; }
 
 const fmt = (n) => Number(n || 0).toLocaleString("bn-BD");
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const BN_DIGITS = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+const toBn = (s) => String(s).replace(/[0-9]/g, d => BN_DIGITS[d]);
+const fmtDuration = (totalSec) => {
+  const m = Math.floor((totalSec || 0) / 60);
+  const s = Math.round((totalSec || 0) % 60);
+  return toBn(`${m}:${String(s).padStart(2, "0")}`);
+};
 
 const cart = {};       // itemId -> qty currently staged for checkout
 let currentTotalXP = 0; // lifetime XP (before this session's spend), used to re-check purchases
@@ -122,34 +151,35 @@ function renderItems() {
   list.innerHTML = STORE_ITEMS.map(item => {
     const owned = inventory[item.id] || { purchased: 0, used: 0, available: 0 };
     const qty = cart[item.id] || 0;
-    const discountPct = item.originalPriceXP > item.priceXP
-      ? Math.round((1 - item.priceXP / item.originalPriceXP) * 100) : 0;
     return `
-    <div class="card store-item-card" data-item="${item.id}">
-      <div class="store-item-top">
-        <div style="min-width:0;">
-          <div class="store-item-name">${esc(item.name)}</div>
-          <div class="text-sm text-muted">${esc(item.tagline)}</div>
-        </div>
-        <div class="store-item-price">
-          ${discountPct > 0 ? `<span class="store-item-price-original num">${fmt(item.originalPriceXP)} XP</span>` : ""}
-          <span class="store-item-price-offer num">${fmt(item.priceXP)}<small>XP</small></span>
-          ${discountPct > 0 ? `<span class="badge badge-completed store-discount-badge">-${discountPct}%</span>` : ""}
-        </div>
+    <div class="store-ticket" data-item="${item.id}">
+      <div class="store-ticket-stub">
+        <span class="store-ticket-plus num">+${fmtDuration(item.secondsGranted)}</span>
+        <span class="store-ticket-plus-label">মিনিট</span>
       </div>
-      <p class="text-sm text-muted store-item-desc">${esc(item.description)}</p>
-      <div class="store-item-footer">
-        <div class="text-sm text-muted">তোমার কাছে আছে: <strong class="num">${fmt(owned.available)}</strong>টি</div>
-        <div class="store-qty">
-          <button type="button" class="store-qty-btn" data-act="dec" ${qty <= 0 ? "disabled" : ""} aria-label="কমাও">−</button>
-          <span class="store-qty-value num">${qty}</span>
-          <button type="button" class="store-qty-btn" data-act="inc" ${qty >= (item.maxPerOrder || 10) ? "disabled" : ""} aria-label="বাড়াও">+</button>
+      <div class="store-ticket-divider"></div>
+      <div class="store-ticket-body">
+        <div class="store-item-top">
+          <div style="min-width:0;">
+            <div class="store-item-name">${esc(item.name)}</div>
+            <div class="text-sm text-muted">${esc(item.tagline)}</div>
+          </div>
+          <span class="store-item-price-offer num">${fmt(item.priceXP)}<small>XP</small></span>
+        </div>
+        <p class="text-sm text-muted store-item-desc">${esc(item.description)}</p>
+        <div class="store-item-footer">
+          <div class="text-sm text-muted">তোমার কাছে আছে: <strong class="num">${fmt(owned.available)}</strong>টি</div>
+          <div class="store-qty">
+            <button type="button" class="store-qty-btn" data-act="dec" ${qty <= 0 ? "disabled" : ""} aria-label="কমাও">−</button>
+            <span class="store-qty-value num">${qty}</span>
+            <button type="button" class="store-qty-btn" data-act="inc" ${qty >= (item.maxPerOrder || 10) ? "disabled" : ""} aria-label="বাড়াও">+</button>
+          </div>
         </div>
       </div>
     </div>`;
   }).join("");
 
-  list.querySelectorAll(".store-item-card").forEach(card => {
+  list.querySelectorAll(".store-ticket").forEach(card => {
     const itemId = card.dataset.item;
     const item = STORE_ITEMS.find(i => i.id === itemId);
     card.querySelectorAll(".store-qty-btn").forEach(btn => {

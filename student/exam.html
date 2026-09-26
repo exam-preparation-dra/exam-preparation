@@ -29,13 +29,14 @@ import { getExamById, getExamSnapshot, isExamAvailableNow } from "../js/utils/re
 import { getSubjects, getChapters, buildNameMap } from "../js/utils/syllabus-utils.js";
 import {
   peekInProgressAttempt, getOrStartAttempt, saveLocalAttempt,
-  syncToFirestoreDebounced, submitAttempt, getExistingResult
+  syncToFirestoreDebounced, extendAttemptTime, submitAttempt, getExistingResult
 } from "../js/utils/attempt-utils.js";
 import { formatHms } from "../js/utils/grading-utils.js";
 import {
   initExamPage, bindThemeButtons, introHtml, runShellHtml, questionHtml,
   setQuestionCounter, setProgress, fillPalette, submitMessage
 } from "../js/utils/exam-ui.js";
+import { STORE_ITEMS, getStoreInventory, useStoreItem } from "../js/utils/store-utils.js";
 
 initTheme();
 initExamPage();
@@ -54,6 +55,9 @@ const firedMinuteCheckpoints = new Set();
 let motivationGiven = false; 
 let lastWarnedInterval = 0; 
 let examInProgress = false;
+const TIME_CARD = STORE_ITEMS.find(i => i.id === "time_extend_card") || STORE_ITEMS[0];
+let cardAvailable = 0;
+let cardQty = 1;
 
 if (!student) {
   window.location.href = "../index.html";
@@ -152,7 +156,7 @@ async function renderIntro() {
 }
 
 function renderExamShell() {
-  shell.innerHTML = runShellHtml({ name: student.name, photoURL: student.photoURL, total: snapshot.questions.length });
+  shell.innerHTML = runShellHtml({ name: student.name, photoURL: student.photoURL, total: snapshot.questions.length, showCardBtn: true });
   bindThemeButtons(shell);
 
   document.getElementById("prevBtn").addEventListener("click", () => navigate(-1));
@@ -163,9 +167,16 @@ function renderExamShell() {
   document.getElementById("cancelSubmitBtn").addEventListener("click", closeSubmitModal);
   document.getElementById("confirmSubmitBtn").addEventListener("click", () => doSubmit(false));
   document.getElementById("figurePreviewModal").addEventListener("click", closeFigurePreview);
+  document.getElementById("useCardBtn").addEventListener("click", openCardModal);
+  document.getElementById("closeCardModalBtn").addEventListener("click", closeCardModal);
+  document.getElementById("cancelCardBtn").addEventListener("click", closeCardModal);
+  document.getElementById("confirmCardBtn").addEventListener("click", confirmUseCard);
+  document.getElementById("cardQtyDec").addEventListener("click", () => setCardQty(cardQty - 1));
+  document.getElementById("cardQtyInc").addEventListener("click", () => setCardQty(cardQty + 1));
   // tap on the dimmed backdrop closes a sheet
   document.getElementById("paletteOverlay").addEventListener("click", e => { if (e.target === e.currentTarget) closePalette(); });
   document.getElementById("submitModal").addEventListener("click", e => { if (e.target === e.currentTarget) closeSubmitModal(); });
+  document.getElementById("cardModal").addEventListener("click", e => { if (e.target === e.currentTarget) closeCardModal(); });
 
   window.addEventListener("online", handleConnChange);
   window.addEventListener("offline", handleConnChange);
@@ -175,6 +186,64 @@ function renderExamShell() {
   }
   questionStartMillis = Date.now();
   renderQuestion();
+  refreshCardBadge();
+}
+
+async function refreshCardBadge() {
+  try {
+    const inv = await getStoreInventory(student.studentId);
+    cardAvailable = inv[TIME_CARD.id]?.available || 0;
+  } catch { cardAvailable = 0; }
+  const badge = document.getElementById("cardBadge");
+  if (!badge) return;
+  badge.textContent = cardAvailable;
+  badge.classList.toggle("hidden", cardAvailable <= 0);
+}
+
+function setCardQty(next) {
+  cardQty = Math.max(1, Math.min(cardAvailable, next));
+  document.getElementById("cardQtyValue").textContent = cardQty;
+  document.getElementById("cardQtyDec").disabled = cardQty <= 1;
+  document.getElementById("cardQtyInc").disabled = cardQty >= cardAvailable;
+  document.getElementById("cardTotalNote").textContent =
+    `মোট +${formatHms(cardQty * TIME_CARD.secondsGranted * 1000)} সময় যোগ হবে।`;
+}
+
+function openCardModal() {
+  if (cardAvailable <= 0) {
+    showToast("তোমার কাছে কোনো টাইম কার্ড নেই। স্টোর থেকে কিনে রাখো।", "error");
+    return;
+  }
+  document.getElementById("cardAvailCount").textContent = cardAvailable;
+  document.getElementById("cardPerUnitLabel").textContent = `+${formatHms(TIME_CARD.secondsGranted * 1000)}`;
+  setCardQty(1);
+  document.getElementById("cardModal").classList.remove("hidden");
+}
+function closeCardModal() { document.getElementById("cardModal").classList.add("hidden"); }
+
+let usingCard = false;
+async function confirmUseCard() {
+  if (usingCard) return;
+  usingCard = true;
+  const btn = document.getElementById("confirmCardBtn");
+  btn.disabled = true;
+  try {
+    const qty = cardQty;
+    const { secondsGranted } = await useStoreItem(student.studentId, TIME_CARD.id, qty);
+    attemptState.endAtMillis += secondsGranted * 1000;
+    saveLocalAttempt(examId, student.studentId, attemptState);
+    await extendAttemptTime(examId, student.studentId, attemptState.endAtMillis);
+    tick();
+    showToast(`+${formatHms(secondsGranted * 1000)} সময় যোগ হয়েছে!`, "success");
+    closeCardModal();
+    await refreshCardBadge();
+  } catch (err) {
+    const map = { NOTHING_TO_USE: "তোমার কাছে এত টাইম কার্ড নেই।" };
+    showToast(map[err.message] || "কার্ড ব্যবহার করা যায়নি, আবার চেষ্টা করো।", "error");
+  } finally {
+    usingCard = false;
+    btn.disabled = false;
+  }
 }
 
 function openSubmitModal() {
