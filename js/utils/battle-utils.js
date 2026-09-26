@@ -207,9 +207,14 @@ export async function startMatch(code) {
     throw new Error(`NOT_ENOUGH_QUESTIONS: pool has ${pool.length}, needs ${totalNeeded}. Add more active questions for these topics or pick more topics.`);
   }
 
-  const levels = [];
+  // Firestore does not allow arrays nested inside arrays. Store the four
+  // levels as a map (1..4), with one question array per level.
+  const levels = {};
   for (let lvl = 0; lvl < LEVEL_COUNT; lvl++) {
-    levels.push(pool.slice(lvl * questionsPerLevel, (lvl + 1) * questionsPerLevel));
+    levels[String(lvl + 1)] = pool.slice(
+      lvl * questionsPerLevel,
+      (lvl + 1) * questionsPerLevel
+    );
   }
 
   const participantIds = [...teamAMembers, ...teamBMembers].map(x => x.studentId);
@@ -227,7 +232,7 @@ export async function startMatch(code) {
     wrongCounts: {},
     scoreBoard: {},
     participantIds,
-    currentQuestion: buildQuestionObj(levels[0][0]),
+    currentQuestion: buildQuestionObj(levels["1"][0]),
     startedAt: Date.now()
   }, { merge: true });
 }
@@ -300,7 +305,7 @@ function resolveQuestion(m, answers, scoreBoard, eliminated, wrongCounts) {
   const matchTotals = { ...(m.matchTotals || { A: 0, B: 0 }) };
   if (winner) { levelWins[winner] += 1; matchTotals[winner] += 1; }
 
-  const levelQuestions = m.levels[m.currentLevel - 1];
+  const levelQuestions = m.levels?.[String(m.currentLevel)] || [];
   const isLastOfLevel = m.currentQuestionIndex >= levelQuestions.length - 1;
 
   let status = m.status, currentLevel = m.currentLevel, currentQuestionIndex = m.currentQuestionIndex;
@@ -326,7 +331,7 @@ function resolveQuestion(m, answers, scoreBoard, eliminated, wrongCounts) {
       nextEliminated = {};
       nextWrongCounts = {};
       levelWins.A = 0; levelWins.B = 0;
-      currentQuestion = buildQuestionObj(m.levels[currentLevel - 1][0]);
+      currentQuestion = buildQuestionObj(m.levels?.[String(currentLevel)][0]);
     }
   } else {
     currentQuestionIndex += 1;
