@@ -79,10 +79,37 @@ export async function createMatch({ hostStudentId, hostName, topics }) {
     teamA: { members: [{ studentId: hostStudentId, name: hostName || "Host", swapCount: 0 }] },
     teamB: emptyTeam(),
     createdAt: Date.now(),
-    startsAt: Date.now() + 60_000
+    startsAt: null
   };
   await setDoc(doc(db, "battleMatches", code), data);
   return code;
+}
+
+/**
+ * Arm the 10-minute lobby countdown only after both teams have at least one member.
+ * If either team becomes empty again, the countdown is cleared until the lobby is ready.
+ */
+export async function syncLobbyTimer(code, ready) {
+  const ref = doc(db, "battleMatches", code);
+  return runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new Error("MATCH_NOT_FOUND");
+    const m = snap.data();
+    if (m.status !== "lobby") return m;
+    const aReady = (m.teamA?.members || []).length > 0;
+    const bReady = (m.teamB?.members || []).length > 0;
+    const actuallyReady = aReady && bReady;
+    if (!actuallyReady) {
+      if (m.startsAt != null) tx.update(ref, { startsAt: null });
+      return { ...m, startsAt: null };
+    }
+    if (m.startsAt == null) {
+      const startsAt = Date.now() + 10 * 60_000;
+      tx.update(ref, { startsAt });
+      return { ...m, startsAt };
+    }
+    return m;
+  });
 }
 
 /** Join an existing lobby. New members enter Team B by default. */
