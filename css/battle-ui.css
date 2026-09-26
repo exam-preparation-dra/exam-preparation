@@ -130,3 +130,57 @@
 .battle-toast.is-error { border-color: var(--arena-wrong); color: var(--arena-wrong); }
 
 .hidden { display: none !important; }
+
+/* =========================================================
+   STEP 3 — LIVE ARENA REDESIGN
+========================================================= */
+.battle-page .app-shell { max-width: 760px; padding: 14px 16px 110px; }
+.battle-header--arena { border-bottom: 0; margin-bottom: 10px; padding-bottom: 0; }
+.battle-header-title { font-family: var(--font-num); font-size: .78rem; font-weight: 800; letter-spacing: .16em; color: var(--arena-muted); }
+.battle-level-block { min-width: 118px; text-align: center; background: var(--surface-solid); border: 1px solid var(--arena-border); border-radius: 16px; padding: 7px 14px 9px; box-shadow: var(--shadow-soft); }
+.battle-level-label { display:block; font-size:.62rem; letter-spacing:.14em; color:var(--arena-muted); font-weight:800; }
+.battle-level-block strong { display:block; font-family:var(--font-num); font-size:1.65rem; line-height:1; margin-top:3px; color:var(--text-primary); }
+.battle-scoreboard--hero { align-items: stretch; gap: 12px; margin: 0 0 12px; }
+.battle-team--hero { appearance:none; cursor:pointer; min-height:132px; padding:18px 12px 14px; display:flex; flex-direction:column; justify-content:center; align-items:center; border:1px solid var(--arena-border); border-top:5px solid var(--team-a); }
+.battle-team--hero.battle-team--b { border-top-color:var(--team-b); }
+.battle-team--hero:hover { transform:translateY(-1px); box-shadow:var(--shadow-lift); }
+.battle-team--hero[aria-expanded="true"] { outline:2px solid currentColor; outline-offset:2px; }
+.battle-team-caption { font-family:var(--font-num); font-size:.72rem; letter-spacing:.13em; font-weight:800; color:var(--arena-muted); }
+.battle-team--hero .battle-team-score { font-size:3.6rem; margin:4px 0 2px; }
+.battle-team--hero.battle-team--a .battle-team-score { color:var(--team-a); }
+.battle-team--hero.battle-team--b .battle-team-score { color:var(--team-b); }
+.battle-team-members-count { font-family:var(--font-num); font-size:.64rem; letter-spacing:.08em; color:var(--arena-muted); font-weight:700; }
+.battle-vs-block { width:94px; flex:0 0 94px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; }
+.battle-vs-block > span { font-family:var(--font-num); font-weight:900; font-size:1.15rem; color:var(--arena-muted); }
+.battle-vs-block small { text-align:center; font-family:var(--font-num); font-size:.62rem; line-height:1.3; font-weight:800; color:var(--text-secondary); }
+.battle-question-meta { display:flex; justify-content:space-between; align-items:center; margin: 10px 0 8px; padding:0 2px; font-family:var(--font-num); font-size:.76rem; font-weight:800; letter-spacing:.06em; color:var(--arena-muted); }
+.battle-question-meta strong { color:var(--text-primary); font-size:1rem; }
+.battle-question-meta .battle-timer { min-width:66px; text-align:center; padding:7px 10px; }
+.battle-progress { margin-bottom: 14px; }
+.battle-progress-track { height:5px; }
+.battle-question-card { border-radius:20px; padding:22px; }
+.battle-question { font-size:1.18rem; line-height:1.75; margin-bottom:22px; }
+.battle-options { gap:10px; }
+.battle-option { min-height:58px; padding:12px 14px; }
+.battle-actions { position:sticky; bottom:10px; z-index:20; margin-top:18px; }
+.battle-buzz { min-height:66px; border-radius:18px; font-size:1.08rem; box-shadow:0 14px 30px rgba(0,0,0,.18); }
+.battle-team-panel { background:var(--surface-solid); border:1px solid var(--arena-border); border-radius:18px; padding:14px; margin:0 0 14px; box-shadow:var(--shadow-lift); }
+.battle-team-panel-head { display:flex; justify-content:space-between; align-items:center; padding-bottom:10px; border-bottom:1px solid var(--arena-border); font-family:var(--font-num); }
+.battle-team-panel-head button { border:0; background:transparent; color:var(--arena-muted); font-size:.68rem; font-weight:800; cursor:pointer; }
+.battle-team-panel-list { display:grid; gap:8px; margin-top:10px; }
+.battle-player-stat { display:flex; justify-content:space-between; gap:12px; align-items:center; padding:11px 10px; border:1px solid var(--arena-border); border-radius:12px; background:var(--surface); }
+.battle-player-stat-name { font-weight:750; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.battle-player-state { margin-left:7px; font-size:.58rem; color:var(--arena-wrong); border:1px solid currentColor; border-radius:999px; padding:2px 5px; }
+.battle-player-stat-values { display:flex; align-items:center; gap:10px; flex-shrink:0; font-family:var(--font-num); font-size:.62rem; color:var(--arena-muted); }
+.battle-player-stat-values strong { color:var(--arena-correct); }
+.battle-empty-team { text-align:center; color:var(--arena-muted); padding:14px; font-size:.8rem; font-weight:700; }
+@media (max-width:560px) {
+  .battle-page .app-shell { padding-left:12px; padding-right:12px; }
+  .battle-team--hero { min-height:112px; padding:13px 7px; }
+  .battle-team--hero .battle-team-score { font-size:2.8rem; }
+  .battle-vs-block { width:62px; flex-basis:62px; }
+  .battle-vs-block small { font-size:.56rem; }
+  .battle-question-card { padding:17px; }
+  .battle-question { font-size:1.06rem; }
+  .battle-player-stat { align-items:flex-start; flex-direction:column; gap:6px; }
+}
