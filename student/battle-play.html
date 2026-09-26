@@ -6,43 +6,118 @@
 <title>ব্যাটেল মোড — লাইভ</title>
 <link rel="stylesheet" href="../css/style.css">
 <link rel="stylesheet" href="../css/battle-ui.css">
+<style>
+  /* Local Overrides for Premium Esports Play View */
+  .battle-timer {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #111217; border: 1px solid #2a2d3a; color: #00f0ff;
+    padding: 6px 14px; font-family: 'Space Grotesk', monospace; font-size: 1.2rem; font-weight: 900;
+  }
+  .battle-timer svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2.5; }
+  .battle-timer.low {
+    color: #070709; background: #ffea00; border-color: #ffea00;
+    animation: alertBlink 0.8s infinite;
+  }
+  @keyframes alertBlink { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.85; transform: scale(1.05); } }
+
+  /* Hazard Stripes for Eliminated Banner */
+  .battle-eliminated {
+    background: repeating-linear-gradient(45deg, rgba(255, 0, 92, 0.15), rgba(255, 0, 92, 0.15) 10px, rgba(255, 0, 92, 0.3) 10px, rgba(255, 0, 92, 0.3) 20px);
+    border: 1px solid #ff005c; color: #fff; padding: 12px; text-align: center;
+    font-weight: 900; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px;
+    box-shadow: inset 0 0 15px rgba(255, 0, 92, 0.2);
+  }
+
+  /* Premium MVP & Best Effort Badges (Replacing Emojis) */
+  .mvp-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(255, 234, 0, 0.1); border: 1px solid #ffea00;
+    color: #ffea00; font-size: 0.65rem; font-weight: 900;
+    padding: 2px 6px; border-radius: 4px; margin-left: 8px; letter-spacing: 1px;
+  }
+  .mvp-badge svg { width: 12px; height: 12px; fill: currentColor; }
+  
+  .effort-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(0, 240, 255, 0.1); border: 1px solid #00f0ff;
+    color: #00f0ff; font-size: 0.65rem; font-weight: 900;
+    padding: 2px 6px; border-radius: 4px; margin-left: 8px; letter-spacing: 1px;
+  }
+
+  /* Result Screen Polish */
+  .result-xp-panel { background: #070709; border: 1px solid #2a2d3a; padding: 16px; margin-top: 20px; }
+  .result-xp-header { color: #6b728e; font-weight: 900; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; border-bottom: 1px solid #2a2d3a; padding-bottom: 8px; text-align: left; }
+</style>
 </head>
 <body class="battle-page">
 <div class="app-shell" id="shell">
-  <header class="battle-header animate-in">
+  
+  <header class="battle-header">
     <div class="battle-brand">
-      <div class="battle-brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 3h10l-1 8a4 4 0 0 1-8 0L7 3Z"/><path d="M7 6H4a3 3 0 0 0 3 3M17 6h3a3 3 0 0 1-3 3M9 3V1M15 3V1M8 20h8M12 15v5"/></svg></div>
-      <div><div class="battle-brand-title">ব্যাটেল</div><div class="battle-brand-sub">লাইভ প্রতিযোগিতা</div></div>
+      <div class="battle-brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 3h10l-1 8a4 4 0 0 1-8 0L7 3Z"/><path d="M7 6H4a3 3 0 0 0 3 3M17 6h3a3 3 0 0 1-3 3M9 3V1M15 3V1M8 20h8M12 15v5"/></svg></div>
+      <div class="battle-brand-title">ARENA LIVE</div>
     </div>
-    <div class="battle-round" id="levelPill">Level 1 · প্রশ্ন 1/5</div>
+    <div class="battle-round" id="levelPill">LVL 1 - Q 1/5</div>
   </header>
 
-  <section class="battle-scoreboard animate-in" aria-label="স্কোরবোর্ড">
-    <div class="battle-team"><div class="battle-team-label">TEAM A</div><div class="battle-team-name" id="teamAName">Team A</div><div class="battle-team-score num" id="teamAScore">0</div></div>
+  <section class="battle-scoreboard" aria-label="স্কোরবোর্ড">
+    <div class="battle-team">
+      <div class="battle-team-label">ALPHA SQUAD</div>
+      <div class="battle-team-name" id="teamAName">TEAM A</div>
+      <div class="battle-team-score" id="teamAScore">0</div>
+    </div>
     <div class="battle-vs">VS</div>
-    <div class="battle-team battle-team--b"><div class="battle-team-label">TEAM B</div><div class="battle-team-name" id="teamBName">Team B</div><div class="battle-team-score num" id="teamBScore">0</div></div>
+    <div class="battle-team battle-team--b">
+      <div class="battle-team-label">OMEGA SQUAD</div>
+      <div class="battle-team-name" id="teamBName">TEAM B</div>
+      <div class="battle-team-score" id="teamBScore">0</div>
+    </div>
   </section>
 
-  <div class="battle-progress animate-in"><div class="battle-progress-meta"><span>এই লেভেলের অগ্রগতি</span><span class="num" id="progressText">0%</span></div><div class="battle-progress-track"><div class="battle-progress-fill" id="progressBar"></div></div></div>
+  <div class="battle-progress">
+    <div class="battle-progress-meta"><span>LEVEL PROGRESSION</span><span id="progressText">0%</span></div>
+    <div class="battle-progress-track"><div class="battle-progress-fill" id="progressBar"></div></div>
+  </div>
 
-  <div id="eliminatedBanner" class="battle-eliminated hidden">তুমি এই লেভেলে বাদ পড়েছো — পরের লেভেলে আবার সুযোগ পাবে।</div>
+  <div id="eliminatedBanner" class="battle-eliminated hidden">
+    <span style="background:#070709; padding:2px 8px; border:1px solid #ff005c;">ELIMINATED FOR THIS ROUND</span>
+  </div>
 
-  <main id="qCard" class="battle-question-card animate-in">
-    <div class="battle-question-head"><span class="battle-question-label">QUESTION</span><span class="battle-timer num" id="timerBox">60s</span></div>
+  <main id="qCard" class="battle-question-card">
+    <div class="battle-question-head">
+      <span class="battle-question-label">QUESTION</span>
+      <div class="battle-timer" id="timerBox">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        <span id="timeText">60s</span>
+      </div>
+    </div>
     <div class="battle-question" id="qText">লোড হচ্ছে…</div>
+    
     <div id="optionsBox" class="battle-options"></div>
-    <div class="battle-actions"><button id="buzzBtn" class="battle-buzz hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 3v4M5.6 6.6l2.8 2.8M3 13h4M21 13h-4M18.4 6.6l-2.8 2.8M8 16a5 5 0 1 1 8 0l1 2H7l1-2Z"/><path d="M9 21h6"/></svg>বাজ়ার চাপুন</button></div>
+    
+    <div class="battle-actions">
+      <button id="buzzBtn" class="battle-buzz hidden">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3v4M5.6 6.6l2.8 2.8M3 13h4M21 13h-4M18.4 6.6l-2.8 2.8M8 16a5 5 0 1 1 8 0l1 2H7l1-2Z"/><path d="M9 21h6"/></svg>
+        BUZZ IN
+      </button>
+    </div>
     <div class="battle-status" id="statusNote"></div>
   </main>
 
   <section id="resultView" class="battle-question-card battle-result hidden">
-    <div class="battle-result-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8M12 17v4M7 4h10l-1 7a4 4 0 0 1-8 0L7 4Z"/><path d="M7 7H4a3 3 0 0 0 3 3M17 7h3a3 3 0 0 1-3 3"/></svg></div>
-    <h2 id="resultTitle" class="battle-result-title"></h2><div class="battle-result-sub">এই ম্যাচের ফলাফল ও XP</div>
-    <div id="xpList" class="battle-xp-list"></div>
-    <a href="./battle-lobby.html" class="battle-new-match">নতুন ম্যাচ</a>
+    <h2 id="resultTitle" class="battle-result-title"></h2>
+    
+    <div class="result-xp-panel">
+      <div class="result-xp-header">MATCH SUMMARY & XP</div>
+      <div id="xpList"></div>
+    </div>
+    
+    <a href="./battle-lobby.html" class="battle-new-match">ENTER NEW MATCH</a>
   </section>
 </div>
+
 <div id="toast" class="battle-toast hidden"></div>
+
 <script type="module">
 import { initTheme } from "../js/utils/ui-utils.js";
 import { getActiveStudent } from "../js/utils/student-utils.js";
@@ -59,7 +134,7 @@ const myTeam = params.get("team") === "B" ? "B" : "A";
 const student = getActiveStudent();
 
 if (!code || !student?.studentId) {
-  document.getElementById("shell").innerHTML = `<div class="qCard">ম্যাচ কোড বা লগইন পাওয়া যায়নি।</div>`;
+  document.getElementById("shell").innerHTML = `<div style="color:#ff005c; font-weight:900; text-align:center; margin-top:50px; border:1px solid #ff005c; padding:20px; background:#111217;">ERROR: NO MATCH CODE OR USER LOGIN FOUND</div>`;
   throw new Error("missing code/student");
 }
 
@@ -71,51 +146,47 @@ const eliminatedBanner = document.getElementById("eliminatedBanner");
 const toast = document.getElementById("toast");
 const resultView = document.getElementById("resultView");
 const qCard = document.getElementById("qCard");
+const timeText = document.getElementById("timeText");
+const timerBox = document.getElementById("timerBox");
 
 let lastQuestionId = null;
 let lastSnapshotForToast = null;
 let claimingInFlight = false;
 let answeringInFlight = false;
 let currentExpiresAt = null;
-const timerBox = document.getElementById("timerBox");
 
-// Every question carries a shared 1-minute clock (currentQuestion.expiresAt).
-// Any connected player's browser polls it here; whoever's tick reaches
-// Firestore first when time is up resolves the question via checkTimeout
-// (safe to call repeatedly -- see battle-utils.js).
 setInterval(() => {
   if (!currentExpiresAt) return;
   const remaining = Math.max(0, Math.ceil((currentExpiresAt - Date.now()) / 1000));
-  timerBox.textContent = `⏱ ${remaining}s`;
+  timeText.textContent = `${remaining}s`;
   timerBox.classList.toggle("low", remaining <= 10);
-  if (remaining <= 0) {
-    checkTimeout(code).catch(() => {});
-  }
+  if (remaining <= 0) { checkTimeout(code).catch(() => {}); }
 }, 1000);
 
-function showToast(msg, ms = 2600) {
-  toast.textContent = msg;
+function showToast(msg, ms = 3000) {
+  toast.innerHTML = msg;
   toast.classList.remove("hidden");
   setTimeout(() => toast.classList.add("hidden"), ms);
 }
 
 function nameOf(m, studentId) {
   const all = [...(m.teamA?.members || []), ...(m.teamB?.members || [])];
-  return all.find(x => x.studentId === studentId)?.name || "কেউ একজন";
+  return all.find(x => x.studentId === studentId)?.name || "UNKNOWN PLAYER";
 }
 
 function summarizePrevious(prevM) {
   const q = prevM.currentQuestion;
   if (!q) return null;
   const a = q.answers?.A, b = q.answers?.B;
-  if (!a && !b) return "কেউ উত্তর দেয়নি — কোনো পয়েন্ট নেই।";
+  
+  if (!a && !b) return "NO ANSWER - NO POINTS";
   if (a?.correct && b?.correct) {
     const faster = a.answeredAt <= b.answeredAt ? "A" : "B";
-    return `দুটো টিমই ঠিক দিয়েছে — Team ${faster} দ্রুত ছিল, পয়েন্ট পেলো Team ${faster}!`;
+    return `BOTH CORRECT! <span style="color:#00ff73;">TEAM ${faster}</span> WAS FASTER (+1 PT)`;
   }
-  if (a?.correct) return "Team A ঠিক উত্তর দিয়েছে — পয়েন্ট পেলো Team A!";
-  if (b?.correct) return "Team B ঠিক উত্তর দিয়েছে — পয়েন্ট পেলো Team B!";
-  return "দুটো টিমই ভুল দিয়েছে — কোনো পয়েন্ট নেই।";
+  if (a?.correct) return "<span style="color:#00ff73;">TEAM A</span> CORRECT (+1 PT)";
+  if (b?.correct) return "<span style="color:#00ff73;">TEAM B</span> CORRECT (+1 PT)";
+  return "BOTH INCORRECT - NO POINTS";
 }
 
 const ref = doc(db, "battleMatches", code);
@@ -123,8 +194,8 @@ onSnapshot(ref, (snap) => {
   if (!snap.exists()) return;
   const m = snap.data();
 
-  document.getElementById("teamAName").textContent = "Team A";
-  document.getElementById("teamBName").textContent = "Team B";
+  document.getElementById("teamAName").textContent = "TEAM A";
+  document.getElementById("teamBName").textContent = "TEAM B";
 
   if (m.status === "finished" && m.result) {
     currentExpiresAt = null;
@@ -135,7 +206,7 @@ onSnapshot(ref, (snap) => {
   qCard.classList.remove("hidden");
 
   const q = m.currentQuestion;
-  if (!q) { qText.textContent = "পরবর্তী প্রশ্নের অপেক্ষায়…"; currentExpiresAt = null; return; }
+  if (!q) { qText.textContent = "WAITING FOR NEXT QUESTION..."; currentExpiresAt = null; return; }
   currentExpiresAt = q.expiresAt || null;
 
   if (lastSnapshotForToast && lastQuestionId && q.questionId !== lastQuestionId) {
@@ -146,7 +217,8 @@ onSnapshot(ref, (snap) => {
   document.getElementById("teamAScore").textContent = `${m.levelWins?.A || 0}`;
   document.getElementById("teamBScore").textContent = `${m.levelWins?.B || 0}`;
   document.getElementById("levelPill").textContent =
-    `Level ${m.currentLevel}/4 · প্রশ্ন ${(m.currentQuestionIndex || 0) + 1}/${m.questionsPerLevel}`;
+    `LVL ${m.currentLevel}/4 - Q ${(m.currentQuestionIndex || 0) + 1}/${m.questionsPerLevel}`;
+  
   const qNo = (m.currentQuestionIndex || 0) + 1;
   const totalQ = m.questionsPerLevel || 1;
   const pct = Math.min(100, Math.round(((qNo - 1) / totalQ) * 100));
@@ -161,7 +233,6 @@ onSnapshot(ref, (snap) => {
   const iClaimed = myClaim?.studentId === student.studentId;
   const myAnswer = q.answers?.[myTeam];
 
-  // ---- options ----
   optionsBox.innerHTML = ["A", "B", "C", "D"].map(k => {
     let cls = "battle-option";
     if (myAnswer) {
@@ -169,17 +240,17 @@ onSnapshot(ref, (snap) => {
     }
     return `<button class="${cls}" data-opt="${k}" ${iClaimed && !myAnswer ? "" : "disabled"}><span class="battle-option-key">${k}</span><span>${esc(q.options_bn?.[k] || "—")}</span></button>`;
   }).join("");
+
   optionsBox.querySelectorAll(".battle-option").forEach(btn => {
     btn.addEventListener("click", async () => {
       if (answeringInFlight || myAnswer || !iClaimed) return;
       answeringInFlight = true;
       try { await submitAnswer(code, { studentId: student.studentId, team: myTeam, option: btn.dataset.opt }); }
-      catch (e) { showToast(e.message === "TIME_UP" ? "সময় শেষ হয়ে গেছে!" : (e.message || "উত্তর জমা দেওয়া যায়নি।")); }
+      catch (e) { showToast(e.message === "TIME_UP" ? "TIME'S UP!" : (e.message || "ERROR SUBMITTING")); }
       answeringInFlight = false;
     });
   });
 
-  // ---- buzz button ----
   if (myClaim || iAmEliminated || myAnswer) {
     buzzBtn.classList.add("hidden");
   } else {
@@ -188,11 +259,12 @@ onSnapshot(ref, (snap) => {
   }
 
   if (myClaim && !iClaimed) {
-    statusNote.textContent = `${nameOf(m, myClaim.studentId)} উত্তর দিচ্ছে তোমার টিমের হয়ে…`;
+    statusNote.textContent = `${nameOf(m, myClaim.studentId)} IS ANSWERING FOR YOUR SQUAD...`;
   } else if (iClaimed && !myAnswer) {
-    statusNote.textContent = "তুমি চান্স পেয়েছো — উত্তর বেছে নাও!";
+    statusNote.innerHTML = "<span style='color:#00ff73;'>YOUR CHANCE - CHOOSE AN ANSWER!</span>";
   } else if (myAnswer) {
-    statusNote.textContent = myAnswer.correct ? "ঠিক! পরের প্রশ্নের অপেক্ষায়…" : "ভুল হয়েছে। পরের প্রশ্নের অপেক্ষায়…";
+    statusNote.textContent = myAnswer.correct ? "CORRECT! WAITING FOR NEXT..." : "INCORRECT! WAITING FOR NEXT...";
+    statusNote.style.color = myAnswer.correct ? "#00ff73" : "#ff005c";
   } else {
     statusNote.textContent = "";
   }
@@ -207,8 +279,8 @@ buzzBtn.addEventListener("click", async () => {
   buzzBtn.disabled = true;
   try { await buzzIn(code, { studentId: student.studentId, team: myTeam }); }
   catch (e) {
-    const map = { ALREADY_CLAIMED: "একটু দেরি হয়ে গেলো!", TIME_UP: "সময় শেষ হয়ে গেছে!" };
-    showToast(map[e.message] || (e.message || "চাপা যায়নি।"));
+    const map = { ALREADY_CLAIMED: "TOO LATE!", TIME_UP: "TIME'S UP!" };
+    showToast(map[e.message] || (e.message || "ERROR BUZZING IN"));
   }
   claimingInFlight = false;
 });
@@ -218,14 +290,30 @@ function renderResult(m) {
   resultView.classList.remove("hidden");
   const r = m.result;
   const iWon = r.winnerTeam === myTeam;
-  document.getElementById("resultTitle").textContent = iWon ? "তোমার টিম জিতেছে!" : "Team " + r.winnerTeam + " জিতেছে";
+  document.getElementById("resultTitle").textContent = iWon ? "VICTORY!" : "TEAM " + r.winnerTeam + " WINS!";
+  document.getElementById("resultTitle").style.color = iWon ? "var(--team-a)" : "var(--team-b)";
+
+  // Premium SVG Icons replacing emojis
+  const starSvg = `<svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+  const shieldSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
 
   const rows = Object.entries(r.xpLog || {}).map(([sid, xp]) => {
     const name = nameOf(m, sid);
-    const isMvp = sid === r.winMvp ? " ⭐ MVP" : (sid === r.loseMvp ? " (সেরা, হেরে যাওয়া দলে)" : "");
-    return `<div class="battle-xp-row"><span>${esc(name)}${isMvp}</span><span class="battle-xp-value">+${xp} XP</span></div>`;
+    let badgeHtml = "";
+    
+    if (sid === r.winMvp) {
+      badgeHtml = `<span class="mvp-badge">${starSvg} MVP</span>`;
+    } else if (sid === r.loseMvp) {
+      badgeHtml = `<span class="effort-badge">${shieldSvg} BEST EFFORT</span>`;
+    }
+
+    return `<div class="battle-xp-row" style="align-items:center;">
+              <span style="display:flex; align-items:center; gap:4px;">${esc(name)}${badgeHtml}</span>
+              <span style="color:#00ff73;">+${xp} XP</span>
+            </div>`;
   }).join("");
-  document.getElementById("xpList").innerHTML = rows || `<div style="color:var(--text-muted);">কোনো XP তথ্য নেই।</div>`;
+  
+  document.getElementById("xpList").innerHTML = rows || `<div style="color:#6b728e; font-weight:800;">NO XP DATA RECORDED</div>`;
 }
 </script>
 </body>
