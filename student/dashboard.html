@@ -221,6 +221,7 @@ import { generateMotivation } from "../js/utils/motivation-utils.js";
 import { computeStudentXP, computeMaxExamXP, getLevelInfo, XP_CATEGORIES, REFERRAL_XP } from "../js/utils/xp-utils.js";
 import { resolveCompletedChallenges, getChallengeBonusXP } from "../js/utils/challenge-utils.js";
 import { getCompletedImprovementAttempts } from "../js/utils/improvement-xp-integration.js";
+import { getStudentBattleXP } from "../js/utils/battle-utils.js";
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -386,20 +387,21 @@ async function loadMain() {
     // get settled into "completed" (win/loss/draw + bonus XP decided).
     await resolveCompletedChallenges(student.studentId).catch(() => []);
 
-    const [results, allStudents, subjects, topics, challengeBonusXP, improvementResults] = await Promise.all([
+    const [results, allStudents, subjects, topics, challengeBonusXP, improvementResults, battleXP] = await Promise.all([
       getApprovedResults(student.studentId), getActiveStudents(), getSubjects(), getTopics(),
       getChallengeBonusXP(student.studentId).catch(() => 0),
-      getCompletedImprovementAttempts(student.studentId).catch(() => [])
+      getCompletedImprovementAttempts(student.studentId).catch(() => []),
+      getStudentBattleXP(student.studentId).catch(() => 0)
     ]);
     const leaderboard = await getLeaderboardData(allStudents);
 
     const myRefs = allStudents.filter(s => s.referredBy === student.studentId && s.studentId !== student.studentId);
-    const xp = computeStudentXP(results, { referralCount: myRefs.length, challengeBonusXP, improvementPracticeResults: improvementResults });
+    const xp = computeStudentXP(results, { referralCount: myRefs.length, challengeBonusXP, improvementPracticeResults: improvementResults, battleXP });
     const myIdx = leaderboard.findIndex(r => r.studentId === student.studentId);
     const rank = myIdx >= 0 ? { rank: myIdx + 1, total: leaderboard.length } : null;
 
     const ctx = {
-      results, allStudents, leaderboard, xp, rank, myRefs,
+      results, allStudents, leaderboard, xp, rank, myRefs, battleXP,
       overall: computeOverallStats(results),
       subjectMap: buildNameMap(subjects), topicMap: buildNameMap(topics),
       resultById: Object.fromEntries(results.map(r => [r.id, r]))
@@ -633,7 +635,8 @@ function renderRank({ leaderboard }) {
           ${myPos >= 3 ? `<p class="d-gap">• • •</p>${row(list[myPos], myPos + 1, true)}` : ""}
         </div>`;
     }).join("")}
-    <a href="../student/leaderboard.html" class="d-btn">সম্পূর্ণ লিডারবোর্ড দেখো</a>`;
+    <a href="../student/leaderboard.html" class="d-btn">সম্পূর্ণ লিডারবোর্ড দেখো</a>
+    <a href="../student/battle-history.html" class="d-btn">Battle History দেখো</a>`;
 }
 
 /* ---------------- stats ---------------- */

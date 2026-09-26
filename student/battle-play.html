@@ -196,6 +196,10 @@ if (!code || !student?.studentId) {
   throw new Error("missing code/student");
 }
 
+// Keep browser back usable even when Battle was opened directly or from a QR link.
+history.replaceState({battlePlay:true}, "", location.href);
+window.addEventListener("popstate", () => { location.href = `./battle-lobby.html?code=${encodeURIComponent(code)}`; });
+
 const qText = document.getElementById("qText");
 const optionsBox = document.getElementById("optionsBox");
 const buzzBtn = document.getElementById("buzzBtn");

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Battle History</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/battle-ui.css">
+<style>
+body{overflow-x:hidden}.history-page{max-width:760px;margin:0 auto;padding:18px 14px 40px}.history-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.history-title{font-size:1.35rem;font-weight:900;margin:0}.back-btn,.history-filter{border:1px solid var(--surface-border);background:var(--surface);color:var(--text-primary);border-radius:12px;padding:9px 13px;font-weight:800;text-decoration:none;cursor:pointer}.history-card{border:1px solid var(--surface-border);background:var(--surface);border-radius:20px;margin-top:12px;overflow:hidden}.history-main{padding:16px}.history-code{font-family:var(--font-num);font-size:.72rem;color:var(--text-muted);font-weight:800;letter-spacing:.12em}.history-date{font-size:.72rem;color:var(--text-muted);font-weight:700;margin-top:3px}.history-score{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;margin:16px 0}.team-score{padding:12px 8px;border:1px solid var(--surface-border);border-radius:15px;text-align:center;background:var(--surface-solid)}.team-score small{display:block;font-size:.65rem;font-weight:900;color:var(--text-muted);letter-spacing:.1em}.team-score strong{display:block;font:900 2.3rem/1 var(--font-num);margin-top:5px}.team-a strong{color:var(--team-a)}.team-b strong{color:var(--team-b)}.history-vs{font-weight:900;color:var(--text-muted)}.history-result{font-size:.82rem;font-weight:900;text-align:center;letter-spacing:.06em}.history-xp{text-align:center;margin-top:8px;color:var(--color-success);font:900 .9rem var(--font-num)}.history-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:14px}.stat{padding:9px 5px;border-radius:11px;background:var(--surface-highlight);text-align:center}.stat b{display:block;font:900 1rem var(--font-num)}.stat span{display:block;font-size:.6rem;font-weight:800;color:var(--text-muted);margin-top:2px}.history-details{border-top:1px solid var(--surface-border);padding:12px 16px}.history-details summary{cursor:pointer;font-size:.76rem;font-weight:900;color:var(--text-primary);list-style:none}.history-details summary::-webkit-details-marker{display:none}.round-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--surface-border)}.round-row:last-child{border-bottom:0}.round-no{font:900 .78rem var(--font-num);color:var(--text-muted)}.round-info{font-size:.72rem;font-weight:700}.round-top{font-size:.68rem;color:var(--text-muted);margin-top:2px}.round-winner{font-size:.7rem;font-weight:900}.question-history{margin-top:14px;border-top:1px solid var(--surface-border);padding-top:10px}.question-item{padding:9px 0;border-bottom:1px solid var(--surface-border);font-size:.68rem}.question-item:last-child{border-bottom:0}.question-head{display:flex;justify-content:space-between;gap:8px;font-weight:900}.answer-line{display:flex;justify-content:space-between;gap:8px;margin-top:5px;color:var(--text-muted)}.answer-ok{color:var(--color-success);font-weight:900}.answer-bad{color:var(--color-danger);font-weight:900}.player-list{margin-top:10px}.player-row{display:grid;grid-template-columns:1fr repeat(4,auto);gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--surface-border);font-size:.68rem}.player-row:last-child{border-bottom:0}.player-name{font-weight:900;min-width:0;overflow:hidden;text-overflow:ellipsis}.player-val{font:800 .68rem var(--font-num);color:var(--text-secondary)}.empty{padding:35px 15px;text-align:center;color:var(--text-muted);font-weight:700;border:1px dashed var(--surface-border);border-radius:16px}@media(max-width:520px){.history-stats{grid-template-columns:repeat(2,1fr)}.player-row{grid-template-columns:1fr repeat(3,auto)}.player-row .xp-col{display:none}}
+</style>
+</head>
+<body>
+<div class="history-page" id="app"><div class="empty">Battle history লোড হচ্ছে...</div></div>
+<script type="module">
+import { initTheme } from "../js/utils/ui-utils.js";
+import { getActiveStudent } from "../js/utils/student-utils.js";
+import { db } from "../js/firebase/firebase-config.js";
+import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { getStudentBattleXP } from "../js/utils/battle-utils.js";
+initTheme();
+const app=document.getElementById("app");
+const student=getActiveStudent();
+const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
+const ms=v=>typeof v?.toMillis==="function"?v.toMillis():Number(v)||0;
+const dateFmt=v=>v?new Date(ms(v)).toLocaleString("bn-BD",{day:"numeric",month:"short",year:"numeric",hour:"numeric",minute:"2-digit"}):"—";
+function allMembers(m){return [...(m.teamA?.members||[]).map(x=>({...x,team:"A"})),...(m.teamB?.members||[]).map(x=>({...x,team:"B"}))];}
+function renderMatch(m){
+ const r=m.result||{}; const xp=Number(r.xpLog?.[student.studentId]||0); const members=allMembers(m); const mine=members.find(x=>x.studentId===student.studentId); const score=r.winnerTeam?((m.matchTotals||{})):{};
+ const a=Number(score.A||0),b=Number(score.B||0); const winner=r.winnerTeam?`GROUP ${r.winnerTeam} WON`:"BATTLE COMPLETE";
+ const rounds=r.levelResults||m.levelResults||[];
+ const myStats=m.scoreBoard?.[student.studentId]||{};
+ const htmlPlayers=members.map(p=>{const s=m.scoreBoard?.[p.studentId]||{};const px=Number(r.xpLog?.[p.studentId]||0);return `<div class="player-row"><span class="player-name">${esc(p.name)}${p.studentId===student.studentId?' (YOU)':''}</span><span class="player-val">${Number(s.correct||0)}</span><span class="player-val">${Number(s.wrong||0)}</span><span class="player-val">${Number((Number(s.correct||0)+Number(s.wrong||0)))}</span><span class="player-val xp-col">+${px}</span></div>`}).join("");
+ const qh=m.questionHistory||[];
+ const playerName=sid=>members.find(p=>p.studentId===sid)?.name||"PLAYER";
+ const htmlQuestions=qh.map((q,i)=>{const a=q.answers?.A,b=q.answers?.B;const line=(team,x)=>x?`<div class="answer-line"><span>GROUP ${team} · ${esc(playerName(x.studentId))} · ${x.option||"—"}</span><span class="${x.correct?'answer-ok':'answer-bad'}">${x.correct?'CORRECT':'WRONG'}</span></div>`:`<div class="answer-line"><span>GROUP ${team}</span><span>NO ANSWER</span></div>`;return `<div class="question-item"><div class="question-head"><span>ROUND ${String(q.level||1).padStart(2,'0')} · QUESTION ${String(q.questionIndex||i+1).padStart(2,'0')}</span><span>${q.winnerTeam?`GROUP ${q.winnerTeam} +1`:"NO POINT"}</span></div>${line('A',a)}${line('B',b)}</div>`}).join("");
+ const htmlRounds=rounds.map((x,i)=>{const top=x.topPlayer?.[x.winnerTeam||"A"];const topName=top?members.find(p=>p.studentId===top.studentId)?.name||"PLAYER":"—";return `<div class="round-row"><span class="round-no">R${String(x.level||i+1).padStart(2,"0")}</span><div class="round-info"><div>GROUP A ${Number(x.score?.A||0)} — GROUP B ${Number(x.score?.B||0)}</div><div class="round-top">${topName}${top?` · ${top.correct} correct / ${top.attempts} chances`:""}</div></div><span class="round-winner">${x.winnerTeam?`GROUP ${x.winnerTeam}`:"DRAW"}</span></div>`}).join("");
+ return `<article class="history-card"><div class="history-main"><div class="history-code">CODE ${esc(m.code||"—")}</div><div class="history-date">${dateFmt(r.finishedAt||m.startedAt||m.createdAt)}</div><div class="history-score"><div class="team-score team-a"><small>GROUP A</small><strong>${a}</strong></div><span class="history-vs">VS</span><div class="team-score team-b"><small>GROUP B</small><strong>${b}</strong></div></div><div class="history-result">${winner}</div><div class="history-xp">YOUR BATTLE XP +${xp}</div><div class="history-stats"><div class="stat"><b>${rounds.length||0}</b><span>ROUNDS</span></div><div class="stat"><b>${Number(myStats.correct||0)}</b><span>CORRECT</span></div><div class="stat"><b>${Number(myStats.wrong||0)}</b><span>WRONG</span></div><div class="stat"><b>${Number(myStats.correct||0)+Number(myStats.wrong||0)}</b><span>CHANCES</span></div></div></div><details class="history-details"><summary>সম্পূর্ণ Battle details দেখুন</summary><div class="round-list">${htmlRounds||'<div class="empty">Round data নেই।</div>'}</div><div class="question-history">${htmlQuestions||'<div class="empty">Question history নেই।</div>'}</div><div class="player-list"><div class="player-row" style="color:var(--text-muted);font-weight:900"><span>PLAYER</span><span>COR</span><span>WRG</span><span>CH</span><span class="xp-col">XP</span></div>${htmlPlayers}</div></details></article>`;
+}
+async function load(){
+ if(!student?.studentId){app.innerHTML='<div class="empty">আগে লগইন করো।</div>';return;}
+ try{
+  const q=query(collection(db,"battleMatches"),where("participantIds","array-contains",student.studentId));
+  const snap=await getDocs(q); const matches=[]; snap.forEach(d=>{const m=d.data();if(m.status==="finished"&&m.result)matches.push({id:d.id,...m});});
+  matches.sort((a,b)=>ms(b.result?.finishedAt||b.startedAt||b.createdAt)-ms(a.result?.finishedAt||a.startedAt||a.createdAt));
+  const totalXP=await getStudentBattleXP(student.studentId).catch(()=>0);
+  app.innerHTML=`<header class="history-top"><a class="back-btn" href="./battle-lobby.html">Back</a><h1 class="history-title">Battle History</h1><span class="history-filter">${totalXP} XP</span></header>${matches.length?matches.map(renderMatch).join(""):'<div class="empty">এখনও কোনো completed Battle নেই।</div>'}`;
+ }catch(e){console.error(e);app.innerHTML='<div class="empty">Battle history লোড করা যায়নি। আবার চেষ্টা করো।</div>';}
+}
+load();
+</script>
+</body>
+</html>

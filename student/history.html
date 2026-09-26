@@ -85,6 +85,7 @@ import { computeStudentXP, getExamXPLines } from "../js/utils/xp-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { getCompletedImprovementAttempts } from "../js/utils/improvement-xp-integration.js";
+import { getStudentBattleXP } from "../js/utils/battle-utils.js";
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -113,10 +114,11 @@ async function renderPage() {
 
   try {
     // Fetch user results & Exact Leaderboard Points
-    const [results, rankData, improvementResults] = await Promise.all([
+    const [results, rankData, improvementResults, battleXP] = await Promise.all([
       getApprovedResults(student.studentId),
       getStudentRank(student.studentId),
-      getCompletedImprovementAttempts(student.studentId).catch(() => [])
+      getCompletedImprovementAttempts(student.studentId).catch(() => []),
+      getStudentBattleXP(student.studentId).catch(() => 0)
     ]);
 
     // Fetch all exams to calculate total exams conducted for this batch
@@ -142,8 +144,9 @@ async function renderPage() {
 
     // Points: computed by the SAME engine the leaderboard and dashboard use, so
     // every exam's number below adds up to the total shown in the summary.
-    const xp = computeStudentXP(results, { referralCount: rankData?.referralCount || 0, challengeBonusXP: rankData?.challengeXP || 0, improvementPracticeResults: improvementResults });
+    const xp = computeStudentXP(results, { referralCount: rankData?.referralCount || 0, challengeBonusXP: rankData?.challengeXP || 0, improvementPracticeResults: improvementResults, battleXP });
     const totalPoints = xp.totalXP;
+    const battleHistoryLink = `<a href="./battle-history.html" style="display:flex;align-items:center;justify-content:center;min-height:44px;margin:12px 0;text-decoration:none;border:1px solid var(--surface-border);border-radius:var(--radius-md);font-weight:800;color:var(--text-primary);background:var(--surface);">Battle History</a>`;
     const xpByResult = {};
     xp.exams.forEach(e => { if (e.resultId) xpByResult[e.resultId] = e; });
 

@@ -58,6 +58,7 @@ body{background:var(--bg-app);color:var(--text-primary);font-family:var(--font-b
       <button id="openCreateBtn" class="entry-btn" type="button"><span class="entry-label">Create</span><span class="entry-sub">নতুন Battle তৈরি করো</span></button>
       <button id="openJoinBtn" class="entry-btn" type="button"><span class="entry-label">Join</span><span class="entry-sub">Battle Code দিয়ে যোগ দাও</span></button>
     </div>
+    <a href="./battle-history.html" class="secondary-action" style="display:flex;align-items:center;justify-content:center;width:100%;margin-top:12px;box-sizing:border-box;text-decoration:none">Battle History</a>
   </main>
 
   <main id="createView" class="view hidden">
@@ -138,7 +139,18 @@ const chapterSelect=document.getElementById("chapterSelect"), topicPicker=docume
 const createError=document.getElementById("createError"), joinError=document.getElementById("joinError"), errorNote=document.getElementById("errorNote");
 let syllabusTree=[]; let unsub=null; let myTeam=null; let scanner=null; let lobbyTimerHandle=null; let currentCode=null;
 
-function showOnly(name){ [modeView,createView,joinView,lobbyView].forEach(v=>v.classList.add("hidden")); ({mode:modeView,create:createView,join:joinView,lobby:lobbyView}[name]).classList.remove("hidden"); }
+let currentView="mode";
+function showOnly(name){ [modeView,createView,joinView,lobbyView].forEach(v=>v.classList.add("hidden")); ({mode:modeView,create:createView,join:joinView,lobby:lobbyView}[name]).classList.remove("hidden"); currentView=name; }
+function setView(name, push=true){
+  showOnly(name);
+  if(push) history.pushState({battleView:name}, "", name==="mode" ? location.pathname+location.search : location.pathname+location.search+"#"+name);
+}
+window.addEventListener("popstate", ()=>{
+  const view=(location.hash||"").slice(1);
+  if(["create","join","lobby"].includes(view)) showOnly(view);
+  else showOnly("mode");
+});
+
 function showErr(el,msg){ el.textContent=msg; clearTimeout(el._t); el._t=setTimeout(()=>el.textContent="",4500); }
 function stopScanner(){ if(!scanner)return; scanner.stop().catch(()=>{}).finally(()=>{scanner.clear().catch(()=>{});scanner=null;document.getElementById("scannerArea").classList.add("hidden");}); }
 function clearLobbyTimer(){ if(lobbyTimerHandle){clearInterval(lobbyTimerHandle);lobbyTimerHandle=null;} }
@@ -170,9 +182,14 @@ chapterSelect.addEventListener("change",()=>{
   topicPicker.innerHTML=topics.length?topics.map(t=>`<label class="topic-row"><input type="checkbox" class="topic-check" value="${esc(t.id)}"><span>${esc(t.name_bn||t.name_en||t.id)}</span></label>`).join(""):'<div class="empty-member">এই Chapter-এ কোনো Topic নেই।</div>';
 });
 
-document.getElementById("openCreateBtn").onclick=()=>showOnly("create");
-document.getElementById("openJoinBtn").onclick=()=>showOnly("join");
-document.getElementById("homeBtn").onclick=()=>{unsub?.();stopScanner();clearLobbyTimer();showOnly("mode");};
+document.getElementById("openCreateBtn").onclick=()=>setView("create");
+document.getElementById("openJoinBtn").onclick=()=>setView("join");
+document.getElementById("homeBtn").onclick=async()=>{
+  unsub?.(); await stopScanner(); clearLobbyTimer();
+  if(location.hash) history.back();
+  else if(history.length>1) history.back();
+  else location.href="../student/dashboard.html";
+};
 
 document.getElementById("createBtn").onclick=async()=>{
   const topics=[...document.querySelectorAll(".topic-check:checked")].map(x=>x.value);
@@ -191,10 +208,19 @@ document.getElementById("scanQrBtn").onclick=async()=>{
   const area=document.getElementById("scannerArea");area.classList.remove("hidden");if(scanner)return;
   if(typeof Html5Qrcode==="undefined")return showErr(joinError,"QR Scanner লোড হয়নি।");
   scanner=new Html5Qrcode("qr-reader");
-  try{await scanner.start({facingMode:"environment"},{fps:10,qrbox:{width:220,height:220}},decoded=>{const raw=String(decoded||"").trim().toUpperCase();const m=raw.match(/(?:BATTLE[:/]|CODE[:=])?([A-Z0-9]{6})$/);if(m){document.getElementById("joinCodeInput").value=m[1];stopScanner();}},()=>{});}catch(e){scanner=null;showErr(joinError,"Camera permission দিন।");}
+  try{await scanner.start({facingMode:"environment"},{fps:10,qrbox:{width:220,height:220}},async decoded=>{
+    const raw=String(decoded||"").trim().toUpperCase();
+    let code="";
+    try{ const u=new URL(raw); code=(u.searchParams.get("code")||"").trim().toUpperCase(); }catch{}
+    if(!code){ const m=raw.match(/(?:BATTLE[:/]|CODE[:=])?([A-Z0-9]{6})$/); if(m) code=m[1]; }
+    if(!/^[A-Z0-9]{6}$/.test(code)) return;
+    document.getElementById("joinCodeInput").value=code;
+    await stopScanner();
+    document.getElementById("joinBtn").click();
+  },()=>{});}catch(e){scanner=null;showErr(joinError,"Camera permission দিন।");}
 };
 
-document.getElementById("leaveLobbyBtn").onclick=()=>{unsub?.();clearLobbyTimer();showOnly("mode");};
+document.getElementById("leaveLobbyBtn").onclick=()=>{unsub?.();clearLobbyTimer(); if(location.hash) history.back(); else showOnly("mode");};
 
 function renderMembers(el,members,team,isHost,code){
   const list=members||[];
@@ -244,7 +270,7 @@ function startLobbyTimer(startsAt,isHost,code,m){
 }
 
 function enterLobby(code){
-  currentCode=code;showOnly("lobby");document.getElementById("codeBox").textContent=code;
+  currentCode=code;setView("lobby");document.getElementById("codeBox").textContent=code;
   const qrBox=document.getElementById("lobbyQr");
   qrBox.innerHTML="";
   if(typeof QRCode!=="undefined"){
