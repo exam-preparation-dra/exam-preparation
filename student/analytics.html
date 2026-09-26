@@ -7,118 +7,162 @@
 <link rel="stylesheet" href="../css/style.css">
 <style>
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
-  body { overflow-x: hidden; background: var(--bg); }
+  body { overflow-x: hidden; background: var(--bg-app); }
   .app-shell { max-width: 650px; padding-bottom: 40px; margin: 0 auto; }
 
-  /* ===== Premium Glass Cards ===== */
-  .glass-card {
-    background: rgba(128, 128, 128, 0.03); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 20px; padding: 20px; margin-bottom: 20px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.02); transition: transform 0.2s;
-  }
-  .section-label { font-size: 1.1rem; font-weight: 900; color: var(--text-primary); margin: 30px 0 16px 4px; display: flex; align-items: center; gap: 8px; border-bottom: 2px dashed var(--surface-border); padding-bottom: 8px; }
+  /* ===== Flat cards (no blur, no per-block duplicate rules) ===== */
+  .glass-card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 14px; }
 
-  /* ===== Smart Insights (Automated) ===== */
-  .insight-box { display: flex; gap: 14px; padding: 16px; border-radius: 16px; margin-bottom: 12px; border: 1px solid transparent; background: rgba(128,128,128,0.02); }
-  .insight-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  
-  .insight-danger { border-color: rgba(239, 68, 68, 0.2); }
-  .insight-danger .insight-icon { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
-  
-  .insight-warning { border-color: rgba(245, 158, 11, 0.2); }
-  .insight-warning .insight-icon { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-
-  .insight-success { border-color: rgba(16, 185, 129, 0.2); }
-  .insight-success .insight-icon { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-
-  /* ===== Donut Charts for Subjects ===== */
-  .subject-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 12px; }
-  .subject-card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 16px; padding: 16px; text-align: center; display: flex; flex-direction: column; align-items: center; transition: 0.2s; }
-  .subject-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.04); }
-  
-  .circ-chart { display: block; margin: 0 auto; width: 64px; height: 64px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05)); }
-  .circ-bg { fill: none; stroke: rgba(128,128,128,0.12); stroke-width: 3.5; }
-  .circ-fill { fill: none; stroke-linecap: round; stroke-width: 3.5; animation: fillup 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
-  .circ-text { font-family: var(--font-num); font-size: 8.5px; font-weight: 900; fill: var(--text-primary); text-anchor: middle; dominant-baseline: central; }
-  @keyframes fillup { from { stroke-dasharray: 0, 100; } }
-
-  /* ===== Chapter / Topic Rows ===== */
-  .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: rgba(128,128,128,0.02); border: 1px solid var(--surface-border); border-radius: 14px; margin-bottom: 10px; transition: 0.2s; }
-  .detail-row:hover { background: rgba(128,128,128,0.04); }
-  .detail-name { font-size: 0.95rem; font-weight: 800; color: var(--text-primary); margin-bottom: 6px; }
-  .detail-meta { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; display: flex; gap: 8px; align-items: center; }
-  
-  .trend-up { color: #10b981; font-weight: 800; display: flex; align-items: center; gap: 2px; }
-  .trend-down { color: #ef4444; font-weight: 800; display: flex; align-items: center; gap: 2px; }
-  .trend-flat { color: var(--text-muted); font-weight: 800; display: flex; align-items: center; gap: 2px; }
-
-  /* ===== Progress Bars ===== */
-  .progress-track { width: 100%; height: 6px; background: rgba(128,128,128,0.12); border-radius: 99px; overflow: hidden; margin-top: 10px; }
-  .progress-fill { height: 100%; border-radius: 99px; transition: width 1s ease; }
-
-  /* ===== Trend SVG Styles ===== */
-  .trend-svg-container { background: rgba(128,128,128,0.02); border-radius: 16px; padding: 20px 16px; border: 1px dashed var(--surface-border); margin-top: 14px; }
-
-  .page-heading { margin: 18px 2px 22px; }
-  .page-heading h1 { margin: 4px 0 5px; font-size: 1.45rem; font-weight: 950; color: var(--text-primary); }
+  .page-heading { margin: 16px 2px 18px; }
+  .page-heading h1 { margin: 4px 0 5px; font-size: 1.4rem; font-weight: 900; color: var(--text-primary); }
+  .page-heading .eyebrow { margin:0; color:var(--color-accent); font-size:.72rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; }
   .page-subtitle { margin:0; color:var(--text-muted); font-size:.78rem; font-weight:650; line-height:1.5; }
-  .section-label { border-bottom:0; margin:30px 2px 13px; padding:0; gap:10px; }
+
+  .section-label { margin: 26px 2px 12px; padding: 0; display: flex; align-items: center; gap: 10px; }
   .section-label > span:first-child { color:var(--color-accent); display:flex; }
-  .section-label strong { display:block; font-size:1.03rem; }
+  .section-label strong { display:block; font-size:1.02rem; font-weight: 900; color: var(--text-primary); }
   .section-label small { display:block; margin-top:3px; font-size:.68rem; color:var(--text-muted); font-weight:650; }
+
+  /* ===== Entrance animation — cascading fade-up as content mounts ===== */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  #body > * { animation: fadeUp .5s cubic-bezier(.22,1,.36,1) backwards; }
+  #body > *:nth-child(1) { animation-delay: .02s; }
+  #body > *:nth-child(2) { animation-delay: .08s; }
+  #body > *:nth-child(3) { animation-delay: .14s; }
+  #body > *:nth-child(4) { animation-delay: .20s; }
+  #body > *:nth-child(5) { animation-delay: .26s; }
+  #body > *:nth-child(n+6) { animation-delay: .30s; }
+
+  /* ===== Summary strip ===== */
   .summary-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; }
-  .summary-card { padding:14px 12px; border:1px solid var(--surface-border); background:var(--surface); border-radius:16px; box-shadow:0 5px 20px rgba(0,0,0,.025); }
-  .summary-icon { width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:rgba(99,102,241,.08);color:var(--color-accent);margin-bottom:8px; }
+  .summary-card { padding:14px 12px; border:1px solid var(--surface-border); background:var(--surface); border-radius:var(--radius-lg); }
+  .summary-icon { width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:var(--color-accent-soft);color:var(--color-accent);margin-bottom:8px; }
   .summary-card small { display:block;color:var(--text-muted);font-size:.65rem;font-weight:750; }
-  .summary-card strong { display:block;margin-top:3px;color:var(--text-primary);font-size:1.18rem;font-family:var(--font-num);font-weight:950; }
-  .glass-card { background:var(--surface); border:1px solid var(--surface-border); border-radius:18px; padding:17px; box-shadow:0 7px 25px rgba(0,0,0,.025); }
+  .summary-card strong { display:block;margin-top:3px;color:var(--text-primary);font-size:1.15rem;font-family:var(--font-num);font-weight:900; }
+
+  /* ===== Trend chart ===== */
   .trend-wrap { padding:2px 0; }
   .trend-chart { width:100%; height:auto; display:block; }
+  .trend-chart path { stroke-dasharray: 600; stroke-dashoffset: 600; animation: drawLine 1.1s cubic-bezier(.22,1,.36,1) forwards .1s; }
+  @keyframes drawLine { to { stroke-dashoffset: 0; } }
   .trend-caption { display:flex;justify-content:space-between;align-items:center;color:var(--text-muted);font-size:.68rem;font-weight:700;margin-top:3px; }
   .trend-caption strong { color:var(--color-accent);font-size:.9rem;font-family:var(--font-num); }
+
+  /* ===== Smart insights ===== */
   .insight-grid { display:grid;gap:9px; }
-  .insight-box { display:flex;gap:11px;padding:14px;border-radius:15px;border:1px solid var(--surface-border);background:var(--surface); }
+  .insight-box { display:flex;gap:11px;padding:14px;border-radius:var(--radius-lg);border:1px solid var(--surface-border);background:var(--surface); }
   .insight-icon { width:34px;height:34px;flex:0 0 34px;border-radius:10px;display:flex;align-items:center;justify-content:center; }
   .insight-box strong { color:var(--text-primary);font-size:.82rem;font-weight:900; }
   .insight-box p { margin:4px 0 0;color:var(--text-secondary);font-size:.72rem;line-height:1.5;font-weight:600; }
-  .insight-danger .insight-icon { color:#ef4444;background:rgba(239,68,68,.09); }
-  .insight-warning .insight-icon { color:#f59e0b;background:rgba(245,158,11,.09); }
-  .insight-success .insight-icon { color:#10b981;background:rgba(16,185,129,.09); }
-  .insight-neutral .insight-icon { color:var(--color-accent);background:rgba(99,102,241,.09); }
+  .insight-danger .insight-icon { color:var(--color-danger);background:rgba(166,64,47,.1); }
+  .insight-warning .insight-icon { color:var(--color-accent);background:var(--color-accent-soft); }
+  .insight-success .insight-icon { color:var(--color-success);background:rgba(47,125,94,.1); }
+  .insight-neutral .insight-icon { color:var(--color-info);background:rgba(62,110,140,.1); }
+
+  /* ===== Donut charts for subjects (kept for potential future use) ===== */
+  .subject-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 12px; }
+  .subject-card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius-lg); padding: 16px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+  .circ-chart { display: block; margin: 0 auto; width: 64px; height: 64px; }
+  .circ-bg { fill: none; stroke: var(--surface-edge); stroke-width: 3.5; }
+  .circ-fill { fill: none; stroke-linecap: round; stroke-width: 3.5; animation: fillup 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+  .circ-text { font-family: var(--font-num); font-size: 8.5px; font-weight: 900; fill: var(--text-primary); text-anchor: middle; dominant-baseline: central; }
+  @keyframes fillup { from { stroke-dasharray: 0, 100; } }
+
+  /* ===== Stat rows (subject / chapter / topic) ===== */
   .stat-list { display:grid;gap:8px; }
-  .stat-row { display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;background:var(--surface);border:1px solid var(--surface-border);border-radius:14px; }
-  .stat-row.is-weak { border-color:rgba(239,68,68,.28);background:rgba(239,68,68,.035); }
+  .stat-row { display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;background:var(--surface);border:1px solid var(--surface-border);border-radius:var(--radius-lg); }
+  .stat-row.is-weak { border-color:rgba(166,64,47,.28);background:rgba(166,64,47,.04); }
   .stat-main { min-width:0;flex:1; }
   .stat-main strong { display:block;color:var(--text-primary);font-size:.82rem;font-weight:850;overflow-wrap:anywhere; }
   .stat-main span { display:block;color:var(--text-muted);font-size:.65rem;font-weight:650;margin-top:4px; }
   .stat-value { font-family:var(--font-num);font-size:1rem;white-space:nowrap; }
-  .stat-value.excellent { color:#10b981; }.stat-value.good{color:var(--color-accent)}.stat-value.mid{color:#f59e0b}.stat-value.weak{color:#ef4444}.stat-value.muted{color:var(--text-muted)}
-  .bar { height:5px;background:rgba(128,128,128,.12);border-radius:99px;overflow:hidden;margin-top:8px; }
-  .bar i { display:block;height:100%;border-radius:99px;background:var(--color-accent); }
+  .stat-value.excellent { color:var(--color-success); } .stat-value.good{color:var(--color-accent)} .stat-value.mid{color:var(--color-accent)} .stat-value.weak{color:var(--color-danger)} .stat-value.muted{color:var(--text-muted)}
+  .bar { height:5px;background:var(--surface-edge);border-radius:99px;overflow:hidden;margin-top:8px; }
+  .bar i { display:block;height:100%;border-radius:99px;background:var(--color-accent); transition: width 1s cubic-bezier(.22,1,.36,1); }
+  .trend-up { color: var(--color-success); font-weight: 800; display: flex; align-items: center; gap: 2px; }
+  .trend-down { color: var(--color-danger); font-weight: 800; display: flex; align-items: center; gap: 2px; }
+  .trend-flat { color: var(--text-muted); font-weight: 800; display: flex; align-items: center; gap: 2px; }
+
+  /* ===== Time management ===== */
   .time-list { margin-top:8px; }
-  .time-row { display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px dashed var(--surface-border);font-size:.73rem;font-weight:700;color:var(--text-secondary); }
+  .time-row { display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--surface-border);font-size:.73rem;font-weight:700;color:var(--text-secondary); }
+  .time-row:last-child { border-bottom: none; }
   .time-row strong { color:var(--color-accent);font-family:var(--font-num);white-space:nowrap; }
-  .speed-box { display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;padding:11px;border-radius:12px;background:rgba(99,102,241,.05);font-size:.66rem;color:var(--text-muted);font-weight:700; }
+  .speed-box { display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;padding:11px;border-radius:var(--radius-md);background:var(--color-accent-soft);font-size:.66rem;color:var(--text-muted);font-weight:700; }
   .speed-box b { color:var(--text-primary);font-family:var(--font-num); }
-  .pattern-card { padding:13px 14px;border:1px solid rgba(245,158,11,.18);background:rgba(245,158,11,.035);border-radius:14px; }
+
+  /* ===== Repeated wrong-option pattern ===== */
+  .pattern-card { padding:13px 14px;border:1px solid rgba(var(--color-accent-rgb),.25);background:var(--color-accent-soft);border-radius:var(--radius-lg); }
   .pattern-card strong,.pattern-card span { display:block; }
   .pattern-card strong { color:var(--text-primary);font-size:.76rem;line-height:1.45; }
   .pattern-card span { color:var(--text-muted);font-size:.65rem;font-weight:700;margin-top:4px; }
+
+  /* ===== Marked-for-review ===== */
   .review-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:8px; }
-  .review-grid div { padding:12px 8px;border-radius:13px;background:rgba(128,128,128,.035);text-align:center; }
+  .review-grid div { padding:12px 8px;border-radius:var(--radius-md);background:var(--surface-highlight);text-align:center; }
   .review-grid small { display:block;color:var(--text-muted);font-size:.6rem;font-weight:700; }
   .review-grid strong { display:block;margin-top:4px;color:var(--text-primary);font-size:.95rem;font-family:var(--font-num); }
+
+  /* ===== Exam history ===== */
   .history-list { display:grid;gap:8px; }
-  .history-row { display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 14px;background:var(--surface);border:1px solid var(--surface-border);border-radius:14px; }
+  .history-row { display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 14px;background:var(--surface);border:1px solid var(--surface-border);border-radius:var(--radius-lg); }
   .history-row strong,.history-row span { display:block; }
   .history-row strong { color:var(--text-primary);font-size:.77rem;font-weight:850; }
   .history-row span { color:var(--text-muted);font-size:.62rem;font-weight:650;margin-top:3px; }
   .history-score { text-align:right; }
   .history-score strong { color:var(--color-accent);font-size:.95rem;font-family:var(--font-num); }
+
   .empty-mini { padding:18px 12px;text-align:center;color:var(--text-muted);font-size:.7rem;font-weight:700;line-height:1.5; }
   .loading-card { min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-muted);font-size:.72rem;font-weight:700; }
-  .error-card { color:#ef4444;text-align:center;padding:28px 18px; }
+  .error-card { color:var(--color-danger);text-align:center;padding:28px 18px; }
   .error-card p { color:var(--text-muted);font-size:.72rem;font-weight:650;line-height:1.5;margin-top:7px; }
+
+  /* =====================================================================
+     খেলা: টপিক স্প্রিন্ট (Topic Sprint) — a quick reflex game built from
+     the student's own topicStats. Guess "strong" or "weak" before the
+     timer bar runs out; reveal the real accuracy with a flip + streak combo.
+     ===================================================================== */
+  .game-card { position: relative; overflow: hidden; background: #21262f; border-radius: var(--radius-lg); padding: 18px 16px; color: #f3f1ea; }
+  .game-top { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .game-score { font-family: var(--font-num); font-weight: 800; font-size: 1.05rem; color: var(--color-accent); }
+  .game-score span { font-size:.65rem; font-weight:700; color: rgba(243,241,234,.6); margin-left:4px; }
+  .game-streak { font-size:.7rem; font-weight:800; color: rgba(243,241,234,.75); display:flex; align-items:center; gap:4px; }
+  .game-streak b { color: var(--color-success); font-family: var(--font-num); }
+
+  .game-timer { height: 5px; border-radius: 99px; background: rgba(243,241,234,.14); overflow: hidden; margin: 14px 0 18px; }
+  .game-timer i { display:block; height:100%; background: var(--color-accent); border-radius: 99px; width: 100%; transition: width linear; }
+
+  .game-topic-wrap { min-height: 96px; display: flex; align-items: center; justify-content: center; text-align: center; }
+  .game-topic-card { animation: gameCardIn .32s cubic-bezier(.22,1,.36,1); }
+  @keyframes gameCardIn { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .game-topic-name { font-size: 1.15rem; font-weight: 900; line-height: 1.4; }
+  .game-topic-meta { font-size: .68rem; font-weight: 700; color: rgba(243,241,234,.55); margin-top: 6px; }
+
+  .game-reveal { text-align:center; }
+  .game-reveal .verdict { font-size: 1.5rem; font-weight: 900; font-family: var(--font-num); }
+  .game-reveal.correct .verdict { color: var(--color-success); }
+  .game-reveal.wrong .verdict { color: var(--color-danger); }
+  .game-reveal p { margin-top: 6px; font-size: .78rem; font-weight: 700; color: rgba(243,241,234,.8); }
+  .game-shake { animation: gameShake .32s ease; }
+  @keyframes gameShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+
+  .game-btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+  .game-btn { min-height: 50px; border-radius: var(--radius-md); border: none; font: inherit; font-weight: 800; font-size: .88rem; cursor: pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition: transform .12s ease; -webkit-tap-highlight-color: transparent; }
+  .game-btn:active { transform: scale(.96); }
+  .game-btn-strong { background: rgba(47,125,94,.22); color: #a9d9bf; border: 1px solid rgba(47,125,94,.4); }
+  .game-btn-weak { background: rgba(166,64,47,.22); color: #e5b4a8; border: 1px solid rgba(166,64,47,.4); }
+  .game-btn:disabled { opacity: .5; cursor: default; }
+
+  .game-final { text-align: center; padding: 6px 0; }
+  .game-final .final-score { font-family: var(--font-num); font-size: 2.4rem; font-weight: 900; color: var(--color-accent); animation: gameCardIn .4s cubic-bezier(.22,1,.36,1); }
+  .game-final p { font-size: .82rem; font-weight: 700; color: rgba(243,241,234,.8); margin-top: 4px; }
+  .game-replay { margin-top: 16px; min-height: 46px; width: 100%; border-radius: var(--radius-md); border: none; background: var(--color-accent); color: #211a0d; font: inherit; font-weight: 800; font-size: .88rem; cursor: pointer; }
+  .game-locked { text-align: center; padding: 10px 4px; font-size: .82rem; font-weight: 700; color: rgba(243,241,234,.75); line-height: 1.6; }
+
+  .confetti-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .confetti-bit { position: absolute; top: -10px; width: 7px; height: 12px; border-radius: 2px; animation: confettiFall 1.1s ease-in forwards; }
+  @keyframes confettiFall { to { transform: translateY(160px) rotate(340deg); opacity: 0; } }
+
   @media (max-width:480px) {
     .summary-card { padding:12px 9px; }
     .summary-card strong { font-size:1.02rem; }
@@ -126,8 +170,8 @@
     .stat-row { padding:12px; }
     .speed-box { grid-template-columns:1fr; }
     .history-row { align-items:flex-start; }
+    .game-btn-row { gap: 8px; }
   }
-
 </style>
 </head>
 <body>
@@ -221,7 +265,8 @@ function icon(name) {
     clock: `<svg ${common}><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/></svg>`,
     warning: `<svg ${common}><path d="M12 3 2.5 20h19z"/><path d="M12 9v5M12 17h.01"/></svg>`,
     check: `<svg ${common}><circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/></svg>`,
-    trend: `<svg ${common}><polyline points="4 16 9 11 13 14 20 7"/><polyline points="15 7 20 7 20 12"/></svg>`
+    trend: `<svg ${common}><polyline points="4 16 9 11 13 14 20 7"/><polyline points="15 7 20 7 20 12"/></svg>`,
+    game: `<svg ${common}><rect x="2" y="7" width="20" height="10" rx="5"/><line x1="7" y1="10" x2="7" y2="14"/><line x1="5" y1="12" x2="9" y2="12"/><circle cx="15" cy="10.5" r="1"/><circle cx="17.5" cy="13" r="1"/></svg>`
   };
   return paths[name] || paths.chart;
 }
@@ -279,6 +324,156 @@ function buildTrendSvg(trend) {
       </div>
     </div>
   `;
+}
+
+// ===== খেলা: টপিক স্প্রিন্ট =====
+// Real topicStats power the game: each round asks the student to guess
+// whether their own accuracy on a topic is "strong" (>=70%) or "weak"
+// before a 4s timer runs out, then reveals the true number.
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function spawnConfetti(container, count) {
+  const colors = ["#b8863c", "#2f7d5e", "#6b4e96", "#a6402f", "#3e6e8c"];
+  const layer = document.createElement("div");
+  layer.className = "confetti-layer";
+  for (let i = 0; i < count; i++) {
+    const bit = document.createElement("i");
+    bit.className = "confetti-bit";
+    bit.style.left = `${Math.random() * 100}%`;
+    bit.style.background = colors[i % colors.length];
+    bit.style.animationDelay = `${Math.random() * 0.25}s`;
+    bit.style.transform = `rotate(${Math.random() * 60 - 30}deg)`;
+    layer.appendChild(bit);
+  }
+  container.appendChild(layer);
+  setTimeout(() => layer.remove(), 1500);
+}
+
+function initTopicGame(topicStats) {
+  const el = document.getElementById("topicGame");
+  if (!el) return;
+
+  const pool = (topicStats || []).filter(t => t.accuracy !== null && t.accuracy !== undefined && t.attempts > 0);
+  if (pool.length < 4) {
+    el.innerHTML = `<div class="game-locked">খেলাটা আনলক হতে আরও কিছু টপিকে পরীক্ষা দরকার। যত বেশি পরীক্ষা দেবে, তত বেশি টপিক নিয়ে খেলতে পারবে।</div>`;
+    return;
+  }
+
+  const ROUND_MS = 4000;
+  let rounds = [];
+  let idx = 0;
+  let score = 0;
+  let streak = 0;
+  let bestStreak = 0;
+  let timerHandle = null;
+  let answered = false;
+
+  function startRun() {
+    rounds = shuffle(pool).slice(0, Math.min(8, pool.length));
+    idx = 0; score = 0; streak = 0; bestStreak = 0;
+    renderRound();
+  }
+
+  function renderHeader() {
+    return `
+      <div class="game-top">
+        <div class="game-score">${score}<span>পয়েন্ট</span></div>
+        <div class="game-streak">🔥 <b>${streak}</b> কম্বো</div>
+      </div>
+      <div class="game-timer"><i id="gtBar"></i></div>
+    `;
+  }
+
+  function renderRound() {
+    if (idx >= rounds.length) return renderFinal();
+    answered = false;
+    const t = rounds[idx];
+    el.innerHTML = `
+      ${renderHeader()}
+      <div class="game-topic-wrap">
+        <div class="game-topic-card" id="gtCard">
+          <div class="game-topic-name">${(t.name || "টপিক").replace(/</g, "&lt;")}</div>
+          <div class="game-topic-meta">${t.attempts} বার এসেছে</div>
+        </div>
+      </div>
+      <div class="game-btn-row">
+        <button class="game-btn game-btn-strong" data-guess="strong">💪 শক্তিশালী</button>
+        <button class="game-btn game-btn-weak" data-guess="weak">📉 দুর্বলতা</button>
+      </div>
+    `;
+
+    const bar = document.getElementById("gtBar");
+    requestAnimationFrame(() => {
+      bar.style.transition = "none";
+      bar.style.width = "100%";
+      requestAnimationFrame(() => {
+        bar.style.transition = `width ${ROUND_MS}ms linear`;
+        bar.style.width = "0%";
+      });
+    });
+
+    el.querySelectorAll(".game-btn").forEach(btn => {
+      btn.addEventListener("click", () => handleGuess(btn.dataset.guess));
+    });
+
+    clearTimeout(timerHandle);
+    timerHandle = setTimeout(() => handleGuess(null), ROUND_MS);
+  }
+
+  function handleGuess(guess) {
+    if (answered) return;
+    answered = true;
+    clearTimeout(timerHandle);
+
+    const t = rounds[idx];
+    const isStrong = Number(t.accuracy) >= 70;
+    const correct = guess === (isStrong ? "strong" : "weak");
+
+    if (correct) {
+      streak += 1;
+      bestStreak = Math.max(bestStreak, streak);
+      score += 10 + Math.min(streak - 1, 5) * 2;
+    } else {
+      streak = 0;
+    }
+
+    el.innerHTML = `
+      ${renderHeader()}
+      <div class="game-topic-wrap">
+        <div class="game-reveal ${correct ? "correct" : "wrong"} ${correct ? "" : "game-shake"}">
+          <div class="verdict">${correct ? "✓ ঠিক ধরেছো!" : "✗ আসলে অন্যরকম"}</div>
+          <p>${(t.name || "টপিক").replace(/</g, "&lt;")} — accuracy ${Number(t.accuracy).toFixed(0)}% (${isStrong ? "শক্তিশালী" : "দুর্বলতা"})</p>
+        </div>
+      </div>
+    `;
+    if (correct && streak >= 3) spawnConfetti(el, 14);
+
+    setTimeout(() => { idx += 1; renderRound(); }, 1000);
+  }
+
+  function renderFinal() {
+    const msg = score >= 70 ? "চমৎকার! তোমার নিজের দুর্বলতা সম্পর্কে ধারণা বেশ পরিষ্কার।"
+      : score >= 40 ? "মোটামুটি ভালো — analytics-টা আরও একটু ঘেঁটে দেখো।"
+      : "নিজের subject breakdown আরেকবার দেখে নাও, তাহলে পরের বার স্কোর বাড়বে।";
+    el.innerHTML = `
+      <div class="game-final">
+        <div class="final-score">${score}</div>
+        <p>সর্বোচ্চ কম্বো: ${bestStreak} • ${msg}</p>
+        <button class="game-replay" id="gtReplay">আবার খেলো</button>
+      </div>
+    `;
+    if (score >= 70) spawnConfetti(el, 22);
+    document.getElementById("gtReplay").addEventListener("click", startRun);
+  }
+
+  startRun();
 }
 
 async function renderPage() {
@@ -404,6 +599,9 @@ async function renderPage() {
         </div>
       </div>
 
+      ${sectionTitle("game", "খেলে দেখো: টপিক স্প্রিন্ট", "৪ সেকেন্ডে বলো — টপিকটা তোমার শক্তি না দুর্বলতা")}
+      <div class="game-card" id="topicGame"><div class="game-locked">লোড হচ্ছে...</div></div>
+
       ${sectionTitle("chart", "সার্বিক অগ্রগতির ধারা", "পুরনো পরীক্ষা থেকে সর্বশেষ পরীক্ষা")}
       <div class="glass-card">${buildTrendSvg(overall.trend)}</div>
 
@@ -525,6 +723,8 @@ async function renderPage() {
         `).join("")}
       </div>
     `;
+
+    initTopicGame(topicStats);
 
   } catch (err) {
     console.error("Analytics Error:", err);
