@@ -2,7 +2,7 @@
    BATTLE MODE ENGINE
    -----------------------------------------------------------------------
    2 teams (1-4 members each) race through 4 levels of questions, picked
-   automatically from /battleQuestions by topic. Per question: each team's
+   automatically from the main /questions bank by topic. Per question: each team's
    members "buzz" to claim who answers for their side; first correct
    answer (or the only correct one) wins the point for that team. Every
    question carries a 1-minute clock (see TIME_LIMIT_MS) -- both teams see
@@ -160,7 +160,7 @@ function shuffle(arr) {
 /**
  * Host starts the match: locks the rosters, decides questions-per-level
  * from total player count, pulls a random question pool for the chosen
- * topics from /battleQuestions, and splits it into 4 levels.
+ * topics from /questions, and splits it into 4 levels.
  */
 export async function startMatch(code) {
   const ref = doc(db, "battleMatches", code);
@@ -178,20 +178,33 @@ export async function startMatch(code) {
   const questionsPerLevel = totalPlayers > 4 ? QUESTIONS_PER_LEVEL_LARGE : QUESTIONS_PER_LEVEL_SMALL;
   const totalNeeded = questionsPerLevel * LEVEL_COUNT;
 
-  // Firestore 'in' supports at most 10 values -- chunk the topic list.
-  const topics = m.topics || [];
+  // Firestore 'in' supports at most 10 values -- chunk the selected topics.
+  // Battle now uses the MAIN question bank directly, so there is no separate
+  // /battleQuestions copy to maintain. Only active questions are eligible.
+  const topics = [...new Set((m.topics || []).filter(Boolean))];
   const chunks = [];
   for (let i = 0; i < topics.length; i += 10) chunks.push(topics.slice(i, i + 10));
 
   let pool = [];
+  const seenIds = new Set();
   for (const chunk of chunks) {
-    const q = query(collection(db, "battleQuestions"), where("topicId", "in", chunk));
+    const q = query(
+      collection(db, "questions"),
+      where("topicId", "in", chunk),
+      where("isActive", "==", true)
+    );
     const s = await getDocs(q);
-    s.forEach(d => pool.push({ id: d.id, ...d.data() }));
+    s.forEach(d => {
+      // Defensive de-duplication in case the query strategy changes later.
+      if (!seenIds.has(d.id)) {
+        seenIds.add(d.id);
+        pool.push({ id: d.id, ...d.data() });
+      }
+    });
   }
   pool = shuffle(pool);
   if (pool.length < totalNeeded) {
-    throw new Error(`NOT_ENOUGH_QUESTIONS: pool has ${pool.length}, needs ${totalNeeded}. Add more battle questions for these topics or pick more topics.`);
+    throw new Error(`NOT_ENOUGH_QUESTIONS: pool has ${pool.length}, needs ${totalNeeded}. Add more active questions for these topics or pick more topics.`);
   }
 
   const levels = [];
