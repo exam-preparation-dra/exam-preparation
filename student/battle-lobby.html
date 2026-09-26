@@ -3,72 +3,217 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ব্যাটল মোড — লবি</title>
+<title>ব্যাটল মোড</title>
 <link rel="stylesheet" href="../css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode" defer></script>
 <style>
-  body { overflow-x: hidden; }
-  .app-shell { max-width: 560px; padding: var(--space-5) var(--space-4) 40px; margin: 0 auto; }
-  .code-box {
-    text-align: center; font-size: 2.2rem; font-weight: 900; letter-spacing: 6px;
-    background: rgba(201,151,63,0.12); border: 2px dashed var(--accent, #c9973f);
-    border-radius: 16px; padding: 16px; margin: 12px 0;
+  :root{
+    --battle-blue:#5b7cff;
+    --battle-purple:#8b5cf6;
+    --battle-gold:#c9973f;
+    --battle-card:rgba(255,255,255,.055);
+    --battle-line:rgba(255,255,255,.11);
+    --battle-shadow:0 22px 60px rgba(0,0,0,.20);
   }
-  .topic-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--surface-border); font-size: 0.9rem; }
-  .team-col { display: flex; flex-direction: column; gap: 8px; }
-  .member-chip { background: rgba(128,128,128,0.08); border-radius: 10px; padding: 8px 12px; font-weight: 700; font-size: 0.85rem; }
-  .team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
-  .team-title { font-weight: 800; margin-bottom: 6px; }
-  .hidden { display: none !important; }
+  body{overflow-x:hidden;background:radial-gradient(circle at 15% 0%,rgba(91,124,255,.14),transparent 34%),radial-gradient(circle at 100% 10%,rgba(139,92,246,.12),transparent 32%),var(--bg,#0b0f19);}
+  .app-shell{max-width:620px;padding:18px 16px 48px;margin:0 auto;}
+  .hidden{display:none!important;}
+  .battle-page{min-height:calc(100vh - 30px);display:flex;flex-direction:column;}
+  .battle-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;}
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand-icon{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(135deg,var(--battle-blue),var(--battle-purple));box-shadow:0 12px 28px rgba(91,124,255,.28);color:#fff;animation:floatIcon 3s ease-in-out infinite;}
+  .brand-icon svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+  .brand h1{font-size:1.25rem;margin:0;font-weight:900;letter-spacing:-.02em;}
+  .brand p{margin:3px 0 0;color:var(--text-muted);font-size:.78rem;}
+  .back-btn{border:1px solid var(--battle-line);background:rgba(255,255,255,.045);color:var(--text);border-radius:12px;padding:9px 12px;font-weight:800;cursor:pointer;}
+
+  .hero{position:relative;overflow:hidden;text-align:center;padding:34px 20px 30px;border:1px solid var(--battle-line);border-radius:28px;background:linear-gradient(145deg,rgba(91,124,255,.12),rgba(139,92,246,.08) 50%,rgba(255,255,255,.025));box-shadow:var(--battle-shadow);animation:pageIn .55s ease both;}
+  .hero::before,.hero::after{content:"";position:absolute;border-radius:50%;filter:blur(2px);pointer-events:none;}
+  .hero::before{width:180px;height:180px;right:-90px;top:-80px;background:rgba(91,124,255,.13);}
+  .hero::after{width:150px;height:150px;left:-90px;bottom:-80px;background:rgba(139,92,246,.12);}
+  .hero-symbol{width:76px;height:76px;border-radius:24px;margin:0 auto 18px;display:grid;place-items:center;background:linear-gradient(135deg,var(--battle-blue),var(--battle-purple));box-shadow:0 18px 42px rgba(91,124,255,.30);position:relative;z-index:1;animation:pulseGlow 2.8s ease-in-out infinite;}
+  .hero-symbol svg{width:40px;height:40px;stroke:#fff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+  .hero h2{margin:0;font-size:1.8rem;letter-spacing:-.04em;position:relative;z-index:1;}
+  .hero p{max-width:430px;margin:9px auto 0;color:var(--text-muted);font-size:.9rem;line-height:1.55;position:relative;z-index:1;}
+
+  .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:16px;animation:pageIn .65s ease both;}
+  .mode-card{position:relative;text-align:left;border:1px solid var(--battle-line);border-radius:22px;background:var(--battle-card);padding:20px 17px;cursor:pointer;color:var(--text);transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease,background .22s ease;overflow:hidden;}
+  .mode-card::after{content:"";position:absolute;width:90px;height:90px;border-radius:50%;right:-42px;bottom:-46px;background:rgba(255,255,255,.045);}
+  .mode-card:hover{transform:translateY(-3px);border-color:rgba(91,124,255,.5);box-shadow:0 16px 38px rgba(0,0,0,.16);}
+  .mode-card:active{transform:scale(.985);}
+  .mode-icon{width:43px;height:43px;border-radius:14px;display:grid;place-items:center;margin-bottom:18px;background:rgba(91,124,255,.14);color:#7f9aff;}
+  .mode-card.join .mode-icon{background:rgba(139,92,246,.14);color:#ad8cff;}
+  .mode-icon svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+  .mode-card h3{margin:0;font-size:1rem;font-weight:900;}
+  .mode-card p{margin:6px 0 0;color:var(--text-muted);font-size:.76rem;line-height:1.45;}
+  .mode-arrow{position:absolute;right:14px;top:18px;color:var(--text-muted);font-size:1rem;}
+
+  .section{margin-top:15px;border:1px solid var(--battle-line);border-radius:24px;background:rgba(255,255,255,.035);padding:18px;box-shadow:0 12px 35px rgba(0,0,0,.10);animation:pageIn .4s ease both;}
+  .section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:15px;}
+  .section-title{margin:0;font-size:1.05rem;font-weight:900;}
+  .section-sub{margin:4px 0 0;color:var(--text-muted);font-size:.78rem;line-height:1.45;}
+  .mini-badge{font-size:.7rem;font-weight:900;padding:7px 9px;border-radius:999px;background:rgba(201,151,63,.12);color:var(--battle-gold);border:1px solid rgba(201,151,63,.22);white-space:nowrap;}
+
+  .guide{border:1px solid rgba(201,151,63,.20);background:linear-gradient(145deg,rgba(201,151,63,.08),rgba(255,255,255,.025));border-radius:18px;padding:14px;margin-top:14px;}
+  .guide summary{cursor:pointer;font-weight:900;font-size:.86rem;list-style:none;display:flex;align-items:center;justify-content:space-between;}
+  .guide summary::-webkit-details-marker{display:none;}
+  .guide summary::after{content:"+";font-size:1.15rem;color:var(--battle-gold);}
+  .guide[open] summary::after{content:"−";}
+  .guide ol{margin:12px 0 2px;padding-left:21px;color:var(--text-muted);font-size:.78rem;line-height:1.7;}
+
+  .topic-picker{max-height:280px;overflow-y:auto;border:1px solid var(--battle-line);border-radius:17px;padding:7px;background:rgba(0,0,0,.06);}
+  .subject-label{font-weight:900;margin:10px 7px 4px;font-size:.8rem;color:var(--text);}
+  .topic-row{display:flex;align-items:center;gap:10px;padding:11px 9px;border-radius:12px;font-size:.82rem;cursor:pointer;transition:background .18s ease;}
+  .topic-row:hover{background:rgba(255,255,255,.045);}
+  .topic-row input{accent-color:var(--battle-blue);width:17px;height:17px;}
+  .input{width:100%;box-sizing:border-box;}
+  .primary-action{width:100%;border:0;border-radius:15px;padding:13px 16px;margin-top:14px;background:linear-gradient(135deg,var(--battle-blue),var(--battle-purple));color:#fff;font-weight:900;font-size:.9rem;box-shadow:0 12px 28px rgba(91,124,255,.22);cursor:pointer;transition:transform .18s ease,box-shadow .18s ease;}
+  .primary-action:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(91,124,255,.28);}
+  .primary-action:active{transform:scale(.985);}
+  .secondary-action{border:1px solid var(--battle-line);border-radius:13px;padding:11px 13px;background:rgba(255,255,255,.04);color:var(--text);font-weight:800;cursor:pointer;}
+
+  .modal-wrap{position:fixed;inset:0;background:rgba(3,6,14,.72);backdrop-filter:blur(10px);z-index:50;display:grid;place-items:end center;padding:14px;}
+  .modal{width:min(100%,520px);border:1px solid var(--battle-line);background:var(--surface,#111827);border-radius:26px 26px 18px 18px;padding:20px;box-shadow:0 30px 90px rgba(0,0,0,.35);animation:modalUp .32s ease both;}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .modal-head h3{margin:0;font-size:1.1rem;}
+  .close-btn{width:36px;height:36px;border-radius:11px;border:1px solid var(--battle-line);background:rgba(255,255,255,.04);color:var(--text);cursor:pointer;font-size:1.1rem;}
+  .join-code{font-size:1rem;letter-spacing:4px;text-align:center;text-transform:uppercase;}
+  .join-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+  .scan-divider{display:flex;align-items:center;gap:10px;color:var(--text-muted);font-size:.72rem;margin:18px 0;}
+  .scan-divider::before,.scan-divider::after{content:"";height:1px;background:var(--battle-line);flex:1;}
+  #qr-reader{width:100%;overflow:hidden;border-radius:18px;border:1px solid var(--battle-line);background:#000;}
+  #qr-reader video{border-radius:18px;}
+  .scan-note{font-size:.74rem;color:var(--text-muted);text-align:center;margin:9px 0 0;}
+
+  .lobby-card{text-align:center;}
+  .battle-code{font-size:2.15rem;font-weight:1000;letter-spacing:7px;margin:12px 0 8px;color:var(--text);}
+  .share-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+  .qr-box{width:178px;height:178px;margin:16px auto 5px;padding:10px;background:#fff;border-radius:18px;display:grid;place-items:center;}
+  .qr-box canvas,.qr-box img{max-width:100%;max-height:100%;}
+  .share-caption{font-size:.75rem;color:var(--text-muted);}
+  .team-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:15px;}
+  .team-panel{border:1px solid var(--battle-line);border-radius:18px;padding:13px;text-align:left;background:rgba(255,255,255,.03);}
+  .team-title{font-weight:900;font-size:.84rem;margin-bottom:9px;}
+  .team-col{display:flex;flex-direction:column;gap:7px;}
+  .member-chip{background:rgba(128,128,128,.08);border:1px solid rgba(255,255,255,.05);border-radius:11px;padding:9px 10px;font-weight:800;font-size:.78rem;}
+  .empty-team{color:var(--text-muted);font-size:.75rem;padding:5px 0;}
+  .error-note{text-align:center;color:#ef6464;font-weight:800;font-size:.78rem;margin-top:10px;min-height:18px;}
+
+  @keyframes pageIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes modalUp{from{opacity:0;transform:translateY(30px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+  @keyframes pulseGlow{0%,100%{box-shadow:0 18px 42px rgba(91,124,255,.24);transform:translateY(0)}50%{box-shadow:0 20px 55px rgba(139,92,246,.34);transform:translateY(-2px)}}
+  @keyframes floatIcon{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+  @media(max-width:430px){.mode-grid{grid-template-columns:1fr}.hero{padding:28px 17px}.hero h2{font-size:1.55rem}.team-grid{gap:8px}.battle-code{font-size:1.85rem;letter-spacing:5px}.share-row{grid-template-columns:1fr 1fr}}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;}}
 </style>
 </head>
 <body>
 <div class="app-shell" id="shell">
+<div class="battle-page">
 
-  <div id="setupView">
-    <h2>⚔️ ব্যাটল মোড</h2>
-    <p style="color:var(--text-muted); font-size:0.85rem;">দুই দলে ভাগ হয়ে টপিক-ভিত্তিক লাইভ কুইজ ব্যাটল — কে আগে সব উত্তর দিয়ে Level 4 জিতবে!</p>
-
-    <div class="card" style="margin-top:16px;">
-      <h3 style="margin-top:0;">নতুন ম্যাচ তৈরি করো</h3>
-      <label style="font-size:0.85rem;font-weight:700;">টপিক বেছে নাও (একাধিক)</label>
-      <div id="topicPicker" style="max-height:220px; overflow-y:auto; margin-top:8px; border:1px solid var(--surface-border); border-radius:12px; padding:8px;">লোড হচ্ছে…</div>
-      <button id="createBtn" class="btn btn-primary" style="margin-top:14px;">ম্যাচ তৈরি করো</button>
-    </div>
-
-    <div class="card" style="margin-top:16px;">
-      <h3 style="margin-top:0;">কোডে যোগ দাও</h3>
-      <input id="joinCodeInput" class="input" placeholder="৬ অক্ষরের কোড" style="text-transform:uppercase;">
-      <div style="display:flex; gap:10px; margin-top:10px;">
-        <button id="joinABtn" class="btn btn-secondary" style="flex:1;">Team A-তে যোগ দাও</button>
-        <button id="joinBBtn" class="btn btn-secondary" style="flex:1;">Team B-তে যোগ দাও</button>
+  <div class="battle-top">
+    <div class="brand">
+      <div class="brand-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg>
       </div>
+      <div><h1>ব্যাটল মোড</h1><p>দ্রুত সিদ্ধান্ত, সঠিক উত্তর, টিমওয়ার্ক</p></div>
     </div>
+    <button id="homeBtn" class="back-btn" type="button">ফিরে যাও</button>
   </div>
 
-  <div id="lobbyView" class="hidden">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="margin:0;">লবি</h2>
-      <button id="leaveLobbyBtn" class="btn-glass" style="padding:8px 14px;">← ফিরে যাও</button>
-    </div>
-    <div class="code-box" id="codeBox">------</div>
-    <p style="text-align:center; color:var(--text-muted); font-size:0.85rem;">এই কোড বন্ধুদের দাও — তারা কোড দিয়ে Team A বা Team B-তে যোগ দিতে পারবে</p>
-
-    <div class="team-grid">
-      <div>
-        <div class="team-title">Team A</div>
-        <div class="team-col" id="teamACol"></div>
+  <!-- PHASE 1 -->
+  <section id="modeView">
+    <div class="hero">
+      <div class="hero-symbol" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="m13 2-2 7H5l7 4-2 9 9-13h-6l1-7Z"/><path d="M4 4h2M18 4h2M19 17h2"/></svg>
       </div>
-      <div>
-        <div class="team-title">Team B</div>
-        <div class="team-col" id="teamBCol"></div>
-      </div>
+      <h2>তোমার Battle শুরু করো</h2>
+      <p>নতুন ম্যাচ তৈরি করো অথবা বন্ধুর দেওয়া কোড/QR দিয়ে সরাসরি Join করো।</p>
     </div>
 
-    <button id="startBtn" class="btn btn-primary hidden" style="margin-top:20px;">ম্যাচ শুরু করো</button>
-    <p id="waitingNote" class="hidden" style="text-align:center; color:var(--text-muted); font-size:0.85rem; margin-top:16px;">হোস্ট শুরু করার অপেক্ষায়…</p>
-    <p id="errorNote" style="text-align:center; color:#d64545; font-weight:700; font-size:0.85rem; margin-top:10px;"></p>
+    <div class="mode-grid">
+      <button class="mode-card" id="openCreateBtn" type="button">
+        <span class="mode-arrow">→</span>
+        <div class="mode-icon"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></div>
+        <h3>Battle তৈরি করুন</h3>
+        <p>Topic বেছে নিয়ে নতুন Battle room তৈরি করুন।</p>
+      </button>
+      <button class="mode-card join" id="openJoinBtn" type="button">
+        <span class="mode-arrow">→</span>
+        <div class="mode-icon"><svg viewBox="0 0 24 24"><path d="M8 12h8M13 7l5 5-5 5"/><path d="M5 5h5M5 19h5"/></svg></div>
+        <h3>Battle-এ Join করুন</h3>
+        <p>Code লিখুন অথবা QR scan করে দ্রুত Join করুন।</p>
+      </button>
+    </div>
+  </section>
+
+  <!-- PHASE 2 CREATE -->
+  <section id="createView" class="hidden">
+    <div class="section">
+      <div class="section-head">
+        <div><h2 class="section-title">Battle তৈরি করুন</h2><p class="section-sub">যে Topic থেকে প্রশ্ন আসবে সেগুলো বেছে নিন।</p></div>
+        <span class="mini-badge">CREATE</span>
+      </div>
+
+      <details class="guide" open>
+        <summary>Battle কীভাবে তৈরি করবেন?</summary>
+        <ol>
+          <li>নিচ থেকে এক বা একাধিক Topic নির্বাচন করুন।</li>
+          <li>Battle তৈরি হলে একটি ৬ অক্ষরের Code পাওয়া যাবে।</li>
+          <li>Code Copy/Share করুন অথবা QR Code দেখিয়ে অন্যদের Join করান।</li>
+          <li>দুই Team-এ অন্তত একজন করে থাকলে Host Battle শুরু করতে পারবেন।</li>
+        </ol>
+      </details>
+
+      <div style="margin-top:17px;font-size:.86rem;font-weight:900;">Question Topics</div>
+      <div id="topicPicker" class="topic-picker" style="margin-top:9px;">লোড হচ্ছে…</div>
+      <button id="createBtn" class="primary-action" type="button">Battle তৈরি করুন</button>
+    </div>
+  </section>
+
+  <!-- LOBBY -->
+  <section id="lobbyView" class="hidden">
+    <div class="section lobby-card">
+      <div class="section-head" style="text-align:left;margin-bottom:2px;">
+        <div><h2 class="section-title">Battle Lobby</h2><p class="section-sub">বন্ধুদের Code বা QR দিয়ে Join করান।</p></div>
+        <span class="mini-badge">READY</span>
+      </div>
+      <div class="battle-code" id="codeBox">------</div>
+      <div class="share-row">
+        <button id="copyCodeBtn" class="secondary-action" type="button">Code Copy</button>
+        <button id="shareCodeBtn" class="secondary-action" type="button">Share</button>
+      </div>
+      <div class="qr-box" id="qrBox"></div>
+      <div class="share-caption">QR scan করে এই Battle-এ Join করা যাবে</div>
+    </div>
+
+    <div class="section">
+      <div class="section-head"><div><h3 class="section-title">Teams</h3><p class="section-sub">দুই Team-এ Player আসার পর Host Battle শুরু করতে পারবেন।</p></div></div>
+      <div class="team-grid">
+        <div class="team-panel"><div class="team-title">Team A</div><div class="team-col" id="teamACol"></div></div>
+        <div class="team-panel"><div class="team-title">Team B</div><div class="team-col" id="teamBCol"></div></div>
+      </div>
+      <button id="startBtn" class="primary-action hidden" type="button">Battle শুরু করুন</button>
+      <p id="waitingNote" class="hidden" style="text-align:center;color:var(--text-muted);font-size:.78rem;margin:12px 0 0;">Host-এর Battle শুরু করার অপেক্ষায়…</p>
+      <p id="errorNote" class="error-note"></p>
+    </div>
+    <button id="leaveLobbyBtn" class="secondary-action" type="button" style="width:100%;margin-top:10px;">← Lobby থেকে বেরিয়ে যান</button>
+  </section>
+
+</div>
+</div>
+
+<!-- JOIN MODAL -->
+<div id="joinModal" class="modal-wrap hidden" role="dialog" aria-modal="true" aria-labelledby="joinTitle">
+  <div class="modal">
+    <div class="modal-head"><div><h3 id="joinTitle">Battle-এ Join করুন</h3><p class="section-sub">Code দিন অথবা QR scan করুন।</p></div><button id="closeJoinBtn" class="close-btn" type="button">×</button></div>
+    <div style="margin-top:16px;"><label style="font-size:.78rem;font-weight:900;display:block;margin-bottom:7px;">Battle Code</label><input id="joinCodeInput" class="input join-code" maxlength="6" placeholder="A7K9P2" autocomplete="off" style="text-transform:uppercase;"></div>
+    <div class="join-actions"><button id="joinABtn" class="primary-action" style="margin-top:0;" type="button">Team A</button><button id="joinBBtn" class="primary-action" style="margin-top:0;" type="button">Team B</button></div>
+    <div class="scan-divider">অথবা</div>
+    <button id="scanQrBtn" class="secondary-action" type="button" style="width:100%;">QR Code Scan করুন</button>
+    <div id="scannerArea" class="hidden" style="margin-top:12px;"><div id="qr-reader"></div><p class="scan-note">QR-এর মধ্যে Battle Code থাকলে Code automatically বসে যাবে।</p></div>
   </div>
-
 </div>
 
 <script type="module">
@@ -88,79 +233,172 @@ if (!student?.studentId) {
   throw new Error("no active student");
 }
 
-const setupView = document.getElementById("setupView");
+const modeView = document.getElementById("modeView");
+const createView = document.getElementById("createView");
 const lobbyView = document.getElementById("lobbyView");
+const joinModal = document.getElementById("joinModal");
 const topicPicker = document.getElementById("topicPicker");
 const errorNote = document.getElementById("errorNote");
 let unsub = null;
-let myTeam = null; // "A" | "B" once joined
+let myTeam = null;
+let scanner = null;
 
-function showError(msg) { errorNote.textContent = msg; setTimeout(() => { errorNote.textContent = ""; }, 4000); }
+function showError(msg) {
+  errorNote.textContent = msg;
+  setTimeout(() => { errorNote.textContent = ""; }, 4000);
+}
+
+function showOnly(view) {
+  modeView.classList.toggle("hidden", view !== "mode");
+  createView.classList.toggle("hidden", view !== "create");
+  lobbyView.classList.toggle("hidden", view !== "lobby");
+}
+
+// ---------- phase 1 navigation ----------
+document.getElementById("openCreateBtn").addEventListener("click", () => showOnly("create"));
+document.getElementById("openJoinBtn").addEventListener("click", () => joinModal.classList.remove("hidden"));
+document.getElementById("homeBtn").addEventListener("click", () => {
+  unsub?.();
+  stopScanner();
+  showOnly("mode");
+});
+
+document.getElementById("closeJoinBtn").addEventListener("click", () => {
+  stopScanner();
+  joinModal.classList.add("hidden");
+});
+joinModal.addEventListener("click", e => { if (e.target === joinModal) { stopScanner(); joinModal.classList.add("hidden"); } });
 
 // ---------- topic picker ----------
 (async () => {
-  const tree = await getFullSyllabusTree();
-  topicPicker.innerHTML = tree.map(subject => `
-    <div style="font-weight:800; margin-top:6px;">${esc(subject.name_bn || subject.name_en)}</div>
-    ${subject.chapters.flatMap(ch => ch.topics).map(t => `
-      <label class="topic-row">
-        <input type="checkbox" class="topic-check" value="${esc(t.id)}">
-        ${esc(t.name_bn || t.name_en)}
-      </label>
-    `).join("")}
-  `).join("") || `<div style="color:var(--text-muted);">কোনো টপিক পাওয়া যায়নি।</div>`;
+  try {
+    const tree = await getFullSyllabusTree();
+    topicPicker.innerHTML = tree.map(subject => `
+      <div class="subject-label">${esc(subject.name_bn || subject.name_en)}</div>
+      ${subject.chapters.flatMap(ch => ch.topics).map(t => `
+        <label class="topic-row">
+          <input type="checkbox" class="topic-check" value="${esc(t.id)}">
+          <span>${esc(t.name_bn || t.name_en)}</span>
+        </label>
+      `).join("")}
+    `).join("") || `<div style="color:var(--text-muted);padding:12px;">কোনো Topic পাওয়া যায়নি।</div>`;
+  } catch (e) {
+    topicPicker.innerHTML = `<div style="color:#ef6464;padding:12px;">Topic লোড করা যায়নি।</div>`;
+  }
 })();
 
+// ---------- create: EXISTING LOGIC preserved ----------
 document.getElementById("createBtn").addEventListener("click", async () => {
   const topics = [...document.querySelectorAll(".topic-check:checked")].map(c => c.value);
-  if (!topics.length) return showError("অন্তত ১টি টপিক বেছে নাও।");
+  if (!topics.length) return showError("অন্তত ১টি Topic বেছে নাও।");
   try {
     const code = await createMatch({ hostStudentId: student.studentId, hostName: student.name, topics });
     myTeam = "A";
     enterLobby(code);
-  } catch (e) { showError(e.message || "ম্যাচ তৈরি করা যায়নি।"); }
+  } catch (e) { showError(e.message || "Battle তৈরি করা যায়নি।"); }
 });
 
+// ---------- join: EXISTING LOGIC preserved ----------
 async function doJoin(team) {
   const code = document.getElementById("joinCodeInput").value.trim().toUpperCase();
-  if (code.length !== 6) return showError("সঠিক ৬ অক্ষরের কোড দাও।");
+  if (code.length !== 6) return alert("সঠিক ৬ অক্ষরের Code দাও।");
   try {
+    stopScanner();
+    joinModal.classList.add("hidden");
     await joinMatch(code, { studentId: student.studentId, name: student.name, team });
     myTeam = team;
     enterLobby(code);
   } catch (e) {
-    const map = { MATCH_NOT_FOUND: "এই কোডে কোনো ম্যাচ পাওয়া যায়নি।", MATCH_ALREADY_STARTED: "এই ম্যাচ ইতিমধ্যে শুরু হয়ে গেছে।", TEAM_FULL: "এই টিম পূর্ণ (৪ জন)।", ALREADY_IN_OTHER_TEAM: "তুমি আগেই অন্য টিমে আছো।" };
-    showError(map[e.message] || "যোগ দেওয়া যায়নি।");
+    joinModal.classList.remove("hidden");
+    const map = { MATCH_NOT_FOUND: "এই Code-এ কোনো Battle পাওয়া যায়নি।", MATCH_ALREADY_STARTED: "এই Battle ইতিমধ্যে শুরু হয়ে গেছে।", TEAM_FULL: "এই Team পূর্ণ (৪ জন)।", ALREADY_IN_OTHER_TEAM: "তুমি আগেই অন্য Team-এ আছো।" };
+    alert(map[e.message] || "Join করা যায়নি।");
   }
 }
 document.getElementById("joinABtn").addEventListener("click", () => doJoin("A"));
 document.getElementById("joinBBtn").addEventListener("click", () => doJoin("B"));
 
+// ---------- QR scan / share presentation layer ----------
+function extractBattleCode(text) {
+  const raw = String(text || "").trim().toUpperCase();
+  const match = raw.match(/(?:BATTLE[:/]|CODE[:=])?([A-Z0-9]{6})$/);
+  return match ? match[1] : null;
+}
+
+function stopScanner() {
+  if (!scanner) return;
+  scanner.stop().catch(() => {}).finally(() => {
+    scanner.clear().catch(() => {});
+    scanner = null;
+  });
+  document.getElementById("scannerArea").classList.add("hidden");
+}
+
+document.getElementById("scanQrBtn").addEventListener("click", async () => {
+  const area = document.getElementById("scannerArea");
+  area.classList.remove("hidden");
+  if (scanner) return;
+  if (typeof Html5Qrcode === "undefined") {
+    alert("QR Scanner লোড হয়নি। আবার চেষ্টা করো।");
+    return;
+  }
+  scanner = new Html5Qrcode("qr-reader");
+  try {
+    await scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 230, height: 230 } }, decoded => {
+      const code = extractBattleCode(decoded);
+      if (!code) return;
+      document.getElementById("joinCodeInput").value = code;
+      stopScanner();
+    }, () => {});
+  } catch (e) {
+    scanner = null;
+    alert("Camera/QR Scanner চালু করা যায়নি। Camera permission দিন।");
+  }
+});
+
+document.getElementById("copyCodeBtn").addEventListener("click", async () => {
+  const code = document.getElementById("codeBox").textContent.trim();
+  try { await navigator.clipboard.writeText(code); } catch { const ta = document.createElement("textarea"); ta.value = code; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); }
+  const btn = document.getElementById("copyCodeBtn"); const old = btn.textContent; btn.textContent = "Copied ✓"; setTimeout(() => btn.textContent = old, 1300);
+});
+
+document.getElementById("shareCodeBtn").addEventListener("click", async () => {
+  const code = document.getElementById("codeBox").textContent.trim();
+  const text = `আমার Battle-এ Join করো!\nBattle Code: ${code}`;
+  if (navigator.share) { try { await navigator.share({ title: "Battle Invite", text }); } catch {} }
+  else { try { await navigator.clipboard.writeText(text); alert("Share text Copy হয়েছে।"); } catch { alert(text); } }
+});
+
+function renderQr(code) {
+  const box = document.getElementById("qrBox");
+  box.innerHTML = "";
+  if (window.QRCode) new QRCode(box, { text: `BATTLE:${code}`, width: 158, height: 158, colorDark: "#111827", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M });
+}
+
 function renderTeam(colEl, members, team, isHost, code) {
   colEl.innerHTML = (members || []).map(m => {
     const canRemove = isHost && m.studentId !== student.studentId;
-    return `<div class="member-chip" style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
+    return `<div class="member-chip" style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
       <span>${esc(m.name)}</span>
-      ${canRemove ? `<button type="button" class="member-remove" data-team="${team}" data-sid="${esc(m.studentId)}" title="বাদ দাও" style="background:none;border:none;color:#d64545;font-weight:900;cursor:pointer;padding:2px 6px;font-size:0.95rem;">✕</button>` : ""}
+      ${canRemove ? `<button type="button" class="member-remove" data-team="${team}" data-sid="${esc(m.studentId)}" title="বাদ দাও" style="background:none;border:none;color:#ef6464;font-weight:900;cursor:pointer;padding:2px 6px;font-size:.95rem;">×</button>` : ""}
     </div>`;
-  }).join("") || `<div style="color:var(--text-muted); font-size:0.8rem;">খালি</div>`;
+  }).join("") || `<div class="empty-team">এখনও কেউ Join করেনি</div>`;
 
   colEl.querySelectorAll(".member-remove").forEach(btn => {
     btn.addEventListener("click", async () => {
       try {
         await removeMember(code, { hostStudentId: student.studentId, team: btn.dataset.team, studentId: btn.dataset.sid });
       } catch (e) {
-        const map = { NOT_HOST: "শুধু হোস্ট মেম্বার বাদ দিতে পারে।", CANNOT_REMOVE_HOST: "হোস্টকে বাদ দেওয়া যায় না।", MEMBER_NOT_FOUND: "এই মেম্বার আর নেই।", MATCH_ALREADY_STARTED: "ম্যাচ ইতিমধ্যে শুরু হয়ে গেছে।" };
-        showError(map[e.message] || "বাদ দেওয়া যায়নি।");
+        const map = { NOT_HOST: "শুধু Host member বাদ দিতে পারে।", CANNOT_REMOVE_HOST: "Host-কে বাদ দেওয়া যায় না।", MEMBER_NOT_FOUND: "এই member আর নেই।", MATCH_ALREADY_STARTED: "Battle ইতিমধ্যে শুরু হয়ে গেছে।" };
+        showError(map[e.message] || "Member বাদ দেওয়া যায়নি।");
       }
     });
   });
 }
 
 function enterLobby(code) {
-  setupView.classList.add("hidden");
-  lobbyView.classList.remove("hidden");
+  showOnly("lobby");
   document.getElementById("codeBox").textContent = code;
+  renderQr(code);
 
   const ref = doc(db, "battleMatches", code);
   unsub = onSnapshot(ref, (snap) => {
@@ -187,16 +425,15 @@ function enterLobby(code) {
     }
   });
 
-  document.getElementById("startBtn").addEventListener("click", async () => {
+  document.getElementById("startBtn").onclick = async () => {
     try { await startMatch(code); }
-    catch (e) { showError(e.message || "শুরু করা যায়নি।"); }
-  }, { once: true });
+    catch (e) { showError(e.message || "Battle শুরু করা যায়নি।"); }
+  };
 }
 
 document.getElementById("leaveLobbyBtn").addEventListener("click", () => {
   unsub?.();
-  lobbyView.classList.add("hidden");
-  setupView.classList.remove("hidden");
+  showOnly("mode");
 });
 </script>
 </body>
