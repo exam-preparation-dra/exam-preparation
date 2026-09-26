@@ -88,9 +88,6 @@ export async function deleteExamPermanently(examId) {
   batch.delete(doc(db, "examSnapshots", examId));
   batch.delete(doc(db, "exams", examId));
   await batch.commit();
-  // XP is derived from results, so deleting the results automatically removes
-  // this exam's XP from dashboard/history/leaderboard calculations.
-  return { examId, deletedAttempts: attemptsSnap.size, deletedResults: resultsSnap.size };
 }
 
 export async function archiveExam(examId) {
