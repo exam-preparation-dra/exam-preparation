@@ -274,11 +274,11 @@ async function handleDelete(id) {
 }
 
 async function handlePermanentDelete(id, name) {
-  if (!confirm(`"${name}" পরীক্ষাটি এবং এর সাথে জড়িত সব শিক্ষার্থীর attempt, ফলাফল ও ওই পরীক্ষার XP উৎস স্থায়ীভাবে মুছে ফেলবেন? মুছে ফেলার পর Leaderboard থেকে ওই পরীক্ষার XP-ও আর গণনা হবে না। এটি আর ফেরত আনা যাবে না।`)) return;
+  if (!confirm(`"${name}" পরীক্ষাটি এবং এর সাথে জড়িত সব শিক্ষার্থীর attempt ও ফলাফল স্থায়ীভাবে মুছে ফেলবেন? এটি আর ফেরত আনা যাবে না।`)) return;
   if (!confirm("নিশ্চিত? এই পরীক্ষার সব রেকর্ড চিরতরে হারিয়ে যাবে।")) return;
   try {
     await deleteExamPermanently(id);
-    showToast("পরীক্ষা, ফলাফল ও ওই পরীক্ষার XP উৎস মুছে ফেলা হয়েছে। Leaderboard নতুন করে হিসাব হবে।", "success");
+    showToast("পরীক্ষা ও এর সব রেকর্ড মুছে ফেলা হয়েছে।", "success");
     load();
   } catch (err) { showToast(err.message || friendlyError(err), "error"); }
 }
