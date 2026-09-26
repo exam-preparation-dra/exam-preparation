@@ -7,73 +7,81 @@
 <link rel="stylesheet" href="./css/style.css">
 <style>
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; } }
-  body { overflow-x: hidden; background: var(--bg); margin: 0; }
-  
-  /* ===== Normal App Shell ===== */
+  body { overflow-x: hidden; background: var(--bg-app); margin: 0; }
+
+  /* ===== App shell ===== */
   .app-shell { max-width: 480px; padding-bottom: 40px; margin: 0 auto; display: block; }
 
-  /* ===== Premium Clean Header ===== */
-  .register-head { margin-top: 12px; margin-bottom: 24px; text-align: center; }
-  .register-head h1 { font-size: 1.8rem; font-weight: 900; color: var(--text-primary); line-height: 1.3; letter-spacing: -0.5px; }
-  .register-head p { margin-top: 6px; font-size: 0.9rem; color: var(--text-muted); font-weight: 500; }
+  /* ===== Cascading entrance ===== */
+  @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  .register-head, .search-glass, #classFilter, .list-head { animation: fadeUp .5s cubic-bezier(.22,1,.36,1) backwards; }
+  .register-head { animation-delay: .02s; }
+  .search-glass { animation-delay: .08s; }
+  #classFilter { animation-delay: .12s; }
+  .list-head { animation-delay: .16s; }
 
-  /* ===== Glassmorphism Search Bar ===== */
+  /* ===== Header ===== */
+  .register-head { margin-top: 14px; margin-bottom: 20px; text-align: center; }
+  .register-head h1 { font-size: 1.55rem; font-weight: 900; color: var(--text-primary); line-height: 1.3; letter-spacing: -0.3px; }
+  .register-head p { margin-top: 6px; font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+
+  /* ===== Search bar (flat, no glow) ===== */
   .search-glass {
     display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--surface-border);
-    border-radius: 16px; padding: 6px 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.03); transition: 0.3s;
+    border-radius: var(--radius-lg); padding: 4px 14px; transition: border-color var(--transition);
   }
-  .search-glass:focus-within { border-color: var(--color-accent); box-shadow: 0 8px 24px rgba(var(--color-accent-rgb), 0.12); }
-  .search-icon { width: 20px; height: 20px; color: var(--text-muted); flex-shrink: 0; }
-  .search-glass input { flex: 1; background: transparent; border: none; outline: none; padding: 10px 0; font-size: 0.95rem; color: var(--text-primary); font-family: inherit; font-weight: 600; }
+  .search-glass:focus-within { border-color: var(--color-accent); }
+  .search-icon { width: 19px; height: 19px; color: var(--text-muted); flex-shrink: 0; }
+  .search-glass input { flex: 1; background: transparent; border: none; outline: none; padding: 11px 0; font-size: 0.92rem; color: var(--text-primary); font-family: inherit; font-weight: 600; }
   .search-glass input::placeholder { color: var(--text-muted); font-weight: 500; }
   .search-glass input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; display: none; }
-  .search-clear { display: none; background: rgba(128,128,128,0.1); color: var(--text-muted); border: none; border-radius: 50%; width: 28px; height: 28px; align-items: center; justify-content: center; cursor: pointer; }
-  
-  /* ===== Class Filter Chips ===== */
-  .class-filter { display: flex; gap: 8px; overflow-x: auto; padding: 12px 0 4px; margin-top: 12px; scrollbar-width: none; }
+  .search-clear { display: none; background: var(--surface-edge); color: var(--text-muted); border: none; border-radius: 50%; width: 27px; height: 27px; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+
+  /* ===== Class filter chips ===== */
+  .class-filter { display: flex; gap: 8px; overflow-x: auto; padding: 12px 0 4px; margin-top: 10px; scrollbar-width: none; }
   .class-filter::-webkit-scrollbar { display: none; }
-  .chip-glass { padding: 8px 16px; border-radius: 99px; font-size: 0.85rem; font-weight: 700; background: var(--surface); border: 1px solid var(--surface-border); color: var(--text-secondary); cursor: pointer; white-space: nowrap; transition: all 0.2s ease; flex-shrink: 0; }
-  .chip-glass.active { background: var(--color-accent); border-color: var(--color-accent); color: #fff; box-shadow: 0 4px 12px rgba(var(--color-accent-rgb), 0.2); }
+  .chip-glass { padding: 8px 15px; border-radius: 99px; font-size: 0.82rem; font-weight: 700; background: var(--surface); border: 1px solid var(--surface-border); color: var(--text-secondary); cursor: pointer; white-space: nowrap; transition: background var(--transition), border-color var(--transition), color var(--transition); flex-shrink: 0; }
+  .chip-glass.active { background: var(--color-accent); border-color: var(--color-accent); color: #fff; }
 
-  /* ===== Student Cards ===== */
-  .list-head { margin-top: 16px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-  .list-head-title { font-size: 0.9rem; font-weight: 800; color: var(--text-primary); }
-  .list-count { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; background: rgba(128,128,128,0.1); padding: 4px 10px; border-radius: 99px; }
+  /* ===== Student list ===== */
+  .list-head { margin-top: 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .list-head-title { font-size: 0.88rem; font-weight: 800; color: var(--text-primary); }
+  .list-count { font-size: 0.72rem; color: var(--text-muted); font-weight: 700; background: var(--surface-edge); padding: 4px 10px; border-radius: 99px; }
 
-  .student-card { position: relative; display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 16px; padding: 14px; margin-bottom: 10px; cursor: pointer; text-align: left; width: 100%; transition: all 0.2s ease; animation: printIn 400ms ease-out both; overflow: hidden; }
-  .student-card:active { transform: scale(0.96); background: rgba(128,128,128,0.05); }
+  .student-card { position: relative; display: flex; align-items: center; gap: 13px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius-lg); padding: 12px 14px; margin-bottom: 9px; cursor: pointer; text-align: left; width: 100%; transition: background var(--transition); animation: printIn 400ms ease-out both; overflow: hidden; }
+  .student-card:active { background: var(--surface-highlight); }
   @keyframes printIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   .student-card.from-cache { animation: none; }
-  
-  .student-card.is-loading { border-color: var(--color-accent); box-shadow: 0 0 0 2px rgba(var(--color-accent-rgb), 0.15); transform: scale(0.97); background: rgba(128, 128, 128, 0.05); pointer-events: none; }
-  .student-card.is-loading .st-arrow, .student-card.is-loading .st-roll { display: none; }
-  .student-card.is-loading::after { content: ""; position: absolute; right: 20px; top: 50%; margin-top: -9px; width: 18px; height: 18px; border: 2.5px solid var(--color-accent); border-top-color: transparent; border-radius: 50%; animation: spinLoad 0.8s linear infinite; }
-  @keyframes spinLoad { to { transform: rotate(360deg); } }
-  
-  .st-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--color-accent-soft); color: var(--color-accent); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; overflow: hidden; flex-shrink: 0; }
-  .st-avatar img { width: 100%; height: 100%; object-fit: cover; }
-  
-  .st-info { flex: 1; min-width: 0; }
-  .st-name { font-weight: 800; font-size: 1.05rem; color: var(--text-primary); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .st-id { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
-  .st-roll { background: rgba(128,128,128,0.08); color: var(--text-secondary); padding: 6px 12px; border-radius: 10px; font-weight: 800; font-size: 0.85rem; font-family: var(--font-num); }
 
-  /* ===== Skeletons & Empty State ===== */
-  .skel-card { display: flex; gap: 14px; padding: 14px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: 16px; margin-bottom: 10px; }
-  .skel-circle { width: 48px; height: 48px; border-radius: 50%; background: rgba(128,128,128,0.1); animation: pulse 1.5s infinite; }
+  .student-card.is-loading { border-color: var(--color-accent); box-shadow: 0 0 0 1.5px rgba(var(--color-accent-rgb), 0.3); background: var(--surface-highlight); pointer-events: none; }
+  .student-card.is-loading .st-arrow, .student-card.is-loading .st-roll { display: none; }
+  .student-card.is-loading::after { content: ""; position: absolute; right: 18px; top: 50%; margin-top: -9px; width: 18px; height: 18px; border: 2.5px solid var(--color-accent); border-top-color: transparent; border-radius: 50%; animation: spinLoad 0.8s linear infinite; }
+  @keyframes spinLoad { to { transform: rotate(360deg); } }
+
+  .st-avatar { width: 46px; height: 46px; border-radius: 50%; background: var(--color-accent-soft); color: var(--color-accent); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.15rem; overflow: hidden; flex-shrink: 0; }
+  .st-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+  .st-info { flex: 1; min-width: 0; }
+  .st-name { font-weight: 800; font-size: 1rem; color: var(--text-primary); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .st-id { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; }
+  .st-roll { background: var(--surface-edge); color: var(--text-secondary); padding: 6px 11px; border-radius: 9px; font-weight: 800; font-size: 0.82rem; font-family: var(--font-num); }
+
+  /* ===== Skeletons & empty state ===== */
+  .skel-card { display: flex; gap: 14px; padding: 13px 14px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius-lg); margin-bottom: 9px; }
+  .skel-circle { width: 46px; height: 46px; border-radius: 50%; background: var(--surface-edge); animation: pulse 1.5s infinite; }
   .skel-lines { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
-  .skel-line { height: 12px; border-radius: 6px; background: rgba(128,128,128,0.1); animation: pulse 1.5s infinite; }
+  .skel-line { height: 12px; border-radius: 6px; background: var(--surface-edge); animation: pulse 1.5s infinite; }
   @keyframes pulse { 0%,100% { opacity: 0.6; } 50% { opacity: 1; } }
 
-  .empty-search { padding: 40px 20px; text-align: center; color: var(--text-muted); background: var(--surface); border-radius: 16px; border: 1px dashed var(--surface-border); margin-top: 10px; }
-  .empty-search-icon { width: 42px; height: 42px; margin: 0 auto 12px; color: var(--color-accent); opacity: 0.8; }
-  .empty-search strong { display:block; color:var(--text-primary); font-size:1rem; margin-bottom:6px; font-weight: 800; }
+  .empty-search { padding: 36px 20px; text-align: center; color: var(--text-muted); background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--surface-border); margin-top: 10px; }
+  .empty-search-icon { width: 40px; height: 40px; margin: 0 auto 12px; color: var(--color-accent); }
+  .empty-search strong { display:block; color:var(--text-primary); font-size:0.95rem; margin-bottom:6px; font-weight: 800; }
 
   /* ===== Footer ===== */
-  .foot-section { margin-top: 30px; text-align: center; display: flex; flex-direction: column; gap: 12px; }
-  .btn-join { background: var(--surface); border: 1px solid var(--surface-border); color: var(--text-primary); font-weight: 700; padding: 14px; border-radius: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); transition: transform 0.2s; }
-  .btn-join:active { transform: scale(0.98); }
-  .admin-link { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-decoration: none; padding: 8px; }
+  .foot-section { margin-top: 26px; text-align: center; display: flex; flex-direction: column; gap: 10px; }
+  .btn-join { background: var(--surface); border: 1px solid var(--surface-border); color: var(--text-primary); font-weight: 700; padding: 13px; border-radius: var(--radius-md); text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background var(--transition); }
+  .btn-join:active { background: var(--surface-highlight); }
+  .admin-link { font-size: 0.78rem; color: var(--text-muted); font-weight: 600; text-decoration: none; padding: 8px; }
 </style>
 </head>
 <body>
