@@ -184,3 +184,22 @@
   .battle-question { font-size:1.06rem; }
   .battle-player-stat { align-items:flex-start; flex-direction:column; gap:6px; }
 }
+
+/* FINAL POLISH — round header + compact floating buzzer */
+.battle-header--arena{display:block;text-align:center;margin-bottom:12px}
+.battle-header-title{font-size:.7rem;letter-spacing:.2em;margin-bottom:7px}
+.battle-level-block{width:100%;box-sizing:border-box;min-width:0;min-height:82px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 16px;border-radius:20px;background:var(--surface-solid);border:1px solid var(--arena-border);box-shadow:var(--shadow-soft)}
+.battle-level-label{font-size:.64rem;letter-spacing:.2em}
+.battle-level-block strong{font-size:2.55rem;margin-top:5px;letter-spacing:.04em}
+.battle-actions{position:fixed;right:max(18px,calc((100vw - 760px)/2 + 18px));bottom:max(18px,env(safe-area-inset-bottom));z-index:50;margin:0;pointer-events:none}
+.battle-buzz{width:88px;height:88px;min-height:88px;padding:8px;border-radius:50%;display:flex;flex-direction:column;gap:3px;font-size:.68rem;letter-spacing:.08em;line-height:1.1;pointer-events:auto;box-shadow:0 12px 28px rgba(0,0,0,.24),0 0 0 5px color-mix(in srgb,var(--color-accent) 12%,transparent)}
+.battle-buzz svg{width:30px;height:30px}
+.battle-buzz:not(:disabled):hover{transform:translateY(-2px)}
+.battle-buzz:not(:disabled):active{transform:scale(.94)}
+@media(max-width:560px){
+  .battle-level-block{min-height:76px;border-radius:18px}
+  .battle-level-block strong{font-size:2.25rem}
+  .battle-actions{right:16px;bottom:max(16px,env(safe-area-inset-bottom))}
+  .battle-buzz{width:78px;height:78px;min-height:78px}
+  .battle-buzz svg{width:27px;height:27px}
+}
