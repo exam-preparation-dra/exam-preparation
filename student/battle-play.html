@@ -18,6 +18,8 @@
   .opt:disabled { opacity: 0.6; }
   .buzzBtn { width:100%; padding:22px; border-radius:16px; font-weight:900; font-size:1.1rem; background: linear-gradient(135deg,#c9973f,#e0b361); color:#1a1200; border:none; }
   .buzzBtn:disabled { opacity: 0.4; }
+  .timerBox { text-align:center; font-weight:900; font-size:1.4rem; margin-bottom:12px; color: var(--text-primary); }
+  .timerBox.low { color:#ef4444; }
   .statusNote { text-align:center; font-size:0.85rem; color:var(--text-muted); margin: 14px 0; }
   .toast { position: fixed; left:16px; right:16px; bottom:24px; background: var(--surface); border:1px solid var(--surface-border); border-radius: 14px; padding: 14px 18px; font-weight:700; font-size:0.9rem; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 50; }
   .eliminatedBanner { text-align:center; background: rgba(239,68,68,0.1); color:#ef4444; font-weight:800; padding:12px; border-radius:12px; margin-bottom:12px; }
@@ -38,6 +40,7 @@
   <div id="eliminatedBanner" class="eliminatedBanner hidden">তুমি এই লেভেলে বাদ পড়েছো — পরের লেভেলে আবার সুযোগ পাবে।</div>
 
   <div class="qCard" id="qCard">
+    <div class="timerBox" id="timerBox">⏱ 60s</div>
     <div class="qText" id="qText">লোড হচ্ছে…</div>
     <div id="optionsBox"></div>
     <button id="buzzBtn" class="buzzBtn hidden">⚡ আগে চাপো!</button>
@@ -58,7 +61,7 @@ import { initTheme } from "../js/utils/ui-utils.js";
 import { getActiveStudent } from "../js/utils/student-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-import { buzzIn, submitAnswer } from "../js/utils/battle-utils.js";
+import { buzzIn, submitAnswer, checkTimeout } from "../js/utils/battle-utils.js";
 
 initTheme();
 const esc = v => String(v ?? "").replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
@@ -86,6 +89,22 @@ let lastQuestionId = null;
 let lastSnapshotForToast = null;
 let claimingInFlight = false;
 let answeringInFlight = false;
+let currentExpiresAt = null;
+const timerBox = document.getElementById("timerBox");
+
+// Every question carries a shared 1-minute clock (currentQuestion.expiresAt).
+// Any connected player's browser polls it here; whoever's tick reaches
+// Firestore first when time is up resolves the question via checkTimeout
+// (safe to call repeatedly -- see battle-utils.js).
+setInterval(() => {
+  if (!currentExpiresAt) return;
+  const remaining = Math.max(0, Math.ceil((currentExpiresAt - Date.now()) / 1000));
+  timerBox.textContent = `⏱ ${remaining}s`;
+  timerBox.classList.toggle("low", remaining <= 10);
+  if (remaining <= 0) {
+    checkTimeout(code).catch(() => {});
+  }
+}, 1000);
 
 function showToast(msg, ms = 2600) {
   toast.textContent = msg;
@@ -121,6 +140,7 @@ onSnapshot(ref, (snap) => {
   document.getElementById("teamBName").textContent = "Team B";
 
   if (m.status === "finished" && m.result) {
+    currentExpiresAt = null;
     renderResult(m);
     return;
   }
@@ -128,7 +148,8 @@ onSnapshot(ref, (snap) => {
   qCard.classList.remove("hidden");
 
   const q = m.currentQuestion;
-  if (!q) { qText.textContent = "পরবর্তী প্রশ্নের অপেক্ষায়…"; return; }
+  if (!q) { qText.textContent = "পরবর্তী প্রশ্নের অপেক্ষায়…"; currentExpiresAt = null; return; }
+  currentExpiresAt = q.expiresAt || null;
 
   if (lastSnapshotForToast && lastQuestionId && q.questionId !== lastQuestionId) {
     const msg = summarizePrevious(lastSnapshotForToast);
@@ -160,7 +181,7 @@ onSnapshot(ref, (snap) => {
       if (answeringInFlight || myAnswer || !iClaimed) return;
       answeringInFlight = true;
       try { await submitAnswer(code, { studentId: student.studentId, team: myTeam, option: btn.dataset.opt }); }
-      catch (e) { showToast(e.message || "উত্তর জমা দেওয়া যায়নি।"); }
+      catch (e) { showToast(e.message === "TIME_UP" ? "সময় শেষ হয়ে গেছে!" : (e.message || "উত্তর জমা দেওয়া যায়নি।")); }
       answeringInFlight = false;
     });
   });
@@ -192,7 +213,10 @@ buzzBtn.addEventListener("click", async () => {
   claimingInFlight = true;
   buzzBtn.disabled = true;
   try { await buzzIn(code, { studentId: student.studentId, team: myTeam }); }
-  catch (e) { showToast(e.message === "ALREADY_CLAIMED" ? "একটু দেরি হয়ে গেলো!" : (e.message || "চাপা যায়নি।")); }
+  catch (e) {
+    const map = { ALREADY_CLAIMED: "একটু দেরি হয়ে গেলো!", TIME_UP: "সময় শেষ হয়ে গেছে!" };
+    showToast(map[e.message] || (e.message || "চাপা যায়নি।"));
+  }
   claimingInFlight = false;
 });
 

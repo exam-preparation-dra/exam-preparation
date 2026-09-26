@@ -77,7 +77,7 @@ import { getActiveStudent } from "../js/utils/student-utils.js";
 import { getFullSyllabusTree } from "../js/utils/syllabus-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-import { createMatch, joinMatch, startMatch } from "../js/utils/battle-utils.js";
+import { createMatch, joinMatch, startMatch, removeMember } from "../js/utils/battle-utils.js";
 
 initTheme();
 const esc = v => String(v ?? "").replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
@@ -136,8 +136,25 @@ async function doJoin(team) {
 document.getElementById("joinABtn").addEventListener("click", () => doJoin("A"));
 document.getElementById("joinBBtn").addEventListener("click", () => doJoin("B"));
 
-function renderTeam(colEl, members) {
-  colEl.innerHTML = (members || []).map(m => `<div class="member-chip">${esc(m.name)}</div>`).join("") || `<div style="color:var(--text-muted); font-size:0.8rem;">খালি</div>`;
+function renderTeam(colEl, members, team, isHost, code) {
+  colEl.innerHTML = (members || []).map(m => {
+    const canRemove = isHost && m.studentId !== student.studentId;
+    return `<div class="member-chip" style="display:flex; align-items:center; justify-content:space-between; gap:6px;">
+      <span>${esc(m.name)}</span>
+      ${canRemove ? `<button type="button" class="member-remove" data-team="${team}" data-sid="${esc(m.studentId)}" title="বাদ দাও" style="background:none;border:none;color:#d64545;font-weight:900;cursor:pointer;padding:2px 6px;font-size:0.95rem;">✕</button>` : ""}
+    </div>`;
+  }).join("") || `<div style="color:var(--text-muted); font-size:0.8rem;">খালি</div>`;
+
+  colEl.querySelectorAll(".member-remove").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      try {
+        await removeMember(code, { hostStudentId: student.studentId, team: btn.dataset.team, studentId: btn.dataset.sid });
+      } catch (e) {
+        const map = { NOT_HOST: "শুধু হোস্ট মেম্বার বাদ দিতে পারে।", CANNOT_REMOVE_HOST: "হোস্টকে বাদ দেওয়া যায় না।", MEMBER_NOT_FOUND: "এই মেম্বার আর নেই।", MATCH_ALREADY_STARTED: "ম্যাচ ইতিমধ্যে শুরু হয়ে গেছে।" };
+        showError(map[e.message] || "বাদ দেওয়া যায়নি।");
+      }
+    });
+  });
 }
 
 function enterLobby(code) {
@@ -145,7 +162,6 @@ function enterLobby(code) {
   lobbyView.classList.remove("hidden");
   document.getElementById("codeBox").textContent = code;
 
-  const isHost = myTeam === "A"; // simplification: host is whoever created (always joins Team A first)
   const ref = doc(db, "battleMatches", code);
   unsub = onSnapshot(ref, (snap) => {
     if (!snap.exists()) return;
@@ -155,8 +171,9 @@ function enterLobby(code) {
       window.location.href = `./battle-play.html?code=${code}&team=${myTeam}`;
       return;
     }
-    renderTeam(document.getElementById("teamACol"), m.teamA?.members);
-    renderTeam(document.getElementById("teamBCol"), m.teamB?.members);
+    const isHost = student.studentId === m.hostStudentId;
+    renderTeam(document.getElementById("teamACol"), m.teamA?.members, "A", isHost, code);
+    renderTeam(document.getElementById("teamBCol"), m.teamB?.members, "B", isHost, code);
 
     const bothReady = (m.teamA?.members?.length || 0) > 0 && (m.teamB?.members?.length || 0) > 0;
     const startBtn = document.getElementById("startBtn");

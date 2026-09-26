@@ -28,7 +28,7 @@
   }
 
   /* ---------- quick links ---------- */
-  .d-links { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .d-links { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px; }
   .d-link {
     display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px;
     border-radius: var(--radius-md); border: 1px solid var(--surface-border); background: var(--surface-solid);
@@ -294,6 +294,7 @@ async function render() {
     <div class="d-links">
       <a href="../student/analytics.html" class="d-link">${svg("chart")} বিশ্লেষণ</a>
       <a href="../student/comparison.html" class="d-link">${svg("compare")} তুলনা</a>
+      <a href="../student/battle-lobby.html" class="d-link">${svg("bolt")} ব্যাটল মোড</a>
     </div>
 
     <div id="heroSection" class="d-sec"><div class="skeleton" style="height:190px;border-radius:24px;"></div></div>
