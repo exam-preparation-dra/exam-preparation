@@ -76,16 +76,17 @@ export async function createMatch({ hostStudentId, hostName, topics }) {
     hostStudentId,
     topics,
     status: "lobby", // lobby -> active -> finished
-    teamA: { members: [{ studentId: hostStudentId, name: hostName || "Host" }] },
+    teamA: { members: [{ studentId: hostStudentId, name: hostName || "Host", swapCount: 0 }] },
     teamB: emptyTeam(),
-    createdAt: Date.now()
+    createdAt: Date.now(),
+    startsAt: Date.now() + 60_000
   };
   await setDoc(doc(db, "battleMatches", code), data);
   return code;
 }
 
-/** Join an existing lobby as Team A or Team B. */
-export async function joinMatch(code, { studentId, name, team }) {
+/** Join an existing lobby. New members enter Team B by default. */
+export async function joinMatch(code, { studentId, name, team = "B" }) {
   if (team !== "A" && team !== "B") throw new Error("team must be 'A' or 'B'");
   const ref = doc(db, "battleMatches", code);
   return runTransaction(db, async (tx) => {
@@ -103,7 +104,7 @@ export async function joinMatch(code, { studentId, name, team }) {
     const other = m[otherKey]?.members || [];
     if (other.some(mem => mem.studentId === studentId)) throw new Error("ALREADY_IN_OTHER_TEAM");
 
-    const newMembers = [...current, { studentId, name: name || "Player" }];
+    const newMembers = [...current, { studentId, name: name || "Player", swapCount: 0 }];
     tx.update(ref, { [`${teamKey}.members`]: newMembers });
     return { ...m, [teamKey]: { members: newMembers } };
   });
@@ -131,6 +132,50 @@ export async function removeMember(code, { hostStudentId, team, studentId }) {
     const next = current.filter(mem => mem.studentId !== studentId);
     if (next.length === current.length) throw new Error("MEMBER_NOT_FOUND");
     tx.update(ref, { [`${teamKey}.members`]: next });
+  });
+}
+
+/**
+ * Move one lobby member between Team A and Team B.
+ * A normal member may move themselves at most twice per lobby.
+ * The host can move any member without consuming that member's swap count.
+ */
+export async function swapMember(code, { requesterStudentId, studentId, fromTeam, toTeam }) {
+  if (!["A", "B"].includes(fromTeam) || !["A", "B"].includes(toTeam) || fromTeam === toTeam) {
+    throw new Error("INVALID_SWAP");
+  }
+  const ref = doc(db, "battleMatches", code);
+  return runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new Error("MATCH_NOT_FOUND");
+    const m = snap.data();
+    if (m.status !== "lobby") throw new Error("MATCH_ALREADY_STARTED");
+
+    const fromKey = `team${fromTeam}`;
+    const toKey = `team${toTeam}`;
+    const fromMembers = [...(m[fromKey]?.members || [])];
+    const toMembers = [...(m[toKey]?.members || [])];
+    const idx = fromMembers.findIndex(mem => mem.studentId === studentId);
+    if (idx < 0) throw new Error("MEMBER_NOT_FOUND");
+    if (toMembers.length >= TEAM_MAX_MEMBERS) throw new Error("TEAM_FULL");
+
+    const isHost = requesterStudentId === m.hostStudentId;
+    const isSelf = requesterStudentId === studentId;
+    if (!isHost && !isSelf) throw new Error("NOT_ALLOWED");
+
+    const member = { ...fromMembers[idx] };
+    const swapCount = Number(member.swapCount || 0);
+    if (!isHost && swapCount >= 2) throw new Error("SWAP_LIMIT_REACHED");
+    if (!isHost) member.swapCount = swapCount + 1;
+    else member.swapCount = swapCount;
+
+    fromMembers.splice(idx, 1);
+    toMembers.push(member);
+    tx.update(ref, {
+      [`${fromKey}.members`]: fromMembers,
+      [`${toKey}.members`]: toMembers
+    });
+    return { ...m, [fromKey]: { members: fromMembers }, [toKey]: { members: toMembers } };
   });
 }
 
@@ -200,12 +245,13 @@ function shuffle(arr) {
  * state, so Firestore cannot fail with the nested-array error because of the
  * question pool structure.
  */
-export async function startMatch(code) {
+export async function startMatch(code, hostStudentId = null) {
   const ref = doc(db, "battleMatches", code);
   const snap = await getDoc(ref);
   if (!snap.exists()) throw new Error("MATCH_NOT_FOUND");
   const m = snap.data();
   if (m.status !== "lobby") throw new Error("MATCH_ALREADY_STARTED");
+  if (hostStudentId && m.hostStudentId !== hostStudentId) throw new Error("NOT_HOST");
 
   const teamAMembers = m.teamA?.members || [];
   const teamBMembers = m.teamB?.members || [];
@@ -273,6 +319,7 @@ export async function startMatch(code) {
     currentQuestionIndex: 0,
     levelWins: { A: 0, B: 0 },
     matchTotals: { A: 0, B: 0 },
+    levelStats: { A: {}, B: {} },
     eliminated: {},
     wrongCounts: {},
     scoreBoard: {},
@@ -290,11 +337,16 @@ export async function buzzIn(code, { studentId, team }) {
     if (!snap.exists()) throw new Error("MATCH_NOT_FOUND");
     const m = snap.data();
     if (m.status !== "active") throw new Error("MATCH_NOT_ACTIVE");
+    if (!["A", "B"].includes(team)) throw new Error("INVALID_TEAM");
+    const isMember = (m[`team${team}`]?.members || []).some(mem => mem.studentId === studentId);
+    if (!isMember) throw new Error("NOT_TEAM_MEMBER");
     if (m.eliminated?.[studentId]) throw new Error("ELIMINATED_THIS_LEVEL");
     const q = m.currentQuestion;
     if (!q) throw new Error("NO_ACTIVE_QUESTION");
     if (q.expiresAt && Date.now() >= q.expiresAt) throw new Error("TIME_UP");
-    if (q.claim?.[team]) throw new Error("ALREADY_CLAIMED"); // first tap wins, rest are too late
+    if (q.claim?.[team]) throw new Error("ALREADY_CLAIMED"); // one claim per team per question
+    // If this player has already answered/claimed this question, never allow a second claim.
+    if (q.answers?.[team]?.studentId === studentId) throw new Error("ALREADY_ANSWERED");
 
     const newQuestion = { ...q, claim: { ...q.claim, [team]: { studentId, claimedAt: Date.now() } } };
     tx.update(ref, { currentQuestion: newQuestion });
@@ -348,24 +400,38 @@ function resolveQuestion(m, answers, scoreBoard, eliminated, wrongCounts) {
   const winner = decideQuestionWinner(answers);
   const levelWins = { ...(m.levelWins || { A: 0, B: 0 }) };
   const matchTotals = { ...(m.matchTotals || { A: 0, B: 0 }) };
+  const levelStats = {
+    A: { ...(m.levelStats?.A || {}) },
+    B: { ...(m.levelStats?.B || {}) }
+  };
+
   if (winner) {
     levelWins[winner] += 1;
     matchTotals[winner] += 1;
   }
 
-  // questionOrder is a single flat array, so there is never an array-of-arrays
-  // anywhere in the match document.
   const order = Array.isArray(m.questionOrder) ? m.questionOrder : [];
   const questionsPerLevel = Number(m.questionsPerLevel) || QUESTIONS_PER_LEVEL_SMALL;
   const levelStart = (m.currentLevel - 1) * questionsPerLevel;
   const absoluteIndex = levelStart + m.currentQuestionIndex;
   const isLastOfLevel = m.currentQuestionIndex >= questionsPerLevel - 1;
 
+  const fullyEliminated = (team) => {
+    const members = m[`team${team}`]?.members || [];
+    return members.length > 0 && members.every(mem => eliminated[mem.studentId]);
+  };
+
+  // A level ends immediately only when ALL players on BOTH teams are eliminated.
+  // If one team is fully eliminated but the other team still has active players,
+  // the level continues so the remaining players can finish the level.
+  const eliminationEndsLevel = fullyEliminated("A") && fullyEliminated("B");
+
   let status = m.status;
   let currentLevel = m.currentLevel;
   let currentQuestionIndex = m.currentQuestionIndex;
   let currentQuestion = null;
   let result = null;
+  let levelResult = null;
   let nextEliminated = eliminated;
   let nextWrongCounts = wrongCounts;
 
@@ -377,9 +443,35 @@ function resolveQuestion(m, answers, scoreBoard, eliminated, wrongCounts) {
     return buildQuestionObj({ id, ...raw });
   };
 
-  if (isLastOfLevel) {
+  const levelWinner = (() => {
+    if (levelWins.A !== levelWins.B) return levelWins.A > levelWins.B ? "A" : "B";
+    const aAlive = !fullyEliminated("A");
+    const bAlive = !fullyEliminated("B");
+    if (aAlive !== bAlive) return aAlive ? "A" : "B";
+    return null;
+  })();
+
+  const makeLevelResult = () => {
+    const top = {};
+    for (const team of ["A", "B"]) {
+      const rows = Object.entries(levelStats[team] || {});
+      rows.sort((x, y) => (Number(y[1]?.correct || 0) - Number(x[1]?.correct || 0)) ||
+        (Number(y[1]?.attempts || 0) - Number(x[1]?.attempts || 0)));
+      top[team] = rows[0] ? { studentId: rows[0][0], correct: Number(rows[0][1]?.correct || 0), attempts: Number(rows[0][1]?.attempts || 0) } : null;
+    }
+    return {
+      level: m.currentLevel,
+      winnerTeam: levelWinner,
+      score: { ...levelWins },
+      topPlayer: top,
+      reason: eliminationEndsLevel ? "ELIMINATION" : "QUESTIONS_COMPLETE",
+      createdAt: Date.now()
+    };
+  };
+
+  if (isLastOfLevel || eliminationEndsLevel) {
+    levelResult = makeLevelResult();
     if (currentLevel >= LEVEL_COUNT) {
-      // Level 4 decides the whole match.
       let winnerTeam;
       if (levelWins.A === levelWins.B) {
         winnerTeam = matchTotals.A >= matchTotals.B ? "A" : "B";
@@ -388,6 +480,7 @@ function resolveQuestion(m, answers, scoreBoard, eliminated, wrongCounts) {
       }
       status = "finished";
       result = buildResult(m, scoreBoard, winnerTeam);
+      result.levelResults = [...(m.result?.levelResults || []), levelResult];
     } else {
       currentLevel += 1;
       currentQuestionIndex = 0;
@@ -395,7 +488,7 @@ function resolveQuestion(m, answers, scoreBoard, eliminated, wrongCounts) {
       nextWrongCounts = {};
       levelWins.A = 0;
       levelWins.B = 0;
-      currentQuestion = getStoredQuestion(currentLevel * questionsPerLevel - questionsPerLevel);
+      currentQuestion = getStoredQuestion((currentLevel - 1) * questionsPerLevel);
     }
   } else {
     currentQuestionIndex += 1;
@@ -408,6 +501,8 @@ function resolveQuestion(m, answers, scoreBoard, eliminated, wrongCounts) {
     wrongCounts: nextWrongCounts,
     levelWins,
     matchTotals,
+    levelStats: (isLastOfLevel || eliminationEndsLevel) ? { A: {}, B: {} } : levelStats,
+    levelResult,
     status,
     currentLevel,
     currentQuestionIndex,
@@ -415,11 +510,10 @@ function resolveQuestion(m, answers, scoreBoard, eliminated, wrongCounts) {
     result
   };
 }
-
 /**
  * The claimer for a team submits their chosen option. Resolves the
- * question the moment both teams have answered, or the moment the other
- * team is fully eliminated for this level (can no longer answer at all).
+ * question the moment both teams have answered, or when BOTH teams are
+ * fully eliminated for this level (so nobody remains who can answer).
  * Whichever team's level/match progression this triggers happens in the
  * SAME transaction, so the whole engine only ever needs this one entry
  * point during play (plus buzzIn and the timeout watchdog below).
@@ -431,6 +525,9 @@ export async function submitAnswer(code, { studentId, team, option }) {
     if (!snap.exists()) throw new Error("MATCH_NOT_FOUND");
     const m = snap.data();
     if (m.status !== "active") throw new Error("MATCH_NOT_ACTIVE");
+    const isMember = (m[`team${team}`]?.members || []).some(mem => mem.studentId === studentId);
+    if (!isMember) throw new Error("NOT_TEAM_MEMBER");
+    if (m.eliminated?.[studentId]) throw new Error("ELIMINATED_THIS_LEVEL");
     const q = m.currentQuestion;
     if (!q) throw new Error("NO_ACTIVE_QUESTION");
     if (q.expiresAt && Date.now() >= q.expiresAt) throw new Error("TIME_UP");
@@ -441,6 +538,11 @@ export async function submitAnswer(code, { studentId, team, option }) {
     const answers = { ...q.answers, [team]: { studentId, option, correct, answeredAt: Date.now() } };
 
     const scoreBoard = { ...(m.scoreBoard || {}) };
+    const levelStats = { A: { ...(m.levelStats?.A || {}) }, B: { ...(m.levelStats?.B || {}) } };
+    const levelRow = { ...(levelStats[team][studentId] || { correct: 0, attempts: 0 }) };
+    levelRow.attempts += 1;
+    if (correct) levelRow.correct += 1;
+    levelStats[team][studentId] = levelRow;
     const sRow = { ...(scoreBoard[studentId] || { correct: 0, wrong: 0 }) };
     if (correct) sRow.correct += 1; else sRow.wrong += 1;
     scoreBoard[studentId] = sRow;
@@ -456,15 +558,17 @@ export async function submitAnswer(code, { studentId, team, option }) {
     const otherAnswered = !!answers[otherTeam];
     const otherMembers = m[`team${otherTeam}`]?.members || [];
     const otherFullyEliminated = otherMembers.length > 0 && otherMembers.every(mem => eliminated[mem.studentId]);
-
-    if (!otherAnswered && !otherFullyEliminated) {
+    const currentTeamMembers = m[`team${team}`]?.members || [];
+    const currentTeamFullyEliminated = currentTeamMembers.length > 0 && currentTeamMembers.every(mem => eliminated[mem.studentId]);
+    const bothTeamsFullyEliminated = currentTeamFullyEliminated && otherFullyEliminated;
+    if (!otherAnswered && !bothTeamsFullyEliminated) {
       // Still waiting on the other team -- just record this team's answer.
-      tx.update(ref, { currentQuestion: { ...q, answers }, scoreBoard, eliminated, wrongCounts });
+      tx.update(ref, { currentQuestion: { ...q, answers }, scoreBoard, eliminated, wrongCounts, levelStats });
       return;
     }
 
     // Both sides are in (or the other side can no longer answer) -- resolve.
-    tx.update(ref, resolveQuestion(m, answers, scoreBoard, eliminated, wrongCounts));
+    tx.update(ref, resolveQuestion({ ...m, levelStats }, answers, scoreBoard, eliminated, wrongCounts));
   });
 }
 
@@ -503,7 +607,15 @@ export async function checkTimeout(code) {
     const eliminated = { ...(m.eliminated || {}) };
     const wrongCounts = { ...(m.wrongCounts || {}) };
 
-    tx.update(ref, resolveQuestion(m, answers, scoreBoard, eliminated, wrongCounts));
+    const levelStats = { A: { ...(m.levelStats?.A || {}) }, B: { ...(m.levelStats?.B || {}) } };
+    for (const team of ["A", "B"]) {
+      const answer = answers[team];
+      if (!answer?.studentId) continue;
+      const row = { ...(levelStats[team][answer.studentId] || { correct: 0, attempts: 0 }) };
+      if (!q.answers?.[team]) { row.attempts += 1; if (answer.correct) row.correct += 1; }
+      levelStats[team][answer.studentId] = row;
+    }
+    tx.update(ref, resolveQuestion({ ...m, levelStats }, answers, scoreBoard, eliminated, wrongCounts));
   });
 }
 
