@@ -105,5 +105,27 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+
+    // ---- Battle Mode ----
+    // Separate, battle-only question bank -- never mixed with the real
+    // exam bank (/questions), so a public read here can never leak an
+    // answer that matters for a graded exam. Admin populates it (e.g. by
+    // copying selected questions over from the main bank).
+    match /battleQuestions/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Live 2-team battle matches (lobby join/leave/kick, buzz, answer,
+    // 1-minute timeout resolution). No student Auth exists in this project
+    // to lock writes down per-student, so -- like every other student-facing
+    // write here (attempts, results, improvementAttempts) -- this trusts the
+    // client and relies on Firestore transactions inside battle-utils.js for
+    // atomicity, not on these rules for per-user isolation.
+    match /battleMatches/{code} {
+      allow read: if true;
+      allow create, update: if true;
+      allow delete: if isAdmin();
+    }
   }
 }
