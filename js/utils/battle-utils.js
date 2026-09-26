@@ -425,6 +425,14 @@ function buildResult(m, scoreBoard, winnerTeam) {
  */
 function resolveQuestion(m, answers, scoreBoard, eliminated, wrongCounts) {
   const winner = decideQuestionWinner(answers);
+  const questionHistory = [...(m.questionHistory || []), {
+    level: Number(m.currentLevel || 1),
+    questionIndex: Number(m.currentQuestionIndex || 0) + 1,
+    questionId: m.currentQuestion?.questionId || null,
+    answers,
+    winnerTeam: winner || null,
+    resolvedAt: Date.now()
+  }];
   const levelWins = { ...(m.levelWins || { A: 0, B: 0 }) };
   const matchTotals = { ...(m.matchTotals || { A: 0, B: 0 }) };
   const levelStats = {
@@ -507,7 +515,7 @@ function resolveQuestion(m, answers, scoreBoard, eliminated, wrongCounts) {
       }
       status = "finished";
       result = buildResult(m, scoreBoard, winnerTeam);
-      result.levelResults = [...(m.result?.levelResults || []), levelResult];
+      result.levelResults = [...(m.levelResults || []), levelResult];
     } else {
       currentLevel += 1;
       currentQuestionIndex = 0;
@@ -534,6 +542,8 @@ function resolveQuestion(m, answers, scoreBoard, eliminated, wrongCounts) {
     currentLevel,
     currentQuestionIndex,
     currentQuestion,
+    questionHistory,
+    levelResults: levelResult ? [...(m.levelResults || []), levelResult] : (m.levelResults || []),
     result
   };
 }
@@ -649,15 +659,30 @@ export async function checkTimeout(code) {
 /** Sum of XP this student has been awarded across every finished match. */
 export async function getStudentBattleXP(studentId) {
   if (!studentId) return 0;
-  const q = query(
-    collection(db, "battleMatches"),
-    where("participantIds", "array-contains", studentId),
-    where("status", "==", "finished")
-  );
+  // Keep this to a single array-contains query so no composite Firestore index
+  // is required. Finished status is filtered in the client.
+  const q = query(collection(db, "battleMatches"), where("participantIds", "array-contains", studentId));
   const snap = await getDocs(q);
   let total = 0;
-  snap.forEach(d => { total += Number(d.data()?.result?.xpLog?.[studentId] || 0); });
+  snap.forEach(d => {
+    const data=d.data();
+    if (data?.status === "finished") total += Number(data?.result?.xpLog?.[studentId] || 0);
+  });
   return total;
+}
+
+/** Sum finished Battle XP for every student. No new collection or rule is needed. */
+export async function getBattleXPMap() {
+  const snap = await getDocs(collection(db, "battleMatches"));
+  const map = {};
+  snap.forEach(d => {
+    const data=d.data();
+    if (data?.status !== "finished" || !data?.result?.xpLog) return;
+    Object.entries(data.result.xpLog).forEach(([studentId,xp]) => {
+      map[studentId]=(map[studentId]||0)+Number(xp||0);
+    });
+  });
+  return map;
 }
 
 export async function getMatch(code) {
