@@ -24,7 +24,8 @@ import {
   limit,
   serverTimestamp,
   addDoc,
-  updateDoc
+  updateDoc,
+  setDoc
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { getApprovedResults } from "./results-utils.js";
 
@@ -451,6 +452,95 @@ export async function detectWeakAreas(studentId, options = {}) {
       testRequired: true
     };
   });
+}
+
+// ---- Simple topic-wise auto-detection ----------------------------------
+// Separate from analyzeStudentImprovement() above (which needs 3+ attempts,
+// 5+ recent questions and a 60% bar -- built for the student's own insight
+// dashboard). This one is the actual trigger rule Diptendu asked for: sum a
+// topic's marks across EVERY approved result the student has ever gotten,
+// no minimum-attempt gate, and flag it the moment the aggregate is below
+// TOPIC_LOW_SCORE_PERCENT. Called from the student's own browser right after
+// they submit a result, and again from the admin sweep as a backup.
+export const TOPIC_LOW_SCORE_PERCENT = 50;
+const PRIORITY_RANK = { critical: 4, high: 3, medium: 2, low: 1 };
+
+export function aggregateTopicPercentages(results = []) {
+  const approved = groupApprovedResults(results);
+  const map = new Map();
+  for (const result of approved) {
+    const breakdown = Array.isArray(result.topicBreakdown) ? result.topicBreakdown : [];
+    for (const raw of breakdown) {
+      const topicId = raw?.topicId;
+      if (!topicId) continue;
+      if (!map.has(topicId)) map.set(topicId, { marks: 0, totalMarks: 0 });
+      const agg = map.get(topicId);
+      agg.marks += NUM(raw.marks);
+      agg.totalMarks += NUM(raw.totalMarks);
+    }
+  }
+  return [...map.entries()]
+    .filter(([, agg]) => agg.totalMarks > 0)
+    .map(([topicId, agg]) => ({
+      topicId,
+      marks: agg.marks,
+      totalMarks: agg.totalMarks,
+      percentage: Math.round((agg.marks / agg.totalMarks) * 1000) / 10
+    }));
+}
+
+/**
+ * Creates one Improvement request per topic whose aggregate percentage
+ * (across every approved result) is below TOPIC_LOW_SCORE_PERCENT.
+ *
+ * Uses a FIXED document id -- `topic_{studentId}_{topicId}` -- exactly like
+ * the student's own "apply for improvement" flow (see student/improvement.html,
+ * `apply_{studentId}_{examId}`). This is what lets the Firestore rule allow
+ * the write from an unauthenticated student browser at all: the rule checks
+ * the id pattern + an exact field shape, and because the id is fixed, once a
+ * topic's request exists it can never be silently recreated by the client --
+ * only admin can change its status afterward (same one-shot tradeoff the
+ * exam-apply flow already accepts).
+ */
+export async function detectLowTopicsForStudent(studentId) {
+  if (!studentId) return [];
+  const results = await getApprovedResults(studentId);
+  const weakTopics = aggregateTopicPercentages(results).filter(t => t.percentage < TOPIC_LOW_SCORE_PERCENT);
+  if (!weakTopics.length) return [];
+
+  const created = [];
+  let topicDocs = null;
+
+  for (const t of weakTopics) {
+    const reqId = `topic_${studentId}_${t.topicId}`;
+    try {
+      const already = await getDoc(doc(db, "improvementRequests", reqId));
+      if (already.exists()) continue; // fixed id already taken -- rules won't let a student touch it again
+
+      if (!topicDocs) topicDocs = (await getDocs(collection(db, "topics"))).docs;
+      const topicDoc = topicDocs.find(d => d.id === t.topicId);
+      const topicData = topicDoc ? topicDoc.data() : {};
+      const topicName = topicData.name_bn || topicData.name_en || t.topicId;
+      const priority = t.percentage < 30 ? IMPROVEMENT_PRIORITY.CRITICAL
+        : t.percentage < 40 ? IMPROVEMENT_PRIORITY.HIGH : IMPROVEMENT_PRIORITY.MEDIUM;
+
+      const data = {
+        studentId, entityType: "topic", entityId: t.topicId, entityName: topicName,
+        topicId: t.topicId, topicName,
+        subjectId: topicData.subjectId || null, chapterId: topicData.chapterId || null,
+        currentAccuracy: t.percentage, targetAccuracy: IMPROVEMENT_CONFIG.defaultTarget,
+        priority, priorityRank: PRIORITY_RANK[priority] || 0,
+        reason: "low_topic_score", source: "student_topic_detection",
+        status: IMPROVEMENT_STATUS.DETECTED, testRequired: true, improvementTestId: null, adminNote: "",
+        createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+      };
+      await setDoc(doc(db, "improvementRequests", reqId), data);
+      created.push({ id: reqId, ...data });
+    } catch (error) {
+      console.warn(`Topic improvement request skipped for ${t.topicId}:`, error);
+    }
+  }
+  return created;
 }
 
 export async function getImprovementRequest(requestId) {

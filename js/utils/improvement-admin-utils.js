@@ -10,7 +10,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import {
   IMPROVEMENT_CONFIG, IMPROVEMENT_STATUS, IMPROVEMENT_PRIORITY,
-  detectWeakAreas, getImprovementRequestsForStudent
+  detectWeakAreas, getImprovementRequestsForStudent, detectLowTopicsForStudent
 } from "./improvement-utils.js";
 import { getApprovedResults } from "./results-utils.js";
 
@@ -369,6 +369,16 @@ export async function createImprovementRequestsForStudent(studentId,options={}) 
       created.push({id:ref.id,...data}); existing.push({id:ref.id,...data});
     }
   } catch(error){ console.warn("Low-score exam detection skipped:",error); }
+
+  // ---- Backup sweep for the topic-wise (aggregate < 50%) rule. The primary
+  // trigger runs client-side right after the student submits (see
+  // submitAttempt in attempt-utils.js); this just catches anything missed
+  // (e.g. the student closed the tab before it finished). ----
+  try {
+    const topicCreated = await detectLowTopicsForStudent(sid);
+    created.push(...topicCreated);
+  } catch(error){ console.warn("Topic-wise (50%) detection skipped:",error); }
+
   return created;
 }
 

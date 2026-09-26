@@ -18,6 +18,7 @@ import {
   doc, getDoc, setDoc, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { gradeAttempt } from "./grading-utils.js";
+import { detectLowTopicsForStudent } from "./improvement-utils.js";
 
 export function attemptDocId(examId, studentId) {
   return `${examId}_${studentId}`;
@@ -162,6 +163,14 @@ export async function submitAttempt({ examId, studentId, examName, snapshotQuest
   }, { merge: true });
 
   clearLocalAttempt(examId, studentId);
+
+  // Fire-and-forget: check every topic's aggregate percentage (across all of
+  // this student's approved results) and auto-create an Improvement request
+  // for anything under 50%. Never blocks/fails the submission itself -- the
+  // admin sweep (improvement-admin-utils.js) is the backup if this is
+  // interrupted (e.g. the student closes the tab immediately).
+  detectLowTopicsForStudent(studentId).catch(err => console.warn("Improvement topic check skipped:", err));
+
   return { resultId: id, ...grade };
 }
 
