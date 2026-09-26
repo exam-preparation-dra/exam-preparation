@@ -79,7 +79,8 @@ export const XP_CATEGORIES = [
   { key: "streak",        label: "সাপ্তাহিক ধারাবাহিকতা",   hint: "টানা সপ্তাহে পরীক্ষা দিলে" },
   { key: "referral",      label: "বন্ধু রেফার",             hint: "প্রতি বন্ধুতে 250 XP" },
   { key: "challenge",     label: "চ্যালেঞ্জ বোনাস",         hint: "বন্ধুর সাথে challenge জিতলে/হারলে বোনাস XP" },
-  { key: "improvementPractice", label: "উন্নতি প্র্যাকটিস", hint: "দুর্বল জায়গা ঠিক করার প্র্যাকটিসে XP" }
+  { key: "improvementPractice", label: "উন্নতি প্র্যাকটিস", hint: "দুর্বল জায়গা ঠিক করার প্র্যাকটিসে XP" },
+  { key: "battle", label: "ব্যাটল মোড", hint: "ব্যাটল ম্যাচ জিতলে/MVP হলে XP" }
 ];
 
 export const LEVEL_THRESHOLDS = [0, 1000, 3000, 6000, 10000, 15000, 25000, 40000, 60000];
@@ -267,7 +268,7 @@ export function computeImprovementPracticeTotalXP(practiceResults = []) {
 
 // ---------- whole student ----------
 // results: this student's counted (approved / auto-approved) results, any order.
-export function computeStudentXP(results, { referralCount = 0, challengeBonusXP = 0, improvementPracticeResults = [] } = {}) {
+export function computeStudentXP(results, { referralCount = 0, challengeBonusXP = 0, improvementPracticeResults = [], battleXP = 0 } = {}) {
   const sorted = [...(results || [])].sort((a, b) => toMillis(a.submittedAt) - toMillis(b.submittedAt));
 
   const weeksAttended = new Set(sorted.map(r => weekIndex(toMillis(r.submittedAt))));
@@ -311,14 +312,17 @@ export function computeStudentXP(results, { referralCount = 0, challengeBonusXP 
   const improvementPracticeXP = computeImprovementPracticeTotalXP(improvementPracticeResults);
   breakdown.improvementPractice = improvementPracticeXP;
 
+  const battleXPRounded = Math.max(0, Math.round(num(battleXP)));
+  breakdown.battle = battleXPRounded;
+
   Object.keys(breakdown).forEach(k => { breakdown[k] = Math.round(breakdown[k]); });
 
   const examXP = exams.reduce((a, e) => a + e.xp, 0);
-  const totalXP = examXP + referralXP + challengeXP + improvementPracticeXP;
+  const totalXP = examXP + referralXP + challengeXP + improvementPracticeXP + battleXPRounded;
   const avgPercentage = sorted.length ? Math.round((pctSum / sorted.length) * 10) / 10 : 0;
 
   return {
-    totalXP, examXP, referralXP, referralCount: refCount, challengeXP, improvementPracticeXP,
+    totalXP, examXP, referralXP, referralCount: refCount, challengeXP, improvementPracticeXP, battleXP: battleXPRounded,
     breakdown, exams: exams.reverse(),   // newest first
     examsTaken: sorted.length, perfectExams, avgPercentage,
     ...getLevelInfo(totalXP), levelInfo: getLevelInfo(totalXP)
