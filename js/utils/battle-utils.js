@@ -685,6 +685,23 @@ export async function getBattleXPMap() {
   return map;
 }
 
+/** Permanently delete a Battle match. Only its host may delete it.
+ * Deleting the match also removes its result.xpLog, so Battle XP disappears
+ * automatically from leaderboard/history calculations without touching rules.
+ */
+export async function deleteMatch(code, requesterStudentId) {
+  if (!code || !requesterStudentId) throw new Error("INVALID_DELETE_REQUEST");
+  const ref = doc(db, "battleMatches", code);
+  return runTransaction(db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) throw new Error("MATCH_NOT_FOUND");
+    const m = snap.data();
+    if (m.hostStudentId !== requesterStudentId) throw new Error("NOT_HOST");
+    tx.delete(ref);
+    return true;
+  });
+}
+
 export async function getMatch(code) {
   const snap = await getDoc(doc(db, "battleMatches", code));
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
