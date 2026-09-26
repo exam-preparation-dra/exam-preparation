@@ -152,12 +152,53 @@ function renderIntro() {
   });
   bindThemeButtons(shell);
 
-  document.getElementById("startBtn").addEventListener("click", () => {
+  document.getElementById("startBtn").addEventListener("click", renderNote);
+}
+
+/* ---------- pre-exam summary note ---------- */
+// New feature: before the actual improvement exam starts, show the student a
+// summary note built from the already-generated explanation_bn of exactly
+// the questions that will appear in THIS exam (not the whole topic's bank) --
+// so they can read/study it first. Explanations are already embedded in the
+// improvementTestSnapshot the student loaded (test.snapshot.questions), so
+// this needs no extra Firestore reads and no access to the admin-only
+// `questions` collection.
+function renderNote() {
+  const cards = questions.map((q, i) => {
+    const qText = q.question_bn || q.question_en || q.question || "";
+    const exp = String(q.explanation_bn || "").trim();
+    return `
+      <section class="ex-card">
+        <p class="ex-desc"><b>${i + 1}.</b> ${qText}</p>
+        ${exp ? `<p class="ex-desc">${exp}</p>` : `<p class="ex-desc"><i>এই প্রশ্নের ব্যাখ্যা যোগ করা নেই।</i></p>`}
+      </section>`;
+  }).join("");
+
+  shell.innerHTML = `
+    <header class="ex-topbar"><div class="ex-topbar-in">
+      <button class="ex-icon-btn" id="noteBackBtn" type="button" aria-label="ফিরে যান">←</button>
+      <h2 class="ex-page-title">আগে পড়ে নাও</h2>
+      <div class="ex-actions">${themeButtonHtml()}</div>
+    </div></header>
+    <main class="ex-main">
+      <section class="ex-card">
+        <p class="ex-notes-title">এই অনুশীলনের প্রশ্নগুলো এখান থেকেই আসবে — শুরু করার আগে ভালো করে পড়ে নাও।</p>
+      </section>
+      ${cards}
+    </main>
+    <nav class="ex-nav"><div class="ex-nav-in single">
+      <button class="ex-btn ex-btn-primary" id="noteStartBtn" type="button">অনুশীলন শুরু করো</button>
+    </div></nav>
+  `;
+  bindThemeButtons(shell);
+  document.getElementById("noteBackBtn").addEventListener("click", renderIntro);
+  document.getElementById("noteStartBtn").addEventListener("click", () => {
     startedAt = Date.now();
     persist();
     renderExamShell();
     startTimer();
   });
+  if (window.MathJax?.typesetPromise) MathJax.typesetPromise().catch(() => {});
 }
 
 /* ---------- exam shell ---------- */
