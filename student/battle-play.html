@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ব্যাটল মোড — লাইভ</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  body { overflow-x: hidden; }
+  .app-shell { max-width: 560px; padding: var(--space-5) var(--space-4) 40px; margin: 0 auto; }
+  .scoreBar { display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 0.95rem; margin-bottom: 8px; }
+  .levelPill { text-align:center; color: var(--text-muted); font-size: 0.85rem; margin-bottom: 14px; }
+  .qCard { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 18px; padding: 20px; }
+  .qText { font-weight: 800; font-size: 1.05rem; margin-bottom: 16px; }
+  .opt { display:block; width:100%; text-align:left; padding: 14px 16px; margin-bottom: 10px; border-radius: 12px; border: 1px solid var(--surface-border); background: rgba(128,128,128,0.05); font-weight:700; font-size:0.95rem; }
+  .opt.correct { border-color:#10b981; background: rgba(16,185,129,0.15); color:#10b981; }
+  .opt.wrong { border-color:#ef4444; background: rgba(239,68,68,0.15); color:#ef4444; }
+  .opt:disabled { opacity: 0.6; }
+  .buzzBtn { width:100%; padding:22px; border-radius:16px; font-weight:900; font-size:1.1rem; background: linear-gradient(135deg,#c9973f,#e0b361); color:#1a1200; border:none; }
+  .buzzBtn:disabled { opacity: 0.4; }
+  .statusNote { text-align:center; font-size:0.85rem; color:var(--text-muted); margin: 14px 0; }
+  .toast { position: fixed; left:16px; right:16px; bottom:24px; background: var(--surface); border:1px solid var(--surface-border); border-radius: 14px; padding: 14px 18px; font-weight:700; font-size:0.9rem; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 50; }
+  .eliminatedBanner { text-align:center; background: rgba(239,68,68,0.1); color:#ef4444; font-weight:800; padding:12px; border-radius:12px; margin-bottom:12px; }
+  .resultCard { text-align:center; padding: 30px 20px; }
+  .xpRow { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--surface-border); font-size:0.9rem; font-weight:700; }
+  .hidden { display:none !important; }
+</style>
+</head>
+<body>
+<div class="app-shell" id="shell">
+  <div class="scoreBar">
+    <span id="teamAName">Team A</span>
+    <span id="levelScore">0 : 0</span>
+    <span id="teamBName">Team B</span>
+  </div>
+  <div class="levelPill" id="levelPill">Level 1 · প্রশ্ন 1/5</div>
+
+  <div id="eliminatedBanner" class="eliminatedBanner hidden">তুমি এই লেভেলে বাদ পড়েছো — পরের লেভেলে আবার সুযোগ পাবে।</div>
+
+  <div class="qCard" id="qCard">
+    <div class="qText" id="qText">লোড হচ্ছে…</div>
+    <div id="optionsBox"></div>
+    <button id="buzzBtn" class="buzzBtn hidden">⚡ আগে চাপো!</button>
+    <div class="statusNote" id="statusNote"></div>
+  </div>
+
+  <div id="resultView" class="qCard resultCard hidden" style="margin-top:20px;">
+    <h2 id="resultTitle"></h2>
+    <div id="xpList" style="margin-top:16px; text-align:left;"></div>
+    <a href="./battle-lobby.html" class="btn btn-primary" style="margin-top:20px;">নতুন ম্যাচ</a>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script type="module">
+import { initTheme } from "../js/utils/ui-utils.js";
+import { getActiveStudent } from "../js/utils/student-utils.js";
+import { db } from "../js/firebase/firebase-config.js";
+import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { buzzIn, submitAnswer } from "../js/utils/battle-utils.js";
+
+initTheme();
+const esc = v => String(v ?? "").replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+
+const params = new URLSearchParams(location.search);
+const code = params.get("code");
+const myTeam = params.get("team") === "B" ? "B" : "A";
+const student = getActiveStudent();
+
+if (!code || !student?.studentId) {
+  document.getElementById("shell").innerHTML = `<div class="qCard">ম্যাচ কোড বা লগইন পাওয়া যায়নি।</div>`;
+  throw new Error("missing code/student");
+}
+
+const qText = document.getElementById("qText");
+const optionsBox = document.getElementById("optionsBox");
+const buzzBtn = document.getElementById("buzzBtn");
+const statusNote = document.getElementById("statusNote");
+const eliminatedBanner = document.getElementById("eliminatedBanner");
+const toast = document.getElementById("toast");
+const resultView = document.getElementById("resultView");
+const qCard = document.getElementById("qCard");
+
+let lastQuestionId = null;
+let lastSnapshotForToast = null;
+let claimingInFlight = false;
+let answeringInFlight = false;
+
+function showToast(msg, ms = 2600) {
+  toast.textContent = msg;
+  toast.classList.remove("hidden");
+  setTimeout(() => toast.classList.add("hidden"), ms);
+}
+
+function nameOf(m, studentId) {
+  const all = [...(m.teamA?.members || []), ...(m.teamB?.members || [])];
+  return all.find(x => x.studentId === studentId)?.name || "কেউ একজন";
+}
+
+function summarizePrevious(prevM) {
+  const q = prevM.currentQuestion;
+  if (!q) return null;
+  const a = q.answers?.A, b = q.answers?.B;
+  if (!a && !b) return "কেউ উত্তর দেয়নি — কোনো পয়েন্ট নেই।";
+  if (a?.correct && b?.correct) {
+    const faster = a.answeredAt <= b.answeredAt ? "A" : "B";
+    return `দুটো টিমই ঠিক দিয়েছে — Team ${faster} দ্রুত ছিল, পয়েন্ট পেলো Team ${faster}!`;
+  }
+  if (a?.correct) return "Team A ঠিক উত্তর দিয়েছে — পয়েন্ট পেলো Team A!";
+  if (b?.correct) return "Team B ঠিক উত্তর দিয়েছে — পয়েন্ট পেলো Team B!";
+  return "দুটো টিমই ভুল দিয়েছে — কোনো পয়েন্ট নেই।";
+}
+
+const ref = doc(db, "battleMatches", code);
+onSnapshot(ref, (snap) => {
+  if (!snap.exists()) return;
+  const m = snap.data();
+
+  document.getElementById("teamAName").textContent = "Team A";
+  document.getElementById("teamBName").textContent = "Team B";
+
+  if (m.status === "finished" && m.result) {
+    renderResult(m);
+    return;
+  }
+  resultView.classList.add("hidden");
+  qCard.classList.remove("hidden");
+
+  const q = m.currentQuestion;
+  if (!q) { qText.textContent = "পরবর্তী প্রশ্নের অপেক্ষায়…"; return; }
+
+  if (lastSnapshotForToast && lastQuestionId && q.questionId !== lastQuestionId) {
+    const msg = summarizePrevious(lastSnapshotForToast);
+    if (msg) showToast(msg);
+  }
+
+  document.getElementById("levelScore").textContent = `${m.levelWins?.A || 0} : ${m.levelWins?.B || 0}`;
+  document.getElementById("levelPill").textContent =
+    `Level ${m.currentLevel}/4 · প্রশ্ন ${(m.currentQuestionIndex || 0) + 1}/${m.questionsPerLevel}`;
+
+  const iAmEliminated = !!m.eliminated?.[student.studentId];
+  eliminatedBanner.classList.toggle("hidden", !iAmEliminated);
+
+  qText.innerHTML = q.question_bn;
+  const myClaim = q.claim?.[myTeam];
+  const iClaimed = myClaim?.studentId === student.studentId;
+  const myAnswer = q.answers?.[myTeam];
+
+  // ---- options ----
+  optionsBox.innerHTML = ["A", "B", "C", "D"].map(k => {
+    let cls = "opt";
+    if (myAnswer) {
+      if (k === myAnswer.option) cls += myAnswer.correct ? " correct" : " wrong";
+    }
+    return `<button class="${cls}" data-opt="${k}" ${iClaimed && !myAnswer ? "" : "disabled"}>${k}: ${esc(q.options_bn?.[k] || "—")}</button>`;
+  }).join("");
+  optionsBox.querySelectorAll(".opt").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if (answeringInFlight || myAnswer || !iClaimed) return;
+      answeringInFlight = true;
+      try { await submitAnswer(code, { studentId: student.studentId, team: myTeam, option: btn.dataset.opt }); }
+      catch (e) { showToast(e.message || "উত্তর জমা দেওয়া যায়নি।"); }
+      answeringInFlight = false;
+    });
+  });
+
+  // ---- buzz button ----
+  if (myClaim || iAmEliminated || myAnswer) {
+    buzzBtn.classList.add("hidden");
+  } else {
+    buzzBtn.classList.remove("hidden");
+    buzzBtn.disabled = claimingInFlight;
+  }
+
+  if (myClaim && !iClaimed) {
+    statusNote.textContent = `${nameOf(m, myClaim.studentId)} উত্তর দিচ্ছে তোমার টিমের হয়ে…`;
+  } else if (iClaimed && !myAnswer) {
+    statusNote.textContent = "তুমি চান্স পেয়েছো — উত্তর বেছে নাও!";
+  } else if (myAnswer) {
+    statusNote.textContent = myAnswer.correct ? "ঠিক! পরের প্রশ্নের অপেক্ষায়…" : "ভুল হয়েছে। পরের প্রশ্নের অপেক্ষায়…";
+  } else {
+    statusNote.textContent = "";
+  }
+
+  lastQuestionId = q.questionId;
+  lastSnapshotForToast = m;
+});
+
+buzzBtn.addEventListener("click", async () => {
+  if (claimingInFlight) return;
+  claimingInFlight = true;
+  buzzBtn.disabled = true;
+  try { await buzzIn(code, { studentId: student.studentId, team: myTeam }); }
+  catch (e) { showToast(e.message === "ALREADY_CLAIMED" ? "একটু দেরি হয়ে গেলো!" : (e.message || "চাপা যায়নি।")); }
+  claimingInFlight = false;
+});
+
+function renderResult(m) {
+  qCard.classList.add("hidden");
+  resultView.classList.remove("hidden");
+  const r = m.result;
+  const iWon = r.winnerTeam === myTeam;
+  document.getElementById("resultTitle").textContent = iWon ? "🏆 তোমার টিম জিতেছে!" : "Team " + r.winnerTeam + " জিতেছে";
+
+  const rows = Object.entries(r.xpLog || {}).map(([sid, xp]) => {
+    const name = nameOf(m, sid);
+    const isMvp = sid === r.winMvp ? " ⭐ MVP" : (sid === r.loseMvp ? " (সেরা, হেরে যাওয়া দলে)" : "");
+    return `<div class="xpRow"><span>${esc(name)}${isMvp}</span><span>+${xp} XP</span></div>`;
+  }).join("");
+  document.getElementById("xpList").innerHTML = rows || `<div style="color:var(--text-muted);">কোনো XP তথ্য নেই।</div>`;
+}
+</script>
+</body>
+</html>

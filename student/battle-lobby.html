@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ব্যাটল মোড — লবি</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  body { overflow-x: hidden; }
+  .app-shell { max-width: 560px; padding: var(--space-5) var(--space-4) 40px; margin: 0 auto; }
+  .code-box {
+    text-align: center; font-size: 2.2rem; font-weight: 900; letter-spacing: 6px;
+    background: rgba(201,151,63,0.12); border: 2px dashed var(--accent, #c9973f);
+    border-radius: 16px; padding: 16px; margin: 12px 0;
+  }
+  .topic-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--surface-border); font-size: 0.9rem; }
+  .team-col { display: flex; flex-direction: column; gap: 8px; }
+  .member-chip { background: rgba(128,128,128,0.08); border-radius: 10px; padding: 8px 12px; font-weight: 700; font-size: 0.85rem; }
+  .team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+  .team-title { font-weight: 800; margin-bottom: 6px; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="app-shell" id="shell">
+
+  <div id="setupView">
+    <h2>⚔️ ব্যাটল মোড</h2>
+    <p style="color:var(--text-muted); font-size:0.85rem;">দুই দলে ভাগ হয়ে টপিক-ভিত্তিক লাইভ কুইজ ব্যাটল — কে আগে সব উত্তর দিয়ে Level 4 জিতবে!</p>
+
+    <div class="card" style="margin-top:16px;">
+      <h3 style="margin-top:0;">নতুন ম্যাচ তৈরি করো</h3>
+      <label style="font-size:0.85rem;font-weight:700;">টপিক বেছে নাও (একাধিক)</label>
+      <div id="topicPicker" style="max-height:220px; overflow-y:auto; margin-top:8px; border:1px solid var(--surface-border); border-radius:12px; padding:8px;">লোড হচ্ছে…</div>
+      <button id="createBtn" class="btn btn-primary" style="margin-top:14px;">ম্যাচ তৈরি করো</button>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h3 style="margin-top:0;">কোডে যোগ দাও</h3>
+      <input id="joinCodeInput" class="input" placeholder="৬ অক্ষরের কোড" style="text-transform:uppercase;">
+      <div style="display:flex; gap:10px; margin-top:10px;">
+        <button id="joinABtn" class="btn btn-secondary" style="flex:1;">Team A-তে যোগ দাও</button>
+        <button id="joinBBtn" class="btn btn-secondary" style="flex:1;">Team B-তে যোগ দাও</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="lobbyView" class="hidden">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h2 style="margin:0;">লবি</h2>
+      <button id="leaveLobbyBtn" class="btn-glass" style="padding:8px 14px;">← ফিরে যাও</button>
+    </div>
+    <div class="code-box" id="codeBox">------</div>
+    <p style="text-align:center; color:var(--text-muted); font-size:0.85rem;">এই কোড বন্ধুদের দাও — তারা কোড দিয়ে Team A বা Team B-তে যোগ দিতে পারবে</p>
+
+    <div class="team-grid">
+      <div>
+        <div class="team-title">Team A</div>
+        <div class="team-col" id="teamACol"></div>
+      </div>
+      <div>
+        <div class="team-title">Team B</div>
+        <div class="team-col" id="teamBCol"></div>
+      </div>
+    </div>
+
+    <button id="startBtn" class="btn btn-primary hidden" style="margin-top:20px;">ম্যাচ শুরু করো</button>
+    <p id="waitingNote" class="hidden" style="text-align:center; color:var(--text-muted); font-size:0.85rem; margin-top:16px;">হোস্ট শুরু করার অপেক্ষায়…</p>
+    <p id="errorNote" style="text-align:center; color:#d64545; font-weight:700; font-size:0.85rem; margin-top:10px;"></p>
+  </div>
+
+</div>
+
+<script type="module">
+import { initTheme } from "../js/utils/ui-utils.js";
+import { getActiveStudent } from "../js/utils/student-utils.js";
+import { getFullSyllabusTree } from "../js/utils/syllabus-utils.js";
+import { db } from "../js/firebase/firebase-config.js";
+import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { createMatch, joinMatch, startMatch } from "../js/utils/battle-utils.js";
+
+initTheme();
+const esc = v => String(v ?? "").replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+
+const student = getActiveStudent();
+if (!student?.studentId) {
+  document.getElementById("shell").innerHTML = `<div class="card">আগে লগইন করো।</div>`;
+  throw new Error("no active student");
+}
+
+const setupView = document.getElementById("setupView");
+const lobbyView = document.getElementById("lobbyView");
+const topicPicker = document.getElementById("topicPicker");
+const errorNote = document.getElementById("errorNote");
+let unsub = null;
+let myTeam = null; // "A" | "B" once joined
+
+function showError(msg) { errorNote.textContent = msg; setTimeout(() => { errorNote.textContent = ""; }, 4000); }
+
+// ---------- topic picker ----------
+(async () => {
+  const tree = await getFullSyllabusTree();
+  topicPicker.innerHTML = tree.map(subject => `
+    <div style="font-weight:800; margin-top:6px;">${esc(subject.name_bn || subject.name_en)}</div>
+    ${subject.chapters.flatMap(ch => ch.topics).map(t => `
+      <label class="topic-row">
+        <input type="checkbox" class="topic-check" value="${esc(t.id)}">
+        ${esc(t.name_bn || t.name_en)}
+      </label>
+    `).join("")}
+  `).join("") || `<div style="color:var(--text-muted);">কোনো টপিক পাওয়া যায়নি।</div>`;
+})();
+
+document.getElementById("createBtn").addEventListener("click", async () => {
+  const topics = [...document.querySelectorAll(".topic-check:checked")].map(c => c.value);
+  if (!topics.length) return showError("অন্তত ১টি টপিক বেছে নাও।");
+  try {
+    const code = await createMatch({ hostStudentId: student.studentId, hostName: student.name, topics });
+    myTeam = "A";
+    enterLobby(code);
+  } catch (e) { showError(e.message || "ম্যাচ তৈরি করা যায়নি।"); }
+});
+
+async function doJoin(team) {
+  const code = document.getElementById("joinCodeInput").value.trim().toUpperCase();
+  if (code.length !== 6) return showError("সঠিক ৬ অক্ষরের কোড দাও।");
+  try {
+    await joinMatch(code, { studentId: student.studentId, name: student.name, team });
+    myTeam = team;
+    enterLobby(code);
+  } catch (e) {
+    const map = { MATCH_NOT_FOUND: "এই কোডে কোনো ম্যাচ পাওয়া যায়নি।", MATCH_ALREADY_STARTED: "এই ম্যাচ ইতিমধ্যে শুরু হয়ে গেছে।", TEAM_FULL: "এই টিম পূর্ণ (৪ জন)।", ALREADY_IN_OTHER_TEAM: "তুমি আগেই অন্য টিমে আছো।" };
+    showError(map[e.message] || "যোগ দেওয়া যায়নি।");
+  }
+}
+document.getElementById("joinABtn").addEventListener("click", () => doJoin("A"));
+document.getElementById("joinBBtn").addEventListener("click", () => doJoin("B"));
+
+function renderTeam(colEl, members) {
+  colEl.innerHTML = (members || []).map(m => `<div class="member-chip">${esc(m.name)}</div>`).join("") || `<div style="color:var(--text-muted); font-size:0.8rem;">খালি</div>`;
+}
+
+function enterLobby(code) {
+  setupView.classList.add("hidden");
+  lobbyView.classList.remove("hidden");
+  document.getElementById("codeBox").textContent = code;
+
+  const isHost = myTeam === "A"; // simplification: host is whoever created (always joins Team A first)
+  const ref = doc(db, "battleMatches", code);
+  unsub = onSnapshot(ref, (snap) => {
+    if (!snap.exists()) return;
+    const m = snap.data();
+    if (m.status === "active") {
+      unsub?.();
+      window.location.href = `./battle-play.html?code=${code}&team=${myTeam}`;
+      return;
+    }
+    renderTeam(document.getElementById("teamACol"), m.teamA?.members);
+    renderTeam(document.getElementById("teamBCol"), m.teamB?.members);
+
+    const bothReady = (m.teamA?.members?.length || 0) > 0 && (m.teamB?.members?.length || 0) > 0;
+    const startBtn = document.getElementById("startBtn");
+    const waitingNote = document.getElementById("waitingNote");
+    if (student.studentId === m.hostStudentId) {
+      startBtn.classList.toggle("hidden", !bothReady);
+      waitingNote.classList.add("hidden");
+    } else {
+      startBtn.classList.add("hidden");
+      waitingNote.classList.remove("hidden");
+    }
+  });
+
+  document.getElementById("startBtn").addEventListener("click", async () => {
+    try { await startMatch(code); }
+    catch (e) { showError(e.message || "শুরু করা যায়নি।"); }
+  }, { once: true });
+}
+
+document.getElementById("leaveLobbyBtn").addEventListener("click", () => {
+  unsub?.();
+  lobbyView.classList.add("hidden");
+  setupView.classList.remove("hidden");
+});
+</script>
+</body>
+</html>
