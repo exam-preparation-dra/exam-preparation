@@ -303,6 +303,7 @@
 import { initTheme, renderState, renderStudentHeader, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { getActiveStudent, refreshActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
 import { buildLeaderboardRows, getUpcomingExams, getAllApprovedResults } from "../js/utils/results-utils.js";
+import { getBattleXPMap } from "../js/utils/battle-utils.js";
 import { getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival, setRival, clearRival } from "../js/utils/friend-utils.js";
 import { getIncomingChallenges, getOutgoingChallenges, sendChallenge, acceptChallenge, rejectChallenge, resolveCompletedChallenges, getChallengeBonusMap } from "../js/utils/challenge-utils.js";
 import { buildStudentExtras, computeRankMovement, getHeadToHeadMap, toMillis, DAY_MS } from "../js/utils/friend-stats-utils.js";
@@ -333,6 +334,7 @@ const S = {
   h2h: {},
   challengeBonusMap: {},
   improvementResultsMap: {},
+  battleXPMap: {},
   studentMap: {},
   rivalId: null,
   inboxTab: null              // "requests" | "challenges" — set on first render
@@ -424,11 +426,11 @@ function movementChip(change) {
 
 /* ---------------- data ---------------- */
 function computeDerived() {
-  const rows = buildLeaderboardRows(S.results, S.students, S.challengeBonusMap, S.improvementResultsMap);
+  const rows = buildLeaderboardRows(S.results, S.students, S.challengeBonusMap, S.improvementResultsMap, S.battleXPMap);
   S.rows = rows;
 
   const weekAgo = Date.now() - 7 * DAY_MS;
-  const oldRows = buildLeaderboardRows(S.results.filter(r => toMillis(r.submittedAt) && toMillis(r.submittedAt) < weekAgo), S.students, S.challengeBonusMap, S.improvementResultsMap);
+  const oldRows = buildLeaderboardRows(S.results.filter(r => toMillis(r.submittedAt) && toMillis(r.submittedAt) < weekAgo), S.students, S.challengeBonusMap, S.improvementResultsMap, S.battleXPMap);
   S.movement = computeRankMovement(rows, oldRows);
   S.extras = buildStudentExtras(S.results);
 
@@ -456,7 +458,7 @@ async function loadAll({ soft = false } = {}) {
   // win/loss + bonus XP stop sitting stuck on "accepted" forever.
   await resolveCompletedChallenges(id).catch(() => []);
 
-  const [results, friendIds, incoming, outgoing, outChalls, incomingChalls, h2h, challengeBonusMap, rival, improvementResultsMap] = await Promise.all([
+  const [results, friendIds, incoming, outgoing, outChalls, incomingChalls, h2h, challengeBonusMap, rival, improvementResultsMap, battleXPMap] = await Promise.all([
     getAllApprovedResults(),
     getMyFriendIds(id),
     getIncomingRequests(id).catch(() => []),
@@ -466,7 +468,8 @@ async function loadAll({ soft = false } = {}) {
     getHeadToHeadMap(id).catch(() => ({})),
     getChallengeBonusMap().catch(() => ({})),
     getRival(id).catch(() => null),
-    getCompletedImprovementAttemptsByStudent().catch(() => ({}))
+    getCompletedImprovementAttemptsByStudent().catch(() => ({})),
+    getBattleXPMap().catch(() => ({}))
   ]);
 
   S.results = results;
@@ -475,6 +478,7 @@ async function loadAll({ soft = false } = {}) {
   S.incomingChalls = incomingChalls.filter(c => c.status === "pending");
   S.challengeBonusMap = challengeBonusMap;
   S.improvementResultsMap = improvementResultsMap;
+  S.battleXPMap = battleXPMap;
   S.rivalId = S.friendIds.includes(rival?.rivalId) ? rival.rivalId : null;
 
   computeDerived();
