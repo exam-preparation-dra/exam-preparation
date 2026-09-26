@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#c9973f">
+<title>টপিক ডিবাগ — অ্যাডমিন</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  body { overflow-x: hidden; }
+  .app-shell { max-width: 700px; padding: var(--space-5) var(--space-4) 40px; margin: 0 auto; }
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    margin: calc(var(--space-5) * -1) calc(var(--space-4) * -1) var(--space-4);
+    padding: 16px 20px; background: var(--surface);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--surface-border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: var(--space-3); }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--surface-border); }
+  .weak { color: #d64545; font-weight: 800; }
+  .ok { color: var(--text-muted); }
+  .gap-note { font-size: 0.8rem; color: var(--text-muted); margin-top: var(--space-2); line-height: 1.6; }
+  .gap-note b { color: #d64545; }
+</style>
+</head>
+<body>
+<div class="app-shell" id="shell">
+  <div class="topbar">
+    <a href="./improvement.html" class="btn-glass btn-icon" style="display:flex;align-items:center;justify-content:center;">←</a>
+    <h2 style="margin:0;font-size:1.05rem;">টপিক ডিবাগ (কেন ধরা পড়ছে না)</h2>
+    <span></span>
+  </div>
+
+  <div class="card">
+    <label style="font-weight:700;font-size:0.85rem;">শিক্ষার্থী বেছে নাও</label>
+    <select id="studentSelect" class="select" style="margin-top:8px;"><option>লোড হচ্ছে…</option></select>
+    <button id="checkBtn" class="btn btn-primary" style="margin-top:12px;">হিসাব দেখাও</button>
+  </div>
+
+  <div id="result"></div>
+</div>
+
+<script type="module">
+import { initTheme } from "../js/utils/ui-utils.js";
+import { requireAdmin } from "../js/utils/auth.js";
+import { db } from "../js/firebase/firebase-config.js";
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { getActiveStudents } from "../js/utils/student-utils.js";
+import { getApprovedResults } from "../js/utils/results-utils.js";
+import { aggregateTopicPercentages, TOPIC_LOW_SCORE_PERCENT } from "../js/utils/improvement-utils.js";
+
+initTheme();
+const select = document.getElementById("studentSelect");
+const resultBox = document.getElementById("result");
+const esc = v => String(v ?? "").replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+
+const safeName = s => String(s?.name ?? s?.studentName ?? s?.displayName ?? s?.fullName ?? "").trim() || "নাম পাওয়া যায়নি";
+const safeId = s => String(s?.studentId ?? s?.id ?? s?.docId ?? s?.uid ?? "").trim();
+
+requireAdmin(async () => {
+  const students = await getActiveStudents();
+  select.innerHTML = students
+    .map(s => `<option value="${esc(safeId(s))}">${esc(safeName(s))} (${esc(safeId(s))})</option>`)
+    .join("");
+
+  document.getElementById("checkBtn").addEventListener("click", () => run(select.value));
+});
+
+async function run(studentId) {
+  if (!studentId) return;
+  resultBox.innerHTML = `<div class="card"><div class="spinner"></div></div>`;
+
+  const [results, topicsSnap] = await Promise.all([
+    getApprovedResults(studentId),
+    getDocs(collection(db, "topics"))
+  ]);
+  const topicNames = {};
+  topicsSnap.forEach(d => {
+    const x = d.data();
+    topicNames[d.id] = x.name_bn || x.name_en || d.id;
+  });
+
+  const topicStats = aggregateTopicPercentages(results);
+
+  // How many total questions this student has answered across every approved
+  // result, vs. how many of those questions actually carried a topicId --
+  // the gap is exactly what topic-wise detection can never see.
+  let totalQuestionsAllResults = 0;
+  let totalQuestionsWithTopic = 0;
+  results.forEach(r => {
+    totalQuestionsAllResults += Number(r.totalQuestions) || 0;
+    (Array.isArray(r.topicBreakdown) ? r.topicBreakdown : []).forEach(t => {
+      totalQuestionsWithTopic += Number(t.totalQuestions) || 0;
+    });
+  });
+  const missing = Math.max(0, totalQuestionsAllResults - totalQuestionsWithTopic);
+
+  const rows = topicStats
+    .sort((a, b) => a.percentage - b.percentage)
+    .map(t => `
+      <tr>
+        <td>${esc(topicNames[t.topicId] || t.topicId)}</td>
+        <td>${t.marks}/${t.totalMarks}</td>
+        <td class="${t.percentage < TOPIC_LOW_SCORE_PERCENT ? "weak" : "ok"}">${t.percentage}%${t.percentage < TOPIC_LOW_SCORE_PERCENT ? " (weak)" : ""}</td>
+      </tr>`).join("");
+
+  resultBox.innerHTML = `
+    <div class="card">
+      <div style="font-weight:800;">Approved results: ${results.length}</div>
+      <div style="font-size:0.85rem;color:var(--text-muted);margin-top:4px;">
+        মোট প্রশ্ন (সব result মিলিয়ে): ${totalQuestionsAllResults}<br>
+        Topic ট্যাগ করা প্রশ্ন: ${totalQuestionsWithTopic}
+      </div>
+      ${missing > 0 ? `<div class="gap-note"><b>${missing}টি প্রশ্নের কোনো Topic নেই</b> -- এগুলোর marks কোনো topic-এর হিসাবে ঢোকেনি, তাই ঐ প্রশ্নগুলো যতই কম নম্বর পাক, কোনো topic হিসেবে ধরা পড়বে না। Question Bank-এ গিয়ে এই exam(গুলো)-এর প্রশ্নে Topic বসাও।</div>` : ""}
+      ${topicStats.length ? `<table><tr><th>Topic</th><th>Marks</th><th>%</th></tr>${rows}</table>` : `<div class="gap-note">এই শিক্ষার্থীর কোনো approved result-এ topic-tagged প্রশ্ন নেই।</div>`}
+    </div>`;
+}
+</script>
+</body>
+</html>
