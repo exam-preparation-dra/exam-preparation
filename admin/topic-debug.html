@@ -37,8 +37,10 @@
     <label style="font-weight:700;font-size:0.85rem;">শিক্ষার্থী বেছে নাও</label>
     <select id="studentSelect" class="select" style="margin-top:8px;"><option>লোড হচ্ছে…</option></select>
     <button id="checkBtn" class="btn btn-primary" style="margin-top:12px;">হিসাব দেখাও</button>
+    <button id="detectBtn" class="btn btn-secondary" style="margin-top:8px;">এখনই ডিটেক্ট করো (request তৈরি করার চেষ্টা)</button>
   </div>
 
+  <div id="detectResult"></div>
   <div id="result"></div>
 </div>
 
@@ -49,7 +51,7 @@ import { db } from "../js/firebase/firebase-config.js";
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { getActiveStudents } from "../js/utils/student-utils.js";
 import { getApprovedResults } from "../js/utils/results-utils.js";
-import { aggregateTopicPercentages, TOPIC_LOW_SCORE_PERCENT } from "../js/utils/improvement-utils.js";
+import { aggregateTopicPercentages, TOPIC_LOW_SCORE_PERCENT, detectLowTopicsForStudent } from "../js/utils/improvement-utils.js";
 
 initTheme();
 const select = document.getElementById("studentSelect");
@@ -66,7 +68,29 @@ requireAdmin(async () => {
     .join("");
 
   document.getElementById("checkBtn").addEventListener("click", () => run(select.value));
+  document.getElementById("detectBtn").addEventListener("click", () => detectNow(select.value));
 });
+
+async function detectNow(studentId) {
+  if (!studentId) return;
+  const box = document.getElementById("detectResult");
+  box.innerHTML = `<div class="card"><div class="spinner"></div></div>`;
+  try {
+    const created = await detectLowTopicsForStudent(studentId);
+    box.innerHTML = `
+      <div class="card">
+        <div style="font-weight:800;">${created.length ? `${created.length}টি নতুন request তৈরি হয়েছে` : "কোনো নতুন request তৈরি হয়নি (আগে থেকেই আছে, বা weak topic নেই)"}</div>
+        ${created.length ? `<ul style="margin:8px 0 0 18px; font-size:0.85rem;">${created.map(c => `<li>${esc(c.topicName)} — ${c.currentAccuracy}%</li>`).join("")}</ul>` : ""}
+      </div>`;
+  } catch (error) {
+    console.error(error);
+    box.innerHTML = `
+      <div class="card">
+        <div style="font-weight:800;color:#d64545;">Error: ${esc(error?.code || error?.message || String(error))}</div>
+        <div class="gap-note">এই error টার screenshot/text Claude-কে দাও — এখান থেকেই বোঝা যাবে rules ঠিক আছে কিনা, নাকি কোড deploy হয়নি।</div>
+      </div>`;
+  }
+}
 
 async function run(studentId) {
   if (!studentId) return;
