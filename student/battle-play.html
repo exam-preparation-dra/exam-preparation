@@ -79,9 +79,9 @@
 <div class="app-shell" id="shell">
   
   <header class="battle-header battle-header--arena">
-    <div class="battle-header-title">BATTLE</div>
+    <div class="battle-header-title">BATTLE ARENA</div>
     <div class="battle-level-block">
-      <span class="battle-level-label">LEVEL</span>
+      <span class="battle-level-label">ROUND</span>
       <strong id="levelNumber">01</strong>
     </div>
   </header>
@@ -148,11 +148,11 @@
     </div>
     <div id="finalWinner" class="final-winner"></div>
     <div class="final-level-summary">
-      <div class="final-summary-box"><span>LEVELS PLAYED</span><strong id="finalLevels">0</strong></div>
+      <div class="final-summary-box"><span>ROUNDS PLAYED</span><strong id="finalLevels">0</strong></div>
       <div class="final-summary-box"><span>TOTAL PLAYERS</span><strong id="finalPlayers">0</strong></div>
     </div>
     <div class="final-table-wrap">
-      <div class="final-table-head"><span>PLAYER</span><span>CHANCES</span><span>CORRECT</span><span>WRONG</span><span>LEVELS</span><span>XP</span></div>
+      <div class="final-table-head"><span>PLAYER</span><span>CHANCES</span><span>CORRECT</span><span>WRONG</span><span>ROUNDS</span><span>XP</span></div>
       <div id="xpList"></div>
     </div>
     <div class="final-actions"><a href="./battle-lobby.html" class="battle-new-match">ENTER NEW MATCH</a></div>
@@ -162,16 +162,16 @@
 <div id="toast" class="battle-toast hidden"></div>
 <div id="levelResultOverlay" class="level-result-overlay hidden" aria-live="assertive">
   <div class="level-result-card">
-    <div class="level-result-kicker">LEVEL COMPLETE</div>
-    <div class="level-result-level" id="levelResultLevel">LEVEL 01</div>
+    <div class="level-result-kicker">ROUND COMPLETE</div>
+    <div class="level-result-level" id="levelResultLevel">ROUND 01</div>
     <div class="level-result-score">
       <span class="level-result-team level-result-team-a"><small>GROUP A</small><strong id="levelResultA">0</strong></span>
       <span class="level-result-vs">VS</span>
       <span class="level-result-team level-result-team-b"><small>GROUP B</small><strong id="levelResultB">0</strong></span>
     </div>
-    <div class="level-result-winner" id="levelResultWinner">LEVEL WINNER</div>
+    <div class="level-result-winner" id="levelResultWinner">ROUND WINNER</div>
     <div class="level-result-top" id="levelResultTop">TOP PLAYER</div>
-    <div class="level-result-countdown" id="levelResultCountdown">NEXT LEVEL 3</div>
+    <div class="level-result-countdown" id="levelResultCountdown">NEXT ROUND 3</div>
   </div>
 </div>
 
@@ -215,16 +215,16 @@ let levelTransitionTimer = null;
 function showLevelResult(levelResult) {
   if (!levelResult || Number(levelResult.createdAt || 0) === lastLevelResultAt) return;
   lastLevelResultAt = Number(levelResult.createdAt || 0);
-  levelResultLevel.textContent = `LEVEL ${String(levelResult.level || 1).padStart(2,'0')}`;
+  levelResultLevel.textContent = `ROUND ${String(levelResult.level || 1).padStart(2,'0')}`;
   levelResultA.textContent = String(levelResult.score?.A || 0);
   levelResultB.textContent = String(levelResult.score?.B || 0);
   const winner = levelResult.winnerTeam;
-  levelResultWinner.textContent = winner ? `GROUP ${winner} TAKES THE LEVEL` : `LEVEL DRAW`;
+  levelResultWinner.textContent = winner ? `GROUP ${winner} TAKES THE ROUND` : `ROUND DRAW`;
   const top = levelResult.topPlayer?.[winner || 'A'];
   levelResultTop.textContent = top ? `${nameOf(latestMatch, top.studentId)} — ${top.correct} CORRECT / ${top.attempts} CHANCES` : 'NO ANSWER RECORDED';
   levelResultOverlay.classList.remove('hidden');
   let n = 3;
-  levelResultCountdown.textContent = `NEXT LEVEL ${n}`;
+  levelResultCountdown.textContent = `NEXT ROUND ${n}`;
   clearInterval(levelTransitionTimer);
   levelTransitionTimer = setInterval(() => {
     n -= 1;
@@ -233,7 +233,7 @@ function showLevelResult(levelResult) {
       levelResultOverlay.classList.add('hidden');
       return;
     }
-    levelResultCountdown.textContent = `NEXT LEVEL ${n}`;
+    levelResultCountdown.textContent = `NEXT ROUND ${n}`;
   }, 1000);
 }
 

@@ -34,7 +34,7 @@ body{background:var(--bg-app);color:var(--text-primary);font-family:var(--font-b
 .join-wrap{max-width:460px;margin:0 auto}.join-code-input{text-align:center;font-family:var(--font-num);font-size:1.35rem;font-weight:800;letter-spacing:5px;text-transform:uppercase}
 .qr-tools{display:flex;gap:10px;margin-top:12px}.qr-tools button{flex:1}.scanner{margin-top:12px;border-radius:14px;overflow:hidden;background:#000;padding:8px}
 .lobby-head{text-align:center}.lobby-code{font-family:var(--font-num);font-size:2rem;font-weight:900;letter-spacing:7px;margin:8px 0 4px;color:var(--battle-gold)}
-.lobby-code-note{font-size:.8rem;color:var(--text-muted);font-weight:600}.lobby-code-actions{display:flex;justify-content:center;margin:8px 0 2px}.lobby-code-actions .secondary-action{min-width:120px}.lobby-timer{margin:22px 0 18px;border:1px solid var(--surface-border);border-radius:16px;background:var(--surface-solid);padding:15px;text-align:center}
+.lobby-code-note{font-size:.8rem;color:var(--text-muted);font-weight:600}.lobby-code-actions{display:flex;justify-content:center;gap:10px;margin:8px 0 2px}.lobby-code-actions .secondary-action{min-width:120px}.lobby-code-qr{width:148px;height:148px;margin:14px auto 8px;padding:8px;border-radius:16px;background:#fff;border:1px solid var(--surface-border);display:grid;place-items:center}.lobby-code-qr img{display:block;width:132px;height:132px}.lobby-code-qr:empty{display:none}.lobby-timer{margin:22px 0 18px;border:1px solid var(--surface-border);border-radius:16px;background:var(--surface-solid);padding:15px;text-align:center}
 .timer-label{display:block;color:var(--text-muted);font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em}.timer-value{display:block;font-family:var(--font-num);font-size:2rem;font-weight:900;margin-top:2px}
 .member-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}.team-card{border:1px solid var(--surface-border);background:var(--surface-solid);border-radius:16px;padding:15px}.team-card.a{border-top:3px solid var(--battle-gold)}.team-card.b{border-top:3px solid var(--battle-violet)}
 .team-name{font-size:.82rem;font-weight:900;letter-spacing:.06em;margin-bottom:11px}.team-card.b .team-name{color:var(--battle-violet)}
@@ -95,6 +95,7 @@ body{background:var(--bg-app);color:var(--text-primary);font-family:var(--font-b
     <section class="panel lobby-head">
       <h2 class="panel-title">Battle Lobby</h2>
       <div id="codeBox" class="lobby-code">------</div>
+      <div id="lobbyQr" class="lobby-code-qr" aria-label="Battle QR code"></div>
       <div class="lobby-code-actions"><button id="shareCodeBtn" class="secondary-action" type="button">Share</button></div>
       <div class="lobby-code-note">এই Code অন্যদের দাও</div>
       <div class="lobby-timer">
@@ -141,6 +142,16 @@ function showOnly(name){ [modeView,createView,joinView,lobbyView].forEach(v=>v.c
 function showErr(el,msg){ el.textContent=msg; clearTimeout(el._t); el._t=setTimeout(()=>el.textContent="",4500); }
 function stopScanner(){ if(!scanner)return; scanner.stop().catch(()=>{}).finally(()=>{scanner.clear().catch(()=>{});scanner=null;document.getElementById("scannerArea").classList.add("hidden");}); }
 function clearLobbyTimer(){ if(lobbyTimerHandle){clearInterval(lobbyTimerHandle);lobbyTimerHandle=null;} }
+
+// If a shared/QR link contains a Battle code, open the Join view with that code filled in.
+const sharedCode = new URLSearchParams(location.search).get("code");
+if(sharedCode){
+  const normalizedSharedCode = sharedCode.trim().toUpperCase();
+  if(/^[A-Z0-9]{6}$/.test(normalizedSharedCode)){
+    document.getElementById("joinCodeInput").value = normalizedSharedCode;
+    showOnly("join");
+  }
+}
 
 // Load syllabus once. Chapter and Topic are deliberately separate controls.
 try{
@@ -234,6 +245,12 @@ function startLobbyTimer(startsAt,isHost,code,m){
 
 function enterLobby(code){
   currentCode=code;showOnly("lobby");document.getElementById("codeBox").textContent=code;
+  const qrBox=document.getElementById("lobbyQr");
+  qrBox.innerHTML="";
+  if(typeof QRCode!=="undefined"){
+    const joinUrl=`${location.origin}${location.pathname}?code=${encodeURIComponent(code)}`;
+    new QRCode(qrBox,{text:joinUrl,width:132,height:132,colorDark:"#111111",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});
+  }
   const ref=doc(db,"battleMatches",code);
   unsub?.();
   unsub=onSnapshot(ref,snap=>{
