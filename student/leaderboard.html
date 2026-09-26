@@ -51,32 +51,41 @@
   .lb-icon { width:17px; height:17px; flex-shrink:0; }
   .hidden { display:none !important; }
 
-  /* ===== Hero ===== */
-  .lb-hero { position:relative; overflow:hidden; margin-top:16px; padding:18px; }
-  .lb-kicker { display:flex; align-items:center; gap:8px; color:var(--color-accent); font-size:.75rem; font-weight:900; letter-spacing:.05em; text-transform:uppercase; }
-  .lb-hero h1 { margin:6px 0 6px; font-size:1.5rem; line-height:1.15; font-weight:900; }
-  .lb-hero p { margin:0; color:var(--text-secondary); font-size:.83rem; line-height:1.5; }
+  /* ===== Cascading entrance — every top-level block fades/slides up as it mounts ===== */
+  @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  .lb-page > * { animation: fadeUp .5s cubic-bezier(.22,1,.36,1) backwards; }
+  .lb-page > *:nth-child(1) { animation-delay:.02s; }
+  .lb-page > *:nth-child(2) { animation-delay:.06s; }
+  .lb-page > *:nth-child(3) { animation-delay:.10s; }
+  .lb-page > *:nth-child(4) { animation-delay:.14s; }
+  .lb-page > *:nth-child(5) { animation-delay:.18s; }
+  .lb-page > *:nth-child(6) { animation-delay:.22s; }
+  .lb-page > *:nth-child(n+7) { animation-delay:.26s; }
+
+  /* ===== Plain title bar (no card — sits directly on the page) ===== */
+  .lb-titlebar { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:16px; padding:0 2px; }
+  .lb-titlebar h1 { margin:0; font-size:1.2rem; font-weight:900; display:flex; align-items:center; gap:8px; }
+  .lb-titlebar h1 svg { color:var(--color-accent); width:21px; height:21px; }
   .friend-count { display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:99px; font-size:.68rem; font-weight:900; color:var(--color-accent); background:var(--color-accent-soft); border:1px solid rgba(var(--color-accent-rgb),.2); white-space:nowrap; }
 
-  /* ===== Compact topbar (title + tabs + my-rank snapshot, all in one card) ===== */
-  .lb-topbar { margin-top:14px; padding:14px 14px 10px; }
-  .lb-topbar-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
-  .lb-topbar-row h1 { margin:0; font-size:1.15rem; font-weight:900; display:flex; align-items:center; gap:8px; }
-  .lb-topbar-row h1 svg { color:var(--color-accent); width:20px; height:20px; }
+  /* ===== My-rank hero (ink stamp — same language as the dashboard hero) ===== */
+  .lb-hero-stamp { margin-top:12px; padding:16px; border-radius:var(--radius-lg); background:#21262f; color:#f3f1ea; }
+  .lhs-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .lhs-label { font-size:.7rem; font-weight:700; color:rgba(243,241,234,.62); }
+  .lhs-rank { font-family:var(--font-num); font-weight:700; font-size:2.1rem; line-height:1.1; color:var(--color-accent); margin-top:2px; }
+  .lhs-move { text-align:right; font-size:.68rem; font-weight:800; flex-shrink:0; }
+  .lhs-move span { display:block; margin-top:2px; font-weight:700; color:rgba(243,241,234,.55); }
+  .lhs-level-row { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-top:14px; padding-top:12px; border-top:1px solid rgba(243,241,234,.14); font-size:.78rem; font-weight:800; }
+  .lhs-level-row b { font-family:var(--font-num); color:var(--color-accent); font-weight:700; }
+  .lhs-bar { height:6px; border-radius:99px; background:rgba(243,241,234,.14); overflow:hidden; margin-top:8px; }
+  .lhs-bar i { display:block; height:100%; border-radius:99px; background:var(--color-accent); transition:width .9s cubic-bezier(.22,1,.36,1); }
+  .lhs-sub { margin-top:6px; font-size:.66rem; font-weight:700; color:rgba(243,241,234,.6); }
 
-  .rank-strip { display:flex; align-items:center; gap:12px; margin-top:12px; padding:11px 12px; border-radius:var(--radius-md); background:var(--color-accent-soft); border:1px solid rgba(var(--color-accent-rgb),.25); }
-  .rank-strip .rs-rank { flex-shrink:0; width:42px; height:42px; border-radius:11px; background:rgba(var(--color-accent-rgb),.18); color:var(--color-accent); display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:var(--font-num); }
-  .rank-strip .rs-rank b { font-size:1.02rem; font-weight:900; line-height:1; }
-  .rank-strip .rs-rank span { font-size:.5rem; font-weight:800; opacity:.8; }
-  .rank-strip .rs-main { flex:1; min-width:0; }
-  .rank-strip .rs-level { font-size:.78rem; font-weight:900; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-  .rank-strip .rs-bar { height:6px; border-radius:99px; background:var(--surface-edge); overflow:hidden; margin-top:7px; }
-  .rank-strip .rs-bar i { display:block; height:100%; border-radius:99px; background:var(--color-accent); }
-  .rank-strip .rs-sub { margin-top:5px; font-size:.6rem; color:var(--text-muted); font-weight:700; }
-  .rank-strip .rs-move { flex-shrink:0; text-align:center; font-size:.62rem; font-weight:900; }
+  /* ===== Compact topbar (tabs + batch filter only) ===== */
+  .lb-topbar { margin-top:12px; padding:10px 10px; }
 
   /* ===== Scope tabs (Total / Batch / Friends) ===== */
-  .lb-tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-top:12px; padding:5px; border-radius:var(--radius-lg); background:var(--surface-highlight); border:1px solid var(--surface-border); }
+  .lb-tabs { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; padding:5px; border-radius:var(--radius-lg); background:var(--surface-highlight); border:1px solid var(--surface-border); }
   .lb-tab { appearance:none; border:0; background:transparent; color:var(--text-secondary); font:inherit; font-size:.78rem; font-weight:900; min-height:42px; border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; gap:7px; cursor:pointer; transition:background .15s ease; -webkit-tap-highlight-color:transparent; }
   .lb-tab.active { background:var(--color-accent); color:#fff; }
   .lb-tab .lb-icon { width:16px; height:16px; }
@@ -494,12 +503,14 @@ function render() {
     <div class="lb-page">
       ${renderStudentHeader(student, "leaderboard")}
 
+      <section class="lb-titlebar">
+        <h1>${ICON.trophy}লিডারবোর্ড</h1>
+        <div class="friend-count" id="friendCount"></div>
+      </section>
+
+      <div id="rankStrip"></div>
+
       <section class="glass-float-card lb-topbar">
-        <div class="lb-topbar-row">
-          <h1>${ICON.trophy}লিডারবোর্ড</h1>
-          <div class="friend-count" id="friendCount"></div>
-        </div>
-        <div id="rankStrip"></div>
         <div class="lb-tabs" id="scopeTabs"></div>
         <div class="lb-filter-row hidden" id="batchChips"></div>
       </section>
@@ -578,20 +589,23 @@ function renderRankStrip() {
   const level = getLevelInfo(safeNum(me.totalPoints));
   const mv = S.movement[student.studentId];
   const moveHtml = mv === null || mv === undefined
-    ? `<span style="color:var(--text-muted);">নতুন</span>`
+    ? `<span style="color:rgba(243,241,234,.7);">নতুন</span>`
     : mv > 0 ? `<span style="color:var(--color-success);">${ICON.up}+${mv}</span>`
     : mv < 0 ? `<span style="color:var(--color-danger);">${ICON.down}${mv}</span>`
-    : `<span style="color:var(--text-muted);">${ICON.minus}</span>`;
+    : `<span style="color:rgba(243,241,234,.7);">${ICON.minus}</span>`;
 
   el.innerHTML = `
-    <div class="rank-strip">
-      <div class="rs-rank"><b class="num">#${myPos + 1}</b><span>সর্বমোট</span></div>
-      <div class="rs-main">
-        <div class="rs-level">লেভেল ${level.level} <span class="num" style="color:var(--color-accent);">${safeNum(me.totalPoints)} pts</span></div>
-        <div class="rs-bar"><i style="width:${level.percentage}%"></i></div>
-        <div class="rs-sub">${level.isMax ? "সর্বোচ্চ লেভেল!" : `পরের লেভেলের জন্য আরও ${level.xpNeeded} XP লাগবে`}</div>
+    <div class="lb-hero-stamp">
+      <div class="lhs-top">
+        <div>
+          <div class="lhs-label">তোমার অবস্থান (সর্বমোট)</div>
+          <div class="lhs-rank">#${myPos + 1}</div>
+        </div>
+        <div class="lhs-move">${moveHtml}<span>৭ দিনে</span></div>
       </div>
-      <div class="rs-move">${moveHtml}<div style="color:var(--text-muted); font-weight:700; margin-top:2px;">৭ দিনে</div></div>
+      <div class="lhs-level-row"><span>লেভেল ${level.level}</span><b>${safeNum(me.totalPoints)} pts</b></div>
+      <div class="lhs-bar"><i style="width:${level.percentage}%"></i></div>
+      <div class="lhs-sub">${level.isMax ? "সর্বোচ্চ লেভেল!" : `পরের লেভেলের জন্য আরও ${level.xpNeeded} XP লাগবে`}</div>
     </div>`;
 }
 
@@ -728,7 +742,7 @@ function renderRivalCard() {
         <div><b>${rec.draws}</b><small>ড্র</small></div>
         <div><b style="color:var(--color-danger);">${rec.losses}</b><small>তোমার হার</small></div>
       </div>
-      ${total > 1 ? `<div class="rank-strip" style="margin-top:11px; background:rgba(220,38,38,.06); border-color:rgba(220,38,38,.2);"><div class="rs-bar" style="flex:1; margin:0;"><i style="width:${Math.round(rec.wins / total * 100)}%; background:var(--color-danger);"></i></div></div>` : ""}
+      ${total > 1 ? `<div style="margin-top:11px; padding:9px 10px; border-radius:var(--radius-md); background:rgba(166,64,47,.06); border:1px solid rgba(166,64,47,.2);"><div style="height:6px; border-radius:99px; background:var(--surface-edge); overflow:hidden;"><i style="display:block; height:100%; border-radius:99px; width:${Math.round(rec.wins / total * 100)}%; background:var(--color-danger);"></i></div></div>` : ""}
     </section>`;
 
   document.getElementById("rivalOpenBtn")?.addEventListener("click", () => openFriendSheet(S.rivalId));
