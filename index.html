@@ -14,16 +14,20 @@
 
   /* ===== Cascading entrance ===== */
   @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-  .register-head, .search-glass, #classFilter, .list-head { animation: fadeUp .5s cubic-bezier(.22,1,.36,1) backwards; }
-  .register-head { animation-delay: .02s; }
+  .entry-hero, .search-glass, #classFilter, .list-head { animation: fadeUp .5s cubic-bezier(.22,1,.36,1) backwards; }
+  .entry-hero { animation-delay: .02s; }
   .search-glass { animation-delay: .08s; }
   #classFilter { animation-delay: .12s; }
   .list-head { animation-delay: .16s; }
 
-  /* ===== Header ===== */
-  .register-head { margin-top: 14px; margin-bottom: 20px; text-align: center; }
-  .register-head h1 { font-size: 1.55rem; font-weight: 900; color: var(--text-primary); line-height: 1.3; letter-spacing: -0.3px; }
-  .register-head p { margin-top: 6px; font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+  /* ===== Header — ink-stamp seal (same "মার্কশিট" hero language as dashboard/leaderboard) ===== */
+  .entry-hero { position: relative; overflow: hidden; margin-top: 14px; margin-bottom: 20px; padding: 26px 20px 22px; border-radius: var(--radius-lg); background: #21262f; color: #f3f1ea; text-align: center; }
+  .eh-seal { position: relative; width: 62px; height: 62px; margin: 0 auto 14px; }
+  .eh-seal svg { width: 100%; height: 100%; }
+  .eh-seal-ring { fill: none; stroke: rgba(184,134,60,.3); stroke-width: 1.6; stroke-dasharray: 3 5; }
+  .eh-seal-icon { color: var(--color-accent); }
+  .entry-hero h1 { font-size: 1.4rem; font-weight: 900; color: #f3f1ea; line-height: 1.3; letter-spacing: -0.2px; }
+  .entry-hero p { margin-top: 6px; font-size: 0.82rem; color: rgba(243,241,234,.65); font-weight: 600; }
 
   /* ===== Search bar (flat, no glow) ===== */
   .search-glass {
@@ -88,7 +92,17 @@
 
 <!-- App Content -->
 <div class="app-shell" id="appShell">
-  <div class="register-head">
+  <div class="entry-hero">
+    <div class="eh-seal">
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <circle class="eh-seal-ring" cx="32" cy="32" r="29"/>
+        <g class="eh-seal-icon" transform="translate(16,16)" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 2 2 8l14 6 14-6z"/>
+          <path d="M6 11v6c0 2.5 4.5 5 10 5s10-2.5 10-5v-6"/>
+          <path d="M30 8v8"/>
+        </g>
+      </svg>
+    </div>
     <h1 id="platformHeading">EXAM PREPARATION</h1>
     <p>তালিকা থেকে নিজের নাম বেছে নাও</p>
   </div>
