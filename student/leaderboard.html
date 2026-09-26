@@ -430,7 +430,7 @@ function computeDerived() {
   S.rows = rows;
 
   const weekAgo = Date.now() - 7 * DAY_MS;
-  const oldRows = buildLeaderboardRows(S.results.filter(r => toMillis(r.submittedAt) && toMillis(r.submittedAt) < weekAgo), S.students, S.challengeBonusMap, S.improvementResultsMap, S.battleXPMap);
+  const oldRows = buildLeaderboardRows(S.results.filter(r => toMillis(r.submittedAt) && toMillis(r.submittedAt) < weekAgo), S.students, S.challengeBonusMap, S.improvementResultsMap, {});
   S.movement = computeRankMovement(rows, oldRows);
   S.extras = buildStudentExtras(S.results);
 
