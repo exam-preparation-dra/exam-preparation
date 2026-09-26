@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>XP স্টোর — পরীক্ষা প্রস্তুতি</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  .store-topbar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-5); }
+  .store-topbar-title { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); }
+  .store-topbar .icon-btn[aria-hidden] { visibility: hidden; }
+
+  .store-balance-card { text-align: center; }
+  .store-balance-note { margin-top: 4px; }
+
+  .store-section-title { font-size: 0.98rem; font-weight: 700; color: var(--text-primary); margin-bottom: var(--space-3); display: flex; align-items: center; gap: 8px; }
+
+  .store-item-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
+  .store-item-name { font-weight: 700; font-size: 1rem; color: var(--text-primary); }
+  .store-item-desc { margin: var(--space-3) 0; line-height: 1.6; }
+  .store-item-price { text-align: right; flex-shrink: 0; }
+  .store-item-price-original { display: block; font-size: 0.76rem; color: var(--text-muted); text-decoration: line-through; }
+  .store-item-price-offer { display: block; font-size: 1.25rem; font-weight: 700; color: var(--color-accent); white-space: nowrap; }
+  .store-item-price-offer small { font-size: 0.68rem; font-weight: 600; color: var(--text-muted); margin-left: 2px; }
+  .store-discount-badge { margin-top: 4px; }
+
+  .store-item-footer { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--surface-border); flex-wrap: wrap; }
+  .store-qty { display: flex; align-items: center; gap: 10px; }
+  .store-qty-btn {
+    width: 34px; height: 34px; border-radius: var(--radius-sm); border: 1px solid var(--surface-border);
+    background: var(--surface-solid); color: var(--text-primary); font-size: 1.15rem; font-weight: 700;
+    display: grid; place-items: center; transition: border-color var(--transition), opacity var(--transition);
+  }
+  .store-qty-btn:disabled { opacity: 0.35; pointer-events: none; }
+  .store-qty-btn:not(:disabled):hover { border-color: var(--color-accent); color: var(--color-accent); }
+  .store-qty-value { min-width: 22px; text-align: center; font-weight: 700; }
+
+  .store-cart-bar {
+    position: sticky; bottom: var(--space-4);
+    display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+    background: var(--surface); border: 1px solid var(--color-accent); border-radius: var(--radius-lg);
+    padding: 14px 16px; box-shadow: var(--shadow-lift); margin: var(--space-4) 0;
+  }
+  .store-cart-count { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); }
+  .store-cart-total { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); }
+  .store-cart-bar .btn { width: auto; padding: 0 var(--space-6); }
+
+  .store-history-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+  .store-history-name { font-weight: 700; font-size: 0.92rem; color: var(--text-primary); }
+  .store-history-cost { font-weight: 700; color: var(--color-danger); white-space: nowrap; }
+
+  .store-empty-note { padding: var(--space-3) 0; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <header class="store-topbar">
+    <a href="./dashboard.html" class="icon-btn" aria-label="ফিরে যাও">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </a>
+    <h1 class="store-topbar-title">XP স্টোর</h1>
+    <span class="icon-btn" aria-hidden="true"></span>
+  </header>
+
+  <section class="card card--featured store-balance-card">
+    <div class="eyebrow">খরচযোগ্য ব্যালেন্স</div>
+    <div class="figure-hero" id="balanceValue">০</div>
+    <p class="text-sm text-muted store-balance-note" id="balanceNote">লোড হচ্ছে…</p>
+  </section>
+
+  <section class="d-sec">
+    <h2 class="store-section-title">আইটেম</h2>
+    <div id="itemList"><div class="card"><p class="text-sm text-muted">লোড হচ্ছে…</p></div></div>
+  </section>
+
+  <div id="cartBar" class="store-cart-bar hidden">
+    <div>
+      <div class="store-cart-count" id="cartCount"></div>
+      <div class="store-cart-total" id="cartTotal"></div>
+    </div>
+    <button id="checkoutBtn" class="btn btn-primary" type="button">চেকআউট করো</button>
+  </div>
+
+  <section class="d-sec">
+    <h2 class="store-section-title">কেনাকাটার ইতিহাস</h2>
+    <div id="historyList"></div>
+  </section>
+
+</div>
+
+<script type="module">
+import { getActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
+import { getApprovedResults } from "../js/utils/results-utils.js";
+import { computeStudentXP } from "../js/utils/xp-utils.js";
+import { resolveCompletedChallenges, getChallengeBonusXP } from "../js/utils/challenge-utils.js";
+import { getCompletedImprovementAttempts } from "../js/utils/improvement-xp-integration.js";
+import { getStudentBattleXP } from "../js/utils/battle-utils.js";
+import { STORE_ITEMS, getSpentXP, getStoreInventory, purchaseCart, getPurchaseHistory } from "../js/utils/store-utils.js";
+import { initTheme, showToast, formatDate, formatTime } from "../js/utils/ui-utils.js";
+
+initTheme();
+
+const student = getActiveStudent();
+if (!student) { window.location.href = "../index.html"; }
+
+const fmt = (n) => Number(n || 0).toLocaleString("bn-BD");
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const cart = {};       // itemId -> qty currently staged for checkout
+let currentTotalXP = 0; // lifetime XP (before this session's spend), used to re-check purchases
+let inventory = {};
+
+function renderBalance(xp) {
+  document.getElementById("balanceValue").innerHTML = `${fmt(xp.spendableXP)} <small style="font-size:1.2rem;">XP</small>`;
+  document.getElementById("balanceNote").textContent =
+    `মোট অর্জিত ${fmt(xp.totalXP)} XP${xp.spentXP > 0 ? ` · খরচ হয়েছে ${fmt(xp.spentXP)} XP` : ""}`;
+}
+
+function renderItems() {
+  const list = document.getElementById("itemList");
+  list.innerHTML = STORE_ITEMS.map(item => {
+    const owned = inventory[item.id] || { purchased: 0, used: 0, available: 0 };
+    const qty = cart[item.id] || 0;
+    const discountPct = item.originalPriceXP > item.priceXP
+      ? Math.round((1 - item.priceXP / item.originalPriceXP) * 100) : 0;
+    return `
+    <div class="card store-item-card" data-item="${item.id}">
+      <div class="store-item-top">
+        <div style="min-width:0;">
+          <div class="store-item-name">${esc(item.name)}</div>
+          <div class="text-sm text-muted">${esc(item.tagline)}</div>
+        </div>
+        <div class="store-item-price">
+          ${discountPct > 0 ? `<span class="store-item-price-original num">${fmt(item.originalPriceXP)} XP</span>` : ""}
+          <span class="store-item-price-offer num">${fmt(item.priceXP)}<small>XP</small></span>
+          ${discountPct > 0 ? `<span class="badge badge-completed store-discount-badge">-${discountPct}%</span>` : ""}
+        </div>
+      </div>
+      <p class="text-sm text-muted store-item-desc">${esc(item.description)}</p>
+      <div class="store-item-footer">
+        <div class="text-sm text-muted">তোমার কাছে আছে: <strong class="num">${fmt(owned.available)}</strong>টি</div>
+        <div class="store-qty">
+          <button type="button" class="store-qty-btn" data-act="dec" ${qty <= 0 ? "disabled" : ""} aria-label="কমাও">−</button>
+          <span class="store-qty-value num">${qty}</span>
+          <button type="button" class="store-qty-btn" data-act="inc" ${qty >= (item.maxPerOrder || 10) ? "disabled" : ""} aria-label="বাড়াও">+</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+
+  list.querySelectorAll(".store-item-card").forEach(card => {
+    const itemId = card.dataset.item;
+    const item = STORE_ITEMS.find(i => i.id === itemId);
+    card.querySelectorAll(".store-qty-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const cur = cart[itemId] || 0;
+        cart[itemId] = btn.dataset.act === "inc"
+          ? Math.min(item.maxPerOrder || 10, cur + 1)
+          : Math.max(0, cur - 1);
+        renderItems();
+        renderCartBar();
+      });
+    });
+  });
+}
+
+function renderCartBar() {
+  const bar = document.getElementById("cartBar");
+  const lines = Object.entries(cart).filter(([, q]) => q > 0);
+  if (!lines.length) { bar.classList.add("hidden"); return; }
+  bar.classList.remove("hidden");
+  const totalItems = lines.reduce((s, [, q]) => s + q, 0);
+  const totalCost = lines.reduce((s, [id, q]) => s + (STORE_ITEMS.find(i => i.id === id)?.priceXP || 0) * q, 0);
+  document.getElementById("cartCount").textContent = `${fmt(totalItems)}টি আইটেম`;
+  document.getElementById("cartTotal").innerHTML = `<span class="num">${fmt(totalCost)}</span> XP`;
+  document.getElementById("checkoutBtn").dataset.cost = totalCost;
+}
+
+function renderHistory(rows) {
+  const el = document.getElementById("historyList");
+  if (!rows.length) {
+    el.innerHTML = `<div class="card"><p class="text-sm text-muted store-empty-note">এখনো কোনো কেনাকাটা হয়নি।</p></div>`;
+    return;
+  }
+  el.innerHTML = rows.map(r => `
+    <div class="card store-history-row">
+      <div>
+        <div class="store-history-name">${esc(r.itemName)} <span class="text-muted">× ${fmt(r.qty)}</span></div>
+        <div class="text-sm text-muted">${formatDate(r.createdAtMs)} · ${formatTime(r.createdAtMs)}</div>
+      </div>
+      <div class="num store-history-cost">−${fmt(r.totalXP)} XP</div>
+    </div>
+  `).join("");
+}
+
+async function loadAll() {
+  await resolveCompletedChallenges(student.studentId).catch(() => []);
+
+  const [results, allStudents, challengeBonusXP, improvementResults, battleXP, spentXP, inv, history] = await Promise.all([
+    getApprovedResults(student.studentId),
+    getActiveStudents(),
+    getChallengeBonusXP(student.studentId).catch(() => 0),
+    getCompletedImprovementAttempts(student.studentId).catch(() => []),
+    getStudentBattleXP(student.studentId).catch(() => 0),
+    getSpentXP(student.studentId).catch(() => 0),
+    getStoreInventory(student.studentId).catch(() => ({})),
+    getPurchaseHistory(student.studentId).catch(() => [])
+  ]);
+
+  const myRefs = allStudents.filter(s => s.referredBy === student.studentId && s.studentId !== student.studentId);
+  const xp = computeStudentXP(results, {
+    referralCount: myRefs.length, challengeBonusXP,
+    improvementPracticeResults: improvementResults, battleXP, spentXP
+  });
+
+  currentTotalXP = xp.totalXP;
+  inventory = inv;
+
+  renderBalance(xp);
+  renderItems();
+  renderCartBar();
+  renderHistory(history);
+}
+
+document.getElementById("checkoutBtn").addEventListener("click", async (e) => {
+  const lines = Object.entries(cart).filter(([, q]) => q > 0).map(([itemId, qty]) => ({ itemId, qty }));
+  if (!lines.length) return;
+
+  const totalCost = Number(e.currentTarget.dataset.cost || 0);
+  const spentSoFar = await getSpentXP(student.studentId).catch(() => 0);
+  if (totalCost > currentTotalXP - spentSoFar) {
+    showToast("তোমার ব্যালেন্সে যথেষ্ট XP নেই।", "error");
+    return;
+  }
+
+  const summary = lines.map(l => `${STORE_ITEMS.find(i => i.id === l.itemId)?.name} × ${l.qty}`).join(", ");
+  if (!confirm(`${summary}\n\nমোট ${fmt(totalCost)} XP খরচ হবে। কিনতে চাও?`)) return;
+
+  const btn = e.currentTarget;
+  btn.disabled = true;
+  try {
+    await purchaseCart(student.studentId, lines, currentTotalXP);
+    showToast("কেনা হয়ে গেছে! ✅", "success");
+    Object.keys(cart).forEach(k => { cart[k] = 0; });
+    await loadAll();
+  } catch (err) {
+    const map = {
+      INSUFFICIENT_XP: "তোমার ব্যালেন্সে যথেষ্ট XP নেই।",
+      QTY_TOO_HIGH: "একবারে এত বেশি কেনা যাবে না।",
+      EMPTY_CART: "কার্ট খালি।"
+    };
+    showToast(map[err.message] || "কেনা যায়নি, আবার চেষ্টা করো।", "error");
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+loadAll().catch(err => {
+  console.error(err);
+  showToast("তথ্য লোড করা যায়নি।", "error");
+});
+</script>
+</body>
+</html>
