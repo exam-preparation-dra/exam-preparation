@@ -7,46 +7,31 @@
 <link rel="stylesheet" href="../css/style.css">
 <link rel="stylesheet" href="../css/battle-ui.css">
 <style>
-  /* Local Overrides for Premium Esports Play View */
-  .battle-timer {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: #111217; border: 1px solid #2a2d3a; color: #00f0ff;
-    padding: 6px 14px; font-family: 'Space Grotesk', monospace; font-size: 1.2rem; font-weight: 900;
-  }
-  .battle-timer svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2.5; }
+  /* Local overrides for the Battle play view — same paper/card language as the rest of the site */
   .battle-timer.low {
-    color: #070709; background: #ffea00; border-color: #ffea00;
     animation: alertBlink 0.8s infinite;
   }
-  @keyframes alertBlink { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.85; transform: scale(1.05); } }
-
-  /* Hazard Stripes for Eliminated Banner */
-  .battle-eliminated {
-    background: repeating-linear-gradient(45deg, rgba(255, 0, 92, 0.15), rgba(255, 0, 92, 0.15) 10px, rgba(255, 0, 92, 0.3) 10px, rgba(255, 0, 92, 0.3) 20px);
-    border: 1px solid #ff005c; color: #fff; padding: 12px; text-align: center;
-    font-weight: 900; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px;
-    box-shadow: inset 0 0 15px rgba(255, 0, 92, 0.2);
-  }
+  @keyframes alertBlink { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.85; transform: scale(1.04); } }
 
   /* Premium MVP & Best Effort Badges (Replacing Emojis) */
   .mvp-badge {
     display: inline-flex; align-items: center; gap: 4px;
-    background: rgba(255, 234, 0, 0.1); border: 1px solid #ffea00;
-    color: #ffea00; font-size: 0.65rem; font-weight: 900;
-    padding: 2px 6px; border-radius: 4px; margin-left: 8px; letter-spacing: 1px;
+    background: var(--color-accent-soft); border: 1px solid var(--color-accent);
+    color: var(--color-accent); font-size: 0.65rem; font-weight: 700;
+    padding: 2px 8px; border-radius: 999px; margin-left: 8px; letter-spacing: 0.03em;
   }
   .mvp-badge svg { width: 12px; height: 12px; fill: currentColor; }
-  
+
   .effort-badge {
     display: inline-flex; align-items: center; gap: 4px;
-    background: rgba(0, 240, 255, 0.1); border: 1px solid #00f0ff;
-    color: #00f0ff; font-size: 0.65rem; font-weight: 900;
-    padding: 2px 6px; border-radius: 4px; margin-left: 8px; letter-spacing: 1px;
+    background: color-mix(in srgb, var(--color-violet) 14%, transparent); border: 1px solid var(--color-violet);
+    color: var(--color-violet); font-size: 0.65rem; font-weight: 700;
+    padding: 2px 8px; border-radius: 999px; margin-left: 8px; letter-spacing: 0.03em;
   }
 
   /* Result Screen Polish */
-  .result-xp-panel { background: #070709; border: 1px solid #2a2d3a; padding: 16px; margin-top: 20px; }
-  .result-xp-header { color: #6b728e; font-weight: 900; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; border-bottom: 1px solid #2a2d3a; padding-bottom: 8px; text-align: left; }
+  .result-xp-panel { background: var(--surface-solid); border: 1px solid var(--surface-border); border-radius: var(--radius-md); padding: var(--space-4); margin-top: var(--space-5); }
+  .result-xp-header { color: var(--text-muted); font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: var(--space-3); border-bottom: 1px solid var(--surface-border); padding-bottom: var(--space-2); text-align: left; }
 </style>
 </head>
 <body class="battle-page">
@@ -80,7 +65,7 @@
   </div>
 
   <div id="eliminatedBanner" class="battle-eliminated hidden">
-    <span style="background:#070709; padding:2px 8px; border:1px solid #ff005c;">ELIMINATED FOR THIS ROUND</span>
+    <span style="background:var(--surface); padding:2px 8px; border:1px solid var(--color-danger); border-radius: var(--radius-sm);">ELIMINATED FOR THIS ROUND</span>
   </div>
 
   <main id="qCard" class="battle-question-card">
@@ -134,7 +119,7 @@ const myTeam = params.get("team") === "B" ? "B" : "A";
 const student = getActiveStudent();
 
 if (!code || !student?.studentId) {
-  document.getElementById("shell").innerHTML = `<div style="color:#ff005c; font-weight:900; text-align:center; margin-top:50px; border:1px solid #ff005c; padding:20px; background:#111217;">ERROR: NO MATCH CODE OR USER LOGIN FOUND</div>`;
+  document.getElementById("shell").innerHTML = `<div style="color:var(--color-danger); font-weight:700; text-align:center; margin-top:50px; border:1px solid var(--color-danger); border-radius: var(--radius-md); padding:20px; background:var(--surface);">ERROR: NO MATCH CODE OR USER LOGIN FOUND</div>`;
   throw new Error("missing code/student");
 }
 
@@ -182,10 +167,10 @@ function summarizePrevious(prevM) {
   if (!a && !b) return "NO ANSWER - NO POINTS";
   if (a?.correct && b?.correct) {
     const faster = a.answeredAt <= b.answeredAt ? "A" : "B";
-    return `BOTH CORRECT! <span style="color:#00ff73;">TEAM ${faster}</span> WAS FASTER (+1 PT)`;
+    return `BOTH CORRECT! <span style="color:var(--color-success);">TEAM ${faster}</span> WAS FASTER (+1 PT)`;
   }
-  if (a?.correct) return "<span style="color:#00ff73;">TEAM A</span> CORRECT (+1 PT)";
-  if (b?.correct) return "<span style="color:#00ff73;">TEAM B</span> CORRECT (+1 PT)";
+  if (a?.correct) return "<span style=\"color:var(--color-success);\">TEAM A</span> CORRECT (+1 PT)";
+  if (b?.correct) return "<span style=\"color:var(--color-success);\">TEAM B</span> CORRECT (+1 PT)";
   return "BOTH INCORRECT - NO POINTS";
 }
 
@@ -261,10 +246,10 @@ onSnapshot(ref, (snap) => {
   if (myClaim && !iClaimed) {
     statusNote.textContent = `${nameOf(m, myClaim.studentId)} IS ANSWERING FOR YOUR SQUAD...`;
   } else if (iClaimed && !myAnswer) {
-    statusNote.innerHTML = "<span style='color:#00ff73;'>YOUR CHANCE - CHOOSE AN ANSWER!</span>";
+    statusNote.innerHTML = "<span style='color:var(--color-success);'>YOUR CHANCE - CHOOSE AN ANSWER!</span>";
   } else if (myAnswer) {
     statusNote.textContent = myAnswer.correct ? "CORRECT! WAITING FOR NEXT..." : "INCORRECT! WAITING FOR NEXT...";
-    statusNote.style.color = myAnswer.correct ? "#00ff73" : "#ff005c";
+    statusNote.style.color = myAnswer.correct ? "var(--color-success)" : "var(--color-danger)";
   } else {
     statusNote.textContent = "";
   }
@@ -309,11 +294,11 @@ function renderResult(m) {
 
     return `<div class="battle-xp-row" style="align-items:center;">
               <span style="display:flex; align-items:center; gap:4px;">${esc(name)}${badgeHtml}</span>
-              <span style="color:#00ff73;">+${xp} XP</span>
+              <span style="color:var(--color-success);">+${xp} XP</span>
             </div>`;
   }).join("");
   
-  document.getElementById("xpList").innerHTML = rows || `<div style="color:#6b728e; font-weight:800;">NO XP DATA RECORDED</div>`;
+  document.getElementById("xpList").innerHTML = rows || `<div style="color:var(--text-muted); font-weight:600;">NO XP DATA RECORDED</div>`;
 }
 </script>
 </body>

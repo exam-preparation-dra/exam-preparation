@@ -9,66 +9,63 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode" defer></script>
 <style>
-  /* Local overrides for Esports Lobby */
-  body { background-color: var(--arena-bg, #070709); color: var(--arena-text, #fff); font-family: 'Inter', 'Noto Sans Bengali', sans-serif; }
-  .app-shell { max-width: 620px; padding: 24px 16px 48px; margin: 0 auto; }
-  .hidden { display: none !important; }
-  
-  .battle-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; border-bottom: 2px solid #2a2d3a; padding-bottom: 16px; }
-  .brand { display: flex; align-items: center; gap: 16px; }
-  .brand-icon { width: 48px; height: 48px; background: #00f0ff; color: #000; display: grid; place-items: center; clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%); }
-  .brand-icon svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 2.5; }
-  .brand h1 { font-size: 1.4rem; margin: 0; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
-  .brand p { margin: 2px 0 0; color: #6b728e; font-size: 0.8rem; font-weight: 700; }
-  .back-btn { background: #111217; border: 1px solid #2a2d3a; color: #fff; padding: 10px 16px; font-weight: 800; cursor: pointer; transition: all 0.2s; }
-  .back-btn:hover { border-color: #ff005c; color: #ff005c; }
+  /* Local overrides for the Battle lobby — same paper/card language as the rest of the site */
+  body { background-color: var(--bg-app); color: var(--text-primary); font-family: var(--font-bn); }
 
-  .hero { background: #111217; border: 2px solid #2a2d3a; padding: 40px 20px; text-align: center; margin-bottom: 24px; position: relative; }
-  .hero::before { content: ""; position: absolute; left: 0; top: 0; width: 4px; height: 100%; background: #00f0ff; }
-  .hero-symbol { width: 60px; height: 60px; background: #ff005c; margin: 0 auto 20px; display: grid; place-items: center; transform: rotate(45deg); }
-  .hero-symbol svg { width: 30px; height: 30px; stroke: #fff; transform: rotate(-45deg); stroke-width: 2.5; }
-  .hero h2 { margin: 0; font-size: 1.8rem; font-weight: 900; text-transform: uppercase; }
-  .hero p { color: #6b728e; font-size: 0.95rem; font-weight: 600; margin-top: 10px; }
+  .battle-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-6); border-bottom: 1px solid var(--surface-border); padding-bottom: var(--space-4); }
+  .brand { display: flex; align-items: center; gap: var(--space-3); }
+  .brand-icon { width: 48px; height: 48px; border-radius: var(--radius-md); background: linear-gradient(135deg, var(--color-accent), var(--color-accent-2)); color: #2b1d09; display: grid; place-items: center; box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 6px 16px rgba(201,151,63,0.3); }
+  .brand-icon svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2.2; }
+  .brand h1 { font-size: 1.25rem; margin: 0; font-weight: 700; color: var(--text-primary); }
+  .brand p { margin: 2px 0 0; color: var(--text-muted); font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .back-btn { background: var(--surface-solid); border: 1px solid var(--surface-border); color: var(--text-primary); border-radius: var(--radius-md); padding: 10px 16px; font-weight: 600; cursor: pointer; transition: border-color var(--transition), color var(--transition); }
+  .back-btn:hover { border-color: var(--color-accent); color: var(--color-accent); }
 
-  .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px; }
-  .mode-card { background: #070709; border: 2px solid #2a2d3a; padding: 24px 20px; text-align: left; cursor: pointer; color: #fff; transition: all 0.2s; }
-  .mode-card:hover { border-color: #00f0ff; background: rgba(0, 240, 255, 0.05); transform: translateY(-4px); box-shadow: 4px 4px 0 rgba(0, 240, 255, 0.2); }
-  .mode-card.join:hover { border-color: #ff005c; background: rgba(255, 0, 92, 0.05); box-shadow: 4px 4px 0 rgba(255, 0, 92, 0.2); }
-  .mode-icon { width: 40px; height: 40px; background: #111217; border: 1px solid #2a2d3a; display: grid; place-items: center; margin-bottom: 16px; color: #00f0ff; }
-  .mode-card.join .mode-icon { color: #ff005c; }
-  .mode-card h3 { margin: 0; font-size: 1.1rem; font-weight: 900; text-transform: uppercase; }
-  .mode-card p { margin: 8px 0 0; color: #6b728e; font-size: 0.85rem; font-weight: 600; }
+  .hero { background: var(--surface); border: 1px solid var(--surface-border); border-top: 3px solid var(--color-accent); border-radius: var(--radius-lg); padding: var(--space-7) var(--space-5); text-align: center; margin-bottom: var(--space-5); box-shadow: var(--shadow-soft); }
+  .hero-symbol { width: 60px; height: 60px; border-radius: var(--radius-lg); background: linear-gradient(135deg, var(--color-accent), var(--color-accent-2)); margin: 0 auto var(--space-5); display: grid; place-items: center; }
+  .hero-symbol svg { width: 28px; height: 28px; stroke: #2b1d09; stroke-width: 2.2; }
+  .hero h2 { margin: 0; font-size: 1.4rem; font-weight: 700; color: var(--text-primary); }
+  .hero p { color: var(--text-secondary); font-size: 0.92rem; font-weight: 500; margin-top: var(--space-3); }
 
-  .section { background: #111217; border: 1px solid #2a2d3a; padding: 20px; margin-top: 20px; }
-  .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid #2a2d3a; padding-bottom: 12px; }
-  .section-title { margin: 0; font-size: 1.2rem; font-weight: 900; text-transform: uppercase; color: #00f0ff; }
-  .section-sub { margin: 4px 0 0; color: #6b728e; font-size: 0.85rem; font-weight: 600; }
-  
-  .topic-picker { max-height: 250px; overflow-y: auto; background: #070709; border: 1px solid #2a2d3a; padding: 10px; margin-top: 16px; }
-  .subject-label { font-weight: 900; color: #ff005c; text-transform: uppercase; margin: 12px 8px 8px; font-size: 0.85rem; letter-spacing: 1px; }
-  .topic-row { display: flex; align-items: center; gap: 12px; padding: 12px 10px; font-weight: 700; cursor: pointer; border-bottom: 1px solid #1a1c23; }
-  .topic-row:hover { background: #1a1c23; }
-  .topic-row input { accent-color: #00f0ff; width: 18px; height: 18px; }
+  .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-top: var(--space-5); }
+  .mode-card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius-lg); padding: var(--space-5) var(--space-4); text-align: left; cursor: pointer; color: var(--text-primary); transition: border-color var(--transition-lift), transform var(--transition-lift), box-shadow var(--transition-lift); box-shadow: var(--shadow-soft); }
+  .mode-card:hover { border-color: var(--color-accent); transform: translateY(-3px); box-shadow: var(--shadow-lift); }
+  .mode-card.join:hover { border-color: var(--color-violet); }
+  .mode-icon { width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--color-accent-soft); display: grid; place-items: center; margin-bottom: var(--space-4); color: var(--color-accent); }
+  .mode-card.join .mode-icon { background: color-mix(in srgb, var(--color-violet) 14%, transparent); color: var(--color-violet); }
+  .mode-card h3 { margin: 0; font-size: 1rem; font-weight: 700; color: var(--text-primary); }
+  .mode-card p { margin: var(--space-2) 0 0; color: var(--text-muted); font-size: 0.85rem; font-weight: 500; }
 
-  .primary-action { width: 100%; background: #00f0ff; color: #000; border: none; padding: 16px; font-weight: 900; font-size: 1rem; text-transform: uppercase; cursor: pointer; margin-top: 20px; clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px); }
-  .primary-action:hover { background: #fff; }
-  .secondary-action { border: 2px solid #2a2d3a; background: transparent; color: #fff; padding: 12px 16px; font-weight: 800; cursor: pointer; text-transform: uppercase; }
-  .secondary-action:hover { background: #2a2d3a; }
+  .section { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius-lg); padding: var(--space-5); margin-top: var(--space-4); box-shadow: var(--shadow-soft); }
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); border-bottom: 1px solid var(--surface-border); padding-bottom: var(--space-3); }
+  .section-title { margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-primary); }
+  .section-sub { margin: var(--space-1) 0 0; color: var(--text-muted); font-size: 0.82rem; }
 
-  .battle-code { font-family: 'Space Grotesk', monospace; font-size: 3rem; font-weight: 900; letter-spacing: 10px; text-align: center; color: #00f0ff; margin: 20px 0; background: #070709; border: 1px dashed #2a2d3a; padding: 20px; }
-  
-  .team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
-  .team-panel { background: #070709; border: 1px solid #2a2d3a; padding: 16px; }
-  .team-title { font-weight: 900; text-transform: uppercase; margin-bottom: 12px; color: #00f0ff; border-bottom: 1px solid #2a2d3a; padding-bottom: 8px; }
-  .team-panel:last-child .team-title { color: #ff005c; }
-  .member-chip { background: #111217; border: 1px solid #2a2d3a; padding: 10px 12px; font-weight: 800; font-size: 0.85rem; margin-bottom: 8px; display: flex; justify-content: space-between; }
-  
-  .modal-wrap { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: grid; place-items: center; padding: 16px; z-index: 100; }
-  .modal { background: #111217; border: 2px solid #00f0ff; padding: 24px; width: 100%; max-width: 480px; box-shadow: 8px 8px 0 rgba(0, 240, 255, 0.2); }
-  .join-code { background: #070709; border: 2px solid #2a2d3a; color: #00f0ff; font-family: 'Space Grotesk', monospace; font-size: 1.5rem; text-align: center; letter-spacing: 5px; padding: 16px; width: 100%; box-sizing: border-box; font-weight: 900; margin-bottom: 16px; }
-  .join-code:focus { outline: none; border-color: #00f0ff; }
-  
-  .error-note { color: #ff005c; font-weight: 900; text-align: center; margin-top: 12px; }
+  .topic-picker { max-height: 260px; overflow-y: auto; background: var(--surface-solid); border: 1px solid var(--surface-border); border-radius: var(--radius-md); padding: var(--space-2); margin-top: var(--space-4); }
+  .subject-label { font-weight: 700; color: var(--color-violet); margin: 12px 8px 8px; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.03em; }
+  .topic-row { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-2); font-weight: 500; cursor: pointer; border-bottom: 1px solid var(--surface-border); border-radius: var(--radius-sm); }
+  .topic-row:hover { background: var(--surface-highlight); }
+  .topic-row input { accent-color: var(--color-accent); width: 18px; height: 18px; }
+
+  .primary-action { width: 100%; background: linear-gradient(135deg, var(--color-accent), var(--color-accent-2)); color: #2b1d09; border: none; border-radius: var(--radius-md); padding: 16px; font-weight: 700; font-size: 0.98rem; cursor: pointer; margin-top: var(--space-5); box-shadow: 0 10px 24px rgba(201,151,63,0.32), 0 2px 6px rgba(201,151,63,0.4); transition: transform var(--transition-lift); }
+  .primary-action:hover { transform: translateY(-1px); }
+  .secondary-action { border: 1px solid var(--surface-border); background: var(--surface-solid); color: var(--text-primary); border-radius: var(--radius-md); padding: 12px 16px; font-weight: 600; cursor: pointer; transition: border-color var(--transition), color var(--transition); }
+  .secondary-action:hover { border-color: var(--color-accent); color: var(--color-accent); }
+
+  .battle-code { font-family: var(--font-num); font-size: 2.6rem; font-weight: 700; letter-spacing: 8px; text-align: center; color: var(--color-accent); margin: var(--space-5) 0; background: var(--surface-solid); border: 1px dashed var(--surface-border); border-radius: var(--radius-md); padding: var(--space-5); }
+
+  .team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-top: var(--space-5); }
+  .team-panel { background: var(--surface-solid); border: 1px solid var(--surface-border); border-radius: var(--radius-md); padding: var(--space-4); }
+  .team-title { font-weight: 700; margin-bottom: var(--space-3); color: var(--color-accent); border-bottom: 1px solid var(--surface-border); padding-bottom: var(--space-2); font-size: 0.9rem; }
+  .team-panel:last-child .team-title { color: var(--color-violet); }
+  .member-chip { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius-sm); padding: 10px 12px; font-weight: 600; font-size: 0.85rem; margin-bottom: var(--space-2); display: flex; justify-content: space-between; }
+
+  .modal-wrap { position: fixed; inset: 0; background: rgba(20,18,10,0.55); display: grid; place-items: center; padding: var(--space-4); z-index: 100; }
+  .modal { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius-lg); padding: var(--space-5); width: 100%; max-width: 480px; box-shadow: var(--shadow-lift); }
+  .join-code { background: var(--surface-solid); border: 1px solid var(--surface-border); color: var(--color-accent); font-family: var(--font-num); font-size: 1.4rem; text-align: center; letter-spacing: 6px; padding: var(--space-4); width: 100%; box-sizing: border-box; font-weight: 700; margin-bottom: var(--space-4); border-radius: var(--radius-md); }
+  .join-code:focus { outline: none; border-color: var(--color-accent); }
+
+  .error-note { color: var(--color-danger); font-weight: 600; text-align: center; margin-top: var(--space-3); }
 </style>
 </head>
 <body>
@@ -131,17 +128,17 @@
         <button id="copyCodeBtn" class="secondary-action" style="flex: 1;" type="button">COPY CODE</button>
         <button id="shareCodeBtn" class="secondary-action" style="flex: 1;" type="button">SHARE</button>
       </div>
-      <div style="background: #fff; padding: 12px; width: 160px; margin: 0 auto; border: 4px solid #2a2d3a;" id="qrBox"></div>
+      <div style="background: #fff; padding: 12px; width: 160px; margin: 0 auto; border: 1px solid var(--surface-border); border-radius: var(--radius-md);" id="qrBox"></div>
     </div>
 
     <div class="section">
-      <div class="section-head"><div><h3 class="section-title" style="color: #fff;">SQUADS</h3></div></div>
+      <div class="section-head"><div><h3 class="section-title">SQUADS</h3></div></div>
       <div class="team-grid">
         <div class="team-panel"><div class="team-title">TEAM ALPHA (A)</div><div id="teamACol"></div></div>
         <div class="team-panel"><div class="team-title">TEAM OMEGA (B)</div><div id="teamBCol"></div></div>
       </div>
       <button id="startBtn" class="primary-action hidden" type="button">START MATCH</button>
-      <p id="waitingNote" class="hidden" style="text-align:center;color:#6b728e;font-weight:800;margin-top:16px;">WAITING FOR HOST TO START...</p>
+      <p id="waitingNote" class="hidden" style="text-align:center;color:var(--text-muted);font-weight:600;margin-top:16px;">WAITING FOR HOST TO START...</p>
       <p id="errorNote" class="error-note"></p>
     </div>
     <button id="leaveLobbyBtn" class="secondary-action" type="button" style="width:100%;margin-top:16px;">LEAVE LOBBY</button>
@@ -154,16 +151,16 @@
 <div id="joinModal" class="modal-wrap hidden">
   <div class="modal">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-      <h3 style="margin: 0; font-size: 1.2rem; font-weight: 900; color: #00f0ff; text-transform: uppercase;">JOIN BATTLE</h3>
-      <button id="closeJoinBtn" style="background: transparent; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; font-weight: 900;">×</button>
+      <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">JOIN BATTLE</h3>
+      <button id="closeJoinBtn" style="background: transparent; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; font-weight: 700;">×</button>
     </div>
     <input id="joinCodeInput" class="join-code" maxlength="6" placeholder="ENTER CODE" autocomplete="off">
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
       <button id="joinABtn" class="primary-action" style="margin: 0;" type="button">TEAM A</button>
-      <button id="joinBBtn" class="primary-action" style="margin: 0; background: #ff005c; color: #fff;" type="button">TEAM B</button>
+      <button id="joinBBtn" class="primary-action" style="margin: 0; background: var(--color-violet); color: #fff; box-shadow: none;" type="button">TEAM B</button>
     </div>
     <button id="scanQrBtn" class="secondary-action" type="button" style="width:100%;">SCAN QR CODE</button>
-    <div id="scannerArea" class="hidden" style="margin-top:16px; border: 2px solid #2a2d3a; background: #000; padding: 8px;"><div id="qr-reader"></div></div>
+    <div id="scannerArea" class="hidden" style="margin-top:16px; border: 1px solid var(--surface-border); border-radius: var(--radius-md); background: #000; padding: 8px;"><div id="qr-reader"></div></div>
   </div>
 </div>
 
@@ -233,7 +230,7 @@ joinModal.addEventListener("click", e => { if (e.target === joinModal) { stopSca
       `).join("")}
     `).join("") || `<div style="color:var(--text-muted);padding:12px;">কোনো Topic পাওয়া যায়নি।</div>`;
   } catch (e) {
-    topicPicker.innerHTML = `<div style="color:#ff005c;padding:12px;font-weight:bold;">Topic লোড করা যায়নি।</div>`;
+    topicPicker.innerHTML = `<div style="color:var(--color-danger);padding:12px;font-weight:bold;">Topic লোড করা যায়নি।</div>`;
   }
 })();
 
@@ -323,9 +320,9 @@ function renderTeam(colEl, members, team, isHost, code) {
     const canRemove = isHost && m.studentId !== student.studentId;
     return `<div class="member-chip">
       <span>${esc(m.name)}</span>
-      ${canRemove ? `<button type="button" class="member-remove" data-team="${team}" data-sid="${esc(m.studentId)}" style="background:none;border:none;color:#ff005c;font-weight:900;cursor:pointer;">×</button>` : ""}
+      ${canRemove ? `<button type="button" class="member-remove" data-team="${team}" data-sid="${esc(m.studentId)}" style="background:none;border:none;color:var(--color-danger);font-weight:700;cursor:pointer;">×</button>` : ""}
     </div>`;
-  }).join("") || `<div style="color:#6b728e;font-size:0.8rem;padding:8px 0;font-weight:bold;">EMPTY SLOT</div>`;
+  }).join("") || `<div style="color:var(--text-muted);font-size:0.8rem;padding:8px 0;font-weight:bold;">EMPTY SLOT</div>`;
 
   colEl.querySelectorAll(".member-remove").forEach(btn => {
     btn.addEventListener("click", async () => {
