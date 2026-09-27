@@ -12,6 +12,18 @@
    eliminates a member for THAT level only. Whichever team wins Level 4
    (best-of-N within the level) wins the whole match.
 
+   TIE-BREAK: if Level 4 ends tied (equal levelWins for both teams), the
+   match does NOT immediately fall back to whole-match total correct
+   answers. One extra "sudden death" question -- reserved from the pool
+   at startMatch() time, on top of the normal questionsPerLevel*LEVEL_COUNT
+   selection -- is served instead, with both teams' eliminated/wrongCounts
+   reset so everyone can play it. Whoever answers it correctly first wins
+   the whole match outright. Only if that single question also produces no
+   correct answer from either side (both wrong / double timeout) does it
+   fall back to the old matchTotals tie-break, since there is no second
+   reserved question to keep going with. See suddenDeathQuestionId /
+   m.suddenDeath in startMatch()/resolveQuestion() below.
+
    No backend/Cloud Functions exist on this project (Spark plan), and
    students have no Firebase Auth -- so, exactly like every other
    student-facing write in this app, this trusts the client. The only
@@ -319,6 +331,9 @@ export async function startMatch(code, hostStudentId = null) {
     ? QUESTIONS_PER_LEVEL_LARGE
     : QUESTIONS_PER_LEVEL_SMALL;
   const totalNeeded = questionsPerLevel * LEVEL_COUNT;
+  // +1 reserved, unused unless Level 4 ends tied (see resolveQuestion's
+  // sudden-death branch below).
+  const totalNeededWithSuddenDeath = totalNeeded + 1;
 
   const topics = [...new Set((m.topics || []).filter(Boolean))];
   if (!topics.length) throw new Error("NO_TOPICS_SELECTED");
@@ -344,6 +359,11 @@ export async function startMatch(code, hostStudentId = null) {
   }
 
   const pool = shuffle([...poolById.values()]);
+  // Prefer reserving a sudden-death question too, but don't hard-block a
+  // match over it -- a topic pool that's exactly totalNeeded still starts
+  // fine, it just won't have a tiebreaker question available (a Level 4
+  // tie then falls straight back to the old matchTotals decision).
+  const haveSuddenDeath = pool.length >= totalNeededWithSuddenDeath;
   if (pool.length < totalNeeded) {
     throw new Error(
       `NOT_ENOUGH_QUESTIONS: pool has ${pool.length}, needs ${totalNeeded}. ` +
@@ -354,10 +374,13 @@ export async function startMatch(code, hostStudentId = null) {
   // Select exactly the number needed. Extra questions are deliberately not stored.
   const selected = pool.slice(0, totalNeeded).map(sanitizeBattleQuestion);
   const questionOrder = selected.map(q => q.id);
+  const suddenDeathQuestion = haveSuddenDeath
+    ? sanitizeBattleQuestion(pool[totalNeeded])
+    : null;
 
   // Map values contain NO arrays. options_bn is a plain map of strings.
   const battleQuestionMap = Object.fromEntries(
-    selected.map(q => [q.id, q])
+    [...selected, ...(suddenDeathQuestion ? [suddenDeathQuestion] : [])].map(q => [q.id, q])
   );
 
   const participantIds = [...teamAMembers, ...teamBMembers].map(x => x.studentId);
@@ -370,6 +393,8 @@ export async function startMatch(code, hostStudentId = null) {
     questionsPerLevel,
     questionOrder,
     battleQuestionMap,
+    suddenDeathQuestionId: suddenDeathQuestion?.id || null,
+    suddenDeath: false,
     currentLevel: 1,
     currentQuestionIndex: 0,
     levelWins: { A: 0, B: 0 },
@@ -477,6 +502,52 @@ function buildResult(m, scoreBoard, winnerTeam) {
  */
 function resolveQuestion(m, answers, scoreBoard, eliminated, wrongCounts) {
   const winner = decideQuestionWinner(answers);
+
+  // ---- Sudden-death decider question is being resolved right now: this
+  // one question settles the whole match, no matter what levelWins says. ----
+  if (m.suddenDeath) {
+    const matchTotals = { ...(m.matchTotals || { A: 0, B: 0 }) };
+    if (winner) matchTotals[winner] += 1;
+    // Only if even the tiebreaker question gets no correct answer from
+    // either side do we fall back to the old matchTotals decision --
+    // there's no second reserved question to keep the decider going.
+    const winnerTeam = winner || (matchTotals.A >= matchTotals.B ? "A" : "B");
+    const result = buildResult(m, scoreBoard, winnerTeam);
+    result.suddenDeath = true;
+    const levelResult = {
+      level: LEVEL_COUNT,
+      winnerTeam,
+      score: { ...(m.levelWins || { A: 0, B: 0 }) },
+      suddenDeath: true,
+      reason: winner ? "SUDDEN_DEATH" : "SUDDEN_DEATH_NO_ANSWER",
+      createdAt: Date.now()
+    };
+    const levelResults = [...(m.levelResults || []), levelResult];
+    result.levelResults = levelResults;
+    const questionHistory = [...(m.questionHistory || []), {
+      level: LEVEL_COUNT,
+      questionIndex: null,
+      questionId: m.currentQuestion?.questionId || m.suddenDeathQuestionId || null,
+      answers,
+      winnerTeam: winner || null,
+      suddenDeath: true,
+      resolvedAt: Date.now()
+    }];
+    return {
+      scoreBoard,
+      eliminated,
+      wrongCounts,
+      matchTotals,
+      levelStats: { A: {}, B: {} },
+      levelResult,
+      levelResults,
+      status: "finished",
+      currentQuestion: null,
+      questionHistory,
+      result
+    };
+  }
+
   const questionHistory = [...(m.questionHistory || []), {
     level: Number(m.currentLevel || 1),
     questionIndex: Number(m.currentQuestionIndex || 0) + 1,
@@ -521,9 +592,17 @@ function resolveQuestion(m, answers, scoreBoard, eliminated, wrongCounts) {
   let levelResult = null;
   let nextEliminated = eliminated;
   let nextWrongCounts = wrongCounts;
+  let enteringSuddenDeath = false;
 
   const getStoredQuestion = (index) => {
     const id = order[index];
+    if (!id) return null;
+    const raw = m.battleQuestionMap?.[id];
+    if (!raw) return null;
+    return buildQuestionObj({ id, ...raw });
+  };
+
+  const getQuestionById = (id) => {
     if (!id) return null;
     const raw = m.battleQuestionMap?.[id];
     if (!raw) return null;
@@ -559,15 +638,23 @@ function resolveQuestion(m, answers, scoreBoard, eliminated, wrongCounts) {
   if (isLastOfLevel || eliminationEndsLevel) {
     levelResult = makeLevelResult();
     if (currentLevel >= LEVEL_COUNT) {
-      let winnerTeam;
-      if (levelWins.A === levelWins.B) {
-        winnerTeam = matchTotals.A >= matchTotals.B ? "A" : "B";
+      if (levelWins.A === levelWins.B && m.suddenDeathQuestionId) {
+        // Level 4 tied and we have a reserved decider question -- serve it
+        // instead of falling back to matchTotals. Both teams get to play
+        // it, so this level's eliminations/wrong-counts are wiped.
+        levelResult = { ...levelResult, tie: true, headingToSuddenDeath: true };
+        nextEliminated = {};
+        nextWrongCounts = {};
+        currentQuestion = getQuestionById(m.suddenDeathQuestionId);
+        enteringSuddenDeath = true;
       } else {
-        winnerTeam = levelWins.A > levelWins.B ? "A" : "B";
+        const winnerTeam = levelWins.A === levelWins.B
+          ? (matchTotals.A >= matchTotals.B ? "A" : "B")
+          : (levelWins.A > levelWins.B ? "A" : "B");
+        status = "finished";
+        result = buildResult(m, scoreBoard, winnerTeam);
+        result.levelResults = [...(m.levelResults || []), levelResult];
       }
-      status = "finished";
-      result = buildResult(m, scoreBoard, winnerTeam);
-      result.levelResults = [...(m.levelResults || []), levelResult];
     } else {
       currentLevel += 1;
       currentQuestionIndex = 0;
@@ -596,7 +683,8 @@ function resolveQuestion(m, answers, scoreBoard, eliminated, wrongCounts) {
     currentQuestion,
     questionHistory,
     levelResults: levelResult ? [...(m.levelResults || []), levelResult] : (m.levelResults || []),
-    result
+    result,
+    ...(enteringSuddenDeath ? { suddenDeath: true } : {})
   };
 }
 /**
