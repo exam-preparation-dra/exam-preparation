@@ -48,7 +48,7 @@ import {
   collection, doc, getDoc, getDocs, setDoc, runTransaction,
   query, where
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-import { consumeBattleRoomCardForMatch } from "./store-utils.js";
+import { consumeBattleRoomCardForMatch } from "./store-utils.js?v=roomcard1";
 
 export const TEAM_MAX_MEMBERS = 4;
 export const LEVEL_COUNT = 4;
