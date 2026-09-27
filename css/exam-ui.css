@@ -214,6 +214,35 @@
 .ex-review.active { color: var(--ex-warn); background: rgba(var(--ex-warn-rgb), .12); border-color: rgba(var(--ex-warn-rgb), .5); }
 .ex-review.active svg { fill: currentColor; }
 
+/* ---------- Hint card CTA + revealed answer/explanation ---------- */
+.ex-hint-cta {
+  display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 18px; padding: 12px 14px;
+  border-radius: 16px; cursor: pointer; font: inherit; text-align: left;
+  background: rgba(var(--ex-accent-rgb), .09); border: 1px solid rgba(var(--ex-accent-rgb), .3);
+  transition: transform .15s ease, background .2s ease, opacity .2s ease;
+}
+@media (hover: hover) { .ex-hint-cta:not(:disabled):hover { background: rgba(var(--ex-accent-rgb), .16); } }
+.ex-hint-cta:not(:disabled):active { transform: scale(.985); }
+.ex-hint-cta:disabled { opacity: .5; cursor: not-allowed; }
+.ex-hint-cta-icon {
+  flex-shrink: 0; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--ex-accent); color: var(--ex-on-accent);
+}
+.ex-hint-cta-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ex-hint-cta-title { font-weight: 800; font-size: .9rem; color: var(--text-primary); }
+.ex-hint-cta-sub { font-size: .73rem; font-weight: 700; color: var(--text-muted); }
+
+.ex-hint-reveal {
+  margin-top: 18px; padding: 14px; border-radius: 16px;
+  background: rgba(var(--ex-ok-rgb), .1); border: 1px solid rgba(var(--ex-ok-rgb), .35);
+  animation: exRise .3s cubic-bezier(.22, .9, .3, 1) both;
+}
+.ex-hint-reveal-head { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: .8rem; color: var(--ex-ok); }
+.ex-hint-answer { margin-top: 10px; font-size: .92rem; font-weight: 700; line-height: 1.65; color: var(--text-primary); }
+.ex-hint-explanation { margin-top: 8px; font-size: .87rem; font-weight: 600; line-height: 1.75; color: var(--text-secondary); }
+
+.ex-confirm-icon.accent { color: var(--ex-accent-text); background: rgba(var(--ex-accent-rgb), .14); }
+
 /* ---------- Bottom nav ---------- */
 .ex-nav {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
