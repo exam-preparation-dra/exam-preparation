@@ -126,6 +126,18 @@
 [data-theme="dark"] .ex-theme .moon { display: none; }
 
 .ex-card-btn { position: relative; }
+/* Nudges the time-card button when under a minute remains and a card is
+   still usable -- so a student in a rush notices they have an escape hatch. */
+.ex-card-btn.card-nudge {
+  color: var(--ex-bad);
+  background: rgba(var(--ex-bad-rgb), .12);
+  border-color: rgba(var(--ex-bad-rgb), .5);
+  animation: exCardNudge 1s ease-in-out infinite;
+}
+@keyframes exCardNudge {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(var(--ex-bad-rgb), .35); }
+  50% { transform: scale(1.08); box-shadow: 0 0 0 6px rgba(var(--ex-bad-rgb), 0); }
+}
 .ex-card-badge {
   position: absolute; top: -4px; right: -4px; min-width: 17px; height: 17px; padding: 0 4px;
   border-radius: 99px; display: grid; place-items: center; font-size: .64rem; font-weight: 800;
