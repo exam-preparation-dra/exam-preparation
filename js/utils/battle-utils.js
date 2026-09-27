@@ -30,13 +30,17 @@
      - every winning-team member: WIN_XP_PER_MEMBER
      - winning team's top scorer (by correct answers): + WIN_MVP_BONUS_XP
      - every losing-team member: LOSE_XP_PER_MEMBER
-     - losing team's top scorer (by correct answers): LOSE_MVP_XP
+     - losing team's top scorer (by correct answers): + LOSE_MVP_XP
      - losing team's top "attender" (most questions answered, right or
        wrong -- even if just 1 person on that team attended anything):
        + LOSE_MOST_ATTEMPTS_BONUS_XP
      - whoever attended (answered) the most questions match-wide, on
        either team, win or lose: + MOST_BUZZ_BONUS_XP
      - the match creator (host), only if their team wins: + CREATOR_WIN_BONUS_XP
+
+   Creating a match costs 1 Battle Room Card (bought from the XP store,
+   50 XP each, 60-day validity) -- see consumeBattleRoomCardForMatch() in
+   store-utils.js and createMatch() below.
    ========================================================= */
 
 import { db } from "../firebase/firebase-config.js";
@@ -44,6 +48,7 @@ import {
   collection, doc, getDoc, getDocs, setDoc, runTransaction,
   query, where
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { consumeBattleRoomCardForMatch } from "./store-utils.js";
 
 export const TEAM_MAX_MEMBERS = 4;
 export const LEVEL_COUNT = 4;
@@ -52,7 +57,7 @@ export const QUESTIONS_PER_LEVEL_LARGE = 10;  // >4 total players
 export const WIN_XP_PER_MEMBER = 800;
 export const WIN_MVP_BONUS_XP = 4000;
 export const LOSE_XP_PER_MEMBER = 300; // every losing-team member also gets this now
-export const LOSE_MVP_XP = 5000; // losing team's top scorer -- no longer cut
+export const LOSE_MVP_XP = 1500; // losing team's top scorer -- no longer cut
 export const LOSE_MOST_ATTEMPTS_BONUS_XP = 1000; // losing team's top "attender" (most questions answered, right or wrong) -- even if only 1 person attempted
 export const MOST_BUZZ_BONUS_XP = 500; // whoever answered the most questions match-wide (right or wrong), win or lose
 export const CREATOR_WIN_BONUS_XP = 200; // match creator (host) gets this if their team wins
@@ -73,6 +78,11 @@ function emptyTeam() {
 /**
  * Create a new lobby. The host is automatically the first member of
  * Team A. Returns the match code the host shares with everyone else.
+ *
+ * Requires the host to own at least one unused, unexpired Battle Room
+ * Card (bought from the XP store); one card is consumed per match
+ * created. Throws NO_ROOM_CARD if they have none -- the UI should send
+ * them to the store rather than create the match.
  */
 export async function createMatch({ hostStudentId, hostName, topics }) {
   if (!hostStudentId || !Array.isArray(topics) || !topics.length) {
@@ -86,10 +96,13 @@ export async function createMatch({ hostStudentId, hostName, topics }) {
   }
   if (!code) throw new Error("Could not allocate a match code, try again");
 
+  const roomCardId = await consumeBattleRoomCardForMatch(hostStudentId, code);
+
   const data = {
     code,
     hostStudentId,
     topics,
+    roomCardId,
     status: "lobby", // lobby -> active -> finished
     teamA: { members: [{ studentId: hostStudentId, name: hostName || "Host", swapCount: 0 }] },
     teamB: emptyTeam(),

@@ -45,6 +45,17 @@ export const STORE_ITEMS = [
     secondsGranted: 90,
     priceXP: 1000,
     maxPerOrder: 10
+  },
+  {
+    id: "battle_room_card",
+    name: "ব্যাটল রুম কার্ড",
+    tagline: "১টি কার্ড = ১টি নতুন Battle",
+    description: "নতুন Battle Match তৈরি (Create) করতে ১টি কার্ড লাগবে। কেনার পর কার্ডটি ৬০ দিন (২ মাস) পর্যন্ত ব্যবহারযোগ্য থাকবে।",
+    validityDays: 60,     // marks this item as a "room card": buying it also mints
+                          // individual expiring cards in battleRoomCards (see
+                          // purchaseCart below and consumeBattleRoomCardForMatch)
+    priceXP: 50,
+    maxPerOrder: 10
   }
   // আরও item এখানে যোগ হবে — বাকি সব কোড (cart/checkout/inventory) নতুন
   // item-এর জন্য নিজে থেকেই কাজ করবে, আলাদা করে কিছু বদলাতে হবে না।
@@ -130,6 +141,28 @@ export async function purchaseCart(studentId, cart, currentXP) {
     createdAtMs: Date.now()
   }))).catch(() => {});
 
+  // Room-card items (validityDays set) also mint one expiring card doc per
+  // unit bought, in battleRoomCards -- see consumeBattleRoomCardForMatch().
+  // Best-effort like the receipt above: the XP spend already committed
+  // above is the source of truth for balance either way.
+  const now = Date.now();
+  const cardDocs = [];
+  for (const l of lines) {
+    if (!l.item.validityDays) continue;
+    for (let i = 0; i < l.qty; i++) {
+      cardDocs.push(addDoc(collection(db, "battleRoomCards"), {
+        studentId,
+        itemId: l.item.id,
+        status: "available",
+        purchasedAt: now,
+        expiresAt: now + l.item.validityDays * 24 * 60 * 60 * 1000,
+        usedAt: null,
+        matchCode: null
+      }));
+    }
+  }
+  if (cardDocs.length) Promise.all(cardDocs).catch(() => {});
+
   return result;
 }
 
@@ -193,6 +226,64 @@ export async function getUsageHistory(studentId) {
   const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   rows.sort((a, b) => Number(b.createdAtMs || 0) - Number(a.createdAtMs || 0));
   return rows;
+}
+
+/**
+ * How many *currently usable* Battle Room Cards (bought, unused, not
+ * expired) this student has. Shown on battle-lobby.html next to Create.
+ */
+export async function getAvailableBattleRoomCardCount(studentId) {
+  if (!studentId) return 0;
+  const snap = await getDocs(query(
+    collection(db, "battleRoomCards"),
+    where("studentId", "==", studentId),
+    where("status", "==", "available")
+  ));
+  const now = Date.now();
+  return snap.docs.filter(d => Number(d.data()?.expiresAt || 0) > now).length;
+}
+
+/**
+ * Consume the oldest still-valid Battle Room Card this student owns, for
+ * creating match `matchCode`. Throws NO_ROOM_CARD if they have none (all
+ * used up, or every card expired) -- battle-lobby.html shows this as
+ * "buy a card from the store" and does not create the match.
+ */
+export async function consumeBattleRoomCardForMatch(studentId, matchCode) {
+  if (!studentId) throw new Error("NO_ROOM_CARD");
+  const snap = await getDocs(query(
+    collection(db, "battleRoomCards"),
+    where("studentId", "==", studentId),
+    where("status", "==", "available")
+  ));
+  const now = Date.now();
+  const candidates = snap.docs
+    .filter(d => Number(d.data()?.expiresAt || 0) > now)
+    .sort((a, b) => Number(a.data()?.purchasedAt || 0) - Number(b.data()?.purchasedAt || 0));
+  if (!candidates.length) throw new Error("NO_ROOM_CARD");
+
+  const cardRef = candidates[0].ref;
+  const itemId = candidates[0].data()?.itemId || "battle_room_card";
+  await runTransaction(db, async (tx) => {
+    const cardSnap = await tx.get(cardRef);
+    if (!cardSnap.exists() || cardSnap.data()?.status !== "available") throw new Error("NO_ROOM_CARD");
+    tx.update(cardRef, { status: "used", usedAt: Date.now(), matchCode });
+  });
+
+  // Best-effort: keep the generic storeInventory "used" count in sync too,
+  // purely so the admin store report's purchased/used/available columns
+  // stay meaningful for this item. Never blocks match creation on failure.
+  const invRef = doc(db, "storeInventory", studentId);
+  runTransaction(db, async (tx) => {
+    const invSnap = await tx.get(invRef);
+    const data = invSnap.exists() ? invSnap.data() : {};
+    const items = { ...(data.items || {}) };
+    const row = items[itemId] || { purchased: 0, used: 0 };
+    items[itemId] = { ...row, used: Number(row.used || 0) + 1 };
+    tx.set(invRef, { studentId, items, totalSpentXP: Number(data.totalSpentXP || 0), updatedAt: Date.now() }, { merge: true });
+  }).catch(() => {});
+
+  return cardRef.id;
 }
 
 /* ---------- Admin-only reads (rules restrict writes, not reads — but these
