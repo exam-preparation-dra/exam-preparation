@@ -219,10 +219,9 @@
 import { initTheme, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { requireAdmin } from "../js/utils/auth.js";
 import { getFullSyllabusTree } from "../js/utils/syllabus-utils.js";
-import { parseAiImportText, buildAiPromptTemplate, generateQuestionsFromImage, fileToImagePart } from "../js/utils/ai-import-utils.js";
+import { parseAiImportText, buildAiPromptTemplate, generateQuestionsFromImage, fileToImagePart, getStoredApiKey, setStoredApiKey } from "../js/utils/ai-import-utils.js";
 import { addQuestion } from "../js/utils/question-utils.js";
 
-const GEMINI_KEY_STORAGE = "universal_api_key";
 let tree = [];
 let parsedResults = [];
 let pendingTabSwitch = false;
@@ -241,7 +240,7 @@ function setupEventListeners() {
 
   // API Key Modal
   document.getElementById("apiKeyBtn").addEventListener("click", () => {
-    document.getElementById("apiKeyInput").value = localStorage.getItem(GEMINI_KEY_STORAGE) || "";
+    document.getElementById("apiKeyInput").value = getStoredApiKey();
     document.getElementById("apiModal").style.display = "flex";
   });
   document.getElementById("closeApiBtn").addEventListener("click", () => {
@@ -251,7 +250,7 @@ function setupEventListeners() {
   document.getElementById("saveApiBtn").addEventListener("click", () => {
     const key = document.getElementById("apiKeyInput").value.trim();
     if(key) {
-      localStorage.setItem(GEMINI_KEY_STORAGE, key);
+      setStoredApiKey(key);
       showToast("API Key সফলভাবে সেভ হয়েছে!", "success");
       document.getElementById("apiModal").style.display = "none";
       if(pendingTabSwitch) {
@@ -270,7 +269,7 @@ function setupEventListeners() {
   // Tabs Toggle (with API Check)
   document.getElementById("tabManual").addEventListener("click", (e) => switchTab(e.target, "viewManual"));
   document.getElementById("tabApi").addEventListener("click", (e) => {
-     const apiKey = localStorage.getItem(GEMINI_KEY_STORAGE);
+     const apiKey = getStoredApiKey();
      if(!apiKey) {
          pendingTabSwitch = true;
          document.getElementById("apiModal").style.display = "flex";
@@ -424,7 +423,7 @@ function stopProgress() {
 
 // Generate Logic
 async function handleGenerate() {
-  const apiKey = localStorage.getItem(GEMINI_KEY_STORAGE);
+  const apiKey = getStoredApiKey();
   if (!apiKey) {
     showToast("প্রথমে API Key সেট করুন", "error");
     document.getElementById("apiModal").style.display = "flex";
