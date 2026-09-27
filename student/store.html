@@ -70,6 +70,19 @@
   .store-history-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
   .store-history-name { font-weight: 700; font-size: 0.92rem; color: var(--text-primary); }
   .store-history-cost { font-weight: 700; color: var(--color-danger); white-space: nowrap; }
+  .store-history-used { font-weight: 700; color: var(--color-accent); white-space: nowrap; }
+
+  /* ---- Little confetti burst after a purchase ---- */
+  .confetti-burst { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
+  .confetti-burst span {
+    position: absolute; top: 32%; width: 8px; height: 12px; border-radius: 2px;
+    animation: confetti-fall var(--d, 900ms) cubic-bezier(.25,.6,.4,1) forwards;
+  }
+  @keyframes confetti-fall {
+    0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+    100% { transform: translate(var(--x, 0), 280px) rotate(var(--r, 360deg)); opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { .confetti-burst { display: none; } }
 
   .store-empty-note { padding: var(--space-3) 0; }
 </style>
@@ -118,7 +131,7 @@ import { computeStudentXP } from "../js/utils/xp-utils.js";
 import { resolveCompletedChallenges, getChallengeBonusXP } from "../js/utils/challenge-utils.js";
 import { getCompletedImprovementAttempts } from "../js/utils/improvement-xp-integration.js";
 import { getStudentBattleXP } from "../js/utils/battle-utils.js";
-import { STORE_ITEMS, getSpentXP, getStoreInventory, purchaseCart, getPurchaseHistory } from "../js/utils/store-utils.js";
+import { STORE_ITEMS, getSpentXP, getStoreInventory, purchaseCart, getPurchaseHistory, getUsageHistory } from "../js/utils/store-utils.js";
 import { initTheme, showToast, formatDate, formatTime } from "../js/utils/ui-utils.js";
 
 initTheme();
@@ -213,21 +226,32 @@ function renderHistory(rows) {
     el.innerHTML = `<div class="card"><p class="text-sm text-muted store-empty-note">এখনো কোনো কেনাকাটা হয়নি।</p></div>`;
     return;
   }
-  el.innerHTML = rows.map(r => `
+  el.innerHTML = rows.map(r => {
+    if (r.kind === "use") {
+      return `
+      <div class="card store-history-row">
+        <div>
+          <div class="store-history-name">${esc(r.itemName)} <span class="text-muted">× ${fmt(r.qty)}</span> <span class="badge badge-completed" style="font-size:.62rem;">ব্যবহার হয়েছে</span></div>
+          <div class="text-sm text-muted">${r.examTitle ? `${esc(r.examTitle)} পরীক্ষায় · ` : ""}${formatDate(r.createdAtMs)} · ${formatTime(r.createdAtMs)}</div>
+        </div>
+        <div class="num store-history-used">+${fmtDuration(r.secondsGranted)}</div>
+      </div>`;
+    }
+    return `
     <div class="card store-history-row">
       <div>
         <div class="store-history-name">${esc(r.itemName)} <span class="text-muted">× ${fmt(r.qty)}</span></div>
         <div class="text-sm text-muted">${formatDate(r.createdAtMs)} · ${formatTime(r.createdAtMs)}</div>
       </div>
       <div class="num store-history-cost">−${fmt(r.totalXP)} XP</div>
-    </div>
-  `).join("");
+    </div>`;
+  }).join("");
 }
 
 async function loadAll() {
   await resolveCompletedChallenges(student.studentId).catch(() => []);
 
-  const [results, allStudents, challengeBonusXP, improvementResults, battleXP, spentXP, inv, history] = await Promise.all([
+  const [results, allStudents, challengeBonusXP, improvementResults, battleXP, spentXP, inv, purchases, usage] = await Promise.all([
     getApprovedResults(student.studentId),
     getActiveStudents(),
     getChallengeBonusXP(student.studentId).catch(() => 0),
@@ -235,7 +259,8 @@ async function loadAll() {
     getStudentBattleXP(student.studentId).catch(() => 0),
     getSpentXP(student.studentId).catch(() => 0),
     getStoreInventory(student.studentId).catch(() => ({})),
-    getPurchaseHistory(student.studentId).catch(() => [])
+    getPurchaseHistory(student.studentId).catch(() => []),
+    getUsageHistory(student.studentId).catch(() => [])
   ]);
 
   const myRefs = allStudents.filter(s => s.referredBy === student.studentId && s.studentId !== student.studentId);
@@ -247,10 +272,32 @@ async function loadAll() {
   currentTotalXP = xp.totalXP;
   inventory = inv;
 
+  const history = [
+    ...purchases.map(r => ({ ...r, kind: "purchase" })),
+    ...usage.map(r => ({ ...r, kind: "use" }))
+  ].sort((a, b) => Number(b.createdAtMs || 0) - Number(a.createdAtMs || 0));
+
   renderBalance(xp);
   renderItems();
   renderCartBar();
   renderHistory(history);
+}
+
+function fireConfetti() {
+  const colors = ["#ff6a2b", "#22c55e", "#3b82f6", "#eab308", "#ec4899"];
+  const box = document.createElement("div");
+  box.className = "confetti-burst";
+  for (let i = 0; i < 26; i++) {
+    const piece = document.createElement("span");
+    piece.style.setProperty("--x", `${(Math.random() - 0.5) * 240}px`);
+    piece.style.setProperty("--r", `${(Math.random() - 0.5) * 720}deg`);
+    piece.style.setProperty("--d", `${650 + Math.random() * 500}ms`);
+    piece.style.left = `${42 + Math.random() * 16}%`;
+    piece.style.background = colors[i % colors.length];
+    box.appendChild(piece);
+  }
+  document.body.appendChild(box);
+  setTimeout(() => box.remove(), 1500);
 }
 
 document.getElementById("checkoutBtn").addEventListener("click", async (e) => {
@@ -272,6 +319,7 @@ document.getElementById("checkoutBtn").addEventListener("click", async (e) => {
   try {
     await purchaseCart(student.studentId, lines, currentTotalXP);
     showToast("কেনা হয়ে গেছে! ✅", "success");
+    fireConfetti();
     Object.keys(cart).forEach(k => { cart[k] = 0; });
     await loadAll();
   } catch (err) {

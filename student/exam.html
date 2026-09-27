@@ -36,7 +36,7 @@ import {
   initExamPage, bindThemeButtons, introHtml, runShellHtml, questionHtml,
   setQuestionCounter, setProgress, fillPalette, submitMessage
 } from "../js/utils/exam-ui.js";
-import { STORE_ITEMS, getStoreInventory, useStoreItem } from "../js/utils/store-utils.js";
+import { STORE_ITEMS, MAX_CARDS_PER_ATTEMPT, getStoreInventory, useStoreItem } from "../js/utils/store-utils.js";
 
 initTheme();
 initExamPage();
@@ -200,16 +200,25 @@ async function refreshCardBadge() {
   badge.classList.toggle("hidden", cardAvailable <= 0);
 }
 
+function cardsLeftThisAttempt() {
+  return Math.max(0, MAX_CARDS_PER_ATTEMPT - (attemptState.cardsUsedCount || 0));
+}
+
 function setCardQty(next) {
-  cardQty = Math.max(1, Math.min(cardAvailable, next));
+  const cap = Math.min(cardAvailable, cardsLeftThisAttempt());
+  cardQty = Math.max(1, Math.min(cap, next));
   document.getElementById("cardQtyValue").textContent = cardQty;
   document.getElementById("cardQtyDec").disabled = cardQty <= 1;
-  document.getElementById("cardQtyInc").disabled = cardQty >= cardAvailable;
+  document.getElementById("cardQtyInc").disabled = cardQty >= cap;
   document.getElementById("cardTotalNote").textContent =
-    `মোট +${formatHms(cardQty * TIME_CARD.secondsGranted * 1000)} সময় যোগ হবে।`;
+    `মোট +${formatHms(cardQty * TIME_CARD.secondsGranted * 1000)} সময় যোগ হবে। (এই পরীক্ষায় ব্যবহার করা যাবে সর্বোচ্চ ${MAX_CARDS_PER_ATTEMPT}টি — বাকি আছে ${cardsLeftThisAttempt()}টি)`;
 }
 
 function openCardModal() {
+  if (cardsLeftThisAttempt() <= 0) {
+    showToast(`এই পরীক্ষায় সর্বোচ্চ ${MAX_CARDS_PER_ATTEMPT}টি টাইম কার্ড ব্যবহার করা যাবে — সেটা তুমি ইতিমধ্যে ব্যবহার করে ফেলেছো।`, "error");
+    return;
+  }
   if (cardAvailable <= 0) {
     showToast("তোমার কাছে কোনো টাইম কার্ড নেই। স্টোর থেকে কিনে রাখো।", "error");
     return;
@@ -229,10 +238,13 @@ async function confirmUseCard() {
   btn.disabled = true;
   try {
     const qty = cardQty;
-    const { secondsGranted } = await useStoreItem(student.studentId, TIME_CARD.id, qty);
+    const { secondsGranted } = await useStoreItem(
+      student.studentId, TIME_CARD.id, qty, { examId, examTitle: exam.name }
+    );
     attemptState.endAtMillis += secondsGranted * 1000;
+    attemptState.cardsUsedCount = (attemptState.cardsUsedCount || 0) + qty;
     saveLocalAttempt(examId, student.studentId, attemptState);
-    await extendAttemptTime(examId, student.studentId, attemptState.endAtMillis);
+    await extendAttemptTime(examId, student.studentId, attemptState.endAtMillis, attemptState.cardsUsedCount);
     tick();
     showToast(`+${formatHms(secondsGranted * 1000)} সময় যোগ হয়েছে!`, "success");
     closeCardModal();
