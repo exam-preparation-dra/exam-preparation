@@ -37,6 +37,7 @@ import {
   setQuestionCounter, setProgress, fillPalette, submitMessage
 } from "../js/utils/exam-ui.js";
 import { STORE_ITEMS, MAX_CARDS_PER_ATTEMPT, MAX_HINT_CARDS_PER_ATTEMPT, getStoreInventory, useStoreItem } from "../js/utils/store-utils.js?v=roomcard1";
+import { DIALOGUE_BANK, MINUTE_WARN_LINES } from "../js/utils/voice-dialogue.js";
 
 initTheme();
 initExamPage();
@@ -495,12 +496,17 @@ function openPalette() {
 }
 function closePalette() { document.getElementById("paletteOverlay").classList.add("hidden"); }
 
-// --- Bengali voice selection -------------------------------------------
-// The browser only ever gives us whatever Bengali voices the OS/browser
-// ships with — there's no way for a web page to add a new, better voice.
-// What we *can* do is stop settling for the first bn voice Chrome finds
-// (usually a flat local one) and instead prefer a higher-quality bn-BD/
-// bn-IN "Google" network voice when the device actually has one installed.
+// --- Exam voice: pre-recorded audio first, browser TTS as fallback -----
+// DIALOGUE_BANK / MINUTE_WARN_LINES (imported above) are the single source
+// of truth for every line the voice system can say. Each line has a
+// matching pre-recorded file at assets/audio/voice/<key>-<index>.wav,
+// generated once via admin/voice-generator.html (natural Gemini TTS voice,
+// no per-exam API calls). If a file is missing or fails to load, we fall
+// back to the browser's own (robotic but always-available) speechSynthesis
+// so the timer/motivation announcements never go silent.
+const VOICE_AUDIO_BASE = "../assets/audio/voice/";
+let currentVoiceAudio = null;
+
 let cachedBengaliVoice = null;
 function pickBengaliVoice() {
   if (!("speechSynthesis" in window)) return null;
@@ -514,62 +520,55 @@ if ("speechSynthesis" in window) {
   window.speechSynthesis.getVoices();
   window.speechSynthesis.addEventListener("voiceschanged", () => { cachedBengaliVoice = pickBengaliVoice(); });
 }
-
-// --- Varied encouragement dialogue --------------------------------------
-// Multiple lines per situation so the same line doesn't repeat every exam;
-// picked at random (never the same line twice in a row for that situation).
-const DIALOGUE_BANK = {
-  halfwayGood: [
-    "তুমি খুব ভালো করছ, এভাবেই চালিয়ে যাও।",
-    "চমৎকার গতিতে এগোচ্ছ, দেখে ভালো লাগছে।",
-    "দারুণ! তোমার মনোযোগ একদম ঠিক পথে আছে।",
-    "এই গতি ধরে রাখো, তুমি সত্যিই ভালো করছ।",
-    "তোমার প্রস্তুতি স্পষ্ট বোঝা যাচ্ছে, এভাবেই চালিয়ে যাও।"
-  ],
-  halfwaySlow: [
-    "একটু পিছিয়ে আছ, তবে সময় এখনো আছে — গতিটা একটু বাড়াও।",
-    "চিন্তা নেই, এখনো সময় হাতে আছে। একটু দ্রুত এগোও।",
-    "বাকি প্রশ্নগুলোতে একটু গতি বাড়ালে সহজেই শেষ করতে পারবে।"
-  ],
-  slow1: [
-    "এই প্রশ্নে একটু বেশি সময় লাগছে, ভেবে উত্তর দিয়ে দাও।",
-    "চিন্তা নেই, একটু সময় নিয়ে উত্তরটা দিয়ে সামনে বাড়ো।",
-    "এই প্রশ্নটা কঠিন মনে হলে, দরকার হলে পরে আবার ফিরে আসতে পারবে।",
-    "ধীরেসুস্থে ভাবো, তবে সময়টাও একটু খেয়াল রেখো।"
-  ],
-  slow2: [
-    "চিন্তা করো না, তুমি ঠিকভাবেই এগিয়ে যাচ্ছ।",
-    "একটা সিদ্ধান্ত নিয়ে সামনে বাড়ো, তুমি পারবে।",
-    "যেটা মনে হয় সেটাই দিয়ে সামনে যাও, পরে চাইলে দেখে নিও।",
-    "একটা উত্তর বেছে নিয়ে পরের প্রশ্নে চলে যাও, সময় গুরুত্বপূর্ণ।"
-  ],
-  minuteFinal: [
-    "আর মাত্র এক মিনিট বাকি। সময় শেষ হয়ে গেলে তোমার উত্তরগুলো স্বয়ংক্রিয়ভাবে জমা হয়ে যাবে।",
-    "শেষ এক মিনিট চলছে, তাড়াতাড়ি বাকিটা গুছিয়ে নাও।"
-  ]
-};
-const lastDialogueIndex = {};
-function pickDialogue(key) {
-  const arr = DIALOGUE_BANK[key];
-  if (!arr || !arr.length) return "";
-  if (arr.length === 1) return arr[0];
-  let idx = Math.floor(Math.random() * arr.length);
-  if (idx === lastDialogueIndex[key]) idx = (idx + 1) % arr.length;
-  lastDialogueIndex[key] = idx;
-  return arr[idx];
-}
-
-function speak(name, message) {
-  if (!("speechSynthesis" in window)) return;
+function speakFallback(text) {
+  if (!("speechSynthesis" in window) || !text) return;
   try {
-    window.speechSynthesis.cancel(); 
-    const text = name ? `${name}, ${message}` : message;
+    window.speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = "bn-BD"; utter.rate = 0.95;
     const voice = cachedBengaliVoice || pickBengaliVoice();
     if (voice) utter.voice = voice;
     window.speechSynthesis.speak(utter);
   } catch (e) { }
+}
+
+// Plays the pre-recorded file for {key, index}; falls back to speechSynthesis
+// (using `text`) if the file is missing/blocked/fails to load.
+function playVoiceFile(key, index, text) {
+  try {
+    if (currentVoiceAudio) { currentVoiceAudio.pause(); currentVoiceAudio = null; }
+    const audio = new Audio(`${VOICE_AUDIO_BASE}${key}-${index}.wav`);
+    currentVoiceAudio = audio;
+    let fellBack = false;
+    const fallbackOnce = () => { if (fellBack) return; fellBack = true; speakFallback(text); };
+    audio.addEventListener("error", fallbackOnce);
+    audio.play().catch(fallbackOnce);
+  } catch (e) { speakFallback(text); }
+}
+
+// Multiple lines per situation so the same line doesn't repeat every exam;
+// picked at random (never the same line twice in a row for that situation).
+const lastDialogueIndex = {};
+function pickDialogue(key) {
+  const arr = DIALOGUE_BANK[key];
+  if (!arr || !arr.length) return null;
+  let idx = arr.length === 1 ? 0 : Math.floor(Math.random() * arr.length);
+  if (arr.length > 1 && idx === lastDialogueIndex[key]) idx = (idx + 1) % arr.length;
+  lastDialogueIndex[key] = idx;
+  return { text: arr[idx], index: idx };
+}
+
+// Speaks a random variant of a DIALOGUE_BANK situation (e.g. "slow1").
+function speakDialogue(key) {
+  const picked = pickDialogue(key);
+  if (!picked) return;
+  playVoiceFile(key, picked.index, picked.text);
+}
+// Speaks a fixed single-line entry (e.g. MINUTE_WARN_LINES.minuteWarn20).
+function speakFixed(key) {
+  const arr = MINUTE_WARN_LINES[key];
+  if (!arr || !arr.length) return;
+  playVoiceFile(key, 0, arr[0]);
 }
 
 function startTimer() { clearInterval(timerHandle); tick(); timerHandle = setInterval(tick, 1000); }
@@ -593,12 +592,11 @@ function tick() {
   
   const totalMinutes = exam?.durationMinutes || 0;
   const remainingMinutes = remaining / 60000;
-  const MIN_WORDS = { 20: "বিশ", 10: "দশ", 5: "পাঁচ", 1: "এক" };
   [20, 10, 5, 1].filter(m => m < totalMinutes).forEach(m => {
     if (remainingMinutes <= m && remainingMinutes > m - 1 && !firedMinuteCheckpoints.has(m)) {
       firedMinuteCheckpoints.add(m);
-      if (m === 1) { showToast("আর মাত্র ১ মিনিট বাকি — সময় শেষ হলে উত্তর স্বয়ংক্রিয়ভাবে জমা হয়ে যাবে।", "error"); speak(student.name, pickDialogue("minuteFinal")); }
-      else { showToast(`আর মাত্র ${m} মিনিট বাকি আছে।`, "error"); speak(student.name, `আর মাত্র ${MIN_WORDS[m]} মিনিট বাকি আছে।`); }
+      if (m === 1) { showToast("আর মাত্র ১ মিনিট বাকি — সময় শেষ হলে উত্তর স্বয়ংক্রিয়ভাবে জমা হয়ে যাবে।", "error"); speakDialogue("minuteFinal"); }
+      else { showToast(`আর মাত্র ${m} মিনিট বাকি আছে।`, "error"); speakFixed(`minuteWarn${m}`); }
     }
   });
 
@@ -609,7 +607,7 @@ function tick() {
       const answeredCount = Object.keys(attemptState.answers).length;
       const progressRatio = snapshot.questions.length ? answeredCount / snapshot.questions.length : 0;
       const paceRatio = Math.min(1, elapsedMinutes / totalMinutes);
-      speak(student.name, pickDialogue(progressRatio >= paceRatio * 0.7 ? "halfwayGood" : "halfwaySlow"));
+      speakDialogue(progressRatio >= paceRatio * 0.7 ? "halfwayGood" : "halfwaySlow");
     }
   }
 
@@ -618,8 +616,8 @@ function tick() {
     const alreadyAnswered = currentQ && attemptState.answers[currentQ.questionId];
     if (currentQ && !alreadyAnswered) {
       const qElapsedSec = (Date.now() - questionStartMillis) / 1000;
-      if (qElapsedSec >= 60 && !slowQ1Warned) { slowQ1Warned = true; speak(student.name, pickDialogue("slow1")); }
-      if (qElapsedSec >= 120 && !slowQ2Warned) { slowQ2Warned = true; speak(student.name, pickDialogue("slow2")); }
+      if (qElapsedSec >= 60 && !slowQ1Warned) { slowQ1Warned = true; speakDialogue("slow1"); }
+      if (qElapsedSec >= 120 && !slowQ2Warned) { slowQ2Warned = true; speakDialogue("slow2"); }
     }
   }
 
