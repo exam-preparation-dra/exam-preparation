@@ -66,6 +66,9 @@
     color: var(--color-accent);
   }
   .d-hero-xp small { font-size: 1rem; font-weight: 700; letter-spacing: 0; margin-left: 4px; color: rgba(243,241,234,0.6); }
+  .d-hero-spendable { display: block; margin: 4px 0 10px; font-size: 0.78rem; font-weight: 700; color: rgba(243,241,234,0.75); text-decoration: none; }
+  .d-hero-spendable b { font-family: var(--font-num); color: var(--color-accent); font-weight: 800; }
+  .d-hero-spendable .d-hero-spent { margin-left: 4px; font-weight: 600; color: rgba(243,241,234,0.5); }
   .d-chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .d-chip { font-size: 0.72rem; font-weight: 700; padding: 4px 9px; border-radius: 999px; background: rgba(243,241,234,0.1); border: 1px solid rgba(243,241,234,0.16); color: rgba(243,241,234,0.9); }
   .d-chip b { font-family: var(--font-num); font-weight: 700; }
@@ -237,7 +240,7 @@ import { computeStudentXP, computeMaxExamXP, getLevelInfo, XP_CATEGORIES, REFERR
 import { resolveCompletedChallenges, getChallengeBonusXP } from "../js/utils/challenge-utils.js";
 import { getCompletedImprovementAttempts } from "../js/utils/improvement-xp-integration.js";
 import { getStudentBattleXP } from "../js/utils/battle-utils.js?v=roomcard1";
-import { STORE_ITEMS, getStoreInventory } from "../js/utils/store-utils.js?v=roomcard1";
+import { STORE_ITEMS, getStoreInventory, getSpentXP } from "../js/utils/store-utils.js?v=roomcard1";
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -440,16 +443,17 @@ async function loadMain() {
     // get settled into "completed" (win/loss/draw + bonus XP decided).
     await resolveCompletedChallenges(student.studentId).catch(() => []);
 
-    const [results, allStudents, subjects, topics, challengeBonusXP, improvementResults, battleXP] = await Promise.all([
+    const [results, allStudents, subjects, topics, challengeBonusXP, improvementResults, battleXP, spentXP] = await Promise.all([
       getApprovedResults(student.studentId), getActiveStudents(), getSubjects(), getTopics(),
       getChallengeBonusXP(student.studentId).catch(() => 0),
       getCompletedImprovementAttempts(student.studentId).catch(() => []),
-      getStudentBattleXP(student.studentId).catch(() => 0)
+      getStudentBattleXP(student.studentId).catch(() => 0),
+      getSpentXP(student.studentId).catch(() => 0)
     ]);
     const leaderboard = await getLeaderboardData(allStudents);
 
     const myRefs = allStudents.filter(s => s.referredBy === student.studentId && s.studentId !== student.studentId);
-    const xp = computeStudentXP(results, { referralCount: myRefs.length, challengeBonusXP, improvementPracticeResults: improvementResults, battleXP });
+    const xp = computeStudentXP(results, { referralCount: myRefs.length, challengeBonusXP, improvementPracticeResults: improvementResults, battleXP, spentXP });
     const myIdx = leaderboard.findIndex(r => r.studentId === student.studentId);
     const rank = myIdx >= 0 ? { rank: myIdx + 1, total: leaderboard.length } : null;
 
@@ -488,6 +492,10 @@ function renderHero({ xp, rank, leaderboard }) {
       <div>
         <p class="d-hero-label">সর্বমোট XP</p>
         <p class="d-hero-xp"><span id="heroXp">0</span><small>XP</small></p>
+        <a href="../student/store.html" class="d-hero-spendable">
+          খরচযোগ্য ব্যালেন্স <b class="num">${fmt(xp.spendableXP)}</b> XP
+          ${xp.spentXP > 0 ? `<span class="d-hero-spent">(খরচ হয়েছে ${fmt(xp.spentXP)})</span>` : ""}
+        </a>
         <div class="d-chips">
           <span class="d-chip">র‍্যাঙ্ক <b>${rank ? rank.rank : "—"}</b>${rank ? ` / ${rank.total}` : ""}</span>
           ${last ? `<span class="d-chip d-chip-gain">শেষ পরীক্ষায় +<b>${fmt(last.xp)}</b></span>` : ""}
