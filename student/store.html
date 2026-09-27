@@ -85,6 +85,22 @@
   @media (prefers-reduced-motion: reduce) { .confetti-burst { display: none; } }
 
   .store-empty-note { padding: var(--space-3) 0; }
+
+  /* ---- Custom confirm modal (replaces native confirm(), which some
+     in-app/embedded browsers silently block or auto-dismiss after an
+     await, making the checkout button look like it does nothing) ---- */
+  .confirm-overlay {
+    position: fixed; inset: 0; z-index: 500; display: flex; align-items: flex-end;
+    justify-content: center; background: rgba(0,0,0,0.45); padding: var(--space-4);
+  }
+  .confirm-overlay.hidden { display: none; }
+  .confirm-box {
+    width: 100%; max-width: 420px; background: var(--surface-solid); border: 1px solid var(--surface-border);
+    border-radius: var(--radius-lg); padding: var(--space-5); box-shadow: var(--shadow-lift);
+  }
+  .confirm-box-msg { white-space: pre-line; font-size: 0.95rem; color: var(--text-primary); line-height: 1.6; margin-bottom: var(--space-4); }
+  .confirm-box-actions { display: flex; gap: var(--space-3); }
+  .confirm-box-actions .btn { flex: 1; }
 </style>
 </head>
 <body>
@@ -122,6 +138,16 @@
     <div id="historyList"></div>
   </section>
 
+</div>
+
+<div id="confirmOverlay" class="confirm-overlay hidden">
+  <div class="confirm-box">
+    <p class="confirm-box-msg" id="confirmMsg"></p>
+    <div class="confirm-box-actions">
+      <button type="button" class="btn btn-secondary" id="confirmCancelBtn">বাতিল</button>
+      <button type="button" class="btn btn-primary" id="confirmOkBtn">কিনবো</button>
+    </div>
+  </div>
 </div>
 
 <script type="module">
@@ -284,6 +310,35 @@ async function loadAll() {
   renderHistory(history);
 }
 
+/** Custom confirm dialog — resolves true/false. Replaces window.confirm(),
+    which some in-app/embedded browsers silently block or mis-handle when
+    called after an await (i.e. not directly inside the tap), making the
+    checkout button look like it does nothing. */
+function showConfirmModal(message) {
+  return new Promise((resolve) => {
+    const overlay = document.getElementById("confirmOverlay");
+    document.getElementById("confirmMsg").textContent = message;
+    overlay.classList.remove("hidden");
+
+    const cleanup = (result) => {
+      overlay.classList.add("hidden");
+      okBtn.removeEventListener("click", onOk);
+      cancelBtn.removeEventListener("click", onCancel);
+      overlay.removeEventListener("click", onOverlay);
+      resolve(result);
+    };
+    const okBtn = document.getElementById("confirmOkBtn");
+    const cancelBtn = document.getElementById("confirmCancelBtn");
+    const onOk = () => cleanup(true);
+    const onCancel = () => cleanup(false);
+    const onOverlay = (e) => { if (e.target === overlay) cleanup(false); };
+
+    okBtn.addEventListener("click", onOk);
+    cancelBtn.addEventListener("click", onCancel);
+    overlay.addEventListener("click", onOverlay);
+  });
+}
+
 function fireConfetti() {
   const colors = ["#ff6a2b", "#22c55e", "#3b82f6", "#eab308", "#ec4899"];
   const box = document.createElement("div");
@@ -313,7 +368,8 @@ document.getElementById("checkoutBtn").addEventListener("click", async (e) => {
   }
 
   const summary = lines.map(l => `${STORE_ITEMS.find(i => i.id === l.itemId)?.name} × ${l.qty}`).join(", ");
-  if (!confirm(`${summary}\n\nমোট ${fmt(totalCost)} XP খরচ হবে। কিনতে চাও?`)) return;
+  const confirmed = await showConfirmModal(`${summary}\n\nমোট ${fmt(totalCost)} XP খরচ হবে। কিনতে চাও?`);
+  if (!confirmed) return;
 
   const btn = e.currentTarget;
   btn.disabled = true;
