@@ -25,6 +25,18 @@
    result.xpLog; getStudentBattleXP() sums that up per student. Wire the
    returned number into computeStudentXP({ battleXP }) wherever XP is
    displayed (dashboard, history, leaderboard).
+
+   XP payout per finished match (see buildResult):
+     - every winning-team member: WIN_XP_PER_MEMBER
+     - winning team's top scorer (by correct answers): + WIN_MVP_BONUS_XP
+     - every losing-team member: LOSE_XP_PER_MEMBER
+     - losing team's top scorer (by correct answers): LOSE_MVP_XP
+     - losing team's top "attender" (most questions answered, right or
+       wrong -- even if just 1 person on that team attended anything):
+       + LOSE_MOST_ATTEMPTS_BONUS_XP
+     - whoever attended (answered) the most questions match-wide, on
+       either team, win or lose: + MOST_BUZZ_BONUS_XP
+     - the match creator (host), only if their team wins: + CREATOR_WIN_BONUS_XP
    ========================================================= */
 
 import { db } from "../firebase/firebase-config.js";
@@ -37,10 +49,13 @@ export const TEAM_MAX_MEMBERS = 4;
 export const LEVEL_COUNT = 4;
 export const QUESTIONS_PER_LEVEL_SMALL = 5;   // <=4 total players
 export const QUESTIONS_PER_LEVEL_LARGE = 10;  // >4 total players
-export const WIN_XP_PER_MEMBER = 2000;
-export const WIN_MVP_BONUS_XP = 10000;
-export const LOSE_MVP_XP = 5000;
-export const LOSE_XP_CUT_FRACTION = 0.5; // losing team's match-earned XP is cut by this much
+export const WIN_XP_PER_MEMBER = 800;
+export const WIN_MVP_BONUS_XP = 4000;
+export const LOSE_XP_PER_MEMBER = 300; // every losing-team member also gets this now
+export const LOSE_MVP_XP = 5000; // losing team's top scorer -- no longer cut
+export const LOSE_MOST_ATTEMPTS_BONUS_XP = 1000; // losing team's top "attender" (most questions answered, right or wrong) -- even if only 1 person attempted
+export const MOST_BUZZ_BONUS_XP = 500; // whoever answered the most questions match-wide (right or wrong), win or lose
+export const CREATOR_WIN_BONUS_XP = 200; // match creator (host) gets this if their team wins
 export const TIME_LIMIT_MS = 60_000; // 1 minute per question, both teams share the same clock
 
 const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I confusion
@@ -397,6 +412,23 @@ function mvpOf(members, scoreBoard) {
   return best?.studentId || null;
 }
 
+// Total questions a student attended (answered) this match, right or wrong.
+function attemptsCountOf(scoreBoard, studentId) {
+  const s = scoreBoard[studentId];
+  return s ? Number(s.correct || 0) + Number(s.wrong || 0) : 0;
+}
+
+// Whoever among `members` attended (answered) the most questions, right or
+// wrong. Works fine even if only one member attended anything.
+function topAttenderOf(members, scoreBoard) {
+  let best = null;
+  members.forEach(mem => {
+    const c = attemptsCountOf(scoreBoard, mem.studentId);
+    if (!best || c > best.count) best = { studentId: mem.studentId, count: c };
+  });
+  return best?.studentId || null;
+}
+
 function buildResult(m, scoreBoard, winnerTeam) {
   const loserTeam = winnerTeam === "A" ? "B" : "A";
   const winMembers = m[`team${winnerTeam}`]?.members || [];
@@ -404,16 +436,23 @@ function buildResult(m, scoreBoard, winnerTeam) {
 
   const winMvp = mvpOf(winMembers, scoreBoard);
   const loseMvp = mvpOf(loseMembers, scoreBoard);
+  const loseTopAttender = topAttenderOf(loseMembers, scoreBoard);
+  const topBuzzer = topAttenderOf([...winMembers, ...loseMembers], scoreBoard);
 
   const xpLog = {};
   winMembers.forEach(mem => { xpLog[mem.studentId] = (xpLog[mem.studentId] || 0) + WIN_XP_PER_MEMBER; });
+  loseMembers.forEach(mem => { xpLog[mem.studentId] = (xpLog[mem.studentId] || 0) + LOSE_XP_PER_MEMBER; });
   if (winMvp) xpLog[winMvp] = (xpLog[winMvp] || 0) + WIN_MVP_BONUS_XP;
-  if (loseMvp) {
-    const cutXp = Math.round(LOSE_MVP_XP * (1 - LOSE_XP_CUT_FRACTION));
-    xpLog[loseMvp] = (xpLog[loseMvp] || 0) + cutXp;
+  if (loseMvp) xpLog[loseMvp] = (xpLog[loseMvp] || 0) + LOSE_MVP_XP;
+  if (loseTopAttender) xpLog[loseTopAttender] = (xpLog[loseTopAttender] || 0) + LOSE_MOST_ATTEMPTS_BONUS_XP;
+  if (topBuzzer) xpLog[topBuzzer] = (xpLog[topBuzzer] || 0) + MOST_BUZZ_BONUS_XP;
+
+  const hostId = m.hostStudentId;
+  if (hostId && winMembers.some(mem => mem.studentId === hostId)) {
+    xpLog[hostId] = (xpLog[hostId] || 0) + CREATOR_WIN_BONUS_XP;
   }
 
-  return { winnerTeam, loserTeam, winMvp, loseMvp, xpLog, finishedAt: Date.now() };
+  return { winnerTeam, loserTeam, winMvp, loseMvp, loseTopAttender, topBuzzer, xpLog, finishedAt: Date.now() };
 }
 
 /**
