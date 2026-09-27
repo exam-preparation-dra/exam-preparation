@@ -394,6 +394,85 @@ export async function translateSyllabusTerm(apiKey, text) {
   const result = (await callGeminiApi(apiKey, [{ text: prompt }])).trim();
   return isBengali ? { bn: trimmed, en: result } : { bn: result, en: trimmed };
 }
+// ---------- Text-to-speech (used by admin/voice-generator.html) ----------
+// Gemini's TTS models are separate from the text models above, so they get
+// their own candidate list/fallback chain rather than reusing
+// GEMINI_MODEL_CANDIDATES. Same reasoning as there: Google renames/retires
+// preview model ids periodically.
+const GEMINI_TTS_MODEL_CANDIDATES = ["gemini-2.5-flash-preview-tts"];
+
+// Returns raw 16-bit PCM audio bytes (24kHz, mono) as an ArrayBuffer.
+// voiceName: one of Gemini's prebuilt voices (default "Kore" — a warm,
+// natural-sounding voice that works well for Bengali).
+export async function generateSpeechPcm(apiKey, text, { voiceName = "Kore", stylePrompt = "" } = {}) {
+  if (!apiKey) throw new Error("Gemini API key দেওয়া হয়নি।");
+  const trimmed = (text || "").trim();
+  if (!trimmed) throw new Error("খালি লাইন — বলার মতো কিছু নেই।");
+  const promptText = stylePrompt ? `${stylePrompt}: ${trimmed}` : trimmed;
+  const body = {
+    contents: [{ parts: [{ text: promptText }] }],
+    generationConfig: {
+      responseModalities: ["AUDIO"],
+      speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } }
+    }
+  };
+
+  let lastError = null;
+  for (const model of GEMINI_TTS_MODEL_CANDIDATES) {
+    let res;
+    try {
+      res = await fetch(`${geminiEndpoint(model)}?key=${encodeURIComponent(apiKey)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+    } catch (networkErr) {
+      lastError = new Error("Gemini এ পৌঁছানো যায়নি — ইন্টারনেট চেক করো।");
+      continue;
+    }
+
+    if (res.ok) {
+      const data = await res.json();
+      const b64 = data?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      if (!b64) { lastError = new Error("Gemini থেকে অডিও পাওয়া যায়নি।"); continue; }
+      const binary = atob(b64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return bytes.buffer;
+    }
+
+    let detail = "";
+    try { detail = (await res.json())?.error?.message || ""; } catch { /* ignore */ }
+    if (res.status === 404 || /no longer available|not found/i.test(detail)) {
+      lastError = new Error(`TTS মডেল "${model}" আর নেই — পরবর্তী মডেল চেষ্টা করা হচ্ছে...`);
+      continue;
+    }
+    if (res.status === 400 && /API key/i.test(detail)) throw new Error("Gemini API key ভুল — সঠিক key দিয়ে আবার চেষ্টা করো।");
+    if (res.status === 429) throw new Error("Gemini free tier এর সীমা শেষ — একটু পরে আবার চেষ্টা করো।");
+    throw new Error(`Gemini TTS সমস্যা (${res.status}): ${detail || "অজানা সমস্যা"}`);
+  }
+  throw lastError || new Error("কোনো Gemini TTS মডেল দিয়েই কাজ করা গেল না।");
+}
+
+// Wraps raw 16-bit PCM (24kHz, mono -- what Gemini TTS returns) in a
+// minimal WAV header so it plays directly in <audio>/browsers without
+// needing ffmpeg or any audio library.
+export function pcmToWavBlob(pcmArrayBuffer, sampleRate = 24000) {
+  const pcmBytes = new Uint8Array(pcmArrayBuffer);
+  const header = new ArrayBuffer(44);
+  const view = new DataView(header);
+  const writeStr = (offset, str) => { for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)); };
+  const blockAlign = 2; // 1 channel * 16-bit
+  const byteRate = sampleRate * blockAlign;
+  writeStr(0, "RIFF"); view.setUint32(4, 36 + pcmBytes.length, true);
+  writeStr(8, "WAVE"); writeStr(12, "fmt "); view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); view.setUint16(22, 1, true); // PCM, mono
+  view.setUint32(24, sampleRate, true); view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true); view.setUint16(34, 16, true);
+  writeStr(36, "data"); view.setUint32(40, pcmBytes.length, true);
+  return new Blob([header, pcmBytes], { type: "audio/wav" });
+}
+
 export function fileToImagePart(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
