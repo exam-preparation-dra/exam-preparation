@@ -6,7 +6,10 @@
    +1:30 per card to that exam's original duration. More items will be
    added to STORE_ITEMS later — the cart/purchase flow below is written
    generically so a new item is just a new catalog entry, nothing else
-   changes.
+   changes. Each use is capped per-exam at MAX_CARDS_PER_ATTEMPT (enforced
+   client-side in exam.html, same trust model as everything else here) and
+   logged to storeCardUsage for the store's own history list and the admin
+   report.
 
    XP itself is never stored anywhere (computeStudentXP() in xp-utils.js
    always derives it fresh from results/battle/referral/etc). So there is
@@ -50,6 +53,9 @@ export const STORE_ITEMS = [
 export function getStoreItem(itemId) {
   return STORE_ITEMS.find(i => i.id === itemId) || null;
 }
+
+/** How many cards (of any kind) a student may use inside a single exam attempt. */
+export const MAX_CARDS_PER_ATTEMPT = 3;
 
 /** Total XP this student has ever spent in the store (all items combined). */
 export async function getSpentXP(studentId) {
@@ -141,13 +147,19 @@ export async function getPurchaseHistory(studentId) {
  * exam.html when a student taps "টাইম কার্ড ব্যবহার করো" during an exam).
  * Re-checks availability inside a transaction so two taps (or two tabs)
  * can't consume more cards than the student actually owns.
+ *
+ * `examMeta` ({ examId, examTitle }) is optional context for the usage log
+ * (storeCardUsage) — pass it when this is used from inside an exam so the
+ * store's history list and the admin report can show which exam it was
+ * used in. Logging is best-effort, like the purchase receipt above: a
+ * failure here never undoes the already-committed transaction.
  */
-export async function useStoreItem(studentId, itemId, qty = 1) {
+export async function useStoreItem(studentId, itemId, qty = 1, examMeta = null) {
   const item = getStoreItem(itemId);
   if (!item) throw new Error("UNKNOWN_ITEM");
   qty = Math.max(1, Math.floor(Number(qty) || 0));
   const invRef = doc(db, "storeInventory", studentId);
-  return runTransaction(db, async (tx) => {
+  const result = await runTransaction(db, async (tx) => {
     const snap = await tx.get(invRef);
     if (!snap.exists()) throw new Error("NOTHING_TO_USE");
     const data = snap.data();
@@ -159,4 +171,43 @@ export async function useStoreItem(studentId, itemId, qty = 1) {
     tx.update(invRef, { items, updatedAt: Date.now() });
     return { secondsGranted: (item.secondsGranted || 0) * qty, qtyUsed: qty };
   });
+
+  addDoc(collection(db, "storeCardUsage"), {
+    studentId,
+    itemId,
+    itemName: item.name,
+    qty,
+    secondsGranted: result.secondsGranted,
+    examId: examMeta?.examId || null,
+    examTitle: examMeta?.examTitle || null,
+    createdAtMs: Date.now()
+  }).catch(() => {});
+
+  return result;
+}
+
+/** Every "use card" event this student has triggered, newest first. */
+export async function getUsageHistory(studentId) {
+  if (!studentId) return [];
+  const snap = await getDocs(query(collection(db, "storeCardUsage"), where("studentId", "==", studentId)));
+  const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  rows.sort((a, b) => Number(b.createdAtMs || 0) - Number(a.createdAtMs || 0));
+  return rows;
+}
+
+/* ---------- Admin-only reads (rules restrict writes, not reads — but these
+   are only ever called from admin/*.html, guarded by requireAdmin()). ---------- */
+
+/** Every student's storeInventory doc, for the admin store report. */
+export async function getAllInventoriesForAdmin() {
+  const snap = await getDocs(collection(db, "storeInventory"));
+  return snap.docs.map(d => ({ studentId: d.id, ...d.data() }));
+}
+
+/** Most recent "use card" events across every student, for the admin store report. */
+export async function getRecentUsageForAdmin(limitN = 100) {
+  const snap = await getDocs(collection(db, "storeCardUsage"));
+  const rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  rows.sort((a, b) => Number(b.createdAtMs || 0) - Number(a.createdAtMs || 0));
+  return rows.slice(0, limitN);
 }

@@ -69,6 +69,7 @@ export async function peekInProgressAttempt(examId, studentId) {
         markedForReview: data.markedForReview || {},
         startedAtMillis: data.startedAtMillis,
         endAtMillis: data.endAtMillis,
+        cardsUsedCount: data.cardsUsedCount || 0,
         status: "in-progress"
       };
       saveLocalAttempt(examId, studentId, restored);
@@ -89,14 +90,14 @@ export async function getOrStartAttempt(examId, studentId, durationMinutes) {
 
   const startedAtMillis = Date.now();
   const endAtMillis = startedAtMillis + durationMinutes * 60 * 1000;
-  const fresh = { examId, studentId, answers: {}, currentIndex: 0, questionTimes: {}, markedForReview: {}, startedAtMillis, endAtMillis, status: "in-progress" };
+  const fresh = { examId, studentId, answers: {}, currentIndex: 0, questionTimes: {}, markedForReview: {}, startedAtMillis, endAtMillis, cardsUsedCount: 0, status: "in-progress" };
   saveLocalAttempt(examId, studentId, fresh);
 
   try {
     await setDoc(doc(db, "attempts", attemptDocId(examId, studentId)), {
       examId, studentId, durationMinutes,
       startedAtMillis, endAtMillis,
-      answers: {}, currentIndex: 0, questionTimes: {}, markedForReview: {},
+      answers: {}, currentIndex: 0, questionTimes: {}, markedForReview: {}, cardsUsedCount: 0,
       status: "in-progress",
       lastSyncedAt: serverTimestamp()
     });
@@ -123,14 +124,15 @@ export function syncToFirestoreDebounced(examId, studentId, partialData, delayMs
   }, delayMs);
 }
 
-// ---------- Extend an in-progress attempt's end time (a "time card" used mid-exam).
-// Written immediately rather than through the debounced sync above — this is
-// infrequent and important, and the shared debounce timer would otherwise let
-// a later answers/currentIndex sync silently drop this field (last call wins). ----------
-export async function extendAttemptTime(examId, studentId, endAtMillis) {
+// ---------- Extend an in-progress attempt's end time + bump its card-use
+// counter (a "time card" used mid-exam). Written immediately rather than
+// through the debounced sync above — this is infrequent and important, and
+// the shared debounce timer would otherwise let a later answers/currentIndex
+// sync silently drop these fields (last call wins). ----------
+export async function extendAttemptTime(examId, studentId, endAtMillis, cardsUsedCount) {
   try {
     await updateDoc(doc(db, "attempts", attemptDocId(examId, studentId)), {
-      endAtMillis, lastSyncedAt: serverTimestamp()
+      endAtMillis, cardsUsedCount, lastSyncedAt: serverTimestamp()
     });
   } catch {
     // Offline — the local copy (saved by the caller) is enough to resume from.
