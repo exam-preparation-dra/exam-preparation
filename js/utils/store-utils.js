@@ -56,6 +56,16 @@ export const STORE_ITEMS = [
                           // purchaseCart below and consumeBattleRoomCardForMatch)
     priceXP: 50,
     maxPerOrder: 10
+  },
+  {
+    id: "hint_card",
+    name: "হিন্ট কার্ড",
+    tagline: "১টি কার্ড = ১টি প্রশ্নের উত্তর + ব্যাখ্যা",
+    description: "পরীক্ষা চলাকালীন যেকোনো প্রশ্নে ব্যবহার করে সেই প্রশ্নের সঠিক উত্তর ও ব্যাখ্যা দেখে নেওয়া যাবে — একটি কার্ডে একটি প্রশ্নের হিন্ট পাওয়া যাবে।",
+    hintsGranted: 1,      // marks this item as a "hint card" for the store UI
+                          // (see renderItems()/renderHistory() in store.html)
+    priceXP: 300,
+    maxPerOrder: 10
   }
   // আরও item এখানে যোগ হবে — বাকি সব কোড (cart/checkout/inventory) নতুন
   // item-এর জন্য নিজে থেকেই কাজ করবে, আলাদা করে কিছু বদলাতে হবে না।
@@ -67,6 +77,9 @@ export function getStoreItem(itemId) {
 
 /** How many cards (of any kind) a student may use inside a single exam attempt. */
 export const MAX_CARDS_PER_ATTEMPT = 3;
+
+/** How many Hint Cards a student may use inside a single exam attempt (separate cap — one per question, not shared with MAX_CARDS_PER_ATTEMPT above). */
+export const MAX_HINT_CARDS_PER_ATTEMPT = 5;
 
 /** Total XP this student has ever spent in the store (all items combined). */
 export async function getSpentXP(studentId) {
@@ -202,7 +215,7 @@ export async function useStoreItem(studentId, itemId, qty = 1, examMeta = null) 
     if (available < qty) throw new Error("NOTHING_TO_USE");
     items[itemId] = { ...row, used: Number(row.used || 0) + qty };
     tx.update(invRef, { items, updatedAt: Date.now() });
-    return { secondsGranted: (item.secondsGranted || 0) * qty, qtyUsed: qty };
+    return { secondsGranted: (item.secondsGranted || 0) * qty, hintsGranted: (item.hintsGranted || 0) * qty, qtyUsed: qty };
   });
 
   addDoc(collection(db, "storeCardUsage"), {
@@ -211,6 +224,7 @@ export async function useStoreItem(studentId, itemId, qty = 1, examMeta = null) 
     itemName: item.name,
     qty,
     secondsGranted: result.secondsGranted,
+    hintsGranted: result.hintsGranted,
     examId: examMeta?.examId || null,
     examTitle: examMeta?.examTitle || null,
     createdAtMs: Date.now()

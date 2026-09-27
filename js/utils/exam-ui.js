@@ -49,7 +49,9 @@ const ICON = {
   info: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
   warn: `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
   star: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
-  card: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>`
+  card: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>`,
+  bulb: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.45.9 1.15.9 1.9V16h5.4v-.3c0-.75.3-1.45.9-1.9A6 6 0 0 0 12 3z"/></svg>`,
+  check: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`
 };
 
 /* ---------- intro screen ---------- */
@@ -152,6 +154,7 @@ export function runShellHtml({ name, photoURL, total, showCardBtn = false }) {
     </div>
 
     ${showCardBtn ? cardModalHtml() : ""}
+    ${hintModalHtml()}
   `;
 }
 
@@ -188,10 +191,56 @@ function cardModalHtml() {
     </div>`;
 }
 
+/* ---------- "use a hint card" confirm sheet (shown when useHintBtn is tapped) ---------- */
+function hintModalHtml() {
+  return `
+    <div id="hintModal" class="ex-overlay hidden">
+      <div class="ex-sheet ex-confirm">
+        <div class="ex-confirm-icon accent">${ICON.bulb}</div>
+        <p class="ex-sheet-title">হিন্ট কার্ড ব্যবহার করবে?</p>
+        <p class="msg" id="hintModalText"></p>
+        <div class="ex-confirm-actions">
+          <button class="ex-btn ex-btn-ghost" id="cancelHintBtn" type="button">বাতিল</button>
+          <button class="ex-btn ex-btn-primary" id="confirmHintBtn" type="button">হ্যাঁ, দেখাও</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ---------- hint zone shown under a question's options ----------
+   hint: {
+     enabled          -- false if there's no hint_card item in the catalog at all
+     used             -- true once this question's hint has been revealed
+     canUse           -- true if a card can be used right now on this question
+     subtitle         -- pre-composed availability text (exam.html knows the counts)
+     correctLetter, correctText, explanation -- only needed once used
+   } ---------- */
+export function hintZoneHtml(hint) {
+  if (!hint || !hint.enabled) return "";
+  if (hint.used) {
+    return `
+    <div class="ex-hint-reveal">
+      <div class="ex-hint-reveal-head">${ICON.check} <span>হিন্ট কার্ড ব্যবহার করা হয়েছে</span></div>
+      <p class="ex-hint-answer"><b>সঠিক উত্তর:</b> ${esc(hint.correctLetter ?? "")}) ${hint.correctText ?? ""}</p>
+      ${hint.explanation
+        ? `<p class="ex-hint-explanation">${hint.explanation}</p>`
+        : `<p class="ex-hint-explanation text-muted">এই প্রশ্নের জন্য কোনো ব্যাখ্যা যোগ করা নেই।</p>`}
+    </div>`;
+  }
+  return `
+    <button type="button" id="useHintBtn" class="ex-hint-cta" ${hint.canUse ? "" : "disabled"}>
+      <span class="ex-hint-cta-icon">${ICON.bulb}</span>
+      <span class="ex-hint-cta-text">
+        <span class="ex-hint-cta-title">হিন্ট কার্ড ব্যবহার করো</span>
+        <span class="ex-hint-cta-sub">${esc(hint.subtitle ?? "")}</span>
+      </span>
+    </button>`;
+}
+
 /* ---------- one question ---------- */
 // questionBn / questionEn / option text are admin-authored (may contain math or
 // HTML) and are inserted as-is, exactly like before.
-export function questionHtml({ questionBn, questionEn, imageUrl, options, selected, isMarked }) {
+export function questionHtml({ questionBn, questionEn, imageUrl, options, selected, isMarked, hint = null }) {
   const image = imageUrl ? `
     <div class="ex-figure">
       <img src="${esc(imageUrl)}" draggable="false" oncontextmenu="return false;" onerror="this.style.display='none';">
@@ -210,6 +259,8 @@ export function questionHtml({ questionBn, questionEn, imageUrl, options, select
           <span class="ex-option-text">${o.text ?? ""}</span>
         </button>`).join("")}
     </div>
+
+    <div id="hintZone">${hintZoneHtml(hint)}</div>
 
     <button type="button" id="markReviewBtn" class="ex-review ${isMarked ? "active" : ""}">
       ${ICON.star} ${isMarked ? "চিহ্নিত করা আছে" : "পর্যালোচনার জন্য চিহ্নিত করুন"}

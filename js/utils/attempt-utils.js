@@ -70,6 +70,8 @@ export async function peekInProgressAttempt(examId, studentId) {
         startedAtMillis: data.startedAtMillis,
         endAtMillis: data.endAtMillis,
         cardsUsedCount: data.cardsUsedCount || 0,
+        hintsUsed: data.hintsUsed || {},
+        hintCardsUsedCount: data.hintCardsUsedCount || 0,
         status: "in-progress"
       };
       saveLocalAttempt(examId, studentId, restored);
@@ -90,7 +92,7 @@ export async function getOrStartAttempt(examId, studentId, durationMinutes) {
 
   const startedAtMillis = Date.now();
   const endAtMillis = startedAtMillis + durationMinutes * 60 * 1000;
-  const fresh = { examId, studentId, answers: {}, currentIndex: 0, questionTimes: {}, markedForReview: {}, startedAtMillis, endAtMillis, cardsUsedCount: 0, status: "in-progress" };
+  const fresh = { examId, studentId, answers: {}, currentIndex: 0, questionTimes: {}, markedForReview: {}, startedAtMillis, endAtMillis, cardsUsedCount: 0, hintsUsed: {}, hintCardsUsedCount: 0, status: "in-progress" };
   saveLocalAttempt(examId, studentId, fresh);
 
   try {
@@ -98,6 +100,7 @@ export async function getOrStartAttempt(examId, studentId, durationMinutes) {
       examId, studentId, durationMinutes,
       startedAtMillis, endAtMillis,
       answers: {}, currentIndex: 0, questionTimes: {}, markedForReview: {}, cardsUsedCount: 0,
+      hintsUsed: {}, hintCardsUsedCount: 0,
       status: "in-progress",
       lastSyncedAt: serverTimestamp()
     });
@@ -133,6 +136,21 @@ export async function extendAttemptTime(examId, studentId, endAtMillis, cardsUse
   try {
     await updateDoc(doc(db, "attempts", attemptDocId(examId, studentId)), {
       endAtMillis, cardsUsedCount, lastSyncedAt: serverTimestamp()
+    });
+  } catch {
+    // Offline — the local copy (saved by the caller) is enough to resume from.
+  }
+}
+
+// ---------- Record a Hint Card being used on a question (a student taps
+// "হিন্ট কার্ড ব্যবহার করো" during an exam). Written immediately rather than
+// through the debounced sync above, for the same reason as extendAttemptTime
+// above: infrequent and important, and the shared debounce timer would
+// otherwise let a later answers/currentIndex sync silently drop it. ----------
+export async function useHintOnAttempt(examId, studentId, hintsUsed, hintCardsUsedCount) {
+  try {
+    await updateDoc(doc(db, "attempts", attemptDocId(examId, studentId)), {
+      hintsUsed, hintCardsUsedCount, lastSyncedAt: serverTimestamp()
     });
   } catch {
     // Offline — the local copy (saved by the caller) is enough to resume from.
