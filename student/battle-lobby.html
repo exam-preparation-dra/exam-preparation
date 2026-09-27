@@ -73,6 +73,7 @@ body{background:var(--bg-app);color:var(--text-primary);font-family:var(--font-b
         <label class="field-label">Topic</label>
         <div id="topicPicker" class="topic-list"><div class="empty-member">Chapter নির্বাচন করলে Topic দেখা যাবে।</div></div>
       </div>
+      <p id="roomCardNote" class="panel-sub" style="margin-top:-4px;"></p>
       <button id="createBtn" class="primary-action" type="button">Create</button>
       <p id="createError" class="error-note"></p>
     </section>
@@ -128,6 +129,7 @@ import { getFullSyllabusTree } from "../js/utils/syllabus-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { createMatch, joinMatch, startMatch, removeMember, swapMember, syncLobbyTimer, deleteMatch } from "../js/utils/battle-utils.js";
+import { getAvailableBattleRoomCardCount } from "../js/utils/store-utils.js";
 
 initTheme();
 const esc = v => String(v ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
@@ -182,7 +184,17 @@ chapterSelect.addEventListener("change",()=>{
   topicPicker.innerHTML=topics.length?topics.map(t=>`<label class="topic-row"><input type="checkbox" class="topic-check" value="${esc(t.id)}"><span>${esc(t.name_bn||t.name_en||t.id)}</span></label>`).join(""):'<div class="empty-member">এই Chapter-এ কোনো Topic নেই।</div>';
 });
 
-document.getElementById("openCreateBtn").onclick=()=>setView("create");
+const roomCardNote=document.getElementById("roomCardNote");
+async function refreshRoomCardNote(){
+  roomCardNote.textContent="লোড হচ্ছে…";
+  try{
+    const n=await getAvailableBattleRoomCardCount(student.studentId);
+    roomCardNote.innerHTML = n>0
+      ? `তোমার কাছে <strong>${n}টি</strong> Battle Room Card আছে (Create করলে ১টি খরচ হবে)।`
+      : `তোমার কাছে কোনো Battle Room Card নেই। <a href="./store.html">XP স্টোর থেকে কিনে নাও</a> (৫০ XP/কার্ড)।`;
+  }catch(e){ roomCardNote.textContent=""; }
+}
+document.getElementById("openCreateBtn").onclick=()=>{setView("create");refreshRoomCardNote();};
 document.getElementById("openJoinBtn").onclick=()=>setView("join");
 document.getElementById("homeBtn").onclick=async()=>{
   unsub?.(); await stopScanner(); clearLobbyTimer();
@@ -195,7 +207,11 @@ document.getElementById("createBtn").onclick=async()=>{
   const topics=[...document.querySelectorAll(".topic-check:checked")].map(x=>x.value);
   if(!chapterSelect.value)return showErr(createError,"একটি Chapter নির্বাচন করো।");
   if(!topics.length)return showErr(createError,"অন্তত ১টি Topic নির্বাচন করো।");
-  try{const code=await createMatch({hostStudentId:student.studentId,hostName:student.name,topics});myTeam="A";enterLobby(code);}catch(e){showErr(createError,e.message||"Battle তৈরি করা যায়নি।");}
+  try{const code=await createMatch({hostStudentId:student.studentId,hostName:student.name,topics});myTeam="A";enterLobby(code);}catch(e){
+    if(e.message==="NO_ROOM_CARD"){clearTimeout(createError._t);createError.innerHTML=`Battle তৈরি করতে ১টি Battle Room Card লাগবে। <a href="./store.html">XP স্টোর থেকে কিনে নাও</a>।`;}
+    else showErr(createError,e.message||"Battle তৈরি করা যায়নি।");
+    refreshRoomCardNote();
+  }
 };
 
 document.getElementById("joinBtn").onclick=async()=>{

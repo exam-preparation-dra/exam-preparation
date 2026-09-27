@@ -167,8 +167,9 @@ function renderItems() {
     return `
     <div class="store-ticket" data-item="${item.id}">
       <div class="store-ticket-stub">
-        <span class="store-ticket-plus num">+${fmtDuration(item.secondsGranted)}</span>
-        <span class="store-ticket-plus-label">মিনিট</span>
+        ${item.validityDays
+          ? `<span class="store-ticket-plus num">১×</span><span class="store-ticket-plus-label">Battle</span>`
+          : `<span class="store-ticket-plus num">+${fmtDuration(item.secondsGranted)}</span><span class="store-ticket-plus-label">মিনিট</span>`}
       </div>
       <div class="store-ticket-divider"></div>
       <div class="store-ticket-body">
