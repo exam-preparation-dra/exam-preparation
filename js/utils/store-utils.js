@@ -1,9 +1,9 @@
 /* =========================================================
    XP STORE — spend XP on real in-app perks.
 
-   First item: a Time Card (৳1000 XP each). Bought ahead of time from the
+   First item: a Time Card (৳200 XP each). Bought ahead of time from the
    store, one or more can then be used any time DURING an exam to add
-   +1:30 per card to that exam's original duration. More items will be
+   +1:00 per card to that exam's original duration. More items will be
    added to STORE_ITEMS later — the cart/purchase flow below is written
    generically so a new item is just a new catalog entry, nothing else
    changes. Each use is capped per-exam at MAX_CARDS_PER_ATTEMPT (enforced
@@ -40,10 +40,10 @@ export const STORE_ITEMS = [
   {
     id: "time_extend_card",
     name: "টাইম কার্ড",
-    tagline: "প্রতি কার্ডে +১ মিনিট ৩০ সেকেন্ড",
-    description: "পরীক্ষা চলাকালীন যেকোনো সময় ব্যবহার করে মূল সময়ের সাথে বাড়তি দেড় মিনিট যোগ করা যাবে — কিন্তু আগে থেকে কিনে রাখতে হবে।",
-    secondsGranted: 90,
-    priceXP: 1000,
+    tagline: "প্রতি কার্ডে +১ মিনিট",
+    description: "পরীক্ষা চলাকালীন যেকোনো সময় ব্যবহার করে মূল সময়ের সাথে বাড়তি ১ মিনিট যোগ করা যাবে — কিন্তু আগে থেকে কিনে রাখতে হবে।",
+    secondsGranted: 60,
+    priceXP: 200,
     maxPerOrder: 10
   },
   {
@@ -75,8 +75,8 @@ export function getStoreItem(itemId) {
   return STORE_ITEMS.find(i => i.id === itemId) || null;
 }
 
-/** How many cards (of any kind) a student may use inside a single exam attempt. */
-export const MAX_CARDS_PER_ATTEMPT = 3;
+/** How many Time Cards a student may use inside a single exam attempt. */
+export const MAX_CARDS_PER_ATTEMPT = 10;
 
 /** How many Hint Cards a student may use inside a single exam attempt (separate cap — one per question, not shared with MAX_CARDS_PER_ATTEMPT above). */
 export const MAX_HINT_CARDS_PER_ATTEMPT = 5;
