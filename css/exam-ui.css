@@ -78,8 +78,30 @@
 .ex-page-title { font-weight: 900; font-size: 1.05rem; color: var(--text-primary); }
 .ex-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
-.ex-timer { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; line-height: 1; }
+.ex-timer { position: relative; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; line-height: 1; }
 .ex-timer small { font-size: .6rem; font-weight: 800; color: var(--text-muted); }
+
+/* "+1:00" style float that pops up from the timer chip when a Time Card is used */
+.ex-timer-float {
+  position: absolute; top: -2px; right: 0; transform: translateY(0);
+  font-family: var(--font-num); font-weight: 900; font-size: .8rem;
+  color: var(--ex-good, #22c55e); pointer-events: none; white-space: nowrap;
+  animation: exTimeFloat 1.1s ease-out forwards;
+}
+@keyframes exTimeFloat {
+  0%   { opacity: 0; transform: translateY(6px) scale(.8); }
+  20%  { opacity: 1; transform: translateY(-6px) scale(1.08); }
+  70%  { opacity: 1; transform: translateY(-22px) scale(1); }
+  100% { opacity: 0; transform: translateY(-32px) scale(1); }
+}
+/* brief glow on the timer chip itself when time is added */
+#timerDisplay.time-added {
+  animation: exTimeGlow .7s ease-out;
+}
+@keyframes exTimeGlow {
+  0%   { color: var(--ex-good, #22c55e); background: rgba(34, 197, 94, .18); border-color: rgba(34, 197, 94, .5); }
+  100% { color: var(--text-primary); background: var(--ex-chip); border-color: var(--ex-field-edge); }
+}
 #timerDisplay {
   font-family: var(--font-num); font-variant-numeric: tabular-nums; font-weight: 800; font-size: .95rem;
   letter-spacing: .3px; white-space: nowrap; padding: 5px 12px; border-radius: 99px;
@@ -308,8 +330,10 @@
 .ex-legend .l-now { background: var(--ex-accent); border-color: var(--ex-accent); }
 
 /* ---------- Use-a-card sheet ---------- */
-.ex-timecard { display: flex; align-items: center; gap: 14px; margin: 14px 0; padding: 14px; border-radius: 16px; background: rgba(var(--ex-accent-rgb), .1); border: 1px solid rgba(var(--ex-accent-rgb), .3); }
+.ex-timecard { display: flex; align-items: center; gap: 14px; margin: 14px 0; padding: 14px; border-radius: 16px; background: rgba(var(--ex-accent-rgb), .1); border: 1px solid rgba(var(--ex-accent-rgb), .3); transition: background .3s, border-color .3s; }
 .ex-timecard-plus { flex-shrink: 0; font-family: var(--font-num); font-weight: 800; font-size: 1.3rem; color: var(--ex-accent-text); }
+.ex-timecard.used { background: rgba(34, 197, 94, .14); border-color: rgba(34, 197, 94, .4); }
+.ex-timecard.used .ex-timecard-plus { animation: exPop .3s cubic-bezier(.34, 1.56, .64, 1); }
 .ex-timecard-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .ex-timecard-name { font-weight: 800; font-size: .92rem; color: var(--text-primary); }
 .ex-timecard-avail { font-size: .78rem; font-weight: 700; color: var(--text-muted); }
