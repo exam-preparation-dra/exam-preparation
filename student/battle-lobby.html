@@ -139,7 +139,7 @@ if (!student?.studentId) { document.body.innerHTML = `<div style="padding:30px;t
 const modeView=document.getElementById("modeView"), createView=document.getElementById("createView"), joinView=document.getElementById("joinView"), lobbyView=document.getElementById("lobbyView");
 const chapterSelect=document.getElementById("chapterSelect"), topicPicker=document.getElementById("topicPicker");
 const createError=document.getElementById("createError"), joinError=document.getElementById("joinError"), errorNote=document.getElementById("errorNote");
-let syllabusTree=[]; let unsub=null; let myTeam=null; let scanner=null; let lobbyTimerHandle=null; let currentCode=null;
+let syllabusTree=[]; let unsub=null; let myTeam=null; let scanner=null; let scanJoining=false; let lobbyTimerHandle=null; let currentCode=null;
 
 let currentView="mode";
 function showOnly(name){ [modeView,createView,joinView,lobbyView].forEach(v=>v.classList.add("hidden")); ({mode:modeView,create:createView,join:joinView,lobby:lobbyView}[name]).classList.remove("hidden"); currentView=name; }
@@ -154,7 +154,7 @@ window.addEventListener("popstate", ()=>{
 });
 
 function showErr(el,msg){ el.textContent=msg; clearTimeout(el._t); el._t=setTimeout(()=>el.textContent="",4500); }
-function stopScanner(){ if(!scanner)return; scanner.stop().catch(()=>{}).finally(()=>{scanner.clear().catch(()=>{});scanner=null;document.getElementById("scannerArea").classList.add("hidden");}); }
+function stopScanner(){ if(!scanner)return Promise.resolve(); return scanner.stop().catch(()=>{}).finally(()=>{scanner.clear().catch(()=>{});scanner=null;document.getElementById("scannerArea").classList.add("hidden");}); }
 function clearLobbyTimer(){ if(lobbyTimerHandle){clearInterval(lobbyTimerHandle);lobbyTimerHandle=null;} }
 
 // If a shared/QR link contains a Battle code, open the Join view with that code filled in.
@@ -214,25 +214,41 @@ document.getElementById("createBtn").onclick=async()=>{
   }
 };
 
-document.getElementById("joinBtn").onclick=async()=>{
+// Shared join logic -- used by the manual Join button AND directly by the
+// QR scanner below (no button tap needed after a successful scan).
+async function doJoin(code){
+  if(code.length!==6){showErr(joinError,"সঠিক ৬ অক্ষরের Battle Code দাও।");return;}
+  try{
+    await joinMatch(code,{studentId:student.studentId,name:student.name,team:"B"});
+    myTeam="B";
+    enterLobby(code);
+  }catch(e){
+    const map={MATCH_NOT_FOUND:"এই Code-এ কোনো Battle পাওয়া যায়নি।",MATCH_ALREADY_STARTED:"এই Battle ইতিমধ্যে শুরু হয়ে গেছে।",TEAM_FULL:"Team B পূর্ণ।",ALREADY_IN_OTHER_TEAM:"তুমি এই Battle-এ আগে থেকেই আছো।"};
+    showErr(joinError,map[e.message]||e.message||"Join করা যায়নি।");
+  }
+}
+
+document.getElementById("joinBtn").onclick=()=>{
   const code=document.getElementById("joinCodeInput").value.trim().toUpperCase();
-  if(code.length!==6)return showErr(joinError,"সঠিক ৬ অক্ষরের Battle Code দাও।");
-  try{stopScanner();await joinMatch(code,{studentId:student.studentId,name:student.name,team:"B"});myTeam="B";enterLobby(code);}catch(e){const map={MATCH_NOT_FOUND:"এই Code-এ কোনো Battle পাওয়া যায়নি।",MATCH_ALREADY_STARTED:"এই Battle ইতিমধ্যে শুরু হয়ে গেছে।",TEAM_FULL:"Team B পূর্ণ।",ALREADY_IN_OTHER_TEAM:"তুমি এই Battle-এ আগে থেকেই আছো।"};showErr(joinError,map[e.message]||e.message||"Join করা যায়নি।");}
+  doJoin(code);
 };
 
 document.getElementById("scanQrBtn").onclick=async()=>{
   const area=document.getElementById("scannerArea");area.classList.remove("hidden");if(scanner)return;
   if(typeof Html5Qrcode==="undefined")return showErr(joinError,"QR Scanner লোড হয়নি।");
   scanner=new Html5Qrcode("qr-reader");
+  scanJoining=false;
   try{await scanner.start({facingMode:"environment"},{fps:10,qrbox:{width:220,height:220}},async decoded=>{
+    if(scanJoining)return; // camera keeps decoding the same frame while it's stopping -- only act once
     const raw=String(decoded||"").trim().toUpperCase();
     let code="";
     try{ const u=new URL(raw); code=(u.searchParams.get("code")||"").trim().toUpperCase(); }catch{}
     if(!code){ const m=raw.match(/(?:BATTLE[:/]|CODE[:=])?([A-Z0-9]{6})$/); if(m) code=m[1]; }
     if(!/^[A-Z0-9]{6}$/.test(code)) return;
+    scanJoining=true;
     document.getElementById("joinCodeInput").value=code;
-    await stopScanner();
-    document.getElementById("joinBtn").click();
+    await stopScanner();      // fully stop the camera before joining, not fire-and-forget
+    await doJoin(code);       // join directly -- no "Join" tap required
   },()=>{});}catch(e){scanner=null;showErr(joinError,"Camera permission দিন।");}
 };
 
