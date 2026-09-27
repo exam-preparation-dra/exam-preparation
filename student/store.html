@@ -224,7 +224,9 @@ function renderItems() {
       <div class="store-ticket-stub">
         ${item.validityDays
           ? `<span class="store-ticket-plus num">১×</span><span class="store-ticket-plus-label">Battle</span>`
-          : `<span class="store-ticket-plus num">+${fmtDuration(item.secondsGranted)}</span><span class="store-ticket-plus-label">মিনিট</span>`}
+          : item.hintsGranted
+            ? `<span class="store-ticket-plus num">💡${item.hintsGranted}</span><span class="store-ticket-plus-label">হিন্ট</span>`
+            : `<span class="store-ticket-plus num">+${fmtDuration(item.secondsGranted)}</span><span class="store-ticket-plus-label">মিনিট</span>`}
       </div>
       <div class="store-ticket-divider"></div>
       <div class="store-ticket-body">
@@ -284,13 +286,14 @@ function renderHistory(rows) {
   }
   el.innerHTML = rows.map(r => {
     if (r.kind === "use") {
+      const usedLabel = r.hintsGranted ? `${fmt(r.hintsGranted)}টি উত্তর দেখা হয়েছে` : `+${fmtDuration(r.secondsGranted)}`;
       return `
       <div class="card store-history-row">
         <div>
           <div class="store-history-name">${esc(r.itemName)} <span class="text-muted">× ${fmt(r.qty)}</span> <span class="badge badge-completed" style="font-size:.62rem;">ব্যবহার হয়েছে</span></div>
           <div class="text-sm text-muted">${r.examTitle ? `${esc(r.examTitle)} পরীক্ষায় · ` : ""}${formatDate(r.createdAtMs)} · ${formatTime(r.createdAtMs)}</div>
         </div>
-        <div class="num store-history-used">+${fmtDuration(r.secondsGranted)}</div>
+        <div class="num store-history-used">${usedLabel}</div>
       </div>`;
     }
     return `

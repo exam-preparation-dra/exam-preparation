@@ -29,14 +29,14 @@ import { getExamById, getExamSnapshot, isExamAvailableNow } from "../js/utils/re
 import { getSubjects, getChapters, buildNameMap } from "../js/utils/syllabus-utils.js";
 import {
   peekInProgressAttempt, getOrStartAttempt, saveLocalAttempt,
-  syncToFirestoreDebounced, extendAttemptTime, submitAttempt, getExistingResult
+  syncToFirestoreDebounced, extendAttemptTime, useHintOnAttempt, submitAttempt, getExistingResult
 } from "../js/utils/attempt-utils.js";
 import { formatHms } from "../js/utils/grading-utils.js";
 import {
-  initExamPage, bindThemeButtons, introHtml, runShellHtml, questionHtml,
+  initExamPage, bindThemeButtons, introHtml, runShellHtml, questionHtml, hintZoneHtml,
   setQuestionCounter, setProgress, fillPalette, submitMessage
 } from "../js/utils/exam-ui.js";
-import { STORE_ITEMS, MAX_CARDS_PER_ATTEMPT, getStoreInventory, useStoreItem } from "../js/utils/store-utils.js?v=roomcard1";
+import { STORE_ITEMS, MAX_CARDS_PER_ATTEMPT, MAX_HINT_CARDS_PER_ATTEMPT, getStoreInventory, useStoreItem } from "../js/utils/store-utils.js?v=roomcard1";
 
 initTheme();
 initExamPage();
@@ -58,6 +58,8 @@ let examInProgress = false;
 const TIME_CARD = STORE_ITEMS.find(i => i.id === "time_extend_card") || STORE_ITEMS[0];
 let cardAvailable = 0;
 let cardQty = 1;
+const HINT_CARD = STORE_ITEMS.find(i => i.id === "hint_card") || null;
+let hintCardAvailable = 0;
 
 if (!student) {
   window.location.href = "../index.html";
@@ -99,6 +101,7 @@ async function boot() {
       attemptState = resumable;
       attemptState.questionTimes = attemptState.questionTimes || {};
       attemptState.markedForReview = attemptState.markedForReview || {};
+      attemptState.hintsUsed = attemptState.hintsUsed || {};
       renderExamShell();
       startTimer();
       return;
@@ -150,6 +153,7 @@ async function renderIntro() {
     attemptState = await getOrStartAttempt(examId, student.studentId, exam.durationMinutes);
     attemptState.questionTimes = attemptState.questionTimes || {};
     attemptState.markedForReview = attemptState.markedForReview || {};
+    attemptState.hintsUsed = attemptState.hintsUsed || {};
     renderExamShell();
     startTimer();
   });
@@ -173,6 +177,9 @@ function renderExamShell() {
   document.getElementById("confirmCardBtn").addEventListener("click", confirmUseCard);
   document.getElementById("cardQtyDec").addEventListener("click", () => setCardQty(cardQty - 1));
   document.getElementById("cardQtyInc").addEventListener("click", () => setCardQty(cardQty + 1));
+  document.getElementById("cancelHintBtn").addEventListener("click", closeHintModal);
+  document.getElementById("confirmHintBtn").addEventListener("click", confirmUseHint);
+  document.getElementById("hintModal").addEventListener("click", e => { if (e.target === e.currentTarget) closeHintModal(); });
   // tap on the dimmed backdrop closes a sheet
   document.getElementById("paletteOverlay").addEventListener("click", e => { if (e.target === e.currentTarget) closePalette(); });
   document.getElementById("submitModal").addEventListener("click", e => { if (e.target === e.currentTarget) closeSubmitModal(); });
@@ -193,11 +200,17 @@ async function refreshCardBadge() {
   try {
     const inv = await getStoreInventory(student.studentId);
     cardAvailable = inv[TIME_CARD.id]?.available || 0;
-  } catch { cardAvailable = 0; }
+    hintCardAvailable = HINT_CARD ? (inv[HINT_CARD.id]?.available || 0) : 0;
+  } catch { cardAvailable = 0; hintCardAvailable = 0; }
   const badge = document.getElementById("cardBadge");
-  if (!badge) return;
-  badge.textContent = cardAvailable;
-  badge.classList.toggle("hidden", cardAvailable <= 0);
+  if (badge) {
+    badge.textContent = cardAvailable;
+    badge.classList.toggle("hidden", cardAvailable <= 0);
+  }
+  // The hint CTA renders with whatever hintCardAvailable was at question-render
+  // time, which is usually 0 (this fetch hasn't resolved yet) — refresh it now
+  // that we actually know the count.
+  renderHintZone();
 }
 
 function cardsLeftThisAttempt() {
@@ -258,6 +271,83 @@ async function confirmUseCard() {
   }
 }
 
+function buildHintData(q) {
+  if (!HINT_CARD || !q) return { enabled: false };
+  const used = !!attemptState.hintsUsed[q.questionId];
+  const leftThisAttempt = Math.max(0, MAX_HINT_CARDS_PER_ATTEMPT - (attemptState.hintCardsUsedCount || 0));
+  let subtitle;
+  if (hintCardAvailable <= 0) subtitle = "তোমার কাছে কোনো হিন্ট কার্ড নেই — স্টোর থেকে কিনে নাও।";
+  else if (leftThisAttempt <= 0) subtitle = `এই পরীক্ষায় সর্বোচ্চ ${MAX_HINT_CARDS_PER_ATTEMPT}টি ব্যবহার করা হয়ে গেছে।`;
+  else subtitle = `তোমার কাছে আছে ${hintCardAvailable}টি · এই পরীক্ষায় বাকি আছে ${leftThisAttempt}টি`;
+  return {
+    enabled: true,
+    used,
+    canUse: !used && hintCardAvailable > 0 && leftThisAttempt > 0,
+    subtitle,
+    correctLetter: q.correctAnswer,
+    correctText: q.options_bn?.[q.correctAnswer] ?? "",
+    explanation: q.explanation_bn || ""
+  };
+}
+
+function renderHintZone() {
+  if (!attemptState) return;
+  const q = snapshot?.questions?.[attemptState.currentIndex];
+  const zone = document.getElementById("hintZone");
+  if (!zone || !q) return;
+  zone.innerHTML = hintZoneHtml(buildHintData(q));
+  bindHintBtn();
+}
+
+function bindHintBtn() {
+  const btn = document.getElementById("useHintBtn");
+  if (btn) btn.addEventListener("click", openHintModal);
+}
+
+function openHintModal() {
+  const q = snapshot.questions[attemptState.currentIndex];
+  if (!HINT_CARD || !q || attemptState.hintsUsed[q.questionId]) return;
+  if (hintCardAvailable <= 0) {
+    showToast("তোমার কাছে কোনো হিন্ট কার্ড নেই। স্টোর থেকে কিনে রাখো।", "error");
+    return;
+  }
+  const leftThisAttempt = Math.max(0, MAX_HINT_CARDS_PER_ATTEMPT - (attemptState.hintCardsUsedCount || 0));
+  if (leftThisAttempt <= 0) {
+    showToast(`এই পরীক্ষায় সর্বোচ্চ ${MAX_HINT_CARDS_PER_ATTEMPT}টি হিন্ট কার্ড ব্যবহার করা যাবে — সেটা তুমি ইতিমধ্যে ব্যবহার করে ফেলেছো।`, "error");
+    return;
+  }
+  document.getElementById("hintModalText").textContent =
+    `এই প্রশ্নের সঠিক উত্তর ও ব্যাখ্যা দেখতে ১টি হিন্ট কার্ড খরচ হবে। তোমার কাছে আছে ${hintCardAvailable}টি — এই পরীক্ষায় বাকি আছে ${leftThisAttempt}টি।`;
+  document.getElementById("hintModal").classList.remove("hidden");
+}
+function closeHintModal() { document.getElementById("hintModal").classList.add("hidden"); }
+
+let usingHint = false;
+async function confirmUseHint() {
+  if (usingHint) return;
+  usingHint = true;
+  const btn = document.getElementById("confirmHintBtn");
+  btn.disabled = true;
+  const q = snapshot.questions[attemptState.currentIndex];
+  try {
+    await useStoreItem(student.studentId, HINT_CARD.id, 1, { examId, examTitle: exam.name });
+    attemptState.hintsUsed[q.questionId] = true;
+    attemptState.hintCardsUsedCount = (attemptState.hintCardsUsedCount || 0) + 1;
+    hintCardAvailable = Math.max(0, hintCardAvailable - 1);
+    saveLocalAttempt(examId, student.studentId, attemptState);
+    await useHintOnAttempt(examId, student.studentId, attemptState.hintsUsed, attemptState.hintCardsUsedCount);
+    closeHintModal();
+    renderHintZone();
+    showToast("সঠিক উত্তর ও ব্যাখ্যা দেখা যাচ্ছে ✅", "success");
+  } catch (err) {
+    const map = { NOTHING_TO_USE: "তোমার কাছে এত হিন্ট কার্ড নেই।" };
+    showToast(map[err.message] || "হিন্ট কার্ড ব্যবহার করা যায়নি, আবার চেষ্টা করো।", "error");
+  } finally {
+    usingHint = false;
+    btn.disabled = false;
+  }
+}
+
 function openSubmitModal() {
   const qs = snapshot.questions;
   const unanswered = qs.filter(q => !attemptState.answers[q.questionId]).length;
@@ -292,13 +382,15 @@ function renderQuestion() {
     questionEn: q.question_en,
     imageUrl: q.imageUrl,
     options: ["A", "B", "C", "D"].map(letter => ({ letter, text: q.options_bn?.[letter] ?? "" })),
-    selected, isMarked
+    selected, isMarked,
+    hint: buildHintData(q)
   });
 
   body.querySelectorAll(".ex-option").forEach(btn => {
     btn.addEventListener("click", () => selectAnswer(q.questionId, btn.dataset.letter));
   });
   document.getElementById("markReviewBtn").addEventListener("click", () => toggleMarkForReview(q.questionId));
+  bindHintBtn();
   const shieldBtn = body.querySelector(".img-shield");
   if (shieldBtn) shieldBtn.addEventListener("click", () => openFigurePreview(shieldBtn.dataset.url));
 
