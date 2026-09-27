@@ -70,8 +70,25 @@ function splitIntoBlocks(rawText) {
 // alone on its own line with the value on the next line ("A:\nOption"), or
 // the value inline on the same line ("A: Option") — both are valid renderings
 // of the exact format the admin is asked to request, so both must parse.
+// Some AI outputs ignore the "one option per line" instruction and squeeze
+// all four options onto a single line, e.g. "A: ২৪ B: ৩০ C: ৩২ D: ৩৪". The
+// line-based loop below only matches a label at the START of a line, so
+// without this it would swallow " B: ৩০ C: ৩২ D: ৩৪" whole as option A's
+// value and report B/C/D as missing. Detect 2+ "A:"/"B:"/"C:"/"D:" markers
+// on one line and split it back into one line per option before parsing.
+// A normal single-marker line (the documented format) is returned as-is.
+function expandInlineOptionLine(line) {
+  const markers = [...line.matchAll(/([ABCD])[:.]\s*/g)];
+  if (markers.length < 2) return [line];
+  return markers.map((m, i) => {
+    const start = m.index;
+    const end = i + 1 < markers.length ? markers[i + 1].index : line.length;
+    return line.slice(start, end).trim();
+  });
+}
+
 function parseBlock(blockText) {
-  const lines = blockText.split("\n").map(l => l.trim());
+  const lines = blockText.split("\n").map(l => l.trim()).flatMap(expandInlineOptionLine);
   const fields = {};
   let currentKey = null;
   let buffer = [];
@@ -167,6 +184,12 @@ const GEMINI_KEY_STORAGE = "gemini_api_key";
 
 export function getStoredApiKey() {
   return localStorage.getItem(GEMINI_KEY_STORAGE) || "";
+}
+
+export function setStoredApiKey(key) {
+  const trimmed = (key || "").trim();
+  if (trimmed) localStorage.setItem(GEMINI_KEY_STORAGE, trimmed);
+  return trimmed;
 }
 
 export function promptForApiKey(forceAsk = false) {
