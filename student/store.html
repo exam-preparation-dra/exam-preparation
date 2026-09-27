@@ -101,6 +101,21 @@
   .confirm-box-msg { white-space: pre-line; font-size: 0.95rem; color: var(--text-primary); line-height: 1.6; margin-bottom: var(--space-4); }
   .confirm-box-actions { display: flex; gap: var(--space-3); }
   .confirm-box-actions .btn { flex: 1; }
+
+  /* ---- Persistent error panel (unlike the toast, this stays on screen
+     until closed, so the exact error can be read/screenshotted) ---- */
+  .debug-error-panel {
+    position: fixed; left: var(--space-4); right: var(--space-4); bottom: var(--space-4); z-index: 600;
+    background: #2a1414; border: 1px solid var(--color-danger); border-radius: var(--radius-lg);
+    padding: var(--space-4); box-shadow: var(--shadow-lift); max-height: 45vh; overflow-y: auto;
+  }
+  .debug-error-panel.hidden { display: none; }
+  .debug-error-panel-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-2); }
+  .debug-error-panel-title { font-weight: 700; color: #ff8a80; font-size: 0.9rem; }
+  .debug-error-panel-close { background: none; border: none; color: #ff8a80; font-size: 1.2rem; line-height: 1; padding: 4px 8px; cursor: pointer; }
+  .debug-error-panel-body { font-family: monospace; font-size: 0.78rem; color: #ffd6d0; white-space: pre-wrap; word-break: break-word; }
+  .debug-error-panel-actions { margin-top: var(--space-3); }
+  .debug-error-panel-actions .btn { width: auto; padding: 8px 16px; font-size: 0.82rem; }
 </style>
 </head>
 <body>
@@ -150,6 +165,17 @@
   </div>
 </div>
 
+<div id="debugErrorPanel" class="debug-error-panel hidden">
+  <div class="debug-error-panel-head">
+    <span class="debug-error-panel-title">⚠️ সমস্যার বিস্তারিত (স্ক্রিনশট নিয়ে পাঠাও)</span>
+    <button type="button" class="debug-error-panel-close" id="debugErrorCloseBtn">×</button>
+  </div>
+  <div class="debug-error-panel-body" id="debugErrorBody"></div>
+  <div class="debug-error-panel-actions">
+    <button type="button" class="btn btn-secondary" id="debugErrorCopyBtn">টেক্সট কপি করো</button>
+  </div>
+</div>
+
 <script type="module">
 import { getActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
 import { getApprovedResults } from "../js/utils/results-utils.js";
@@ -161,6 +187,9 @@ import { STORE_ITEMS, getSpentXP, getStoreInventory, purchaseCart, getPurchaseHi
 import { initTheme, showToast, formatDate, formatTime } from "../js/utils/ui-utils.js";
 
 initTheme();
+
+window.addEventListener("error", (e) => showDebugError(e.error || new Error(e.message), "window error"));
+window.addEventListener("unhandledrejection", (e) => showDebugError(e.reason, "unhandled promise rejection"));
 
 const student = getActiveStudent();
 if (!student) { window.location.href = "../index.html"; }
@@ -310,6 +339,33 @@ async function loadAll() {
   renderHistory(history);
 }
 
+function showDebugError(err, context) {
+  const panel = document.getElementById("debugErrorPanel");
+  const body = document.getElementById("debugErrorBody");
+  const lines = [
+    `যেখানে হয়েছে: ${context}`,
+    `সময়: ${new Date().toLocaleString("bn-BD")}`,
+    `err.message: ${err?.message ?? "(নেই)"}`,
+    `err.code: ${err?.code ?? "(নেই)"}`,
+    `err.name: ${err?.name ?? "(নেই)"}`,
+    `stack:\n${err?.stack ?? "(নেই)"}`
+  ];
+  body.textContent = lines.join("\n");
+  panel.classList.remove("hidden");
+}
+document.getElementById("debugErrorCloseBtn").addEventListener("click", () => {
+  document.getElementById("debugErrorPanel").classList.add("hidden");
+});
+document.getElementById("debugErrorCopyBtn").addEventListener("click", async () => {
+  const text = document.getElementById("debugErrorBody").textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast("কপি হয়েছে।", "success");
+  } catch {
+    showToast("কপি করা যায়নি — নিজে সিলেক্ট করে কপি করো।", "error");
+  }
+});
+
 /** Custom confirm dialog — resolves true/false. Replaces window.confirm(),
     which some in-app/embedded browsers silently block or mis-handle when
     called after an await (i.e. not directly inside the tap), making the
@@ -372,7 +428,9 @@ document.getElementById("checkoutBtn").addEventListener("click", async (e) => {
   if (!confirmed) return;
 
   const btn = e.currentTarget;
+  const originalLabel = btn.textContent;
   btn.disabled = true;
+  btn.textContent = "প্রসেস হচ্ছে…";
   try {
     await purchaseCart(student.studentId, lines, currentTotalXP);
     showToast("কেনা হয়ে গেছে! ✅", "success");
@@ -380,19 +438,27 @@ document.getElementById("checkoutBtn").addEventListener("click", async (e) => {
     Object.keys(cart).forEach(k => { cart[k] = 0; });
     await loadAll();
   } catch (err) {
+    console.error("purchaseCart failed:", err);
+    showDebugError(err, "checkout / purchaseCart");
     const map = {
       INSUFFICIENT_XP: "তোমার ব্যালেন্সে যথেষ্ট XP নেই।",
       QTY_TOO_HIGH: "একবারে এত বেশি কেনা যাবে না।",
       EMPTY_CART: "কার্ট খালি।"
     };
-    showToast(map[err.message] || "কেনা যায়নি, আবার চেষ্টা করো।", "error");
+    // Show the real error text (not just a generic message) so it can be
+    // read/screenshotted directly off the screen for debugging, in case
+    // something other than the three expected errors above is thrown
+    // (e.g. a Firestore network/permission error).
+    showToast(map[err.message] || `কেনা যায়নি: ${err.message || err}`, "error");
   } finally {
     btn.disabled = false;
+    btn.textContent = originalLabel;
   }
 });
 
 loadAll().catch(err => {
   console.error(err);
+  showDebugError(err, "পাতা লোড হওয়ার সময় (loadAll)");
   showToast("তথ্য লোড করা যায়নি।", "error");
 });
 </script>
