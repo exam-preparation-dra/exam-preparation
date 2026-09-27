@@ -223,9 +223,24 @@ function showLevelResult(levelResult) {
   levelResultA.textContent = String(levelResult.score?.A || 0);
   levelResultB.textContent = String(levelResult.score?.B || 0);
   const winner = levelResult.winnerTeam;
-  levelResultWinner.textContent = winner ? `GROUP ${winner} TAKES THE ROUND` : `ROUND DRAW`;
-  const top = levelResult.topPlayer?.[winner || 'A'];
-  levelResultTop.textContent = top ? `${nameOf(latestMatch, top.studentId)} — ${top.correct} CORRECT / ${top.attempts} CHANCES` : 'NO ANSWER RECORDED';
+
+  if (levelResult.headingToSuddenDeath) {
+    // Level 4 tied -- one decider question is coming up next, no winner yet.
+    levelResultWinner.textContent = "TIE! SUDDEN DEATH NEXT";
+    levelResultTop.textContent = "ONE QUESTION DECIDES THE MATCH";
+  } else if (levelResult.suddenDeath) {
+    levelResultWinner.textContent = winner
+      ? `GROUP ${winner} WINS THE SUDDEN DEATH!`
+      : `GROUP ${winner || 'A'} WINS (NO CORRECT ANSWER)`;
+    const top = levelResult.topPlayer?.[winner || 'A'];
+    levelResultTop.textContent = top
+      ? `${nameOf(latestMatch, top.studentId)} — ${top.correct} CORRECT / ${top.attempts} CHANCES`
+      : 'DECIDED BY MATCH TOTALS';
+  } else {
+    levelResultWinner.textContent = winner ? `GROUP ${winner} TAKES THE ROUND` : `ROUND DRAW`;
+    const top = levelResult.topPlayer?.[winner || 'A'];
+    levelResultTop.textContent = top ? `${nameOf(latestMatch, top.studentId)} — ${top.correct} CORRECT / ${top.attempts} CHANCES` : 'NO ANSWER RECORDED';
+  }
   levelResultOverlay.classList.remove('hidden');
   let n = 3;
   levelResultCountdown.textContent = `NEXT ROUND ${n}`;
@@ -351,9 +366,15 @@ onSnapshot(ref, (snap) => {
   if (aScoreEl.textContent !== nextAScore) { aScoreEl.textContent = nextAScore; aScoreEl.classList.remove("score-bump"); void aScoreEl.offsetWidth; aScoreEl.classList.add("score-bump"); }
   if (bScoreEl.textContent !== nextBScore) { bScoreEl.textContent = nextBScore; bScoreEl.classList.remove("score-bump"); void bScoreEl.offsetWidth; bScoreEl.classList.add("score-bump"); }
   document.getElementById("levelNumber").textContent = String(m.currentLevel || 1).padStart(2, '0');
-  document.getElementById("levelPill").textContent = `QUESTION ${String(qNo).padStart(2,'0')} / ${String(totalQ).padStart(2,'0')}`;
-  document.getElementById("questionNumber").textContent = String(qNo).padStart(2,'0');
-  document.getElementById("questionTotal").textContent = String(totalQ).padStart(2,'0');
+  if (m.suddenDeath) {
+    document.getElementById("levelPill").textContent = "SUDDEN DEATH — DECIDER";
+    document.getElementById("questionNumber").textContent = "SD";
+    document.getElementById("questionTotal").textContent = "1";
+  } else {
+    document.getElementById("levelPill").textContent = `QUESTION ${String(qNo).padStart(2,'0')} / ${String(totalQ).padStart(2,'0')}`;
+    document.getElementById("questionNumber").textContent = String(qNo).padStart(2,'0');
+    document.getElementById("questionTotal").textContent = String(totalQ).padStart(2,'0');
+  }
   document.getElementById("teamAMemberCount").textContent = `${(m.teamA?.members || []).length} MEMBERS`;
   document.getElementById("teamBMemberCount").textContent = `${(m.teamB?.members || []).length} MEMBERS`;
   const pct = Math.min(100, Math.round(((qNo - 1) / totalQ) * 100));
@@ -434,7 +455,9 @@ function renderResult(m) {
   document.getElementById("finalScoreA").textContent = finalA;
   document.getElementById("finalScoreB").textContent = finalB;
   document.getElementById("resultTitle").textContent = r.winnerTeam ? (iWon ? "YOUR TEAM FINISHED FIRST" : `GROUP ${r.winnerTeam} FINISHED FIRST`) : "BATTLE COMPLETE";
-  document.getElementById("finalWinner").textContent = r.winnerTeam ? `GROUP ${r.winnerTeam} · ${finalA} — ${finalB}` : `FINAL SCORE · ${finalA} — ${finalB}`;
+  document.getElementById("finalWinner").textContent = r.winnerTeam
+    ? `GROUP ${r.winnerTeam} · ${finalA} — ${finalB}${r.suddenDeath ? " (SUDDEN DEATH)" : ""}`
+    : `FINAL SCORE · ${finalA} — ${finalB}`;
 
   const allMembers = [...(m.teamA?.members || []).map(x => ({...x, team:"A"})), ...(m.teamB?.members || []).map(x => ({...x, team:"B"}))];
   const xpLog = r.xpLog || {};

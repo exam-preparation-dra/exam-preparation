@@ -86,6 +86,31 @@
 
   .store-empty-note { padding: var(--space-3) 0; }
 
+  /* ---- "just bought this" flash on a ticket + floating "+N" over its
+     owned-count, shown briefly right after checkout succeeds ---- */
+  .store-ticket.purchase-flash { animation: storeTicketFlash .9s ease-out; }
+  @keyframes storeTicketFlash {
+    0%   { box-shadow: 0 0 0 3px var(--color-accent); background: var(--color-accent-soft); }
+    100% { box-shadow: var(--shadow-soft); background: var(--surface); }
+  }
+  .store-owned-wrap { position: relative; display: inline-block; }
+  .store-owned-pop {
+    position: absolute; left: 50%; top: -2px; transform: translate(-50%, 0);
+    font-weight: 700; font-size: .78rem; color: var(--color-accent);
+    pointer-events: none; white-space: nowrap;
+    animation: storeOwnedFloat 1.1s ease-out forwards;
+  }
+  @keyframes storeOwnedFloat {
+    0%   { opacity: 0; transform: translate(-50%, 6px) scale(.85); }
+    20%  { opacity: 1; transform: translate(-50%, -6px) scale(1.08); }
+    70%  { opacity: 1; transform: translate(-50%, -20px) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -28px) scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .store-ticket.purchase-flash { animation: none; }
+    .store-owned-pop { animation: none; display: none; }
+  }
+
   /* ---- Custom confirm modal (replaces native confirm(), which some
      in-app/embedded browsers silently block or auto-dismiss after an
      await, making the checkout button look like it does nothing) ---- */
@@ -239,7 +264,7 @@ function renderItems() {
         </div>
         <p class="text-sm text-muted store-item-desc">${esc(item.description)}</p>
         <div class="store-item-footer">
-          <div class="text-sm text-muted">তোমার কাছে আছে: <strong class="num">${fmt(owned.available)}</strong>টি</div>
+          <div class="text-sm text-muted">তোমার কাছে আছে: <span class="store-owned-wrap"><strong class="num" data-owned-count="${item.id}">${fmt(owned.available)}</strong></span>টি</div>
           <div class="store-qty">
             <button type="button" class="store-qty-btn" data-act="dec" ${qty <= 0 ? "disabled" : ""} aria-label="কমাও">−</button>
             <span class="store-qty-value num">${qty}</span>
@@ -398,6 +423,30 @@ function showConfirmModal(message) {
   });
 }
 
+// Briefly flashes each just-purchased item's ticket and pops a "+qty" over
+// its owned-count, so the purchase feels tied to the specific item(s)
+// bought (confetti alone is generic, this points at what changed).
+function flashPurchasedItems(lines) {
+  (lines || []).forEach(({ itemId, qty }) => {
+    const ticket = document.querySelector(`.store-ticket[data-item="${itemId}"]`);
+    if (ticket) {
+      ticket.classList.remove("purchase-flash");
+      void ticket.offsetWidth;
+      ticket.classList.add("purchase-flash");
+      ticket.addEventListener("animationend", () => ticket.classList.remove("purchase-flash"), { once: true });
+    }
+    const countEl = document.querySelector(`[data-owned-count="${itemId}"]`);
+    const wrap = countEl?.closest(".store-owned-wrap");
+    if (wrap) {
+      const pop = document.createElement("span");
+      pop.className = "store-owned-pop";
+      pop.textContent = `+${qty}`;
+      wrap.appendChild(pop);
+      pop.addEventListener("animationend", () => pop.remove());
+    }
+  });
+}
+
 function fireConfetti() {
   const colors = ["#ff6a2b", "#22c55e", "#3b82f6", "#eab308", "#ec4899"];
   const box = document.createElement("div");
@@ -444,6 +493,7 @@ document.getElementById("checkoutBtn").addEventListener("click", async (e) => {
     fireConfetti();
     Object.keys(cart).forEach(k => { cart[k] = 0; });
     await loadAll();
+    flashPurchasedItems(lines);
   } catch (err) {
     console.error("purchaseCart failed:", err);
     showDebugError(err, "checkout / purchaseCart");

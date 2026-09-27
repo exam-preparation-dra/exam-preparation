@@ -581,6 +581,15 @@ function tick() {
     display.classList.toggle("timer-critical", remaining <= 60 * 1000 && remaining > 0);
     display.classList.toggle("timer-warning", remaining <= 5 * 60 * 1000 && remaining > 60 * 1000);
   }
+
+  // Timer's in the last minute and the student still has a usable Time
+  // Card -- nudge the card button so they notice it in time.
+  const cardBtn = document.getElementById("useCardBtn");
+  if (cardBtn) {
+    const canNudge = remaining <= 60 * 1000 && remaining > 0
+      && cardAvailable > 0 && cardsLeftThisAttempt() > 0;
+    cardBtn.classList.toggle("card-nudge", canNudge);
+  }
   
   const totalMinutes = exam?.durationMinutes || 0;
   const remainingMinutes = remaining / 60000;
