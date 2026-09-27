@@ -181,7 +181,7 @@ import { initTheme } from "../js/utils/ui-utils.js";
 import { getActiveStudent } from "../js/utils/student-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-import { buzzIn, submitAnswer, checkTimeout } from "../js/utils/battle-utils.js";
+import { buzzIn, submitAnswer, checkTimeout } from "../js/utils/battle-utils.js?v=roomcard1";
 
 initTheme();
 const esc = v => String(v ?? "").replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));

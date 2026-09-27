@@ -17,7 +17,7 @@ import { initTheme } from "../js/utils/ui-utils.js";
 import { getActiveStudent } from "../js/utils/student-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-import { getStudentBattleXP, deleteMatch } from "../js/utils/battle-utils.js";
+import { getStudentBattleXP, deleteMatch } from "../js/utils/battle-utils.js?v=roomcard1";
 initTheme();
 const app=document.getElementById("app");
 const student=getActiveStudent();
