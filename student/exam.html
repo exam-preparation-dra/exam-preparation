@@ -238,10 +238,26 @@ function openCardModal() {
   }
   document.getElementById("cardAvailCount").textContent = cardAvailable;
   document.getElementById("cardPerUnitLabel").textContent = `+${formatHms(TIME_CARD.secondsGranted * 1000)}`;
+  document.getElementById("cardModal").querySelector(".ex-timecard")?.classList.remove("used");
   setCardQty(1);
   document.getElementById("cardModal").classList.remove("hidden");
 }
 function closeCardModal() { document.getElementById("cardModal").classList.add("hidden"); }
+
+function flashTimeAdded(secondsGranted) {
+  const timerBox = document.querySelector(".ex-timer");
+  const timerEl = document.getElementById("timerDisplay");
+  if (!timerBox || !timerEl) return;
+  const float = document.createElement("span");
+  float.className = "ex-timer-float";
+  float.textContent = `+${formatHms(secondsGranted * 1000)}`;
+  timerBox.appendChild(float);
+  float.addEventListener("animationend", () => float.remove());
+  timerEl.classList.remove("time-added");
+  void timerEl.offsetWidth; // restart animation if already running
+  timerEl.classList.add("time-added");
+  timerEl.addEventListener("animationend", () => timerEl.classList.remove("time-added"), { once: true });
+}
 
 let usingCard = false;
 async function confirmUseCard() {
@@ -260,7 +276,9 @@ async function confirmUseCard() {
     await extendAttemptTime(examId, student.studentId, attemptState.endAtMillis, attemptState.cardsUsedCount);
     tick();
     showToast(`+${formatHms(secondsGranted * 1000)} সময় যোগ হয়েছে!`, "success");
-    closeCardModal();
+    flashTimeAdded(secondsGranted);
+    document.getElementById("cardModal")?.querySelector(".ex-timecard")?.classList.add("used");
+    setTimeout(closeCardModal, 420);
     await refreshCardBadge();
   } catch (err) {
     const map = { NOTHING_TO_USE: "তোমার কাছে এত টাইম কার্ড নেই।" };
