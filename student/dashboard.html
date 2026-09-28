@@ -368,13 +368,7 @@ async function render() {
 
     <div id="upcomingSection" class="d-sec" hidden></div>
     <div id="walletSection" class="d-sec"><div class="skeleton" style="height:128px;border-radius:16px;"></div></div>
-    <div id="xpSection" class="d-sec"></div>
     <div id="recentSection" class="d-sec"></div>
-    <div id="motivationSection" class="d-sec"></div>
-    <div id="rankSection" class="d-sec"></div>
-    <div id="statsSection" class="d-sec"></div>
-    <div id="subjectSection" class="d-sec"></div>
-    <div id="weakSection" class="d-sec"></div>
     <div id="referralSection" class="d-sec d-last"><div class="skeleton" style="height:300px;border-radius:22px;"></div></div>
   `;
   loadUpcoming();
@@ -545,7 +539,7 @@ async function loadMain() {
       resultById: Object.fromEntries(results.map(r => [r.id, r]))
     };
 
-    for (const fn of [renderHero, renderReferral, renderXPBreakdown, renderRecent, renderMotivation, renderRank, renderStats, renderSubjects, renderWeak]) {
+    for (const fn of [renderHero, renderReferral, renderRecent]) {
       try { fn(ctx); } catch (e) { console.error(fn.name, e); }
     }
     animateBars();
@@ -672,39 +666,6 @@ function renderReferral({ myRefs }) {
   });
 }
 
-/* ---------------- XP breakdown ---------------- */
-function renderXPBreakdown({ xp }) {
-  const el = $("xpSection");
-  const rows = XP_CATEGORIES.map(c => ({ ...c, value: xp.breakdown[c.key] || 0 })).filter(r => r.value > 0).sort((a, b) => b.value - a.value);
-  const total = rows.reduce((a, r) => a + r.value, 0);
-
-  el.innerHTML = `
-    <p class="d-h">${svg("bolt", 20)} XP কোথা থেকে এলো</p>
-    <div class="d-card">
-      ${total === 0
-        ? `<p class="d-sub" style="text-align:center;padding:10px 0;">প্রথম পরীক্ষা দিলেই XP জমতে শুরু করবে।</p>`
-        : `<div class="d-stack" role="img" aria-label="XP ভাগ">${rows.map(r => `<i style="width:${(r.value / total * 100).toFixed(2)}%;background:${CAT_COLORS[r.key]}"></i>`).join("")}</div>
-           <div style="margin-top:8px;">
-             ${rows.map(r => `
-               <div class="d-xrow">
-                 <span class="d-dot" style="background:${CAT_COLORS[r.key]}"></span>
-                 <div class="d-xrow-name">${r.label}<span>${r.hint}</span></div>
-                 <span class="d-xrow-val">+${fmt(r.value)}</span>
-               </div>`).join("")}
-           </div>`}
-      <details class="d-rules">
-        <summary>কীভাবে আরও XP পাবো? ${svg("down", 18)}</summary>
-        <ul>
-          <li><b>বড় পরীক্ষা, বেশি XP।</b> প্রশ্ন যত বেশি, অংশগ্রহণ ও সঠিক উত্তরের XP তত বেশি।</li>
-          <li><b>নির্ভুলতা দামি।</b> 90% নির্ভুলতা ও 70% নির্ভুলতার XP এক নয়।</li>
-          <li><b>নিজেকে ছাড়াও।</b> আগের গড়ের চেয়ে 10 বা 20 পয়েন্ট ভালো করলে বোনাস।</li>
-          <li><b>টানা সপ্তাহে পরীক্ষা দাও।</b> ধারাবাহিকতার বোনাস প্রতি সপ্তাহে বাড়ে (সর্বোচ্চ 4 সপ্তাহ)।</li>
-          <li><b>বন্ধুকে ডাকো।</b> প্রতি বন্ধু যুক্ত হলেই +${REFERRAL_XP} XP।</li>
-          <li><b>ফাঁকা খাতা জমা দিলে</b> অংশগ্রহণের XP মেলে না।</li>
-        </ul>
-      </details>
-    </div>`;
-}
 
 /* ---------------- recent exams with XP ---------------- */
 function renderRecent({ xp, resultById }) {
@@ -729,113 +690,10 @@ function renderRecent({ xp, resultById }) {
     </div>`;
 }
 
-/* ---------------- motivation ---------------- */
-function renderMotivation({ results, overall, rank, subjectMap }) {
-  const el = $("motivationSection");
-  if (results.length === 0 || !overall) { el.innerHTML = ""; return; }
-  const stats = computeSubjectStats(results, subjectMap);
-  let weakest = null, strongest = null;
-  stats.forEach(s => {
-    if (s.accuracy == null) return;
-    if (!weakest || s.accuracy < weakest.accuracy) weakest = s;
-    if (!strongest || s.accuracy > strongest.accuracy) strongest = s;
-  });
-  const advice = generateMotivation({
-    overallPercentage: overall.avgPercentage, rank: rank?.rank, totalStudents: rank?.total, examsTaken: overall.examsTaken,
-    weakestSubjectName: weakest?.name, weakestSubjectAccuracy: weakest?.accuracy,
-    strongestSubjectName: strongest?.name !== weakest?.name ? strongest?.name : null, strongestSubjectAccuracy: strongest?.accuracy
-  });
-  el.innerHTML = `<div class="d-card"><div class="d-quote"><p>AI বিশ্লেষণ ও পরামর্শ</p><p>${advice}</p></div></div>`;
-}
 
-/* ---------------- class ranking ---------------- */
-function renderRank({ leaderboard }) {
-  const el = $("rankSection");
-  if (leaderboard.length === 0) { el.innerHTML = ""; return; }
-  const byClass = {};
-  leaderboard.forEach(r => { (byClass[r.className || "অনির্ধারিত ক্লাস"] ||= []).push(r); });
-  const myClass = student.className || "অনির্ধারিত ক্লাস";
-  const names = Object.keys(byClass).sort((a, b) => (a === myClass ? -1 : 0) - (b === myClass ? -1 : 0));
 
-  const row = (s, pos, me) => `
-    <div class="d-rank ${me ? "d-rank-me" : ""}">
-      <span class="d-pos d-pos-${pos}">${pos}</span>
-      <span class="d-rank-name">${esc(s.name)}${me ? " (তুমি)" : ""}</span>
-      <span class="d-rank-xp">${fmt(s.totalPoints)} XP</span>
-    </div>`;
 
-  el.innerHTML = `
-    <p class="d-h">${svg("users", 20)} ক্লাস র‍্যাঙ্কিং</p>
-    ${names.map(cls => {
-      const list = byClass[cls];
-      const top3 = list.slice(0, 3);
-      const myPos = list.findIndex(s => s.studentId === student.studentId);
-      return `
-        <div class="d-card d-class">
-          <p class="d-class-name">${esc(cls)}</p>
-          ${top3.map((s, i) => row(s, i + 1, s.studentId === student.studentId)).join("")}
-          ${myPos >= 3 ? `<p class="d-gap">• • •</p>${row(list[myPos], myPos + 1, true)}` : ""}
-        </div>`;
-    }).join("")}
-    <a href="../student/leaderboard.html" class="d-btn">সম্পূর্ণ লিডারবোর্ড দেখো</a>
-    <a href="../student/battle-history.html" class="d-btn">Battle History দেখো</a>`;
-}
 
-/* ---------------- stats ---------------- */
-function renderStats({ overall }) {
-  const el = $("statsSection");
-  if (!overall) {
-    el.innerHTML = `<p class="d-h">${svg("chart", 20)} পরিসংখ্যান</p><div class="d-card"></div>`;
-    renderState(el.querySelector(".d-card"), "empty", "এখনো কোনো অনুমোদিত ফলাফল নেই।");
-    return;
-  }
-  const totalQ = overall.totalCorrect + overall.totalWrong + overall.totalUnanswered;
-  const cells = [
-    ["মোট পরীক্ষা", overall.examsTaken, ""], ["সঠিক", overall.totalCorrect, "color:var(--color-success)"], ["ভুল", overall.totalWrong, "color:var(--color-danger)"],
-    ["গড় স্কোর", overall.avgPercentage != null ? overall.avgPercentage + "%" : "—", ""], ["গড় নির্ভুলতা", overall.avgAccuracy != null ? overall.avgAccuracy + "%" : "—", ""], ["প্রশ্ন ফেস করা", totalQ, ""]
-  ];
-  const trend = overall.trend ? overall.trend.slice(-12) : null;
-  el.innerHTML = `
-    <p class="d-h">${svg("chart", 20)} পরিসংখ্যান</p>
-    <div class="d-card" style="padding:4px 12px;">
-      <div class="d-stats">${cells.map(c => `<div class="d-stat"><p>${c[0]}</p><p style="${c[2]}">${c[1]}</p></div>`).join("")}</div>
-    </div>
-    ${trend ? `
-      <div class="d-card" style="margin-top:10px;">
-        <p class="d-sub">স্কোরের ধারা (সর্বশেষ ${trend.length}টি পরীক্ষা)</p>
-        <div class="d-trend">${trend.map(t => `<i data-h="${Math.max(6, t.value || 0)}" title="${esc(t.label)}: ${t.value ?? "—"}%"></i>`).join("")}</div>
-      </div>` : ""}`;
-}
-
-/* ---------------- subjects ---------------- */
-function renderSubjects({ results, subjectMap }) {
-  const el = $("subjectSection");
-  const stats = computeSubjectStats(results, subjectMap);
-  if (stats.length === 0) { el.innerHTML = ""; return; }
-  el.innerHTML = `
-    <p class="d-h">${svg("grid", 20)} বিষয়ভিত্তিক পারফরম্যান্স</p>
-    <div class="d-card">
-      ${stats.map(s => `
-        <div class="d-subj">
-          <div class="d-subj-top"><strong>${esc(s.name)}</strong><span>${s.accuracy ?? "—"}%</span></div>
-          <div class="d-bar"><i data-w="${s.accuracy ?? 0}"></i></div>
-          <p class="d-subj-meta">সঠিক ${s.correct} &nbsp;•&nbsp; ভুল ${s.wrong}</p>
-        </div>`).join("")}
-    </div>`;
-}
-
-/* ---------------- weak topics ---------------- */
-function renderWeak({ results, topicMap }) {
-  const el = $("weakSection");
-  if (results.length === 0) { el.innerHTML = ""; return; }
-  const stats = computeTopicStats(results, topicMap);
-  const weak = stats.filter(t => t.isWeak);
-  el.innerHTML = `
-    <p class="d-h">${svg("alert", 20)} দুর্বল টপিক</p>
-    ${weak.length === 0
-      ? `<div class="d-card"><p class="d-sub" style="font-weight:700;">${stats.length === 0 ? "পর্যাপ্ত তথ্য নেই।" : "কোনো ধারাবাহিক দুর্বল টপিক পাওয়া যায়নি।"}</p></div>`
-      : weak.map(t => `<div class="d-weak"><div><strong>${esc(t.name ?? "—")}</strong><span>সঠিকতার হার মাত্র <em>${t.accuracy}%</em></span></div></div>`).join("")}`;
-}
 
 /* ---------------- one-time bar animations ---------------- */
 function animateBars() {
