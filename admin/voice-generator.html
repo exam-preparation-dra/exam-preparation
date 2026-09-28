@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ভয়েস জেনারেটর — অ্যাডমিন</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  body { overflow-x: hidden; background: var(--bg); }
+  .app-shell { max-width: 700px; padding: 16px 16px 40px; margin: 0 auto; }
+  .top-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .btn-glass {
+    background: rgba(128,128,128,0.08); border: 1px solid rgba(128,128,128,0.2); border-radius: 12px;
+    color: var(--text-primary); padding: 8px 14px; font-weight: 700; font-size: 0.85rem;
+    display: inline-flex; align-items: center; gap: 6px; cursor: pointer; text-decoration: none;
+  }
+  .btn-glass:active { transform: scale(0.96); }
+  .btn-primary { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .page-header { text-align: center; margin-bottom: 20px; }
+  .page-header h1 { font-size: 1.35rem; font-weight: 950; margin: 0 0 6px; color: var(--text-primary); }
+  .page-header p { font-size: 0.82rem; color: var(--text-muted); font-weight: 600; margin: 0; line-height: 1.6; }
+  .note { background: rgba(128,128,128,0.06); border: 1px solid var(--surface-border); border-radius: 14px;
+    padding: 14px 16px; font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); line-height: 1.7; margin-bottom: 18px; }
+  .note code { background: rgba(128,128,128,0.12); padding: 1px 6px; border-radius: 6px; font-size: 0.78rem; }
+  .line-card { background: rgba(128,128,128,0.04); border: 1px solid var(--surface-border); border-radius: 14px;
+    padding: 12px 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+  .line-info { flex: 1; min-width: 0; }
+  .line-key { font-size: 0.7rem; font-weight: 800; color: var(--color-accent); text-transform: uppercase; letter-spacing: 0.3px; }
+  .line-text { font-size: 0.88rem; font-weight: 700; color: var(--text-primary); margin-top: 2px; }
+  .line-status { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); margin-top: 4px; }
+  .line-status.ok { color: #10b981; }
+  .line-status.err { color: #ef4444; }
+  .line-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+  audio { height: 32px; max-width: 130px; }
+  .spinner-sm { width: 16px; height: 16px; border: 2px solid rgba(128,128,128,0.3); border-top-color: var(--color-accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .progress-bar-bg { height: 6px; border-radius: 99px; background: rgba(128,128,128,0.2); overflow: hidden; margin: 14px 0; }
+  .progress-bar-fill { height: 100%; width: 0%; border-radius: 99px; background: var(--color-accent); transition: width 0.3s; }
+  .section-title { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 22px 0 10px; }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <div class="top-nav">
+    <a href="admin.html" class="btn-glass">← অ্যাডমিন</a>
+    <button class="btn-glass" id="apiKeyBtn">API Key</button>
+  </div>
+
+  <div class="page-header">
+    <h1>এক্সাম ভয়েস জেনারেটর</h1>
+    <p>পরীক্ষার সময় যে বাংলা লাইনগুলো বলা হয়, প্রতিটার জন্য একবার প্রাকৃতিক অডিও তৈরি করো — এরপর সেগুলো ফাইল হিসেবে সেভ থাকবে, ছাত্রের এক্সামে আর কোনো API লাগবে না।</p>
+  </div>
+
+  <div class="note">
+    প্রতিটা ফাইল বানানোর পর <b>Download</b> চাপো, তারপর সেভ হওয়া ফাইলটা প্রজেক্টের
+    <code>assets/audio/voice/</code> ফোল্ডারে রেখে দাও (ফোল্ডার না থাকলে বানিয়ে নাও)।
+    ফাইলের নাম বদলাবে না — কোডে ঠিক এই নামগুলোই খোঁজা হয়।
+  </div>
+
+  <button class="btn-glass btn-primary" id="generateAllBtn" style="width:100%; justify-content:center; padding:12px;">
+    সব লাইন জেনারেট করো
+  </button>
+  <div class="progress-bar-bg" id="progressWrap" style="display:none;">
+    <div class="progress-bar-fill" id="progressFill"></div>
+  </div>
+
+  <div id="lineList"></div>
+</div>
+
+<script type="module">
+import { getStoredApiKey, promptForApiKey, generateSpeechPcm, pcmToWavBlob } from "../js/utils/ai-import-utils.js";
+import { buildVoiceManifest } from "../js/utils/voice-dialogue.js";
+
+const manifest = buildVoiceManifest(); // [{key, index, text}, ...]
+const listEl = document.getElementById("lineList");
+const results = {}; // "key-index" -> { blobUrl, blob }
+
+document.getElementById("apiKeyBtn").addEventListener("click", () => promptForApiKey(true));
+
+function fileNameFor(item) { return `${item.key}-${item.index}.wav`; }
+
+function render() {
+  listEl.innerHTML = "";
+  let currentSection = null;
+  manifest.forEach(item => {
+    if (item.key !== currentSection) {
+      currentSection = item.key;
+      const h = document.createElement("div");
+      h.className = "section-title";
+      h.textContent = item.key;
+      listEl.appendChild(h);
+    }
+    const id = `${item.key}-${item.index}`;
+    const card = document.createElement("div");
+    card.className = "line-card";
+    card.id = `card-${id}`;
+    card.innerHTML = `
+      <div class="line-info">
+        <div class="line-key">${fileNameFor(item)}</div>
+        <div class="line-text">${item.text}</div>
+        <div class="line-status" id="status-${id}">এখনো তৈরি হয়নি</div>
+      </div>
+      <div class="line-actions" id="actions-${id}">
+        <button class="btn-glass" data-gen="${id}">তৈরি করো</button>
+      </div>`;
+    listEl.appendChild(card);
+  });
+  listEl.querySelectorAll("[data-gen]").forEach(btn => {
+    btn.addEventListener("click", () => generateOne(btn.dataset.gen));
+  });
+}
+
+async function generateOne(id) {
+  const item = manifest.find(m => `${m.key}-${m.index}` === id);
+  const statusEl = document.getElementById(`status-${id}`);
+  const actionsEl = document.getElementById(`actions-${id}`);
+  const apiKey = promptForApiKey(false);
+  if (!apiKey) { statusEl.textContent = "API key ছাড়া করা যাবে না।"; statusEl.className = "line-status err"; return; }
+
+  actionsEl.innerHTML = `<div class="spinner-sm"></div>`;
+  statusEl.textContent = "তৈরি হচ্ছে...";
+  statusEl.className = "line-status";
+  try {
+    const pcm = await generateSpeechPcm(apiKey, item.text, { voiceName: "Kore", stylePrompt: "Say warmly and encouragingly, in natural Bangladeshi Bengali" });
+    const blob = pcmToWavBlob(pcm);
+    const url = URL.createObjectURL(blob);
+    results[id] = { blob, url };
+    statusEl.textContent = "তৈরি হয়ে গেছে ✓";
+    statusEl.className = "line-status ok";
+    actionsEl.innerHTML = `
+      <audio controls src="${url}"></audio>
+      <a class="btn-glass" href="${url}" download="${fileNameFor(item)}">ডাউনলোড</a>`;
+  } catch (e) {
+    statusEl.textContent = e.message || "সমস্যা হয়েছে।";
+    statusEl.className = "line-status err";
+    actionsEl.innerHTML = `<button class="btn-glass" data-gen="${id}">আবার চেষ্টা করো</button>`;
+    actionsEl.querySelector("[data-gen]").addEventListener("click", () => generateOne(id));
+  }
+}
+
+document.getElementById("generateAllBtn").addEventListener("click", async () => {
+  const apiKey = promptForApiKey(false);
+  if (!apiKey) return;
+  const btn = document.getElementById("generateAllBtn");
+  const wrap = document.getElementById("progressWrap");
+  const fill = document.getElementById("progressFill");
+  btn.disabled = true; wrap.style.display = "block";
+  for (let i = 0; i < manifest.length; i++) {
+    const item = manifest[i];
+    const id = `${item.key}-${item.index}`;
+    if (!results[id]) { await generateOne(id); }
+    fill.style.width = `${Math.round(((i + 1) / manifest.length) * 100)}%`;
+  }
+  btn.disabled = false;
+  btn.textContent = "সব হয়ে গেছে — প্রতিটা লাইনের পাশে Download চাপো";
+});
+
+render();
+</script>
+</body>
+</html>
