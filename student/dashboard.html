@@ -466,26 +466,34 @@ function renderUpcoming(el, exams, resultMap) {
     const publishMs = exam?.publishDate?.toMillis?.();
     return Math.max(Number.isFinite(examMs) ? examMs : 0, Number.isFinite(publishMs) ? publishMs : 0);
   };
-  const list = exams.filter(exam => {
-    // Show every published/upcoming exam until 7 days after its date.
-    // If its start time hasn't arrived yet, the card is shown as "locked"
-    // (no start button) instead of the whole exam disappearing.
+  const endOfToday = new Date(now); endOfToday.setHours(23, 59, 59, 999);
+  const DAY7 = 7 * 24 * 60 * 60 * 1000;
+  const eligible = exams.filter(exam => {
+    // An exam can be taken for 7 days from its date. It appears once its
+    // day has come (later start time today => shown locked) and disappears
+    // after the 7 days are over.
     const examMs = exam?.examDate?.toMillis?.();
-    if (Number.isFinite(examMs) && now >= examMs + 7 * 24 * 60 * 60 * 1000) return false;
+    if (!Number.isFinite(examMs)) return false;
+    if (now >= examMs + DAY7) return false;
+    if (startOf(exam) > endOfToday.getTime()) return false;
     const target = exam.targetBatch || "all";
     if (target !== "all" && target !== student.className) { console.info("[exam hidden: batch]", exam.name, target, student.className); return false; }
     const allowed = exam.allowedStudents || [];
     if (allowed.length > 0 && !allowed.includes(student.studentId)) { console.info("[exam hidden: not allowed]", exam.name); return false; }
     return true;
-  });
+  }).sort((x, y) => x.examDate.toMillis() - y.examDate.toMillis());
+  // Only ONE exam at a time: the earliest one the student hasn't submitted yet;
+  // if everything is submitted, the latest submitted one (so the result stays reachable).
+  const notDone = eligible.find(e => !resultMap[e.id]);
+  const list = notDone ? [notDone] : (eligible.length ? [eligible[eligible.length - 1]] : []);
   if (list.length === 0) {
     el.hidden = false;
-    el.innerHTML = `<p class="d-h">${svg("clock", 20)} আসন্ন পরীক্ষা</p><div class="d-card"><p class="d-sub" style="text-align:center;padding:6px 0;">এখন কোনো পরীক্ষা চালু নেই।</p></div>`;
+    el.innerHTML = `<p class="d-h">${svg("clock", 20)} চলমান পরীক্ষা</p><div class="d-card"><p class="d-sub" style="text-align:center;padding:6px 0;">এখন কোনো পরীক্ষা চালু নেই।</p></div>`;
     return;
   }
 
   el.hidden = false;
-  el.innerHTML = `<p class="d-h">${svg("clock", 20)} আসন্ন পরীক্ষা</p>` + list.map(exam => {
+  el.innerHTML = `<p class="d-h">${svg("clock", 20)} চলমান পরীক্ষা</p>` + list.map(exam => {
     const d = exam.examDate?.toDate ? exam.examDate.toDate() : null;
     const dateStr = d ? d.toLocaleDateString("bn-BD", { day: "numeric", month: "short" }) : "—";
     const own = resultMap[exam.id];
@@ -514,6 +522,7 @@ function renderUpcoming(el, exams, resultMap) {
           <div class="d-fact"><p>সময়</p><p class="num">${exam.durationMinutes ? exam.durationMinutes + " মি." : "—"}</p></div>
           <div class="d-fact"><p>প্রশ্ন</p><p class="num">${qCount || "—"}</p></div>
         </div>
+        <p class="d-sub" style="margin:8px 0 0;">${exam.examDate?.toMillis ? "শেষ তারিখ: " + new Date(exam.examDate.toMillis() + 6 * 24 * 60 * 60 * 1000).toLocaleDateString("bn-BD", { day: "numeric", month: "short" }) + " (৭ দিন সময়)" : ""}</p>
         <div class="d-xp-line">
           <p>এই পরীক্ষায় সর্বোচ্চ XP<br><span class="d-sub">উন্নতি ও ধারাবাহিকতা বোনাস আলাদা</span></p>
           <strong>${fmt(maxXP)}</strong>
