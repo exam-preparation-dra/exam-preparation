@@ -359,6 +359,7 @@ async function render() {
     <div id="cardReminderSection" class="d-sec" hidden></div>
 
     <div id="heroSection" class="d-sec"><div class="skeleton" style="height:190px;border-radius:24px;"></div></div>
+    <div id="upcomingSection" class="d-sec" hidden></div>
     <div class="d-links d-sec">
       <a href="../student/analytics.html" class="d-link">${svg("chart")} বিশ্লেষণ</a>
       <a href="../student/comparison.html" class="d-link">${svg("compare")} তুলনা</a>
@@ -366,7 +367,6 @@ async function render() {
       <a href="../student/store.html" class="d-link">${svg("store")} XP স্টোর</a>
     </div>
 
-    <div id="upcomingSection" class="d-sec" hidden></div>
     <div id="walletSection" class="d-sec"><div class="skeleton" style="height:128px;border-radius:16px;"></div></div>
     <div id="recentSection" class="d-sec"></div>
     <div id="referralSection" class="d-sec d-last"><div class="skeleton" style="height:300px;border-radius:22px;"></div></div>
@@ -473,7 +473,11 @@ function renderUpcoming(el, exams, resultMap) {
     if (allowed.length > 0 && !allowed.includes(student.studentId)) return false;
     return true;
   });
-  if (list.length === 0) { el.hidden = true; el.innerHTML = ""; return; }
+  if (list.length === 0) {
+    el.hidden = false;
+    el.innerHTML = `<p class="d-h">${svg("clock", 20)} আসন্ন পরীক্ষা</p><div class="d-card"><p class="d-sub" style="text-align:center;padding:6px 0;">এখন কোনো পরীক্ষা চালু নেই।</p></div>`;
+    return;
+  }
 
   el.hidden = false;
   el.innerHTML = `<p class="d-h">${svg("clock", 20)} আসন্ন পরীক্ষা</p>` + list.map(exam => {
