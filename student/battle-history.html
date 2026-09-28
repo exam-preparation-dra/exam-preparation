@@ -44,7 +44,7 @@ async function load(){
   const snap=await getDocs(q); const matches=[]; snap.forEach(d=>{const m=d.data();if(m.status==="finished"&&m.result)matches.push({id:d.id,...m});});
   matches.sort((a,b)=>ms(b.result?.finishedAt||b.startedAt||b.createdAt)-ms(a.result?.finishedAt||a.startedAt||a.createdAt));
   const totalXP=await getStudentBattleXP(student.studentId).catch(()=>0);
-  app.innerHTML=`<header class="history-top"><a class="back-btn" href="./battle-lobby.html">Back</a><h1 class="history-title">Battle History</h1><span class="history-filter">${totalXP} XP</span></header>${matches.length?matches.map(renderMatch).join(""):'<div class="empty">এখনও কোনো completed Battle নেই।</div>'}`;
+  app.innerHTML=`<header class="history-top"><a class="back-btn" href="./battle-lobby.html" aria-label="ফিরে যাও"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a><h1 class="history-title">Battle History</h1><span class="history-filter">${totalXP} XP</span></header>${matches.length?matches.map(renderMatch).join(""):'<div class="empty">এখনও কোনো completed Battle নেই।</div>'}`;
   app.querySelectorAll(".delete-battle").forEach(btn=>btn.onclick=async()=>{
     const code=btn.dataset.code;
     if(!confirm(`Battle ${code} permanently delete করতে চাও?\n\nএই Battle-এর XP Leaderboard থেকেও বাদ যাবে এবং History-তেও আর থাকবে না।`)) return;

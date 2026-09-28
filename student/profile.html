@@ -893,13 +893,6 @@ async function renderPage() {
     </main>
   `;
 
-  const themeToggle = document.getElementById("themeToggle");
-  if (themeToggle) {
-    themeToggle.addEventListener("click", () => {
-      toggleTheme();
-    });
-  }
-
   await Promise.allSettled([loadIdentity(), loadGamification(), loadStats(), loadNetworkData(), loadPremiumInsights()]);
 
   const search = document.getElementById("dirSearch");
