@@ -34,11 +34,100 @@ export function themeButtonHtml() {
     </button>`;
 }
 
-// Call after every innerHTML render that contains a theme button.
+// Call after every innerHTML render (theme toggle, day/night picker, eligible list).
 export function bindThemeButtons(root = document) {
   root.querySelectorAll("[data-ex-theme]").forEach(btn => {
     btn.addEventListener("click", () => { toggleTheme(); syncThemeColor(); });
   });
+  root.querySelectorAll("[data-ex-mode]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      setExamTheme(btn.dataset.exMode);
+      root.querySelectorAll("[data-ex-mode]").forEach(b => {
+        const on = b === btn;
+        b.classList.toggle("active", on);
+        b.setAttribute("aria-checked", on ? "true" : "false");
+      });
+    });
+  });
+  bindEligible(root);
+}
+
+/* ---------- day / night mode: chosen once, on the intro screen ---------- */
+function currentTheme() { return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light"; }
+
+export function setExamTheme(mode) {
+  const m = mode === "dark" ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme", m);
+  try { localStorage.setItem("theme", m); } catch (e) { }
+  syncThemeColor();
+}
+
+function modePickerHtml() {
+  const cur = currentTheme();
+  const opt = (m, label, sub, icon) => `
+    <button type="button" class="ex-mode ${cur === m ? "active" : ""}" data-ex-mode="${m}" role="radio" aria-checked="${cur === m}">
+      <span class="ex-mode-ico">${icon}</span>
+      <span class="ex-mode-txt"><b>${label}</b><small>${sub}</small></span>
+      <span class="ex-mode-tick">${ICON.check}</span>
+    </button>`;
+  return `
+    <section class="ex-card">
+      <p class="ex-notes-title">${ICON.sun} পরীক্ষা কোন মোডে দেবে?</p>
+      <p class="ex-sheet-sub" style="margin:0;">শুরু করার আগে বেছে নাও — পরীক্ষা চলার সময় মোড বদলানো যাবে না।</p>
+      <div class="ex-modes" role="radiogroup" aria-label="ডে বা নাইট মোড">
+        ${opt("light", "ডে মোড", "উজ্জ্বল ব্যাকগ্রাউন্ড", ICON.sun)}
+        ${opt("dark", "নাইট মোড", "চোখের আরামের জন্য", ICON.moon)}
+      </div>
+    </section>`;
+}
+
+/* ---------- "who is eligible for this exam" list ----------
+   The page loads the students and calls setEligibleData({ students, scope, meId }).
+   Every [data-elig-list] on screen (intro dropdown + in-exam popover) is filled from it. */
+let eligData = null;
+export function setEligibleData(data) { eligData = data; paintEligible(); }
+
+function eligListHtml() {
+  if (!eligData) return `<p class="ex-elig-empty">লোড হচ্ছে...</p>`;
+  if (eligData.error) return `<p class="ex-elig-empty">তালিকা লোড করা যায়নি।</p>`;
+  const { students = [], scope = "", meId = "" } = eligData;
+  if (!students.length) return `<p class="ex-elig-empty">কোনো শিক্ষার্থী পাওয়া যায়নি।</p>`;
+  return `<p class="ex-elig-scope">${esc(scope)} · মোট ${students.length} জন</p>
+    <ul class="ex-elig-ul">${students.map(st => {
+      const me = st.studentId === meId;
+      return `<li class="${me ? "me" : ""}"><span class="ex-elig-av">${esc(String(st.name || "?").trim().charAt(0))}</span><span class="ex-elig-name">${esc(st.name)}</span>${me ? "<em>আপনি</em>" : `<small>${esc(st.studentId)}</small>`}</li>`;
+    }).join("")}</ul>`;
+}
+
+function paintEligible() {
+  document.querySelectorAll("[data-elig-list]").forEach(el => { el.innerHTML = eligListHtml(); });
+  const n = eligData && !eligData.error && eligData.students ? eligData.students.length : "";
+  document.querySelectorAll("[data-elig-count]").forEach(el => { el.textContent = n; });
+}
+
+let eligDocBound = false;
+function bindEligible(root) {
+  root.querySelectorAll("[data-elig-toggle]").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      const target = document.getElementById(btn.dataset.eligToggle);
+      if (!target) return;
+      const open = target.classList.contains("hidden");
+      target.classList.toggle("hidden", !open);
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+  });
+  if (!eligDocBound) {
+    eligDocBound = true;
+    const closePop = () => {
+      const pop = document.getElementById("eligPop");
+      if (pop) pop.classList.add("hidden");
+      document.querySelectorAll('[data-elig-toggle="eligPop"]').forEach(b => b.setAttribute("aria-expanded", "false"));
+    };
+    document.addEventListener("click", e => { if (!e.target.closest("#eligPop")) closePop(); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closePop(); });
+  }
+  paintEligible();
 }
 
 const ICON = {
@@ -51,17 +140,22 @@ const ICON = {
   star: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
   card: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>`,
   bulb: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.45.9 1.15.9 1.9V16h5.4v-.3c0-.75.3-1.45.9-1.9A6 6 0 0 0 12 3z"/></svg>`,
+  clock: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>`,
+  users: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  chev: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>`,
+  sun: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>`,
+  moon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>`,
   check: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`
 };
 
 /* ---------- intro screen ---------- */
 // stats: [{label, value}]   facts / notes: html strings (already escaped where needed)
-export function introHtml({ backHref, title, name, description, stats = [], facts = [], notes = [], startLabel }) {
+export function introHtml({ backHref, title, name, description, stats = [], facts = [], notes = [], startLabel, showMode = true, showEligible = false }) {
   return `
     <header class="ex-topbar"><div class="ex-topbar-in">
       <a href="${esc(backHref)}" class="ex-icon-btn" aria-label="ফিরে যান">${ICON.back}</a>
       <h2 class="ex-page-title">${esc(title)}</h2>
-      <div class="ex-actions">${themeButtonHtml()}</div>
+      <span class="ex-spacer" aria-hidden="true"></span>
     </div></header>
 
     <main class="ex-main">
@@ -73,6 +167,19 @@ export function introHtml({ backHref, title, name, description, stats = [], fact
         </div>
         ${facts.length ? `<div class="ex-facts">${facts.map(f => `<p>${f}</p>`).join("")}</div>` : ""}
       </section>
+
+      ${showMode ? modePickerHtml() : ""}
+
+      ${showEligible ? `
+      <section class="ex-card ex-elig-card">
+        <button type="button" class="ex-elig-head" data-elig-toggle="eligIntro" aria-expanded="false">
+          <span class="ex-elig-ico">${ICON.users}</span>
+          <span class="ex-elig-title"><b>কারা এই পরীক্ষা দিচ্ছে</b><small>ট্যাপ করে নামের তালিকা দেখো</small></span>
+          <span class="ex-elig-count" data-elig-count></span>
+          <span class="ex-elig-chev">${ICON.chev}</span>
+        </button>
+        <div id="eligIntro" class="ex-elig-body hidden"><div class="ex-elig-scroll" data-elig-list></div></div>
+      </section>` : ""}
 
       <section class="ex-card">
         <p class="ex-notes-title">${ICON.info} মনে রাখুন</p>
@@ -87,21 +194,33 @@ export function introHtml({ backHref, title, name, description, stats = [], fact
 }
 
 /* ---------- running exam shell ---------- */
-export function runShellHtml({ name, photoURL, total, showCardBtn = false }) {
+export function runShellHtml({ name, photoURL, total, showCardBtn = false, showEligible = false }) {
   const initial = esc(String(name || "?").trim().charAt(0));
   return `
-    <header class="ex-topbar"><div class="ex-topbar-in">
-      <div class="ex-user">
-        ${photoURL ? `<img class="ex-avatar" src="${esc(photoURL)}" alt="">` : `<div class="ex-avatar">${initial}</div>`}
-        <span class="ex-user-name">${esc(name)}</span>
+    <header class="ex-topbar">
+      <div class="ex-topbar-in ex-run">
+        <div class="ex-user">
+          ${photoURL ? `<img class="ex-avatar" src="${esc(photoURL)}" alt="">` : `<div class="ex-avatar">${initial}</div>`}
+          <span class="ex-user-name">${esc(name)}</span>
+        </div>
+
+        <div class="ex-timer" role="timer">
+          <span class="ex-timer-ico">${ICON.clock}</span>
+          <div class="ex-timer-txt"><small>বাকি সময়</small><span id="timerDisplay">--:--</span></div>
+        </div>
+
+        <div class="ex-actions">
+          ${showEligible ? `<button type="button" class="ex-tool-btn" data-elig-toggle="eligPop" aria-expanded="false" aria-label="কারা পরীক্ষা দিচ্ছে">${ICON.users}<span class="ex-tool-lbl">কারা দিচ্ছে</span><span class="ex-tool-count" data-elig-count></span></button>` : ""}
+          ${showCardBtn ? `<button id="useCardBtn" class="ex-tool-btn ex-card-btn" type="button" aria-label="টাইম কার্ড ব্যবহার করো">${ICON.card}<span class="ex-tool-lbl">টাইম কার্ড</span><span id="cardBadge" class="ex-card-badge hidden">0</span></button>` : ""}
+          <button id="submitBtn" class="ex-submit" type="button">জমা দিন</button>
+        </div>
       </div>
-      <div class="ex-actions">
-        ${showCardBtn ? `<button id="useCardBtn" class="ex-icon-btn ex-card-btn" type="button" aria-label="টাইম কার্ড ব্যবহার করো">${ICON.card}<span id="cardBadge" class="ex-card-badge hidden">0</span></button>` : ""}
-        <div class="ex-timer"><small>বাকি সময়</small><span id="timerDisplay">--:--</span></div>
-        ${themeButtonHtml()}
-        <button id="submitBtn" class="ex-submit" type="button">জমা দিন</button>
-      </div>
-    </div></header>
+      ${showEligible ? `
+      <div id="eligPop" class="ex-pop hidden">
+        <div class="ex-pop-head"><p class="ex-pop-title">কারা এই পরীক্ষা দিচ্ছে</p></div>
+        <div class="ex-elig-scroll" data-elig-list></div>
+      </div>` : ""}
+    </header>
 
     <main class="ex-main">
       <section class="ex-card">
