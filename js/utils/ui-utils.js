@@ -1703,49 +1703,11 @@ export function renderStudentHeader(
 ) {
 
   const tabs = [
-
-    {
-      key: "dashboard",
-      href: "../student/dashboard.html",
-      icon: icons.home,
-      label: "ড্যাশবোর্ড"
-    },
-
-    {
-      key: "calendar",
-      href: "../student/calendar.html",
-      icon: icons.calendar,
-      label: "ক্যালেন্ডার"
-    },
-
-    {
-      key: "history",
-      href: "../student/history.html",
-      icon: icons.history,
-      label: "ইতিহাস"
-    },
-
-    {
-      key: "leaderboard",
-      href: "../student/leaderboard.html",
-      icon: icons.chart,
-      label: "লিডারবোর্ড"
-    },
-
-    {
-      key: "improvement",
-      href: "../student/improvement.html",
-      icon: icons.improvement,
-      label: "উন্নতি"
-    },
-
-    {
-      key: "profile",
-      href: "../student/profile.html",
-      icon: icons.user,
-      label: "প্রোফাইল"
-    }
-
+    { key: "dashboard", href: "../student/dashboard.html", icon: icons.home, label: "হোম" },
+    { key: "calendar", href: "../student/calendar.html", icon: icons.calendar, label: "ক্যালেন্ডার" },
+    { key: "leaderboard", href: "../student/leaderboard.html", icon: icons.chart, label: "লিডারবোর্ড" },
+    { key: "improvement", href: "../student/improvement.html", icon: icons.improvement, label: "উন্নতি" },
+    { key: "profile", href: "../student/profile.html", icon: icons.user, label: "প্রোফাইল" }
   ];
 
 
@@ -1768,72 +1730,23 @@ export function renderStudentHeader(
 
 
   const html = `
-
-    <!-- =================================================
-         TOP HEADER
-         ================================================= -->
-
-    <div class="topbar">
-
-      <!-- Student identity -->
-
-      <div
-        class="brand hdr-brand"
-      >
-
-        <div
-          class="brand-mark hdr-avatar"
-        >
-
-          ${
+    <header class="hdr">
+      <div class="hdr-row">
+        <button type="button" class="hdr-user" id="hdrUserBtn" aria-haspopup="true" aria-expanded="false" aria-label="মেনু">
+          <span class="brand-mark hdr-avatar">${
             student?.photoURL
-              ? `
-                <img
-                  src="${escapeNotification(student.photoURL)}"
-                  alt=""
-                  style="
-                    width:100%;
-                    height:100%;
-                    object-fit:cover;
-                    display:block;
-                  "
-                />
-              `
+              ? `<img src="${escapeNotification(student.photoURL)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;" />`
               : escapeNotification(initial)
-          }
-
-        </div>
-
-
-        <div style="min-width:0;">
-
-          <h1
-            class="hdr-name"
-          >
-            ${safeName}
-          </h1>
-
-          <span
-            class="hdr-id-pill"
-          >
-            ${safeStudentId}
+          }</span>
+          <span class="hdr-user-text">
+            <span class="hdr-name">${safeName}</span>
+            <span class="hdr-id">${safeStudentId}</span>
           </span>
+          <svg class="hdr-caret" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
 
-        </div>
-
-      </div>
-
-
-      <!-- =================================================
-           RIGHT SIDE ACTIONS
-           ================================================= -->
-
-      <div
-        class="hdr-actions"
-        style="position:relative;"
-      >
-
-        <!-- Global Notification -->
+        <div class="hdr-actions" style="position:relative;">
+          
 
         <div
           class="student-global-notification"
@@ -1848,7 +1761,7 @@ export function renderStudentHeader(
             title="Notifications"
           >
 
-            ${icons.bell}
+            \${icons.bell}
 
             <span
               class="global-notification-dot"
@@ -1904,93 +1817,26 @@ export function renderStudentHeader(
           </div>
 
         </div>
-
-
-        <!-- Theme -->
-
-        <button
-          class="theme-toggle hdr-icon"
-          id="themeToggle"
-          type="button"
-          aria-label="থিম পরিবর্তন"
-          title="থিম পরিবর্তন"
-        >
-
-          <span
-            class="theme-toggle-thumb"
-          ></span>
-
-        </button>
-
-
-        <!-- Student switch -->
-
-        <a
-          href="../index.html"
-          class="icon-btn hdr-icon"
-          title="শিক্ষার্থী পরিবর্তন"
-          aria-label="শিক্ষার্থী পরিবর্তন"
-        >
-
-          ${icons.arrowLeft}
-
-        </a>
-
+        </div>
       </div>
 
-    </div>
+      <div class="hdr-menu" id="hdrMenu" role="menu">
+        <a href="../student/history.html" class="hdr-menu-item ${activeKey === "history" ? "active" : ""}" role="menuitem">${icons.history}<span>ইতিহাস</span></a>
+        <div class="hdr-menu-item hdr-menu-row">
+          <span>ডার্ক মোড</span>
+          <button class="theme-toggle" id="themeToggle" type="button" aria-label="থিম পরিবর্তন" title="থিম পরিবর্তন"><span class="theme-toggle-thumb"></span></button>
+        </div>
+        <a href="../index.html" class="hdr-menu-item" role="menuitem">${icons.arrowLeft}<span>শিক্ষার্থী পরিবর্তন</span></a>
+      </div>
+    </header>
 
-
-    <!-- =================================================
-         NAVIGATION
-         ================================================= -->
-
-    <div
-      class="glass card hdr-nav"
-    >
-
-      ${
-        tabs
-          .map(
-            tab => `
-
-              <a
-                href="${tab.href}"
-                class="hdr-nav-tab ${tab.key === activeKey ? "active" : ""}"
-              >
-
-                <span
-                  style="
-                    width:20px;
-                    height:20px;
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                  "
-                >
-                  ${tab.icon}
-                </span>
-
-
-                <span
-                  class="text-xs"
-                  style="
-                    font-weight:600;
-                    text-align:center;
-                  "
-                >
-                  ${tab.label}
-                </span>
-
-              </a>
-
-            `
-          )
-          .join("")
-      }
-
-    </div>
-
+    <nav class="hdr-nav" aria-label="প্রধান মেনু">
+      ${tabs.map(tab => `
+        <a href="${tab.href}" class="hdr-nav-tab ${tab.key === activeKey ? "active" : ""}" ${tab.key === activeKey ? 'aria-current="page"' : ""}>
+          <span class="hdr-nav-ico">${tab.icon}</span>
+          <span class="hdr-nav-label">${tab.label}</span>
+        </a>`).join("")}
+    </nav>
   `;
 
 
@@ -2018,11 +1864,22 @@ export function renderStudentHeader(
         "globalNotificationClose"
       );
 
+    // ---------- Theme switch (single binding for all student pages) ----------
+    const themeBtn = document.getElementById("themeToggle");
+    if (themeBtn) themeBtn.addEventListener("click", () => { toggleTheme(); });
 
-    // With six tabs the row can scroll on small phones: keep the current tab in view.
-    const activeTab = document.querySelector(".hdr-nav-tab.active");
-    if (activeTab && activeTab.scrollIntoView) {
-      activeTab.scrollIntoView({ inline: "center", block: "nearest" });
+    // ---------- Avatar menu ----------
+    const userBtn = document.getElementById("hdrUserBtn");
+    const menu = document.getElementById("hdrMenu");
+    if (userBtn && menu) {
+      const setMenu = open => {
+        menu.classList.toggle("open", open);
+        userBtn.setAttribute("aria-expanded", open ? "true" : "false");
+      };
+      userBtn.onclick = e => { e.stopPropagation(); setMenu(!menu.classList.contains("open")); };
+      menu.addEventListener("click", e => e.stopPropagation());
+      document.addEventListener("click", () => setMenu(false));
+      document.addEventListener("keydown", e => { if (e.key === "Escape") setMenu(false); });
     }
 
     // ---------- Open / close notification ----------
