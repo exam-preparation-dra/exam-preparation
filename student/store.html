@@ -343,9 +343,7 @@ async function buildRecommendation(results, subjectNameMap) {
   }
 
   const subjectStats = computeSubjectStats(results, subjectNameMap);
-  const weak = subjectStats
-    .filter(s => s.accuracy !== null && (s.correct + s.wrong) >= 4 && s.accuracy < 60)
-    .sort((a, b) => a.accuracy - b.accuracy);
+  const bySubjectId = Object.fromEntries(subjectStats.map(s => [s.subjectId, s]));
 
   let speedAccuracy = null;
   try {
@@ -354,37 +352,62 @@ async function buildRecommendation(results, subjectNameMap) {
     speedAccuracy = computeTimeManagementStats(records, subjectNameMap, {})?.speedAccuracy || null;
   } catch { speedAccuracy = null; }
 
-  // 1) a weak subject that's actually part of the next exam
+  // ---- We know what's coming next: the pick must be about THAT exam's own
+  // subjects — never a weak subject from some unrelated exam, even if it's
+  // the weakest one overall. ----
   if (upcoming && Array.isArray(upcoming.subjectIds) && upcoming.subjectIds.length) {
-    const match = weak.find(s => upcoming.subjectIds.includes(s.subjectId));
-    if (match) {
+    const examSubjects = upcoming.subjectIds.map(id => bySubjectId[id]).filter(Boolean);
+    const weakestInExam = examSubjects
+      .filter(s => s.accuracy !== null && (s.correct + s.wrong) >= 4)
+      .sort((a, b) => a.accuracy - b.accuracy)[0];
+
+    if (weakestInExam && weakestInExam.accuracy < 65) {
       return {
         itemId: "hint_card", examName,
-        reason: `${match.name}-এ তোমার accuracy মাত্র ${match.accuracy}% আর এটা আসন্ন পরীক্ষায় আছে — হিন্ট কার্ড আটকে যাওয়া প্রশ্নে কাজে লাগবে।`
+        reason: `আসন্ন “${examName}”-এ ${weakestInExam.name} আছে, যেখানে তোমার accuracy মাত্র ${weakestInExam.accuracy}% — হিন্ট কার্ড আটকে যাওয়া প্রশ্নে কাজে লাগবে।`
       };
     }
-  }
 
-  // 2) rushing pattern: answering fast is going wrong more than answering slow
-  if (speedAccuracy?.rushingLikely) {
+    if (speedAccuracy?.rushingLikely) {
+      return {
+        itemId: "time_extend_card", examName,
+        reason: `তাড়াহুড়ো করে উত্তর দিলে ভুল হওয়ার হার (${speedAccuracy.fasterWrongRate}%) বেশি দেখা যাচ্ছে — “${examName}”-এ বাড়তি সময় থাকলে চাপ কমবে।`
+      };
+    }
+
+    if (!examSubjects.length) {
+      return {
+        itemId: "time_extend_card", examName,
+        reason: `“${examName}”-এর বিষয়ে তোমার আগের কোনো ফলাফল নেই — নতুন জায়গায় সময় বেশি লাগতে পারে, তাই টাইম কার্ড রাখা ভালো।`
+      };
+    }
+
+    // this exam's own subjects already look fine — a safe generic pick, still tied to this exam
     return {
       itemId: "time_extend_card", examName,
-      reason: `তাড়াহুড়ো করে উত্তর দিলে ভুল হওয়ার হার (${speedAccuracy.fasterWrongRate}%) স্বাভাবিকের চেয়ে বেশি — বাড়তি সময় থাকলে চাপ কমবে।`
+      reason: `“${examName}”-এর বিষয়গুলোতে তোমার accuracy ভালো — শুধু সময় কম পড়া থেকে বাঁচতে টাইম কার্ড রাখা যায়।`
     };
   }
 
-  // 3) a weak subject in general, even if it's not on the next exam
-  if (weak.length) {
-    const w = weak[0];
+  // ---- No specific upcoming exam known: fall back to overall weakest subject
+  // (kept general — no exam tag, since it isn't tied to any particular exam). ----
+  const weakOverall = subjectStats
+    .filter(s => s.accuracy !== null && (s.correct + s.wrong) >= 4 && s.accuracy < 60)
+    .sort((a, b) => a.accuracy - b.accuracy)[0];
+  if (weakOverall) {
     return {
-      itemId: "hint_card", examName,
-      reason: `${w.name}-এ তোমার accuracy ${w.accuracy}% — হিন্ট কার্ড দিয়ে ভুল হওয়ার কারণটা বুঝে নেওয়া যাবে।`
+      itemId: "hint_card", examName: null,
+      reason: `${weakOverall.name}-এ তোমার সার্বিক accuracy ${weakOverall.accuracy}% — হিন্ট কার্ড দিয়ে ভুল হওয়ার কারণটা বুঝে নেওয়া যাবে।`
     };
   }
-
-  // 4) nothing concerning found — a safe general pick
+  if (speedAccuracy?.rushingLikely) {
+    return {
+      itemId: "time_extend_card", examName: null,
+      reason: `তাড়াহুড়ো করে উত্তর দিলে ভুল হওয়ার হার (${speedAccuracy.fasterWrongRate}%) বেশি দেখা যাচ্ছে — বাড়তি সময় থাকলে চাপ কমবে।`
+    };
+  }
   return {
-    itemId: "time_extend_card", examName,
+    itemId: "time_extend_card", examName: null,
     reason: "তোমার পারফরম্যান্স মোটামুটি স্থিতিশীল — তাও পরীক্ষায় শেষ মুহূর্তে সময় কম পড়লে কাজে লাগার জন্য টাইম কার্ড রাখা ভালো।"
   };
 }
