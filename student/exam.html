@@ -24,7 +24,7 @@
 
 <script type="module">
 import { initTheme, icons, renderState, showToast } from "../js/utils/ui-utils.js";
-import { getActiveStudent, refreshActiveStudent } from "../js/utils/student-utils.js";
+import { getActiveStudent, refreshActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
 import { getExamById, getExamSnapshot, isExamAvailableNow } from "../js/utils/results-utils.js";
 import { getSubjects, getChapters, buildNameMap } from "../js/utils/syllabus-utils.js";
 import {
@@ -33,11 +33,11 @@ import {
 } from "../js/utils/attempt-utils.js";
 import { formatHms } from "../js/utils/grading-utils.js";
 import {
-  initExamPage, bindThemeButtons, introHtml, runShellHtml, questionHtml, hintZoneHtml,
+  initExamPage, bindThemeButtons, setEligibleData, introHtml, runShellHtml, questionHtml, hintZoneHtml,
   setQuestionCounter, setProgress, fillPalette, submitMessage
 } from "../js/utils/exam-ui.js";
 import { STORE_ITEMS, MAX_CARDS_PER_ATTEMPT, MAX_HINT_CARDS_PER_ATTEMPT, getStoreInventory, useStoreItem } from "../js/utils/store-utils.js?v=roomcard1";
-import { DIALOGUE_BANK, MINUTE_WARN_LINES, fillName } from "../js/utils/voice-dialogue.js";
+import { DIALOGUE_BANK, MINUTE_WARN_LINES } from "../js/utils/voice-dialogue.js";
 
 initTheme();
 initExamPage();
@@ -97,6 +97,8 @@ async function boot() {
       renderState(shell, "error", "এই পরীক্ষা এখনো শুরু হয়নি অথবা এর সময়সীমা শেষ হয়ে গেছে।"); return;
     }
 
+    loadEligible(); // fills the "who is eligible" lists in the background
+
     const resumable = await peekInProgressAttempt(examId, student.studentId);
     if (resumable) {
       attemptState = resumable;
@@ -118,6 +120,28 @@ async function boot() {
   }
 }
 
+// Who can take this exam? Specific student IDs if the admin listed any,
+// otherwise everyone in the exam's target batch (same rule as the dashboard).
+async function loadEligible() {
+  try {
+    const all = await getActiveStudents();
+    const allowed = exam.allowedStudents || [];
+    const target = exam.targetBatch || "all";
+    let list, scope;
+    if (allowed.length > 0) {
+      list = all.filter(s => allowed.includes(s.studentId));
+      scope = "নির্বাচিত শিক্ষার্থী";
+    } else {
+      list = all.filter(s => target === "all" || target === s.className);
+      scope = target === "all" ? "সব শিক্ষার্থী" : `${target} ব্যাচ`;
+    }
+    setEligibleData({ students: list.map(s => ({ studentId: s.studentId, name: s.name })), scope, meId: student.studentId });
+  } catch (err) {
+    console.error(err);
+    setEligibleData({ error: true });
+  }
+}
+
 async function renderIntro() {
   const [subjects, chapters] = await Promise.all([getSubjects(), getChapters()]);
   const subjectMap = buildNameMap(subjects);
@@ -131,11 +155,11 @@ async function renderIntro() {
     description: exam.description || "",
     stats: [
       { label: "মোট প্রশ্ন", value: snapshot.questions.length },
-      { label: "সময়কাল", value: `${exam.durationMinutes} মি` }
+      { label: "সময়কাল", value: `${exam.durationMinutes} মি` },
+      { label: "মোট নম্বর", value: exam.totalMarks ?? "—" }
     ],
     facts: [
       `<strong>তারিখ:</strong> ${dateStr} • ${exam.informationalTime || "—"}`,
-      `<strong>মোট নম্বর:</strong> ${exam.totalMarks ?? "—"}`,
       ...(subjNames ? [`<strong>বিষয়:</strong> ${subjNames}`] : [])
     ],
     notes: [
@@ -144,7 +168,8 @@ async function renderIntro() {
       "জমা দেওয়ার পর কোনো উত্তর পরিবর্তন করা যাবে না।",
       "<strong>ছবির ওপর ক্লিক করে জুম করা যাবে। ছবি ডাউনলোড করা সম্পূর্ণ নিষিদ্ধ।</strong>"
     ],
-    startLabel: "পরীক্ষা শুরু করুন"
+    startLabel: "পরীক্ষা শুরু করুন",
+    showEligible: true
   });
   bindThemeButtons(shell);
 
@@ -161,7 +186,7 @@ async function renderIntro() {
 }
 
 function renderExamShell() {
-  shell.innerHTML = runShellHtml({ name: student.name, photoURL: student.photoURL, total: snapshot.questions.length, showCardBtn: true });
+  shell.innerHTML = runShellHtml({ name: student.name, photoURL: student.photoURL, total: snapshot.questions.length, showCardBtn: true, showEligible: true });
   bindThemeButtons(shell);
 
   document.getElementById("prevBtn").addEventListener("click", () => navigate(-1));
@@ -496,13 +521,17 @@ function openPalette() {
 }
 function closePalette() { document.getElementById("paletteOverlay").classList.add("hidden"); }
 
-// --- Exam voice: live browser (Google, when available) speechSynthesis --
+// --- Exam voice: pre-recorded audio first, browser TTS as fallback -----
 // DIALOGUE_BANK / MINUTE_WARN_LINES (imported above) are the single source
-// of truth for every line the voice system can say. Every line is spoken
-// live through the browser's own speechSynthesis, using a Google Bengali
-// voice whenever the device has one installed (e.g. "Google বাংলা" on
-// Chrome/Android) -- no pre-recorded audio files involved, so each line
-// can naturally address the student by name.
+// of truth for every line the voice system can say. Each line has a
+// matching pre-recorded file at assets/audio/voice/<key>-<index>.wav,
+// generated once via admin/voice-generator.html (natural Gemini TTS voice,
+// no per-exam API calls). If a file is missing or fails to load, we fall
+// back to the browser's own (robotic but always-available) speechSynthesis
+// so the timer/motivation announcements never go silent.
+const VOICE_AUDIO_BASE = "../assets/audio/voice/";
+let currentVoiceAudio = null;
+
 let cachedBengaliVoice = null;
 function pickBengaliVoice() {
   if (!("speechSynthesis" in window)) return null;
@@ -516,7 +545,7 @@ if ("speechSynthesis" in window) {
   window.speechSynthesis.getVoices();
   window.speechSynthesis.addEventListener("voiceschanged", () => { cachedBengaliVoice = pickBengaliVoice(); });
 }
-function speak(text) {
+function speakFallback(text) {
   if (!("speechSynthesis" in window) || !text) return;
   try {
     window.speechSynthesis.cancel();
@@ -528,6 +557,20 @@ function speak(text) {
   } catch (e) { }
 }
 
+// Plays the pre-recorded file for {key, index}; falls back to speechSynthesis
+// (using `text`) if the file is missing/blocked/fails to load.
+function playVoiceFile(key, index, text) {
+  try {
+    if (currentVoiceAudio) { currentVoiceAudio.pause(); currentVoiceAudio = null; }
+    const audio = new Audio(`${VOICE_AUDIO_BASE}${key}-${index}.wav`);
+    currentVoiceAudio = audio;
+    let fellBack = false;
+    const fallbackOnce = () => { if (fellBack) return; fellBack = true; speakFallback(text); };
+    audio.addEventListener("error", fallbackOnce);
+    audio.play().catch(fallbackOnce);
+  } catch (e) { speakFallback(text); }
+}
+
 // Multiple lines per situation so the same line doesn't repeat every exam;
 // picked at random (never the same line twice in a row for that situation).
 const lastDialogueIndex = {};
@@ -537,22 +580,20 @@ function pickDialogue(key) {
   let idx = arr.length === 1 ? 0 : Math.floor(Math.random() * arr.length);
   if (arr.length > 1 && idx === lastDialogueIndex[key]) idx = (idx + 1) % arr.length;
   lastDialogueIndex[key] = idx;
-  return arr[idx];
+  return { text: arr[idx], index: idx };
 }
 
-// Speaks a random variant of a DIALOGUE_BANK situation (e.g. "slow1"),
-// with the student's name filled in.
+// Speaks a random variant of a DIALOGUE_BANK situation (e.g. "slow1").
 function speakDialogue(key) {
-  const text = pickDialogue(key);
-  if (!text) return;
-  speak(fillName(text, student?.name));
+  const picked = pickDialogue(key);
+  if (!picked) return;
+  playVoiceFile(key, picked.index, picked.text);
 }
-// Speaks a fixed single-line entry (e.g. MINUTE_WARN_LINES.minuteWarn20),
-// with the student's name filled in.
+// Speaks a fixed single-line entry (e.g. MINUTE_WARN_LINES.minuteWarn20).
 function speakFixed(key) {
   const arr = MINUTE_WARN_LINES[key];
   if (!arr || !arr.length) return;
-  speak(fillName(arr[0], student?.name));
+  playVoiceFile(key, 0, arr[0]);
 }
 
 function startTimer() { clearInterval(timerHandle); tick(); timerHandle = setInterval(tick, 1000); }
