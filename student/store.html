@@ -15,36 +15,39 @@
 
   .store-section-title { font-size: 0.98rem; font-weight: 700; color: var(--text-primary); margin-bottom: var(--space-3); display: flex; align-items: center; gap: 8px; }
 
-  /* ---- Ticket-style item card: a torn-stub coupon look ---- */
+  /* ---- Card item: coloured card face on top, plain-language details below ---- */
   .store-ticket {
-    display: flex; padding: 0; overflow: hidden; margin-bottom: var(--space-4);
-    background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-soft);
+    --wc-a: #2d5a7b; --wc-b: #15283b;
+    margin-bottom: var(--space-4); overflow: hidden; border-radius: 22px;
+    background: var(--surface); border: 1px solid var(--surface-border); box-shadow: var(--shadow-soft);
   }
-  .store-ticket-stub {
-    flex-shrink: 0; width: 88px; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 2px; text-align: center; background: var(--color-accent-soft); color: var(--color-accent); padding: var(--space-3);
+  .store-ticket[data-kind="hint"] { --wc-a: #a77a2c; --wc-b: #4d3611; }
+  .store-ticket[data-kind="battle"] { --wc-a: #6d3f78; --wc-b: #2b1834; }
+  .store-face {
+    position: relative; overflow: hidden; isolation: isolate; color: #f6f3ea; padding: 16px 18px 18px;
+    background: linear-gradient(145deg, var(--wc-a), var(--wc-b));
+    box-shadow: 0 1px 0 rgba(255,255,255,.14) inset;
   }
-  .store-ticket-plus { font-size: 1.2rem; font-weight: 700; line-height: 1.15; }
-  .store-ticket-plus-label { font-size: 0.68rem; font-weight: 600; opacity: 0.85; }
-  .store-ticket-divider {
-    flex-shrink: 0; width: 1px; position: relative;
-    background-image: linear-gradient(var(--surface-border) 60%, transparent 0%);
-    background-position: left; background-size: 1px 10px; background-repeat: repeat-y;
-  }
-  .store-ticket-divider::before, .store-ticket-divider::after {
-    content: ""; position: absolute; left: 50%; transform: translateX(-50%); width: 16px; height: 16px;
-    border-radius: 50%; background: var(--bg-app); border: 1px solid var(--surface-border);
-  }
-  .store-ticket-divider::before { top: -9px; }
-  .store-ticket-divider::after { bottom: -9px; }
-  .store-ticket-body { flex: 1; min-width: 0; padding: var(--space-4); }
+  .store-face::before { content: ""; position: absolute; z-index: -1; right: -50px; top: -60px; width: 190px; height: 190px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.2), rgba(255,255,255,0) 68%); }
+  .store-face::after { content: ""; position: absolute; z-index: -1; left: -34px; bottom: -84px; width: 210px; height: 210px; border-radius: 50%; border: 28px solid rgba(255,255,255,.05); }
+  .store-face-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .store-face-name { display: flex; align-items: center; gap: 10px; min-width: 0; font-size: .98rem; font-weight: 800; }
+  .store-face-ico { flex-shrink: 0; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: rgba(255,255,255,.16); }
+  .store-price { flex-shrink: 0; padding: 5px 12px; border-radius: 99px; font-size: .95rem; font-weight: 800; color: #1b1b1b; background: rgba(255,255,255,.9); white-space: nowrap; }
+  .store-price small { font-size: .66rem; font-weight: 800; margin-left: 2px; opacity: .7; }
+  .store-face-main { display: flex; align-items: baseline; gap: 8px; margin-top: 18px; }
+  .store-face-big { font-family: var(--font-num); font-size: 2.9rem; font-weight: 800; line-height: 1; letter-spacing: -.02em; }
+  .store-face-unit { font-size: .9rem; font-weight: 700; opacity: .8; }
+  .store-face-tag { margin-top: 8px; font-size: .78rem; font-weight: 700; color: rgba(246,243,234,.82); }
 
-  .store-item-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
-  .store-item-name { font-weight: 700; font-size: 1rem; color: var(--text-primary); }
-  .store-item-desc { margin: var(--space-3) 0 0; line-height: 1.6; }
-  .store-item-price-offer { display: block; font-size: 1.15rem; font-weight: 700; color: var(--color-accent); white-space: nowrap; flex-shrink: 0; }
-  .store-item-price-offer small { font-size: 0.68rem; font-weight: 600; color: var(--text-muted); margin-left: 2px; }
+  .store-ticket-body { padding: 16px 18px 16px; }
+  .store-what { font-size: .88rem; font-weight: 600; line-height: 1.7; color: var(--text-secondary); }
+  .store-facts { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 12px; }
+  .store-facts li { display: flex; align-items: flex-start; gap: 12px; }
+  .store-fact-n { flex-shrink: 0; width: 24px; height: 24px; margin-top: 1px; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-num); font-size: .76rem; font-weight: 800; color: var(--color-accent); background: var(--color-accent-soft); }
+  .store-fact-t { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .store-fact-t b { font-size: .8rem; font-weight: 800; color: var(--text-primary); }
+  .store-fact-t span { font-size: .8rem; font-weight: 600; line-height: 1.6; color: var(--text-muted); }
 
   .store-item-footer { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: var(--space-4); padding-top: var(--space-3); border-top: 1px dashed var(--surface-border); flex-wrap: wrap; }
   .store-qty { display: flex; align-items: center; gap: 10px; }
@@ -90,8 +93,8 @@
      owned-count, shown briefly right after checkout succeeds ---- */
   .store-ticket.purchase-flash { animation: storeTicketFlash .9s ease-out; }
   @keyframes storeTicketFlash {
-    0%   { box-shadow: 0 0 0 3px var(--color-accent); background: var(--color-accent-soft); }
-    100% { box-shadow: var(--shadow-soft); background: var(--surface); }
+    0%   { box-shadow: 0 0 0 3px var(--color-accent); }
+    100% { box-shadow: var(--shadow-soft); }
   }
   .store-owned-wrap { position: relative; display: inline-block; }
   .store-owned-pop {
@@ -208,7 +211,7 @@ import { computeStudentXP } from "../js/utils/xp-utils.js";
 import { resolveCompletedChallenges, getChallengeBonusXP } from "../js/utils/challenge-utils.js";
 import { getCompletedImprovementAttempts } from "../js/utils/improvement-xp-integration.js";
 import { getStudentBattleXP } from "../js/utils/battle-utils.js?v=roomcard1";
-import { STORE_ITEMS, getSpentXP, getStoreInventory, purchaseCart, getPurchaseHistory, getUsageHistory } from "../js/utils/store-utils.js?v=roomcard1";
+import { STORE_ITEMS, MAX_CARDS_PER_ATTEMPT, MAX_HINT_CARDS_PER_ATTEMPT, getSpentXP, getStoreInventory, getAvailableBattleRoomCardCount, purchaseCart, getPurchaseHistory, getUsageHistory } from "../js/utils/store-utils.js?v=roomcard1";
 import { initTheme, showToast, formatDate, formatTime } from "../js/utils/ui-utils.js";
 
 initTheme();
@@ -239,30 +242,67 @@ function renderBalance(xp) {
     `মোট অর্জিত ${fmt(xp.totalXP)} XP${xp.spentXP > 0 ? ` · খরচ হয়েছে ${fmt(xp.spentXP)} XP` : ""}`;
 }
 
+const ICONS = {
+  time: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  hint: '<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.45.9 1.15.9 1.9V16h5.4v-.3c0-.75.3-1.45.9-1.9A6 6 0 0 0 12 3z"/>',
+  battle: '<path d="M13 2 4 11l3 3 9-9V2z"/><path d="m11 13 6 6"/><path d="m20 16-4 4"/>'
+};
+const icon = (k) => `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[k]}</svg>`;
+
+// What each card does, in plain words (shown on the card).
+function cardInfo(item) {
+  if (item.validityDays) return {
+    kind: "battle", big: "১", unit: "টি নতুন Battle",
+    what: "ব্যাটল মোডে নতুন Battle Match তৈরি করতে এই কার্ড লাগে।",
+    facts: [
+      ["কোথায় ব্যবহার হবে", "ব্যাটল লবিতে নতুন Battle তৈরি (Create) করার সময়।"],
+      ["কী পাবে", "১টি কার্ডে ১টি নতুন Battle Match তৈরি করা যাবে।"],
+      ["মেয়াদ", `কেনার পর ${fmt(item.validityDays)} দিন (২ মাস) পর্যন্ত ব্যবহার করা যাবে — তারপর কার্ড মেয়াদোত্তীর্ণ হয়ে যাবে।`]
+    ]
+  };
+  if (item.hintsGranted) return {
+    kind: "hint", big: fmt(item.hintsGranted), unit: "টি প্রশ্নের উত্তর",
+    what: "পরীক্ষায় আটকে গেলে যেকোনো একটি প্রশ্নের সঠিক উত্তর ও ব্যাখ্যা দেখে নিতে পারবে।",
+    facts: [
+      ["কোথায় ব্যবহার হবে", "পরীক্ষা চলার সময়, প্রশ্নের নিচে “হিন্ট কার্ড ব্যবহার করো” বাটনে ট্যাপ করে।"],
+      ["কী পাবে", "১টি কার্ডে ১টি প্রশ্নের সঠিক উত্তর ও ব্যাখ্যা দেখা যাবে।"],
+      ["সীমা", `এক পরীক্ষায় সর্বোচ্চ ${fmt(MAX_HINT_CARDS_PER_ATTEMPT)}টি হিন্ট কার্ড ব্যবহার করা যাবে। আগে থেকে কিনে রাখতে হবে।`]
+    ]
+  };
+  const mins = Math.round((item.secondsGranted || 60) / 60);
+  return {
+    kind: "time", big: `+${fmt(mins)}`, unit: "মিনিট",
+    what: "সময় কম পড়লে পরীক্ষা চলার মাঝেই টাইমারে বাড়তি সময় যোগ করতে পারবে।",
+    facts: [
+      ["কোথায় ব্যবহার হবে", "পরীক্ষা চলার সময় উপরের বারের টাইম কার্ড বাটনে ট্যাপ করে।"],
+      ["কী পাবে", `প্রতিটি কার্ডে মূল সময়ের সাথে ${fmt(mins)} মিনিট বাড়তি যোগ হবে।`],
+      ["সীমা", `এক পরীক্ষায় সর্বোচ্চ ${fmt(MAX_CARDS_PER_ATTEMPT)}টি টাইম কার্ড ব্যবহার করা যাবে। আগে থেকে কিনে রাখতে হবে।`]
+    ]
+  };
+}
+
 function renderItems() {
   const list = document.getElementById("itemList");
   list.innerHTML = STORE_ITEMS.map(item => {
     const owned = inventory[item.id] || { purchased: 0, used: 0, available: 0 };
     const qty = cart[item.id] || 0;
+    const info = cardInfo(item);
     return `
-    <div class="store-ticket" data-item="${item.id}">
-      <div class="store-ticket-stub">
-        ${item.validityDays
-          ? `<span class="store-ticket-plus num">১×</span><span class="store-ticket-plus-label">Battle</span>`
-          : item.hintsGranted
-            ? `<span class="store-ticket-plus num">💡${item.hintsGranted}</span><span class="store-ticket-plus-label">হিন্ট</span>`
-            : `<span class="store-ticket-plus num">+${fmtDuration(item.secondsGranted)}</span><span class="store-ticket-plus-label">মিনিট</span>`}
-      </div>
-      <div class="store-ticket-divider"></div>
-      <div class="store-ticket-body">
-        <div class="store-item-top">
-          <div style="min-width:0;">
-            <div class="store-item-name">${esc(item.name)}</div>
-            <div class="text-sm text-muted">${esc(item.tagline)}</div>
-          </div>
-          <span class="store-item-price-offer num">${fmt(item.priceXP)}<small>XP</small></span>
+    <div class="store-ticket" data-item="${item.id}" data-kind="${info.kind}">
+      <div class="store-face">
+        <div class="store-face-top">
+          <div class="store-face-name"><span class="store-face-ico">${icon(info.kind)}</span><span>${esc(item.name)}</span></div>
+          <span class="store-price num">${fmt(item.priceXP)}<small>XP</small></span>
         </div>
-        <p class="text-sm text-muted store-item-desc">${esc(item.description)}</p>
+        <div class="store-face-main"><span class="store-face-big">${info.big}</span><span class="store-face-unit">${info.unit}</span></div>
+        <p class="store-face-tag">${esc(item.tagline)}</p>
+      </div>
+      <div class="store-ticket-body">
+        <p class="store-what">${info.what}</p>
+        <ul class="store-facts">
+          ${info.facts.map(([label, text], i) => `
+          <li><span class="store-fact-n">${toBn(i + 1)}</span><span class="store-fact-t"><b>${label}</b><span>${text}</span></span></li>`).join("")}
+        </ul>
         <div class="store-item-footer">
           <div class="text-sm text-muted">তোমার কাছে আছে: <span class="store-owned-wrap"><strong class="num" data-owned-count="${item.id}">${fmt(owned.available)}</strong></span>টি</div>
           <div class="store-qty">
@@ -335,7 +375,7 @@ function renderHistory(rows) {
 async function loadAll() {
   await resolveCompletedChallenges(student.studentId).catch(() => []);
 
-  const [results, allStudents, challengeBonusXP, improvementResults, battleXP, spentXP, inv, purchases, usage] = await Promise.all([
+  const [results, allStudents, challengeBonusXP, improvementResults, battleXP, spentXP, inv, purchases, usage, battleCards] = await Promise.all([
     getApprovedResults(student.studentId),
     getActiveStudents(),
     getChallengeBonusXP(student.studentId).catch(() => 0),
@@ -344,7 +384,8 @@ async function loadAll() {
     getSpentXP(student.studentId).catch(() => 0),
     getStoreInventory(student.studentId).catch(() => ({})),
     getPurchaseHistory(student.studentId).catch(() => []),
-    getUsageHistory(student.studentId).catch(() => [])
+    getUsageHistory(student.studentId).catch(() => []),
+    getAvailableBattleRoomCardCount(student.studentId).catch(() => null)
   ]);
 
   const myRefs = allStudents.filter(s => s.referredBy === student.studentId && s.studentId !== student.studentId);
@@ -355,6 +396,8 @@ async function loadAll() {
 
   currentTotalXP = xp.totalXP;
   inventory = inv;
+  // Battle cards expire — show only the ones still usable (same number the dashboard shows).
+  if (battleCards !== null && inventory.battle_room_card) inventory.battle_room_card.available = battleCards;
 
   const history = [
     ...purchases.map(r => ({ ...r, kind: "purchase" })),
