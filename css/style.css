@@ -774,3 +774,82 @@ p { color: var(--text-secondary); }
   .badge { border: 1px solid currentColor; }
    }
    
+
+
+/* =========================================================
+   Student header v2 — quiet top bar, avatar menu, bottom tab bar
+   (theme switch + "switch student" live in the avatar menu;
+   no back-arrow lookalike in the header)
+   ========================================================= */
+.hdr { position: relative; margin-bottom: var(--space-4); z-index: 30; }
+.hdr-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.hdr-user {
+  display: flex; align-items: center; gap: 10px; min-width: 0; padding: 4px 8px 4px 4px;
+  background: transparent; border: 0; border-radius: 14px; color: inherit; text-align: left;
+}
+.hdr-user:active { background: var(--surface-highlight); }
+.hdr .hdr-avatar { width: 40px; height: 40px; border: 0; box-shadow: none; border-radius: 12px; }
+.hdr-user-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.hdr .hdr-name { display: block; margin: 0; font-size: 1rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hdr-id { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); font-family: var(--font-num); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hdr-caret { color: var(--text-muted); flex-shrink: 0; transition: transform var(--transition); }
+.hdr-user[aria-expanded="true"] .hdr-caret { transform: rotate(180deg); }
+
+.hdr .hdr-actions { padding: 0; background: none; border: 0; gap: 0; }
+.hdr .hdr-actions .global-notification-btn {
+  width: 40px; height: 40px; border-radius: 12px; background: var(--surface-solid); border: 1px solid var(--surface-border);
+  display: inline-flex; align-items: center; justify-content: center; color: var(--text-secondary);
+}
+
+.hdr-menu {
+  display: none; position: absolute; left: 0; top: calc(100% + 6px); min-width: 230px; padding: 6px;
+  background: var(--surface-solid); border: 1px solid var(--surface-border); border-radius: 16px;
+  box-shadow: var(--shadow-lift); z-index: 60;
+}
+.hdr-menu.open { display: block; }
+.hdr-menu-item {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; padding: 8px 12px;
+  border-radius: 10px; font-size: 0.9rem; font-weight: 700; color: var(--text-primary);
+}
+.hdr-menu-item svg { width: 20px; height: 20px; color: var(--text-muted); flex-shrink: 0; }
+a.hdr-menu-item:active, a.hdr-menu-item.active { background: var(--color-accent-soft); }
+.hdr-menu-row { justify-content: space-between; }
+.hdr-menu-row .theme-toggle { margin: 0; }
+
+/* bottom tab bar (phones) */
+.hdr-nav {
+  position: fixed; left: 50%; bottom: 0; transform: translateX(-50%); z-index: 50;
+  width: min(100%, 560px); margin: 0; padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+  display: flex; gap: 2px; overflow: visible;
+  background: var(--surface-solid); border: 0; border-top: 1px solid var(--surface-border);
+  border-radius: 18px 18px 0 0; box-shadow: 0 -6px 20px rgba(20,18,10,0.06);
+}
+.hdr-nav-tab {
+  flex: 1 1 0; min-width: 0; gap: 2px; padding: 4px 2px; border-radius: 12px; background: none; box-shadow: none;
+  display: flex; flex-direction: column; align-items: center; color: var(--text-muted);
+}
+.hdr-nav-ico { width: 44px; height: 28px; border-radius: 999px; display: grid; place-items: center; transition: background var(--transition); }
+.hdr-nav-ico svg { width: 21px; height: 21px; }
+.hdr-nav-label { font-size: 0.66rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.hdr-nav-tab.active { color: var(--color-accent); background: none; box-shadow: none; }
+.hdr-nav-tab.active .hdr-nav-ico { background: var(--color-accent-soft); }
+.hdr-nav-tab.active .hdr-nav-label { font-weight: 800; }
+.app-shell:has(.hdr-nav) { padding-bottom: calc(92px + env(safe-area-inset-bottom)) !important; }
+
+@media (min-width: 900px) {
+  .hdr-nav {
+    position: static; transform: none; width: auto; margin: 0 0 var(--space-5); padding: 4px;
+    border: 1px solid var(--surface-border); border-radius: 14px; box-shadow: none;
+  }
+  .hdr-nav-tab { flex-direction: row; justify-content: center; gap: 8px; padding: 8px 10px; }
+  .hdr-nav-ico { width: 24px; height: 24px; background: none !important; }
+  .hdr-nav-tab.active { background: var(--color-accent-soft); }
+  .app-shell:has(.hdr-nav) { padding-bottom: var(--space-7) !important; }
+}
+
+/* shared icon-only back button for sub-pages (exam, battle, store…) */
+.back-btn {
+  display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 0 !important;
+  border-radius: 12px !important; flex-shrink: 0; line-height: 0;
+}
+.back-btn svg { width: 20px; height: 20px; }
