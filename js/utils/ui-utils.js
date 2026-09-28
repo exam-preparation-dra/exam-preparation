@@ -576,7 +576,7 @@ function injectNotificationStyles() {
     @media (max-width: 600px) {
       .global-notification-panel {
         position: fixed;
-        top: 70px;
+        top: 68px;
         right: 12px;
         width: calc(100vw - 24px);
         max-height: 70vh;
@@ -1761,7 +1761,7 @@ export function renderStudentHeader(
             title="Notifications"
           >
 
-            \${icons.bell}
+            ${icons.bell}
 
             <span
               class="global-notification-dot"
@@ -1826,7 +1826,7 @@ export function renderStudentHeader(
           <span>ডার্ক মোড</span>
           <button class="theme-toggle" id="themeToggle" type="button" aria-label="থিম পরিবর্তন" title="থিম পরিবর্তন"><span class="theme-toggle-thumb"></span></button>
         </div>
-        <a href="../index.html" class="hdr-menu-item" role="menuitem">${icons.arrowLeft}<span>শিক্ষার্থী পরিবর্তন</span></a>
+        <a href="../index.html" class="hdr-menu-item" role="menuitem">${icons.arrowLeft}<span>Back</span></a>
       </div>
     </header>
 
