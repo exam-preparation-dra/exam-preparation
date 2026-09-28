@@ -860,25 +860,13 @@ async function renderPage() {
       <div class="profile-tabs-wrap">
         <div class="tab-nav">
           <button class="tab-btn active" onclick="switchTab('tab-overview')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>ওভারভিউ</button>
-          <button class="tab-btn" onclick="switchTab('tab-stats')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M3 3v18h18"/><path d="M7 16l4-5 3 3 5-7"/></svg>পরিসংখ্যান</button>
           <button class="tab-btn" onclick="switchTab('tab-network')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2"/><path d="M16 3.5a4 4 0 0 1 0 7"/></svg>নেটওয়ার্ক</button>
         </div>
       </div>
 
       <section id="tab-overview" class="tab-content active">
-        <div id="identitySection" class="profile-section full"></div>
-        <div id="topperSection" class="profile-section full mt-4"></div>
-        <div id="journeySection" class="profile-section mt-4"></div>
-        <div id="improvementSection" class="profile-section mt-4"></div>
-        <div id="strengthSection" class="profile-section mt-4"></div>
         <div id="recordsSection" class="profile-section mt-4"></div>
-        <div id="activitySection" class="profile-section mt-4"></div>
-        <div id="rivalSection" class="profile-section mt-4"></div>
         <div id="badgeCollectionAdvanced" class="profile-section full mt-4"></div>
-      </section>
-
-      <section id="tab-stats" class="tab-content">
-        <div id="statsSection"></div>
       </section>
 
       <section id="tab-network" class="tab-content">
@@ -893,7 +881,7 @@ async function renderPage() {
     </main>
   `;
 
-  await Promise.allSettled([loadIdentity(), loadGamification(), loadStats(), loadNetworkData(), loadPremiumInsights()]);
+  await Promise.allSettled([loadIdentity(), loadNetworkData(), loadPremiumInsights()]);
 
   const search = document.getElementById("dirSearch");
   if (search) search.addEventListener("input", e => { dirSearchTerm=e.target.value.trim().toLowerCase(); renderDirectory(); });
@@ -901,7 +889,6 @@ async function renderPage() {
 
 async function loadIdentity() {
   const hero = document.getElementById("premiumHero");
-  const el = document.getElementById("identitySection");
   try {
     const snap = await getDoc(doc(db, "students", student.docId));
     const data = snap.exists() ? snap.data() : {};
@@ -933,121 +920,20 @@ async function loadIdentity() {
       </div>`;
     document.getElementById("shareProfileBtn").addEventListener("click", () => openShareChoice(data));
 
-    el.innerHTML = `
-      <div class="profile-section-head"><div><h2 class="profile-section-title">শিক্ষাগত পরিচয়</h2><div class="profile-section-note">তোমার পড়াশোনার সংক্ষিপ্ত পরিচয়</div></div></div>
-      <div class="identity-grid">
-        <div class="identity-card"><div class="identity-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><div class="identity-label">শ্রেণি</div><div class="identity-value">${myBatch}</div></div>
-        <div class="identity-card"><div class="identity-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M4 19V5"/><path d="M4 19h17"/><path d="m7 15 4-5 3 3 5-7"/></svg></div><div class="identity-label">র‍্যাঙ্ক</div><div class="identity-value">${rank?.rank ? "#"+rank.rank : "র‍্যাঙ্ক নেই"}</div></div>
-        <div class="identity-card"><div class="identity-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div class="identity-label">প্রোফাইল আইডি</div><div class="identity-value" style="font-size:.82rem">${student.studentId || "—"}</div></div>
-      </div>`;
   } catch (err) {
     hero.innerHTML = `<div class="profile-empty">প্রোফাইলের তথ্য লোড করা যায়নি।</div>`;
-    el.innerHTML = `<div class="profile-empty">প্রোফাইলের তথ্য লোড করা যায়নি।</div>`;
-  }
-}
-
-async function loadGamification() {
-  const el = document.getElementById("topperSection");
-  try {
-    const rank = await getStudentRank(student.studentId).catch(()=>null);
-    if (!rank) { el.innerHTML = `<div class="profile-empty">র‍্যাঙ্ক দেখতে একটি অনুমোদিত পরীক্ষা সম্পূর্ণ করো।</div>`; return; }
-    el.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">বর্তমান অবস্থান</h2><div class="profile-section-note">অনুমোদিত পরীক্ষার ফলাফল থেকে হিসাব করা</div></div></div>
-      <div class="records-grid">
-        <div class="রেকর্ড-card"><div class="রেকর্ড-value">#${rank.rank}</div><div class="রেকর্ড-label">সার্বিক র‍্যাঙ্ক</div></div>
-        <div class="রেকর্ড-card"><div class="রেকর্ড-value">${Number(rank.totalPoints||0).toLocaleString()}</div><div class="রেকর্ড-label">মোট পয়েন্ট</div></div>
-      </div>`;
-  } catch { el.innerHTML=""; }
-}
-
-async function loadStats() {
-  const statsEl = document.getElementById("statsSection");
-  try {
-    const results = await getApprovedResults(student.studentId);
-    const overall = computeOverallStats(results);
-
-    if (!overall) {
-      statsEl.innerHTML = `<div class="glass-card text-center text-muted font-bold">কোনো পরীক্ষার ফলাফল নেই।</div>`;
-      return;
-    }
-
-    statsEl.innerHTML = `
-      <p style="font-size:1rem; font-weight:900; color:var(--text-primary); margin-bottom:12px;">সার্বিক পরিসংখ্যান</p>
-      <div class="stats-grid">
-        <div class="stat-box">
-          <div class="stat-val">${overall.examsTaken}</div>
-          <div class="stat-lbl">মোট পরীক্ষা</div>
-        </div>
-        <div class="stat-box" style="background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.2);">
-          <div class="stat-val" style="color:#10b981;">${overall.avgPercentage ?? "—"}%</div>
-          <div class="stat-lbl">গড় স্কোর</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-val">${overall.avgAccuracy ?? "—"}%</div>
-          <div class="stat-lbl">সঠিকতার হার</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-val">${overall.totalCorrect}</div>
-          <div class="stat-lbl">সঠিক উত্তর</div>
-        </div>
-      </div>
-    `;
-    
-    const subjects = await getSubjects();
-    const subjectStats = computeSubjectStats(results, buildNameMap(subjects));
-
-    if (subjectStats.length > 0) {
-      const sHtml = subjectStats.map(s => `
-        <div class="glass-card" style="padding:16px; margin-bottom:12px;">
-          <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-            <span style="font-weight:800; font-size:0.95rem; color:var(--text-secondary);">${s.name}</span>
-            <span style="font-weight:900; color:var(--color-accent); font-family:var(--font-num);">${s.accuracy ?? "—"}%</span>
-          </div>
-          <div style="width:100%; height:6px; background:rgba(128,128,128,0.15); border-radius:99px; overflow:hidden;">
-            <div style="width:${s.accuracy ?? 0}%; height:100%; background:var(--color-accent); border-radius:99px;"></div>
-          </div>
-        </div>
-      `).join("");
-      statsEl.innerHTML += `<p style="font-size:1rem; font-weight:900; color:var(--text-primary); margin:20px 0 12px;">বিষয়ভিত্তিক পারফরম্যান্স</p>` + sHtml;
-    }
-
-  } catch (err) {
-    statsEl.innerHTML = `<div class="text-center text-muted">তথ্য লোড করা যায়নি।</div>`;
   }
 }
 
 async function loadPremiumInsights() {
-  const journey = document.getElementById("journeySection");
-  const strength = document.getElementById("strengthSection");
   const records = document.getElementById("recordsSection");
-  const activity = document.getElementById("activitySection");
-  const rivalEl = document.getElementById("rivalSection");
   try {
-    const [results, subjects, rank, rival, challengeWins] = await Promise.all([
-      getApprovedResults(student.studentId).catch(()=>[]),
-      getSubjects().catch(()=>[]),
-      getStudentRank(student.studentId).catch(()=>null),
-      getRival(student.studentId).catch(()=>null),
-      getChallengeWinCount(student.studentId).catch(()=>0)
-    ]);
+    const results = await getApprovedResults(student.studentId).catch(()=>[]);
     const overall = computeOverallStats(results);
-    const subjectStats = computeSubjectStats(results, buildNameMap(subjects)).filter(x=>x.accuracy!=null).sort((a,b)=>b.accuracy-a.accuracy);
     const best = results.reduce((m,r)=>Math.max(m,Number(r.percentage||0)),0);
     const totalCorrect = overall?.totalCorrect || 0;
     const examCount = overall?.examsTaken || 0;
     const avg = overall?.avgPercentage;
-
-    const milestones = [];
-    if (examCount >= 1) milestones.push(["First approved exam","Your academic journey has started."]);
-    if (examCount >= 5) milestones.push(["Five exams completed","You have built a consistent exam রেকর্ড."]);
-    if (Number(rank?.totalPoints||0) >= 1000) milestones.push(["1,000 পয়েন্ট reached","Your পয়েন্ট total crossed the first major milestone."]);
-    if (challengeWins > 0) milestones.push(["First চ্যালেঞ্জ win","You have started competing with peers."]);
-    if (rank?.rank) milestones.push([`Rank #${rank.rank} achieved`,`Current standing among ${rank.totalStudents || "all"} students.`]);
-    const journeyItems = milestones.slice(0,4);
-    if (journeyItems.length===0) journeyItems.push(["Your journey starts here","Complete an approved exam to create your first milestone."]);
-    journey.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">আমার যাত্রা</h2><div class="profile-section-note">তোমার বাস্তব কার্যক্রম থেকে তৈরি অগ্রগতির ধাপ</div></div></div><div class="journey">${journeyItems.map(([a,b])=>`<div class="journey-item"><div class="journey-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m6 12 4 4 8-9"/></svg></div><div class="journey-card"><strong>${a}</strong><span>${b}</span></div></div>`).join("")}</div>`;
-
-    const topSubjects = subjectStats.slice(0,4);
-    strength.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">আমার শক্তির দিক</h2><div class="profile-section-note">অনুমোদিত পরীক্ষার ফলাফল থেকে বিষয়ভিত্তিক নির্ভুলতা</div></div></div>${topSubjects.length ? `<div class="strength-list">${topSubjects.map(s=>`<div class="strength-row"><div class="strength-name">${s.name}</div><div class="strength-bar"><div class="strength-fill" style="width:${Math.min(100,Math.max(0,s.accuracy))}%"></div></div><div class="strength-score">${s.accuracy}%</div></div>`).join("")}</div>` : `<div class="profile-empty">যথেষ্ট অনুমোদিত পরীক্ষার ফলাফল হলে বিষয়ভিত্তিক তথ্য এখানে দেখা যাবে।</div>`}`;
 
     records.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">ব্যক্তিগত রেকর্ড</h2><div class="profile-section-note">তোমার সেরা ফলাফলের রেকর্ড</div></div></div><div class="records-grid">
       <div class="রেকর্ড-card"><div class="রেকর্ড-value">${examCount}</div><div class="রেকর্ড-label">অনুমোদিত পরীক্ষা</div></div>
@@ -1055,20 +941,9 @@ async function loadPremiumInsights() {
       <div class="রেকর্ড-card"><div class="রেকর্ড-value">${best ? best+"%" : "—"}</div><div class="রেকর্ড-label">সেরা স্কোর</div></div>
       <div class="রেকর্ড-card"><div class="রেকর্ড-value">${totalCorrect}</div><div class="রেকর্ড-label">সঠিক উত্তর</div></div>
     </div>`;
-
-    const counts = Array.from({length:28},()=>0);
-    const today = new Date(); today.setHours(0,0,0,0);
-    results.forEach(r=>{ const raw=r.submittedAt?.toDate ? r.submittedAt.toDate() : (r.submittedAt ? new Date(r.submittedAt) : null); if(!raw||isNaN(raw)) return; raw.setHours(0,0,0,0); const d=Math.round((today-raw)/86400000); if(d>=0&&d<28) counts[27-d]++; });
-    activity.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">পড়াশোনার কার্যক্রম</h2><div class="profile-section-note">গত ২৮ দিনে অনুমোদিত পরীক্ষার কার্যক্রম</div></div></div><div class="activity-grid">${counts.map(c=>`<div class="activity-cell ${c>=3?'active-3':c===2?'active-2':c===1?'active-1':''}" title="${c} approved exam${c===1?'':'s'}"></div>`).join("")}</div><div style="display:flex;justify-content:space-between;margin-top:9px;color:var(--text-muted);font-size:.65rem;font-weight:750"><span>২৮ দিন আগে</span><span>আজ</span></div>`;
-
-    if (rival) {
-      rivalEl.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">প্রতিদ্বন্দ্বী চ্যালেঞ্জ</h2><div class="profile-section-note">তোমার বর্তমান প্রতিদ্বন্দ্বী</div></div></div><div class="rival-card"><div class="rival-person"><div class="rival-name">${student.name}</div><div class="rival-meta">তুমি</div></div><div><div class="rival-স্কোর">${challengeWins}</div><div class="rival-vs">জয়</div></div><div class="rival-person"><div class="rival-name">${rival.name || rival.studentId || "Rival"}</div><div class="rival-meta">বর্তমান প্রতিদ্বন্দ্বী</div></div></div>`;
-    } else {
-      rivalEl.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">প্রতিদ্বন্দ্বী চ্যালেঞ্জ</h2><div class="profile-section-note">নেটওয়ার্ক থেকে একজন প্রতিদ্বন্দ্বী বেছে নিয়ে চ্যালেঞ্জ শুরু করো।</div></div></div><div class="profile-empty">এখনও কোনো প্রতিদ্বন্দ্বী বেছে নেওয়া হয়নি।</div>`;
-    }
   } catch (err) {
     console.warn("Profile insights skipped", err);
-    [journey,strength,records,activity,rivalEl].forEach(el=>{ if(el && !el.innerHTML) el.innerHTML=`<div class="profile-empty">এই মুহূর্তে অতিরিক্ত প্রোফাইল তথ্য পাওয়া যাচ্ছে না।</div>`; });
+    if (records && !records.innerHTML) records.innerHTML=`<div class="profile-empty"></div>`;
   }
 }
 
