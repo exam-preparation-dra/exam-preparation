@@ -42,6 +42,46 @@
     display: grid; place-items: center; color: var(--text-muted); background: transparent; border: none;
   }
 
+  /* ---------- my cards (wallet): physical-card look, swipe on phone ---------- */
+  .d-wallet-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+  .d-wallet-head .d-h { margin: 0; }
+  .d-wallet-buy { display: inline-flex; align-items: center; gap: 4px; font-size: 0.78rem; font-weight: 800; color: var(--color-accent); text-decoration: none; padding: 4px 2px; }
+  .d-wallet-rail {
+    display: flex; gap: 12px; overflow-x: auto; margin: 0 -16px; padding: 4px 16px 10px;
+    scroll-snap-type: x mandatory; scroll-padding: 0 16px; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  .d-wallet-rail::-webkit-scrollbar { display: none; }
+  .wc {
+    --wc-a: #24425f; --wc-b: #16283d;
+    position: relative; overflow: hidden; flex: 0 0 74%; max-width: 280px; min-height: 148px; scroll-snap-align: start;
+    display: flex; flex-direction: column; justify-content: space-between; padding: 14px 16px 12px;
+    border-radius: 20px; color: #f6f3ea; text-decoration: none; isolation: isolate;
+    background: linear-gradient(145deg, var(--wc-a), var(--wc-b));
+    box-shadow: 0 1px 0 rgba(255,255,255,.14) inset, 0 10px 24px rgba(15, 20, 30, .22);
+    transition: transform .18s ease, box-shadow .2s ease;
+  }
+  .wc::before { content: ""; position: absolute; z-index: -1; right: -46px; top: -54px; width: 170px; height: 170px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.2), rgba(255,255,255,0) 68%); }
+  .wc::after { content: ""; position: absolute; z-index: -1; left: -30px; bottom: -70px; width: 190px; height: 190px; border-radius: 50%; border: 26px solid rgba(255,255,255,.05); }
+  .wc:active { transform: scale(.98); }
+  .wc-time { --wc-a: #2d5a7b; --wc-b: #15283b; }
+  .wc-hint { --wc-a: #a77a2c; --wc-b: #4d3611; }
+  .wc-battle { --wc-a: #6d3f78; --wc-b: #2b1834; }
+  .wc-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .wc-name { display: flex; align-items: center; gap: 9px; font-size: .86rem; font-weight: 800; letter-spacing: .01em; }
+  .wc-ico { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: rgba(255,255,255,.16); }
+  .wc-chip { width: 30px; height: 22px; border-radius: 6px; background: linear-gradient(135deg, rgba(255,255,255,.55), rgba(255,255,255,.18)); opacity: .75; }
+  .wc-bal { display: flex; align-items: baseline; gap: 7px; margin-top: 10px; }
+  .wc-bal b { font-family: var(--font-num); font-size: 2.6rem; font-weight: 800; line-height: 1; letter-spacing: -.02em; }
+  .wc-bal small { font-size: .78rem; font-weight: 700; opacity: .75; }
+  .wc-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; padding-top: 9px; border-top: 1px solid rgba(255,255,255,.16); font-size: .72rem; font-weight: 700; color: rgba(246,243,234,.82); }
+  .wc-plus { flex-shrink: 0; height: 24px; padding: 0 10px; border-radius: 99px; display: inline-flex; align-items: center; font-size: .72rem; font-weight: 800; color: #1b1b1b; background: rgba(255,255,255,.88); }
+  .wc.empty { filter: saturate(.55) brightness(.9); }
+  .wc.empty .wc-bal b { opacity: .55; }
+  @media (min-width: 640px) {
+    .d-wallet-rail { display: grid; grid-template-columns: repeat(3, 1fr); overflow: visible; margin: 0; padding: 4px 0 6px; }
+    .wc { flex: none; max-width: none; }
+  }
+
   /* ---------- quick links ---------- */
   .d-links { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
   .d-link {
@@ -240,7 +280,7 @@ import { computeStudentXP, computeMaxExamXP, getLevelInfo, XP_CATEGORIES, REFERR
 import { resolveCompletedChallenges, getChallengeBonusXP } from "../js/utils/challenge-utils.js";
 import { getCompletedImprovementAttempts } from "../js/utils/improvement-xp-integration.js";
 import { getStudentBattleXP } from "../js/utils/battle-utils.js?v=roomcard1";
-import { STORE_ITEMS, getStoreInventory, getSpentXP } from "../js/utils/store-utils.js?v=roomcard1";
+import { STORE_ITEMS, getStoreInventory, getSpentXP, getAvailableBattleRoomCardCount } from "../js/utils/store-utils.js?v=roomcard1";
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -298,6 +338,9 @@ const ic = {
   copy: '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
   check: '<polyline points="20 6 9 17 4 12"/>',
   down: '<polyline points="6 9 12 15 18 9"/>',
+  clockc: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  bulb: '<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.45.9 1.15.9 1.9V16h5.4v-.3c0-.75.3-1.45.9-1.9A6 6 0 0 0 12 3z"/>',
+  swords: '<path d="M13 2 4 11l3 3 9-9V2z"/><path d="m11 13 6 6"/><path d="m20 16-4 4"/>',
   store: '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>'
 };
 const svg = (name, size = 18) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ic[name]}</svg>`;
@@ -322,6 +365,7 @@ async function render() {
     <div id="cardReminderSection" class="d-sec" hidden></div>
 
     <div id="heroSection" class="d-sec"><div class="skeleton" style="height:190px;border-radius:24px;"></div></div>
+    <div id="walletSection" class="d-sec"><div class="skeleton" style="height:128px;border-radius:16px;"></div></div>
     <div id="upcomingSection" class="d-sec" hidden></div>
     <div id="referralSection" class="d-sec"><div class="skeleton" style="height:300px;border-radius:22px;"></div></div>
     <div id="xpSection" class="d-sec"></div>
@@ -335,10 +379,47 @@ async function render() {
   $("themeToggle")?.addEventListener("click", toggleTheme);
   loadUpcoming();
   loadMain();
-  loadCardReminder();
+  loadWallet();
 }
 
-/* ---------------- "টাইম কার্ড কমে যাচ্ছে" reminder ---------------- */
+/* ---------------- my cards (balance right on the dashboard) ---------------- */
+async function loadWallet() {
+  const el = $("walletSection");
+  try {
+    const [inv, battleCount] = await Promise.all([
+      getStoreInventory(student.studentId),
+      getAvailableBattleRoomCardCount(student.studentId).catch(() => 0)
+    ]);
+    const tiles = [
+      { id: "time_extend_card", icon: "clockc", label: "টাইম কার্ড", count: inv.time_extend_card?.available || 0, note: "প্রতি কার্ডে +১ মিনিট" },
+      { id: "hint_card", icon: "bulb", label: "হিন্ট কার্ড", count: inv.hint_card?.available || 0, note: "১ কার্ড = ১ প্রশ্নের উত্তর" },
+      { id: "battle_room_card", icon: "swords", label: "ব্যাটল কার্ড", count: battleCount, note: "১ কার্ড = ১টি ব্যাটল" }
+    ];
+    const kind = { time_extend_card: "time", hint_card: "hint", battle_room_card: "battle" };
+    el.innerHTML = `
+      <section aria-label="আমার কার্ড">
+        <div class="d-wallet-head">
+          <p class="d-h">${svg("store", 20)} আমার কার্ড</p>
+          <a href="../student/store.html" class="d-wallet-buy">স্টোরে যাও ›</a>
+        </div>
+        <div class="d-wallet-rail">
+          ${tiles.map(t => `
+            <a href="../student/store.html" class="wc wc-${kind[t.id]} ${t.count === 0 ? "empty" : ""}">
+              <span class="wc-top">
+                <span class="wc-name"><span class="wc-ico">${svg(t.icon, 17)}</span>${t.label}</span>
+                <span class="wc-chip" aria-hidden="true"></span>
+              </span>
+              <span class="wc-bal"><b>${fmt(t.count)}</b><small>টি বাকি</small></span>
+              <span class="wc-foot"><span>${t.note}</span><span class="wc-plus">${t.count === 0 ? "কিনে নাও" : "+ আরও"}</span></span>
+            </a>`).join("")}
+        </div>
+      </section>`;
+  } catch {
+    el.innerHTML = "";
+  }
+}
+
+/* ---------------- "টাইম কার্ড কমে যাচ্ছে" reminder (আর ব্যবহার হচ্ছে না — উপরের কার্ড ব্যালেন্স সেটা দেখায়) ---------------- */
 const CARD_REMINDER_DISMISS_KEY = `cardReminderDismissed_${student.studentId}`;
 async function loadCardReminder() {
   const el = $("cardReminderSection");
