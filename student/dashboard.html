@@ -404,7 +404,7 @@ async function loadWallet() {
         </div>
         <div class="d-wallet-rail">
           ${tiles.map(t => `
-            <a href="../student/store.html" class="wc wc-${kind[t.id]} ${t.count === 0 ? "empty" : ""}">
+            <a href="../student/store.html?item=${t.id}" class="wc wc-${kind[t.id]} ${t.count === 0 ? "empty" : ""}">
               <span class="wc-top">
                 <span class="wc-name"><span class="wc-ico">${svg(t.icon, 17)}</span>${t.label}</span>
                 <span class="wc-chip" aria-hidden="true"></span>

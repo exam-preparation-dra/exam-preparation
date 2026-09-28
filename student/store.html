@@ -10,8 +10,45 @@
   .store-topbar-title { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); }
   .store-topbar .icon-btn[aria-hidden] { visibility: hidden; }
 
-  .store-balance-card { text-align: center; }
-  .store-balance-note { margin-top: 4px; }
+  /* ---------- balance hero (ink-stamp, matches dashboard XP hero) ---------- */
+  .store-hero {
+    position: relative; overflow: hidden; isolation: isolate; color: #f3f1ea; text-align: center;
+    border-radius: 22px; padding: 22px 20px 18px;
+    background: linear-gradient(150deg, #21262f, #12151b);
+    box-shadow: 0 1px 0 rgba(255,255,255,.1) inset, 0 14px 34px rgba(0,0,0,.22);
+  }
+  .store-hero::before { content: ""; position: absolute; z-index: -1; right: -60px; top: -72px; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, rgba(var(--color-accent-rgb),.35), rgba(var(--color-accent-rgb),0) 70%); }
+  .store-hero-label { font-size: .8rem; font-weight: 700; letter-spacing: .02em; color: rgba(243,241,234,.7); }
+  .store-hero-big { margin-top: 6px; font-family: var(--font-num); font-size: 2.7rem; font-weight: 800; line-height: 1.05; }
+  .store-hero-big small { font-size: 1rem; font-weight: 700; margin-left: 6px; color: var(--color-accent); }
+  .store-hero-note { margin-top: 6px; font-size: .8rem; font-weight: 600; color: rgba(243,241,234,.72); }
+
+  /* ---------- "recommended for you" card ---------- */
+  .reco-card {
+    display: block; width: 100%; position: relative; text-align: left; margin: var(--space-4) 0 0;
+    padding: 14px 16px 13px; border-radius: 20px; cursor: pointer; font: inherit;
+    border: 1px solid rgba(var(--color-accent-rgb), .35); background: var(--color-accent-soft);
+    transition: transform .15s ease;
+  }
+  .reco-card:active { transform: scale(.99); }
+  .reco-ribbon { display: inline-block; margin-bottom: 9px; padding: 3px 10px; border-radius: 99px; font-size: .66rem; font-weight: 800; letter-spacing: .02em; color: #fff; background: var(--color-accent); }
+  .reco-row { display: flex; align-items: flex-start; gap: 12px; }
+  .reco-ico { flex-shrink: 0; width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; color: #fff; background: var(--color-accent); }
+  .reco-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .reco-body b { font-size: .92rem; font-weight: 800; color: var(--text-primary); }
+  .reco-reason { font-size: .8rem; font-weight: 600; line-height: 1.55; color: var(--text-secondary); }
+  .reco-exam { align-self: flex-start; margin-top: 2px; padding: 2px 9px; border-radius: 99px; font-size: .66rem; font-weight: 800; color: var(--color-accent); background: var(--surface-solid); }
+  .reco-arrow { flex-shrink: 0; margin-top: 7px; color: var(--color-accent); transform: rotate(-90deg); }
+  .reco-empty { background: var(--surface); border: 1px dashed var(--surface-border); cursor: default; }
+  .reco-empty-text { font-size: .82rem; font-weight: 600; color: var(--text-muted); }
+
+  /* highlight a card jumped to from the dashboard wallet or the recommendation */
+  .store-ticket.deep-link-glow { animation: storeDeepGlow 1.7s ease; }
+  @keyframes storeDeepGlow {
+    0%   { box-shadow: var(--shadow-soft); }
+    18%  { box-shadow: 0 0 0 4px rgba(var(--color-accent-rgb), .45); }
+    100% { box-shadow: var(--shadow-soft); }
+  }
 
   .store-section-title { font-size: 0.98rem; font-weight: 700; color: var(--text-primary); margin-bottom: var(--space-3); display: flex; align-items: center; gap: 8px; }
 
@@ -60,15 +97,26 @@
   .store-qty-btn:not(:disabled):hover { border-color: var(--color-accent); color: var(--color-accent); }
   .store-qty-value { min-width: 22px; text-align: center; font-weight: 700; }
 
+  /* ---------- checkout bar (elevated pill, matches card gradients) ---------- */
   .store-cart-bar {
     position: sticky; bottom: var(--space-4);
-    display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
-    background: var(--surface); border: 1px solid var(--color-accent); border-radius: var(--radius-lg);
-    padding: 14px 16px; box-shadow: var(--shadow-lift); margin: var(--space-4) 0;
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    background: var(--surface); border: 1px solid var(--surface-border); border-radius: 20px;
+    padding: 10px 10px 10px 18px; box-shadow: var(--shadow-lift); margin: var(--space-4) 0;
   }
-  .store-cart-count { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); }
-  .store-cart-total { font-size: 1.15rem; font-weight: 700; color: var(--text-primary); }
-  .store-cart-bar .btn { width: auto; padding: 0 var(--space-6); }
+  .store-cart-info { display: flex; flex-direction: column; gap: 2px; }
+  .store-cart-count { font-size: 0.74rem; font-weight: 700; color: var(--text-muted); }
+  .store-cart-total { font-family: var(--font-num); font-size: 1.2rem; font-weight: 800; color: var(--text-primary); }
+  .store-checkout-btn {
+    display: inline-flex; align-items: center; gap: 8px; padding: 13px 22px; border: none; border-radius: 14px;
+    cursor: pointer; font: inherit; font-size: 0.9rem; font-weight: 800; color: #1d1608; white-space: nowrap;
+    background: linear-gradient(135deg, var(--color-accent), var(--color-accent-2));
+    box-shadow: 0 8px 18px rgba(var(--color-accent-rgb), .32);
+    transition: transform .15s ease, filter .2s ease;
+  }
+  .store-checkout-btn:hover:not(:disabled) { filter: brightness(1.05); }
+  .store-checkout-btn:active:not(:disabled) { transform: scale(.96); }
+  .store-checkout-btn:disabled { opacity: 0.6; pointer-events: none; }
 
   .store-history-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
   .store-history-name { font-weight: 700; font-size: 0.92rem; color: var(--text-primary); }
@@ -157,11 +205,13 @@
     <span class="icon-btn" aria-hidden="true"></span>
   </header>
 
-  <section class="card card--featured store-balance-card">
-    <div class="eyebrow">খরচযোগ্য ব্যালেন্স</div>
-    <div class="figure-hero" id="balanceValue">০</div>
-    <p class="text-sm text-muted store-balance-note" id="balanceNote">লোড হচ্ছে…</p>
+  <section class="store-hero">
+    <p class="store-hero-label">খরচযোগ্য ব্যালেন্স</p>
+    <p class="store-hero-big" id="balanceValue">০</p>
+    <p class="store-hero-note" id="balanceNote">লোড হচ্ছে…</p>
   </section>
+
+  <div id="recoSection"></div>
 
   <section class="d-sec">
     <h2 class="store-section-title">আইটেম</h2>
@@ -169,11 +219,11 @@
   </section>
 
   <div id="cartBar" class="store-cart-bar hidden">
-    <div>
+    <div class="store-cart-info">
       <div class="store-cart-count" id="cartCount"></div>
       <div class="store-cart-total" id="cartTotal"></div>
     </div>
-    <button id="checkoutBtn" class="btn btn-primary" type="button">চেকআউট করো</button>
+    <button id="checkoutBtn" class="store-checkout-btn" type="button">চেকআউট করো</button>
   </div>
 
   <section class="d-sec">
@@ -206,7 +256,9 @@
 
 <script type="module">
 import { getActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
-import { getApprovedResults } from "../js/utils/results-utils.js";
+import { getApprovedResults, getUpcomingExams, getStudentResultStatusMap, getExamSnapshotsMap } from "../js/utils/results-utils.js";
+import { getSubjects, buildNameMap } from "../js/utils/syllabus-utils.js";
+import { computeSubjectStats, buildQuestionRecords, computeTimeManagementStats } from "../js/utils/analytics-utils.js";
 import { computeStudentXP } from "../js/utils/xp-utils.js";
 import { resolveCompletedChallenges, getChallengeBonusXP } from "../js/utils/challenge-utils.js";
 import { getCompletedImprovementAttempts } from "../js/utils/improvement-xp-integration.js";
@@ -237,7 +289,7 @@ let currentTotalXP = 0; // lifetime XP (before this session's spend), used to re
 let inventory = {};
 
 function renderBalance(xp) {
-  document.getElementById("balanceValue").innerHTML = `${fmt(xp.spendableXP)} <small style="font-size:1.2rem;">XP</small>`;
+  document.getElementById("balanceValue").innerHTML = `${fmt(xp.spendableXP)} <small>XP</small>`;
   document.getElementById("balanceNote").textContent =
     `মোট অর্জিত ${fmt(xp.totalXP)} XP${xp.spentXP > 0 ? ` · খরচ হয়েছে ${fmt(xp.spentXP)} XP` : ""}`;
 }
@@ -248,6 +300,121 @@ const ICONS = {
   battle: '<path d="M13 2 4 11l3 3 9-9V2z"/><path d="m11 13 6 6"/><path d="m20 16-4 4"/>'
 };
 const icon = (k) => `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[k]}</svg>`;
+const CHEVRON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>`;
+
+/* ---------- scroll to + briefly glow a store card (recommendation tap, or arriving from the dashboard wallet) ---------- */
+function jumpToItem(itemId) {
+  const card = document.querySelector(`.store-ticket[data-item="${itemId}"]`);
+  if (!card) return;
+  card.scrollIntoView({ behavior: "smooth", block: "center" });
+  card.classList.remove("deep-link-glow");
+  void card.offsetWidth;
+  card.classList.add("deep-link-glow");
+  card.addEventListener("animationend", () => card.classList.remove("deep-link-glow"), { once: true });
+}
+
+/* ---------- "recommended for you": looks at this student's own results
+   (subject accuracy + speed-vs-accuracy) and, when it exists, the next
+   exam this student is still eligible to take — so the pick and its
+   reason change automatically as new exams come up. ---------- */
+async function buildRecommendation(results, subjectNameMap) {
+  let upcoming = null;
+  try {
+    const [exams, resultMap] = await Promise.all([
+      getUpcomingExams(),
+      getStudentResultStatusMap(student.studentId)
+    ]);
+    const now = Date.now();
+    const eligible = exams.filter(exam => {
+      const target = exam.targetBatch || "all";
+      if (target !== "all" && target !== student.className) return false;
+      const allowed = exam.allowedStudents || [];
+      if (allowed.length > 0 && !allowed.includes(student.studentId)) return false;
+      if (resultMap[exam.id]) return false; // already submitted/approved for this one
+      const examMs = exam.examDate?.toMillis?.();
+      return !Number.isFinite(examMs) || examMs >= now - 24 * 60 * 60 * 1000;
+    }).sort((a, b) => (a.examDate?.toMillis?.() ?? 0) - (b.examDate?.toMillis?.() ?? 0));
+    upcoming = eligible[0] || null;
+  } catch { upcoming = null; }
+
+  const examName = upcoming?.name || null;
+
+  if (!results.length) {
+    return { itemId: null, examName, reason: "এখনো কোনো পরীক্ষা দাওনি — একটা পরীক্ষা দিলেই তোমার ফলাফল দেখে এখানে কার্ড সুপারিশ করা হবে।" };
+  }
+
+  const subjectStats = computeSubjectStats(results, subjectNameMap);
+  const weak = subjectStats
+    .filter(s => s.accuracy !== null && (s.correct + s.wrong) >= 4 && s.accuracy < 60)
+    .sort((a, b) => a.accuracy - b.accuracy);
+
+  let speedAccuracy = null;
+  try {
+    const snapshotsByExamId = await getExamSnapshotsMap(results.map(r => r.examId));
+    const records = buildQuestionRecords(results, snapshotsByExamId);
+    speedAccuracy = computeTimeManagementStats(records, subjectNameMap, {})?.speedAccuracy || null;
+  } catch { speedAccuracy = null; }
+
+  // 1) a weak subject that's actually part of the next exam
+  if (upcoming && Array.isArray(upcoming.subjectIds) && upcoming.subjectIds.length) {
+    const match = weak.find(s => upcoming.subjectIds.includes(s.subjectId));
+    if (match) {
+      return {
+        itemId: "hint_card", examName,
+        reason: `${match.name}-এ তোমার accuracy মাত্র ${match.accuracy}% আর এটা আসন্ন পরীক্ষায় আছে — হিন্ট কার্ড আটকে যাওয়া প্রশ্নে কাজে লাগবে।`
+      };
+    }
+  }
+
+  // 2) rushing pattern: answering fast is going wrong more than answering slow
+  if (speedAccuracy?.rushingLikely) {
+    return {
+      itemId: "time_extend_card", examName,
+      reason: `তাড়াহুড়ো করে উত্তর দিলে ভুল হওয়ার হার (${speedAccuracy.fasterWrongRate}%) স্বাভাবিকের চেয়ে বেশি — বাড়তি সময় থাকলে চাপ কমবে।`
+    };
+  }
+
+  // 3) a weak subject in general, even if it's not on the next exam
+  if (weak.length) {
+    const w = weak[0];
+    return {
+      itemId: "hint_card", examName,
+      reason: `${w.name}-এ তোমার accuracy ${w.accuracy}% — হিন্ট কার্ড দিয়ে ভুল হওয়ার কারণটা বুঝে নেওয়া যাবে।`
+    };
+  }
+
+  // 4) nothing concerning found — a safe general pick
+  return {
+    itemId: "time_extend_card", examName,
+    reason: "তোমার পারফরম্যান্স মোটামুটি স্থিতিশীল — তাও পরীক্ষায় শেষ মুহূর্তে সময় কম পড়লে কাজে লাগার জন্য টাইম কার্ড রাখা ভালো।"
+  };
+}
+
+function renderRecommendation(rec) {
+  const el = document.getElementById("recoSection");
+  if (!rec) { el.innerHTML = ""; return; }
+  if (!rec.itemId) {
+    el.innerHTML = `<div class="reco-card reco-empty"><p class="reco-empty-text">${esc(rec.reason)}</p></div>`;
+    return;
+  }
+  const item = STORE_ITEMS.find(i => i.id === rec.itemId);
+  const kindMap = { time_extend_card: "time", hint_card: "hint", battle_room_card: "battle" };
+  const kind = kindMap[rec.itemId];
+  el.innerHTML = `
+    <button type="button" class="reco-card" data-reco-target="${rec.itemId}">
+      <span class="reco-ribbon">তোমার জন্য সুপারিশ</span>
+      <span class="reco-row">
+        <span class="reco-ico">${icon(kind)}</span>
+        <span class="reco-body">
+          <b>${esc(item.name)}</b>
+          <span class="reco-reason">${esc(rec.reason)}</span>
+          ${rec.examName ? `<span class="reco-exam">${esc(rec.examName)}-এর জন্য</span>` : ""}
+        </span>
+        <span class="reco-arrow">${CHEVRON}</span>
+      </span>
+    </button>`;
+  el.querySelector("[data-reco-target]")?.addEventListener("click", (e) => jumpToItem(e.currentTarget.dataset.recoTarget));
+}
 
 // What each card does, in plain words (shown on the card).
 function cardInfo(item) {
@@ -375,9 +542,10 @@ function renderHistory(rows) {
 async function loadAll() {
   await resolveCompletedChallenges(student.studentId).catch(() => []);
 
-  const [results, allStudents, challengeBonusXP, improvementResults, battleXP, spentXP, inv, purchases, usage, battleCards] = await Promise.all([
+  const [results, allStudents, subjects, challengeBonusXP, improvementResults, battleXP, spentXP, inv, purchases, usage, battleCards] = await Promise.all([
     getApprovedResults(student.studentId),
     getActiveStudents(),
+    getSubjects().catch(() => []),
     getChallengeBonusXP(student.studentId).catch(() => 0),
     getCompletedImprovementAttempts(student.studentId).catch(() => []),
     getStudentBattleXP(student.studentId).catch(() => 0),
@@ -387,6 +555,7 @@ async function loadAll() {
     getUsageHistory(student.studentId).catch(() => []),
     getAvailableBattleRoomCardCount(student.studentId).catch(() => null)
   ]);
+  const subjectNameMap = buildNameMap(subjects);
 
   const myRefs = allStudents.filter(s => s.referredBy === student.studentId && s.studentId !== student.studentId);
   const xp = computeStudentXP(results, {
@@ -408,6 +577,11 @@ async function loadAll() {
   renderItems();
   renderCartBar();
   renderHistory(history);
+
+  buildRecommendation(results, subjectNameMap).then(renderRecommendation).catch(() => renderRecommendation(null));
+
+  const jumpId = new URLSearchParams(location.search).get("item");
+  if (jumpId) setTimeout(() => jumpToItem(jumpId), 200);
 }
 
 function showDebugError(err, context) {
