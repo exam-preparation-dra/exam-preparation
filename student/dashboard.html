@@ -450,7 +450,7 @@ let unsubscribeUpcoming = null;
 async function loadUpcoming() {
   const el = $("upcomingSection");
   try {
-    const resultMap = await getStudentResultStatusMap(student.studentId);
+    const resultMap = await getStudentResultStatusMap(student.studentId).catch(() => ({}));
     if (unsubscribeUpcoming) unsubscribeUpcoming();
     unsubscribeUpcoming = subscribeToUpcomingExams(
       (exams) => renderUpcoming(el, exams, resultMap),
@@ -461,16 +461,21 @@ async function loadUpcoming() {
 
 function renderUpcoming(el, exams, resultMap) {
   const now = Date.now();
+  const startOf = (exam) => {
+    const examMs = exam?.examDate?.toMillis?.();
+    const publishMs = exam?.publishDate?.toMillis?.();
+    return Math.max(Number.isFinite(examMs) ? examMs : 0, Number.isFinite(publishMs) ? publishMs : 0);
+  };
   const list = exams.filter(exam => {
-    // isExamAvailableNow already encodes the intended rule (both
-    // publishDate AND examDate must have arrived) — it just wasn't being
-    // used here, so an exam published today but scheduled for next week
-    // was showing up immediately instead of waiting for its date.
-    if (!isExamAvailableNow(exam, now)) return false;
+    // Show every published/upcoming exam until 7 days after its date.
+    // If its start time hasn't arrived yet, the card is shown as "locked"
+    // (no start button) instead of the whole exam disappearing.
+    const examMs = exam?.examDate?.toMillis?.();
+    if (Number.isFinite(examMs) && now >= examMs + 7 * 24 * 60 * 60 * 1000) return false;
     const target = exam.targetBatch || "all";
-    if (target !== "all" && target !== student.className) return false;
+    if (target !== "all" && target !== student.className) { console.info("[exam hidden: batch]", exam.name, target, student.className); return false; }
     const allowed = exam.allowedStudents || [];
-    if (allowed.length > 0 && !allowed.includes(student.studentId)) return false;
+    if (allowed.length > 0 && !allowed.includes(student.studentId)) { console.info("[exam hidden: not allowed]", exam.name); return false; }
     return true;
   });
   if (list.length === 0) {
@@ -492,6 +497,10 @@ function renderUpcoming(el, exams, resultMap) {
     let action = "";
     if (own?.status === "approved") action = `<a href="../student/result.html?resultId=${esc(own.resultId)}" class="d-btn d-btn-ok">ফলাফল দেখুন</a>`;
     else if (own?.status === "pending") action = `<p class="d-note">জমা দেওয়া হয়েছে — অনুমোদনের অপেক্ষায়।</p>`;
+    else if (now < startOf(exam)) {
+      const st = new Date(startOf(exam));
+      action = `<p class="d-note">শুরু হবে ${st.toLocaleDateString("bn-BD", { day: "numeric", month: "short" })}, ${st.toLocaleTimeString("bn-BD", { hour: "numeric", minute: "2-digit" })}</p>`;
+    }
     else if (exam.status === "published") action = `<a href="../student/exam.html?examId=${esc(exam.id)}" class="d-btn d-btn-primary">পরীক্ষা শুরু করুন</a>`;
 
     return `
