@@ -37,7 +37,7 @@ import {
   setQuestionCounter, setProgress, fillPalette, submitMessage
 } from "../js/utils/exam-ui.js";
 import { STORE_ITEMS, MAX_CARDS_PER_ATTEMPT, MAX_HINT_CARDS_PER_ATTEMPT, getStoreInventory, useStoreItem } from "../js/utils/store-utils.js?v=roomcard1";
-import { DIALOGUE_BANK, MINUTE_WARN_LINES } from "../js/utils/voice-dialogue.js";
+import { DIALOGUE_BANK, MINUTE_WARN_LINES, fillName } from "../js/utils/voice-dialogue.js";
 
 initTheme();
 initExamPage();
@@ -496,17 +496,13 @@ function openPalette() {
 }
 function closePalette() { document.getElementById("paletteOverlay").classList.add("hidden"); }
 
-// --- Exam voice: pre-recorded audio first, browser TTS as fallback -----
+// --- Exam voice: live browser (Google, when available) speechSynthesis --
 // DIALOGUE_BANK / MINUTE_WARN_LINES (imported above) are the single source
-// of truth for every line the voice system can say. Each line has a
-// matching pre-recorded file at assets/audio/voice/<key>-<index>.wav,
-// generated once via admin/voice-generator.html (natural Gemini TTS voice,
-// no per-exam API calls). If a file is missing or fails to load, we fall
-// back to the browser's own (robotic but always-available) speechSynthesis
-// so the timer/motivation announcements never go silent.
-const VOICE_AUDIO_BASE = "../assets/audio/voice/";
-let currentVoiceAudio = null;
-
+// of truth for every line the voice system can say. Every line is spoken
+// live through the browser's own speechSynthesis, using a Google Bengali
+// voice whenever the device has one installed (e.g. "Google বাংলা" on
+// Chrome/Android) -- no pre-recorded audio files involved, so each line
+// can naturally address the student by name.
 let cachedBengaliVoice = null;
 function pickBengaliVoice() {
   if (!("speechSynthesis" in window)) return null;
@@ -520,7 +516,7 @@ if ("speechSynthesis" in window) {
   window.speechSynthesis.getVoices();
   window.speechSynthesis.addEventListener("voiceschanged", () => { cachedBengaliVoice = pickBengaliVoice(); });
 }
-function speakFallback(text) {
+function speak(text) {
   if (!("speechSynthesis" in window) || !text) return;
   try {
     window.speechSynthesis.cancel();
@@ -532,20 +528,6 @@ function speakFallback(text) {
   } catch (e) { }
 }
 
-// Plays the pre-recorded file for {key, index}; falls back to speechSynthesis
-// (using `text`) if the file is missing/blocked/fails to load.
-function playVoiceFile(key, index, text) {
-  try {
-    if (currentVoiceAudio) { currentVoiceAudio.pause(); currentVoiceAudio = null; }
-    const audio = new Audio(`${VOICE_AUDIO_BASE}${key}-${index}.wav`);
-    currentVoiceAudio = audio;
-    let fellBack = false;
-    const fallbackOnce = () => { if (fellBack) return; fellBack = true; speakFallback(text); };
-    audio.addEventListener("error", fallbackOnce);
-    audio.play().catch(fallbackOnce);
-  } catch (e) { speakFallback(text); }
-}
-
 // Multiple lines per situation so the same line doesn't repeat every exam;
 // picked at random (never the same line twice in a row for that situation).
 const lastDialogueIndex = {};
@@ -555,20 +537,22 @@ function pickDialogue(key) {
   let idx = arr.length === 1 ? 0 : Math.floor(Math.random() * arr.length);
   if (arr.length > 1 && idx === lastDialogueIndex[key]) idx = (idx + 1) % arr.length;
   lastDialogueIndex[key] = idx;
-  return { text: arr[idx], index: idx };
+  return arr[idx];
 }
 
-// Speaks a random variant of a DIALOGUE_BANK situation (e.g. "slow1").
+// Speaks a random variant of a DIALOGUE_BANK situation (e.g. "slow1"),
+// with the student's name filled in.
 function speakDialogue(key) {
-  const picked = pickDialogue(key);
-  if (!picked) return;
-  playVoiceFile(key, picked.index, picked.text);
+  const text = pickDialogue(key);
+  if (!text) return;
+  speak(fillName(text, student?.name));
 }
-// Speaks a fixed single-line entry (e.g. MINUTE_WARN_LINES.minuteWarn20).
+// Speaks a fixed single-line entry (e.g. MINUTE_WARN_LINES.minuteWarn20),
+// with the student's name filled in.
 function speakFixed(key) {
   const arr = MINUTE_WARN_LINES[key];
   if (!arr || !arr.length) return;
-  playVoiceFile(key, 0, arr[0]);
+  speak(fillName(arr[0], student?.name));
 }
 
 function startTimer() { clearInterval(timerHandle); tick(); timerHandle = setInterval(tick, 1000); }
