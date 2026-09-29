@@ -273,6 +273,7 @@ let db;
 let doc, getDoc, collection, getDocs;
 let getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival;
 let getChallengeWinCount;
+let requireStudentSession;
 let getLevelInfo;
 
 async function loadModule(path, run) {
@@ -301,6 +302,7 @@ const __ok = (
   await loadModule("../js/firebase/firebase-config.js", m => ({ db } = m)) &&
   await loadModule("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js", m => ({ doc, getDoc, collection, getDocs } = m)) &&
   await loadModule("../js/utils/friend-utils.js?v=ref1", m => ({ getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival } = m)) &&
+  await loadModule("../js/utils/student-auth.js", m => ({ requireStudentSession } = m)) &&
   await loadModule("../js/utils/challenge-utils.js", m => ({ getChallengeWinCount } = m)) &&
   await loadModule("../js/utils/xp-utils.js", m => ({ getLevelInfo } = m))
 );
@@ -312,7 +314,10 @@ initTheme();
 const $ = id => document.getElementById(id);
 const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const shell = $("shell");
-let student = getActiveStudent();
+const viewer = getActiveStudent();          // the logged-in student
+let student = viewer;                        // whose profile is on screen
+const targetSid = new URLSearchParams(location.search).get("sid");
+let viewMode = false, viewIsFriend = false;  // viewing someone else's profile?
 
 /* ==========================================================
    BADGES — 25 achievements, all computed from data already loaded.
@@ -544,7 +549,7 @@ async function fetchData() {
       { friendCount: friendIds.length, hasRival: !!rival, challengeWins: wins });
     badges = buildBadgeCatalog(ctx).map(b => ({ ...b, earned: !!b.check(ctx), progress: b.progress ? b.progress(ctx) : null }));
   } catch (e) { console.warn("Badge calculation failed", e); }
-  return { results, rank, overall, subjectStats, badges };
+  return { results, rank, overall, subjectStats, badges, friendCount: friendIds.length };
 }
 
 const referralLink = () => new URL(`../invite.html?ref=${encodeURIComponent(student.studentId)}`, window.location.href).href;
@@ -574,13 +579,86 @@ const ICON = {
 /* ==========================================================
    PAGE
    ========================================================== */
-if (!student) {
-  window.location.href = "../index.html";
-} else {
+(async function boot() {
+  if (!viewer) { window.location.href = "../index.html"; return; }
+  // Guard: the cached student must match a real signed-in Firebase session.
+  if (!(await requireStudentSession(viewer.studentId))) {
+    localStorage.removeItem("activeStudent");
+    window.location.href = "../index.html";
+    return;
+  }
+  if (targetSid && targetSid !== viewer.studentId) {
+    try {
+      const all = await getActiveStudents();
+      const target = all.find(x => x.studentId === targetSid);
+      if (!target) { window.location.href = "profile.html"; return; }
+      student = target; viewMode = true;
+      viewIsFriend = (await getMyFriendIds(viewer.studentId)).includes(target.studentId);
+    } catch (e) { window.location.href = "profile.html"; return; }
+    renderViewPage();
+    return;
+  }
   renderPage();
   refreshActiveStudent(student.docId).then(fresh => {
     if (fresh) { student = fresh; renderHeroShell(); loadData().then(fillHero).catch(() => {}); }
   }).catch(err => console.warn("Student refresh skipped", err));
+})();
+
+/* ---------- VIEW MODE: someone else's profile, limited by friendship ---------- */
+async function renderViewPage() {
+  shell.innerHTML = `
+    ${renderStudentHeader(viewer, "profile")}
+    <main class="pf">
+      <div class="pf-card" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div class="pf-note">👁 ভিউ মোড · ${viewIsFriend ? "বন্ধু হিসেবে দেখছো" : "বন্ধু নও — সীমিত তথ্য"}</div>
+        <a class="pf-btn sm" href="profile.html">← আমার প্রোফাইল</a>
+      </div>
+      <section class="pf-hero" id="pfHero"></section>
+      <div class="pf-card" id="viewAction"></div>
+      ${viewIsFriend ? `<div class="pf-card" id="recordsSection"><div class="spinner" style="margin:18px auto"></div></div>
+      <div class="pf-card" id="strengthSection" style="display:none"></div>` : ""}
+      <div id="badgeCollection"></div>
+    </main>`;
+  renderHeroShell();
+  renderViewAction();
+  try {
+    const d = await loadData();
+    fillHero(d);
+    if (viewIsFriend) {
+      renderRecords(d);
+      renderStrength(d);
+      renderBadges(d);
+      $("badgeCollection").insertAdjacentHTML("afterbegin",
+        `<div class="pf-card"><div class="pf-note">মোট বন্ধু: <b>${d.friendCount}</b></div></div>`);
+    } else {
+      const got = d.badges.filter(b => b.earned).length;
+      $("badgeCollection").innerHTML = `<div class="pf-card"><div class="pf-bsum">
+        <div><h2 class="pf-h">ব্যাজ</h2><div class="pf-note">বিস্তারিত দেখতে বন্ধু হও</div></div>
+        <big>${got}<small>/${d.badges.length}</small></big></div></div>`;
+    }
+  } catch (e) {
+    console.warn("view load failed", e);
+    $("badgeCollection").innerHTML = `<div class="pf-empty">তথ্য লোড করা যায়নি।</div>`;
+  }
+}
+
+async function renderViewAction() {
+  const el = $("viewAction");
+  if (viewIsFriend) { el.innerHTML = `<span class="pf-state ok">✔ তোমরা বন্ধু</span>`; return; }
+  try {
+    const [inc, out] = await Promise.all([getIncomingRequests(viewer.studentId), getOutgoingRequests(viewer.studentId)]);
+    const incoming = inc.find(r => r.fromStudentId === student.studentId);
+    const outgoing = out.find(r => r.toStudentId === student.studentId);
+    if (incoming) {
+      el.innerHTML = `<button class="pf-btn primary" id="vaBtn" type="button">বন্ধুত্বের অনুরোধ গ্রহণ করো</button>`;
+      $("vaBtn").onclick = async () => { try { await acceptFriendRequest(incoming.id, viewer.studentId); location.reload(); } catch (e) { showToast(friendlyError(e), "error"); } };
+    } else if (outgoing) {
+      el.innerHTML = `<span class="pf-state wait">অনুরোধ পাঠানো হয়েছে — অপেক্ষমাণ</span>`;
+    } else {
+      el.innerHTML = `<button class="pf-btn primary" id="vaBtn" type="button">+ বন্ধু হওয়ার অনুরোধ পাঠাও</button>`;
+      $("vaBtn").onclick = async () => { try { await sendFriendRequest(viewer.studentId, student.studentId); showToast("অনুরোধ পাঠানো হয়েছে", "success"); renderViewAction(); } catch (e) { showToast(friendlyError(e), "error"); } };
+    }
+  } catch (e) { el.innerHTML = ""; }
 }
 
 function renderPage() {
@@ -663,12 +741,18 @@ function renderHeroShell() {
       <div class="pf-metric"><b id="pfMExams">—</b><span>পরীক্ষা</span></div>
       <div class="pf-metric"><b id="pfMBadges">—</b><span>ব্যাজ</span></div>
     </div>
-    <div class="pf-actions">
+    ${viewMode ? "" : `<div class="pf-actions">
       <button class="pf-btn primary" id="shareProfileBtn" type="button">${ICON.share}প্রোফাইল শেয়ার</button>
       <button class="pf-btn" id="copyLinkBtn" type="button">${ICON.link}লিংক কপি</button>
-    </div>`;
-  $("shareProfileBtn").addEventListener("click", openShareChoice);
-  $("copyLinkBtn").addEventListener("click", async () => showToast(await copyText(referralLink()) ? "লিংক কপি হয়েছে" : "কপি করা যায়নি", "success"));
+    </div>`}`;
+  if (!viewMode) {
+    $("shareProfileBtn").addEventListener("click", openShareChoice);
+    $("copyLinkBtn").addEventListener("click", async () => showToast(await copyText(referralLink()) ? "লিংক কপি হয়েছে" : "কপি করা যায়নি", "success"));
+  }
+  if (viewMode && !viewIsFriend) {
+    $("pfMRank").parentElement.style.display = "none";
+    $("pfMExams").parentElement.style.display = "none";
+  }
 }
 
 function fillHero(d) {
@@ -742,7 +826,7 @@ function renderBadges(d) {
   host.innerHTML = `
     <div class="pf-card">
       <div class="pf-bsum">
-        <div><h2 class="pf-h">আমার ব্যাজ সংগ্রহ</h2><div class="pf-note">${got.length}টি অর্জিত, ${locked.length}টি বাকি</div></div>
+        <div><h2 class="pf-h">${viewMode ? "ব্যাজ সংগ্রহ" : "আমার ব্যাজ সংগ্রহ"}</h2><div class="pf-note">${got.length}টি অর্জিত, ${locked.length}টি বাকি</div></div>
         <big>${got.length}<small>/${state.length}</small></big>
       </div>
       <div class="pf-bar" style="margin-top:12px"><i style="width:${state.length ? (got.length / state.length) * 100 : 0}%"></i></div>
@@ -881,7 +965,7 @@ function renderReqsAndFriends() {
     <div class="pf-head"><div><h2 class="pf-h">আমার বন্ধুরা</h2><div class="pf-note">${friendIds.length} / ${MAX_FRIENDS}</div></div></div>
     ${friendIds.length === 0 ? `<div class="pf-empty">এখনো কোনো বন্ধু যোগ হয়নি।</div>` : friendIds.map(fid => `
       <div class="pf-row">
-        <div class="pf-rname">${esc(nameOf[fid] || fid)}${classOf[fid] ? `<small>${esc(classOf[fid])}</small>` : ""}</div>
+        <div class="pf-rname"><a href="profile.html?sid=${esc(fid)}" style="color:inherit;text-decoration:none">${esc(nameOf[fid] || fid)}</a>${classOf[fid] ? `<small>${esc(classOf[fid])}</small>` : ""}</div>
         <button class="pf-btn sm danger friend-remove" data-id="${fid}" type="button">সরাও</button>
       </div>`).join("")}
   </div>`;
@@ -923,7 +1007,7 @@ function renderDirectory() {
       : inc ? `<button class="pf-btn sm primary req-accept" data-id="${inc.id}" type="button">গ্রহণ করো</button>`
       : out ? `<span class="pf-state wait">অপেক্ষমাণ</span>`
       : `<button class="pf-btn sm send-req" data-sid="${esc(s.studentId)}" type="button">+ যোগ করো</button>`;
-    return `<div class="pf-row"><div class="pf-rname">${esc(s.name)}<small>${esc(s.className || "N/A")}</small></div><div style="flex:none">${act}</div></div>`;
+    return `<div class="pf-row"><div class="pf-rname"><a href="profile.html?sid=${esc(s.studentId)}" style="color:inherit;text-decoration:none">${esc(s.name)}</a><small>${esc(s.className || "N/A")}</small></div><div style="flex:none">${act}</div></div>`;
   }).join("");
 
   list.querySelectorAll(".req-accept").forEach(b => b.addEventListener("click", () => acceptReq(b.dataset.id)));
