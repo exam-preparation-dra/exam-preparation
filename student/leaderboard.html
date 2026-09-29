@@ -90,7 +90,7 @@ let student = getActiveStudent();
 /* ---------------- state ---------------- */
 const S = {
   q: "",
-  tab: "rank",            // rank | challenges | friends
+  tab: ["rank", "challenges", "friends"].includes(new URLSearchParams(location.search).get("tab")) ? new URLSearchParams(location.search).get("tab") : "rank",
   scope: "overall",       // overall | batch | friends
   period: "all",          // all | week
   batch: null,
