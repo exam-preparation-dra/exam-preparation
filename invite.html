@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>বন্ধুত্ব — পরীক্ষা প্রস্তুতি</title>
+<link rel="stylesheet" href="./css/style.css">
+<style>
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; } }
+  body { overflow-x: hidden; background: var(--bg-app); }
+  .app-shell { max-width: 440px; margin: 0 auto; padding: 28px 18px 40px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+  @keyframes up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes pop { 0% { transform: scale(.4); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: none; } }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .screen { animation: up .4s cubic-bezier(.22,1,.36,1) both; }
+
+  .card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 24px; padding: 26px 20px; text-align: center; box-shadow: var(--shadow-soft); }
+  .who { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .av { width: 84px; height: 84px; border-radius: 26px; display: grid; place-items: center; flex: none; color: #fff; font-size: 2rem; font-weight: 900; overflow: hidden; position: relative; background: linear-gradient(135deg, var(--color-accent), #7c5a22); border: 2px solid rgba(var(--color-accent-rgb), .45); }
+  .av img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .av.sm { width: 64px; height: 64px; border-radius: 20px; font-size: 1.5rem; }
+  .who h1 { margin-top: 12px; font-size: 1.35rem; font-weight: 900; color: var(--text-primary); word-break: break-word; }
+  .who p { font-size: .8rem; font-weight: 700; color: var(--text-muted); }
+
+  .q { margin: 22px 0 14px; font-size: 1rem; font-weight: 900; color: var(--text-primary); }
+  .btns { display: grid; gap: 10px; }
+  .btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 15px; border-radius: 16px; border: 1px solid var(--surface-border); background: var(--surface-highlight); color: var(--text-primary); font: inherit; font-size: .95rem; font-weight: 800; cursor: pointer; text-decoration: none; transition: transform var(--transition); }
+  .btn:active { transform: scale(.98); }
+  .btn.primary { background: var(--color-accent); border-color: var(--color-accent); color: #fff; }
+
+  .search { display: flex; align-items: center; gap: 10px; padding: 11px 14px; margin: 16px 0 12px; border-radius: 14px; background: var(--surface-highlight); border: 1px solid var(--surface-border); text-align: left; }
+  .search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; font-size: .9rem; font-weight: 600; color: var(--text-primary); }
+  .chips { display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none; margin-bottom: 12px; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { padding: 7px 13px; border-radius: 99px; white-space: nowrap; border: 1px solid var(--surface-border); background: var(--surface-highlight); color: var(--text-secondary); font: inherit; font-size: .76rem; font-weight: 800; cursor: pointer; }
+  .chip.on { background: var(--color-accent); border-color: var(--color-accent); color: #fff; }
+  .list { max-height: 46vh; overflow-y: auto; text-align: left; }
+  .row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 12px; margin-bottom: 8px; border-radius: 14px; border: 1px solid var(--surface-border); background: var(--surface-highlight); color: var(--text-primary); font: inherit; cursor: pointer; text-align: left; }
+  .row:active { background: var(--surface-edge); }
+  .row .mini { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: rgba(var(--color-accent-rgb), .14); color: var(--color-accent); font-weight: 900; flex: none; }
+  .row b { display: block; font-size: .9rem; font-weight: 800; }
+  .row small { font-size: .7rem; font-weight: 700; color: var(--text-muted); }
+  .empty { padding: 22px 8px; text-align: center; font-size: .82rem; font-weight: 700; color: var(--text-muted); }
+
+  .pair { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 18px; }
+  .pair .arrow { color: var(--color-accent); display: grid; place-items: center; }
+  .status { width: 64px; height: 64px; margin: 0 auto 16px; border-radius: 50%; display: grid; place-items: center; animation: pop .6s cubic-bezier(.18,.9,.2,1) both; }
+  .status.ok { background: rgba(47,125,94,.12); color: var(--color-success); }
+  .status.info { background: rgba(var(--color-accent-rgb), .14); color: var(--color-accent); }
+  .status.bad { background: rgba(166,64,47,.12); color: var(--color-danger); }
+  .status svg path { stroke-dasharray: 30; stroke-dashoffset: 30; animation: draw .5s .25s ease forwards; }
+  .title { font-size: 1.1rem; font-weight: 900; color: var(--text-primary); }
+  .sub { margin-top: 6px; font-size: .82rem; font-weight: 700; color: var(--text-muted); }
+  .load { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 10px 0; }
+  .load .spinner { width: 34px; height: 34px; border-width: 3px; margin: 0; }
+  .link { display: inline-block; margin-top: 16px; background: none; border: 0; font: inherit; font-size: .78rem; font-weight: 800; color: var(--text-muted); cursor: pointer; text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="app-shell"><div id="view"></div></div>
+
+<script type="module">
+import { initTheme, showToast } from "./js/utils/ui-utils.js";
+import { getActiveStudent, getActiveStudents } from "./js/utils/student-utils.js";
+import { findStudentByStudentId, sendFriendRequest } from "./js/utils/friend-utils.js?v=ref1";
+
+initTheme();
+
+const view = document.getElementById("view");
+const code = (new URLSearchParams(location.search).get("ref") || "").trim().toUpperCase();
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const initial = s => esc(String(s?.name || "?").charAt(0).toUpperCase());
+const avatar = (s, cls = "") => `<div class="av ${cls}">${initial(s)}${s?.photoURL ? `<img src="${esc(s.photoURL)}" alt="" onerror="this.remove()">` : ""}</div>`;
+
+const ICON = {
+  check: '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  info: '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8h.01M11 12h1v5h1"/></svg>',
+  x: '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  arrow: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+  search: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
+};
+
+const screen = html => { view.innerHTML = `<div class="screen">${html}</div>`; };
+let inviter = null;
+
+async function boot() {
+  screen(`<div class="card"><div class="load"><div class="spinner"></div></div></div>`);
+  try { inviter = code ? await findStudentByStudentId(code) : null; } catch { inviter = null; }
+  if (!inviter) {
+    screen(`<div class="card"><div class="status bad">${ICON.x}</div><div class="title">লিংকটি সঠিক নয়</div>
+      <div class="btns" style="margin-top:20px"><a class="btn" href="./index.html">হোমে যাও</a></div></div>`);
+    return;
+  }
+  // photo isn't on the lookup result — pull it from the full list quietly
+  getActiveStudents().then(list => { const f = list.find(s => s.studentId === inviter.studentId); if (f) inviter = { ...inviter, photoURL: f.photoURL }; }).catch(() => {});
+  showChoice();
+}
+
+function showChoice() {
+  screen(`<div class="card">
+    <div class="who">${avatar(inviter)}<h1>${esc(inviter.name)}</h1><p>${esc(inviter.className || "")}</p></div>
+    <div class="q">তুমি কি আগে থেকেই আছো?</div>
+    <div class="btns">
+      <button class="btn primary" id="enrolled" type="button">হ্যাঁ, আমি আছি</button>
+      <a class="btn" href="./join.html?ref=${encodeURIComponent(inviter.studentId)}">না, আমি নতুন</a>
+    </div>
+  </div>`);
+  document.getElementById("enrolled").addEventListener("click", () => {
+    const me = getActiveStudent();
+    if (me?.studentId) send(me); else showPicker();
+  });
+}
+
+async function showPicker() {
+  screen(`<div class="card">
+    <div class="who">${avatar(inviter, "sm")}<p style="margin-top:8px">${esc(inviter.name)}</p></div>
+    <div class="q" style="margin-top:14px">তোমার নাম বেছে নাও</div>
+    <div class="chips" id="chips"></div>
+    <div class="search">${ICON.search}<input id="q" placeholder="নাম খুঁজো..." autocomplete="off"></div>
+    <div class="list" id="list"><div class="load"><div class="spinner"></div></div></div>
+  </div>`);
+
+  let all = [];
+  try { all = (await getActiveStudents()).filter(s => s.studentId !== inviter.studentId); }
+  catch { document.getElementById("list").innerHTML = `<div class="empty">তালিকা লোড করা যায়নি</div>`; return; }
+
+  let cls = "all", term = "";
+  const draw = () => {
+    const classes = [...new Set(all.map(s => s.className).filter(Boolean))].sort();
+    document.getElementById("chips").innerHTML = [`<button class="chip ${cls === "all" ? "on" : ""}" data-c="all">সব</button>`,
+      ...classes.map(c => `<button class="chip ${cls === c ? "on" : ""}" data-c="${esc(c)}">${esc(c)}</button>`)].join("");
+    document.querySelectorAll("#chips .chip").forEach(b => b.addEventListener("click", () => { cls = b.dataset.c; draw(); }));
+    const rows = all.filter(s => (cls === "all" || s.className === cls) && (!term || String(s.name || "").toLowerCase().includes(term)));
+    const list = document.getElementById("list");
+    list.innerHTML = rows.length ? rows.map(s => `<button class="row" data-id="${esc(s.studentId)}" type="button"><span class="mini">${initial(s)}</span><span><b>${esc(s.name)}</b><small>${esc(s.className || "")}</small></span></button>`).join("") : `<div class="empty">কাউকে পাওয়া যায়নি</div>`;
+    list.querySelectorAll(".row").forEach(r => r.addEventListener("click", () => send(all.find(s => s.studentId === r.dataset.id))));
+  };
+  draw();
+  document.getElementById("q").addEventListener("input", e => { term = e.target.value.trim().toLowerCase(); draw(); });
+}
+
+async function send(me) {
+  if (!me) return;
+  if (me.studentId === inviter.studentId) {
+    screen(`<div class="card"><div class="status info">${ICON.info}</div><div class="title">এটা তোমার নিজের QR</div>
+      <div class="btns" style="margin-top:20px"><a class="btn" href="./student/profile.html">প্রোফাইলে যাও</a></div></div>`);
+    return;
+  }
+  screen(`<div class="card"><div class="pair">${avatar(me, "sm")}<span class="arrow">${ICON.arrow}</span>${avatar(inviter, "sm")}</div>
+    <div class="load"><div class="spinner"></div><div class="title">রিকোয়েস্ট পাঠানো হচ্ছে</div></div></div>`);
+
+  let ok = true, msg = "";
+  const started = Date.now();
+  try { await sendFriendRequest(me.studentId, inviter.studentId); }
+  catch (err) { ok = false; msg = err?.message || "পাঠানো যায়নি"; }
+  const wait = 900 - (Date.now() - started);
+  if (wait > 0) await new Promise(r => setTimeout(r, wait));
+
+  const home = getActiveStudent() ? "./student/dashboard.html" : "./index.html";
+  if (ok) {
+    screen(`<div class="card"><div class="pair">${avatar(me, "sm")}<span class="arrow">${ICON.arrow}</span>${avatar(inviter, "sm")}</div>
+      <div class="status ok">${ICON.check}</div>
+      <div class="title">ফ্রেন্ড রিকোয়েস্ট পাঠানো হয়েছে</div>
+      <div class="sub">${esc(inviter.name)}</div>
+      <div class="btns" style="margin-top:22px"><a class="btn primary" href="${home}">ঠিক আছে</a></div></div>`);
+  } else {
+    screen(`<div class="card"><div class="pair">${avatar(me, "sm")}<span class="arrow">${ICON.arrow}</span>${avatar(inviter, "sm")}</div>
+      <div class="status info">${ICON.info}</div>
+      <div class="title">${esc(msg)}</div>
+      <div class="btns" style="margin-top:22px"><a class="btn primary" href="${home}">ঠিক আছে</a></div></div>`);
+  }
+}
+
+boot();
+</script>
+</body>
+</html>
