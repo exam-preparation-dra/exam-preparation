@@ -21,13 +21,14 @@
   .list-head { animation-delay: .16s; }
 
   /* ===== Header — ink-stamp seal (same "মার্কশিট" hero language as dashboard/leaderboard) ===== */
-  .entry-hero { position: relative; overflow: hidden; margin-top: 14px; margin-bottom: 20px; padding: 26px 20px 22px; border-radius: var(--radius-lg); background: #21262f; color: #f3f1ea; text-align: center; }
-  .eh-seal { position: relative; width: 62px; height: 62px; margin: 0 auto 14px; }
+  .entry-hero { position: relative; overflow: hidden; margin-top: 14px; margin-bottom: 20px; padding: 26px 20px 22px; border-radius: var(--radius-lg); background: var(--surface); border: 1px solid var(--surface-border); color: var(--text-primary); text-align: center; }
+  .entry-hero::before { content: ""; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 44px; height: 3px; border-radius: 0 0 3px 3px; background: var(--color-accent); }
+  .eh-seal { position: relative; width: 62px; height: 62px; margin: 0 auto 14px; border-radius: 50%; background: var(--color-accent-soft); }
   .eh-seal svg { width: 100%; height: 100%; }
-  .eh-seal-ring { fill: none; stroke: rgba(184,134,60,.3); stroke-width: 1.6; stroke-dasharray: 3 5; }
+  .eh-seal-ring { fill: none; stroke: rgba(184,134,60,.45); stroke-width: 1.6; stroke-dasharray: 3 5; }
   .eh-seal-icon { color: var(--color-accent); }
-  .entry-hero h1 { font-size: 1.4rem; font-weight: 900; color: #f3f1ea; line-height: 1.3; letter-spacing: -0.2px; }
-  .entry-hero p { margin-top: 6px; font-size: 0.82rem; color: rgba(243,241,234,.65); font-weight: 600; }
+  .entry-hero h1 { font-size: 1.4rem; font-weight: 900; color: var(--text-primary); line-height: 1.3; letter-spacing: -0.2px; }
+  .entry-hero p { margin-top: 6px; font-size: 0.82rem; color: var(--text-secondary); font-weight: 600; }
 
   /* ===== Search bar (flat, no glow) ===== */
   .search-glass {
@@ -170,7 +171,7 @@ const filterEl = document.getElementById("classFilter");
 const searchInput = document.getElementById("studentSearchInput");
 if (safeNext()) {
   const note = document.createElement("div");
-  note.style.cssText = "margin:0 0 12px;padding:12px 14px;border-radius:12px;background:rgba(201,151,63,.14);font-size:.84rem;font-weight:700;line-height:1.5";
+  note.style.cssText = "margin:0 0 12px;padding:12px 14px;border-radius:var(--radius-md);background:var(--color-accent-soft);border:1px solid rgba(var(--color-accent-rgb),.28);color:var(--text-primary);font-size:.84rem;font-weight:700;line-height:1.5";
   note.textContent = "Battle-এ যোগ দিতে আগে নিজের নাম বেছে পাসওয়ার্ড দাও। তারপর নিজে থেকেই Battle-এ যোগ হবে।";
   searchInput?.parentElement?.insertAdjacentElement("beforebegin", note);
 }
@@ -292,79 +293,127 @@ function injectPwStyle() {
   if (document.getElementById("pwStyle")) return;
   const st = document.createElement("style"); st.id = "pwStyle";
   st.textContent = `
-  .pw-ov{position:fixed;inset:0;z-index:9999;background:rgba(15,15,20,.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px}
-  .pw-card{width:100%;max-width:380px;background:var(--surface-solid,#fff);color:var(--text-main,#222);border:1px solid var(--surface-border,#e5e2d9);border-radius:20px;box-shadow:0 24px 70px rgba(0,0,0,.35);overflow:hidden}
-  .pw-top{display:flex;align-items:center;gap:12px;padding:16px 18px;background:var(--surface-highlight,#faf9f5);border-bottom:1px solid var(--surface-border,#e5e2d9)}
-  .pw-av{width:42px;height:42px;border-radius:50%;background:var(--color-accent,#b8863c);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.05rem;flex:none}
-  .pw-nm{font-weight:800;font-size:.98rem;line-height:1.2}
-  .pw-cl{font-size:.74rem;color:var(--text-muted,#888);margin-top:2px}
-  .pw-x{margin-left:auto;background:none;border:0;font-size:1.5rem;line-height:1;color:var(--text-muted,#888);cursor:pointer;padding:4px 8px}
-  .pw-steps{display:flex;gap:6px;padding:14px 18px 0}
-  .pw-step{flex:1;text-align:center;font-size:.72rem;font-weight:700;padding:7px 4px;border-radius:9px;background:rgba(128,128,128,.10);color:var(--text-muted,#888)}
-  .pw-step.on{background:var(--color-accent,#b8863c);color:#fff}
-  .pw-step.done{background:rgba(22,163,74,.14);color:#15803d}
-  .pw-body{padding:18px}
-  .pw-emoji{font-size:1.9rem;margin-bottom:6px}
-  .pw-h{margin:0 0 6px;font-size:1.08rem;font-weight:800}
-  .pw-p{margin:0 0 14px;font-size:.84rem;line-height:1.55;color:var(--text-muted,#777)}
-  .pw-f{position:relative;margin-bottom:10px}
-  .pw-f input{width:100%;box-sizing:border-box;padding:13px 44px 13px 14px;border-radius:12px;border:1.5px solid var(--surface-border,#ddd);background:var(--surface-solid,#fff);color:inherit;font-size:1rem;outline:none}
-  .pw-f input:focus{border-color:var(--color-accent,#b8863c)}
-  .pw-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;font-size:1.05rem;padding:8px}
-  .pw-err{color:#dc2626;font-size:.8rem;min-height:18px;margin:2px 0 8px}
-  .pw-btn{width:100%;padding:13px;border-radius:12px;border:0;background:var(--color-accent,#b8863c);color:#fff;font-weight:800;font-size:.95rem;cursor:pointer}
-  .pw-btn:disabled{opacity:.55;cursor:default}
-  .pw-link{display:block;width:100%;margin-top:10px;background:none;border:0;color:var(--color-accent,#b8863c);font-weight:700;font-size:.82rem;cursor:pointer;padding:6px}
-  .pw-note{background:rgba(234,179,8,.12);color:#a16207;border-radius:10px;padding:10px 12px;font-size:.8rem;margin-bottom:12px}`;
+  @keyframes pwIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  .pw-ov { position:fixed; inset:0; z-index:9999; background:rgba(20,18,10,.55); display:flex; align-items:center; justify-content:center; padding:16px; }
+  .pw-card { width:100%; max-width:380px; background:var(--surface); color:var(--text-primary); border:1px solid var(--surface-border); border-radius:var(--radius-lg); box-shadow:var(--shadow-lift); overflow:hidden; font-family:var(--font-bn); animation:pwIn .28s cubic-bezier(.22,1,.36,1) both; }
+
+  /* Header: light paper band, hairline divider */
+  .pw-top { display:flex; align-items:center; gap:12px; padding:14px 14px 14px 16px; background:var(--surface-highlight); border-bottom:1px solid var(--surface-border); color:var(--text-primary); }
+  .pw-av { width:42px; height:42px; border-radius:50%; background:var(--color-accent-soft); border:1px solid rgba(184,134,60,.4); color:var(--color-accent); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.05rem; flex:none; }
+  .pw-who { min-width:0; flex:1; }
+  .pw-nm { font-weight:800; font-size:.98rem; line-height:1.25; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pw-cl { font-size:.74rem; color:var(--text-muted); font-weight:600; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pw-cl .num { font-family:var(--font-num); }
+  .pw-x { flex:none; width:34px; height:34px; display:flex; align-items:center; justify-content:center; background:var(--surface-edge); border:0; border-radius:50%; color:var(--text-secondary); cursor:pointer; transition:background var(--transition); }
+  .pw-x:active { background:var(--surface-border); }
+
+  /* Steps */
+  .pw-steps { display:flex; gap:8px; padding:16px 18px 0; }
+  .pw-step { flex:1; display:flex; align-items:center; justify-content:center; gap:6px; font-size:.76rem; font-weight:700; padding:8px 6px; border-radius:var(--radius-sm); border:1px solid var(--surface-border); background:var(--surface-highlight); color:var(--text-muted); }
+  .pw-step .pw-sn { font-family:var(--font-num); font-weight:700; }
+  .pw-step.on { background:var(--color-accent); border-color:var(--color-accent); color:#fff; }
+  .pw-step.done { background:rgba(47,125,94,.10); border-color:rgba(47,125,94,.30); color:var(--color-success); }
+
+  /* Body */
+  .pw-body { padding:18px; }
+  .pw-ic { width:44px; height:44px; border-radius:var(--radius-md); background:var(--color-accent-soft); color:var(--color-accent); display:flex; align-items:center; justify-content:center; margin-bottom:12px; }
+  .pw-ic.ok { background:rgba(47,125,94,.12); color:var(--color-success); }
+  .pw-h { margin:0 0 6px; font-size:1.08rem; font-weight:800; color:var(--text-primary); line-height:1.35; }
+  .pw-p { margin:0 0 16px; font-size:.85rem; line-height:1.6; color:var(--text-secondary); font-weight:500; }
+  .pw-p b { color:var(--text-primary); font-weight:800; }
+
+  .pw-f { position:relative; margin-bottom:10px; }
+  .pw-f input { width:100%; min-height:48px; padding:0 46px 0 var(--space-4); border-radius:var(--radius-sm); border:1px solid var(--surface-border); background:var(--surface); color:var(--text-primary); font-family:var(--font-bn); font-size:1rem; font-weight:600; outline:none; transition:border-color var(--transition); }
+  .pw-f input::placeholder { color:var(--text-muted); font-weight:500; }
+  .pw-f input:focus { border-color:var(--color-accent); }
+  .pw-eye { position:absolute; right:4px; top:50%; transform:translateY(-50%); width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:none; border:0; border-radius:var(--radius-sm); color:var(--text-muted); cursor:pointer; }
+  .pw-eye.on { color:var(--color-accent); }
+
+  .pw-err { color:var(--color-danger); font-size:.8rem; font-weight:700; min-height:18px; margin:2px 0 8px; line-height:1.45; }
+  .pw-btn { width:100%; min-height:48px; padding:0 var(--space-5); display:inline-flex; align-items:center; justify-content:center; gap:8px; border-radius:var(--radius-md); border:0; background:var(--color-accent); color:#fff; font-family:var(--font-bn); font-weight:700; font-size:.95rem; cursor:pointer; transition:opacity var(--transition), transform var(--transition-lift); }
+  .pw-btn:active { transform:scale(.98); }
+  .pw-btn:disabled { opacity:.55; cursor:default; pointer-events:none; }
+  .pw-link { display:flex; align-items:center; justify-content:center; gap:6px; width:100%; margin-top:8px; min-height:42px; background:none; border:0; color:var(--text-secondary); font-family:var(--font-bn); font-weight:700; font-size:.84rem; cursor:pointer; }
+  .pw-link:active { color:var(--color-accent); }
+  .pw-note { display:flex; gap:8px; align-items:flex-start; background:var(--color-accent-soft); border:1px solid rgba(var(--color-accent-rgb),.28); color:var(--text-primary); border-radius:var(--radius-md); padding:10px 12px; font-size:.8rem; font-weight:600; line-height:1.5; margin-bottom:12px; }
+  .pw-note svg { flex:none; margin-top:2px; color:var(--color-accent); }`;
   document.head.appendChild(st);
 }
+
+// Small stroke icons (same 24px / 2px round-cap language as the rest of the site)
+const PW_ICON = {
+  lock:   '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  code:   '<path d="M4 9V6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v3a2 2 0 0 0 0 6v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a2 2 0 0 0 0-6z"/><path d="M14 5v14" stroke-dasharray="2 3"/>',
+  key:    '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3"/>',
+  user:   '<path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/>',
+  clock:  '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  help:   '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 0 1 5 .6c0 1.7-2.5 2.2-2.5 3.7"/><path d="M12 17.2h.01"/>',
+  eye:    '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  eyeOff: '<path d="M17.9 17.9A10.9 10.9 0 0 1 12 19c-6.5 0-10-7-10-7a18 18 0 0 1 4.1-5.1M9.9 5.2A10 10 0 0 1 12 5c6.5 0 10 7 10 7a18 18 0 0 1-2.2 3.2"/><path d="M1 1l22 22"/>',
+  check:  '<path d="M20 6L9 17l-5-5"/>',
+  x:      '<path d="M18 6L6 18M6 6l12 12"/>',
+  right:  '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  left:   '<path d="M19 12H5M11 6l-6 6 6 6"/>',
+  info:   '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>'
+};
+const pwSvg = (name, size = 20) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PW_ICON[name]}</svg>`;
 
 function askStudentPassword(student) {
   injectPwStyle();
   return new Promise((resolve) => {
     const ov = document.createElement("div");
     ov.className = "pw-ov";
-    ov.innerHTML = `<div class="pw-card">
+    ov.innerHTML = `<div class="pw-card" role="dialog" aria-modal="true">
       <div class="pw-top">
-        <div class="pw-av">${(student.name || "S").charAt(0)}</div>
-        <div><div class="pw-nm"></div><div class="pw-cl"></div></div>
-        <button class="pw-x" type="button" aria-label="বন্ধ">×</button>
+        <div class="pw-av"></div>
+        <div class="pw-who"><div class="pw-nm"></div><div class="pw-cl"></div></div>
+        <button class="pw-x" type="button" aria-label="বন্ধ">${pwSvg("x", 18)}</button>
       </div>
       <div id="pwSteps"></div>
       <div class="pw-body" id="pwBody"></div></div>`;
+    ov.querySelector(".pw-av").textContent = (student.name || "S").charAt(0);
     ov.querySelector(".pw-nm").textContent = student.name || "";
-    ov.querySelector(".pw-cl").textContent = `${student.className || ""} · ${student.studentId}`;
+    const cl = ov.querySelector(".pw-cl");
+    cl.textContent = student.className ? `${student.className} · ` : "";
+    const idSpan = document.createElement("span"); idSpan.className = "num"; idSpan.textContent = student.studentId;
+    cl.appendChild(idSpan);
     document.body.appendChild(ov);
 
     const body = ov.querySelector("#pwBody");
     const stepsEl = ov.querySelector("#pwSteps");
-    const done = (v) => { ov.remove(); resolve(v); };
+    const onKey = (e) => { if (e.key === "Escape") done(false); };
+    const done = (v) => { document.removeEventListener("keydown", onKey); ov.remove(); resolve(v); };
+    document.addEventListener("keydown", onKey);
     ov.querySelector(".pw-x").addEventListener("click", () => done(false));
     ov.addEventListener("mousedown", (e) => { if (e.target === ov) done(false); });
 
-    const field = (id, ph, ac) => `<div class="pw-f"><input id="${id}" type="password" placeholder="${ph}" autocomplete="${ac}"><button type="button" class="pw-eye" data-for="${id}" aria-label="দেখাও">👁</button></div>`;
+    const field = (id, ph, ac) => `<div class="pw-f"><input id="${id}" type="password" placeholder="${ph}" autocomplete="${ac}"><button type="button" class="pw-eye" data-for="${id}" aria-label="দেখাও">${pwSvg("eye", 20)}</button></div>`;
     const steps = (n) => { stepsEl.innerHTML = `<div class="pw-steps">
-        <div class="pw-step ${n === 1 ? "on" : "done"}">${n === 1 ? "১" : "✔"} সেটআপ কোড</div>
-        <div class="pw-step ${n === 2 ? "on" : ""}">২ নিজের পাসওয়ার্ড</div></div>`; };
+        <div class="pw-step ${n === 1 ? "on" : "done"}">${n === 1 ? `<span class="pw-sn">১</span>` : pwSvg("check", 15)} সেটআপ কোড</div>
+        <div class="pw-step ${n === 2 ? "on" : ""}"><span class="pw-sn">২</span> নিজের পাসওয়ার্ড</div></div>`; };
     const wireCommon = () => {
       body.querySelectorAll(".pw-eye").forEach(b => b.addEventListener("click", () => {
-        const i = body.querySelector("#" + b.dataset.for); i.type = i.type === "password" ? "text" : "password";
+        const i = body.querySelector("#" + b.dataset.for);
+        const show = i.type === "password";
+        i.type = show ? "text" : "password";
+        b.innerHTML = pwSvg(show ? "eyeOff" : "eye", 20);
+        b.classList.toggle("on", show);
       }));
       body.querySelector("input")?.focus();
     };
     const setErr = (m) => { const e = body.querySelector(".pw-err"); if (e) e.textContent = m || ""; };
-    const busy = (b, t) => { b.disabled = true; b.dataset.t = b.textContent; b.textContent = t; };
-    const idle = (b) => { b.disabled = false; b.textContent = b.dataset.t; };
+    const busy = (b, t) => { b.disabled = true; b.dataset.t = b.innerHTML; b.textContent = t; };
+    const idle = (b) => { b.disabled = false; b.innerHTML = b.dataset.t; };
 
     // ---- screens ----
     function viewChecking() { stepsEl.innerHTML = ""; body.innerHTML = `<p class="pw-p" style="text-align:center;margin:18px 0">একটু অপেক্ষা করো…</p>`; }
 
     function viewLogin(note) {
       stepsEl.innerHTML = "";
-      body.innerHTML = `<div class="pw-emoji">🔐</div>
+      body.innerHTML = `<div class="pw-ic">${pwSvg("lock", 22)}</div>
         <h3 class="pw-h">পাসওয়ার্ড দাও</h3>
         <p class="pw-p">তোমার নিজের পাসওয়ার্ড লিখে ঢোকো।</p>
-        ${note ? `<div class="pw-note">${note}</div>` : ""}
+        ${note ? `<div class="pw-note">${pwSvg("info", 16)}<span>${note}</span></div>` : ""}
         ${field("pw1", "পাসওয়ার্ড", "current-password")}
         <div class="pw-err"></div>
         <button class="pw-btn" id="pwGo" type="button">প্রবেশ করো</button>
@@ -383,12 +432,12 @@ function askStudentPassword(student) {
 
     function viewCode() {
       steps(1);
-      body.innerHTML = `<div class="pw-emoji">🎟️</div>
+      body.innerHTML = `<div class="pw-ic">${pwSvg("code", 22)}</div>
         <h3 class="pw-h">সেটআপ কোড লেখো</h3>
         <p class="pw-p">অ্যাডমিন তোমাকে যে কোডটা পাঠিয়েছে সেটা এখানে লেখো। এটা শুধু প্রথমবারের জন্য — এরপর তুমি নিজের পাসওয়ার্ড বানাবে।</p>
         ${field("pw1", "যেমন: K7M2XQ4P", "one-time-code")}
         <div class="pw-err"></div>
-        <button class="pw-btn" id="pwGo" type="button">পরের ধাপ →</button>`;
+        <button class="pw-btn" id="pwGo" type="button"><span>পরের ধাপ</span>${pwSvg("right", 18)}</button>`;
       wireCommon();
       const go = async () => {
         const v = body.querySelector("#pw1").value.trim(); if (!v) return setErr("কোডটা লেখো।");
@@ -402,9 +451,9 @@ function askStudentPassword(student) {
 
     function viewNewPass() {
       steps(2);
-      body.innerHTML = `<div class="pw-emoji">🔑</div>
+      body.innerHTML = `<div class="pw-ic">${pwSvg("key", 22)}</div>
         <h3 class="pw-h">নিজের পাসওয়ার্ড বানাও</h3>
-        <p class="pw-p">কোড ঠিক আছে ✔ এখন থেকে এই পাসওয়ার্ড দিয়েই তুমি ঢুকবে। কমপক্ষে ৬ অক্ষর দাও, আর নিজে মনে রাখো।</p>
+        <p class="pw-p">কোড ঠিক আছে। এখন থেকে এই পাসওয়ার্ড দিয়েই তুমি ঢুকবে। কমপক্ষে ৬ অক্ষর দাও, আর নিজে মনে রাখো।</p>
         ${field("pw1", "নতুন পাসওয়ার্ড", "new-password")}
         ${field("pw2", "আবার লেখো", "new-password")}
         <div class="pw-err"></div>
@@ -424,7 +473,7 @@ function askStudentPassword(student) {
 
     function viewApply() {
       stepsEl.innerHTML = "";
-      body.innerHTML = `<div class="pw-emoji">👋</div>
+      body.innerHTML = `<div class="pw-ic">${pwSvg("user", 22)}</div>
         <h3 class="pw-h">প্রথমবার এসেছো?</h3>
         <p class="pw-p">তোমার প্রোফাইল এখনো চালু হয়নি। নিজের পাসওয়ার্ড বানাতে আগে অ্যাডমিনের কাছ থেকে একটা <b>সেটআপ কোড</b> লাগবে। নিচের বাটনে চাপলে অ্যাডমিন তোমার আবেদন দেখতে পাবে।</p>
         <div class="pw-err"></div>
@@ -440,8 +489,8 @@ function askStudentPassword(student) {
 
     function viewPending(type) {
       stepsEl.innerHTML = "";
-      body.innerHTML = `<div class="pw-emoji">⏳</div>
-        <h3 class="pw-h">আবেদন পাঠানো হয়েছে ✔</h3>
+      body.innerHTML = `<div class="pw-ic ok">${pwSvg("check", 22)}</div>
+        <h3 class="pw-h">আবেদন পাঠানো হয়েছে</h3>
         <p class="pw-p">অ্যাডমিন তোমার আবেদন দেখতে পাবে এবং তোমাকে ${type === "reset" ? "নতুন " : ""}সেটআপ কোড পাঠাবে। কোড পেলে আবার এখানে এসে <b>নিজের নাম চাপো</b>, তারপর কোডটা লিখবে।</p>
         <button class="pw-btn" id="pwOk" type="button">ঠিক আছে</button>`;
       body.querySelector("#pwOk").addEventListener("click", () => done(false));
@@ -449,12 +498,12 @@ function askStudentPassword(student) {
 
     function viewForgot() {
       stepsEl.innerHTML = "";
-      body.innerHTML = `<div class="pw-emoji">🤔</div>
+      body.innerHTML = `<div class="pw-ic">${pwSvg("help", 22)}</div>
         <h3 class="pw-h">পাসওয়ার্ড ভুলে গেছো?</h3>
         <p class="pw-p">সমস্যা নেই। আবেদন পাঠাও — অ্যাডমিন তোমার পাসওয়ার্ড রিসেট করে নতুন সেটআপ কোড দেবে, তারপর তুমি নতুন পাসওয়ার্ড বানাবে।</p>
         <div class="pw-err"></div>
         <button class="pw-btn" id="pwGo" type="button">রিসেটের আবেদন পাঠাও</button>
-        <button class="pw-link" id="pwBack" type="button">← ফিরে যাও</button>`;
+        <button class="pw-link" id="pwBack" type="button">${pwSvg("left", 16)}<span>ফিরে যাও</span></button>`;
       body.querySelector("#pwBack").addEventListener("click", () => viewLogin());
       body.querySelector("#pwGo").addEventListener("click", async (e) => {
         const b = e.currentTarget; busy(b, "পাঠানো হচ্ছে…");
