@@ -160,6 +160,31 @@
   .pf-mini .pf-bico { margin: 0; }
   .pf-mini span.t { font-size: .7rem; font-weight: 800; line-height: 1.3; color: var(--text-secondary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   @media (max-width: 380px) { .pf-metrics { grid-template-columns: repeat(3, 1fr); } .pf-avatar { width: 64px; height: 64px; font-size: 1.5rem; } .pf-tab { font-size: .74rem; } }
+
+  /* streak / pins / cards */
+  .pf-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 9px; }
+  .pf-tags .pf-title { margin-top: 0; }
+  .pf-streak { display: none; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 999px; background: var(--surface-highlight); border: 1px solid var(--surface-border); color: var(--text-secondary); font-size: .72rem; font-weight: 800; }
+  .pf-streak.on { display: inline-flex; }
+  .pf-streak svg { color: var(--color-accent); }
+  .pf-pins { display: inline-flex; gap: 5px; }
+  .pf-pin { --rc: #8b95a5; width: 30px; height: 30px; padding: 0; border-radius: 10px; display: grid; place-items: center; color: var(--rc); background: color-mix(in srgb, var(--rc) 14%, var(--surface)); border: 1px solid color-mix(in srgb, var(--rc) 32%, transparent); cursor: pointer; }
+  .pf-pin svg { width: 16px; height: 16px; }
+  .pf-head .pf-btn.sm { flex: none; }
+  .pf-slots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .pf-slot { min-height: 92px; }
+  .pf-slot.empty { display: grid; place-items: center; border: 1.5px dashed var(--surface-border); border-radius: 16px; background: transparent; color: var(--text-muted); font-size: 1.4rem; font-weight: 700; cursor: pointer; }
+  .pf-wallet { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .pf-wc { display: flex; flex-direction: column; gap: 2px; padding: 12px 10px; border-radius: 16px; background: var(--surface-highlight); text-decoration: none; color: inherit; }
+  .pf-wc:active { transform: scale(.97); }
+  .pf-wc b { font-family: var(--font-num); font-size: 1.5rem; font-weight: 800; color: var(--text-primary); line-height: 1.2; }
+  .pf-wc span { font-size: .72rem; font-weight: 800; color: var(--text-secondary); }
+  .pf-wc small { font-size: .64rem; font-weight: 700; color: var(--text-muted); }
+  .pf-wc.zero b { color: var(--text-muted); }
+  .pf-pick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; max-height: 46vh; overflow-y: auto; margin: 14px 0; text-align: center; }
+  .pf-pick .pf-mini { position: relative; border: 2px solid transparent; }
+  .pf-pick .pf-mini.sel { border-color: var(--color-accent); background: rgba(var(--color-accent-rgb), .1); }
+  .pf-pick .pf-mini.sel::after { content: "✓"; position: absolute; top: 6px; right: 8px; font-size: .75rem; font-weight: 900; color: var(--color-accent); }
 </style>
 </head>
 <body oncontextmenu="return false;">
@@ -303,7 +328,7 @@ let db;
 let doc, getDoc, collection, getDocs;
 let getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival;
 let getChallengeWinCount, sendChallenge;
-let requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, friendlyStudentAuthError;
+let requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, savePinnedBadges, friendlyStudentAuthError;
 let viewPrivacy = { records: true, subjects: true, badges: true, publicStats: false };
 let getLevelInfo;
 
@@ -333,7 +358,7 @@ const __ok = (
   await loadModule("../js/firebase/firebase-config.js", m => ({ db } = m)) &&
   await loadModule("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js", m => ({ doc, getDoc, collection, getDocs } = m)) &&
   await loadModule("../js/utils/friend-utils.js?v=ref1", m => ({ getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival } = m)) &&
-  await loadModule("../js/utils/student-auth.js", m => ({ requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, friendlyStudentAuthError } = m)) &&
+  await loadModule("../js/utils/student-auth.js", m => ({ requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, savePinnedBadges, friendlyStudentAuthError } = m)) &&
   await loadModule("../js/utils/challenge-utils.js", m => ({ getChallengeWinCount, sendChallenge } = m)) &&
   await loadModule("../js/utils/xp-utils.js", m => ({ getLevelInfo } = m))
 );
@@ -547,6 +572,19 @@ function rarityKey(r) {
 const rarityOf = b => RARITY[rarityKey(b.rarity)];
 const isSecretLocked = b => !b.earned && rarityKey(b.rarity) === "secret";
 
+/* ---------- streak (consecutive weeks with an exam) + pinned badges ---------- */
+const FLAME = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2s5 4.5 5 10a5 5 0 0 1-10 0c0-2 1-3.500 2-4.500 0 1.500 1 2.500 2 2.500 0-3-1-5.500 1-8z"/></svg>';
+let pinned = [];
+const cleanPins = (ids, d) => (Array.isArray(ids) ? ids : []).filter(id => d.badges.some(b => b.id === id && b.earned)).slice(0, 3);
+function calcStreak(results) {
+  const ms = r => { const t = r.submittedAt; const v = t?.toMillis ? t.toMillis() : (typeof t === "number" ? t : Date.parse(t)); return Number.isFinite(v) ? v : 0; };
+  const wk = t => { const x = new Date(t); return Math.floor((Date.UTC(x.getFullYear(), x.getMonth(), x.getDate()) / 86400000 + 3) / 7); };
+  const weeks = new Set((results || []).map(ms).filter(Boolean).map(wk));
+  let w = wk(Date.now()); if (!weeks.has(w)) w -= 1;
+  let n = 0; while (weeks.has(w)) { n++; w--; }
+  return n;
+}
+
 /* ==========================================================
    DATA — one fetch, shared by hero / overview / badges / share card
    ========================================================== */
@@ -659,6 +697,7 @@ async function renderViewPage() {
   renderViewAction(canSub && canRec);
   try {
     const d = await loadData();
+    pinned = canBadge ? cleanPins(viewPrivacy.pinnedBadges, d) : [];
     fillHero(d);
     if (canRec) renderRecords(d);
     if (canSub) renderStrength(d);
@@ -818,8 +857,9 @@ function renderPage() {
       </nav>
 
       <section id="tab-overview" class="tab-content pf-pane active">
+        <div class="pf-card" id="pinCard" style="display:none"></div>
+        <div class="pf-card" id="cardsSection"></div>
         <div class="pf-card pf-scan" id="inviteSection"></div>
-        <div class="pf-card" id="recentBadges" style="display:none"></div>
       </section>
 
       <section id="tab-badges" class="tab-content pf-pane">
@@ -845,11 +885,13 @@ function renderPage() {
 
   renderHeroShell();
   renderInvite();
+  renderCards();
   renderSettings();
   loadNetworkData();
-  loadData().then(d => {
+  loadData().then(async d => {
+    try { pinned = cleanPins((await getPrivacy(student.studentId)).pinnedBadges, d); } catch {}
     fillHero(d);
-    renderRecent(d);
+    renderPinCard(d);
     renderBadges(d);
     showBadgeUnlocks(d.badges);
   }).catch(err => {
@@ -873,7 +915,7 @@ function renderHeroShell() {
       <div style="min-width:0">
         <h1 class="pf-name">${esc(student.name || "শিক্ষার্থী")}</h1>
         <div class="pf-sub">${esc(student.className || "শ্রেণি নির্ধারিত নয়")} · ${esc(student.studentId || "—")}</div>
-        <div class="pf-title" id="pfTitle">${ICON.star}<span>—</span></div>
+        <div class="pf-tags"><div class="pf-title" id="pfTitle">${ICON.star}<span>—</span></div><span class="pf-streak" id="pfStreak"></span><span class="pf-pins" id="pfPins"></span></div>
       </div>
     </div>
     <div class="pf-level">
@@ -904,6 +946,19 @@ function fillHero(d) {
   $("pfMXp").textContent = xp.toLocaleString();
   const got = d.badges.filter(b => b.earned).length;
   $("pfMBadges").textContent = d.badges.length ? `${got}/${d.badges.length}` : "—";
+  const showStats = !viewMode || viewIsFriend || viewPrivacy.publicStats;
+  const st = showStats ? calcStreak(d.results) : 0;
+  const stEl = $("pfStreak");
+  stEl.classList.toggle("on", st > 0);
+  stEl.innerHTML = st > 0 ? `${FLAME}${st} সপ্তাহ ধারাবাহিক` : "";
+  renderPins(d);
+}
+
+function renderPins(d) {
+  const el = $("pfPins"); if (!el) return;
+  el.innerHTML = pinned.map(id => d.badges.find(b => b.id === id)).filter(Boolean).map(b =>
+    `<button type="button" class="pf-pin" data-badge="${b.id}" title="${esc(b.title)}" style="--rc:${rarityOf(b).color}">${badgeIcon(b)}</button>`).join("");
+  el.querySelectorAll("[data-badge]").forEach(x => x.addEventListener("click", () => showBadgeDetail(d.badges.find(b => b.id === x.dataset.badge))));
 }
 
 /* ---------- overview ---------- */
@@ -948,18 +1003,85 @@ async function renderInvite() {
   if (box) box.innerHTML = qr ? `<img src="${qr}" alt="QR">` : `<div class="pf-note" style="text-align:center">QR তৈরি করা যায়নি।<br>লিংক কপি করে শেয়ার করো।</div>`;
 }
 
-function renderRecent(d) {
-  const host = $("recentBadges");
-  const got = d.badges.filter(b => b.earned).slice(0, 6);
-  if (!host || !got.length) return;
+function renderPinCard(d) {
+  const host = $("pinCard"); if (!host) return;
+  const earned = d.badges.filter(b => b.earned);
+  if (!earned.length) { host.style.display = "none"; return; }
   host.style.display = "";
+  const items = pinned.map(id => d.badges.find(b => b.id === id)).filter(Boolean);
+  const slots = [];
+  for (let i = 0; i < 3; i++) {
+    const b = items[i];
+    slots.push(b
+      ? `<button class="pf-mini pf-slot" type="button" data-badge="${b.id}" style="--rc:${rarityOf(b).color}"><span class="pf-bico sm">${badgeIcon(b)}</span><span class="t">${b.title}</span></button>`
+      : `<button class="pf-slot empty" type="button" data-edit="1" aria-label="ব্যাজ বেছে নাও">+</button>`);
+  }
   host.innerHTML = `
-    <div class="pf-head"><div><h2 class="pf-h">সাম্প্রতিক ব্যাজ</h2><div class="pf-note">${d.badges.filter(b => b.earned).length}টি অর্জিত</div></div></div>
-    <div class="pf-recent">${got.map(b => `
-      <button class="pf-mini" type="button" data-badge="${b.id}" style="--rc:${rarityOf(b).color}">
-        <span class="pf-bico sm">${badgeIcon(b)}</span><span class="t">${b.title}</span>
-      </button>`).join("")}</div>`;
-  host.querySelectorAll("[data-badge]").forEach(el => el.addEventListener("click", () => showBadgeDetail(d.badges.find(x => x.id === el.dataset.badge))));
+    <div class="pf-head"><div><h2 class="pf-h">প্রিয় ব্যাজ</h2><div class="pf-note">সেরা ৩টি বেছে নাও — প্রোফাইল ও শেয়ার কার্ডে দেখাবে</div></div>
+      <button class="pf-btn sm" type="button" data-edit="1">বদলাও</button></div>
+    <div class="pf-slots">${slots.join("")}</div>`;
+  host.querySelectorAll("[data-edit]").forEach(x => x.addEventListener("click", () => openPinPicker(d)));
+  host.querySelectorAll("[data-badge]").forEach(x => x.addEventListener("click", () => showBadgeDetail(d.badges.find(b => b.id === x.dataset.badge))));
+}
+
+function openPinPicker(d) {
+  const earned = d.badges.filter(b => b.earned);
+  let sel = pinned.slice();
+  const div = document.createElement("div");
+  div.className = "pf-modal"; div.setAttribute("role", "dialog");
+  div.innerHTML = `<div class="pf-modal-card">
+    <h3>প্রিয় ব্যাজ বেছে নাও</h3>
+    <div class="pf-note" id="pickCount"></div>
+    <div class="pf-pick">${earned.map(b => `<button type="button" class="pf-mini" data-id="${b.id}" style="--rc:${rarityOf(b).color}"><span class="pf-bico sm">${badgeIcon(b)}</span><span class="t">${b.title}</span></button>`).join("")}</div>
+    <div style="display:flex;gap:10px"><button class="pf-btn" type="button" id="pickCancel" style="flex:1">বাতিল</button><button class="pf-btn primary" type="button" id="pickSave" style="flex:1">সেভ</button></div>
+  </div>`;
+  document.body.appendChild(div);
+  const paint = () => {
+    div.querySelectorAll(".pf-mini").forEach(x => x.classList.toggle("sel", sel.includes(x.dataset.id)));
+    div.querySelector("#pickCount").textContent = `${sel.length}/3 বাছাই করা হয়েছে`;
+  };
+  paint();
+  div.addEventListener("click", async e => {
+    if (e.target === div || e.target.closest("#pickCancel")) return div.remove();
+    const m = e.target.closest(".pf-mini");
+    if (m) {
+      const id = m.dataset.id;
+      sel = sel.includes(id) ? sel.filter(x => x !== id) : (sel.length < 3 ? [...sel, id] : sel);
+      return paint();
+    }
+    if (e.target.closest("#pickSave")) {
+      const btn = div.querySelector("#pickSave"); btn.disabled = true; btn.textContent = "...";
+      try {
+        await savePinnedBadges(student.studentId, sel);
+        pinned = sel; div.remove();
+        renderPins(d); renderPinCard(d);
+        showToast("সেভ হয়েছে", "success");
+      } catch (err) { showToast(friendlyError(err), "error"); btn.disabled = false; btn.textContent = "সেভ"; }
+    }
+  });
+}
+
+async function renderCards() {
+  const el = $("cardsSection"); if (!el) return;
+  try {
+    const { getStoreInventory, getAvailableBattleRoomCardCount } = await import("../js/utils/store-utils.js");
+    const [inv, battle] = await Promise.all([
+      getStoreInventory(student.studentId),
+      getAvailableBattleRoomCardCount(student.studentId).catch(() => 0)
+    ]);
+    const tiles = [
+      ["time_extend_card", "টাইম কার্ড", "+১ মিনিট", inv.time_extend_card?.available || 0],
+      ["hint_card", "হিন্ট কার্ড", "১টি উত্তর", inv.hint_card?.available || 0],
+      ["battle_room_card", "ব্যাটল কার্ড", "১টি ব্যাটল", battle || 0]
+    ];
+    el.innerHTML = `
+      <div class="pf-head"><div><h2 class="pf-h">আমার কার্ড</h2><div class="pf-note">পরীক্ষা শেষে ফ্রি কার্ড পাবে</div></div>
+        <a class="pf-btn sm" href="store.html">স্টোর ›</a></div>
+      <div class="pf-wallet">${tiles.map(t => `<a class="pf-wc ${t[3] ? "" : "zero"}" href="store.html?item=${t[0]}"><b>${t[3]}</b><span>${t[1]}</span><small>${t[2]}</small></a>`).join("")}</div>`;
+  } catch (err) {
+    console.warn("cards failed", err);
+    el.style.display = "none";
+  }
 }
 
 // what goes along with the shared file / gets copied: just the link
@@ -1212,6 +1334,9 @@ function buildProfileCardHtml(d, qrUrl) {
   const xp = Number(d.rank?.totalPoints || 0);
   const lv = getLevelInfo(xp);
   const got = d.badges.filter(b => b.earned);
+  const streak = calcStreak(d.results);
+  const shown = pinned.map(id => d.badges.find(b => b.id === id)).filter(Boolean);
+  const showList = shown.length ? shown : got.slice(0, 8);
   const rankText = d.rank?.rank ? "#" + d.rank.rank : "—";
   const title = xp >= 10000 ? "Physics Legend" : xp >= 5000 ? "Physics Master" : xp >= 2500 ? "Problem Solver" : xp >= 1000 ? "Concept Builder" : "Physics Explorer";
   const initial = esc((student.name || "?").charAt(0).toUpperCase());
@@ -1233,7 +1358,7 @@ function buildProfileCardHtml(d, qrUrl) {
         <div style="min-width:0;">
           <div style="font-size:21px;font-weight:900;line-height:1.3;color:${INK};word-break:break-word;">${esc(student.name)}</div>
           <div style="margin-top:3px;font-size:12px;font-weight:700;color:${SOFT};line-height:1.4;">${esc(student.className || "—")} · ${esc(student.studentId)}</div>
-          <div style="display:inline-block;margin-top:8px;padding:4px 10px;border-radius:999px;background:rgba(184,134,60,.12);border:1px solid rgba(184,134,60,.25);color:${A};font-size:11px;font-weight:900;line-height:1.4;">★ ${title}</div>
+          <div style="margin-top:8px;"><span style="display:inline-block;padding:4px 10px;border-radius:999px;background:rgba(184,134,60,.12);border:1px solid rgba(184,134,60,.25);color:${A};font-size:11px;font-weight:900;line-height:1.4;">★ ${title}</span>${streak > 0 ? `<span style="display:inline-block;margin-left:6px;padding:4px 10px;border-radius:999px;background:#fff;border:1px solid ${LINE};color:${SOFT};font-size:11px;font-weight:800;line-height:1.4;">${streak} সপ্তাহ ধারাবাহিক</span>` : ""}</div>
         </div>
       </div>
 
@@ -1249,12 +1374,12 @@ function buildProfileCardHtml(d, qrUrl) {
       </div>
     </div>
 
-    ${got.length ? `
+    ${showList.length ? `
     <div style="margin-top:12px;padding:16px;border-radius:20px;background:#fff;border:1px solid ${LINE};">
-      <div style="font-size:13px;font-weight:900;color:${INK};margin-bottom:11px;line-height:1.4;">অর্জিত ব্যাজ</div>
+      <div style="font-size:13px;font-weight:900;color:${INK};margin-bottom:11px;line-height:1.4;">${shown.length ? "প্রিয় ব্যাজ" : "অর্জিত ব্যাজ"}</div>
       <div style="display:flex;flex-wrap:wrap;gap:7px;">
-        ${got.slice(0, 8).map(b => `<span style="padding:6px 11px;border-radius:999px;background:rgba(184,134,60,.12);border:1px solid rgba(184,134,60,.28);color:#8a6222;font-size:11px;font-weight:800;line-height:1.4;">${esc(b.title)}</span>`).join("")}
-        ${got.length > 8 ? `<span style="padding:6px 11px;border-radius:999px;background:#efede4;color:${SOFT};font-size:11px;font-weight:800;line-height:1.4;">+${got.length - 8}</span>` : ""}
+        ${showList.map(b => `<span style="padding:6px 11px;border-radius:999px;background:rgba(184,134,60,.12);border:1px solid rgba(184,134,60,.28);color:#8a6222;font-size:11px;font-weight:800;line-height:1.4;">${esc(b.title)}</span>`).join("")}
+        ${!shown.length && got.length > 8 ? `<span style="padding:6px 11px;border-radius:999px;background:#efede4;color:${SOFT};font-size:11px;font-weight:800;line-height:1.4;">+${got.length - 8}</span>` : ""}
       </div>
     </div>` : ""}
 
