@@ -140,7 +140,7 @@
 <script type="module">
 import { initTheme, icons, renderState } from "./js/utils/ui-utils.js";
 import { getActiveStudents, setActiveStudent, findActiveAttempt } from "./js/utils/student-utils.js";
-import { currentStudentSession, studentLogin, setNewPassword, friendlyStudentAuthError } from "./js/utils/student-auth.js";
+import { currentStudentSession, studentLogin, setNewPassword, friendlyStudentAuthError, getStudentAuthStatus, requestSetupCode } from "./js/utils/student-auth.js";
 import { getPlatformSettings } from "./js/utils/settings-utils.js";
 
 // Initialize Theme
@@ -276,67 +276,195 @@ function renderList(list, fromCache = false) {
   });
 }
 
-// Password gate. Resolves true once the student is authenticated (and has
-// replaced the admin's setup code, if it was their first login).
+// ---------------------------------------------------------------
+// Password gate. Resolves true once the student is authenticated.
+// Screens: login (returning) · code (first time, has admin's code) ·
+// newpass (choose own password) · apply (first time, no code yet) ·
+// pending (applied, waiting) · forgot (request a reset).
+// ---------------------------------------------------------------
+function injectPwStyle() {
+  if (document.getElementById("pwStyle")) return;
+  const st = document.createElement("style"); st.id = "pwStyle";
+  st.textContent = `
+  .pw-ov{position:fixed;inset:0;z-index:9999;background:rgba(15,15,20,.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:16px}
+  .pw-card{width:100%;max-width:380px;background:var(--surface-solid,#fff);color:var(--text-main,#222);border:1px solid var(--surface-border,#e5e2d9);border-radius:20px;box-shadow:0 24px 70px rgba(0,0,0,.35);overflow:hidden}
+  .pw-top{display:flex;align-items:center;gap:12px;padding:16px 18px;background:var(--surface-highlight,#faf9f5);border-bottom:1px solid var(--surface-border,#e5e2d9)}
+  .pw-av{width:42px;height:42px;border-radius:50%;background:var(--color-accent,#b8863c);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.05rem;flex:none}
+  .pw-nm{font-weight:800;font-size:.98rem;line-height:1.2}
+  .pw-cl{font-size:.74rem;color:var(--text-muted,#888);margin-top:2px}
+  .pw-x{margin-left:auto;background:none;border:0;font-size:1.5rem;line-height:1;color:var(--text-muted,#888);cursor:pointer;padding:4px 8px}
+  .pw-steps{display:flex;gap:6px;padding:14px 18px 0}
+  .pw-step{flex:1;text-align:center;font-size:.72rem;font-weight:700;padding:7px 4px;border-radius:9px;background:rgba(128,128,128,.10);color:var(--text-muted,#888)}
+  .pw-step.on{background:var(--color-accent,#b8863c);color:#fff}
+  .pw-step.done{background:rgba(22,163,74,.14);color:#15803d}
+  .pw-body{padding:18px}
+  .pw-emoji{font-size:1.9rem;margin-bottom:6px}
+  .pw-h{margin:0 0 6px;font-size:1.08rem;font-weight:800}
+  .pw-p{margin:0 0 14px;font-size:.84rem;line-height:1.55;color:var(--text-muted,#777)}
+  .pw-f{position:relative;margin-bottom:10px}
+  .pw-f input{width:100%;box-sizing:border-box;padding:13px 44px 13px 14px;border-radius:12px;border:1.5px solid var(--surface-border,#ddd);background:var(--surface-solid,#fff);color:inherit;font-size:1rem;outline:none}
+  .pw-f input:focus{border-color:var(--color-accent,#b8863c)}
+  .pw-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;font-size:1.05rem;padding:8px}
+  .pw-err{color:#dc2626;font-size:.8rem;min-height:18px;margin:2px 0 8px}
+  .pw-btn{width:100%;padding:13px;border-radius:12px;border:0;background:var(--color-accent,#b8863c);color:#fff;font-weight:800;font-size:.95rem;cursor:pointer}
+  .pw-btn:disabled{opacity:.55;cursor:default}
+  .pw-link{display:block;width:100%;margin-top:10px;background:none;border:0;color:var(--color-accent,#b8863c);font-weight:700;font-size:.82rem;cursor:pointer;padding:6px}
+  .pw-note{background:rgba(234,179,8,.12);color:#a16207;border-radius:10px;padding:10px 12px;font-size:.8rem;margin-bottom:12px}`;
+  document.head.appendChild(st);
+}
+
 function askStudentPassword(student) {
+  injectPwStyle();
   return new Promise((resolve) => {
     const ov = document.createElement("div");
-    ov.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:18px;";
-    ov.innerHTML = `
-      <div style="background:var(--surface-solid,#fff);color:var(--text-main,#222);border:1px solid var(--surface-border,#ddd);border-radius:16px;padding:22px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.3)">
-        <h3 id="pwTitle" style="margin:0 0 4px;font-size:1.05rem"></h3>
-        <p id="pwHint" style="margin:0 0 14px;font-size:.82rem;opacity:.7"></p>
-        <input id="pwInput1" type="password" autocomplete="current-password" class="input-glass" style="width:100%;margin-bottom:8px">
-        <input id="pwInput2" type="password" autocomplete="new-password" placeholder="আবার লেখো" class="input-glass" style="width:100%;margin-bottom:8px;display:none">
-        <div id="pwErr" style="color:#dc2626;font-size:.8rem;min-height:18px;margin-bottom:8px"></div>
-        <div style="display:flex;gap:8px;justify-content:flex-end">
-          <button id="pwCancel" type="button" class="btn-join" style="padding:9px 16px">বাতিল</button>
-          <button id="pwOk" type="button" class="btn-join" style="padding:9px 16px;font-weight:800">এগিয়ে যাও</button>
-        </div>
-      </div>`;
+    ov.className = "pw-ov";
+    ov.innerHTML = `<div class="pw-card">
+      <div class="pw-top">
+        <div class="pw-av">${(student.name || "S").charAt(0)}</div>
+        <div><div class="pw-nm"></div><div class="pw-cl"></div></div>
+        <button class="pw-x" type="button" aria-label="বন্ধ">×</button>
+      </div>
+      <div id="pwSteps"></div>
+      <div class="pw-body" id="pwBody"></div></div>`;
+    ov.querySelector(".pw-nm").textContent = student.name || "";
+    ov.querySelector(".pw-cl").textContent = `${student.className || ""} · ${student.studentId}`;
     document.body.appendChild(ov);
-    const $ = id => ov.querySelector("#" + id);
-    let mode = "login";
-    const setMode = (m) => {
-      mode = m;
-      if (m === "login") {
-        $("pwTitle").textContent = `${student.name}, পাসওয়ার্ড দাও`;
-        $("pwHint").textContent = "প্রথমবার হলে অ্যাডমিনের দেওয়া সেটআপ কোড লেখো।";
-        $("pwInput1").placeholder = "পাসওয়ার্ড / সেটআপ কোড";
-      } else {
-        $("pwTitle").textContent = "নিজের নতুন পাসওয়ার্ড বানাও";
-        $("pwHint").textContent = "কমপক্ষে ৬ অক্ষর। এটাই ভবিষ্যতে তোমার পাসওয়ার্ড।";
-        $("pwInput1").value = ""; $("pwInput1").autocomplete = "new-password";
-        $("pwInput1").placeholder = "নতুন পাসওয়ার্ড";
-        $("pwInput2").style.display = "block";
-      }
-      $("pwErr").textContent = ""; $("pwInput1").focus();
-    };
+
+    const body = ov.querySelector("#pwBody");
+    const stepsEl = ov.querySelector("#pwSteps");
     const done = (v) => { ov.remove(); resolve(v); };
-    const submit = async () => {
-      const p1 = $("pwInput1").value;
-      $("pwErr").textContent = "";
-      if (!p1) { $("pwErr").textContent = "পাসওয়ার্ড লেখো।"; return; }
-      $("pwOk").disabled = true;
-      try {
-        if (mode === "login") {
-          const { needsNewPassword } = await studentLogin(student.studentId, p1);
-          if (needsNewPassword) { setMode("set"); } else { return done(true); }
-        } else {
-          if (p1.length < 6) throw { code: "auth/weak-password" };
-          if (p1 !== $("pwInput2").value) throw { message: "দুটি পাসওয়ার্ড মেলেনি।" };
-          await setNewPassword(student.studentId, p1);
-          return done(true);
-        }
-      } catch (err) {
-        $("pwErr").textContent = friendlyStudentAuthError(err);
-      }
-      $("pwOk").disabled = false;
+    ov.querySelector(".pw-x").addEventListener("click", () => done(false));
+    ov.addEventListener("mousedown", (e) => { if (e.target === ov) done(false); });
+
+    const field = (id, ph, ac) => `<div class="pw-f"><input id="${id}" type="password" placeholder="${ph}" autocomplete="${ac}"><button type="button" class="pw-eye" data-for="${id}" aria-label="দেখাও">👁</button></div>`;
+    const steps = (n) => { stepsEl.innerHTML = `<div class="pw-steps">
+        <div class="pw-step ${n === 1 ? "on" : "done"}">${n === 1 ? "১" : "✔"} সেটআপ কোড</div>
+        <div class="pw-step ${n === 2 ? "on" : ""}">২ নিজের পাসওয়ার্ড</div></div>`; };
+    const wireCommon = () => {
+      body.querySelectorAll(".pw-eye").forEach(b => b.addEventListener("click", () => {
+        const i = body.querySelector("#" + b.dataset.for); i.type = i.type === "password" ? "text" : "password";
+      }));
+      body.querySelector("input")?.focus();
     };
-    $("pwOk").addEventListener("click", submit);
-    ov.addEventListener("keydown", e => { if (e.key === "Enter") submit(); });
-    $("pwCancel").addEventListener("click", () => done(false));
-    setMode("login");
+    const setErr = (m) => { const e = body.querySelector(".pw-err"); if (e) e.textContent = m || ""; };
+    const busy = (b, t) => { b.disabled = true; b.dataset.t = b.textContent; b.textContent = t; };
+    const idle = (b) => { b.disabled = false; b.textContent = b.dataset.t; };
+
+    // ---- screens ----
+    function viewChecking() { stepsEl.innerHTML = ""; body.innerHTML = `<p class="pw-p" style="text-align:center;margin:18px 0">একটু অপেক্ষা করো…</p>`; }
+
+    function viewLogin(note) {
+      stepsEl.innerHTML = "";
+      body.innerHTML = `<div class="pw-emoji">🔐</div>
+        <h3 class="pw-h">পাসওয়ার্ড দাও</h3>
+        <p class="pw-p">তোমার নিজের পাসওয়ার্ড লিখে ঢোকো।</p>
+        ${note ? `<div class="pw-note">${note}</div>` : ""}
+        ${field("pw1", "পাসওয়ার্ড", "current-password")}
+        <div class="pw-err"></div>
+        <button class="pw-btn" id="pwGo" type="button">প্রবেশ করো</button>
+        <button class="pw-link" id="pwForgot" type="button">পাসওয়ার্ড ভুলে গেছো?</button>`;
+      wireCommon();
+      const go = async () => {
+        const v = body.querySelector("#pw1").value; if (!v) return setErr("পাসওয়ার্ড লেখো।");
+        const b = body.querySelector("#pwGo"); busy(b, "যাচাই হচ্ছে…"); setErr("");
+        try { const r = await studentLogin(student.studentId, v); r.needsNewPassword ? viewNewPass() : done(true); }
+        catch (e) { setErr(friendlyStudentAuthError(e)); idle(b); }
+      };
+      body.querySelector("#pwGo").addEventListener("click", go);
+      body.querySelector("#pw1").addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+      body.querySelector("#pwForgot").addEventListener("click", viewForgot);
+    }
+
+    function viewCode() {
+      steps(1);
+      body.innerHTML = `<div class="pw-emoji">🎟️</div>
+        <h3 class="pw-h">সেটআপ কোড লেখো</h3>
+        <p class="pw-p">অ্যাডমিন তোমাকে যে কোডটা পাঠিয়েছে সেটা এখানে লেখো। এটা শুধু প্রথমবারের জন্য — এরপর তুমি নিজের পাসওয়ার্ড বানাবে।</p>
+        ${field("pw1", "যেমন: K7M2XQ4P", "one-time-code")}
+        <div class="pw-err"></div>
+        <button class="pw-btn" id="pwGo" type="button">পরের ধাপ →</button>`;
+      wireCommon();
+      const go = async () => {
+        const v = body.querySelector("#pw1").value.trim(); if (!v) return setErr("কোডটা লেখো।");
+        const b = body.querySelector("#pwGo"); busy(b, "যাচাই হচ্ছে…"); setErr("");
+        try { const r = await studentLogin(student.studentId, v); r.needsNewPassword ? viewNewPass() : done(true); }
+        catch (e) { setErr("কোডটা মেলেনি। অ্যাডমিনের পাঠানো কোড আবার দেখে লেখো।"); idle(b); }
+      };
+      body.querySelector("#pwGo").addEventListener("click", go);
+      body.querySelector("#pw1").addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+    }
+
+    function viewNewPass() {
+      steps(2);
+      body.innerHTML = `<div class="pw-emoji">🔑</div>
+        <h3 class="pw-h">নিজের পাসওয়ার্ড বানাও</h3>
+        <p class="pw-p">কোড ঠিক আছে ✔ এখন থেকে এই পাসওয়ার্ড দিয়েই তুমি ঢুকবে। কমপক্ষে ৬ অক্ষর দাও, আর নিজে মনে রাখো।</p>
+        ${field("pw1", "নতুন পাসওয়ার্ড", "new-password")}
+        ${field("pw2", "আবার লেখো", "new-password")}
+        <div class="pw-err"></div>
+        <button class="pw-btn" id="pwGo" type="button">পাসওয়ার্ড সেভ করে ঢোকো</button>`;
+      wireCommon();
+      const go = async () => {
+        const p1 = body.querySelector("#pw1").value, p2 = body.querySelector("#pw2").value;
+        if (p1.length < 6) return setErr("পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।");
+        if (p1 !== p2) return setErr("দুটি পাসওয়ার্ড মেলেনি।");
+        const b = body.querySelector("#pwGo"); busy(b, "সেভ হচ্ছে…"); setErr("");
+        try { await setNewPassword(student.studentId, p1); done(true); }
+        catch (e) { setErr(friendlyStudentAuthError(e)); idle(b); }
+      };
+      body.querySelector("#pwGo").addEventListener("click", go);
+      body.querySelector("#pw2").addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+    }
+
+    function viewApply() {
+      stepsEl.innerHTML = "";
+      body.innerHTML = `<div class="pw-emoji">👋</div>
+        <h3 class="pw-h">প্রথমবার এসেছো?</h3>
+        <p class="pw-p">তোমার প্রোফাইল এখনো চালু হয়নি। নিজের পাসওয়ার্ড বানাতে আগে অ্যাডমিনের কাছ থেকে একটা <b>সেটআপ কোড</b> লাগবে। নিচের বাটনে চাপলে অ্যাডমিন তোমার আবেদন দেখতে পাবে।</p>
+        <div class="pw-err"></div>
+        <button class="pw-btn" id="pwGo" type="button">সেটআপ কোডের জন্য আবেদন করো</button>
+        <button class="pw-link" id="pwHave" type="button">আমার কাছে কোড আছে</button>`;
+      body.querySelector("#pwGo").addEventListener("click", async (e) => {
+        const b = e.currentTarget; busy(b, "পাঠানো হচ্ছে…");
+        try { await requestSetupCode(student, "setup"); viewPending("setup"); }
+        catch (err) { setErr("আবেদন পাঠানো যায়নি। ইন্টারনেট দেখে আবার চেষ্টা করো।"); idle(b); }
+      });
+      body.querySelector("#pwHave").addEventListener("click", viewCode);
+    }
+
+    function viewPending(type) {
+      stepsEl.innerHTML = "";
+      body.innerHTML = `<div class="pw-emoji">⏳</div>
+        <h3 class="pw-h">আবেদন পাঠানো হয়েছে ✔</h3>
+        <p class="pw-p">অ্যাডমিন তোমার আবেদন দেখতে পাবে এবং তোমাকে ${type === "reset" ? "নতুন " : ""}সেটআপ কোড পাঠাবে। কোড পেলে আবার এখানে এসে <b>নিজের নাম চাপো</b>, তারপর কোডটা লিখবে।</p>
+        <button class="pw-btn" id="pwOk" type="button">ঠিক আছে</button>`;
+      body.querySelector("#pwOk").addEventListener("click", () => done(false));
+    }
+
+    function viewForgot() {
+      stepsEl.innerHTML = "";
+      body.innerHTML = `<div class="pw-emoji">🤔</div>
+        <h3 class="pw-h">পাসওয়ার্ড ভুলে গেছো?</h3>
+        <p class="pw-p">সমস্যা নেই। আবেদন পাঠাও — অ্যাডমিন তোমার পাসওয়ার্ড রিসেট করে নতুন সেটআপ কোড দেবে, তারপর তুমি নতুন পাসওয়ার্ড বানাবে।</p>
+        <div class="pw-err"></div>
+        <button class="pw-btn" id="pwGo" type="button">রিসেটের আবেদন পাঠাও</button>
+        <button class="pw-link" id="pwBack" type="button">← ফিরে যাও</button>`;
+      body.querySelector("#pwBack").addEventListener("click", () => viewLogin());
+      body.querySelector("#pwGo").addEventListener("click", async (e) => {
+        const b = e.currentTarget; busy(b, "পাঠানো হচ্ছে…");
+        try { await requestSetupCode(student, "reset"); viewPending("reset"); }
+        catch (err) { setErr("আবেদন পাঠানো যায়নি। আবার চেষ্টা করো।"); idle(b); }
+      });
+    }
+
+    // ---- decide which screen to open first ----
+    viewChecking();
+    getStudentAuthStatus(student.studentId).then(st => {
+      if (st.hasAccount && st.passwordSet) viewLogin(st.pending ? "তোমার রিসেটের আবেদন অ্যাডমিনের কাছে পাঠানো আছে।" : "");
+      else if (st.hasAccount) viewCode();
+      else if (st.pending) viewPending(st.pending.type);
+      else viewApply();
+    }).catch(() => viewLogin());
   });
 }
 
