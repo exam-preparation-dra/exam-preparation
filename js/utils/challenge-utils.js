@@ -324,198 +324,148 @@ export async function getChallenge(challengeId) {
 
 // ============================================================
 // RESOLVE COMPLETED CHALLENGES
+//
+// FIXES (why challenges never finished before):
+//  1. "Auto Select" (__NEXT_EXAM__) challenges were never bound to a real
+//     exam (nothing ever called updateNextExamChallenges), so they stayed
+//     "accepted" forever. Now the first exam that BOTH students took after
+//     the challenge was accepted is picked automatically.
+//  2. Only status === "approved" results counted, but the rest of the app
+//     treats a "pending" result older than 24h as approved. Now the same
+//     rule is used here, so challenges resolve together with the leaderboard.
 // ============================================================
+
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+function toMs(ts) {
+  if (!ts) return 0;
+  if (typeof ts.toMillis === "function") return ts.toMillis();
+  if (typeof ts.seconds === "number") return ts.seconds * 1000;
+  const t = new Date(ts).getTime();
+  return Number.isFinite(t) ? t : 0;
+}
+
+// Same rule the leaderboard uses: approved, or pending for 24h+.
+function isCountedResult(r) {
+  if (!r) return false;
+  if (!r.status || r.status === "approved") return true;
+  if (r.status === "pending") {
+    const ms = toMs(r.submittedAt);
+    return !!ms && Date.now() - ms >= ONE_DAY_MS;
+  }
+  return false;
+}
 
 export async function resolveCompletedChallenges(studentId) {
   if (!studentId) return [];
 
-  const incomingQuery = query(
-    collection(db, "examChallenges"),
-    where("toStudentId", "==", studentId),
-    where("status", "==", "accepted")
-  );
-
-  const outgoingQuery = query(
-    collection(db, "examChallenges"),
-    where("fromStudentId", "==", studentId),
-    where("status", "==", "accepted")
-  );
-
   const [incomingSnap, outgoingSnap] = await Promise.all([
-    getDocs(incomingQuery),
-    getDocs(outgoingQuery)
+    getDocs(query(collection(db, "examChallenges"),
+      where("toStudentId", "==", studentId), where("status", "==", "accepted"))),
+    getDocs(query(collection(db, "examChallenges"),
+      where("fromStudentId", "==", studentId), where("status", "==", "accepted")))
   ]);
 
-  const challenges = [
-    ...incomingSnap.docs.map(d => ({
-      id: d.id,
-      ...d.data()
-    })),
-    ...outgoingSnap.docs.map(d => ({
-      id: d.id,
-      ...d.data()
-    }))
-  ];
+  const byId = new Map();
+  [...incomingSnap.docs, ...outgoingSnap.docs].forEach(d => byId.set(d.id, { id: d.id, ...d.data() }));
+
+  // One results query per student, cached for this call. { examId: result }
+  const cache = {};
+  const loadResults = (sid) => (cache[sid] ||= (async () => {
+    const snap = await getDocs(query(collection(db, "results"), where("studentId", "==", sid)));
+    const map = {};
+    snap.docs.forEach(d => { const x = d.data(); if (x.examId) map[x.examId] = x; });
+    return map;
+  })());
 
   const resolved = [];
 
-  for (const challenge of challenges) {
-    if (challenge.bonusAwarded) {
-      continue;
-    }
+  for (const challenge of byId.values()) {
+    if (challenge.bonusAwarded) continue;
 
-    /*
-     * A special __NEXT_EXAM__ challenge cannot be resolved until
-     * a real exam ID has been selected/assigned.
-     */
-    if (
-      !challenge.examId ||
-      challenge.examId === "__NEXT_EXAM__"
-    ) {
-      continue;
-    }
-
-    const fromResultRef = doc(
-      db,
-      "results",
-      resultKey(
-        challenge.examId,
-        challenge.fromStudentId
-      )
-    );
-
-    const toResultRef = doc(
-      db,
-      "results",
-      resultKey(
-        challenge.examId,
-        challenge.toStudentId
-      )
-    );
-
-    const [fromResultSnap, toResultSnap] = await Promise.all([
-      getDoc(fromResultRef),
-      getDoc(toResultRef)
+    const [fromMap, toMap] = await Promise.all([
+      loadResults(challenge.fromStudentId),
+      loadResults(challenge.toStudentId)
     ]);
+    const challengeRef = doc(db, "examChallenges", challenge.id);
 
-    if (!fromResultSnap.exists() || !toResultSnap.exists()) {
-      continue;
+    let examId = challenge.examId;
+    let examName = challenge.examName;
+
+    // Auto-select: earliest exam BOTH took after the challenge was accepted.
+    if (!examId || examId === "__NEXT_EXAM__") {
+      const since = toMs(challenge.acceptedAt) || toMs(challenge.createdAt) || 0;
+      let best = null;
+      for (const id of Object.keys(fromMap)) {
+        const a = fromMap[id], b = toMap[id];
+        if (!b) continue;
+        const ta = toMs(a.submittedAt), tb = toMs(b.submittedAt);
+        if (since && (ta < since || tb < since)) continue;
+        const t = Math.max(ta, tb);
+        if (!best || t < best.t) best = { id, t, name: a.examName || b.examName };
+      }
+      if (!best) continue;
+      examId = best.id;
+      examName = best.name || examName;
+      await updateDoc(challengeRef, { examId, examName }).catch(() => {});
     }
 
-    const fromResult = fromResultSnap.data();
-    const toResult = toResultSnap.data();
+    const fromResult = fromMap[examId];
+    const toResult = toMap[examId];
+    if (!fromResult || !toResult) continue;
+    if (!isCountedResult(fromResult) || !isCountedResult(toResult)) continue;
 
-    /*
-     * Only approved results are used for challenge resolution.
-     */
-    if (
-      fromResult.status &&
-      fromResult.status !== "approved"
-    ) {
-      continue;
-    }
-
-    if (
-      toResult.status &&
-      toResult.status !== "approved"
-    ) {
-      continue;
-    }
-
-    const fromPercentage = getResultPercentage(fromResult);
-    const toPercentage = getResultPercentage(toResult);
-
+    const fromPct = getResultPercentage(fromResult);
+    const toPct = getResultPercentage(toResult);
     const fromMarks = getResultMarks(fromResult);
     const toMarks = getResultMarks(toResult);
 
-    let winnerStudentId = null;
-    let loserStudentId = null;
-    let winnerBonus = 0;
-
-    /*
-     * Percentage is the primary comparison.
-     * Obtained marks are used as the tie-breaker.
-     */
-    if (fromPercentage > toPercentage) {
-      winnerStudentId = challenge.fromStudentId;
-      loserStudentId = challenge.toStudentId;
-      winnerBonus = CHALLENGE_REWARDS.winner;
-    } else if (toPercentage > fromPercentage) {
-      winnerStudentId = challenge.toStudentId;
-      loserStudentId = challenge.fromStudentId;
-      winnerBonus = CHALLENGE_REWARDS.winner;
-    } else if (fromMarks > toMarks) {
-      winnerStudentId = challenge.fromStudentId;
-      loserStudentId = challenge.toStudentId;
-      winnerBonus = CHALLENGE_REWARDS.winner;
-    } else if (toMarks > fromMarks) {
-      winnerStudentId = challenge.toStudentId;
-      loserStudentId = challenge.fromStudentId;
-      winnerBonus = CHALLENGE_REWARDS.winner;
+    // Percentage first, obtained marks as tie-breaker.
+    let winnerStudentId = null, loserStudentId = null;
+    if (fromPct > toPct || (fromPct === toPct && fromMarks > toMarks)) {
+      winnerStudentId = challenge.fromStudentId; loserStudentId = challenge.toStudentId;
+    } else if (toPct > fromPct || (fromPct === toPct && toMarks > fromMarks)) {
+      winnerStudentId = challenge.toStudentId; loserStudentId = challenge.fromStudentId;
     }
 
-    const challengeRef = doc(
-      db,
-      "examChallenges",
-      challenge.id
-    );
-
-    /*
-     * Draw
-     */
     if (!winnerStudentId) {
       await updateDoc(challengeRef, {
-        status: "completed",
-        bonusAwarded: true,
-
-        winnerStudentId: null,
-        loserStudentId: null,
-
-        winnerBonus: 0,
-        loserBonus: 0,
-        drawBonus: CHALLENGE_REWARDS.draw,
-
-        completedAt: serverTimestamp(),
-        resolvedAt: serverTimestamp()
+        status: "completed", bonusAwarded: true,
+        winnerStudentId: null, loserStudentId: null,
+        winnerBonus: 0, loserBonus: 0, drawBonus: CHALLENGE_REWARDS.draw,
+        fromPercentage: fromPct, toPercentage: toPct,
+        completedAt: serverTimestamp(), resolvedAt: serverTimestamp()
       });
-
-      resolved.push({
-        id: challenge.id,
-        result: "draw",
-        drawBonus: CHALLENGE_REWARDS.draw
-      });
-
+      resolved.push({ id: challenge.id, result: "draw", drawBonus: CHALLENGE_REWARDS.draw });
       continue;
     }
 
-    /*
-     * Winner / loser
-     */
     await updateDoc(challengeRef, {
-      status: "completed",
-      bonusAwarded: true,
-
-      winnerStudentId,
-      loserStudentId,
-
-      winnerBonus,
-      loserBonus: CHALLENGE_REWARDS.loser,
-
-      completedAt: serverTimestamp(),
-      resolvedAt: serverTimestamp()
+      status: "completed", bonusAwarded: true,
+      winnerStudentId, loserStudentId,
+      winnerBonus: CHALLENGE_REWARDS.winner, loserBonus: CHALLENGE_REWARDS.loser,
+      fromPercentage: fromPct, toPercentage: toPct,
+      completedAt: serverTimestamp(), resolvedAt: serverTimestamp()
     });
-
     resolved.push({
-      id: challenge.id,
-      result: "completed",
-      winnerStudentId,
-      loserStudentId,
-      winnerBonus,
-      loserBonus: CHALLENGE_REWARDS.loser
+      id: challenge.id, result: "completed", winnerStudentId, loserStudentId,
+      winnerBonus: CHALLENGE_REWARDS.winner, loserBonus: CHALLENGE_REWARDS.loser
     });
   }
 
   return resolved;
+}
+
+// Sender takes back a challenge that is still waiting for an answer.
+export async function cancelChallenge(challengeId, studentId) {
+  const ref = doc(db, "examChallenges", challengeId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return true;
+  const c = snap.data();
+  if (c.fromStudentId !== studentId) throw new Error("এই challenge বাতিল করার অনুমতি নেই।");
+  if (c.status !== "pending") throw new Error("এই challenge আর pending নেই।");
+  await deleteDoc(ref);
+  return true;
 }
 
 
