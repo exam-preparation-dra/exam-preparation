@@ -91,6 +91,7 @@ import { initTheme, toggleTheme, renderState, showToast, friendlyError } from ".
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
 import { getActiveStudents, createStudent, updateStudentPhoto } from "../js/utils/student-utils.js";
 import { getPendingRequests, deleteStudentRequest } from "../js/utils/student-requests-utils.js";
+import { sendReferralFriendRequest } from "../js/utils/friend-utils.js?v=ref1";
 import { getLeaderboardData } from "../js/utils/results-utils.js"; // Added Import for XP Calculation
 import { toDirectImageUrl } from "../js/utils/image-utils.js";
 import { uploadStudentPhoto, deleteStudentPhoto } from "../js/utils/storage-utils.js";
@@ -570,9 +571,16 @@ function wireRequestCard(request) {
     if (!finalName) { showToast("নাম খালি রাখা যাবে বায় না।", "error"); return; }
     if (!confirm(`"${finalName}" কে অনুমোদন দেবেন?`)) return;
     try {
-      await createStudent(finalName, request.className, request.referredBy || null);
+      const created = await createStudent(finalName, request.className, request.referredBy || null);
       await deleteStudentRequest(request.id);
-      showToast("শিক্ষার্থী যোগ করা হয়েছে।", "success");
+      // Referral link -> new student automatically sends a friend request to
+      // the friend who invited them (they accept it from Profile > বন্ধু).
+      let friendSent = false;
+      if (request.referredBy) {
+        try { friendSent = await sendReferralFriendRequest(created.studentId, request.referredBy); }
+        catch (e) { console.warn("Referral friend request skipped", e); }
+      }
+      showToast(friendSent ? "শিক্ষার্থী যোগ হয়েছে — বন্ধুকে ফ্রেন্ড রিকোয়েস্টও চলে গেছে।" : "শিক্ষার্থী যোগ করা হয়েছে।", "success");
       loadPendingRequests(); loadStudents();
     } catch (err) { showToast(friendlyError(err), "error"); }
   });
