@@ -78,6 +78,18 @@
   .modal-title { display: flex; align-items: center; gap: 8px; font-size: 1.1rem; font-weight: 900; margin-bottom: 12px; color: var(--text-primary); }
   .modal-text { font-size: 0.83rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 8px; }
 
+  /* ===== Inviter card ===== */
+  .inviter { display:flex; align-items:center; gap:12px; padding:14px 16px; margin-bottom:16px; border-radius:var(--radius-lg); border:1px solid rgba(47,125,94,.3); background:rgba(47,125,94,.07); }
+  .inviter-av { width:42px; height:42px; border-radius:50%; flex-shrink:0; display:grid; place-items:center; background:var(--color-success); color:#fff; font-weight:900; font-size:1.05rem; }
+  .inviter small { display:block; font-size:.7rem; font-weight:700; color:var(--text-muted); }
+  .inviter b { display:block; font-size:.98rem; font-weight:900; color:var(--text-primary); margin-top:1px; }
+  .inviter em { display:block; font-style:normal; font-size:.72rem; font-weight:700; color:var(--color-success); margin-top:2px; }
+  .ref-row { display:flex; gap:8px; }
+  .ref-row .input-glass { text-transform:uppercase; letter-spacing:.06em; font-family:var(--font-num); }
+  .ref-hint { margin-top:7px; font-size:.75rem; font-weight:700; min-height:1em; color:var(--text-muted); }
+  .ref-hint.ok { color:var(--color-success); }
+  .ref-hint.bad { color:var(--color-danger); }
+
   /* ===== Success state ===== */
   .success-box { text-align: center; padding: 20px 10px; }
   .success-icon { width: 48px; height: 48px; color: var(--color-success); margin: 0 auto 16px; background: rgba(47,125,94,.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
@@ -128,6 +140,13 @@
         <option value="Other">অন্যান্য</option>
       </select>
     </div>
+    <div class="field">
+      <label for="refInput">বন্ধুর রেফারেল কোড <span style="font-weight:600;color:var(--text-muted);">(ঐচ্ছিক)</span></label>
+      <div class="ref-row">
+        <input class="input-glass" id="refInput" placeholder="যেমন: STU-0001" maxlength="12" autocomplete="off">
+      </div>
+      <div class="ref-hint" id="refHint"></div>
+    </div>
     <button type="submit" class="btn-submit" id="submitBtn">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
       আবেদন পাঠাও
@@ -155,25 +174,67 @@
 <script type="module">
 import { initTheme, showToast, friendlyError } from "./js/utils/ui-utils.js";
 import { submitStudentRequest } from "./js/utils/student-requests-utils.js";
+import { findStudentByStudentId } from "./js/utils/friend-utils.js?v=ref1";
 
 // Initialize theme
 initTheme();
 
 // ---------- Referral link (?ref=STU-0001) ----------
-// A friend's share link lands here with their studentId in the query
-// string. We just carry it through to the join request as-is — no
-// Firestore lookup needed here (join.html has no admin access anyway);
-// the admin sees/approves the real name when reviewing the request, and
-// an unknown/mistyped ref simply earns no one a referral credit.
-const referredBy = new URLSearchParams(window.location.search).get("ref");
-if (referredBy) {
-  document.getElementById("referralBanner").innerHTML = `
-    <div class="glass-float-card" style="padding:13px 16px; margin-bottom:16px; display:flex; align-items:center; gap:10px; border-color:rgba(47,125,94,0.3); background:rgba(47,125,94,0.07);">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polyline points="20 6 9 17 4 12"/></svg>
-      <p style="margin:0; font-size:0.85rem; font-weight:700; color:var(--text-primary);">একজন বন্ধুর আমন্ত্রণে যুক্ত হচ্ছ</p>
-    </div>
-  `;
+// A friend's share link / QR lands here with their studentId in the query
+// string. The code is auto-filled into the referral field and the inviter's
+// real name is looked up (students collection is publicly readable) and shown.
+// After the admin approves this request, a friend request from the new
+// student is sent automatically to the inviter (see admin/students.html).
+const refInput = document.getElementById("refInput");
+const refHint = document.getElementById("refHint");
+const banner = document.getElementById("referralBanner");
+let referredBy = null;      // validated code (or null)
+let refTimer = null;
+
+function esc(v) { return String(v ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+
+async function checkRef(raw, { fromLink = false } = {}) {
+  const code = String(raw || "").trim().toUpperCase();
+  referredBy = null;
+  banner.innerHTML = "";
+  refHint.className = "ref-hint"; refHint.textContent = "";
+  if (!code) return;
+  refHint.textContent = "যাচাই হচ্ছে...";
+  try {
+    const inviter = await findStudentByStudentId(code);
+    if (refInput.value.trim().toUpperCase() !== code) return; // user kept typing
+    if (!inviter) {
+      refHint.className = "ref-hint bad";
+      refHint.textContent = fromLink ? "এই লিংকের কোডটি সঠিক নয় — চাইলে কোড ছাড়াই আবেদন করতে পারো।" : "এই কোডে কাউকে পাওয়া যায়নি।";
+      return;
+    }
+    referredBy = inviter.studentId;
+    refHint.className = "ref-hint ok";
+    refHint.textContent = "কোডটি সঠিক";
+    banner.innerHTML = `
+      <div class="inviter">
+        <div class="inviter-av">${esc((inviter.name || "?").charAt(0))}</div>
+        <div>
+          <small>তোমাকে আমন্ত্রণ জানিয়েছে</small>
+          <b>${esc(inviter.name)}</b>
+          <em>অনুমোদনের পর ${esc(inviter.name)}-এর কাছে ফ্রেন্ড রিকোয়েস্ট চলে যাবে</em>
+        </div>
+      </div>`;
+  } catch (e) {
+    refHint.className = "ref-hint bad";
+    refHint.textContent = "কোড যাচাই করা যায়নি। নেট চেক করো।";
+  }
 }
+
+const urlRef = new URLSearchParams(window.location.search).get("ref");
+if (urlRef) {
+  refInput.value = urlRef.trim().toUpperCase();
+  checkRef(urlRef, { fromLink: true });
+}
+refInput.addEventListener("input", () => {
+  clearTimeout(refTimer);
+  refTimer = setTimeout(() => checkRef(refInput.value), 450);
+});
 
 // Modal Logic
 const guideBtn = document.getElementById("guideBtn");
@@ -202,6 +263,12 @@ document.getElementById("joinForm").addEventListener("submit", async (e) => {
     return;
   }
 
+  // A typed code must be a real student — otherwise the friend request could never be delivered.
+  if (refInput.value.trim() && !referredBy) {
+    await checkRef(refInput.value);
+    if (!referredBy) { showToast("রেফারেল কোড সঠিক নয় — ঠিক করো অথবা ফাঁকা রাখো।", "error"); return; }
+  }
+
   btn.disabled = true;
   btn.innerHTML = `<span class="spinner" style="width:16px; height:16px; border-width:2px; border-color:#fff; border-top-color:transparent;"></span> পাঠানো হচ্ছে...`;
   
@@ -214,7 +281,7 @@ document.getElementById("joinForm").addEventListener("submit", async (e) => {
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
         <p style="font-weight:800; font-size:1.1rem; color:var(--text-primary); margin-bottom:8px;">আবেদন সফলভাবে পাঠানো হয়েছে</p>
-        <p class="text-sm text-muted">অ্যাডমিন অনুমোদন দিলেই তুমি প্রথম পেজের তালিকায় নিজের নাম দেখতে পারবে। তুমি এখন এই পেজটি বন্ধ করে দিতে পারো।</p>
+        <p class="text-sm text-muted">${referredBy ? "অ্যাডমিন অনুমোদন দিলে তোমার বন্ধুর কাছে স্বয়ংক্রিয়ভাবে ফ্রেন্ড রিকোয়েস্ট চলে যাবে, আর " : ""}অ্যাডমিন অনুমোদন দিলেই তুমি প্রথম পেজের তালিকায় নিজের নাম দেখতে পারবে। তুমি এখন এই পেজটি বন্ধ করে দিতে পারো।</p>
         <a href="./index.html" class="btn-glass" style="margin-top:20px; display:inline-flex; width:auto; padding:10px 20px;">তালিকায় ফিরে যাও</a>
       </div>
     `;
