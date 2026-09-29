@@ -48,7 +48,7 @@
   .lx-sub { font-size:.68rem; color:var(--text-muted); margin-top:1px; }
   .lx-val { margin-left:auto; text-align:right; flex:none; font-family:var(--font-num); font-weight:800; font-size:.9rem; }
   .lx-tag { font-size:.6rem; font-weight:800; padding:2px 6px; border-radius:99px; background:var(--color-accent); color:#fff; margin-left:5px; vertical-align:1px; }
-  .lx-mv { font-size:.64rem; font-weight:800; margin-left:4px; }
+  .lx-mv { display:inline-flex; align-items:center; font-size:.64rem; font-weight:800; margin-left:4px; }
   .lx-mv.up { color:var(--color-success); } .lx-mv.down { color:var(--color-danger); }
   .lx-badge { margin-left:auto; flex:none; font-size:.66rem; font-weight:800; padding:3px 9px; border-radius:99px; background:var(--surface-edge); color:var(--text-secondary); }
   .lx-badge.win { background:rgba(47,125,94,.14); color:var(--color-success); }
@@ -67,6 +67,73 @@
   .lx-sheet-h { font-weight:800; margin-bottom:12px; }
   .lx-list { display:flex; flex-direction:column; gap:8px; }
   .lx-list .lx-btn { width:100%; padding:12px; }
+
+  /* ===== Leaderboard v2: hero card, podium, rich rows, awards, rival ===== */
+  .lx-hero { position:relative; overflow:hidden; color:#f3f1ea; background:#21262f; border-radius:var(--radius-lg); padding:16px 16px 12px; display:grid; grid-template-columns:1fr auto; column-gap:12px; align-items:center; }
+  .lx-h-label { font-size:.76rem; font-weight:700; color:rgba(243,241,234,.68); display:flex; align-items:center; gap:8px; }
+  .lx-h-label .lx-av { width:22px!important; height:22px!important; font-size:.66rem!important; }
+  .lx-h-rank { font-family:var(--font-num); font-weight:700; font-size:2.7rem; line-height:1.08; letter-spacing:-.02em; margin:2px 0 2px; color:var(--color-accent); }
+  .lx-h-xp { font-size:.8rem; font-weight:700; color:rgba(243,241,234,.78); }
+  .lx-h-xp b { font-family:var(--font-num); color:#f3f1ea; font-weight:800; }
+  .lx-h-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .lx-h-chip { font-size:.7rem; font-weight:700; padding:4px 9px; border-radius:999px; background:rgba(243,241,234,.1); border:1px solid rgba(243,241,234,.16); color:rgba(243,241,234,.9); display:inline-flex; align-items:center; gap:3px; }
+  .lx-h-chip b { font-family:var(--font-num); font-weight:700; }
+  .lx-h-chip.up { background:rgba(47,125,94,.28); border-color:rgba(47,125,94,.5); color:#a9d9bf; }
+  .lx-h-chip.down { background:rgba(166,64,47,.28); border-color:rgba(166,64,47,.5); color:#e8b5aa; }
+  .lx-h-seal { position:relative; width:84px; height:84px; }
+  .lx-h-seal svg.ring { width:100%; height:100%; transform:rotate(-90deg); }
+  .lx-h-ring { transition:stroke-dashoffset 1.2s cubic-bezier(.22,1,.36,1); }
+  .lx-h-seal-c { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .lx-h-seal-c b { font-family:var(--font-num); font-size:1.35rem; line-height:1; font-weight:700; color:var(--color-accent); }
+  .lx-h-seal-c span { font-size:.6rem; font-weight:700; color:rgba(243,241,234,.6); margin-top:2px; }
+  .lx-h-foot { grid-column:1 / -1; margin-top:12px; padding-top:10px; border-top:1px solid rgba(243,241,234,.14); font-size:.78rem; font-weight:600; color:rgba(243,241,234,.8); line-height:1.6; }
+  .lx-h-foot b { font-family:var(--font-num); color:var(--color-accent); font-weight:700; }
+
+  .lx-rival { display:flex; align-items:center; gap:10px; width:100%; padding:10px 12px; border-radius:var(--radius-lg); border:1px solid var(--surface-border); background:var(--surface); color:var(--text-primary); font:inherit; text-align:left; cursor:pointer; position:relative; padding-left:16px; }
+  .lx-rival::before { content:""; position:absolute; left:0; top:12px; bottom:12px; width:3px; border-radius:3px; background:var(--color-danger); }
+  .lx-rival .mid { min-width:0; flex:1; }
+  .lx-rival .k { font-size:.66rem; font-weight:800; color:var(--text-muted); }
+  .lx-rival .n { font-size:.88rem; font-weight:800; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .lx-rival .g { font-size:.74rem; font-weight:700; margin-top:1px; }
+  .lx-rival .g.ahead { color:var(--color-success); } .lx-rival .g.behind { color:var(--color-danger); } .lx-rival .g.even { color:var(--text-secondary); }
+  .lx-rival .rec { flex:none; text-align:right; font-size:.68rem; font-weight:700; color:var(--text-muted); line-height:1.5; }
+  .lx-rival .rec b { font-family:var(--font-num); color:var(--text-primary); font-weight:800; font-size:.92rem; display:block; }
+  .lx-rival.empty { justify-content:center; color:var(--text-secondary); font-size:.78rem; font-weight:700; border-style:dashed; background:transparent; }
+  .lx-rival.empty::before { display:none; }
+
+  .lx-awards { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; }
+  .lx-award { background:var(--surface); border:1px solid var(--surface-border); border-radius:var(--radius-md); padding:10px 8px 9px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:4px; min-width:0; cursor:pointer; }
+  .lx-award .t { font-size:.64rem; font-weight:800; color:var(--text-muted); display:flex; align-items:center; gap:4px; }
+  .lx-award .t .lx-ico { color:var(--color-accent); width:13px; height:13px; }
+  .lx-award .nm { font-size:.76rem; font-weight:800; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .lx-award .v { font-family:var(--font-num); font-size:.72rem; font-weight:800; color:var(--color-accent); }
+
+  .lx-search { display:flex; gap:8px; }
+  .lx-search .lx-inp { flex:1; min-width:0; }
+  .lx-jump { flex:none; display:inline-flex; align-items:center; gap:5px; padding:0 13px; border-radius:11px; border:1px solid var(--surface-border); background:var(--surface-solid); color:var(--text-primary); font:inherit; font-size:.76rem; font-weight:800; cursor:pointer; }
+  .lx-jump .lx-ico { color:var(--color-accent); }
+
+  .lx-podium { display:grid; grid-template-columns:1fr 1.1fr 1fr; gap:8px; align-items:end; background:var(--surface); border:1px solid var(--surface-border); border-radius:var(--radius-lg); padding:16px 10px 0; overflow:hidden; }
+  .lx-pod { --medal:var(--color-accent); display:flex; flex-direction:column; align-items:center; min-width:0; cursor:pointer; }
+  .lx-pod.p2 { --medal:#8d94a0; } .lx-pod.p3 { --medal:#a7683c; }
+  .lx-pod-av { position:relative; margin-bottom:8px; }
+  .lx-pod-av .lx-av { box-shadow:0 0 0 2px var(--surface), 0 0 0 4px var(--medal); }
+  .lx-pod-n { position:absolute; right:-6px; bottom:-6px; width:20px; height:20px; border-radius:50%; background:var(--medal); color:#fff; font-family:var(--font-num); font-weight:800; font-size:.7rem; display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 2px var(--surface); }
+  .lx-pod-nm { font-size:.78rem; font-weight:800; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center; }
+  .lx-pod-v { font-family:var(--font-num); font-weight:800; font-size:.92rem; color:var(--text-primary); margin-top:1px; }
+  .lx-pod-v small { font-size:.62rem; font-weight:700; color:var(--text-muted); margin-left:2px; }
+  .lx-pod-bar { width:100%; margin-top:8px; border-radius:8px 8px 0 0; background:color-mix(in srgb, var(--medal) 16%, transparent); border:1px solid color-mix(in srgb, var(--medal) 40%, transparent); border-bottom:0; }
+  .lx-pod.p1 .lx-pod-bar { height:44px; } .lx-pod.p2 .lx-pod-bar { height:30px; } .lx-pod.p3 .lx-pod-bar { height:22px; }
+  .lx-pod.me .lx-pod-nm { color:var(--color-accent); }
+
+  .lx-mid { min-width:0; flex:1; }
+  .lx-bar { height:4px; border-radius:4px; background:var(--surface-edge); margin-top:6px; overflow:hidden; }
+  .lx-bar i { display:block; height:100%; border-radius:4px; background:var(--color-accent); opacity:.85; }
+  .lx-row.me .lx-bar { background:rgba(var(--color-accent-rgb),.2); }
+  .lx-val small { font-size:.6rem; font-weight:700; color:var(--text-muted); margin-left:2px; }
+  .lx-wk { display:block; font-size:.62rem; font-weight:700; color:var(--color-success); margin-top:1px; }
+  .lx-flash { animation:lxFlash 1.4s ease-out; }
+  @keyframes lxFlash { 0%,35% { box-shadow:0 0 0 2px var(--color-accent); } 100% { box-shadow:0 0 0 2px transparent; } }
 </style>
 </head>
 <body>
@@ -97,7 +164,7 @@ const S = {
   students: [], studentMap: {}, results: [], rows: [], extras: {}, movement: {}, overallRank: {},
   friendIds: [], incoming: [], outgoing: [], inChalls: [], outChalls: [], h2h: {},
   challengeBonusMap: {}, improvementResultsMap: {}, battleXPMap: {},
-  rivalId: null, q: "", cheers: { received: [], sentToday: new Set() }
+  rivalId: null, q: "", rq: "", cheers: { received: [], sentToday: new Set() }
 };
 const NO_BATCH = "ব্যাচ নেই";
 let examsCache = null;
@@ -205,9 +272,47 @@ function renderAll() { renderHero(); renderTabs(); renderBody(); }
 function renderHero() {
   const r = S.rows.find(x => x.studentId === me());
   const rank = S.overallRank[me()];
-  document.getElementById("lxHero").innerHTML = `<div class="lx-me">${avatar(student, 38)}
-    <div style="min-width:0"><b>${esc(student.name)}</b><small>${esc(student.className || "")}</small></div>
-    <div class="r"><b>${rank ? "#" + rank : "-"}</b><br><small>${fmt(r?.totalPoints)} XP</small></div></div>`;
+  const top = S.rows[0];
+  const pct = top && num(top.totalPoints) > 0 ? Math.min(100, Math.round(num(r?.totalPoints) / num(top.totalPoints) * 100)) : 0;
+  const R = 34, C = 2 * Math.PI * R;
+  const wk = weeklyXP(me()), mv = S.movement[me()], streak = num(S.extras[me()]?.streak);
+
+  let foot;
+  if (!rank) foot = "পরীক্ষা দিলেই তুমি র‍্যাঙ্কিংয়ে চলে আসবে।";
+  else if (rank === 1) {
+    const nx = S.rows[1];
+    foot = nx ? `তুমিই শীর্ষে — দ্বিতীয়জনের চেয়ে <b>${fmt(num(r.totalPoints) - num(nx.totalPoints))}</b> XP এগিয়ে।` : "তুমিই এখন শীর্ষে।";
+  } else {
+    const up = S.rows[rank - 2], gap = num(up.totalPoints) - num(r.totalPoints);
+    foot = gap > 0 ? `<b>#${rank - 1}</b>-এ উঠতে আর <b>${fmt(gap)}</b> XP দরকার — ${esc(up.name)}-কে ছাড়াতে হবে।` : `${esc(up.name)}-এর সাথে পয়েন্ট সমান — একটা পরীক্ষাই র‍্যাঙ্ক বদলে দেবে।`;
+  }
+  const chips = [
+    wk > 0 ? `<span class="lx-h-chip up">এই সপ্তাহে +<b>${fmt(wk)}</b> XP</span>` : "",
+    mv > 0 ? `<span class="lx-h-chip up">${I.up}<b>${mv}</b> ধাপ উপরে</span>` : mv < 0 ? `<span class="lx-h-chip down">${I.down}<b>${Math.abs(mv)}</b> ধাপ নিচে</span>` : "",
+    streak >= 2 ? `<span class="lx-h-chip"><b>${streak}</b> সপ্তাহের স্ট্রিক</span>` : ""
+  ].join("");
+
+  document.getElementById("lxHero").innerHTML = `<section class="lx-hero" aria-label="তোমার র‍্যাঙ্ক">
+    <div>
+      <p class="lx-h-label">${avatar(student, 22)}<span>${esc(student.name)}</span></p>
+      <p class="lx-h-rank">${rank ? "#" + rank : "—"}</p>
+      <p class="lx-h-xp"><b>${fmt(r?.totalPoints)}</b> XP${S.rows.length ? ` · ${S.rows.length} জনের মধ্যে` : ""}</p>
+      ${chips ? `<div class="lx-h-chips">${chips}</div>` : ""}
+    </div>
+    <div class="lx-h-seal" role="img" aria-label="শীর্ষের ${pct}%">
+      <svg class="ring" viewBox="0 0 80 80" aria-hidden="true">
+        <circle cx="40" cy="40" r="${R}" fill="none" stroke="rgba(243,241,234,0.12)" stroke-width="7"/>
+        <circle class="lx-h-ring" id="lxRing" cx="40" cy="40" r="${R}" fill="none" stroke="#b8863c" stroke-width="7" stroke-linecap="round"
+          stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${C.toFixed(2)}" data-c="${C.toFixed(2)}" data-pct="${pct}"/>
+      </svg>
+      <div class="lx-h-seal-c"><b>${pct}%</b><span>শীর্ষের</span></div>
+    </div>
+    <p class="lx-h-foot">${foot}</p>
+  </section>`;
+  const ring = document.getElementById("lxRing");
+  if (ring) requestAnimationFrame(() => requestAnimationFrame(() => {
+    ring.style.strokeDashoffset = (Number(ring.dataset.c) * (1 - Number(ring.dataset.pct) / 100)).toFixed(2);
+  }));
 }
 
 function renderTabs() {
@@ -221,23 +326,105 @@ function renderBody() {
 }
 
 /* ---- ranking ---- */
+const ICO = {
+  trophy: svg(`<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>`),
+  trend: svg(`<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>`),
+  doc: svg(`<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>`),
+  target: svg(`<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/>`)
+};
+
+function awardsHtml() {
+  const rows = S.rows;
+  const best = fn => { let b = null, bv = 0; rows.forEach(r => { const v = fn(r); if (v > bv) { bv = v; b = r; } }); return b ? { r: b, v: bv } : null; };
+  const wk = best(r => weeklyXP(r.studentId));
+  const up = best(r => num(S.movement[r.studentId]));
+  const ex = best(r => num(S.extras[r.studentId]?.weeklyExams));
+  const tiles = [
+    wk && { t: "সপ্তাহের সেরা", ic: ICO.trophy, ...wk, txt: `+${fmt(wk.v)} XP` },
+    up && { t: "সবচেয়ে উন্নতি", ic: ICO.trend, ...up, txt: `${up.v} ধাপ উপরে` },
+    ex && { t: "বেশি পরীক্ষা", ic: ICO.doc, ...ex, txt: `${ex.v}টি পরীক্ষা` }
+  ].filter(Boolean);
+  if (!tiles.length) return "";
+  return `<div class="lx-title">এই সপ্তাহের সেরা</div>
+    <div class="lx-awards" style="grid-template-columns:repeat(${tiles.length}, minmax(0,1fr))">${tiles.map(x => `
+      <div class="lx-award" data-act="go" data-id="${esc(x.r.studentId)}">
+        <span class="t">${x.ic}${x.t}</span>${avatar(x.r, 34)}
+        <span class="nm">${esc(x.r.name)}</span><span class="v">${x.txt}</span></div>`).join("")}</div>`;
+}
+
+function rivalHtml() {
+  const rid = S.rivalId;
+  if (!rid) {
+    return S.friendIds.length ? `<button class="lx-rival empty" data-act="tab" data-id="friends">${I.swords} রাইভাল বানাও — বন্ধুদের তালিকা থেকে</button>` : "";
+  }
+  const rv = S.rows.find(r => r.studentId === rid), mine = S.rows.find(r => r.studentId === me());
+  if (!rv) return "";
+  const gap = num(mine?.totalPoints) - num(rv.totalPoints);
+  const rec = S.h2h[rid] || { wins: 0, losses: 0, draws: 0 };
+  const g = gap > 0 ? `<div class="g ahead">তুমি ${fmt(gap)} XP এগিয়ে</div>` : gap < 0 ? `<div class="g behind">তুমি ${fmt(-gap)} XP পিছিয়ে</div>` : `<div class="g even">পয়েন্ট সমান সমান</div>`;
+  return `<button class="lx-rival" data-act="go" data-id="${esc(rid)}">
+    ${avatar(rv, 38)}
+    <div class="mid"><div class="k">তোমার রাইভাল · #${S.overallRank[rid] || "-"}</div><div class="n">${esc(rv.name)}</div>${g}</div>
+    <div class="rec"><b>${rec.wins}-${rec.losses}</b>জিত-হার</div></button>`;
+}
+
+function rankListHtml() {
+  const all = scopeRows();
+  const val = r => S.period === "week" ? weeklyXP(r.studentId) : num(r.totalPoints);
+  const q = normQ(S.rq);
+  const idx = new Map(all.map((r, i) => [r.studentId, i]));
+  const rows = q ? all.filter(r => normQ(r.name).includes(q) || normQ(r.studentId).includes(q)) : all;
+  if (all.length === 0) return `<div class="lx-card lx-empty">কেউ নেই</div>`;
+  if (rows.length === 0) return `<div class="lx-card lx-empty">পাওয়া যায়নি</div>`;
+
+  const showPodium = !q && all.length >= 3;
+  const topVal = Math.max(1, ...all.map(val));
+  let out = "";
+
+  if (showPodium) {
+    const order = [1, 0, 2];
+    out += `<div class="lx-podium">${order.map(i => {
+      const r = all[i], mine = r.studentId === me();
+      return `<div class="lx-pod p${i + 1} ${mine ? "me" : ""}" ${mine ? 'id="lxMe"' : ""} data-act="go" data-id="${esc(r.studentId)}">
+        <div class="lx-pod-av">${avatar(r, i === 0 ? 58 : 48)}<span class="lx-pod-n">${i + 1}</span></div>
+        <div class="lx-pod-nm">${esc(r.name)}</div>
+        <div class="lx-pod-v">${fmt(val(r))}<small>XP</small></div>
+        <div class="lx-pod-bar"></div></div>`;
+    }).join("")}</div>`;
+  }
+
+  const list = showPodium ? rows.slice(3) : rows;
+  if (list.length) {
+    out += `<div class="lx-card">${list.map(r => {
+      const i = idx.get(r.studentId), mine = r.studentId === me();
+      const w = weeklyXP(r.studentId);
+      const pct = Math.max(2, Math.round(val(r) / topVal * 100));
+      const meta = [batchOf(r), r.examsTaken ? `${r.examsTaken}টি পরীক্ষা` : "", r.examsTaken ? `গড় ${Math.round(num(r.avgPercentage))}%` : ""].filter(Boolean).join(" · ");
+      return `<div class="lx-row ${mine ? "me" : ""}" ${mine ? 'id="lxMe"' : ""} data-act="go" data-id="${esc(r.studentId)}">
+        <span class="lx-rk">${i + 1}</span>${avatar(r, 36)}
+        <div class="lx-mid"><div class="lx-nm">${esc(r.name)}${mine ? `<span class="lx-tag">তুমি</span>` : ""}</div>
+          <div class="lx-sub">${esc(meta)}</div>
+          <div class="lx-bar"><i style="width:${pct}%"></i></div></div>
+        <div class="lx-val">${fmt(val(r))}<small>XP</small>${S.period === "all" ? mvChip(S.movement[r.studentId]) : ""}
+          ${S.period === "all" && w > 0 ? `<span class="lx-wk">+${fmt(w)} এই সপ্তাহে</span>` : ""}</div></div>`;
+    }).join("")}</div>`;
+  }
+  return out;
+}
+const normQ = v => String(v ?? "").trim().toLocaleLowerCase();
+
 function viewRank() {
-  const rows = scopeRows();
   const batches = [...new Set(S.rows.map(batchOf))].filter(b => b !== NO_BATCH).sort();
   const chip = (group, k, t) => `<button class="lx-chip ${S[group] === k ? "on" : ""}" data-act="${group}" data-id="${k}">${t}</button>`;
-  const val = r => S.period === "week" ? weeklyXP(r.studentId) : num(r.totalPoints);
   return `<div style="display:flex;flex-direction:column;gap:10px">
+    ${rivalHtml()}
+    ${awardsHtml()}
     <div class="lx-filters">${chip("scope", "overall", "সবাই")}${chip("scope", "batch", "ব্যাচ")}${chip("scope", "friends", "বন্ধুরা")}
       <span style="flex:1"></span>${chip("period", "all", "সর্বমোট")}${chip("period", "week", "এই সপ্তাহ")}</div>
     ${S.scope === "batch" ? `<select class="lx-sel" data-sel="batch">${batches.map(b => `<option value="${esc(b)}" ${S.batch === b ? "selected" : ""}>${esc(b)}</option>`).join("")}</select>` : ""}
-    ${rows.length === 0 ? `<div class="lx-card lx-empty">কেউ নেই</div>` : `<div class="lx-card">${rows.map((r, i) => {
-      const mine = r.studentId === me();
-      return `<div class="lx-row ${mine ? "me" : ""}" data-act="go" data-id="${esc(r.studentId)}">
-        <span class="lx-rk ${i < 3 ? "t" + (i + 1) : ""}">${i + 1}</span>${avatar(r, 34)}
-        <div style="min-width:0"><div class="lx-nm">${esc(r.name)}${mine ? `<span class="lx-tag">তুমি</span>` : ""}</div>
-        <div class="lx-sub">${esc(batchOf(r))}</div></div>
-        <div class="lx-val">${fmt(val(r))}${S.period === "all" ? mvChip(S.movement[r.studentId]) : ""}</div></div>`;
-    }).join("")}</div>`}
+    <div class="lx-search"><input class="lx-inp" id="lxSearch" type="search" placeholder="নাম দিয়ে খোঁজো" value="${esc(S.rq)}" autocomplete="off">
+      <button class="lx-jump" type="button" data-act="jump">${ICO.target}আমি</button></div>
+    <div id="lxList" style="display:flex;flex-direction:column;gap:10px">${rankListHtml()}</div>
   </div>`;
 }
 
@@ -374,6 +561,7 @@ document.addEventListener("change", (e) => {
   if (e.target.dataset?.sel === "batch") { S.batch = e.target.value; renderBody(); }
 });
 document.addEventListener("input", (e) => {
+  if (e.target.id === "lxSearch") { S.rq = e.target.value; const l = document.getElementById("lxList"); if (l) l.innerHTML = rankListHtml(); return; }
   if (e.target.id === "frSearch") { S.q = e.target.value; const r = document.getElementById("frRes"); if (r) r.innerHTML = searchResultsHtml(); }
 });
 
@@ -402,6 +590,14 @@ document.addEventListener("click", (e) => {
     case "fr-remove": if (confirm("এই বন্ধুকে তালিকা থেকে সরাবে?")) run(() => removeFriend(me(), id), "বন্ধুত্ব শেষ হয়েছে"); break;
     case "rival-set": run(() => setRival(me(), id), "রাইভাল ঠিক করা হয়েছে"); break;
     case "rival-clear": run(() => clearRival(me()), "রাইভাল সরানো হয়েছে"); break;
+    case "jump": {
+      if (S.rq) { S.rq = ""; const inp = document.getElementById("lxSearch"); if (inp) inp.value = ""; const l = document.getElementById("lxList"); if (l) l.innerHTML = rankListHtml(); }
+      const el = document.getElementById("lxMe");
+      if (!el) { showToast("এই তালিকায় তুমি নেই।", "error"); break; }
+      el.scrollIntoView({ block: "center", behavior: "smooth" });
+      el.classList.remove("lx-flash"); void el.offsetWidth; el.classList.add("lx-flash");
+      break;
+    }
     case "cheer": run(() => sendCheer(me(), id, t.dataset.x), "উৎসাহ পাঠানো হয়েছে"); break;
   }
 });
