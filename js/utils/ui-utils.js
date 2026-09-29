@@ -1826,6 +1826,10 @@ export function renderStudentHeader(
           <span>ডার্ক মোড</span>
           <button class="theme-toggle" id="themeToggle" type="button" aria-label="থিম পরিবর্তন" title="থিম পরিবর্তন"><span class="theme-toggle-thumb"></span></button>
         </div>
+        <div class="hdr-menu-item hdr-menu-row">
+          <span>পরীক্ষার টাইমার</span>
+          <button class="hdr-switch" id="examTimerToggle" type="button" role="switch" aria-checked="true" aria-label="পরীক্ষার টাইমার দেখাও বা লুকাও"><span></span></button>
+        </div>
         <a href="../index.html" class="hdr-menu-item" role="menuitem">${icons.arrowLeft}<span>Back</span></a>
       </div>
     </header>
@@ -1867,6 +1871,19 @@ export function renderStudentHeader(
     // ---------- Theme switch (single binding for all student pages) ----------
     const themeBtn = document.getElementById("themeToggle");
     if (themeBtn) themeBtn.addEventListener("click", () => { toggleTheme(); });
+
+    // ---------- Exam timer show/hide switch ----------
+    const timerSwitch = document.getElementById("examTimerToggle");
+    if (timerSwitch) {
+      const paintSwitch = () => {
+        const on = !isExamTimerHidden();
+        timerSwitch.classList.toggle("on", on);
+        timerSwitch.setAttribute("aria-checked", on ? "true" : "false");
+      };
+      paintSwitch();
+      timerSwitch.addEventListener("click", () => setExamTimerHidden(!isExamTimerHidden()));
+      window.addEventListener("examtimer:change", paintSwitch);
+    }
 
     // ---------- Avatar menu ----------
     const userBtn = document.getElementById("hdrUserBtn");
@@ -2400,4 +2417,15 @@ try {
     err
   );
 
+}
+
+
+/* ---------- Exam countdown timer: show/hide preference (this device) ---------- */
+const EXAM_TIMER_KEY = "examTimerHidden";
+export function isExamTimerHidden() {
+  try { return localStorage.getItem(EXAM_TIMER_KEY) === "1"; } catch { return false; }
+}
+export function setExamTimerHidden(hidden) {
+  try { localStorage.setItem(EXAM_TIMER_KEY, hidden ? "1" : "0"); } catch { /* storage blocked */ }
+  window.dispatchEvent(new Event("examtimer:change"));
 }
