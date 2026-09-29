@@ -316,3 +316,93 @@ export async function getRecentUsageForAdmin(limitN = 100) {
   rows.sort((a, b) => Number(b.createdAtMs || 0) - Number(a.createdAtMs || 0));
   return rows.slice(0, limitN);
 }
+
+
+/* =========================================================
+   FREE CARD CLAIM (after every exam)
+   Every student who has submitted an exam can claim free random
+   XP-store card(s) for that exam, once:
+     - the exam's top scorer gets 2 cards,
+     - everyone else gets 1 card.
+   "Top scorer" = highest obtainedMarks among all submissions of that exam
+   (ties broken by faster timeTakenSeconds; an exact tie makes both top).
+   Claimed cards go straight into storeInventory (items[id].purchased += n),
+   so they show up in the wallet / store / exam exactly like bought cards --
+   but no XP is spent (totalSpentXP is untouched).
+   One claim doc per exam+student: examCardClaims/{examId}_{studentId}.
+   Same client-trust model as the rest of the store (see header above).
+   ========================================================= */
+
+function randomInt(n) {
+  const a = new Uint32Array(1);
+  crypto.getRandomValues(a);
+  return a[0] % n;
+}
+
+/** The claim this student already made for this exam, or null. */
+export async function getExamClaim(examId, studentId) {
+  if (!examId || !studentId) return null;
+  const snap = await getDoc(doc(db, "examCardClaims", `${examId}_${studentId}`));
+  return snap.exists() ? snap.data() : null;
+}
+
+/**
+ * Claim the free card(s) for one exam. Throws:
+ *   NO_RESULT        -- this student has no submission for the exam
+ *   ALREADY_CLAIMED  -- already claimed (err.claim holds the earlier claim)
+ * Returns { cards: [itemId...], isTop, count }.
+ */
+export async function claimExamCards(examId, studentId) {
+  if (!examId || !studentId) throw new Error("NO_RESULT");
+
+  const snap = await getDocs(query(collection(db, "results"), where("examId", "==", examId)));
+  const rows = snap.docs.map(d => d.data());
+  const mine = rows.find(r => r.studentId === studentId);
+  if (!mine) throw new Error("NO_RESULT");
+
+  const better = (a, b) => {           // is a strictly better than b ?
+    const ma = Number(a.obtainedMarks || 0), mb = Number(b.obtainedMarks || 0);
+    if (ma !== mb) return ma > mb;
+    const ta = Number(a.timeTakenSeconds ?? Infinity), tb = Number(b.timeTakenSeconds ?? Infinity);
+    return ta < tb;
+  };
+  const isTop = !rows.some(r => r.studentId !== studentId && better(r, mine));
+  const count = isTop ? 2 : 1;
+  const cards = Array.from({ length: count }, () => STORE_ITEMS[randomInt(STORE_ITEMS.length)].id);
+
+  const claimRef = doc(db, "examCardClaims", `${examId}_${studentId}`);
+  const invRef = doc(db, "storeInventory", studentId);
+
+  await runTransaction(db, async (tx) => {
+    const [claimSnap, invSnap] = await Promise.all([tx.get(claimRef), tx.get(invRef)]);
+    if (claimSnap.exists()) {
+      const err = new Error("ALREADY_CLAIMED");
+      err.claim = claimSnap.data();
+      throw err;
+    }
+    const items = { ...((invSnap.exists() ? invSnap.data().items : null) || {}) };
+    for (const id of cards) {
+      const row = items[id] || { purchased: 0, used: 0 };
+      items[id] = { purchased: Number(row.purchased || 0) + 1, used: Number(row.used || 0) };
+    }
+    tx.set(invRef, { studentId, items, updatedAt: Date.now() }, { merge: true });
+    tx.set(claimRef, { studentId, examId, examName: mine.examName || "", isTop, count, cards, claimedAt: Date.now() });
+  });
+
+  // Battle-room cards are individual expiring docs (see purchaseCart) -- mint
+  // them too, best-effort; the inventory counter above is already committed.
+  const now = Date.now();
+  const mints = [];
+  for (const id of cards) {
+    const item = getStoreItem(id);
+    if (!item?.validityDays) continue;
+    mints.push(addDoc(collection(db, "battleRoomCards"), {
+      studentId, itemId: id, status: "available", purchasedAt: now,
+      expiresAt: now + item.validityDays * 24 * 60 * 60 * 1000,
+      usedAt: null, matchCode: null, source: "exam_claim"
+    }));
+  }
+  if (mints.length) Promise.all(mints).catch(() => {});
+
+  return { cards, isTop, count };
+}
