@@ -7,282 +7,133 @@
 <link rel="stylesheet" href="../css/style.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
-  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
-  body { overflow-x: hidden; background: var(--bg); }
-  .app-shell { max-width: 600px; padding-bottom: 40px; margin: 0 auto; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; } }
+  body { overflow-x: hidden; background: var(--bg-app); }
+  .app-shell { max-width: 600px; margin: 0 auto; padding-bottom: 48px; }
+  .pf { display: grid; gap: 14px; margin-top: 14px; }
 
-  /* ===== Premium Glass Cards ===== */
-  .glass-card {
-    background: rgba(128, 128, 128, 0.03); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(128, 128, 128, 0.12); border-radius: 20px; padding: 20px; margin-bottom: 16px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.02);
-  }
+  /* ---------- generic pieces ---------- */
+  .pf-card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 20px; padding: 18px; box-shadow: var(--shadow-soft); }
+  .pf-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; margin-bottom: 14px; }
+  .pf-h { font-size: 1rem; font-weight: 900; color: var(--text-primary); }
+  .pf-note { font-size: .72rem; font-weight: 700; color: var(--text-muted); margin-top: 2px; }
+  .pf-empty { padding: 22px 10px; text-align: center; font-size: .8rem; font-weight: 700; color: var(--text-muted); }
+  .pf-btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--surface-border); background: var(--surface-highlight); color: var(--text-primary); font-size: .82rem; font-weight: 800; cursor: pointer; transition: transform var(--transition), background var(--transition); }
+  .pf-btn:active { transform: scale(.97); }
+  .pf-btn.primary { background: var(--color-accent); border-color: var(--color-accent); color: #fff; }
+  .pf-btn.danger { color: var(--color-danger); border-color: rgba(166,64,47,.3); background: transparent; }
+  .pf-btn.sm { padding: 7px 11px; font-size: .74rem; border-radius: 10px; }
+  .pf-btn:disabled { opacity: .6; cursor: not-allowed; }
+  .pf-btn svg { flex: none; }
 
-  /* ===== Identity Section ===== */
-  .profile-header { text-align: center; padding: 24px 16px; position: relative; overflow: hidden; }
-  .profile-header::before { content: ''; position: absolute; top: -50px; left: 50%; transform: translateX(-50%); width: 200px; height: 100px; background: var(--color-accent); filter: blur(60px); opacity: 0.15; z-index: -1; border-radius: 50%; }
-  
-  /* Image Protection Layer */
-  .img-container { position: relative; width: 110px; height: 110px; margin: 0 auto 16px; }
-  .img-container img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid rgba(128,128,128,0.2); pointer-events: none; user-select: none; -webkit-user-drag: none; }
-  .img-shield { position: absolute; inset: 0; z-index: 10; border-radius: 50%; } 
-  .fallback-avatar { width: 100%; height: 100%; border-radius: 50%; background: linear-gradient(135deg, var(--color-accent), #3b82f6); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 900; }
+  /* ---------- hero ---------- */
+  .pf-hero { position: relative; overflow: hidden; padding: 20px; border-radius: 24px; border: 1px solid rgba(var(--color-accent-rgb), .28); background: linear-gradient(140deg, rgba(var(--color-accent-rgb), .15), var(--surface) 64%); box-shadow: var(--shadow-soft); }
+  .pf-id { display: flex; gap: 16px; align-items: center; }
+  .pf-avatar { position: relative; width: 84px; height: 84px; flex: none; border-radius: 26px; overflow: hidden; background: linear-gradient(135deg, var(--color-accent), #7c5a22); color: #fff; display: grid; place-items: center; font-size: 2rem; font-weight: 900; border: 2px solid rgba(var(--color-accent-rgb), .45); }
+  .pf-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; user-select: none; -webkit-user-drag: none; }
+  .pf-name { font-size: 1.35rem; font-weight: 900; line-height: 1.2; color: var(--text-primary); word-break: break-word; }
+  .pf-sub { margin-top: 4px; font-size: .78rem; font-weight: 700; color: var(--text-secondary); }
+  .pf-title { display: inline-flex; align-items: center; gap: 6px; margin-top: 9px; padding: 5px 10px; border-radius: 999px; background: rgba(var(--color-accent-rgb), .12); border: 1px solid rgba(var(--color-accent-rgb), .25); color: var(--color-accent); font-size: .72rem; font-weight: 900; }
+  .pf-level { margin-top: 18px; }
+  .pf-level-row { display: flex; justify-content: space-between; gap: 10px; font-size: .72rem; font-weight: 800; color: var(--text-secondary); margin-bottom: 6px; }
+  .pf-bar { height: 8px; border-radius: 99px; background: var(--surface-edge); overflow: hidden; }
+  .pf-bar i { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, #d9a84e, var(--color-accent)); transition: width .8s cubic-bezier(.2,.8,.2,1); }
+  .pf-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 16px; }
+  .pf-metric { padding: 11px 4px; text-align: center; border-radius: 14px; background: var(--surface); border: 1px solid var(--surface-border); }
+  .pf-metric b { display: block; font-family: var(--font-num); font-size: 1.05rem; font-weight: 800; color: var(--text-primary); }
+  .pf-metric span { display: block; margin-top: 2px; font-size: .66rem; font-weight: 700; color: var(--text-muted); }
+  .pf-actions { display: flex; gap: 8px; margin-top: 14px; }
+  .pf-actions .pf-btn { flex: 1; }
 
-  .st-name { font-size: 1.4rem; font-weight: 900; color: var(--text-primary); margin-bottom: 4px; }
-  .st-meta { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
-  .batch-badge { background: rgba(var(--color-accent-rgb), 0.1); color: var(--color-accent); padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.75rem; border: 1px solid rgba(var(--color-accent-rgb), 0.2); }
+  /* ---------- tabs ---------- */
+  .pf-tabs { display: flex; gap: 6px; padding: 5px; border-radius: 16px; background: var(--surface-edge); border: 1px solid var(--surface-border); }
+  .pf-tab { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 6px; border: 0; border-radius: 12px; background: transparent; color: var(--text-secondary); font-size: .8rem; font-weight: 800; cursor: pointer; transition: background var(--transition), color var(--transition); }
+  .pf-tab.active { background: var(--surface); color: var(--color-accent); box-shadow: var(--shadow-soft); }
+  .pf-dot { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 99px; display: none; place-items: center; background: var(--color-danger); color: #fff; font-size: .62rem; font-weight: 900; }
+  .pf-dot.on { display: inline-grid; }
+  .pf-pane { display: none; gap: 14px; }
+  .pf-pane.active { display: grid; animation: pfIn .25s ease; }
+  @keyframes pfIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
-  /* ===== Tab Navigation ===== */
-  .tab-nav { display: flex; gap: 8px; background: rgba(128,128,128,0.05); padding: 6px; border-radius: 16px; margin-bottom: 20px; border: 1px solid rgba(128,128,128,0.1); }
-  .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; color: var(--text-secondary); font-size: 0.85rem; font-weight: 800; border-radius: 12px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 6px; }
-  .tab-btn.active { background: var(--surface); color: var(--color-accent); box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--surface-border); }
-  .tab-content { display: none; animation: fadeIn 0.3s ease; }
-  .tab-content.active { display: block; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+  /* ---------- overview ---------- */
+  .pf-records { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .pf-rec { padding: 14px; border-radius: 16px; background: var(--surface-highlight); border: 1px solid var(--surface-border); }
+  .pf-rec b { display: block; font-family: var(--font-num); font-size: 1.4rem; font-weight: 800; color: var(--text-primary); }
+  .pf-rec span { display: block; margin-top: 3px; font-size: .72rem; font-weight: 700; color: var(--text-muted); }
+  .pf-strength { display: grid; gap: 12px; }
+  .pf-srow { display: grid; grid-template-columns: 96px 1fr 46px; gap: 10px; align-items: center; }
+  .pf-srow span { font-size: .76rem; font-weight: 800; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pf-srow b { font-family: var(--font-num); font-size: .78rem; font-weight: 800; text-align: right; color: var(--color-accent); }
 
-  /* ===== Stats Grid ===== */
-  .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-  .stat-box { background: rgba(128,128,128,0.03); border: 1px solid rgba(128,128,128,0.08); border-radius: 14px; padding: 16px; text-align: center; }
-  .stat-val { font-size: 1.6rem; font-weight: 900; color: var(--text-primary); font-family: var(--font-num); }
-  .stat-lbl { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-top: 4px; }
+  /* invite */
+  .pf-invite { border-color: rgba(var(--color-accent-rgb), .3); background: linear-gradient(140deg, rgba(var(--color-accent-rgb), .1), var(--surface) 60%); }
+  .pf-code { display: inline-block; margin: 2px 0 12px; padding: 6px 12px; border-radius: 10px; background: var(--surface); border: 1px dashed rgba(var(--color-accent-rgb), .55); font-family: var(--font-num); font-weight: 800; letter-spacing: .08em; color: var(--color-accent); }
+  .pf-link { padding: 10px 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--surface-border); font-size: .72rem; font-weight: 700; color: var(--text-secondary); word-break: break-all; margin-bottom: 12px; direction: ltr; }
+  .pf-invite p { font-size: .78rem; line-height: 1.6; color: var(--text-secondary); font-weight: 600; }
+  .pf-invite .row { display: flex; gap: 8px; }
+  .pf-invite .row .pf-btn { flex: 1; }
 
-  /* ===== Search & Filter ===== */
-  .batch-filters { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 12px; scrollbar-width: none; margin-bottom: 12px; }
-  .batch-filters::-webkit-scrollbar { display: none; }
-  .chip { padding: 6px 14px; border-radius: 99px; font-size: 0.75rem; font-weight: 800; background: rgba(128,128,128,0.05); border: 1px solid rgba(128,128,128,0.15); color: var(--text-secondary); cursor: pointer; white-space: nowrap; transition: 0.2s; }
-  .chip.active { background: var(--color-accent); border-color: var(--color-accent); color: #fff; }
-  .search-box { display: flex; align-items: center; gap: 10px; background: rgba(128,128,128,0.03); border: 1px solid var(--surface-border); border-radius: 12px; padding: 10px 14px; margin-bottom: 16px; }
-  .search-box input { flex: 1; border: none; background: transparent; outline: none; font-family: inherit; font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
+  /* ---------- badges ---------- */
+  .pf-bsum { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .pf-bsum big { font-family: var(--font-num); font-size: 1.7rem; font-weight: 800; color: var(--color-accent); }
+  .pf-bsum big small { font-size: .8rem; color: var(--text-muted); font-weight: 700; }
+  .pf-next { display: grid; gap: 4px; margin-top: 4px; }
+  .pf-nrow { display: flex; align-items: center; gap: 12px; padding: 9px 0; border: 0; background: transparent; text-align: left; width: 100%; cursor: pointer; color: inherit; font: inherit; }
+  .pf-nrow + .pf-nrow { border-top: 1px solid var(--surface-border); }
+  .pf-nrow strong { display: block; font-size: .8rem; font-weight: 900; color: var(--text-primary); }
+  .pf-nrow small { display: block; margin-top: 2px; font-size: .68rem; font-weight: 700; color: var(--text-muted); }
+  .pf-chips { display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none; margin-bottom: 14px; }
+  .pf-chips::-webkit-scrollbar { display: none; }
+  .pf-chip { padding: 7px 13px; border-radius: 99px; white-space: nowrap; border: 1px solid var(--surface-border); background: var(--surface-highlight); color: var(--text-secondary); font-size: .74rem; font-weight: 800; cursor: pointer; }
+  .pf-chip.active { background: var(--color-accent); border-color: var(--color-accent); color: #fff; }
+  .pf-bgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .pf-badge { --rc: #8b95a5; position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; padding: 16px 10px 14px; border-radius: 18px; border: 1px solid var(--surface-border); background: var(--surface-highlight); color: var(--text-primary); font: inherit; cursor: pointer; transition: transform var(--transition), border-color var(--transition); }
+  .pf-badge:active { transform: scale(.98); }
+  .pf-badge.earned { border-color: color-mix(in srgb, var(--rc) 45%, transparent); background: linear-gradient(160deg, color-mix(in srgb, var(--rc) 11%, var(--surface)), var(--surface)); }
+  .pf-bico { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; color: var(--rc); background: color-mix(in srgb, var(--rc) 14%, var(--surface)); border: 1px solid color-mix(in srgb, var(--rc) 32%, transparent); margin-bottom: 4px; }
+  .pf-bico svg { width: 26px; height: 26px; }
+  .pf-bico.sm { width: 44px; height: 44px; border-radius: 14px; margin: 0; flex: none; }
+  .pf-bico.sm svg { width: 22px; height: 22px; }
+  .pf-badge.locked .pf-bico { color: var(--text-muted); background: var(--surface-edge); border-color: var(--surface-border); filter: grayscale(.6); opacity: .8; }
+  .pf-badge strong { font-size: .76rem; font-weight: 900; line-height: 1.3; }
+  .pf-badge .rar { font-size: .6rem; font-weight: 900; letter-spacing: .04em; color: var(--rc); }
+  .pf-badge.locked .rar { color: var(--text-muted); }
+  .pf-badge .got { margin-top: 2px; font-size: .68rem; font-weight: 900; color: var(--color-success); }
+  .pf-badge .prog { width: 100%; margin-top: 6px; }
+  .pf-badge .prog .pf-bar { height: 5px; }
+  .pf-badge .prog small { display: block; margin-top: 4px; font-size: .64rem; font-weight: 800; color: var(--text-muted); }
+  .pf-badge .sec { margin-top: 2px; font-size: .66rem; font-weight: 700; color: var(--text-muted); }
 
-  /* ===== Network Rows ===== */
-  .dir-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: rgba(128,128,128,0.02); border: 1px solid var(--surface-border); border-radius: 14px; margin-bottom: 10px; }
-  .dir-name { font-weight: 800; font-size: 0.9rem; color: var(--text-primary); }
-  .dir-batch { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; background: rgba(128,128,128,0.08); padding: 2px 6px; border-radius: 4px; margin-left: 6px; }
+  .pf-modal { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; padding: 20px; background: rgba(0,0,0,.55); animation: pfIn .2s ease; }
+  .pf-modal-card { --rc: #8b95a5; width: min(360px, 100%); padding: 26px 22px 20px; border-radius: 24px; text-align: center; background: var(--surface); border: 1px solid var(--surface-border); box-shadow: var(--shadow-lift); }
+  .pf-modal-card .pf-bico { width: 84px; height: 84px; border-radius: 26px; margin: 0 auto 12px; }
+  .pf-modal-card .pf-bico svg { width: 42px; height: 42px; }
+  .pf-modal-card h3 { font-size: 1.1rem; font-weight: 900; margin-bottom: 4px; }
+  .pf-modal-card .rar { font-size: .68rem; font-weight: 900; color: var(--rc); }
+  .pf-how { margin: 14px 0; padding: 12px; border-radius: 14px; background: var(--surface-highlight); text-align: left; font-size: .8rem; line-height: 1.6; color: var(--text-secondary); font-weight: 600; }
+  .pf-how b { color: var(--text-primary); }
+  .pf-unlock .pf-bico { animation: pfPop .7s cubic-bezier(.18,.9,.2,1); }
+  @keyframes pfPop { 0% { transform: scale(.4) rotate(-8deg); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: none; } }
 
-  /* Buttons */
-  .btn-primary { background: var(--color-accent); color: #fff; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; width: 100%; }
-  .btn-secondary { background: rgba(128,128,128,0.08); color: var(--text-primary); border: 1px solid rgba(128,128,128,0.2); padding: 8px 14px; border-radius: 8px; font-weight: 800; cursor: pointer; transition: 0.2s; }
-  .btn-sm { padding: 6px 12px; font-size: 0.75rem; border-radius: 8px; }
-  .status-badge { padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; border: 1px solid transparent; }
-  .badge-friend { background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.2); }
-  .badge-pending { background: rgba(128,128,128,0.1); color: var(--text-muted); border-color: rgba(128,128,128,0.2); }
+  /* ---------- friends ---------- */
+  .pf-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 14px; background: var(--surface-highlight); border: 1px solid var(--surface-border); }
+  .pf-row + .pf-row { margin-top: 8px; }
+  .pf-rname { font-size: .88rem; font-weight: 800; color: var(--text-primary); min-width: 0; }
+  .pf-rname small { display: inline-block; margin-left: 6px; padding: 2px 7px; border-radius: 6px; background: var(--surface-edge); font-size: .66rem; font-weight: 700; color: var(--text-muted); }
+  .pf-tag { display: inline-block; margin-top: 3px; padding: 2px 8px; border-radius: 6px; font-size: .64rem; font-weight: 800; background: rgba(var(--color-accent-rgb), .12); color: var(--color-accent); }
+  .pf-state { padding: 4px 10px; border-radius: 8px; font-size: .68rem; font-weight: 800; white-space: nowrap; }
+  .pf-state.ok { background: rgba(47,125,94,.12); color: var(--color-success); }
+  .pf-state.wait { background: var(--surface-edge); color: var(--text-muted); }
+  .pf-search { display: flex; align-items: center; gap: 10px; padding: 10px 14px; margin-bottom: 12px; border-radius: 12px; background: var(--surface-highlight); border: 1px solid var(--surface-border); }
+  .pf-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; font-size: .85rem; font-weight: 600; color: var(--text-primary); }
 
-
-
-  .badge-mini-card b{display:block;font-size:.65rem;line-height:1.25}
-  .badge-mini-card small{display:block;margin-top:3px;font-size:.55rem;color:var(--text-muted);font-weight:700}
-  .badge-art{width:40px;height:40px;min-width:40px;border-radius:13px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.15);color:#fff;background:linear-gradient(145deg,#64748b,#1e293b);box-shadow:0 5px 15px rgba(0,0,0,.12)}
-  .badge-art svg{width:22px;height:22px}
-  .badge-art.common{background:linear-gradient(145deg,#64748b,#334155)}
-  .badge-art.uncommon{background:linear-gradient(145deg,#0891b2,#164e63)}
-  .badge-art.rare{background:linear-gradient(145deg,#4f46e5,#312e81)}
-  .badge-art.epic{background:linear-gradient(145deg,#9333ea,#581c87)}
-  .badge-art.legendary{background:linear-gradient(145deg,#d97706,#78350f)}
-  .badge-art.secret{background:linear-gradient(145deg,#0f172a,#020617)}
-
-/* ==========================================================
-   STUDENT PROFILE — no emoji, icon-only interface
-   ========================================================== */
-.profile-premium { display:grid; gap:16px; }
-.profile-hero { position:relative; overflow:hidden; padding:24px; border-radius:24px; border:1px solid rgba(var(--color-accent-rgb),.18); background:linear-gradient(135deg,rgba(var(--color-accent-rgb),.12),rgba(128,128,128,.035) 55%,rgba(59,130,246,.08)); box-shadow:0 18px 50px rgba(0,0,0,.08); }
-.profile-hero:before { content:""; position:absolute; width:220px; height:220px; right:-90px; top:-110px; border-radius:50%; background:var(--color-accent); opacity:.08; filter:blur(8px); }
-.profile-hero-grid { position:relative; display:grid; grid-template-columns:auto 1fr auto; gap:18px; align-items:center; }
-.profile-avatar-xl { width:96px; height:96px; border-radius:28px; overflow:hidden; border:2px solid rgba(var(--color-accent-rgb),.35); background:linear-gradient(135deg,var(--color-accent),#3b82f6); box-shadow:0 12px 28px rgba(0,0,0,.12); display:grid; place-items:center; color:#fff; font-size:2rem; font-weight:900; }
-.profile-avatar-xl img { width:100%; height:100%; object-fit:cover; }
-.profile-eyebrow { font-size:.7rem; text-transform:uppercase; letter-spacing:.14em; font-weight:900; color:var(--color-accent); margin-bottom:5px; }
-.profile-title { margin:0; font-size:clamp(1.55rem,5vw,2.25rem); font-weight:950; color:var(--text-primary); letter-spacing:-.03em; }
-.profile-subtitle { margin-top:5px; color:var(--text-secondary); font-size:.85rem; font-weight:700; }
-.profile-title-pill { display:inline-flex; align-items:center; gap:7px; margin-top:10px; padding:7px 10px; border-radius:999px; background:rgba(var(--color-accent-rgb),.1); border:1px solid rgba(var(--color-accent-rgb),.18); color:var(--color-accent); font-size:.75rem; font-weight:900; }
-.profile-hero-actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
-.profile-icon-btn { width:42px; height:42px; border-radius:13px; display:grid; place-items:center; border:1px solid var(--surface-border); background:var(--surface); color:var(--text-secondary); cursor:pointer; }
-.profile-icon-btn:hover { color:var(--color-accent); border-color:rgba(var(--color-accent-rgb),.35); }
-.profile-metrics { position:relative; display:grid; grid-template-columns:repeat(4,1fr); gap:9px; margin-top:18px; }
-.profile-metric { padding:13px; border-radius:16px; background:rgba(255,255,255,.45); border:1px solid rgba(128,128,128,.12); backdrop-filter:blur(10px); }
-.profile-metric-label { color:var(--text-muted); font-size:.68rem; font-weight:800; margin-bottom:4px; }
-.profile-metric-value { color:var(--text-primary); font-size:1.1rem; font-weight:950; font-family:var(--font-num); }
-.profile-section { padding:18px; border-radius:20px; border:1px solid var(--surface-border); background:var(--surface); box-shadow:0 10px 35px rgba(0,0,0,.035); }
-.profile-section-head { display:flex; justify-content:space-between; align-items:flex-end; gap:12px; margin-bottom:14px; }
-.profile-section-title { margin:0; color:var(--text-primary); font-size:1.02rem; font-weight:950; }
-.profile-section-note { color:var(--text-muted); font-size:.7rem; font-weight:700; }
-.identity-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
-.identity-card { padding:14px; border-radius:16px; background:rgba(128,128,128,.045); border:1px solid rgba(128,128,128,.1); }
-.identity-icon { width:34px; height:34px; border-radius:11px; display:grid; place-items:center; color:var(--color-accent); background:rgba(var(--color-accent-rgb),.09); margin-bottom:9px; }
-.identity-label { color:var(--text-muted); font-size:.68rem; font-weight:800; }
-.identity-value { margin-top:3px; color:var(--text-primary); font-size:1rem; font-weight:950; }
-.journey { position:relative; display:grid; gap:12px; }
-.journey:before { content:""; position:absolute; left:10px; top:10px; bottom:10px; width:2px; background:linear-gradient(var(--color-accent),rgba(var(--color-accent-rgb),.08)); }
-.journey-item { position:relative; display:grid; grid-template-columns:22px 1fr; gap:10px; align-items:start; }
-.journey-dot { width:20px; height:20px; border-radius:50%; background:var(--surface); border:2px solid var(--color-accent); z-index:1; display:grid; place-items:center; }
-.journey-dot svg { width:10px; height:10px; }
-.journey-card { padding:11px 13px; border-radius:14px; background:rgba(128,128,128,.045); border:1px solid rgba(128,128,128,.1); }
-.journey-card strong { color:var(--text-primary); font-size:.8rem; }
-.journey-card span { display:block; margin-top:3px; color:var(--text-muted); font-size:.68rem; font-weight:700; }
-.strength-list { display:grid; gap:12px; }
-.strength-row { display:grid; grid-template-columns:105px 1fr 48px; gap:10px; align-items:center; }
-.strength-name { color:var(--text-secondary); font-size:.74rem; font-weight:850; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.strength-bar { height:8px; background:rgba(128,128,128,.13); border-radius:999px; overflow:hidden; }
-.strength-fill { height:100%; border-radius:999px; background:linear-gradient(90deg,var(--color-accent),#3b82f6); }
-.strength-score { color:var(--color-accent); font-size:.75rem; font-weight:950; text-align:right; font-family:var(--font-num); }
-.records-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:9px; }
-.record-card { padding:13px; border-radius:15px; background:rgba(128,128,128,.045); border:1px solid rgba(128,128,128,.1); }
-.record-value { color:var(--text-primary); font-size:1.15rem; font-weight:950; font-family:var(--font-num); }
-.record-label { margin-top:3px; color:var(--text-muted); font-size:.68rem; font-weight:800; }
-.activity-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
-.activity-cell { aspect-ratio:1; border-radius:5px; background:rgba(128,128,128,.1); border:1px solid rgba(128,128,128,.06); }
-.activity-cell.active-1 { background:rgba(212,162,68,.30); border-color:rgba(212,162,68,.22); }
-.activity-cell.active-2 { background:rgba(212,162,68,.58); border-color:rgba(212,162,68,.35); }
-.activity-cell.active-3 { background:#d4a244; border-color:#d4a244; box-shadow:0 0 0 1px rgba(212,162,68,.18),0 4px 10px rgba(212,162,68,.14); }
-.rival-card { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:12px; padding:16px; border-radius:18px; background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(var(--color-accent-rgb),.06)); border:1px solid rgba(var(--color-accent-rgb),.16); }
-.rival-person { text-align:center; }
-.rival-name { color:var(--text-primary); font-weight:950; font-size:.85rem; }
-.rival-meta { color:var(--text-muted); font-size:.65rem; font-weight:750; margin-top:2px; }
-.rival-স্কোর { font-size:1.4rem; font-weight:950; color:var(--text-primary); font-family:var(--font-num); }
-.rival-vs { color:var(--text-muted); font-size:.65rem; font-weight:900; }
-.profile-empty { padding:22px; text-align:center; color:var(--text-muted); font-size:.78rem; font-weight:750; }
-@media(max-width:640px){ .profile-hero-grid{grid-template-columns:auto 1fr}.profile-hero-actions{grid-column:1/-1;justify-content:flex-start}.profile-metrics{grid-template-columns:repeat(2,1fr)}.identity-grid{grid-template-columns:repeat(2,1fr)}.strength-row{grid-template-columns:86px 1fr 42px}.records-grid{grid-template-columns:repeat(2,1fr)} }
-@media(min-width:900px){ .profile-premium{grid-template-columns:1.15fr .85fr;align-items:start}.profile-hero,.profile-tabs-wrap{grid-column:1/-1}.profile-section.full{grid-column:1/-1}.profile-section.tall{grid-row:span 2} }
+  @media (max-width: 380px) { .pf-metrics { grid-template-columns: repeat(2, 1fr); } .pf-avatar { width: 72px; height: 72px; font-size: 1.7rem; } }
+  @media (min-width: 520px) { .pf-bgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 </style>
-
-<style id="badge-polish-fix">
-.advanced-badges{
-  margin:0;
-  padding:18px;
-  overflow:hidden;
-  background:linear-gradient(145deg,#fffdf8 0%,#fbf7ed 52%,#fffaf1 100%);
-  border:1px solid rgba(178,145,78,.16);
-  box-shadow:0 12px 38px rgba(139,112,55,.08);
-  color:#3c3428;
-}
-.badge-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.badge-head h2{margin:3px 0;font-size:1.24rem;letter-spacing:-.02em;color:#30291f}
-.badge-head p{margin:0;color:#8c806e;font-size:.72rem;font-weight:750}
-.badge-total{font-size:1.45rem;font-weight:950;color:#bd8a2f;white-space:nowrap}
-.badge-total span{font-size:.72rem;color:#a99a83;font-weight:800}
-.badge-kicker{font-size:.58rem;letter-spacing:.17em;font-weight:950;color:#c0933e;opacity:.9}
-.badge-progress{height:6px;border-radius:99px;background:#eee6d7;margin:12px 1px 14px;overflow:hidden}
-.badge-progress i,.mini-progress i,.detail-progress i{
-  display:block;height:100%;border-radius:inherit;
-  background:linear-gradient(90deg,#d6a13b,#c78d35,#b67a2e);
-  transition:width .7s cubic-bezier(.2,.8,.2,1)
-}
-.almost-box{
-  border:1px solid rgba(196,150,68,.18);
-  background:linear-gradient(135deg,#fffaf0,#f8f3ff);
-  border-radius:17px;padding:11px 12px;margin-bottom:14px;
-}
-.almost-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
-.almost-title span{font-size:.72rem;font-weight:950;color:#40372b}
-.almost-title small{font-size:.58rem;color:#b17e27;font-weight:800}
-.almost-item{
-  width:100%;display:flex;align-items:center;gap:10px;border:0;background:transparent;
-  color:#40372b;text-align:left;padding:7px 0;cursor:pointer
-}
-.almost-item + .almost-item{border-top:1px solid rgba(155,130,84,.10)}
-.almost-item .premium-badge{width:50px;height:50px;flex:none}
-.almost-item .badge-core{width:38px;height:38px;border-radius:13px}
-.almost-item strong,.almost-item small,.almost-item em{display:block}
-.almost-item strong{font-size:.7rem;font-weight:900;color:#3d3428}
-.almost-item small{font-size:.59rem;line-height:1.35;color:#938673;margin-top:2px}
-.almost-item em{font-size:.6rem;color:#8c62c5;font-style:normal;font-weight:850;margin-top:2px}
-.badge-filter{display:flex;gap:7px;margin-bottom:13px;overflow-x:auto;scrollbar-width:none}
-.badge-filter::-webkit-scrollbar{display:none}
-.badge-filter button{
-  border:1px solid rgba(154,127,79,.18);background:#fffaf1;
-  color:#8a7b66;border-radius:999px;padding:7px 11px;
-  font:inherit;font-size:.62rem;font-weight:850;white-space:nowrap;cursor:pointer
-}
-.badge-filter button.active{
-  background:linear-gradient(135deg,#d4a348,#bd8730);
-  border-color:#c3913e;color:#fff;
-  box-shadow:0 5px 16px rgba(190,139,48,.20)
-}
-.badge-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.badge-item{
-  min-width:0;min-height:174px;border:1px solid rgba(154,127,79,.14);
-  background:linear-gradient(145deg,#fffefb,#faf5eb);
-  border-radius:18px;padding:12px 8px;text-align:center;color:#3d3428;
-  cursor:pointer;position:relative;overflow:hidden;
-  transition:transform .22s,box-shadow .22s,border-color .22s
-}
-.badge-item:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(139,112,55,.10);border-color:rgba(139,92,246,.22)}
-.badge-item strong{display:block;font-size:.68rem;line-height:1.22;margin-top:8px;font-weight:950;color:#382f24}
-.badge-item>span{display:block;font-size:.57rem;color:#9b8d79;margin-top:3px}
-.badge-item>small{display:block;font-size:.55rem;line-height:1.35;margin-top:7px;color:#938673}
-.badge-item>em{display:block;font-size:.56rem;font-style:normal;margin-top:4px;color:#9a8b77;font-weight:800}
-.badge-item.locked{opacity:.94}
-.badge-item.earned{
-  border-color:rgba(201,147,53,.22);
-  background:linear-gradient(145deg,#fffdf7,#f8f0df)
-}
-.badge-item.earned .badge-core{
-  box-shadow:0 8px 26px color-mix(in srgb,var(--badge-accent) 24%,transparent),inset 0 0 18px rgba(255,255,255,.65)
-}
-.claimed-label{color:#b17d29!important;font-weight:950!important;letter-spacing:.08em}
-.mini-progress{height:4px;background:#eee7da;border-radius:8px;margin:8px 6px 0;overflow:hidden}
-.premium-badge{width:62px;height:62px;position:relative;display:grid;place-items:center;margin:auto}
-.badge-core{
-  width:46px;height:46px;border-radius:15px;display:grid;place-items:center;color:var(--badge-accent);
-  background:linear-gradient(145deg,var(--badge-soft),#fffdf8);
-  border:1px solid color-mix(in srgb,var(--badge-accent) 30%,transparent);
-  box-shadow:0 8px 22px color-mix(in srgb,var(--badge-accent) 14%,transparent),inset 0 0 18px rgba(255,255,255,.75);
-  position:relative;z-index:2
-}
-.badge-core svg{width:24px;height:24px}
-.badge-orbit{position:absolute;inset:4px;border:1px dashed color-mix(in srgb,var(--badge-accent) 34%,transparent);border-radius:50%;animation:badgeSpin 12s linear infinite}
-.badge-rarity{position:absolute;right:-3px;bottom:-1px;background:var(--badge-accent);color:#fff;border-radius:999px;padding:2px 5px;font-size:.41rem;font-weight:950;z-index:3}
-.is-locked .badge-core{
-  filter:saturate(.65);
-  opacity:.70;
-  background:linear-gradient(145deg,#f7f3ea,#ebe4d7);
-  color:#9c9385
-}
-.is-locked .badge-orbit{animation:none;opacity:.35}
-.badge-modal{position:fixed;inset:0;background:rgba(72,59,38,.30);backdrop-filter:blur(12px);display:grid;place-items:center;z-index:9999;padding:20px;animation:modalIn .22s ease}
-.badge-modal-card{
-  width:min(360px,100%);background:#fffdf8;border:1px solid rgba(178,145,78,.20);
-  border-radius:27px;padding:27px 22px;text-align:center;
-  box-shadow:0 28px 90px rgba(92,72,35,.22);color:#3d3428
-}
-.badge-modal-card .premium-badge{width:108px;height:108px}
-.badge-modal-card .badge-core{width:76px;height:76px;border-radius:22px}
-.badge-modal-card .badge-core svg{width:37px;height:37px}
-.badge-modal-card h3{margin:12px 0 7px;font-size:1.14rem;color:#382f24}
-.badge-modal-rarity{font-size:.58rem;font-weight:950;color:#9a8a72}
-.how-to{text-align:left;line-height:1.55;font-size:.77rem;background:#f8f3e9;border-radius:14px;padding:12px;color:#695d4d}
-.detail-progress{height:6px;background:#ece4d6;border-radius:8px;overflow:hidden}
-.badge-close{margin-top:12px;border:0;border-radius:12px;padding:9px 18px;font-weight:850;cursor:pointer;background:#c99335;color:#fff}
-.badge-item.earned{animation:earnedFloat 4.5s ease-in-out infinite}
-@keyframes badgeSpin{to{transform:rotate(360deg)}}
-@keyframes earnedFloat{50%{transform:translateY(-2px)}}
-@keyframes modalIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
-@media(max-width:600px){
-  .advanced-badges{padding:15px}
-  .badge-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
-  .badge-item{min-height:170px}
-  .premium-badge{width:58px;height:58px}
-  .badge-core{width:43px;height:43px}
-  .badge-core svg{width:22px;height:22px}
-}
-</style>
-
-
-<style id="badge-unlock-polish">
-.badge-unlock-overlay{position:fixed;inset:0;z-index:12000;display:grid;place-items:center;padding:20px;background:rgba(88,70,39,.24);backdrop-filter:blur(14px);animation:unlockFade .22s ease}
-.badge-unlock-card{position:relative;width:min(330px,100%);padding:28px 22px 22px;text-align:center;border-radius:28px;border:1px solid rgba(201,147,53,.24);background:linear-gradient(145deg,#fffef9,#f7f0e2);color:#3b3226;box-shadow:0 30px 100px rgba(95,73,35,.24);overflow:hidden;animation:unlockPop .7s cubic-bezier(.18,.9,.2,1)}
-.badge-unlock-card:before{content:"";position:absolute;inset:-45%;background:radial-gradient(circle,rgba(245,190,76,.20),rgba(139,92,246,.08),transparent 60%);animation:unlockRotate 5s linear infinite}
-.badge-unlock-card>*{position:relative}
-.badge-unlock-card .premium-badge{width:118px;height:118px;margin:0 auto 7px}.badge-unlock-card .badge-core{width:82px;height:82px;border-radius:25px}.badge-unlock-card .badge-core svg{width:40px;height:40px}
-.unlock-label{font-size:.58rem;letter-spacing:.16em;font-weight:950;color:#aa7727;margin-top:4px}
-.badge-unlock-card h3{margin:8px 0 5px;font-size:1.25rem;font-weight:950;color:#352c21}
-.badge-unlock-card p{margin:0 auto 14px;max-width:260px;font-size:.72rem;line-height:1.5;color:#796d5d}
-.badge-unlock-card button{border:0;border-radius:12px;padding:9px 20px;background:linear-gradient(135deg,#c99335,#aa7626);color:#fff;font-weight:900;cursor:pointer;box-shadow:0 8px 20px rgba(170,118,38,.22)}
-.unlock-spark{position:absolute!important;width:7px;height:7px;border-radius:50%;background:#f0b53e;top:28px;left:32px;box-shadow:225px 30px 0 #9b72d6,170px 230px 0 #62bfc5,35px 200px 0 #d984a7;animation:sparkFloat 1.8s ease-in-out infinite}
-@keyframes unlockFade{from{opacity:0}to{opacity:1}}@keyframes unlockPop{0%{opacity:0;transform:scale(.55) translateY(25px) rotate(-3deg)}55%{opacity:1;transform:scale(1.06) translateY(-3px) rotate(1deg)}100%{transform:scale(1)}}@keyframes unlockRotate{to{transform:rotate(360deg)}}@keyframes sparkFloat{50%{transform:scale(1.7) rotate(12deg);opacity:.7}}
-</style>
-
 </head>
-<body oncontextmenu="return false;"> <!-- Blocks Right Click Globally -->
+<body oncontextmenu="return false;">
 <div class="app-shell" id="shell">
   <div class="state-block"><div class="spinner"></div></div>
 </div>
@@ -418,12 +269,12 @@ let initTheme, toggleTheme, renderState, renderStudentHeader, showToast, friendl
 let getActiveStudent, refreshActiveStudent, getActiveStudents;
 let getApprovedResults, getStudentRank;
 let computeOverallStats, computeSubjectStats, computeChapterStats, computeTopicStats;
-let computeGamificationData, attendanceBadgesEarned;
+let computeGamificationData;
 let db;
 let doc, getDoc, collection, getDocs;
-let getSubjects, buildNameMap;
 let getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival;
 let getChallengeWinCount;
+let getLevelInfo;
 
 async function loadModule(path, run) {
   try {
@@ -431,8 +282,7 @@ async function loadModule(path, run) {
     run(mod);
     return true;
   } catch (err) {
-    const shell = document.getElementById("shell");
-    if (shell && window.__showProfileError) {
+    if (window.__showProfileError) {
       window.__showProfileError(
         "মডিউল ইম্পোর্ট ত্রুটি (ফাইল লোড হয়নি)",
         "ফাইল: " + path + "\nত্রুটি: " + (err && err.message ? err.message : String(err)) +
@@ -448,40 +298,26 @@ const __ok = (
   await loadModule("../js/utils/student-utils.js", m => ({ getActiveStudent, refreshActiveStudent, getActiveStudents } = m)) &&
   await loadModule("../js/utils/results-utils.js", m => ({ getApprovedResults, getStudentRank } = m)) &&
   await loadModule("../js/utils/analytics-utils.js", m => ({ computeOverallStats, computeSubjectStats, computeChapterStats, computeTopicStats } = m)) &&
-  await loadModule("../js/utils/gamification-utils.js", m => ({ computeGamificationData, attendanceBadgesEarned } = m)) &&
+  await loadModule("../js/utils/gamification-utils.js", m => ({ computeGamificationData } = m)) &&
   await loadModule("../js/firebase/firebase-config.js", m => ({ db } = m)) &&
   await loadModule("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js", m => ({ doc, getDoc, collection, getDocs } = m)) &&
-  await loadModule("../js/utils/syllabus-utils.js", m => ({ getSubjects, buildNameMap } = m)) &&
-  await loadModule("../js/utils/friend-utils.js", m => ({ getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival } = m)) &&
-  await loadModule("../js/utils/challenge-utils.js", m => ({ getChallengeWinCount } = m))
+  await loadModule("../js/utils/friend-utils.js?v=ref1", m => ({ getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival } = m)) &&
+  await loadModule("../js/utils/challenge-utils.js", m => ({ getChallengeWinCount } = m)) &&
+  await loadModule("../js/utils/xp-utils.js", m => ({ getLevelInfo } = m))
 );
 
-if (!__ok) {
-  // stop here — one of the files above is missing/broken, and the red box
-  // above already shows exactly which one and why.
-} else {
+if (__ok) {
 
 initTheme();
 
+const $ = id => document.getElementById(id);
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const shell = $("shell");
+let student = getActiveStudent();
 
 /* ==========================================================
-   UNIFIED BADGE SYSTEM
-   20 achievement families. Every badge is calculated from the
-   existing approved-result/gamification/syllabus data.
-   No per-badge Firestore reads.
+   BADGES — 25 achievements, all computed from data already loaded.
    ========================================================== */
-const BADGE_CATEGORIES = ["সব","পরীক্ষা","নির্ভুলতা","সঠিক উত্তর","পয়েন্ট","উন্নতি","ধারাবাহিকতা","গতি","পূর্ণ নম্বর","লিডারবোর্ড","বিষয়","অধ্যায়","টপিক","Coverage","সর্বগুণসম্পন্ন","সামাজিক","বিশেষ"];
-let badgeFilter = "সব", badgeSearch = "";
-
-function makeTierBadges(prefix, category, thresholds, nameFn, descFn, checkFn, rarityFn){
-  return thresholds.map((n,i)=>({
-    id:`${prefix}-${n}`, name:nameFn(n), category, threshold:n, metric:prefix,
-    desc:descFn(n), check:c=>checkFn(c,n),
-    rarity:rarityFn ? rarityFn(n,i,thresholds) : (i===thresholds.length-1?"অতি বিরল":i>=thresholds.length-2?"বিশেষ":i>=2?"বিরল":"অসাধারণ")
-  }));
-}
-
-
 function buildBadgeCatalog(ctx) {
   const catalog = [];
   const add = (id, title, category, requirement, rarity, icon, check, progress) =>
@@ -596,143 +432,6 @@ function badgeIconSvg(code) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${paths[code]||paths.M20}</svg>`;
 }
 
-function badgeVisual(badge, earned) {
-  const themes = {
-    "সাধারণ":["#94a3b8","#e2e8f0"],
-    "অসাধারণ":["#0ea5e9","#dbeafe"],
-    "বিরল":["#8b5cf6","#ede9fe"],
-    "বিশেষ":["#ec4899","#fce7f3"],
-    "অতি বিরল":["#f59e0b","#fef3c7"],
-    "গোপন":["#14b8a6","#ccfbf1"]
-  };
-  const [accent,soft] = themes[badge.rarity] || themes.Rare;
-  return `<div class="premium-badge ${earned?"is-earned":"is-locked"}" style="--badge-accent:${accent};--badge-soft:${soft}">
-    <div class="badge-orbit"></div><div class="badge-core">${badgeIconSvg(badge.icon)}</div>
-    <div class="badge-rarity">${({Common:"সাধারণ",Uncommon:"অসাধারণ",Rare:"বিরল",Epic:"বিশেষ",Legendary:"অতি বিরল",Secret:"গোপন"}[badge.rarity] || "গোপন") }</div>
-  </div>`;
-}
-
-function renderBadgeCollection(state) {
-  const host = document.getElementById("badgeCollectionAdvanced");
-  if (!host) return;
-
-  const অর্জিত = state.filter(x => x.earned);
-  const locked = state.filter(x => !x.earned);
-  const almost = locked
-    .filter(x => x.progress && x.progress.max > 1)
-    .sort((a,b) => (b.progress.value / b.progress.max) - (a.progress.value / a.progress.max))
-    .slice(0, 3);
-
-  host.innerHTML = `<section class="glass-card advanced-badges">
-    <div class="badge-head">
-      <div>
-        <div class="badge-kicker">অর্জনসমূহ</div>
-        <h2>আমার ব্যাজ সংগ্রহ</h2>
-        <p>${অর্জিত.length} / ${state.length} অর্জিত</p>
-      </div>
-      <div class="badge-total">${অর্জিত.length}<span>/${state.length}</span></div>
-    </div>
-
-    <div class="badge-progress">
-      <i style="width:${state.length ? (অর্জিত.length / state.length) * 100 : 0}%"></i>
-    </div>
-
-    ${almost.length ? `<div class="almost-box">
-      <div class="almost-title"><span>পরবর্তী অর্জন</span><small>আর একটু এগোলেই</small></div>
-      ${almost.map(x => `<button class="almost-item" type="button" data-badge-id="${x.id}">
-        ${badgeVisual(x,false)}
-        <span>
-          <strong>${x.title}</strong>
-          <small>${x.requirement}</small>
-          <em>${x.progress.text}</em>
-        </span>
-      </button>`).join("")}
-    </div>` : ""}
-
-    <div class="badge-filter">
-      <button type="button" class="active" data-filter="অর্জিত">অর্জিত <b>${অর্জিত.length}</b></button>
-      <button type="button" data-filter="locked">লক করা <b>${locked.length}</b></button>
-      <button type="button" data-filter="all">সব <b>${state.length}</b></button>
-    </div>
-
-    <div class="badge-grid">
-      ${state.map(x => `<button type="button"
-          class="badge-item ${x.earned ? "earned" : "locked"}"
-          data-badge-id="${x.id}" data-earned="${x.earned}">
-        ${badgeVisual(x,x.earned)}
-        <strong>${x.title}</strong>
-        <span>${x.category}</span>
-        ${x.earned
-          ? `<small class="অর্জিত-label">অর্জিত</small>`
-          : x.rarity === "গোপন"
-            ? `<small>গোপন ব্যাজ — শর্ত অজানা</small>`
-            : `<small>${x.requirement}</small>`}
-        ${!x.earned && x.progress ? `<div class="mini-progress">
-          <i style="width:${Math.min(100,(x.progress.value / x.progress.max) * 100)}%"></i>
-        </div><em>${x.progress.text}</em>` : ""}
-      </button>`).join("")}
-    </div>
-  </section>`;
-
-  const applyFilter = f => {
-    host.querySelectorAll(".badge-item").forEach(el => {
-      const earned = el.dataset.earned === "true";
-      el.style.display = f === "all" || (f === "অর্জিত" && earned) || (f === "locked" && !earned) ? "" : "none";
-    });
-  };
-
-  host.querySelectorAll("[data-filter]").forEach(btn => {
-    btn.onclick = () => {
-      host.querySelectorAll("[data-filter]").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      applyFilter(btn.dataset.filter);
-    };
-  });
-
-  host.querySelectorAll("[data-badge-id]").forEach(el => {
-    el.onclick = () => showBadgeDetail(state.find(x => x.id === el.dataset.badgeId));
-  });
-
-  applyFilter("অর্জিত");
-}
-
-function showBadgeDetail(b) {
-  if (!b) return;
-  const old=document.getElementById("badgeDetailModal"); if(old) old.remove();
-  const div=document.createElement("div"); div.id="badgeDetailModal"; div.className="badge-modal";
-  const hideReq = !b.earned && b.rarity === "গোপন";
-  div.innerHTML=`<div class="badge-modal-card">${badgeVisual(b,b.earned)}<div class="badge-modal-rarity">${b.rarity}</div><h3>${b.title}</h3><p class="how-to"><b>কীভাবে অর্জন করবে?</b><br>${hideReq ? "এটা একটা গোপন ব্যাজ — শর্ত জানা নেই। ধরে নিজে খুঁজে বের করো!" : b.requirement}</p>${b.progress && !hideReq?`<div class="detail-progress"><i style="width:${Math.min(100,b.progress.value/b.progress.max*100)}%"></i></div><p>${b.progress.text}</p>`:""}<button class="badge-close">বন্ধ</button></div>`;
-  document.body.appendChild(div); div.onclick=e=>{if(e.target===div||e.target.classList.contains("badge-close"))div.remove()};
-}
-
-
-function showBadgeUnlocks(state) {
-  try {
-    const key = `badge-seen-${student.studentId}`;
-    const previous = JSON.parse(localStorage.getItem(key) || "[]");
-    const prevSet = new Set(previous);
-    const fresh = state.filter(b => b.earned && !prevSet.has(b.id));
-    localStorage.setItem(key, JSON.stringify(state.filter(b=>b.earned).map(b=>b.id)));
-    if (!fresh.length) return;
-
-    const b = fresh[0];
-    const overlay = document.createElement("div");
-    overlay.className = "badge-unlock-overlay";
-    overlay.innerHTML = `<div class="badge-unlock-card">
-      <div class="unlock-spark"></div>
-      ${badgeVisual(b,true)}
-      <div class="unlock-label">ব্যাজ অর্জিত</div>
-      <h3>${b.title}</h3>
-      <p>${b.requirement}</p>
-      <button type="button">চালিয়ে যাও</button>
-    </div>`;
-    document.body.appendChild(overlay);
-    const close = () => overlay.remove();
-    overlay.addEventListener("click", e => { if (e.target === overlay || e.target.closest("button")) close(); });
-    setTimeout(close, 6500);
-  } catch {}
-}
-
 
 function getBadgeContext(results, gData, rank, subjectStats, chapterStats, topicStats, social = {}) {
   const arr=results||[], nums=k=>arr.reduce((s,r)=>s+Number(r[k]||0),0);
@@ -783,10 +482,10 @@ function getBadgeContext(results, gData, rank, subjectStats, chapterStats, topic
     bestPercentage:Math.max(0,...percentages),bestAccuracy:Math.max(0,...accuracies),
     highAccuracyExamCount,highScoreExamCount,perfectExams,zeroWrongExams,highAttemptExams,fastAccurateExams,cleanRun,
     maxImprovement:realMaxImprovement,longestStreak:realLongestStreak,
-    weeklyOverall:Number(gData?.badgeCounts?.weeklyOverall?.[gData?.nameOf]||0),
-    weeklyClass:Number(gData?.badgeCounts?.weeklyClass?.[gData?.nameOf]||0),
-    monthlyOverall:Number(gData?.badgeCounts?.monthlyOverall?.[gData?.nameOf]||0),
-    monthlyClass:Number(gData?.badgeCounts?.monthlyClass?.[gData?.nameOf]||0),
+    weeklyOverall:Number(gData?.badgeCounts?.[student.studentId]?.weeklyOverall||0),
+    weeklyClass:Number(gData?.badgeCounts?.[student.studentId]?.weeklyClass||0),
+    monthlyOverall:Number(gData?.badgeCounts?.[student.studentId]?.monthlyOverall||0),
+    monthlyClass:Number(gData?.badgeCounts?.[student.studentId]?.monthlyClass||0),
     subjectStats,chapterStats,topicStats,topicCoverage,
     strongSubjects:(subjectStats||[]).filter(x=>x.attempts>=5&&x.accuracy>=80).length,
     bestSubjectMaster:(subjectStats||[]).some(x=>x.attempts>=5&&x.accuracy>=90),
@@ -794,158 +493,354 @@ function getBadgeContext(results, gData, rank, subjectStats, chapterStats, topic
     bestTopicMaster:(topicStats||[]).some(x=>x.attempts>=5&&x.accuracy>=90)
   };
 }
-async function initAdvancedBadges() {
-  try {
-    const [results, rank, gData, subjectsSnap, chaptersSnap, topicsSnap, friendIdsForBadges, rivalForBadges, challengeWinsForBadges] = await Promise.all([
-      getApprovedResults(student.studentId),
-      getStudentRank(student.studentId).catch(()=>null),
-      computeGamificationData().catch(()=>({})),
-      getDocs(collection(db, "subjects")),
-      getDocs(collection(db, "chapters")),
-      getDocs(collection(db, "topics")),
-      getMyFriendIds(student.studentId).catch(()=>[]),
-      getRival(student.studentId).catch(()=>null),
-      getChallengeWinCount(student.studentId).catch(()=>0)
-    ]);
-    const subjectMap={}, chapterMap={}, topicMap={};
-    subjectsSnap.forEach(d=>{const x=d.data();subjectMap[d.id]=x.name_bn||x.name_en||d.id});
-    chaptersSnap.forEach(d=>{const x=d.data();chapterMap[d.id]=x.name_bn||x.name_en||d.id});
-    topicsSnap.forEach(d=>{const x=d.data();topicMap[d.id]=x.name_bn||x.name_en||d.id});
-    const subjectStats=computeSubjectStats(results,subjectMap).map(x=>({...x,id:x.subjectId}));
-    const chapterStats=computeChapterStats(results,chapterMap).map(x=>({...x,id:x.chapterId}));
-    const topicStats=computeTopicStats(results,topicMap).map(x=>({...x,id:x.topicId}));
-    const social = { friendCount: friendIdsForBadges.length, hasRival: !!rivalForBadges, challengeWins: challengeWinsForBadges };
-    const ctx=getBadgeContext(results,gData,rank,subjectStats,chapterStats,topicStats,social);
-    const state=buildBadgeCatalog(ctx).map(b=>({...b,earned:!!b.check(ctx),progress:b.progress?b.progress(ctx):null}));
-    renderBadgeCollection(state);
-    showBadgeUnlocks(state);
-    const old=document.getElementById("badgeCollectionAdvancedOld");
-    if(old) old.remove();
-  } catch(e) { console.warn("Advanced badges unavailable",e); }
+
+
+const RARITY = {
+  common:    { bn: "সাধারণ",     color: "#8b95a5" },
+  uncommon:  { bn: "অসাধারণ",   color: "#0ea5e9" },
+  rare:      { bn: "বিরল",       color: "#8b5cf6" },
+  epic:      { bn: "এপিক",       color: "#ec4899" },
+  legendary: { bn: "কিংবদন্তি", color: "#d99a1f" },
+  secret:    { bn: "গোপন",       color: "#14b8a6" }
+};
+// The catalog mixes Bengali and English rarity names — normalise to one key.
+function rarityKey(r) {
+  const bn = { "সাধারণ": "common", "অসাধারণ": "uncommon", "বিরল": "rare", "বিশেষ": "epic", "অতি বিরল": "legendary", "গোপন": "secret" };
+  const k = bn[r] || String(r || "").toLowerCase();
+  return RARITY[k] ? k : "common";
+}
+const rarityOf = b => RARITY[rarityKey(b.rarity)];
+const isSecretLocked = b => !b.earned && rarityKey(b.rarity) === "secret";
+
+/* ==========================================================
+   DATA — one fetch, shared by hero / overview / badges / share card
+   ========================================================== */
+let dataPromise = null;
+function loadData(force = false) {
+  if (force || !dataPromise) dataPromise = fetchData();
+  return dataPromise;
 }
 
-const shell = document.getElementById("shell");
-let student = getActiveStudent();
+async function fetchData() {
+  const sid = student.studentId;
+  const [results, rank, gData, subjectsSnap, chaptersSnap, topicsSnap, friendIds, rival, wins] = await Promise.all([
+    getApprovedResults(sid).catch(() => []),
+    getStudentRank(sid).catch(() => null),
+    computeGamificationData().catch(() => ({})),
+    getDocs(collection(db, "subjects")).catch(() => null),
+    getDocs(collection(db, "chapters")).catch(() => null),
+    getDocs(collection(db, "topics")).catch(() => null),
+    getMyFriendIds(sid).catch(() => []),
+    getRival(sid).catch(() => null),
+    getChallengeWinCount(sid).catch(() => 0)
+  ]);
+  const nameMap = snap => { const m = {}; snap?.forEach(d => { const x = d.data(); m[d.id] = x.name_bn || x.name_en || d.id; }); return m; };
+  const overall = computeOverallStats(results);
+  let subjectStats = [], badges = [];
+  try {
+    subjectStats = computeSubjectStats(results, nameMap(subjectsSnap)).map(x => ({ ...x, id: x.subjectId }));
+    const chapterStats = computeChapterStats(results, nameMap(chaptersSnap)).map(x => ({ ...x, id: x.chapterId }));
+    const topicStats = computeTopicStats(results, nameMap(topicsSnap)).map(x => ({ ...x, id: x.topicId }));
+    const ctx = getBadgeContext(results, gData, rank, subjectStats, chapterStats, topicStats,
+      { friendCount: friendIds.length, hasRival: !!rival, challengeWins: wins });
+    badges = buildBadgeCatalog(ctx).map(b => ({ ...b, earned: !!b.check(ctx), progress: b.progress ? b.progress(ctx) : null }));
+  } catch (e) { console.warn("Badge calculation failed", e); }
+  return { results, rank, overall, subjectStats, badges };
+}
 
+const referralLink = () => new URL(`../join.html?ref=${encodeURIComponent(student.studentId)}`, window.location.href).href;
+
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; }
+  catch {
+    try {
+      const t = document.createElement("textarea");
+      t.value = text; t.style.cssText = "position:fixed;left:-9999px;top:0;";
+      document.body.appendChild(t); t.select();
+      const ok = document.execCommand("copy"); t.remove(); return ok;
+    } catch { return false; }
+  }
+}
+
+const ICON = {
+  share: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>',
+  link: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"/></svg>',
+  star: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3z"/></svg>',
+  search: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  home: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>',
+  badge: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 4v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V7l7-4z"/><path d="M9 12l2 2 4-4"/></svg>',
+  users: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2"/><path d="M16 3.5a4 4 0 0 1 0 7"/></svg>'
+};
+
+/* ==========================================================
+   PAGE
+   ========================================================== */
 if (!student) {
   window.location.href = "../index.html";
 } else {
   renderPage();
-  initAdvancedBadges();
   refreshActiveStudent(student.docId).then(fresh => {
-    if (fresh) {
-      student = fresh;
-      renderPage();
-      initAdvancedBadges();
-    }
+    if (fresh) { student = fresh; renderHeroShell(); loadData().then(fillHero).catch(() => {}); }
   }).catch(err => console.warn("Student refresh skipped", err));
 }
 
-window.switchTab = function(tabId) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  document.querySelector(`[onclick="switchTab('${tabId}')"]`).classList.add('active');
-  document.getElementById(tabId).classList.add('active');
-};
-
-let allNetStudents = [], friendIds = [], incomingReqs = [], outgoingReqs = [];
-let dirBatchFilter = "all", dirSearchTerm = "";
-
-async function renderPage() {
+function renderPage() {
   shell.innerHTML = `
     ${renderStudentHeader(student, "profile")}
-    <main class="profile-premium mt-4">
-      <section id="premiumHero" class="profile-hero"><div class="spinner" style="margin:20px auto"></div></section>
+    <main class="pf">
+      <section class="pf-hero" id="pfHero"></section>
 
-      <div class="profile-tabs-wrap">
-        <div class="tab-nav">
-          <button class="tab-btn active" onclick="switchTab('tab-overview')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>ওভারভিউ</button>
-          <button class="tab-btn" onclick="switchTab('tab-network')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2"/><path d="M16 3.5a4 4 0 0 1 0 7"/></svg>নেটওয়ার্ক</button>
-        </div>
-      </div>
+      <nav class="pf-tabs" id="pfTabs">
+        <button class="pf-tab active" data-tab="tab-overview">${ICON.home}ওভারভিউ</button>
+        <button class="pf-tab" data-tab="tab-badges">${ICON.badge}ব্যাজ</button>
+        <button class="pf-tab" data-tab="tab-network">${ICON.users}বন্ধু<span class="pf-dot" id="pfReqDot"></span></button>
+      </nav>
 
-      <section id="tab-overview" class="tab-content active">
-        <div id="recordsSection" class="profile-section mt-4"></div>
-        <div id="badgeCollectionAdvanced" class="profile-section full mt-4"></div>
+      <section id="tab-overview" class="tab-content pf-pane active">
+        <div class="pf-card" id="recordsSection"><div class="spinner" style="margin:18px auto"></div></div>
+        <div class="pf-card" id="strengthSection" style="display:none"></div>
+        <div class="pf-card pf-invite" id="inviteSection"></div>
       </section>
 
-      <section id="tab-network" class="tab-content">
+      <section id="tab-badges" class="tab-content pf-pane">
+        <div id="badgeCollection"><div class="pf-card"><div class="spinner" style="margin:18px auto"></div></div></div>
+      </section>
+
+      <section id="tab-network" class="tab-content pf-pane">
         <div id="reqAndFriendsSection"></div>
-        <div class="glass-card mt-4" style="padding:16px;">
-          <p style="font-size:1.05rem;font-weight:900;color:var(--text-primary);margin-bottom:12px;">শিক্ষার্থী তালিকা</p>
-          <div class="batch-filters" id="dirFilters"></div>
-          <div class="search-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="dirSearch" placeholder="নাম দিয়ে খুঁজুন..."></div>
+        <div class="pf-card">
+          <div class="pf-head"><div><h2 class="pf-h">শিক্ষার্থী তালিকা</h2><div class="pf-note">বন্ধু বানাতে খুঁজে নাও</div></div></div>
+          <div class="pf-chips" id="dirFilters"></div>
+          <div class="pf-search">${ICON.search}<input type="text" id="dirSearch" placeholder="নাম দিয়ে খুঁজুন..."></div>
           <div id="dirList"></div>
         </div>
       </section>
-    </main>
-  `;
+    </main>`;
 
-  await Promise.allSettled([loadIdentity(), loadNetworkData(), loadPremiumInsights()]);
+  document.querySelectorAll(".pf-tab").forEach(b => b.addEventListener("click", () => switchTab(b.dataset.tab)));
+  $("dirSearch").addEventListener("input", e => { dirSearchTerm = e.target.value.trim().toLowerCase(); renderDirectory(); });
 
-  const search = document.getElementById("dirSearch");
-  if (search) search.addEventListener("input", e => { dirSearchTerm=e.target.value.trim().toLowerCase(); renderDirectory(); });
+  renderHeroShell();
+  renderInvite();
+  loadNetworkData();
+  loadData().then(d => {
+    fillHero(d);
+    renderRecords(d);
+    renderStrength(d);
+    renderBadges(d);
+    showBadgeUnlocks(d.badges);
+  }).catch(err => {
+    console.warn("Profile data failed", err);
+    $("recordsSection").innerHTML = `<div class="pf-empty">তথ্য লোড করা যায়নি। পেজ রিফ্রেশ করো।</div>`;
+    $("badgeCollection").innerHTML = "";
+  });
 }
 
-async function loadIdentity() {
-  const hero = document.getElementById("premiumHero");
-  try {
-    const snap = await getDoc(doc(db, "students", student.docId));
-    const data = snap.exists() ? snap.data() : {};
-    const myBatch = data.className || student.className || "শ্রেণি নির্ধারিত নয়";
-    const rank = await getStudentRank(student.studentId).catch(()=>null);
-    const পয়েন্ট = Number(rank?.totalPoints || 0);
-    const level = Math.max(1, Math.floor(পয়েন্ট / 500) + 1);
-    const title = পয়েন্ট >= 10000 ? "Physics Legend" : পয়েন্ট >= 5000 ? "Physics Master" : পয়েন্ট >= 2500 ? "Problem Solver" : পয়েন্ট >= 1000 ? "Concept Builder" : "Physics Explorer";
-    const avatar = data.photoURL ? `<img src="${data.photoURL}" alt="Profile">` : `<span>${(student.name || "S").charAt(0).toUpperCase()}</span>`;
+function switchTab(id) {
+  document.querySelectorAll(".pf-tab").forEach(b => b.classList.toggle("active", b.dataset.tab === id));
+  document.querySelectorAll(".pf-pane").forEach(p => p.classList.toggle("active", p.id === id));
+}
 
-    hero.innerHTML = `
-      <div class="profile-hero-grid">
-        <div class="profile-avatar-xl">${avatar}</div>
-        <div>
-          <div class="profile-eyebrow">শিক্ষার্থী প্রোফাইল</div>
-          <h1 class="profile-title">${student.name || "শিক্ষার্থী"}</h1>
-          <div class="profile-subtitle">${myBatch} <span style="opacity:.45">•</span> ID ${student.studentId || "—"}</div>
-          <div class="profile-title-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3z"/></svg>${title}</div>
-        </div>
-        <div class="profile-hero-actions">
-          <button class="profile-icon-btn" id="shareProfileBtn" title="Share profile"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4"/><path d="m15.4 6.5-6.8 4"/></svg></button>
-        </div>
+/* ---------- hero ---------- */
+function renderHeroShell() {
+  const av = esc((student.name || "S").charAt(0).toUpperCase()) +
+    (student.photoURL ? `<img src="${esc(student.photoURL)}" alt="" onerror="this.remove()">` : "");
+  $("pfHero").innerHTML = `
+    <div class="pf-id">
+      <div class="pf-avatar">${av}</div>
+      <div style="min-width:0">
+        <h1 class="pf-name">${esc(student.name || "শিক্ষার্থী")}</h1>
+        <div class="pf-sub">${esc(student.className || "শ্রেণি নির্ধারিত নয়")} · ${esc(student.studentId || "—")}</div>
+        <div class="pf-title" id="pfTitle">${ICON.star}<span>—</span></div>
       </div>
-      <div class="profile-metrics">
-        <div class="profile-metric"><div class="profile-metric-label">লেভেল</div><div class="profile-metric-value">${level}</div></div>
-        <div class="profile-metric"><div class="profile-metric-label">র‍্যাঙ্ক</div><div class="profile-metric-value">${rank?.rank ? "#"+rank.rank : "—"}</div></div>
-        <div class="profile-metric"><div class="profile-metric-label">পয়েন্ট</div><div class="profile-metric-value">${পয়েন্ট.toLocaleString()}</div></div>
-        <div class="profile-metric"><div class="profile-metric-label">শিক্ষার্থী</div><div class="profile-metric-value">${rank?.totalStudents || "—"}</div></div>
-      </div>`;
-    document.getElementById("shareProfileBtn").addEventListener("click", () => openShareChoice(data));
-
-  } catch (err) {
-    hero.innerHTML = `<div class="profile-empty">প্রোফাইলের তথ্য লোড করা যায়নি।</div>`;
-  }
-}
-
-async function loadPremiumInsights() {
-  const records = document.getElementById("recordsSection");
-  try {
-    const results = await getApprovedResults(student.studentId).catch(()=>[]);
-    const overall = computeOverallStats(results);
-    const best = results.reduce((m,r)=>Math.max(m,Number(r.percentage||0)),0);
-    const totalCorrect = overall?.totalCorrect || 0;
-    const examCount = overall?.examsTaken || 0;
-    const avg = overall?.avgPercentage;
-
-    records.innerHTML = `<div class="profile-section-head"><div><h2 class="profile-section-title">ব্যক্তিগত রেকর্ড</h2><div class="profile-section-note">তোমার সেরা ফলাফলের রেকর্ড</div></div></div><div class="records-grid">
-      <div class="রেকর্ড-card"><div class="রেকর্ড-value">${examCount}</div><div class="রেকর্ড-label">অনুমোদিত পরীক্ষা</div></div>
-      <div class="রেকর্ড-card"><div class="রেকর্ড-value">${avg==null?"—":avg+"%"}</div><div class="রেকর্ড-label">গড় স্কোর</div></div>
-      <div class="রেকর্ড-card"><div class="রেকর্ড-value">${best ? best+"%" : "—"}</div><div class="রেকর্ড-label">সেরা স্কোর</div></div>
-      <div class="রেকর্ড-card"><div class="রেকর্ড-value">${totalCorrect}</div><div class="রেকর্ড-label">সঠিক উত্তর</div></div>
+    </div>
+    <div class="pf-level">
+      <div class="pf-level-row"><span id="pfLvText">লেভেল —</span><span id="pfLvNext"></span></div>
+      <div class="pf-bar"><i id="pfLvFill"></i></div>
+    </div>
+    <div class="pf-metrics">
+      <div class="pf-metric"><b id="pfMRank">—</b><span>র‍্যাঙ্ক</span></div>
+      <div class="pf-metric"><b id="pfMXp">—</b><span>মোট XP</span></div>
+      <div class="pf-metric"><b id="pfMExams">—</b><span>পরীক্ষা</span></div>
+      <div class="pf-metric"><b id="pfMBadges">—</b><span>ব্যাজ</span></div>
+    </div>
+    <div class="pf-actions">
+      <button class="pf-btn primary" id="shareProfileBtn" type="button">${ICON.share}প্রোফাইল শেয়ার</button>
+      <button class="pf-btn" id="copyLinkBtn" type="button">${ICON.link}আমন্ত্রণ লিংক</button>
     </div>`;
-  } catch (err) {
-    console.warn("Profile insights skipped", err);
-    if (records && !records.innerHTML) records.innerHTML=`<div class="profile-empty"></div>`;
-  }
+  $("shareProfileBtn").addEventListener("click", openShareChoice);
+  $("copyLinkBtn").addEventListener("click", async () => showToast(await copyText(referralLink()) ? "লিংক কপি হয়েছে" : "কপি করা যায়নি", "success"));
 }
+
+function fillHero(d) {
+  if (!$("pfHero")) return;
+  const xp = Number(d.rank?.totalPoints || 0);
+  const lv = getLevelInfo(xp);
+  const title = xp >= 10000 ? "Physics Legend" : xp >= 5000 ? "Physics Master" : xp >= 2500 ? "Problem Solver" : xp >= 1000 ? "Concept Builder" : "Physics Explorer";
+  $("pfTitle").innerHTML = `${ICON.star}<span>${title}</span>`;
+  $("pfLvText").textContent = `লেভেল ${lv.level}`;
+  $("pfLvNext").textContent = lv.isMax ? "সর্বোচ্চ লেভেল" : `পরের লেভেলে ${lv.xpNeeded.toLocaleString()} XP বাকি`;
+  requestAnimationFrame(() => { $("pfLvFill").style.width = Math.max(3, lv.percentage) + "%"; });
+  $("pfMRank").textContent = d.rank?.rank ? "#" + d.rank.rank : "—";
+  $("pfMXp").textContent = xp.toLocaleString();
+  $("pfMExams").textContent = d.overall?.examsTaken || 0;
+  const got = d.badges.filter(b => b.earned).length;
+  $("pfMBadges").textContent = d.badges.length ? `${got}/${d.badges.length}` : "—";
+}
+
+/* ---------- overview ---------- */
+function renderRecords(d) {
+  const best = d.results.reduce((m, r) => Math.max(m, Number(r.percentage || 0)), 0);
+  const o = d.overall;
+  $("recordsSection").innerHTML = `
+    <div class="pf-head"><div><h2 class="pf-h">ব্যক্তিগত রেকর্ড</h2><div class="pf-note">শুধু অনুমোদিত ফলাফল থেকে</div></div></div>
+    <div class="pf-records">
+      <div class="pf-rec"><b>${o?.examsTaken || 0}</b><span>অনুমোদিত পরীক্ষা</span></div>
+      <div class="pf-rec"><b>${o?.avgPercentage == null ? "—" : o.avgPercentage + "%"}</b><span>গড় স্কোর</span></div>
+      <div class="pf-rec"><b>${best ? best + "%" : "—"}</b><span>সেরা স্কোর</span></div>
+      <div class="pf-rec"><b>${o?.totalCorrect || 0}</b><span>সঠিক উত্তর</span></div>
+    </div>`;
+}
+
+function renderStrength(d) {
+  const rows = d.subjectStats.filter(x => x.accuracy != null).sort((a, b) => b.accuracy - a.accuracy).slice(0, 4);
+  const el = $("strengthSection");
+  if (!rows.length) { el.style.display = "none"; return; }
+  el.style.display = "";
+  el.innerHTML = `
+    <div class="pf-head"><div><h2 class="pf-h">বিষয়ভিত্তিক নির্ভুলতা</h2><div class="pf-note">তোমার সেরা বিষয়গুলো</div></div></div>
+    <div class="pf-strength">${rows.map(r => `
+      <div class="pf-srow"><span>${esc(r.name)}</span><div class="pf-bar"><i style="width:${Math.min(100, r.accuracy)}%"></i></div><b>${r.accuracy}%</b></div>`).join("")}
+    </div>`;
+}
+
+function renderInvite() {
+  const link = referralLink();
+  $("inviteSection").innerHTML = `
+    <div class="pf-head"><div><h2 class="pf-h">বন্ধুকে আমন্ত্রণ করো</h2><div class="pf-note">তোমার রেফারেল কোড ও লিংক</div></div></div>
+    <div class="pf-code">${esc(student.studentId)}</div>
+    <div class="pf-link">${esc(link)}</div>
+    <p>প্রোফাইল শেয়ার করলে PDF/ছবির সাথে এই লিংক আর QR কোড যায়। বন্ধু লিংকে ট্যাপ করলে যুক্ত হওয়ার পেজ খুলবে আর তোমার কোড নিজে থেকে বসে যাবে। অ্যাডমিন অনুমোদন দিলে তার ফ্রেন্ড রিকোয়েস্ট সরাসরি তোমার কাছে আসবে।</p>
+    <div class="row" style="margin-top:14px">
+      <button class="pf-btn" id="inviteCopy" type="button">${ICON.link}লিংক কপি</button>
+      <button class="pf-btn primary" id="inviteShare" type="button">${ICON.share}লিংক পাঠাও</button>
+    </div>`;
+  $("inviteCopy").addEventListener("click", async () => showToast(await copyText(link) ? "লিংক কপি হয়েছে" : "কপি করা যায়নি", "success"));
+  $("inviteShare").addEventListener("click", async () => {
+    const text = inviteText(link);
+    if (navigator.share) { try { await navigator.share({ title: "পরীক্ষা প্রস্তুতি", text }); return; } catch (e) { if (e && e.name === "AbortError") return; } }
+    showToast(await copyText(text) ? "মেসেজ কপি হয়েছে, পেস্ট করে পাঠাও" : "শেয়ার করা যায়নি", "success");
+  });
+}
+
+const inviteText = link => `${student.name} তোমাকে পরীক্ষার প্রস্তুতিতে যুক্ত হতে ডাকছে।\nএই লিংকে ট্যাপ করে আবেদন করো (রেফারেল কোড ${student.studentId}):\n${link}`;
+
+/* ---------- badges ---------- */
+let badgeFilter = null;   // null = choose a sensible default on first render
+
+function badgeIcon(b) { return badgeIconSvg(b.icon); }
+
+function renderBadges(d) {
+  const host = $("badgeCollection");
+  const state = d.badges;
+  if (!state.length) { host.innerHTML = `<div class="pf-card"><div class="pf-empty">ব্যাজ লোড করা যায়নি।</div></div>`; return; }
+
+  const got = state.filter(x => x.earned), locked = state.filter(x => !x.earned);
+  if (badgeFilter === null) badgeFilter = got.length ? "earned" : "all";
+  const next = locked.filter(x => x.progress && x.progress.max > 1 && x.progress.value > 0)
+    .sort((a, b) => (b.progress.value / b.progress.max) - (a.progress.value / a.progress.max)).slice(0, 3);
+
+  host.innerHTML = `
+    <div class="pf-card">
+      <div class="pf-bsum">
+        <div><h2 class="pf-h">আমার ব্যাজ সংগ্রহ</h2><div class="pf-note">${got.length}টি অর্জিত, ${locked.length}টি বাকি</div></div>
+        <big>${got.length}<small>/${state.length}</small></big>
+      </div>
+      <div class="pf-bar" style="margin-top:12px"><i style="width:${state.length ? (got.length / state.length) * 100 : 0}%"></i></div>
+    </div>
+    ${next.length ? `<div class="pf-card">
+      <div class="pf-head" style="margin-bottom:6px"><div><h2 class="pf-h">পরবর্তী অর্জন</h2><div class="pf-note">আর একটু এগোলেই</div></div></div>
+      <div class="pf-next">${next.map(x => `
+        <button class="pf-nrow" type="button" data-badge="${x.id}" style="--rc:${rarityOf(x).color}">
+          <span class="pf-bico sm">${badgeIcon(x)}</span>
+          <span style="flex:1;min-width:0"><strong>${x.title}</strong><small>${x.requirement}</small>
+            <span class="pf-bar" style="display:block;height:5px;margin-top:6px"><i style="width:${Math.min(100, x.progress.value / x.progress.max * 100)}%"></i></span></span>
+          <span style="font-family:var(--font-num);font-size:.72rem;font-weight:800;color:var(--text-muted);white-space:nowrap">${x.progress.text}</span>
+        </button>`).join("")}</div>
+    </div>` : ""}
+    <div class="pf-card">
+      <div class="pf-chips">
+        <button class="pf-chip ${badgeFilter === "earned" ? "active" : ""}" data-f="earned">অর্জিত ${got.length}</button>
+        <button class="pf-chip ${badgeFilter === "locked" ? "active" : ""}" data-f="locked">বাকি ${locked.length}</button>
+        <button class="pf-chip ${badgeFilter === "all" ? "active" : ""}" data-f="all">সব ${state.length}</button>
+      </div>
+      <div class="pf-bgrid" id="pfBadgeGrid"></div>
+    </div>`;
+
+  const grid = $("pfBadgeGrid");
+  const list = state.filter(x => badgeFilter === "all" || (badgeFilter === "earned" ? x.earned : !x.earned));
+  grid.innerHTML = list.length ? list.map(x => {
+    const r = rarityOf(x);
+    return `<button type="button" class="pf-badge ${x.earned ? "earned" : "locked"}" data-badge="${x.id}" style="--rc:${r.color}">
+      <div class="pf-bico">${badgeIcon(x)}</div>
+      <strong>${isSecretLocked(x) ? "গোপন ব্যাজ" : x.title}</strong>
+      <span class="rar">${r.bn}</span>
+      ${x.earned ? `<span class="got">অর্জিত</span>`
+        : isSecretLocked(x) ? `<span class="sec">শর্ত অজানা</span>`
+        : x.progress ? `<div class="prog"><div class="pf-bar"><i style="width:${Math.min(100, x.progress.value / x.progress.max * 100)}%"></i></div><small>${x.progress.text}</small></div>` : ""}
+    </button>`;
+  }).join("") : `<div class="pf-empty" style="grid-column:1/-1">এখানে কিছু নেই।</div>`;
+
+  host.querySelectorAll("[data-f]").forEach(c => c.addEventListener("click", () => { badgeFilter = c.dataset.f; renderBadges(d); }));
+  host.querySelectorAll("[data-badge]").forEach(el => el.addEventListener("click", () => showBadgeDetail(state.find(x => x.id === el.dataset.badge))));
+}
+
+function showBadgeDetail(b) {
+  if (!b) return;
+  $("badgeDetailModal")?.remove();
+  const r = rarityOf(b), hide = isSecretLocked(b);
+  const div = document.createElement("div");
+  div.id = "badgeDetailModal"; div.className = "pf-modal"; div.setAttribute("role", "dialog");
+  div.innerHTML = `<div class="pf-modal-card" style="--rc:${r.color}">
+    <div class="pf-bico">${badgeIcon(b)}</div>
+    <div class="rar">${r.bn}</div>
+    <h3>${hide ? "গোপন ব্যাজ" : b.title}</h3>
+    <div class="pf-how"><b>কীভাবে অর্জন করবে?</b><br>${hide ? "এটা একটা গোপন ব্যাজ — নিজে খুঁজে বের করো!" : b.requirement}</div>
+    ${b.progress && !hide && !b.earned ? `<div class="pf-bar"><i style="width:${Math.min(100, b.progress.value / b.progress.max * 100)}%"></i></div><p style="font-size:.74rem;font-weight:800;color:var(--text-muted);margin-top:6px">${b.progress.text}</p>` : ""}
+    ${b.earned ? `<p style="font-size:.8rem;font-weight:900;color:var(--color-success)">তুমি এটা অর্জন করেছ</p>` : ""}
+    <button class="pf-btn primary" type="button" style="margin-top:14px;width:100%">বন্ধ করো</button>
+  </div>`;
+  document.body.appendChild(div);
+  div.addEventListener("click", e => { if (e.target === div || e.target.closest("button")) div.remove(); });
+}
+
+function showBadgeUnlocks(state) {
+  try {
+    const key = `badge-seen-${student.studentId}`;
+    const seen = new Set(JSON.parse(localStorage.getItem(key) || "[]"));
+    const earned = state.filter(b => b.earned);
+    localStorage.setItem(key, JSON.stringify(earned.map(b => b.id)));
+    const fresh = earned.filter(b => !seen.has(b.id));
+    if (!fresh.length) return;
+    const b = fresh[0], r = rarityOf(b);
+    const div = document.createElement("div");
+    div.className = "pf-modal pf-unlock";
+    div.innerHTML = `<div class="pf-modal-card" style="--rc:${r.color}">
+      <div class="rar" style="margin-bottom:10px">নতুন ব্যাজ অর্জিত</div>
+      <div class="pf-bico">${badgeIcon(b)}</div>
+      <h3>${b.title}</h3>
+      <div class="pf-how">${b.requirement}</div>
+      ${fresh.length > 1 ? `<p style="font-size:.74rem;font-weight:800;color:var(--text-muted)">আরও ${fresh.length - 1}টি নতুন ব্যাজ পেয়েছ — ব্যাজ ট্যাবে দেখো</p>` : ""}
+      <button class="pf-btn primary" type="button" style="margin-top:12px;width:100%">চালিয়ে যাও</button>
+    </div>`;
+    document.body.appendChild(div);
+    div.addEventListener("click", e => { if (e.target === div || e.target.closest("button")) div.remove(); });
+  } catch {}
+}
+
+/* ---------- friends ---------- */
+let allNetStudents = [], friendIds = [], incomingReqs = [], outgoingReqs = [];
+let dirBatchFilter = "all", dirSearchTerm = "";
 
 async function loadNetworkData() {
   try {
@@ -954,267 +849,272 @@ async function loadNetworkData() {
       getIncomingRequests(student.studentId), getOutgoingRequests(student.studentId)
     ]);
     allNetStudents = students; friendIds = fIds; incomingReqs = inc; outgoingReqs = out;
-    dirBatchFilter = student.className || "all";
+    if (dirBatchFilter === "all" && student.className) dirBatchFilter = student.className;
+    const dot = $("pfReqDot");
+    if (dot) { dot.textContent = inc.length; dot.classList.toggle("on", inc.length > 0); }
     renderReqsAndFriends();
     renderDirectoryFilters();
     renderDirectory();
-  } catch (err) {}
+  } catch (err) {
+    console.warn("Network load failed", err);
+    const el = $("reqAndFriendsSection");
+    if (el) el.innerHTML = `<div class="pf-card"><div class="pf-empty">বন্ধুদের তালিকা লোড করা যায়নি।</div></div>`;
+  }
+}
+
+function refreshAfterFriendChange() {
+  loadNetworkData();
+  loadData(true).then(d => { fillHero(d); renderBadges(d); }).catch(() => {});
 }
 
 function renderReqsAndFriends() {
-  const el = document.getElementById("reqAndFriendsSection");
-  const nameOf = {}; allNetStudents.forEach(s => { nameOf[s.studentId] = s.name; });
+  const el = $("reqAndFriendsSection");
+  const nameOf = {}, classOf = {};
+  allNetStudents.forEach(s => { nameOf[s.studentId] = s.name; classOf[s.studentId] = s.className; });
 
   let html = "";
-
-  if (incomingReqs.length > 0) {
-    html += `
-      <p style="font-size:1rem; font-weight:900; color:var(--text-primary); margin-bottom:12px;">বন্ধুত্বের অনুরোধ</p>
-      <div class="glass-card" style="padding:12px;">
-        ${incomingReqs.map(r => `
-          <div class="dir-row" style="background:var(--surface);">
-            <span class="dir-name">${nameOf[r.fromStudentId] || r.fromStudentId}</span>
-            <div style="display:flex; gap:6px;">
-              <button class="btn-secondary req-reject btn-sm" data-id="${r.id}">বাতিল</button>
-              <button class="btn-primary req-accept btn-sm" data-id="${r.id}" style="width:auto;">গ্রহণ</button>
-            </div>
+  if (incomingReqs.length) {
+    html += `<div class="pf-card" style="margin-bottom:14px">
+      <div class="pf-head"><div><h2 class="pf-h">বন্ধুত্বের অনুরোধ</h2><div class="pf-note">${incomingReqs.length}টি অপেক্ষায়</div></div></div>
+      ${incomingReqs.map(r => `
+        <div class="pf-row">
+          <div class="pf-rname">${esc(nameOf[r.fromStudentId] || r.fromStudentId)}${classOf[r.fromStudentId] ? `<small>${esc(classOf[r.fromStudentId])}</small>` : ""}
+            ${r.viaReferral ? `<br><span class="pf-tag">তোমার লিংকে যুক্ত হয়েছে</span>` : ""}</div>
+          <div style="display:flex;gap:6px;flex:none">
+            <button class="pf-btn sm req-reject" data-id="${r.id}" type="button">বাতিল</button>
+            <button class="pf-btn sm primary req-accept" data-id="${r.id}" type="button">গ্রহণ</button>
           </div>
-        `).join("")}
-      </div>
-    `;
+        </div>`).join("")}
+    </div>`;
   }
 
-  html += `
-    <p style="font-size:1rem; font-weight:900; color:var(--text-primary); margin-bottom:12px;">আমার বন্ধুরা (${friendIds.length}/${MAX_FRIENDS})</p>
-    <div class="glass-card" style="padding:12px;">
-      ${friendIds.length === 0
-        ? `<p class="text-sm text-center text-muted font-bold" style="padding:10px;">এখনো কোনো বন্ধু যোগ হয়নি।</p>`
-        : friendIds.map(fid => `
-          <div class="dir-row" style="background:var(--surface);">
-            <span class="dir-name">${nameOf[fid] || fid}</span>
-            <button class="btn-secondary friend-remove btn-sm" data-id="${fid}" style="border-color:rgba(239,68,68,0.3); color:#ef4444;">সরাও</button>
-          </div>
-        `).join("")}
-    </div>
-  `;
+  html += `<div class="pf-card" style="margin-bottom:14px">
+    <div class="pf-head"><div><h2 class="pf-h">আমার বন্ধুরা</h2><div class="pf-note">${friendIds.length} / ${MAX_FRIENDS}</div></div></div>
+    ${friendIds.length === 0 ? `<div class="pf-empty">এখনো কোনো বন্ধু যোগ হয়নি।</div>` : friendIds.map(fid => `
+      <div class="pf-row">
+        <div class="pf-rname">${esc(nameOf[fid] || fid)}${classOf[fid] ? `<small>${esc(classOf[fid])}</small>` : ""}</div>
+        <button class="pf-btn sm danger friend-remove" data-id="${fid}" type="button">সরাও</button>
+      </div>`).join("")}
+  </div>`;
 
   el.innerHTML = html;
-  el.querySelectorAll(".req-accept").forEach(b => b.addEventListener("click", async () => { try { await acceptFriendRequest(b.dataset.id, student.studentId); showToast("যুক্ত হলো", "success"); await loadNetworkData(); } catch (err) { showToast(friendlyError(err), "error"); } }));
-  el.querySelectorAll(".req-reject").forEach(b => b.addEventListener("click", async () => { try { await rejectFriendRequest(b.dataset.id); await loadNetworkData(); } catch(e){} }));
-  el.querySelectorAll(".friend-remove").forEach(b => b.addEventListener("click", async () => { if (!confirm("এই বন্ধুকে তালিকা থেকে সরাতে চাও?")) return; try { await removeFriend(student.studentId, b.dataset.id); showToast("সরানো হয়েছে", "success"); await loadNetworkData(); } catch(e){} }));
+  el.querySelectorAll(".req-accept").forEach(b => b.addEventListener("click", () => acceptReq(b.dataset.id)));
+  el.querySelectorAll(".req-reject").forEach(b => b.addEventListener("click", async () => { try { await rejectFriendRequest(b.dataset.id); refreshAfterFriendChange(); } catch (e) { showToast(friendlyError(e), "error"); } }));
+  el.querySelectorAll(".friend-remove").forEach(b => b.addEventListener("click", async () => {
+    if (!confirm("এই বন্ধুকে তালিকা থেকে সরাতে চাও?")) return;
+    try { await removeFriend(student.studentId, b.dataset.id); showToast("সরানো হয়েছে", "success"); refreshAfterFriendChange(); } catch (e) { showToast(friendlyError(e), "error"); }
+  }));
+}
+
+async function acceptReq(id) {
+  try { await acceptFriendRequest(id, student.studentId); showToast("বন্ধু যুক্ত হলো", "success"); refreshAfterFriendChange(); }
+  catch (err) { showToast(friendlyError(err), "error"); }
 }
 
 function renderDirectoryFilters() {
-  const filterEl = document.getElementById("dirFilters");
+  const el = $("dirFilters");
   const batches = [...new Set(allNetStudents.map(s => s.className || "Other"))].sort();
-  filterEl.innerHTML = `<div class="chip ${dirBatchFilter === "all" ? "active" : ""}" data-batch="all">সব ব্যাচ</div>` + batches.map(b => `<div class="chip ${dirBatchFilter === b ? "active" : ""}" data-batch="${b}">${b}</div>`).join("");
-  filterEl.querySelectorAll(".chip").forEach(chip => { chip.addEventListener("click", () => { dirBatchFilter = chip.dataset.batch; renderDirectoryFilters(); renderDirectory(); }); });
+  el.innerHTML = `<button class="pf-chip ${dirBatchFilter === "all" ? "active" : ""}" data-batch="all">সব ব্যাচ</button>` +
+    batches.map(b => `<button class="pf-chip ${dirBatchFilter === b ? "active" : ""}" data-batch="${esc(b)}">${esc(b)}</button>`).join("");
+  el.querySelectorAll(".pf-chip").forEach(c => c.addEventListener("click", () => { dirBatchFilter = c.dataset.batch; renderDirectoryFilters(); renderDirectory(); }));
 }
 
 function renderDirectory() {
-  const dirList = document.getElementById("dirList");
-  let filtered = allNetStudents.filter(s => s.studentId !== student.studentId);
-  if (dirBatchFilter !== "all") filtered = filtered.filter(s => (s.className || "Other") === dirBatchFilter);
-  if (dirSearchTerm !== "") filtered = filtered.filter(s => s.name.toLowerCase().includes(dirSearchTerm));
+  const list = $("dirList");
+  let rows = allNetStudents.filter(s => s.studentId !== student.studentId);
+  if (dirBatchFilter !== "all") rows = rows.filter(s => (s.className || "Other") === dirBatchFilter);
+  if (dirSearchTerm) rows = rows.filter(s => String(s.name || "").toLowerCase().includes(dirSearchTerm));
+  if (!rows.length) { list.innerHTML = `<div class="pf-empty">কাউকে পাওয়া যায়নি।</div>`; return; }
 
-  if (filtered.length === 0) { dirList.innerHTML = `<p class="text-sm text-center text-muted font-bold" style="padding:20px;">কাউকে পাওয়া যায়নি।</p>`; return; }
-
-  dirList.innerHTML = filtered.map(s => {
+  list.innerHTML = rows.map(s => {
     const isFriend = friendIds.includes(s.studentId);
-    const isIncoming = incomingReqs.find(r => r.fromStudentId === s.studentId);
-    const isOutgoing = outgoingReqs.find(r => r.toStudentId === s.studentId);
-
-    let actionBtn = '';
-    if (isFriend) actionBtn = `<span class="status-badge badge-friend">বন্ধু</span>`;
-    else if (isIncoming) actionBtn = `<button class="btn-primary req-accept btn-sm" data-id="${isIncoming.id}" style="width:auto;">গ্রহণ করুন</button>`;
-    else if (isOutgoing) actionBtn = `<span class="status-badge badge-pending">অপেক্ষমাণ</span>`;
-    else actionBtn = `<button class="btn-secondary send-req btn-sm" data-sid="${s.studentId}">+ যোগ করো</button>`;
-
-    return `
-      <div class="dir-row">
-        <div><div class="dir-name">${s.name} <span class="dir-batch">${s.className || "N/A"}</span></div></div>
-        <div style="flex-shrink:0;">${actionBtn}</div>
-      </div>
-    `;
+    const inc = incomingReqs.find(r => r.fromStudentId === s.studentId);
+    const out = outgoingReqs.find(r => r.toStudentId === s.studentId);
+    const act = isFriend ? `<span class="pf-state ok">বন্ধু</span>`
+      : inc ? `<button class="pf-btn sm primary req-accept" data-id="${inc.id}" type="button">গ্রহণ করো</button>`
+      : out ? `<span class="pf-state wait">অপেক্ষমাণ</span>`
+      : `<button class="pf-btn sm send-req" data-sid="${esc(s.studentId)}" type="button">+ যোগ করো</button>`;
+    return `<div class="pf-row"><div class="pf-rname">${esc(s.name)}<small>${esc(s.className || "N/A")}</small></div><div style="flex:none">${act}</div></div>`;
   }).join("");
 
-  dirList.querySelectorAll(".req-accept").forEach(b => b.addEventListener("click", async () => { try { await acceptFriendRequest(b.dataset.id, student.studentId); showToast("যুক্ত হলো", "success"); await loadNetworkData(); } catch (err) { showToast(friendlyError(err), "error"); } }));
-  dirList.querySelectorAll(".send-req").forEach(b => b.addEventListener("click", async () => { const btn = b; const originalText = btn.textContent; btn.disabled = true; btn.textContent = "..."; try { await sendFriendRequest(student.studentId, btn.dataset.sid); showToast("অনুরোধ পাঠানো হয়েছে!", "success"); await loadNetworkData(); } catch (err) { showToast(friendlyError(err), "error"); btn.disabled = false; btn.textContent = originalText; } }));
+  list.querySelectorAll(".req-accept").forEach(b => b.addEventListener("click", () => acceptReq(b.dataset.id)));
+  list.querySelectorAll(".send-req").forEach(b => b.addEventListener("click", async () => {
+    const txt = b.textContent; b.disabled = true; b.textContent = "...";
+    try { await sendFriendRequest(student.studentId, b.dataset.sid); showToast("অনুরোধ পাঠানো হয়েছে", "success"); await loadNetworkData(); }
+    catch (err) { showToast(friendlyError(err), "error"); b.disabled = false; b.textContent = txt; }
+  }));
 }
 
-// ==========================================
-// SHARE PROFILE CARD LOGIC (Updated to focus on Points and Badges, no %)
-// ==========================================
-function openShareChoice(studentData) {
+/* ==========================================================
+   SHARE CARD  (PNG / PDF)  — carries the friend-invite link + QR
+   ========================================================== */
+function openShareChoice() {
   const overlay = document.createElement("div");
-  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(5px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;";
+  overlay.className = "pf-modal";
   overlay.innerHTML = `
-    <div class="glass-card" style="max-width:380px;width:100%;text-align:center;background:var(--surface);">
-      <p style="font-weight:900; font-size:1.1rem; margin-bottom:8px;">শেয়ার ফরম্যাট</p>
-      <p class="text-xs text-muted mb-4" style="line-height:1.5;">ছবি (PNG) সরাসরি WhatsApp-এ পাঠানো যায়। প্রিন্ট বা সেভ করতে PDF বেছে নাও।</p>
-      <div style="display:flex; gap:10px;">
-        <button type="button" class="btn-secondary" id="choosePngBtn" style="flex:1;">ছবি (PNG)</button>
-        <button type="button" class="btn-primary" id="choosePdfBtn" style="flex:1; width:auto;">PDF</button>
+    <div class="pf-modal-card" style="--rc:var(--color-accent)">
+      <h3 style="margin-bottom:6px">প্রোফাইল শেয়ার করো</h3>
+      <p style="font-size:.78rem;line-height:1.6;font-weight:600;color:var(--text-secondary);margin-bottom:16px">কার্ডের সাথে তোমার আমন্ত্রণ লিংক আর QR কোড যাবে। বন্ধু ট্যাপ করলেই যুক্ত হওয়ার পেজ খুলবে, তোমার কোড নিজে থেকে বসে যাবে।</p>
+      <div style="display:flex;gap:10px">
+        <button type="button" class="pf-btn" id="choosePngBtn" style="flex:1">ছবি (PNG)</button>
+        <button type="button" class="pf-btn primary" id="choosePdfBtn" style="flex:1">PDF</button>
       </div>
-      <button type="button" class="btn-secondary mt-3" id="shareChoiceCancelBtn" style="width:100%; border:none; background:transparent;">বাতিল করুন</button>
-    </div>
-  `;
+      <button type="button" class="pf-btn" id="shareChoiceCancelBtn" style="width:100%;margin-top:10px;border:0;background:transparent">বাতিল</button>
+    </div>`;
   document.body.appendChild(overlay);
+  overlay.addEventListener("click", e => { if (e.target === overlay) overlay.remove(); });
   overlay.querySelector("#shareChoiceCancelBtn").addEventListener("click", () => overlay.remove());
-  overlay.querySelector("#choosePngBtn").addEventListener("click", () => { overlay.remove(); generateProfileCard(studentData, "png"); });
-  overlay.querySelector("#choosePdfBtn").addEventListener("click", () => { overlay.remove(); generateProfileCard(studentData, "pdf"); });
+  overlay.querySelector("#choosePngBtn").addEventListener("click", () => { overlay.remove(); generateProfileCard("png"); });
+  overlay.querySelector("#choosePdfBtn").addEventListener("click", () => { overlay.remove(); generateProfileCard("pdf"); });
 }
 
-async function buildProfileCardHtml(studentData) {
-  // Fetch Real Rank/Points and Badges
-  const rank = await getStudentRank(student.studentId);
-  const totalPoints = rank?.totalPoints || 0;
-  
-  const gData = await computeGamificationData();
-  const examCount = gData.examCounts?.[student.studentId] || 0;
-  let অর্জিতBadgeNames = [];
-  try {
-    const [results, subjectsSnap, chaptersSnap, topicsSnap] = await Promise.all([
-      getApprovedResults(student.studentId),
-      getDocs(collection(db, "subjects")),
-      getDocs(collection(db, "chapters")),
-      getDocs(collection(db, "topics"))
-    ]);
-    const subjectMap={}, chapterMap={}, topicMap={};
-    subjectsSnap.forEach(d=>{const x=d.data();subjectMap[d.id]=x.name_bn||x.name_en||d.id});
-    chaptersSnap.forEach(d=>{const x=d.data();chapterMap[d.id]=x.name_bn||x.name_en||d.id});
-    topicsSnap.forEach(d=>{const x=d.data();topicMap[d.id]=x.name_bn||x.name_en||d.id});
-    const subjectStats=computeSubjectStats(results,subjectMap).map(x=>({...x,id:x.subjectId}));
-    const chapterStats=computeChapterStats(results,chapterMap).map(x=>({...x,id:x.chapterId}));
-    const topicStats=computeTopicStats(results,topicMap).map(x=>({...x,id:x.topicId}));
-    const ctx=getBadgeContext(results,gData,rank,subjectStats,chapterStats,topicStats);
-    অর্জিতBadgeNames=buildBadgeCatalog(ctx).filter(b=>b.check(ctx)).map(b=>b.title);
-  } catch {}
-  const totalBadges = অর্জিতBadgeNames.length;
-  const cardBadgeNames = অর্জিতBadgeNames.map(name => ({
-    "পরীক্ষা যোদ্ধা": "Exam Warrior",
-    "নির্ভুলতার মাস্টার": "Accuracy Master",
-    "সঠিক উত্তরের মাস্টার": "Correct Answer Master",
-    "পয়েন্ট সংগ্রাহক": "Point Collector",
-    "ঘুরে দাঁড়ানোর চ্যাম্পিয়ন": "Comeback Champion",
-    "ধারাবাহিকতার চ্যাম্পিয়ন": "Consistency Champion",
-    "দ্রুত সমাধানকারী": "Speed Solver",
-    "পূর্ণ নম্বর": "Perfect Score",
-    "ভুলহীন পরীক্ষা": "Zero Wrong",
-    "প্রচেষ্টার মাস্টার": "Attempt Master",
-    "ধারাবাহিক নিখুঁত দৌড়": "Clean Run",
-    "সাপ্তাহিক শীর্ষস্থান": "Weekly Topper",
-    "শ্রেণির সাপ্তাহিক শীর্ষস্থান": "Class Weekly Topper",
-    "মাসিক শীর্ষস্থান": "Monthly Topper",
-    "শ্রেণির মাসিক শীর্ষস্থান": "Class Monthly Topper",
-    "বিষয় মাস্টার": "Subject Master",
-    "অধ্যায় মাস্টার": "Chapter Master",
-    "টপিক মাস্টার": "Topic Master",
-    "সিলেবাস মাস্টার": "Syllabus Master",
-    "সর্বগুণসম্পন্ন": "All-Rounder",
-    "সাপ্তাহিক ধারাবাহিকতা": "Weekly Streak",
-    "প্রথম বন্ধু": "First Friend",
-    "সামাজিক বৃত্ত": "Social Circle",
-    "প্রতিদ্বন্দ্বী নির্ধারিত": "Rival Marked",
-    "চ্যালেঞ্জ চ্যাম্পিয়ন": "Challenge Champion",
-    "রাতজাগা": "Night Owl",
-    "নিখুঁত শুরু": "Perfect Start"
-  }[name] || name));
-  const photoURL = studentData.photoURL || null;
-  const badgeColor = "#d4a244";
-  const rankText = rank?.rank ? `#${rank.rank}${rank.totalStudents ? ` / ${rank.totalStudents}` : ""}` : "—";
-  const levelText = rank?.level != null ? `LEVEL ${rank.level}` : "";
+function makeQr(text, size = 132) {
+  return new Promise(resolve => {
+    if (typeof QRCode === "undefined") return resolve("");
+    const box = document.createElement("div");
+    box.style.cssText = "position:fixed;left:-9999px;top:0;";
+    document.body.appendChild(box);
+    try { new QRCode(box, { text, width: size, height: size, correctLevel: QRCode.CorrectLevel.M }); }
+    catch { box.remove(); return resolve(""); }
+    setTimeout(() => {
+      const c = box.querySelector("canvas");
+      const url = c ? c.toDataURL("image/png") : (box.querySelector("img")?.src || "");
+      box.remove(); resolve(url);
+    }, 80);
+  });
+}
+
+function buildProfileCardHtml(d, qrUrl, link) {
+  const xp = Number(d.rank?.totalPoints || 0);
+  const lv = getLevelInfo(xp);
+  const got = d.badges.filter(b => b.earned);
+  const rankText = d.rank?.rank ? `#${d.rank.rank}${d.rank.totalStudents ? ` / ${d.rank.totalStudents}` : ""}` : "—";
+  const gold = "#d4a244";
+  const initial = esc((student.name || "?").charAt(0));
+  const avatar = student.photoURL
+    ? `<img id="cardPhoto" src="${esc(student.photoURL)}" crossorigin="anonymous" style="width:100px;height:100px;border-radius:50%;object-fit:cover;margin:16px auto 12px;display:block;border:3px solid ${gold};box-shadow:0 0 0 5px rgba(212,162,68,.15);">`
+    : "";
+  const fallback = `<div id="cardAvatarFb" style="${student.photoURL ? "display:none;" : ""}width:100px;height:100px;border-radius:50%;margin:16px auto 12px;background:linear-gradient(145deg,#e8c988,${gold});align-items:center;justify-content:center;font-size:38px;font-weight:800;color:#1c1509;box-shadow:0 0 0 5px rgba(212,162,68,.15);${student.photoURL ? "" : "display:flex;"}">${initial}</div>`;
+  const host = link.replace(/^https?:\/\//, "");
 
   return `
-    <div id="profileCardInner" style="width:400px;font-family:'Noto Sans Bengali',sans-serif;background:linear-gradient(160deg,#0c0a06 0%,#1c1509 55%,#0c0a06 100%);color:#ffffff;border-radius:26px;overflow:hidden;position:relative;">
-      <div style="height:5px;background:linear-gradient(90deg,#8a6a2a,#e8c988,#8a6a2a);"></div>
-      <div style="padding:30px 28px 20px;text-align:center;">
-        <p style="margin:0;line-height:1.4;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#e8c988;font-weight:800;">EXAM PREPARATION • STUDENT CARD</p>
-        ${photoURL ? `<img src="${photoURL}" crossorigin="anonymous" style="width:100px;height:100px;border-radius:50%;object-fit:cover;margin:16px auto 12px;display:block;border:3px solid ${badgeColor};box-shadow:0 0 0 5px rgba(212,162,68,0.15);">` : `<div style="width:100px;height:100px;border-radius:50%;margin:16px auto 12px;background:linear-gradient(145deg,#e8c988,${badgeColor});display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:800;color:#1c1509;box-shadow:0 0 0 5px rgba(212,162,68,0.15);">${(student.name || "?").charAt(0)}</div>`}
-        <h1 style="margin:0;line-height:1.15;font-size:28px;font-weight:900;color:#ffffff;">${student.name}</h1>
-        <div style="margin-top:9px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
-          <span style="display:inline-block;padding:4px 12px;border-radius:999px;background:rgba(255,255,255,0.08);color:#cbd5e1;font-size:11px;font-weight:700;">${studentData.className || "CLASS NOT SET"} • ${student.studentId}</span>
-          ${levelText ? `<span style="display:inline-block;padding:4px 12px;border-radius:999px;background:rgba(212,162,68,0.16);border:1px solid rgba(212,162,68,0.35);color:#e8c988;font-size:11px;font-weight:800;">${levelText}</span>` : ""}
-        </div>
-      </div>
-
-      <div style="margin:0 20px;background:rgba(212,162,68,0.08);border-radius:18px;padding:20px;text-align:center;border:1px solid rgba(212,162,68,0.22);">
-        <p style="margin:0;font-size:48px;font-weight:900;color:#e8c988;font-family:sans-serif;line-height:1;">${totalPoints}</p>
-        <p style="margin:6px 0 0;font-size:13px;color:#cbd5e1;font-weight:700;">TOTAL POINTS</p>
-      </div>
-
-      <div style="display:flex;gap:8px;margin:14px 20px 0;">
-        <div style="flex:1;background:rgba(255,255,255,0.06);border-radius:16px;padding:12px 8px;text-align:center;">
-          <p style="margin:0;line-height:1.3;font-size:18px;font-weight:800;color:#ffffff;">${rankText}</p>
-          <p style="margin:4px 0 0;line-height:1.3;font-size:11px;color:#94a3b8;font-weight:600;">RANK</p>
-        </div>
-        <div style="flex:1;background:rgba(255,255,255,0.06);border-radius:16px;padding:12px 8px;text-align:center;">
-          <p style="margin:0;line-height:1.3;font-size:18px;font-weight:800;color:#ffffff;">${totalBadges} টি</p>
-          <p style="margin:4px 0 0;line-height:1.3;font-size:11px;color:#94a3b8;font-weight:600;">BADGES</p>
-        </div>
-        <div style="flex:1;background:rgba(255,255,255,0.06);border-radius:16px;padding:12px 8px;text-align:center;">
-          <p style="margin:0;line-height:1.3;font-size:18px;font-weight:800;color:#ffffff;">${examCount}</p>
-          <p style="margin:4px 0 0;line-height:1.3;font-size:11px;color:#94a3b8;font-weight:600;">EXAMS</p>
-        </div>
-      </div>
-      ${অর্জিতBadgeNames.length ? `
-      <div style="margin:14px 20px 0;padding:12px 14px;background:rgba(255,255,255,0.045);border:1px solid rgba(255,255,255,0.10);border-radius:16px;">
-        <p style="margin:0 0 9px;font-size:11px;color:#cbd5e1;font-weight:800;text-align:left;">অর্জিত BADGES</p>
-        <div style="display:flex;flex-wrap:wrap;gap:7px;">
-          ${cardBadgeNames.slice(0,8).map(name => `<span style="padding:6px 9px;border-radius:999px;background:rgba(212,162,68,.16);border:1px solid rgba(212,162,68,.32);color:#e8c988;font-size:10px;font-weight:800;">${name}</span>`).join("")}
-          ${অর্জিতBadgeNames.length > 8 ? `<span style="padding:6px 9px;border-radius:999px;background:rgba(255,255,255,.06);color:#94a3b8;font-size:10px;font-weight:800;">+${অর্জিতBadgeNames.length - 8} আরও</span>` : ""}
-        </div>
-      </div>` : ""}
-
-      <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin:22px 0 20px;">
-        <span style="width:5px;height:5px;border-radius:50%;background:#8a6a2a;"></span>
-        <p style="margin:0;font-size:10px;color:#7d7362;font-weight:700;letter-spacing:.5px;">${new Date().toLocaleDateString("en-US", { year:"numeric", month:"short", day:"numeric" })}</p>
-        <span style="width:5px;height:5px;border-radius:50%;background:#8a6a2a;"></span>
+  <div id="profileCardInner" style="width:400px;font-family:'Noto Sans Bengali','Inter',sans-serif;background:linear-gradient(160deg,#0c0a06 0%,#1c1509 55%,#0c0a06 100%);color:#fff;border-radius:26px;overflow:hidden;position:relative;">
+    <div style="height:5px;background:linear-gradient(90deg,#8a6a2a,#e8c988,#8a6a2a);"></div>
+    <div style="padding:26px 28px 16px;text-align:center;">
+      <p style="margin:0;line-height:1.4;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#e8c988;font-weight:800;">EXAM PREPARATION • STUDENT CARD</p>
+      ${avatar}${fallback}
+      <h1 style="margin:0;line-height:1.25;font-size:27px;font-weight:900;color:#fff;">${esc(student.name)}</h1>
+      <div style="margin-top:9px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
+        <span style="display:inline-block;padding:4px 12px;border-radius:999px;background:rgba(255,255,255,.08);color:#cbd5e1;font-size:11px;font-weight:700;">${esc(student.className || "CLASS NOT SET")} • ${esc(student.studentId)}</span>
+        <span style="display:inline-block;padding:4px 12px;border-radius:999px;background:rgba(212,162,68,.16);border:1px solid rgba(212,162,68,.35);color:#e8c988;font-size:11px;font-weight:800;">LEVEL ${lv.level}</span>
       </div>
     </div>
-  `;
-  }
 
-  async function generateProfileCard(studentData, format) {
-  const btn = document.getElementById("shareProfileBtn");
-  const originalText = btn.innerHTML;
-  btn.disabled = true; btn.innerHTML = "কার্ড তৈরি হচ্ছে...";
+    <div style="margin:0 20px;background:rgba(212,162,68,.08);border-radius:18px;padding:18px;text-align:center;border:1px solid rgba(212,162,68,.22);">
+      <p style="margin:0;font-size:44px;font-weight:900;color:#e8c988;font-family:sans-serif;line-height:1;">${xp.toLocaleString()}</p>
+      <p style="margin:6px 0 0;font-size:12px;color:#cbd5e1;font-weight:700;letter-spacing:.5px;">TOTAL XP</p>
+    </div>
+
+    <div style="display:flex;gap:8px;margin:12px 20px 0;">
+      ${[[rankText, "RANK"], [`${got.length}/${d.badges.length || 0}`, "BADGES"], [d.overall?.examsTaken || 0, "EXAMS"]].map(([v, l]) => `
+      <div style="flex:1;background:rgba(255,255,255,.06);border-radius:16px;padding:11px 6px;text-align:center;">
+        <p style="margin:0;line-height:1.3;font-size:17px;font-weight:800;color:#fff;">${v}</p>
+        <p style="margin:4px 0 0;line-height:1.3;font-size:10px;color:#94a3b8;font-weight:700;letter-spacing:.5px;">${l}</p>
+      </div>`).join("")}
+    </div>
+
+    ${got.length ? `
+    <div style="margin:12px 20px 0;padding:12px 14px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.1);border-radius:16px;">
+      <p style="margin:0 0 9px;font-size:11px;color:#cbd5e1;font-weight:800;text-align:left;">অর্জিত ব্যাজ</p>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;">
+        ${got.slice(0, 8).map(b => `<span style="padding:6px 10px;border-radius:999px;background:rgba(212,162,68,.16);border:1px solid rgba(212,162,68,.32);color:#e8c988;font-size:10px;font-weight:800;">${esc(b.title)}</span>`).join("")}
+        ${got.length > 8 ? `<span style="padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.06);color:#94a3b8;font-size:10px;font-weight:800;">+${got.length - 8} আরও</span>` : ""}
+      </div>
+    </div>` : ""}
+
+    <div id="cardCta" style="display:flex;align-items:center;gap:14px;margin:14px 20px 0;padding:14px;border-radius:18px;background:#fffaf0;color:#1c1509;">
+      ${qrUrl ? `<img src="${qrUrl}" style="width:96px;height:96px;flex:none;border-radius:10px;display:block;background:#fff;">` : ""}
+      <div style="min-width:0;text-align:left;">
+        <p style="margin:0;font-size:15px;font-weight:900;line-height:1.35;">আমার সাথে যুক্ত হও</p>
+        <p style="margin:3px 0 8px;font-size:11px;font-weight:600;line-height:1.5;color:#5b5240;">QR স্ক্যান করো বা লিংকে ট্যাপ করো — রেফারেল কোড নিজে থেকে বসে যাবে।</p>
+        <span style="display:inline-block;padding:4px 10px;border-radius:8px;background:#1c1509;color:#e8c988;font-size:12px;font-weight:800;letter-spacing:1px;font-family:sans-serif;">${esc(student.studentId)}</span>
+        <p style="margin:7px 0 0;font-size:9px;font-weight:700;color:#8a7a55;word-break:break-all;font-family:sans-serif;">${esc(host)}</p>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin:16px 0 18px;">
+      <span style="width:5px;height:5px;border-radius:50%;background:#8a6a2a;"></span>
+      <p style="margin:0;font-size:10px;color:#7d7362;font-weight:700;letter-spacing:.5px;">${new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</p>
+      <span style="width:5px;height:5px;border-radius:50%;background:#8a6a2a;"></span>
+    </div>
+  </div>`;
+}
+
+async function generateProfileCard(format) {
+  const btn = $("shareProfileBtn");
+  const original = btn.innerHTML;
+  btn.disabled = true; btn.textContent = "কার্ড তৈরি হচ্ছে...";
 
   try {
-    const area = document.getElementById("shareCardArea");
-    area.innerHTML = await buildProfileCardHtml(studentData);
-    const img = area.querySelector("img");
-    if (img && !img.complete) await new Promise(res => { img.onload = res; img.onerror = res; });
+    const d = await loadData();
+    const link = referralLink();
+    const qrUrl = await makeQr(link);
 
-    const canvas = await html2canvas(document.getElementById("profileCardInner"), { scale: 2, backgroundColor: null, useCORS: true });
-    const fileNameBase = `${student.name}_প্রোফাইল`.replace(/\s+/g, "_");
+    const area = $("shareCardArea");
+    area.innerHTML = buildProfileCardHtml(d, qrUrl, link);
+
+    // photo: if it can't load (blocked / bad link), fall back to the initial — never a broken image
+    const photo = area.querySelector("#cardPhoto");
+    if (photo) {
+      await new Promise(res => { if (photo.complete) return res(); photo.onload = res; photo.onerror = res; });
+      if (!photo.naturalWidth) { photo.remove(); area.querySelector("#cardAvatarFb").style.display = "flex"; }
+    }
+    try { await document.fonts.load('800 14px "Noto Sans Bengali"', "অআক"); await document.fonts.ready; } catch {}
+
+    const card = area.querySelector("#profileCardInner");
+    const canvas = await html2canvas(card, { scale: 2, backgroundColor: null, useCORS: true });
+    const base = `${student.name}_প্রোফাইল`.replace(/\s+/g, "_");
+    const w = canvas.width / 2, h = canvas.height / 2;
 
     let file, dataUrl;
     if (format === "png") {
       dataUrl = canvas.toDataURL("image/png");
       const blob = await (await fetch(dataUrl)).blob();
-      file = new File([blob], `${fileNameBase}.png`, { type: "image/png" });
+      file = new File([blob], `${base}.png`, { type: "image/png" });
     } else {
       const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF({ unit: "px", format: [canvas.width / 2, canvas.height / 2] });
-      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, canvas.width / 2, canvas.height / 2);
+      const pdf = new jsPDF({ unit: "px", format: [w, h] });
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", 0, 0, w, h);
+      // the invite panel is a real tappable link inside the PDF
+      const cta = card.querySelector("#cardCta");
+      if (cta) {
+        const cr = cta.getBoundingClientRect(), br = card.getBoundingClientRect();
+        pdf.link(cr.left - br.left, cr.top - br.top, cr.width, cr.height, { url: link });
+      }
       const blob = pdf.output("blob");
-      file = new File([blob], `${fileNameBase}.pdf`, { type: "application/pdf" });
+      file = new File([blob], `${base}.pdf`, { type: "application/pdf" });
       dataUrl = URL.createObjectURL(blob);
     }
 
+    const text = inviteText(link);
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try { await navigator.share({ files: [file], title: fileNameBase }); return; } catch {}
+      try { await navigator.share({ files: [file], title: base, text }); return; }
+      catch (err) { if (err && err.name === "AbortError") return; }
     }
+    // Fallback (desktop / browsers that can't share files): save the file + copy the invite link
     const a = document.createElement("a"); a.href = dataUrl; a.download = file.name; a.click();
+    const copied = await copyText(text);
+    showToast(copied ? "ফাইল সেভ হয়েছে, আমন্ত্রণ মেসেজ কপি হয়েছে — সাথে পেস্ট করে পাঠাও" : "ফাইল সেভ হয়েছে", "success");
   } catch (err) {
+    console.error("Profile card failed", err);
     showToast("কার্ড তৈরি করা যায়নি।", "error");
   } finally {
-    btn.disabled = false; btn.innerHTML = originalText;
+    $("shareCardArea").innerHTML = "";
+    btn.disabled = false; btn.innerHTML = original;
   }
 }
 
-} // end else (imports all loaded successfully)
+} // end if (__ok)
 </script>
 
 <script type="module">
