@@ -44,19 +44,43 @@ body{background:var(--bg-app);color:var(--text-primary);font-family:var(--font-b
 .member-main{min-width:0;display:flex;align-items:center;gap:7px;flex:1}.you-tag{font-size:.6rem;font-weight:900;letter-spacing:.05em;padding:3px 6px;border-radius:999px;background:var(--battle-gold-soft);color:var(--battle-gold)}
 .member-swap{border:1px solid var(--surface-border);background:var(--surface-solid);color:var(--text-primary);border-radius:8px;padding:6px 9px;font-size:.7rem;font-weight:800;cursor:pointer}.member-swap:hover{border-color:var(--battle-gold)}.member-swap.disabled{opacity:.45;cursor:not-allowed}.member-remove{width:28px;height:28px;border:1px solid var(--surface-border);background:var(--surface-solid);color:var(--color-danger);border-radius:8px;font-size:1rem;font-weight:900;cursor:pointer}
 @media(max-width:560px){.entry-grid,.member-grid{grid-template-columns:1fr}.entry-btn{min-height:110px}.battle-page{padding:16px 12px 32px}.lobby-code{font-size:1.75rem}}
+
+.top-right{display:flex;align-items:center;gap:8px}
+.card-chip{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:12px;border:1px solid var(--surface-border);background:var(--surface-solid);font-weight:800;font-size:.78rem;text-decoration:none;color:var(--text-secondary)}
+.card-chip svg{width:16px;height:16px;color:var(--battle-gold)}
+.card-chip b{font-family:var(--font-num);color:var(--battle-gold);font-size:1.02rem;line-height:1}
+.card-chip.zero b{color:var(--color-danger)}
+.card-banner{display:flex;align-items:center;gap:12px;border:1px solid var(--surface-border);background:var(--surface);border-radius:18px;padding:14px 16px;margin-bottom:14px;box-shadow:var(--shadow-soft)}
+.card-banner .cb-n{font-family:var(--font-num);font-size:1.9rem;font-weight:900;color:var(--battle-gold);line-height:1}
+.card-banner.zero .cb-n{color:var(--color-danger)}
+.card-banner .cb-t{font-size:.86rem;font-weight:800}.card-banner .cb-s{font-size:.74rem;color:var(--text-muted);font-weight:600;margin-top:2px;line-height:1.45}
+.card-banner a{margin-left:auto;flex:none;font-size:.76rem;font-weight:800;color:#241a08;background:var(--battle-gold);border-radius:10px;padding:8px 12px;text-decoration:none}
+.join-tip{margin:14px 0 0;padding:11px 13px;border-radius:12px;background:var(--battle-gold-soft);font-size:.78rem;line-height:1.55;color:var(--text-secondary);font-weight:600}
+.lobby-code-actions{flex-wrap:wrap}
 </style>
 </head>
 <body>
 <div class="battle-page">
   <header class="battle-top">
     <h1 class="battle-title">Battle</h1>
+    <div class="top-right">
+      <a id="cardChip" class="card-chip" href="./store.html" aria-label="Battle Room Card">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 10h18"/></svg>
+        Room Card <b id="cardChipN">-</b>
+      </a>
     <button id="homeBtn" class="back-btn" type="button" aria-label="ফিরে যাও"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+    </div>
   </header>
 
   <main id="modeView" class="view">
+    <div id="cardBanner" class="card-banner">
+      <div class="cb-n" id="cbN">-</div>
+      <div><div class="cb-t">Battle Room Card</div><div class="cb-s" id="cbS">লোড হচ্ছে…</div></div>
+      <a href="./store.html" id="cbBuy" class="hidden">কিনে নাও</a>
+    </div>
     <div class="entry-grid">
-      <button id="openCreateBtn" class="entry-btn" type="button"><span class="entry-label">Create</span><span class="entry-sub">নতুন Battle তৈরি করো</span></button>
-      <button id="openJoinBtn" class="entry-btn" type="button"><span class="entry-label">Join</span><span class="entry-sub">Battle Code দিয়ে যোগ দাও</span></button>
+      <button id="openCreateBtn" class="entry-btn" type="button"><span class="entry-label">Create</span><span class="entry-sub" id="createSub">নতুন Battle তৈরি করো (১টি Room Card লাগবে)</span></button>
+      <button id="openJoinBtn" class="entry-btn" type="button"><span class="entry-label">Join</span><span class="entry-sub">Code বা QR স্ক্যান করে যোগ দাও (কার্ড লাগে না)</span></button>
     </div>
     <a href="./battle-history.html" class="secondary-action" style="display:flex;align-items:center;justify-content:center;width:100%;margin-top:12px;box-sizing:border-box;text-decoration:none">Battle History</a>
   </main>
@@ -90,6 +114,7 @@ body{background:var(--bg-app);color:var(--text-primary);font-family:var(--font-b
       </div>
       <div id="scannerArea" class="scanner hidden"><div id="qr-reader"></div></div>
       <p id="joinError" class="error-note"></p>
+      <div class="join-tip">QR স্ক্যান করলেই নিজে থেকে Battle-এ যোগ হয়ে যাবে, আলাদা Join বাটন চাপতে হবে না। ফোনের ক্যামেরা দিয়ে স্ক্যান করলেও একই কাজ হবে।</div>
     </section>
   </main>
 
@@ -98,7 +123,7 @@ body{background:var(--bg-app);color:var(--text-primary);font-family:var(--font-b
       <h2 class="panel-title">Battle Lobby</h2>
       <div id="codeBox" class="lobby-code">------</div>
       <div id="lobbyQr" class="lobby-code-qr" aria-label="Battle QR code"></div>
-      <div class="lobby-code-actions"><button id="shareCodeBtn" class="secondary-action" type="button">Share</button></div>
+      <div class="lobby-code-actions"><button id="copyCodeBtn" class="secondary-action" type="button">Code কপি</button><button id="shareCodeBtn" class="secondary-action" type="button">Share</button></div>
       <div class="lobby-code-note">এই Code অন্যদের দাও</div>
       <div class="lobby-timer">
         <span class="timer-label">Battle starts in</span>
@@ -128,8 +153,14 @@ import { getActiveStudent } from "../js/utils/student-utils.js";
 import { getFullSyllabusTree } from "../js/utils/syllabus-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-import { createMatch, joinMatch, startMatch, removeMember, swapMember, syncLobbyTimer, deleteMatch } from "../js/utils/battle-utils.js?v=roomcard1";
+import { createMatch, joinMatch, startMatch, removeMember, swapMember, syncLobbyTimer, deleteMatch, getMatch } from "../js/utils/battle-utils.js?v=roomcard1";
 import { getAvailableBattleRoomCardCount } from "../js/utils/store-utils.js?v=roomcard1";
+
+// A shared / QR link (?code=XXXXXX) goes to the auto-join page: no button to tap.
+{
+  const sc = (new URLSearchParams(location.search).get("code") || "").trim().toUpperCase();
+  if (/^[A-Z0-9]{6}$/.test(sc)) { location.replace("./battle-join.html?code=" + sc); await new Promise(() => {}); }
+}
 
 initTheme();
 const esc = v => String(v ?? "").replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
@@ -153,19 +184,10 @@ window.addEventListener("popstate", ()=>{
   else showOnly("mode");
 });
 
+const joinLinkFor=code=>new URL("./battle-join.html?code="+encodeURIComponent(code),location.href).href;
 function showErr(el,msg){ el.textContent=msg; clearTimeout(el._t); el._t=setTimeout(()=>el.textContent="",4500); }
 function stopScanner(){ if(!scanner)return Promise.resolve(); return scanner.stop().catch(()=>{}).finally(()=>{scanner.clear().catch(()=>{});scanner=null;document.getElementById("scannerArea").classList.add("hidden");}); }
 function clearLobbyTimer(){ if(lobbyTimerHandle){clearInterval(lobbyTimerHandle);lobbyTimerHandle=null;} }
-
-// If a shared/QR link contains a Battle code, open the Join view with that code filled in.
-const sharedCode = new URLSearchParams(location.search).get("code");
-if(sharedCode){
-  const normalizedSharedCode = sharedCode.trim().toUpperCase();
-  if(/^[A-Z0-9]{6}$/.test(normalizedSharedCode)){
-    document.getElementById("joinCodeInput").value = normalizedSharedCode;
-    showOnly("join");
-  }
-}
 
 // Load syllabus once. Chapter and Topic are deliberately separate controls.
 try{
@@ -185,15 +207,30 @@ chapterSelect.addEventListener("change",()=>{
 });
 
 const roomCardNote=document.getElementById("roomCardNote");
-async function refreshRoomCardNote(){
-  roomCardNote.textContent="লোড হচ্ছে…";
+let cardCount=null;
+async function refreshCardBalance(){
   try{
     const n=await getAvailableBattleRoomCardCount(student.studentId);
+    cardCount=n;
+    document.getElementById("cardChipN").textContent=n;
+    document.getElementById("cardChip").classList.toggle("zero",n===0);
+    document.getElementById("cbN").textContent=n;
+    document.getElementById("cardBanner").classList.toggle("zero",n===0);
+    document.getElementById("cbS").textContent = n>0
+      ? "Battle তৈরি করতে ১টি কার্ড খরচ হয়। Join করতে কার্ড লাগে না।"
+      : "Battle তৈরি করতে কার্ড লাগবে। XP স্টোর থেকে কিনে নাও (৫০ XP/কার্ড)।";
+    document.getElementById("cbBuy").classList.toggle("hidden",n>0);
+    document.getElementById("createSub").textContent = n>0 ? `নতুন Battle তৈরি করো · ${n}টি কার্ড আছে` : "নতুন Battle তৈরি করো · কার্ড নেই";
     roomCardNote.innerHTML = n>0
       ? `তোমার কাছে <strong>${n}টি</strong> Battle Room Card আছে (Create করলে ১টি খরচ হবে)।`
       : `তোমার কাছে কোনো Battle Room Card নেই। <a href="./store.html">XP স্টোর থেকে কিনে নাও</a> (৫০ XP/কার্ড)।`;
-  }catch(e){ roomCardNote.textContent=""; }
+    document.getElementById("createBtn").disabled = (n===0);
+  }catch(e){ document.getElementById("cbS").textContent="কার্ডের তথ্য আনা যায়নি।"; }
 }
+const refreshRoomCardNote=refreshCardBalance;
+refreshCardBalance();
+window.addEventListener("pageshow",refreshCardBalance);
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden) refreshCardBalance(); });
 document.getElementById("openCreateBtn").onclick=()=>{setView("create");refreshRoomCardNote();};
 document.getElementById("openJoinBtn").onclick=()=>setView("join");
 document.getElementById("homeBtn").onclick=async()=>{
@@ -207,7 +244,7 @@ document.getElementById("createBtn").onclick=async()=>{
   const topics=[...document.querySelectorAll(".topic-check:checked")].map(x=>x.value);
   if(!chapterSelect.value)return showErr(createError,"একটি Chapter নির্বাচন করো।");
   if(!topics.length)return showErr(createError,"অন্তত ১টি Topic নির্বাচন করো।");
-  try{const code=await createMatch({hostStudentId:student.studentId,hostName:student.name,topics});myTeam="A";enterLobby(code);}catch(e){
+  try{const code=await createMatch({hostStudentId:student.studentId,hostName:student.name,topics});myTeam="A";refreshCardBalance();enterLobby(code);}catch(e){
     if(e.message==="NO_ROOM_CARD"){clearTimeout(createError._t);createError.innerHTML=`Battle তৈরি করতে ১টি Battle Room Card লাগবে। <a href="./store.html">XP স্টোর থেকে কিনে নাও</a>।`;}
     else showErr(createError,e.message||"Battle তৈরি করা যায়নি।");
     refreshRoomCardNote();
@@ -306,7 +343,7 @@ function enterLobby(code){
   const qrBox=document.getElementById("lobbyQr");
   qrBox.innerHTML="";
   if(typeof QRCode!=="undefined"){
-    const joinUrl=`${location.origin}${location.pathname}?code=${encodeURIComponent(code)}`;
+    const joinUrl=joinLinkFor(code);
     new QRCode(qrBox,{text:joinUrl,width:132,height:132,colorDark:"#111111",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});
   }
   const ref=doc(db,"battleMatches",code);
@@ -330,8 +367,11 @@ function enterLobby(code){
   });
   document.getElementById("startBtn").onclick=async()=>{try{await startMatch(code,student.studentId);}catch(e){showErr(errorNote,e.message||"Battle শুরু করা যায়নি।");}};
   document.getElementById("deleteBattleBtn")?.addEventListener("click",async()=>{ if(!confirm(`Battle ${code} permanently delete করতে চাও?\n\nBattle-এর XP/History থেকেও এটি বাদ যাবে।`)) return; try{await deleteMatch(code,student.studentId); unsub?.(); clearLobbyTimer(); showOnly("mode");}catch(e){showErr(errorNote,e.message==="NOT_HOST"?"শুধু Host এই Battle delete করতে পারবে।":"Battle delete করা যায়নি।");}});
+  document.getElementById("copyCodeBtn").onclick=async()=>{
+    try{await navigator.clipboard.writeText(code);showErr(errorNote,"Code কপি হয়েছে।");}catch{showErr(errorNote,"কপি করা যায়নি।");}
+  };
   document.getElementById("shareCodeBtn").onclick=async()=>{
-    const shareUrl=`${location.origin}${location.pathname}?code=${encodeURIComponent(code)}`;
+    const shareUrl=joinLinkFor(code);
     const shareText=`Battle Code: ${code}`;
     try{
       if(navigator.share){await navigator.share({title:"Battle",text:shareText,url:shareUrl});}
@@ -339,6 +379,26 @@ function enterLobby(code){
       else{showErr(errorNote,`Battle Code: ${code}`);}
     }catch(e){if(e?.name!=="AbortError")showErr(errorNote,"Share করা যায়নি।");}
   };
+}
+
+// Arrived from battle-join.html (QR): open the lobby directly with the right team.
+{
+  const enter=(new URLSearchParams(location.search).get("enter")||"").trim().toUpperCase();
+  if(/^[A-Z0-9]{6}$/.test(enter)){
+    try{
+      const m=await getMatch(enter);
+      const inA=(m?.teamA?.members||[]).some(x=>x.studentId===student.studentId);
+      const inB=(m?.teamB?.members||[]).some(x=>x.studentId===student.studentId);
+      history.replaceState({},"",location.pathname);
+      if(m&&(inA||inB)){
+        myTeam=inA?"A":"B";
+        if(m.status==="active") location.href=`./battle-play.html?code=${enter}&team=${myTeam}`;
+        else enterLobby(enter);
+      }else{
+        showOnly("join"); showErr(joinError,"এই Battle-এ তুমি নেই। Code দিয়ে আবার Join করো।");
+      }
+    }catch(e){ history.replaceState({},"",location.pathname); }
+  }
 }
 </script>
 </body>

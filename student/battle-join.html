@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Battle-এ যোগ দাও</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  :root{--battle-gold:#c9973f;--battle-gold-soft:rgba(201,151,63,.12)}
+  body{background:var(--bg-app);color:var(--text-primary);font-family:var(--font-bn);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .jc{width:100%;max-width:400px;background:var(--surface);border:1px solid var(--surface-border);border-radius:24px;padding:28px 22px;text-align:center;box-shadow:var(--shadow-lift)}
+  .jc-ico{width:64px;height:64px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;background:var(--battle-gold-soft);color:var(--battle-gold)}
+  .jc-ico svg{width:30px;height:30px}
+  .jc-ico.err{background:rgba(166,64,47,.12);color:var(--color-danger)}
+  .jc-ico.ok{background:rgba(47,125,94,.14);color:var(--color-success)}
+  .jc-h{font-size:1.15rem;font-weight:800;margin:0 0 6px}
+  .jc-p{font-size:.86rem;color:var(--text-muted);line-height:1.6;margin:0}
+  .jc-code{display:inline-block;margin:14px 0 4px;padding:9px 18px;border-radius:12px;background:var(--surface-highlight);border:1px solid var(--surface-edge);font-family:var(--font-num);font-size:1.5rem;font-weight:900;letter-spacing:6px;color:var(--battle-gold)}
+  .jc-spin{width:30px;height:30px;border-radius:50%;border:3px solid var(--battle-gold-soft);border-top-color:var(--battle-gold);animation:sp .8s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .jc-btns{display:flex;flex-direction:column;gap:8px;margin-top:18px}
+  .jb{border:1px solid var(--surface-border);background:var(--surface-solid);color:var(--text-primary);border-radius:13px;padding:13px;font:inherit;font-weight:800;font-size:.9rem;cursor:pointer;text-decoration:none;display:block}
+  .jb.p{background:var(--battle-gold);border-color:var(--battle-gold);color:#241a08}
+</style>
+</head>
+<body>
+<div class="jc" id="card"><div class="jc-ico"><div class="jc-spin"></div></div><h1 class="jc-h">একটু অপেক্ষা করো…</h1></div>
+
+<script type="module">
+import { initTheme } from "../js/utils/ui-utils.js";
+import { getActiveStudent } from "../js/utils/student-utils.js";
+import { requireStudentSession } from "../js/utils/student-auth.js";
+import { joinMatch, getMatch } from "../js/utils/battle-utils.js?v=roomcard1";
+
+initTheme();
+const card = document.getElementById("card");
+const ICON = {
+  spin: `<div class="jc-spin"></div>`,
+  ok: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg>`,
+  err: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>`
+};
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+function show({ kind = "", title, text = "", code = "", buttons = "" }) {
+  card.innerHTML = `<div class="jc-ico ${kind}">${ICON[kind === "err" ? "err" : kind === "ok" ? "ok" : "spin"]}</div>
+    <h1 class="jc-h">${esc(title)}</h1>
+    ${code ? `<div class="jc-code">${esc(code)}</div>` : ""}
+    ${text ? `<p class="jc-p">${esc(text)}</p>` : ""}
+    ${buttons ? `<div class="jc-btns">${buttons}</div>` : ""}`;
+}
+
+// ---- read the code from the QR link ----
+function readCode() {
+  const p = new URLSearchParams(location.search);
+  const raw = (p.get("code") || "").trim().toUpperCase();
+  return /^[A-Z0-9]{6}$/.test(raw) ? raw : "";
+}
+const code = readCode();
+
+const ERR = {
+  MATCH_NOT_FOUND: "এই Code-এ কোনো Battle পাওয়া যায়নি। QR/Code ঠিক আছে কিনা দেখো।",
+  MATCH_ALREADY_STARTED: "এই Battle ইতিমধ্যে শুরু হয়ে গেছে, এখন আর যোগ দেওয়া যাবে না।",
+  TEAM_FULL: "Team B পূর্ণ হয়ে গেছে।",
+  ALREADY_IN_OTHER_TEAM: "তুমি এই Battle-এ আগে থেকেই আছো।"
+};
+const goLobby = `<a class="jb" href="./battle-lobby.html">Battle পেজে যাও</a>`;
+
+async function main() {
+  if (!code) {
+    show({ kind: "err", title: "QR ঠিক নেই", text: "এই লিংকে কোনো বৈধ Battle Code নেই।", buttons: goLobby });
+    return;
+  }
+
+  // 1) must be logged in (real Firebase session), else go to login and come back here
+  const student = getActiveStudent();
+  const ok = student && await requireStudentSession(student.studentId);
+  if (!ok) {
+    localStorage.removeItem("activeStudent");
+    const next = `student/battle-join.html?code=${code}`;
+    show({ title: "আগে লগইন করো", text: "নিজের নাম বেছে পাসওয়ার্ড দিলে নিজে থেকেই Battle-এ যোগ হবে।", code });
+    setTimeout(() => location.replace(`../index.html?next=${encodeURIComponent(next)}`), 900);
+    return;
+  }
+
+  // 2) join
+  show({ title: "Battle-এ যোগ দেওয়া হচ্ছে…", code });
+  try {
+    const m = await getMatch(code);
+    if (!m) throw new Error("MATCH_NOT_FOUND");
+    const inA = (m.teamA?.members || []).some(x => x.studentId === student.studentId);
+    const inB = (m.teamB?.members || []).some(x => x.studentId === student.studentId);
+
+    // already a member: just take them to the right place
+    if (inA || inB) {
+      const team = inA ? "A" : "B";
+      if (m.status === "active") { location.replace(`./battle-play.html?code=${code}&team=${team}`); return; }
+      if (m.status === "lobby") { location.replace(`./battle-lobby.html?enter=${code}`); return; }
+      throw new Error("MATCH_ALREADY_STARTED");
+    }
+
+    await joinMatch(code, { studentId: student.studentId, name: student.name, team: "B" });
+    show({ kind: "ok", title: "যোগ দেওয়া হয়েছে", text: "Lobby-তে নিয়ে যাচ্ছি…", code });
+    setTimeout(() => location.replace(`./battle-lobby.html?enter=${code}`), 500);
+  } catch (e) {
+    const msg = ERR[e.message] || e.message || "Join করা যায়নি।";
+    show({ kind: "err", title: "যোগ দেওয়া যায়নি", text: msg, code,
+      buttons: `<button class="jb p" id="retry" type="button">আবার চেষ্টা করো</button>${goLobby}` });
+    document.getElementById("retry")?.addEventListener("click", main);
+  }
+}
+main();
+</script>
+</body>
+</html>
