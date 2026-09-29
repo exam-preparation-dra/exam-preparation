@@ -215,6 +215,9 @@ requireAdmin(() => {
       <div id="requestsList"></div>
     </div>
 
+    <!-- Setup-code requests from students -->
+    <div id="setupReqBox"></div>
+
     <!-- Search & Filter Section -->
     <div class="search-filter-container">
       <div class="search-box">
@@ -339,7 +342,48 @@ function showCodesModal(title, lines) {
 async function createCodeFor(s) {
   const code = await adminCreateStudentAccount(s.studentId);
   window.__authStateMap[s.studentId] = { passwordSet: false };
+  try { await deleteDoc(doc(db, "setupRequests", s.studentId)); } catch (e) {}
   return code;
+}
+
+async function loadSetupRequests() {
+  const box = document.getElementById("setupReqBox");
+  if (!box) return;
+  let reqs = [];
+  try {
+    const snap = await getDocs(collection(db, "setupRequests"));
+    reqs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (e) { console.warn("setupRequests load failed", e); }
+  if (!reqs.length) { box.innerHTML = ""; return; }
+  const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  box.innerHTML = `<div style="background:rgba(234,179,8,.10);border:1px solid rgba(234,179,8,.35);border-radius:14px;padding:14px;margin-bottom:16px">
+    <div style="font-weight:800;margin-bottom:8px">🔑 সেটআপ কোডের আবেদন (${reqs.length})</div>
+    ${reqs.map(r => `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid rgba(128,128,128,.15);flex-wrap:wrap" data-rid="${esc(r.id)}">
+      <div style="flex:1;min-width:150px"><b>${esc(r.name)}</b> <small style="opacity:.7">${esc(r.className)} · ${esc(r.studentId)}</small>
+        <div style="font-size:.75rem;opacity:.75">${r.type === "reset" ? "🔄 পাসওয়ার্ড রিসেট চাইছে (আগে Firebase Console → Authentication থেকে ওর ইউজার ডিলিট করো)" : "🆕 প্রথমবার — পাসওয়ার্ড বানাতে চাইছে"}</div></div>
+      <button class="req-code" type="button" style="padding:8px 14px;font-weight:800;cursor:pointer">কোড তৈরি করো</button>
+      <button class="req-dismiss" type="button" style="padding:8px 12px;cursor:pointer">বাদ দাও</button>
+    </div>`).join("")}
+  </div>`;
+  box.querySelectorAll("[data-rid]").forEach(row => {
+    const r = reqs.find(x => x.id === row.dataset.rid);
+    row.querySelector(".req-code").addEventListener("click", async (e) => {
+      const btn = e.currentTarget; btn.disabled = true;
+      try {
+        const code = await createCodeFor({ studentId: r.studentId });
+        showCodesModal("সেটআপ কোড", [`${r.name} (${r.studentId}) — ${code}`]);
+        loadSetupRequests(); renderFilteredList();
+      } catch (err) {
+        if (err?.code === "auth/email-already-in-use")
+          showToast("ওর অ্যাকাউন্ট আগে থেকেই আছে। Firebase Console → Authentication থেকে ইউজারটা ডিলিট করে আবার চাপো।", "error");
+        else showToast(friendlyStudentAuthError(err), "error");
+        btn.disabled = false;
+      }
+    });
+    row.querySelector(".req-dismiss").addEventListener("click", async () => {
+      try { await deleteDoc(doc(db, "setupRequests", r.id)); loadSetupRequests(); } catch (e) { showToast("বাদ দেওয়া যায়নি", "error"); }
+    });
+  });
 }
 
 async function loadAllStudents() {
@@ -365,6 +409,7 @@ async function loadStudents() {
     } catch (err) { console.error("XP Load Failed:", err); }
     
     await loadAuthStates();
+    loadSetupRequests();
     updateBatchFilterDropdown();
     renderFilteredList();
   } catch (err) {
