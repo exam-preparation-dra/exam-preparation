@@ -96,6 +96,7 @@ import { getLeaderboardData } from "../js/utils/results-utils.js"; // Added Impo
 import { toDirectImageUrl } from "../js/utils/image-utils.js";
 import { uploadStudentPhoto, deleteStudentPhoto } from "../js/utils/storage-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
+import { adminCreateStudentAccount, friendlyStudentAuthError } from "../js/utils/student-auth.js";
 import { collection, getDocs, orderBy, query, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 initTheme();
@@ -220,6 +221,7 @@ requireAdmin(() => {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" id="searchStudent" placeholder="নাম বা আইডি দিয়ে খুঁজুন...">
       </div>
+      <button id="bulkCodesBtn" type="button" class="input-glass" style="padding:12px;cursor:pointer;font-weight:700;white-space:nowrap">🔑 সবার কোড তৈরি</button>
       <div class="filter-box">
         <select id="filterBatch" class="input-glass" style="padding:12px;">
           <option value="all">সব ব্যাচ</option>
@@ -264,6 +266,19 @@ requireAdmin(() => {
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
   document.getElementById("logoutBtn").addEventListener("click", adminLogout);
   document.getElementById("addForm").addEventListener("submit", handleAdd);
+  document.getElementById("bulkCodesBtn").addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    const todo = allAdminStudentsList.filter(s => s.isActive !== false && !(window.__authStateMap || {})[s.studentId]);
+    if (!todo.length) { showToast("সবার অ্যাকাউন্ট আগেই তৈরি আছে।", "success"); return; }
+    if (!confirm(`${todo.length} জনের জন্য সেটআপ কোড তৈরি হবে। এগোবে?`)) return;
+    btn.disabled = true; const lines = [];
+    for (const s of todo) {
+      try { lines.push(`${s.name} (${s.studentId}) — ${await createCodeFor(s)}`); }
+      catch (err) { lines.push(`${s.name} (${s.studentId}) — ব্যর্থ: ${err?.code || err?.message}`); }
+    }
+    btn.disabled = false; renderFilteredList();
+    showCodesModal("সেটআপ কোড", lines);
+  });
   setupBatchDropdowns();
   
   document.getElementById("searchStudent").addEventListener("input", renderFilteredList);
@@ -297,6 +312,36 @@ requireAdmin(() => {
   loadPendingRequests();
 });
 
+async function loadAuthStates() {
+  window.__authStateMap = {};
+  try {
+    const snap = await getDocs(collection(db, "studentAuthState"));
+    snap.forEach(d => window.__authStateMap[d.id] = d.data());
+  } catch (e) { console.warn("authState load failed", e); }
+}
+
+function showCodesModal(title, lines) {
+  const text = lines.join("\n");
+  const ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:18px;";
+  ov.innerHTML = `<div style="background:var(--surface-solid,#fff);color:var(--text-main,#222);border-radius:16px;padding:20px;width:100%;max-width:460px">
+    <h3 style="margin:0 0 6px">${title}</h3>
+    <p style="margin:0 0 10px;font-size:.8rem;opacity:.7">কোডগুলো এখনই কপি করে নাও — পরে আর দেখা যাবে না। ছাত্র প্রথমবার লগইন করলে নিজের পাসওয়ার্ড বানাবে।</p>
+    <textarea readonly style="width:100%;height:200px;font-family:monospace;font-size:.85rem;padding:10px;border-radius:10px">${text}</textarea>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+      <button class="cp" type="button" style="padding:8px 14px">কপি</button>
+      <button class="cl" type="button" style="padding:8px 14px;font-weight:800">বন্ধ</button></div></div>`;
+  document.body.appendChild(ov);
+  ov.querySelector(".cp").addEventListener("click", () => navigator.clipboard?.writeText(text).then(() => showToast("কপি হয়েছে", "success")));
+  ov.querySelector(".cl").addEventListener("click", () => ov.remove());
+}
+
+async function createCodeFor(s) {
+  const code = await adminCreateStudentAccount(s.studentId);
+  window.__authStateMap[s.studentId] = { passwordSet: false };
+  return code;
+}
+
 async function loadAllStudents() {
   const snap = await getDocs(query(collection(db, "students"), orderBy("sequenceNumber")));
   return snap.docs.map(d => ({ docId: d.id, ...d.data() }));
@@ -319,6 +364,7 @@ async function loadStudents() {
       lb.forEach(r => window.__studentXPMap[r.studentId] = r.totalPoints);
     } catch (err) { console.error("XP Load Failed:", err); }
     
+    await loadAuthStates();
     updateBatchFilterDropdown();
     renderFilteredList();
   } catch (err) {
@@ -390,10 +436,12 @@ function renderFilteredList() {
             </span>
             <!-- Live XP Display -->
             <span class="st-badge" style="background:rgba(234, 179, 8, 0.15); color:#a16207; border:1px solid rgba(234, 179, 8, 0.3);">⭐ ${xp} XP</span>
+            ${(() => { const a = (window.__authStateMap || {})[stId]; return a ? (a.passwordSet ? `<span class="st-badge" style="background:rgba(22,163,74,.12);color:#15803d">🔒 পাসওয়ার্ড সেট</span>` : `<span class="st-badge" style="background:rgba(234,179,8,.15);color:#a16207">⏳ কোড অপেক্ষমাণ</span>`) : `<span class="st-badge" style="background:rgba(239,68,68,.1);color:#b91c1c">অ্যাকাউন্ট নেই</span>`; })()}
             ${s.isActive === false ? `<span class="st-inactive">নিষ্ক্রিয়</span>` : ""}
           </div>
         </div>
         <div class="st-actions">
+          <button class="action-icon code-btn" title="সেটআপ কোড তৈরি">🔑</button>
           <button class="action-icon photo-btn" title="ছবি পরিবর্তন"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
           <button class="action-icon edit-btn" title="সম্পাদনা"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
           <button class="action-icon toggle-btn" title="সক্রিয়/নিষ্ক্রিয়" style="${s.isActive === false ? 'color:#ef4444; border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.05);' : ''}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="${s.isActive !== false ? '16' : '8'}" cy="12" r="3"/></svg></button>
@@ -410,6 +458,20 @@ function bindStudentActions(students) {
   document.querySelectorAll(".student-row").forEach(row => {
     const docId = row.dataset.id;
     const student = students.find(s => s.docId === docId);
+
+    row.querySelector(".code-btn").addEventListener("click", async (e) => {
+      const btn = e.currentTarget; btn.disabled = true;
+      try {
+        const code = await createCodeFor(student);
+        showCodesModal("সেটআপ কোড", [`${student.name} (${student.studentId}) — ${code}`]);
+        renderFilteredList();
+      } catch (err) {
+        if (err?.code === "auth/email-already-in-use")
+          showToast("অ্যাকাউন্ট আগে থেকেই আছে। রিসেট করতে Firebase Console → Authentication থেকে ওই ইউজার ডিলিট করো, তারপর আবার চাপো।", "error");
+        else showToast(friendlyStudentAuthError(err), "error");
+      }
+      btn.disabled = false;
+    });
 
     // ID Copy Feature
     row.querySelector(".copy-id-btn").addEventListener("click", (e) => {
