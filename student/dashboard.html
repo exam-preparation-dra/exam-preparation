@@ -263,6 +263,18 @@
 
   .d-last { padding-bottom: 24px; }
   [hidden] { display: none !important; }
+  /* next-exam countdown chip */
+  .d-timer-wrap { margin-top: 0; }
+  .d-timer { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 40px; padding: 6px 14px; border-radius: 999px;
+    background: var(--surface-solid); border: 1px solid var(--surface-border); color: var(--text-primary);
+    font-size: .8rem; font-weight: 800; text-align: left; }
+  .d-timer svg { flex-shrink: 0; color: var(--color-accent); }
+  .d-timer-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); }
+  .d-timer-time { font-family: var(--font-num); font-variant-numeric: tabular-nums; color: var(--color-accent); font-weight: 900; white-space: nowrap; }
+  .d-timer-confirm { border-style: dashed; }
+  .d-timer-confirm .d-timer-time { color: var(--text-muted); }
+  .d-timer-urgent .d-timer-time { color: #ef4444; animation: dTmrPulse 1s ease-in-out infinite; }
+  @keyframes dTmrPulse { 50% { opacity: .55; } }
 </style>
 </head>
 <body>
@@ -271,7 +283,7 @@
 </div>
 
 <script type="module">
-import { initTheme, toggleTheme, renderState, renderStudentHeader, showToast } from "../js/utils/ui-utils.js";
+import { initTheme, toggleTheme, renderState, renderStudentHeader, showToast, isExamTimerHidden, setExamTimerHidden } from "../js/utils/ui-utils.js";
 import { getActiveStudent, refreshActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
 import { subscribeToUpcomingExams, getApprovedResults, getStudentResultStatusMap, getLeaderboardData, isExamAvailableNow } from "../js/utils/results-utils.js";
 import { getSubjects, getTopics, buildNameMap } from "../js/utils/syllabus-utils.js";
@@ -281,6 +293,7 @@ import { computeStudentXP, computeMaxExamXP, getLevelInfo, XP_CATEGORIES, REFERR
 import { resolveCompletedChallenges, getChallengeBonusXP } from "../js/utils/challenge-utils.js";
 import { getCompletedImprovementAttempts } from "../js/utils/improvement-xp-integration.js";
 import { getStudentBattleXP } from "../js/utils/battle-utils.js?v=roomcard1";
+import { mountExamClaim } from "../js/utils/exam-claim-ui.js";
 import { STORE_ITEMS, getStoreInventory, getSpentXP, getAvailableBattleRoomCardCount } from "../js/utils/store-utils.js?v=roomcard1";
 
 initTheme();
@@ -356,6 +369,7 @@ async function render() {
   shell.innerHTML = `
     ${renderStudentHeader(student, "dashboard")}
 
+    <div id="timerSection" class="d-sec d-timer-wrap" hidden></div>
     <div id="cardReminderSection" class="d-sec" hidden></div>
 
     <div id="heroSection" class="d-sec"><div class="skeleton" style="height:190px;border-radius:24px;"></div></div>
@@ -447,13 +461,94 @@ async function loadCardReminder() {
 
 /* ---------------- upcoming exams (live) ---------------- */
 let unsubscribeUpcoming = null;
+/* ---------------- next-exam countdown ---------------- */
+const startOfExam = (exam) => {
+  const examMs = exam?.examDate?.toMillis?.();
+  const publishMs = exam?.publishDate?.toMillis?.();
+  return Math.max(Number.isFinite(examMs) ? examMs : 0, Number.isFinite(publishMs) ? publishMs : 0);
+};
+let timerCtx = { exams: [], resultMap: {}, el: null };
+let timerInterval = null;
+
+function nextExamFor(exams, resultMap) {
+  const now = Date.now();
+  return exams.filter(e => {
+    const st = startOfExam(e);
+    if (!st || st <= now) return false;
+    if (resultMap[e.id]) return false;
+    const target = e.targetBatch || "all";
+    if (target !== "all" && target !== student.className) return false;
+    const allowed = e.allowedStudents || [];
+    if (allowed.length > 0 && !allowed.includes(student.studentId)) return false;
+    return true;
+  }).sort((a, b) => startOfExam(a) - startOfExam(b))[0] || null;
+}
+
+function fmtCountdown(ms) {
+  const t = Math.max(0, Math.floor(ms / 1000));
+  const d = Math.floor(t / 86400), h = Math.floor((t % 86400) / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
+  const p = n => String(n).padStart(2, "0");
+  return (d > 0 ? d + "দিন " : "") + p(h) + ":" + p(m) + ":" + p(s);
+}
+
+function renderTimer() {
+  const el = $("timerSection");
+  if (!el) return;
+  clearInterval(timerInterval);
+  const next = isExamTimerHidden() ? null : nextExamFor(timerCtx.exams, timerCtx.resultMap);
+  if (!next) { el.hidden = true; el.innerHTML = ""; return; }
+
+  const target = startOfExam(next);
+  el.hidden = false;
+  el.innerHTML = `
+    <button type="button" class="d-timer" id="dTimer" aria-label="পরের পরীক্ষার টাইমার">
+      ${svg("clock", 18)}
+      <span class="d-timer-name">পরের পরীক্ষা: ${esc(next.name)}</span>
+      <span class="d-timer-time" id="tmrTime"></span>
+    </button>`;
+  const btn = $("dTimer"), tEl = $("tmrTime");
+  let confirming = false, confirmTimer = null;
+
+  const tick = () => {
+    const left = target - Date.now();
+    if (left <= 0) {            // exam time has come: drop the timer, show the exam card
+      clearInterval(timerInterval);
+      renderTimer();
+      if (timerCtx.el) renderUpcoming(timerCtx.el, timerCtx.exams, timerCtx.resultMap);
+      return;
+    }
+    btn.classList.toggle("d-timer-urgent", left < 10 * 60 * 1000);
+    if (!confirming) tEl.textContent = fmtCountdown(left);
+  };
+  tick();
+  timerInterval = setInterval(tick, 1000);
+
+  // 1st tap -> shows "লুকাও"; 2nd tap (within 3s) -> hides. Turn back on from the avatar menu.
+  btn.onclick = () => {
+    if (!confirming) {
+      confirming = true;
+      tEl.textContent = "লুকাও";
+      btn.classList.add("d-timer-confirm");
+      confirmTimer = setTimeout(() => { confirming = false; btn.classList.remove("d-timer-confirm"); tick(); }, 3000);
+    } else {
+      clearTimeout(confirmTimer);
+      setExamTimerHidden(true);
+    }
+  };
+}
+window.addEventListener("examtimer:change", renderTimer);
+
 async function loadUpcoming() {
   const el = $("upcomingSection");
   try {
     const resultMap = await getStudentResultStatusMap(student.studentId).catch(() => ({}));
     if (unsubscribeUpcoming) unsubscribeUpcoming();
     unsubscribeUpcoming = subscribeToUpcomingExams(
-      (exams) => renderUpcoming(el, exams, resultMap),
+      (exams) => {
+        timerCtx = { exams, resultMap, el };
+        renderUpcoming(el, exams, resultMap);
+        renderTimer();
+      },
       (err) => { console.error(err); el.hidden = true; }
     );
   } catch (err) { console.error(err); el.hidden = true; }
@@ -694,7 +789,7 @@ function renderRecent({ xp, resultById }) {
   const el = $("recentSection");
   if (xp.exams.length === 0) { el.innerHTML = ""; return; }
   const rows = xp.exams.slice(0, 5);
-  el.innerHTML = `
+  el.innerHTML = `<div id="claimMount"></div>` + `
     <p class="d-h">${svg("list", 20)} সাম্প্রতিক পরীক্ষা ও XP</p>
     <div class="d-card">
       ${rows.map(e => {
@@ -710,6 +805,10 @@ function renderRecent({ xp, resultById }) {
           </a>`;
       }).join("")}
     </div>`;
+  // Free card: only for the NEWEST exam; the widget itself hides when it is
+  // already claimed or the exam's 7-day window is over.
+  const newest = (resultById[rows[0].resultId] || {}).examId;
+  if (newest) mountExamClaim($("claimMount"), { examId: newest, studentId: student.studentId, hideIfClaimed: true });
 }
 
 
