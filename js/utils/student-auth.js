@@ -20,6 +20,7 @@ import {
 import {
   getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
   updatePassword, signOut, onAuthStateChanged,
+  reauthenticateWithCredential, EmailAuthProvider,
   setPersistence, browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
@@ -77,6 +78,33 @@ export function friendlyStudentAuthError(err) {
   if (c === "auth/network-request-failed") return "ইন্টারনেট সংযোগ নেই।";
   if (c === "auth/operation-not-allowed") return "Firebase Console-এ Email/Password sign-in চালু করা হয়নি।";
   return err?.message || "কিছু একটা ভুল হয়েছে।";
+}
+
+/* ---------- CHANGE PASSWORD + PRIVACY SETTINGS ---------- */
+export async function changeMyPassword(studentId, oldPassword, newPassword) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("আবার লগইন করো।");
+  await reauthenticateWithCredential(user, EmailAuthProvider.credential(studentEmail(studentId), oldPassword));
+  await updatePassword(user, newPassword);
+}
+
+// What OTHER students may see on my profile. Stored in `studentPrivacy/{studentId}`.
+//  records / subjects / badges -> visible to friends only
+//  publicStats                 -> rank + exam count visible even to non-friends
+export const DEFAULT_PRIVACY = { records: true, subjects: true, badges: true, publicStats: false };
+
+export async function getPrivacy(studentId) {
+  try {
+    const snap = await getDoc(doc(db, "studentPrivacy", studentId));
+    return { ...DEFAULT_PRIVACY, ...(snap.exists() ? snap.data() : {}) };
+  } catch { return { ...DEFAULT_PRIVACY }; }
+}
+
+export async function savePrivacy(studentId, p) {
+  await setDoc(doc(db, "studentPrivacy", studentId), {
+    records: !!p.records, subjects: !!p.subjects, badges: !!p.badges, publicStats: !!p.publicStats,
+    updatedAt: serverTimestamp()
+  }, { merge: true });
 }
 
 /* ---------- FIRST-TIME DETECTION + "APPLY FOR SETUP CODE" ---------- */
