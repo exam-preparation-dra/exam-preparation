@@ -123,6 +123,7 @@
 import { initTheme, icons, renderState, showToast } from "../js/utils/ui-utils.js";
 import { getActiveStudent } from "../js/utils/student-utils.js";
 import { getResultById, getExamSnapshot } from "../js/utils/results-utils.js";
+import { mountExamClaim } from "../js/utils/exam-claim-ui.js";
 import { getSubjects, getChapters, getTopics, buildNameMap } from "../js/utils/syllabus-utils.js";
 import { buildQuestionReview, formatSeconds, getSlowestQuestions } from "../js/utils/grading-utils.js";
 
@@ -207,6 +208,7 @@ async function load() {
     } else {
       await renderApproved();
     }
+    mountExamClaim(document.getElementById("claimMount"), { examId: result.examId, studentId: student.studentId });
   } catch (err) {
     console.error(err);
     renderState(shell, "error", "ফলাফল লোড করা যায়নি।");
@@ -228,6 +230,7 @@ function renderPending() {
       <p style="font-size:0.85rem; color:var(--text-muted); font-weight:600; margin-top:12px; line-height:1.6;">অ্যাডমিন অনুমোদনের অপেক্ষায় আছে। অনুমোদনের পর সম্পূর্ণ ফলাফল ও সঠিক উত্তর এখানে দেখা যাবে।</p>
       <div style="background:rgba(128,128,128,0.1); color:var(--text-secondary); padding:6px 14px; border-radius:99px; font-size:0.8rem; font-weight:800; display:inline-block; margin-top:20px;">অনুমোদনের অপেক্ষায়</div>
     </div>
+    <div id="claimMount"></div>
   `;
 }
 
@@ -316,6 +319,7 @@ async function renderApproved() {
         <button class="btn-action btn-primary" id="shareBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> শেয়ার করুন</button>
       </div>
       
+      <div id="claimMount"></div>
       <p style="font-size:1.1rem; font-weight:900; color:var(--text-primary); margin:32px 0 16px;">প্রশ্নভিত্তিক পর্যালোচনা</p>
       <div id="reviewList"></div>
     </div>

@@ -281,6 +281,8 @@ import { computeStudentXP, computeMaxExamXP, getLevelInfo, XP_CATEGORIES, REFERR
 import { resolveCompletedChallenges, getChallengeBonusXP } from "../js/utils/challenge-utils.js";
 import { getCompletedImprovementAttempts } from "../js/utils/improvement-xp-integration.js";
 import { getStudentBattleXP } from "../js/utils/battle-utils.js?v=roomcard1";
+import { mountExamClaim } from "../js/utils/exam-claim-ui.js";
+import { getExamClaim } from "../js/utils/store-utils.js?v=roomcard1";
 import { STORE_ITEMS, getStoreInventory, getSpentXP, getAvailableBattleRoomCardCount } from "../js/utils/store-utils.js?v=roomcard1";
 
 initTheme();
@@ -694,7 +696,7 @@ function renderRecent({ xp, resultById }) {
   const el = $("recentSection");
   if (xp.exams.length === 0) { el.innerHTML = ""; return; }
   const rows = xp.exams.slice(0, 5);
-  el.innerHTML = `
+  el.innerHTML = `<div id="claimMount"></div>` + `
     <p class="d-h">${svg("list", 20)} সাম্প্রতিক পরীক্ষা ও XP</p>
     <div class="d-card">
       ${rows.map(e => {
@@ -710,6 +712,16 @@ function renderRecent({ xp, resultById }) {
           </a>`;
       }).join("")}
     </div>`;
+  // Offer the free card for the newest exam (of the last 3) not claimed yet.
+  (async () => {
+    for (const row of rows.slice(0, 3)) {
+      const examId = (resultById[row.resultId] || {}).examId;
+      if (!examId) continue;
+      let claimed = true;
+      try { claimed = !!(await getExamClaim(examId, student.studentId)); } catch { return; }
+      if (!claimed) { mountExamClaim($("claimMount"), { examId, studentId: student.studentId, hideIfClaimed: true }); return; }
+    }
+  })();
 }
 
 
