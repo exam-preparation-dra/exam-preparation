@@ -22,7 +22,10 @@
   .who h1 { margin-top: 12px; font-size: 1.35rem; font-weight: 900; color: var(--text-primary); word-break: break-word; }
   .who p { font-size: .8rem; font-weight: 700; color: var(--text-muted); }
 
-  .q { margin: 22px 0 14px; font-size: 1rem; font-weight: 900; color: var(--text-primary); }
+  .stack { display: grid; gap: 12px; }
+  .tag { display: inline-block; margin-bottom: 14px; padding: 5px 12px; border-radius: 99px; background: rgba(var(--color-accent-rgb), .12); border: 1px solid rgba(var(--color-accent-rgb), .25); color: var(--color-accent); font-size: .72rem; font-weight: 900; }
+  .tag.plain { background: var(--surface-edge); border-color: var(--surface-border); color: var(--text-muted); }
+  .q { margin: 0 0 16px; font-size: 1rem; font-weight: 900; color: var(--text-primary); }
   .btns { display: grid; gap: 10px; }
   .btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 15px; border-radius: 16px; border: 1px solid var(--surface-border); background: var(--surface-highlight); color: var(--text-primary); font: inherit; font-size: .95rem; font-weight: 800; cursor: pointer; text-decoration: none; transition: transform var(--transition); }
   .btn:active { transform: scale(.98); }
@@ -97,12 +100,18 @@ async function boot() {
 }
 
 function showChoice() {
-  screen(`<div class="card">
-    <div class="who">${avatar(inviter)}<h1>${esc(inviter.name)}</h1><p>${esc(inviter.className || "")}</p></div>
-    <div class="q">তুমি কি আগে থেকেই আছো?</div>
-    <div class="btns">
-      <button class="btn primary" id="enrolled" type="button">হ্যাঁ, আমি আছি</button>
-      <a class="btn" href="./join.html?ref=${encodeURIComponent(inviter.studentId)}">না, আমি নতুন</a>
+  screen(`<div class="stack">
+    <div class="card">
+      <span class="tag">যার QR স্ক্যান করেছ</span>
+      <div class="who">${avatar(inviter)}<h1>${esc(inviter.name)}</h1><p>${esc(inviter.className || "")}</p></div>
+    </div>
+    <div class="card">
+      <span class="tag plain">তোমার জন্য</span>
+      <div class="q">তুমি কি এই অ্যাপে আগে থেকেই আছো?</div>
+      <div class="btns">
+        <button class="btn primary" id="enrolled" type="button">হ্যাঁ, আমি আছি</button>
+        <a class="btn" href="./join.html?ref=${encodeURIComponent(inviter.studentId)}">না, আমি নতুন</a>
+      </div>
     </div>
   </div>`);
   document.getElementById("enrolled").addEventListener("click", () => {
@@ -113,8 +122,11 @@ function showChoice() {
 
 async function showPicker() {
   screen(`<div class="card">
-    <div class="who">${avatar(inviter, "sm")}<p style="margin-top:8px">${esc(inviter.name)}</p></div>
-    <div class="q" style="margin-top:14px">তোমার নাম বেছে নাও</div>
+    <span class="tag">যার QR স্ক্যান করেছ</span>
+    <div class="who">${avatar(inviter, "sm")}<h1 style="font-size:1.1rem;margin-top:8px">${esc(inviter.name)}</h1></div>
+    <div style="height:1px;background:var(--surface-border);margin:18px 0"></div>
+    <span class="tag plain">তোমার নাম</span>
+    <div class="q" style="margin-bottom:0">নিজের নাম বেছে নাও</div>
     <div class="chips" id="chips"></div>
     <div class="search">${ICON.search}<input id="q" placeholder="নাম খুঁজো..." autocomplete="off"></div>
     <div class="list" id="list"><div class="load"><div class="spinner"></div></div></div>
