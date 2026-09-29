@@ -107,6 +107,15 @@ export async function savePrivacy(studentId, p) {
   }, { merge: true });
 }
 
+// Up to 3 badge ids the student wants to show on their profile / share card.
+// Stored on the same studentPrivacy doc (merge) so savePrivacy never wipes it.
+export async function savePinnedBadges(studentId, ids) {
+  await setDoc(doc(db, "studentPrivacy", studentId), {
+    pinnedBadges: (Array.isArray(ids) ? ids : []).slice(0, 3).map(String),
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+}
+
 /* ---------- FIRST-TIME DETECTION + "APPLY FOR SETUP CODE" ---------- */
 // Public, non-secret info used by the login screen to decide what to show:
 //  hasAccount=false            -> first time, student can apply for a setup code
