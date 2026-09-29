@@ -716,6 +716,23 @@ async function renderGlobalNotifications(student) {
       )
     );
 
+    // Sender side: my challenge got accepted. Both sides: a challenge finished.
+    const myId = student.studentId;
+    const chCol = collection(db, "examChallenges");
+    const acceptedOutQuery = query(chCol, where("fromStudentId", "==", myId), where("status", "==", "accepted"));
+    const doneOutQuery = query(chCol, where("fromStudentId", "==", myId), where("status", "==", "completed"));
+    const doneInQuery = query(chCol, where("toStudentId", "==", myId), where("status", "==", "completed"));
+
+    // Settle finished challenges (throttled: at most once / 5 min per tab)
+    try {
+      const last = Number(sessionStorage.getItem("chResolveAt") || 0);
+      if (Date.now() - last > 5 * 60 * 1000) {
+        sessionStorage.setItem("chResolveAt", String(Date.now()));
+        const cm = await import("./challenge-utils.js");
+        await cm.resolveCompletedChallenges(myId).catch(() => []);
+      }
+    } catch (e) {}
+
     const improvementQuery = query(
       collection(db, "improvementRequests"),
       where(
@@ -729,13 +746,25 @@ async function renderGlobalNotifications(student) {
       requestSnap,
       challengeSnap,
       studentSnap,
-      improvementSnap
+      improvementSnap,
+      acceptedOutSnap,
+      doneOutSnap,
+      doneInSnap
     ] = await Promise.all([
       getDocs(requestQuery),
       getDocs(challengeQuery),
       getDocs(collection(db, "students")),
-      getDocs(improvementQuery).catch(() => ({ docs: [] }))
+      getDocs(improvementQuery).catch(() => ({ docs: [] })),
+      getDocs(acceptedOutQuery).catch(() => ({ docs: [] })),
+      getDocs(doneOutQuery).catch(() => ({ docs: [] })),
+      getDocs(doneInQuery).catch(() => ({ docs: [] }))
     ]);
+
+    const WEEK = 7 * 24 * 60 * 60 * 1000;
+    const chAccepted = acceptedOutSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .filter(c => notificationMillis(c.acceptedAt) > Date.now() - 3 * 24 * 60 * 60 * 1000);
+    const chDone = [...doneOutSnap.docs, ...doneInSnap.docs].map(d => ({ id: d.id, ...d.data() }))
+      .filter(c => notificationMillis(c.resolvedAt || c.completedAt) > Date.now() - WEEK);
 
     // ---------- Student names ----------
     const names = {};
@@ -824,6 +853,31 @@ async function renderGlobalNotifications(student) {
             challenge.createdAt
         })
       ),
+
+      ...chAccepted.map(c => ({
+        key: `challenge-accepted:${c.id}`,
+        type: "challenge-accepted",
+        id: c.id,
+        other: names[c.toStudentId] || "একজন শিক্ষার্থী",
+        exam: c.examName || "পরবর্তী পরীক্ষা",
+        createdAt: c.acceptedAt
+      })),
+
+      ...chDone.map(c => {
+        const won = c.winnerStudentId === student.studentId;
+        const lost = c.loserStudentId === student.studentId;
+        const otherId = c.fromStudentId === student.studentId ? c.toStudentId : c.fromStudentId;
+        return {
+          key: `challenge-result:${c.id}`,
+          type: "challenge-result",
+          id: c.id,
+          other: names[otherId] || "একজন শিক্ষার্থী",
+          exam: c.examName || "পরীক্ষা",
+          outcome: won ? "win" : lost ? "lose" : "draw",
+          xp: won ? Number(c.winnerBonus) || 0 : lost ? Number(c.loserBonus) || 0 : Number(c.drawBonus) || 0,
+          createdAt: c.resolvedAt || c.completedAt
+        };
+      }),
 
       ...improvementSnap.docs
         .map(d => ({ id: d.id, ...d.data() }))
@@ -988,6 +1042,38 @@ async function renderGlobalNotifications(student) {
 
                 </div>
 
+              </div>
+            `;
+          }
+
+          if (item.type === "challenge-accepted" || item.type === "challenge-result") {
+            const isRes = item.type === "challenge-result";
+            const title = isRes
+              ? (item.outcome === "win" ? `${escapeNotification(item.other)}-কে হারিয়েছো` : item.outcome === "lose" ? `${escapeNotification(item.other)}-এর কাছে হেরেছো` : `${escapeNotification(item.other)}-এর সাথে ড্র হয়েছে`)
+              : `${escapeNotification(item.other)} তোমার challenge গ্রহণ করেছে`;
+            const sub = isRes
+              ? `পরীক্ষা: ${escapeNotification(item.exam)} · +${item.xp} XP`
+              : `পরীক্ষা: ${escapeNotification(item.exam)}`;
+            return `
+              <div class="global-notification-item" data-notification-key="${escapeNotification(item.key)}">
+                <div class="global-notification-item-title">
+                  <div class="global-notification-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      ${isRes
+                        ? `<path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/>`
+                        : `<path d="M14.5 17.5 3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M14.5 6.5 18 3h3v3l-3.5 3.5"/><path d="M5 14l4 4"/>`}
+                    </svg>
+                  </div>
+                  <div class="global-notification-main">
+                    <strong>${title}</strong>
+                    <p>${sub}</p>
+                    <div class="global-notification-time">${notificationAge(item.createdAt)}</div>
+                  </div>
+                </div>
+                <div class="global-notification-actions">
+                  <button type="button" class="global-notif-open-challenges">দেখো</button>
+                  <button type="button" class="global-notif-hide" data-key="${escapeNotification(item.key)}">লুকান</button>
+                </div>
               </div>
             `;
           }
@@ -1186,6 +1272,14 @@ async function renderGlobalNotifications(student) {
           `;
         })
         .join("");
+
+    // ---------- Open challenges tab ----------
+    list.querySelectorAll(".global-notif-open-challenges").forEach(button => {
+      button.onclick = event => {
+        event.stopPropagation();
+        window.location.href = "../student/leaderboard.html?tab=challenges";
+      };
+    });
 
     // ---------- Start improvement exam ----------
     list
@@ -1831,6 +1925,10 @@ export function renderStudentHeader(
           <button class="hdr-switch" id="examTimerToggle" type="button" role="switch" aria-checked="true" aria-label="পরীক্ষার টাইমার দেখাও বা লুকাও"><span></span></button>
         </div>
         <a href="../index.html" class="hdr-menu-item" role="menuitem">${icons.arrowLeft}<span>Back</span></a>
+        <button type="button" class="hdr-menu-item" id="hdrLogoutBtn" role="menuitem" style="width:100%;background:none;border:0;font:inherit;color:var(--color-danger);cursor:pointer;text-align:left">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+          <span>লগআউট</span>
+        </button>
       </div>
     </header>
 
@@ -1897,6 +1995,17 @@ export function renderStudentHeader(
       menu.addEventListener("click", e => e.stopPropagation());
       document.addEventListener("click", () => setMenu(false));
       document.addEventListener("keydown", e => { if (e.key === "Escape") setMenu(false); });
+    }
+
+    // ---------- Logout ----------
+    const logoutBtn = document.getElementById("hdrLogoutBtn");
+    if (logoutBtn) {
+      logoutBtn.onclick = async () => {
+        if (!confirm("লগআউট করবে?")) return;
+        try { const m = await import("./student-auth.js"); await m.studentLogout(); }
+        catch (e) { localStorage.removeItem("activeStudent"); }
+        window.location.href = "../index.html";
+      };
     }
 
     // ---------- Open / close notification ----------
