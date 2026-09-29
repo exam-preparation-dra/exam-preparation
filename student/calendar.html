@@ -9,98 +9,100 @@
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
 
   /* =========================================================
-     Exam calendar — same "honour roll" look as the dashboard:
-     one dark hero card, quiet glass cards, brass accent.
+     Exam calendar — flat "মার্কশিট" layout, same tokens and same
+     ink-stamp hero as the dashboard. Hairline cards, one brass
+     accent, no gradients / blur / glass.
      ========================================================= */
   .d-sec { margin-top: 20px; }
-  .d-h { font-size: 1rem; font-weight: 800; color: var(--text-primary); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .d-h { font-size: 0.98rem; font-weight: 800; color: var(--text-primary); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
   .d-h svg { color: var(--color-accent); flex-shrink: 0; }
-  .d-card {
-    background: var(--surface); border: 1px solid var(--surface-border); border-radius: 20px; padding: 16px;
-    backdrop-filter: blur(var(--blur-sm)); -webkit-backdrop-filter: blur(var(--blur-sm)); box-shadow: var(--shadow-soft);
-  }
+  .d-card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius-lg); padding: 14px; }
 
-  /* ---------- hero (next exam) ---------- */
+  /* ---------- hero (ink stamp) — identical to dashboard ---------- */
   .d-hero {
-    position: relative; overflow: hidden; color: #f1ece0;
-    border-radius: 24px; padding: 20px 18px 16px; border: 1px solid rgba(201,151,63,0.3);
-    background:
-      repeating-linear-gradient(0deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 30px),
-      linear-gradient(155deg, #0f1a12 0%, #1a2a1c 62%, #2a2413 100%);
-    box-shadow: 0 18px 40px -14px rgba(15,26,18,0.55);
+    position: relative; overflow: hidden; color: #f3f1ea;
+    border-radius: var(--radius-lg); padding: 18px 16px 14px;
+    background: #21262f;
     display: grid; grid-template-columns: 1fr auto; column-gap: 12px; align-items: center;
   }
-  .d-hero-label { font-size: 0.8rem; font-weight: 700; color: rgba(241,236,224,0.7); }
-  .cal-hero-name { margin: 4px 0 10px; font-size: 1.3rem; font-weight: 800; line-height: 1.35; color: #f0cf8a; }
+  .d-hero-label { font-size: 0.78rem; font-weight: 700; color: rgba(243,241,234,0.68); }
+  .cal-hero-name { margin: 4px 0 10px; font-size: 1.25rem; font-weight: 800; line-height: 1.35; color: #f3f1ea; }
   .d-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .d-chip { font-size: 0.74rem; font-weight: 700; padding: 5px 10px; border-radius: 999px; background: rgba(241,236,224,0.09); border: 1px solid rgba(241,236,224,0.14); color: rgba(241,236,224,0.92); }
-  .d-seal { position: relative; width: 112px; height: 112px; }
+  .d-chip { font-size: 0.72rem; font-weight: 700; padding: 4px 9px; border-radius: 999px; background: rgba(243,241,234,0.1); border: 1px solid rgba(243,241,234,0.16); color: rgba(243,241,234,0.9); }
+  .d-seal { position: relative; width: 100px; height: 100px; }
   .d-seal svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-  .d-seal-ring { transition: stroke-dashoffset 1.4s cubic-bezier(0.22, 1, 0.36, 1); }
+  .d-seal-ring { transition: stroke-dashoffset 1.2s cubic-bezier(0.22, 1, 0.36, 1); }
   .d-seal-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .d-seal-center span { font-size: 0.68rem; font-weight: 700; color: rgba(241,236,224,0.65); }
-  .d-seal-center b { font-family: var(--font-num); font-size: 2.2rem; line-height: 1; font-weight: 700; color: #f0cf8a; }
+  .d-seal-center span { font-size: 0.65rem; font-weight: 700; color: rgba(243,241,234,0.6); }
+  .d-seal-center b { font-family: var(--font-num); font-size: 2rem; line-height: 1; font-weight: 700; color: var(--color-accent); }
   .d-seal-center b.word { font-family: var(--font-bn); font-size: 1.5rem; }
-  .d-hero-foot { grid-column: 1 / -1; margin-top: 14px; padding-top: 12px; border-top: 1px dashed rgba(241,236,224,0.2); font-size: 0.8rem; font-weight: 600; color: rgba(241,236,224,0.82); line-height: 1.6; }
-  .d-hero-foot b { font-family: var(--font-num); color: #f0cf8a; font-weight: 700; }
+  .d-hero-foot { grid-column: 1 / -1; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(243,241,234,0.14); font-size: 0.78rem; font-weight: 600; color: rgba(243,241,234,0.8); line-height: 1.6; }
+  .d-hero-foot b { font-family: var(--font-num); color: var(--color-accent); font-weight: 700; }
 
+  /* ---------- buttons (same as dashboard) ---------- */
   .d-btn {
-    display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 44px; margin-top: 10px;
-    border-radius: 14px; border: 1px solid var(--surface-border); font-weight: 800; font-size: 0.86rem; font-family: inherit; cursor: pointer;
-    background: var(--surface-solid); color: var(--text-primary); transition: transform var(--transition);
+    display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 46px; margin-top: 10px;
+    border-radius: var(--radius-md); border: 1px solid var(--surface-border); font-weight: 800; font-size: 0.9rem; font-family: inherit; cursor: pointer;
+    background: var(--surface-solid); color: var(--text-primary); transition: background var(--transition);
   }
-  .d-btn:active { transform: scale(0.97); }
-  .d-btn-primary { background: linear-gradient(135deg, var(--color-accent), var(--color-accent-2)); color: #2b1d09; border: none; box-shadow: 0 8px 20px rgba(201,151,63,0.3); }
-  .d-btn-ok { color: var(--color-success); border-color: rgba(63,157,99,0.45); }
+  .d-btn:active { background: var(--surface-highlight); }
+  .d-btn-primary { background: var(--color-accent); color: #211a0d; border: none; }
+  .d-btn-ok { color: var(--color-success); border-color: rgba(47,125,94,0.4); }
 
-  /* ---------- calendar ---------- */
+  /* ---------- month card ---------- */
   .cal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .cal-title { font-size: 1.02rem; font-weight: 800; color: var(--text-primary); }
   .cal-nav { display: flex; gap: 6px; }
   .cal-btn {
-    min-width: 34px; height: 34px; padding: 0 8px; display: grid; place-items: center; cursor: pointer;
-    border-radius: 10px; border: 1px solid var(--surface-border); background: var(--surface-solid);
-    color: var(--text-primary); font: inherit; font-size: 0.72rem; font-weight: 800; transition: transform var(--transition);
+    min-width: 36px; height: 36px; padding: 0 10px; display: grid; place-items: center; cursor: pointer;
+    border-radius: var(--radius-sm); border: 1px solid var(--surface-border); background: var(--surface-solid);
+    color: var(--text-primary); font: inherit; font-size: 0.74rem; font-weight: 800; transition: background var(--transition);
   }
-  .cal-btn:active { transform: scale(0.92); }
+  .cal-btn:active { background: var(--surface-highlight); }
   .cal-btn:focus-visible, .cal-cell:focus-visible, .cal-link:focus-visible, .d-btn:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 12px; }
-  .cal-dow { text-align: center; padding: 4px 0; font-size: 0.68rem; font-weight: 800; color: var(--text-muted); }
+
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--surface-border); }
+  .cal-dow { text-align: center; padding: 2px 0 4px; font-size: 0.68rem; font-weight: 800; color: var(--text-muted); }
   .cal-cell {
     aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-    border-radius: 12px; border: 1px solid transparent; background: transparent; color: var(--text-primary);
-    font: inherit; font-size: 0.86rem; font-weight: 700;
+    border-radius: var(--radius-sm); border: 1px solid transparent; background: transparent; color: var(--text-primary);
+    font: inherit; font-family: var(--font-num); font-size: 0.86rem; font-weight: 700;
   }
-  .cal-cell.muted { color: var(--text-muted); }
-  button.cal-cell { cursor: pointer; background: rgba(128,128,128,0.07); border-color: rgba(128,128,128,0.16); transition: transform var(--transition); }
-  button.cal-cell:active { transform: scale(0.93); }
+  .cal-cell.muted { color: var(--text-muted); font-weight: 600; }
+  button.cal-cell { cursor: pointer; background: var(--color-accent-soft); border-color: rgba(var(--color-accent-rgb), 0.3); transition: background var(--transition); }
+  button.cal-cell.past { background: var(--surface-edge); border-color: var(--surface-border); color: var(--text-secondary); }
+  button.cal-cell:active { background: rgba(var(--color-accent-rgb), 0.24); }
   .cal-cell.today { border-color: var(--color-accent); box-shadow: inset 0 0 0 1px var(--color-accent); }
-  .cal-cell.selected { background: var(--color-accent); border-color: var(--color-accent); color: #2b1d09; }
+  button.cal-cell.selected, button.cal-cell.selected.past { background: var(--color-accent); border-color: var(--color-accent); color: #211a0d; }
   .cal-dots { display: flex; gap: 3px; height: 5px; }
   .cal-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--color-accent); }
   .cal-cell.past .cal-dot { background: var(--text-muted); }
-  .cal-cell.selected .cal-dot { background: #2b1d09; }
+  .cal-cell.selected .cal-dot { background: #211a0d; }
   .cal-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; font-size: 0.7rem; font-weight: 700; color: var(--text-muted); }
   .cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
   .cal-legend i { width: 7px; height: 7px; border-radius: 50%; background: var(--color-accent); }
   .cal-legend i.past { background: var(--text-muted); }
 
-  .cal-list-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 16px 2px 8px; font-size: 0.86rem; font-weight: 800; color: var(--text-primary); }
-  .cal-link { background: none; border: none; padding: 4px 2px; cursor: pointer; font: inherit; font-size: 0.74rem; font-weight: 800; color: var(--color-accent); }
+  /* ---------- exam list ---------- */
+  .cal-list-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 16px 0 8px; padding-top: 14px; border-top: 1px solid var(--surface-border); font-size: 0.88rem; font-weight: 800; color: var(--text-primary); }
+  .cal-link { background: none; border: none; padding: 4px 2px; cursor: pointer; font: inherit; font-size: 0.76rem; font-weight: 800; color: var(--color-accent); }
   .cal-list { display: grid; gap: 10px; }
-  .cal-item { padding: 12px; border-radius: 16px; border: 1px solid var(--surface-border); background: var(--surface-solid); }
-  .cal-item.is-today { border-color: var(--color-accent); }
+  .cal-item { position: relative; padding: 12px 12px 12px 16px; border-radius: var(--radius-md); border: 1px solid var(--surface-border); background: var(--surface-solid); }
+  .cal-item::before { content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 3px; border-radius: 3px; background: var(--surface-border); }
+  .cal-item.is-today { border-color: rgba(var(--color-accent-rgb), 0.5); }
+  .cal-item.is-today::before, .cal-item.is-soon::before { background: var(--color-accent); }
+  .cal-item.is-done::before { background: var(--color-success); }
   .cal-row { display: flex; align-items: center; gap: 12px; }
-  .cal-date { flex-shrink: 0; width: 54px; padding: 8px 0; text-align: center; border-radius: 13px; background: var(--color-accent-soft); border: 1px solid rgba(201,151,63,0.3); }
-  .cal-date b { display: block; font-size: 1.4rem; line-height: 1.15; font-weight: 800; color: var(--text-primary); }
+  .cal-date { flex-shrink: 0; width: 54px; padding: 7px 0; text-align: center; border-radius: var(--radius-sm); background: var(--color-accent-soft); border: 1px solid rgba(var(--color-accent-rgb), 0.3); }
+  .cal-date b { display: block; font-family: var(--font-num); font-size: 1.35rem; line-height: 1.15; font-weight: 700; color: var(--text-primary); }
   .cal-date span { display: block; margin-top: 1px; font-size: 0.68rem; font-weight: 800; color: var(--text-secondary); }
   .cal-info { min-width: 0; flex: 1; }
   .cal-name { font-size: 0.95rem; font-weight: 800; line-height: 1.4; color: var(--text-primary); }
   .cal-day { margin-top: 2px; font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); }
   .cal-meta { margin-top: 2px; font-size: 0.72rem; font-weight: 600; color: var(--text-muted); }
-  .cal-chip { flex-shrink: 0; align-self: flex-start; padding: 4px 10px; border-radius: 999px; font-size: 0.7rem; font-weight: 800; white-space: nowrap; color: var(--color-accent); background: var(--color-accent-soft); }
-  .cal-chip.now { color: #2b1d09; background: var(--color-accent); }
-  .cal-chip.done { color: var(--color-success); background: rgba(63,157,99,0.14); }
+  .cal-chip { flex-shrink: 0; align-self: flex-start; padding: 3px 9px; border-radius: 999px; font-size: 0.68rem; font-weight: 800; white-space: nowrap; color: var(--color-accent); background: var(--color-accent-soft); }
+  .cal-chip.now { color: #211a0d; background: var(--color-accent); }
+  .cal-chip.done { color: var(--color-success); background: rgba(47,125,94,0.12); }
   .cal-empty { padding: 18px 10px; text-align: center; font-size: 0.82rem; font-weight: 700; line-height: 1.7; color: var(--text-muted); }
 </style>
 </head>
@@ -137,8 +139,8 @@ function render() {
   shell.innerHTML = `
     ${renderStudentHeader(student, "calendar")}
 
-    <div id="nextSection" class="d-sec"><div class="skeleton" style="height:190px;border-radius:24px;"></div></div>
-    <div id="calendarSection" class="d-sec"><div class="skeleton" style="height:360px;border-radius:20px;"></div></div>
+    <div id="nextSection" class="d-sec"><div class="skeleton" style="height:190px;border-radius:var(--radius-lg);"></div></div>
+    <div id="calendarSection" class="d-sec"><div class="skeleton" style="height:360px;border-radius:var(--radius-lg);"></div></div>
   `;
   loadExams();
 }
@@ -270,10 +272,9 @@ function drawNext() {
       </div>
       <div class="d-seal" role="img" aria-label="${diff === 0 ? "আজ" : `আর ${bn(diff)} দিন`}">
         <svg viewBox="0 0 120 120" aria-hidden="true">
-          <defs><linearGradient id="sealGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0cf8a"/><stop offset="1" stop-color="#c9973f"/></linearGradient></defs>
-          <circle cx="60" cy="60" r="57" fill="none" stroke="rgba(226,181,104,0.28)" stroke-width="1.5" stroke-dasharray="2 5"/>
-          <circle cx="60" cy="60" r="${R}" fill="rgba(0,0,0,0.18)" stroke="rgba(241,236,224,0.12)" stroke-width="8"/>
-          <circle class="d-seal-ring" id="sealRing" cx="60" cy="60" r="${R}" fill="none" stroke="url(#sealGrad)" stroke-width="8" stroke-linecap="round"
+          <circle cx="60" cy="60" r="57" fill="none" stroke="rgba(184,134,60,0.22)" stroke-width="1.5" stroke-dasharray="2 5"/>
+          <circle cx="60" cy="60" r="${R}" fill="none" stroke="rgba(243,241,234,0.12)" stroke-width="8"/>
+          <circle class="d-seal-ring" id="sealRing" cx="60" cy="60" r="${R}" fill="none" stroke="#b8863c" stroke-width="8" stroke-linecap="round"
                   stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${C.toFixed(2)}" data-c="${C.toFixed(2)}" data-fill="${fill}"/>
         </svg>
         <div class="d-seal-center">
@@ -306,7 +307,7 @@ function calendarItemHtml({ exam, day }) {
   else if (!taken && exam.status === "published" && isExamAvailableNow(exam)) action = `<a href="../student/exam.html?examId=${esc(exam.id)}" class="d-btn d-btn-primary">পরীক্ষা শুরু করুন</a>`;
 
   return `
-    <div class="cal-item ${diff === 0 ? "is-today" : ""}">
+    <div class="cal-item ${taken ? "is-done" : diff === 0 ? "is-today" : diff > 0 && diff <= 3 ? "is-soon" : ""}">
       <div class="cal-row">
         <div class="cal-date"><b>${bn(day.d)}</b><span>${BN_MONTHS_SHORT[day.m]}</span></div>
         <div class="cal-info">
