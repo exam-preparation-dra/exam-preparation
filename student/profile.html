@@ -130,6 +130,14 @@
 
   @media (max-width: 380px) { .pf-metrics { grid-template-columns: repeat(2, 1fr); } .pf-avatar { width: 72px; height: 72px; font-size: 1.7rem; } }
   @media (min-width: 520px) { .pf-bgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .pf-tg { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; border-top:1px solid var(--surface-border); font-size:.86rem; font-weight:600; cursor:pointer; }
+  .pf-tg input { display:none; }
+  .pf-tg i { flex:none; width:42px; height:24px; border-radius:99px; background:rgba(128,128,128,.35); position:relative; transition:.2s; }
+  .pf-tg i::after { content:""; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:.2s; }
+  .pf-tg input:checked + i { background:var(--color-accent); }
+  .pf-tg input:checked + i::after { left:21px; }
+  .pf-inp { width:100%; box-sizing:border-box; padding:12px 14px; margin-bottom:8px; border-radius:12px; border:1.5px solid var(--surface-border); background:var(--surface-solid,#fff); color:inherit; font-size:.95rem; outline:none; }
+  .pf-inp:focus { border-color:var(--color-accent); }
 </style>
 </head>
 <body oncontextmenu="return false;">
@@ -266,14 +274,15 @@
 <script type="module">
 let initTheme, toggleTheme, renderState, renderStudentHeader, showToast, friendlyError;
 let getActiveStudent, refreshActiveStudent, getActiveStudents;
-let getApprovedResults, getStudentRank;
+let getApprovedResults, getStudentRank, getUpcomingExams;
 let computeOverallStats, computeSubjectStats, computeChapterStats, computeTopicStats;
 let computeGamificationData;
 let db;
 let doc, getDoc, collection, getDocs;
 let getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival;
-let getChallengeWinCount;
-let requireStudentSession;
+let getChallengeWinCount, sendChallenge;
+let requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, friendlyStudentAuthError;
+let viewPrivacy = { records: true, subjects: true, badges: true, publicStats: false };
 let getLevelInfo;
 
 async function loadModule(path, run) {
@@ -296,14 +305,14 @@ async function loadModule(path, run) {
 const __ok = (
   await loadModule("../js/utils/ui-utils.js", m => ({ initTheme, toggleTheme, renderState, renderStudentHeader, showToast, friendlyError } = m)) &&
   await loadModule("../js/utils/student-utils.js", m => ({ getActiveStudent, refreshActiveStudent, getActiveStudents } = m)) &&
-  await loadModule("../js/utils/results-utils.js", m => ({ getApprovedResults, getStudentRank } = m)) &&
+  await loadModule("../js/utils/results-utils.js", m => ({ getApprovedResults, getStudentRank, getUpcomingExams } = m)) &&
   await loadModule("../js/utils/analytics-utils.js", m => ({ computeOverallStats, computeSubjectStats, computeChapterStats, computeTopicStats } = m)) &&
   await loadModule("../js/utils/gamification-utils.js", m => ({ computeGamificationData } = m)) &&
   await loadModule("../js/firebase/firebase-config.js", m => ({ db } = m)) &&
   await loadModule("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js", m => ({ doc, getDoc, collection, getDocs } = m)) &&
   await loadModule("../js/utils/friend-utils.js?v=ref1", m => ({ getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival } = m)) &&
-  await loadModule("../js/utils/student-auth.js", m => ({ requireStudentSession } = m)) &&
-  await loadModule("../js/utils/challenge-utils.js", m => ({ getChallengeWinCount } = m)) &&
+  await loadModule("../js/utils/student-auth.js", m => ({ requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, friendlyStudentAuthError } = m)) &&
+  await loadModule("../js/utils/challenge-utils.js", m => ({ getChallengeWinCount, sendChallenge } = m)) &&
   await loadModule("../js/utils/xp-utils.js", m => ({ getLevelInfo } = m))
 );
 
@@ -606,35 +615,43 @@ const ICON = {
 
 /* ---------- VIEW MODE: someone else's profile, limited by friendship ---------- */
 async function renderViewPage() {
+  viewPrivacy = await getPrivacy(student.studentId);
+  const canRec = viewIsFriend && viewPrivacy.records;
+  const canSub = viewIsFriend && viewPrivacy.subjects;
+  const canBadge = viewIsFriend && viewPrivacy.badges;
   shell.innerHTML = `
     ${renderStudentHeader(viewer, "profile")}
     <main class="pf">
       <div class="pf-card" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-        <div class="pf-note">👁 ভিউ মোড · ${viewIsFriend ? "বন্ধু হিসেবে দেখছো" : "বন্ধু নও — সীমিত তথ্য"}</div>
+        <div class="pf-note">ভিউ মোড · ${viewIsFriend ? "বন্ধু হিসেবে দেখছো" : "বন্ধু নও, তাই সীমিত তথ্য"}</div>
         <a class="pf-btn sm" href="profile.html">← আমার প্রোফাইল</a>
       </div>
       <section class="pf-hero" id="pfHero"></section>
       <div class="pf-card" id="viewAction"></div>
-      ${viewIsFriend ? `<div class="pf-card" id="recordsSection"><div class="spinner" style="margin:18px auto"></div></div>
-      <div class="pf-card" id="strengthSection" style="display:none"></div>` : ""}
+      ${canRec ? `<div class="pf-card" id="recordsSection"><div class="spinner" style="margin:18px auto"></div></div>` : ""}
+      ${canSub ? `<div class="pf-card" id="strengthSection" style="display:none"></div>` : ""}
       <div id="badgeCollection"></div>
+      <div id="hiddenNote"></div>
     </main>`;
   renderHeroShell();
-  renderViewAction();
+  renderViewAction(canSub && canRec);
   try {
     const d = await loadData();
     fillHero(d);
-    if (viewIsFriend) {
-      renderRecords(d);
-      renderStrength(d);
+    if (canRec) renderRecords(d);
+    if (canSub) renderStrength(d);
+    const got = d.badges.filter(b => b.earned).length;
+    if (canBadge) {
       renderBadges(d);
       $("badgeCollection").insertAdjacentHTML("afterbegin",
         `<div class="pf-card"><div class="pf-note">মোট বন্ধু: <b>${d.friendCount}</b></div></div>`);
     } else {
-      const got = d.badges.filter(b => b.earned).length;
       $("badgeCollection").innerHTML = `<div class="pf-card"><div class="pf-bsum">
-        <div><h2 class="pf-h">ব্যাজ</h2><div class="pf-note">বিস্তারিত দেখতে বন্ধু হও</div></div>
+        <div><h2 class="pf-h">ব্যাজ</h2><div class="pf-note">${viewIsFriend ? "বিস্তারিত গোপন রাখা হয়েছে" : "বিস্তারিত দেখতে বন্ধু হও"}</div></div>
         <big>${got}<small>/${d.badges.length}</small></big></div></div>`;
+    }
+    if (viewIsFriend && (!canRec || !canSub)) {
+      $("hiddenNote").innerHTML = `<div class="pf-card"><div class="pf-note">এই শিক্ষার্থী কিছু তথ্য গোপন রেখেছে।</div></div>`;
     }
   } catch (e) {
     console.warn("view load failed", e);
@@ -642,9 +659,49 @@ async function renderViewPage() {
   }
 }
 
-async function renderViewAction() {
+async function openChallengeFromProfile() {
+  const ov = document.createElement("div");
+  ov.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;";
+  ov.innerHTML = `<div class="pf-card" style="width:100%;max-width:400px;margin:0">
+    <h2 class="pf-h">${esc(student.name)}-কে চ্যালেঞ্জ করো</h2>
+    <div class="pf-note" style="margin-bottom:12px">কোন পরীক্ষায় চ্যালেঞ্জ করবে?</div>
+    <div id="chBody"><div class="spinner" style="margin:14px auto"></div></div>
+    <div class="pf-actions" style="margin-top:12px;justify-content:flex-end">
+      <button class="pf-btn" id="chCancel" type="button">বাতিল</button>
+      <button class="pf-btn primary" id="chSend" type="button" style="display:none">চ্যালেঞ্জ পাঠাও</button>
+    </div></div>`;
+  document.body.appendChild(ov);
+  ov.querySelector("#chCancel").onclick = () => ov.remove();
+  try {
+    const exams = await getUpcomingExams().catch(() => []);
+    ov.querySelector("#chBody").innerHTML = `<select id="chSel" class="pf-inp">
+      <option value="__NEXT_EXAM__">পরবর্তী পরীক্ষা (Auto Select)</option>
+      ${(Array.isArray(exams) ? exams : []).map(e => `<option value="${esc(e.id)}">${esc(e.name || "পরীক্ষা")}</option>`).join("")}
+    </select>`;
+    const send = ov.querySelector("#chSend"); send.style.display = "inline-flex";
+    send.onclick = async () => {
+      const sel = ov.querySelector("#chSel");
+      send.disabled = true; send.textContent = "পাঠানো হচ্ছে...";
+      try {
+        await sendChallenge({ fromStudentId: viewer.studentId, toStudentId: student.studentId,
+          examId: sel.value, examName: sel.options[sel.selectedIndex]?.text || "পরীক্ষা" });
+        showToast("চ্যালেঞ্জ পাঠানো হয়েছে", "success"); ov.remove();
+      } catch (e) { showToast(e.message || friendlyError(e), "error"); send.disabled = false; send.textContent = "চ্যালেঞ্জ পাঠাও"; }
+    };
+  } catch (e) { ov.querySelector("#chBody").innerHTML = `<div class="pf-empty">পরীক্ষার তালিকা আনা যায়নি।</div>`; }
+}
+
+async function renderViewAction(canCompare) {
   const el = $("viewAction");
-  if (viewIsFriend) { el.innerHTML = `<span class="pf-state ok">✔ তোমরা বন্ধু</span>`; return; }
+  if (viewIsFriend) {
+    el.innerHTML = `<div class="pf-state ok" style="display:inline-block">তোমরা বন্ধু</div>
+      <div class="pf-actions" style="margin-top:10px">
+        <button class="pf-btn primary" id="vaChallenge" type="button">চ্যালেঞ্জ পাঠাও</button>
+        ${canCompare ? `<a class="pf-btn" href="comparison.html?friendId=${encodeURIComponent(student.studentId)}">তুলনা দেখো</a>` : ""}
+      </div>`;
+    $("vaChallenge").onclick = openChallengeFromProfile;
+    return;
+  }
   try {
     const [inc, out] = await Promise.all([getIncomingRequests(viewer.studentId), getOutgoingRequests(viewer.studentId)]);
     const incoming = inc.find(r => r.fromStudentId === student.studentId);
@@ -653,12 +710,76 @@ async function renderViewAction() {
       el.innerHTML = `<button class="pf-btn primary" id="vaBtn" type="button">বন্ধুত্বের অনুরোধ গ্রহণ করো</button>`;
       $("vaBtn").onclick = async () => { try { await acceptFriendRequest(incoming.id, viewer.studentId); location.reload(); } catch (e) { showToast(friendlyError(e), "error"); } };
     } else if (outgoing) {
-      el.innerHTML = `<span class="pf-state wait">অনুরোধ পাঠানো হয়েছে — অপেক্ষমাণ</span>`;
+      el.innerHTML = `<span class="pf-state wait">অনুরোধ পাঠানো হয়েছে, অপেক্ষমাণ</span>`;
     } else {
       el.innerHTML = `<button class="pf-btn primary" id="vaBtn" type="button">+ বন্ধু হওয়ার অনুরোধ পাঠাও</button>`;
       $("vaBtn").onclick = async () => { try { await sendFriendRequest(viewer.studentId, student.studentId); showToast("অনুরোধ পাঠানো হয়েছে", "success"); renderViewAction(); } catch (e) { showToast(friendlyError(e), "error"); } };
     }
   } catch (e) { el.innerHTML = ""; }
+}
+
+/* ---------- SETTINGS TAB: privacy, change password, logout ---------- */
+async function renderSettings() {
+  const host = $("settingsHost");
+  if (!host) return;
+  const p = await getPrivacy(student.studentId);
+  const rows = [
+    ["records", "বন্ধুরা আমার রেকর্ড (স্কোর) দেখতে পাবে"],
+    ["subjects", "বন্ধুরা আমার বিষয়ভিত্তিক নির্ভুলতা দেখতে পাবে"],
+    ["badges", "বন্ধুরা আমার ব্যাজের বিস্তারিত দেখতে পাবে"],
+    ["publicStats", "বন্ধু না হলেও সবাই আমার র‍্যাঙ্ক ও পরীক্ষার সংখ্যা দেখতে পাবে"]
+  ];
+  host.innerHTML = `
+    <div class="pf-card">
+      <div class="pf-head"><div><h2 class="pf-h">গোপনীয়তা</h2><div class="pf-note">অন্যরা তোমার প্রোফাইলে কী দেখবে</div></div></div>
+      ${rows.map(([k, t]) => `<label class="pf-tg"><span>${t}</span><input type="checkbox" data-k="${k}" ${p[k] ? "checked" : ""}><i></i></label>`).join("")}
+      <div class="pf-note" style="margin-top:8px">নাম, ক্লাস, লেভেল ও XP সবসময় দেখা যাবে।</div>
+    </div>
+    <div class="pf-card">
+      <div class="pf-head"><div><h2 class="pf-h">পাসওয়ার্ড বদলাও</h2><div class="pf-note">কমপক্ষে ৬ অক্ষর</div></div></div>
+      <input class="pf-inp" id="pwOld" type="password" placeholder="বর্তমান পাসওয়ার্ড" autocomplete="current-password">
+      <input class="pf-inp" id="pwNew" type="password" placeholder="নতুন পাসওয়ার্ড" autocomplete="new-password">
+      <input class="pf-inp" id="pwNew2" type="password" placeholder="নতুন পাসওয়ার্ড আবার লেখো" autocomplete="new-password">
+      <div id="pwMsg" style="color:var(--color-danger);font-size:.8rem;min-height:18px;margin-bottom:6px"></div>
+      <button class="pf-btn primary" id="pwSave" type="button">পাসওয়ার্ড বদলাও</button>
+    </div>
+    <div class="pf-card">
+      <div class="pf-head"><div><h2 class="pf-h">লগআউট</h2><div class="pf-note">অন্য কেউ এই ডিভাইসে ঢুকতে চাইলে আগে লগআউট করো</div></div></div>
+      <button class="pf-btn danger" id="logoutBtn" type="button">লগআউট</button>
+    </div>`;
+
+  host.querySelectorAll(".pf-tg input").forEach(cb => cb.addEventListener("change", async () => {
+    const next = {};
+    host.querySelectorAll(".pf-tg input").forEach(x => { next[x.dataset.k] = x.checked; });
+    try { await savePrivacy(student.studentId, next); showToast("সেভ হয়েছে", "success"); }
+    catch (e) { cb.checked = !cb.checked; showToast("সেভ করা যায়নি", "error"); }
+  }));
+
+  $("pwSave").addEventListener("click", async () => {
+    const o = $("pwOld").value, n = $("pwNew").value, n2 = $("pwNew2").value, msg = $("pwMsg");
+    msg.textContent = "";
+    if (!o) { msg.textContent = "বর্তমান পাসওয়ার্ড লেখো।"; return; }
+    if (n.length < 6) { msg.textContent = "নতুন পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।"; return; }
+    if (n !== n2) { msg.textContent = "নতুন পাসওয়ার্ড দুটি মেলেনি।"; return; }
+    if (n === o) { msg.textContent = "নতুন পাসওয়ার্ড আগেরটার থেকে আলাদা হতে হবে।"; return; }
+    const btn = $("pwSave"); btn.disabled = true;
+    try {
+      await changeMyPassword(student.studentId, o, n);
+      showToast("পাসওয়ার্ড বদলানো হয়েছে", "success");
+      $("pwOld").value = $("pwNew").value = $("pwNew2").value = "";
+    } catch (e) {
+      const c = e?.code || "";
+      msg.textContent = (c === "auth/invalid-credential" || c === "auth/wrong-password")
+        ? "বর্তমান পাসওয়ার্ড ভুল।" : friendlyStudentAuthError(e);
+    }
+    btn.disabled = false;
+  });
+
+  $("logoutBtn").addEventListener("click", async () => {
+    if (!confirm("লগআউট করবে?")) return;
+    try { await studentLogout(); } catch (e) {}
+    window.location.href = "../index.html";
+  });
 }
 
 function renderPage() {
@@ -671,6 +792,7 @@ function renderPage() {
         <button class="pf-tab active" data-tab="tab-overview">${ICON.home}ওভারভিউ</button>
         <button class="pf-tab" data-tab="tab-badges">${ICON.badge}ব্যাজ</button>
         <button class="pf-tab" data-tab="tab-network">${ICON.users}বন্ধু<span class="pf-dot" id="pfReqDot"></span></button>
+        <button class="pf-tab" data-tab="tab-settings">সেটিংস</button>
       </nav>
 
       <section id="tab-overview" class="tab-content pf-pane active">
@@ -692,6 +814,9 @@ function renderPage() {
           <div id="dirList"></div>
         </div>
       </section>
+      <section id="tab-settings" class="tab-content pf-pane">
+        <div id="settingsHost"><div class="pf-card"><div class="spinner" style="margin:18px auto"></div></div></div>
+      </section>
     </main>`;
 
   document.querySelectorAll(".pf-tab").forEach(b => b.addEventListener("click", () => switchTab(b.dataset.tab)));
@@ -699,6 +824,7 @@ function renderPage() {
 
   renderHeroShell();
   renderInvite();
+  renderSettings();
   loadNetworkData();
   loadData().then(d => {
     fillHero(d);
@@ -749,7 +875,7 @@ function renderHeroShell() {
     $("shareProfileBtn").addEventListener("click", openShareChoice);
     $("copyLinkBtn").addEventListener("click", async () => showToast(await copyText(referralLink()) ? "লিংক কপি হয়েছে" : "কপি করা যায়নি", "success"));
   }
-  if (viewMode && !viewIsFriend) {
+  if (viewMode && !(viewIsFriend || viewPrivacy.publicStats)) {
     $("pfMRank").parentElement.style.display = "none";
     $("pfMExams").parentElement.style.display = "none";
   }
