@@ -2,203 +2,66 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>অ্যাডমিন লগইন — পরীক্ষা প্রস্তুতি</title>
 <link rel="stylesheet" href="../css/style.css">
 <style>
-  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; } }
-  html, body { height: 100%; }
-  body {
-    overflow-x: hidden; background: var(--bg);
-    display: flex; align-items: center; justify-content: center;
-    min-height: 100vh; margin: 0; position: relative;
-  }
-
-  /* ===== Ambient background blobs ===== */
-  .bg-blob {
-    position: fixed; border-radius: 50%; filter: blur(60px);
-    opacity: 0.35; pointer-events: none; z-index: 0;
-    animation: drift 16s ease-in-out infinite;
-  }
-  .bg-blob.one { width: 320px; height: 320px; top: -80px; left: -80px; background: var(--color-accent); }
-  .bg-blob.two { width: 280px; height: 280px; bottom: -100px; right: -60px; background: #8b5cf6; animation-duration: 20s; animation-delay: 2s; }
-  @keyframes drift {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(20px, -20px) scale(1.08); }
-  }
-
-  .app-shell { width: 100%; max-width: 420px; padding: 20px; box-sizing: border-box; position: relative; z-index: 1; }
-
-  /* ===== Premium Glassmorphism Theme ===== */
-  .glass-float-card {
-    background: rgba(128, 128, 128, 0.05);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(128, 128, 128, 0.15);
-    border-radius: 24px;
-    padding: 34px 26px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.10), 0 2px 0 rgba(255,255,255,0.04) inset;
-    animation: cardIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-  @keyframes cardIn {
-    from { opacity: 0; transform: translateY(16px) scale(0.98); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-  }
-
-  /* ===== Header ===== */
-  .admin-header { text-align: center; margin-bottom: 30px; }
-  .admin-icon-ring {
-    width: 68px; height: 68px; margin: 0 auto 18px; padding: 5px;
-    border-radius: 20px;
-    background: conic-gradient(from 0deg, var(--color-accent), #8b5cf6, var(--color-accent));
-    animation: spinRing 5s linear infinite;
-  }
-  @keyframes spinRing { to { transform: rotate(360deg); } }
-  .admin-icon {
-    width: 100%; height: 100%;
-    background: linear-gradient(135deg, var(--color-accent), #2563eb);
-    color: #fff; border-radius: 16px;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
-  }
-  .admin-header h1 { font-size: 1.45rem; font-weight: 900; color: var(--text-primary); margin: 0 0 4px 0; letter-spacing: -0.5px; }
-  .admin-header p { font-size: 0.85rem; color: var(--text-muted); margin: 0; font-weight: 600; }
-
-  /* ===== Form Styles ===== */
-  .field { margin-bottom: 20px; position: relative; }
-  .field label { display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 8px; }
-
-  .input-wrapper { position: relative; display: flex; align-items: center; }
-  .input-leading-icon {
-    position: absolute; left: 14px; color: var(--text-muted);
-    display: flex; align-items: center; justify-content: center; pointer-events: none;
-    transition: color 0.2s;
-  }
-
-  .input-glass {
-    width: 100%; box-sizing: border-box; padding: 14px 16px 14px 44px;
-    background: rgba(128, 128, 128, 0.05);
-    border: 1px solid var(--surface-border);
-    border-radius: 12px;
-    color: var(--text-primary);
-    font-family: inherit; font-size: 0.95rem; font-weight: 600;
-    outline: none; transition: all 0.25s ease;
-  }
-  .input-glass:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.15); background: var(--surface); }
-  .input-wrapper:focus-within .input-leading-icon { color: var(--color-accent); }
-
-  /* Password Wrapper & Toggle */
-  .password-wrapper .input-glass { padding-right: 48px; }
-  .toggle-password {
-    position: absolute; right: 12px;
-    background: transparent; border: none; padding: 6px;
-    color: var(--text-muted); cursor: pointer; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center; transition: color 0.2s;
-  }
-  .toggle-password:hover { color: var(--text-primary); background: rgba(128, 128, 128, 0.1); }
-
-  .btn-submit {
-    width: 100%;
-    background: linear-gradient(135deg, var(--color-accent), #2563eb);
-    color: #fff;
-    border: none; border-radius: 12px; padding: 15px;
-    font-size: 1rem; font-weight: 800; font-family: inherit;
-    cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
-    display: flex; justify-content: center; align-items: center; gap: 8px;
-    margin-top: 10px;
-    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.28);
-  }
-  .btn-submit:hover { box-shadow: 0 12px 28px rgba(37, 99, 235, 0.36); }
-  .btn-submit:active { transform: scale(0.98); }
-  .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
-
-  /* Error Message */
-  .error-msg {
-    background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2);
-    color: #ef4444; padding: 10px 14px; border-radius: 10px; font-size: 0.8rem; font-weight: 700;
-    margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
-    animation: shake 0.35s ease;
-  }
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-4px); }
-    75% { transform: translateX(4px); }
-  }
-  .hidden { display: none !important; }
-
-  /* Footer Link */
-  .back-link {
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-    margin-top: 24px; font-size: 0.85rem; font-weight: 700;
-    color: var(--text-muted); text-decoration: none; transition: color 0.2s;
-  }
-  .back-link:hover { color: var(--color-accent); }
+  body { min-height: 100vh; margin: 0; display: flex; align-items: center; justify-content: center; padding: 20px; background: var(--bg-app); color: var(--text-primary); font-family: var(--font-bn); }
+  .box { width: 100%; max-width: 380px; }
+  .card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 20px; padding: 28px 22px; box-shadow: var(--shadow-soft); }
+  .logo { width: 48px; height: 48px; border-radius: 14px; background: var(--color-accent); color: #fff; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+  .logo svg { width: 24px; height: 24px; }
+  h1 { font-size: 1.3rem; font-weight: 800; margin: 0 0 4px; }
+  .sub { font-size: .85rem; color: var(--text-muted); margin: 0 0 22px; }
+  label { display: block; font-size: .8rem; font-weight: 700; color: var(--text-secondary); margin: 0 0 6px; }
+  .field { margin-bottom: 14px; }
+  .wrap { position: relative; }
+  input { width: 100%; box-sizing: border-box; padding: 13px 14px; border-radius: 12px; border: 1.5px solid var(--surface-border); background: var(--surface-solid); color: inherit; font: inherit; font-size: .95rem; outline: none; transition: border-color var(--transition); }
+  input:focus { border-color: var(--color-accent); }
+  .wrap input { padding-right: 46px; }
+  .eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border: 0; background: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+  .eye:hover { color: var(--text-primary); }
+  .eye svg { width: 19px; height: 19px; }
+  .err { display: none; margin: 0 0 14px; padding: 10px 12px; border-radius: 10px; background: rgba(166,64,47,.10); color: var(--color-danger); font-size: .8rem; font-weight: 700; line-height: 1.45; }
+  .err.show { display: block; }
+  .btn { width: 100%; padding: 14px; border: 0; border-radius: 12px; background: var(--color-accent); color: #fff; font: inherit; font-size: .95rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn:active { transform: scale(.99); }
+  .btn:disabled { opacity: .65; cursor: default; }
+  .back { display: block; text-align: center; margin-top: 18px; font-size: .82rem; font-weight: 700; color: var(--text-muted); text-decoration: none; }
+  .back:hover { color: var(--color-accent); }
 </style>
 </head>
 <body>
-
-<div class="bg-blob one"></div>
-<div class="bg-blob two"></div>
-
-<div class="app-shell">
-
-  <div class="glass-float-card">
-
-    <div class="admin-header">
-      <div class="admin-icon-ring">
-        <div class="admin-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        </div>
-      </div>
-      <h1>অ্যাডমিন প্যানেল</h1>
-      <p>নিয়ন্ত্রণ কেন্দ্রে প্রবেশ করুন</p>
+<div class="box">
+  <div class="card">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
     </div>
+    <h1>অ্যাডমিন লগইন</h1>
+    <p class="sub">চালিয়ে যেতে ইমেইল ও পাসওয়ার্ড দাও</p>
 
-    <form id="loginForm">
+    <form id="loginForm" novalidate>
       <div class="field">
-        <label for="email">ইমেইল ঠিকানা</label>
-        <div class="input-wrapper">
-          <input class="input-glass" type="email" id="email" required autocomplete="username" placeholder="admin@example.com">
-          <span class="input-leading-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 6c0-1.1-.9-2-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6z"/><polyline points="22 6 12 13 2 6"/></svg>
-          </span>
-        </div>
+        <label for="email">ইমেইল</label>
+        <input type="email" id="email" required autocomplete="username" placeholder="admin@example.com">
       </div>
-
       <div class="field">
         <label for="password">পাসওয়ার্ড</label>
-        <div class="input-wrapper password-wrapper">
-          <input class="input-glass" type="password" id="password" required autocomplete="current-password" placeholder="পাসওয়ার্ড লিখুন">
-          <span class="input-leading-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          </span>
-          <button type="button" class="toggle-password" id="togglePasswordBtn" aria-label="পাসওয়ার্ড দেখুন">
-            <!-- Eye Off Icon (Default for hidden password) -->
-            <svg class="eye-off-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-            <!-- Eye Open Icon (Hidden by default) -->
-            <svg class="eye-on-icon hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <div class="wrap">
+          <input type="password" id="password" required autocomplete="current-password" placeholder="পাসওয়ার্ড">
+          <button type="button" class="eye" id="eyeBtn" aria-label="পাসওয়ার্ড দেখাও">
+            <svg id="eyeOff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            <svg id="eyeOn" style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
       </div>
 
-      <div id="errorMsg" class="error-msg hidden">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span id="errorText">ভুল ইমেইল বা পাসওয়ার্ড</span>
-      </div>
+      <div id="err" class="err" role="alert"></div>
 
-      <button type="submit" class="btn-submit" id="loginBtn">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-        প্রবেশ করুন
-      </button>
+      <button type="submit" class="btn" id="loginBtn">প্রবেশ করো</button>
     </form>
-
   </div>
-
-  <a href="../index.html" class="back-link">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-    শিক্ষার্থী পাতায় ফিরে যান
-  </a>
-
+  <a href="../index.html" class="back">← শিক্ষার্থী পেজে ফিরে যাও</a>
 </div>
 
 <script type="module">
@@ -208,49 +71,30 @@ import { adminLogin, redirectIfLoggedIn } from "../js/utils/auth.js";
 initTheme();
 redirectIfLoggedIn();
 
-const form = document.getElementById("loginForm");
-const btn = document.getElementById("loginBtn");
-const errorMsg = document.getElementById("errorMsg");
-const errorText = document.getElementById("errorText");
-const passwordInput = document.getElementById("password");
-const togglePasswordBtn = document.getElementById("togglePasswordBtn");
-const eyeOn = document.querySelector(".eye-on-icon");
-const eyeOff = document.querySelector(".eye-off-icon");
+const $ = id => document.getElementById(id);
+const form = $("loginForm"), btn = $("loginBtn"), err = $("err"), pw = $("password");
 
-// Show/Hide Password Logic
-togglePasswordBtn.addEventListener("click", () => {
-  const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
-  passwordInput.setAttribute("type", type);
-
-  if (type === "text") {
-    eyeOff.classList.add("hidden");
-    eyeOn.classList.remove("hidden");
-  } else {
-    eyeOn.classList.add("hidden");
-    eyeOff.classList.remove("hidden");
-  }
+$("eyeBtn").addEventListener("click", () => {
+  const show = pw.type === "password";
+  pw.type = show ? "text" : "password";
+  $("eyeOff").style.display = show ? "none" : "";
+  $("eyeOn").style.display = show ? "" : "none";
 });
+
+const showErr = (m) => { err.textContent = m; err.classList.add("show"); };
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
-  errorMsg.classList.add("hidden");
-  btn.disabled = true;
-  btn.innerHTML = `<span class="spinner" style="width:16px; height:16px; border-width:2px; border-color:#fff; border-top-color:transparent;"></span> যাচাই করা হচ্ছে...`;
-
+  err.classList.remove("show");
+  const email = $("email").value.trim();
+  if (!email || !pw.value) { showErr("ইমেইল ও পাসওয়ার্ড দুটোই লেখো।"); return; }
+  btn.disabled = true; btn.textContent = "যাচাই হচ্ছে…";
   try {
-    await adminLogin(
-      document.getElementById("email").value.trim(),
-      passwordInput.value
-    );
+    await adminLogin(email, pw.value);
     window.location.href = "../admin/dashboard.html";
-  } catch (err) {
-    errorText.textContent = friendlyError(err);
-    errorMsg.classList.remove("hidden");
-    btn.disabled = false;
-    btn.innerHTML = `
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-      প্রবেশ করুন
-    `;
+  } catch (e2) {
+    showErr(e2?.code === "auth/not-admin" ? e2.message : friendlyError(e2));
+    btn.disabled = false; btn.textContent = "প্রবেশ করো";
   }
 });
 </script>
