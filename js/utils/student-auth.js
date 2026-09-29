@@ -79,6 +79,37 @@ export function friendlyStudentAuthError(err) {
   return err?.message || "কিছু একটা ভুল হয়েছে।";
 }
 
+/* ---------- FIRST-TIME DETECTION + "APPLY FOR SETUP CODE" ---------- */
+// Public, non-secret info used by the login screen to decide what to show:
+//  hasAccount=false            -> first time, student can apply for a setup code
+//  hasAccount && !passwordSet  -> admin already issued a code, student must enter it
+//  hasAccount && passwordSet   -> normal password login
+export async function getStudentAuthStatus(studentId) {
+  const [a, r] = await Promise.all([
+    getDoc(doc(db, "studentAuthState", studentId)),
+    getDoc(doc(db, "setupRequests", studentId))
+  ]);
+  return {
+    hasAccount: a.exists(),
+    passwordSet: a.exists() && a.data().passwordSet === true,
+    pending: r.exists() ? r.data() : null
+  };
+}
+
+// type: "setup" (first time) or "reset" (forgot password). One doc per student.
+export async function requestSetupCode(student, type = "setup") {
+  const ref = doc(db, "setupRequests", student.studentId);
+  if ((await getDoc(ref)).exists()) return; // already pending
+  await setDoc(ref, {
+    studentId: student.studentId,
+    name: student.name || "",
+    className: student.className || "",
+    type,
+    status: "pending",
+    createdAt: serverTimestamp()
+  });
+}
+
 /* ---------- ADMIN SIDE ---------- */
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I
 function genCode(len = 8) {
