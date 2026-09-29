@@ -210,14 +210,13 @@ async function checkRef(raw, { fromLink = false } = {}) {
     }
     referredBy = inviter.studentId;
     refHint.className = "ref-hint ok";
-    refHint.textContent = "কোডটি সঠিক";
+    refHint.textContent = "";
     banner.innerHTML = `
       <div class="inviter">
         <div class="inviter-av">${esc((inviter.name || "?").charAt(0))}</div>
         <div>
-          <small>তোমাকে আমন্ত্রণ জানিয়েছে</small>
+          <small>আমন্ত্রণ</small>
           <b>${esc(inviter.name)}</b>
-          <em>অনুমোদনের পর ${esc(inviter.name)}-এর কাছে ফ্রেন্ড রিকোয়েস্ট চলে যাবে</em>
         </div>
       </div>`;
   } catch (e) {
@@ -281,7 +280,7 @@ document.getElementById("joinForm").addEventListener("submit", async (e) => {
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
         <p style="font-weight:800; font-size:1.1rem; color:var(--text-primary); margin-bottom:8px;">আবেদন সফলভাবে পাঠানো হয়েছে</p>
-        <p class="text-sm text-muted">${referredBy ? "অ্যাডমিন অনুমোদন দিলে তোমার বন্ধুর কাছে স্বয়ংক্রিয়ভাবে ফ্রেন্ড রিকোয়েস্ট চলে যাবে, আর " : ""}অ্যাডমিন অনুমোদন দিলেই তুমি প্রথম পেজের তালিকায় নিজের নাম দেখতে পারবে। তুমি এখন এই পেজটি বন্ধ করে দিতে পারো।</p>
+        <p class="text-sm text-muted">অ্যাডমিন অনুমোদন দিলেই তালিকায় নিজের নাম দেখতে পারবে।</p>
         <a href="./index.html" class="btn-glass" style="margin-top:20px; display:inline-flex; width:auto; padding:10px 20px;">তালিকায় ফিরে যাও</a>
       </div>
     `;
