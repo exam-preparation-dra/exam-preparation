@@ -15,7 +15,7 @@
    ========================================================= */
 import { db } from "../firebase/firebase-config.js";
 import {
-  collection, addDoc, getDocs, query, where, doc, updateDoc, deleteDoc, serverTimestamp
+  collection, addDoc, getDocs, getDoc, setDoc, query, where, doc, updateDoc, deleteDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 export const MAX_FRIENDS = 50;
@@ -129,4 +129,47 @@ export async function setRival(studentId, rivalId) {
 export async function clearRival(studentId) {
   const existing = await getRival(studentId);
   if (existing) await deleteDoc(doc(db, "rivals", existing.id));
+}
+
+
+/* =========================================================
+   REFERRAL LINK -> AUTO FRIEND REQUEST
+   A student shares join.html?ref=STU-XXXX (link / QR on the profile card).
+   The newcomer applies on join.html, admin approves in admin/students.html,
+   and right after approval sendReferralFriendRequest() drops a PENDING
+   friend request from the NEW student to the ONE who invited them (the
+   inviter just taps "গ্রহণ" in Profile > বন্ধু). Fixed doc id => can never
+   be created twice for the same pair.
+   ========================================================= */
+
+// Public lookup by STU-XXXX code (students collection is publicly readable).
+// Returns { docId, studentId, name, className } or null.
+export async function findStudentByStudentId(studentId) {
+  const id = String(studentId || "").trim().toUpperCase();
+  if (!id) return null;
+  const snap = await getDocs(query(collection(db, "students"), where("studentId", "==", id)));
+  if (snap.empty) return null;
+  const d = snap.docs[0];
+  const s = d.data();
+  if (s.isActive === false) return null;
+  return { docId: d.id, studentId: s.studentId, name: s.name || s.studentId, className: s.className || "" };
+}
+
+// Called by admin right after approving a join request that carried a
+// referral code. Returns true if a request was created.
+export async function sendReferralFriendRequest(newStudentId, referrerStudentId) {
+  if (!newStudentId || !referrerStudentId || newStudentId === referrerStudentId) return false;
+  const referrer = await findStudentByStudentId(referrerStudentId);
+  if (!referrer) return false;
+  const ref = doc(db, "friendRequests", `ref_${newStudentId}_${referrer.studentId}`);
+  const existing = await getDoc(ref);
+  if (existing.exists()) return false;
+  await setDoc(ref, {
+    fromStudentId: newStudentId,
+    toStudentId: referrer.studentId,
+    status: "pending",
+    viaReferral: true,
+    createdAt: serverTimestamp()
+  });
+  return true;
 }
