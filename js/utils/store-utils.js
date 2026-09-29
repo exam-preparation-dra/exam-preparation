@@ -339,6 +339,16 @@ function randomInt(n) {
   return a[0] % n;
 }
 
+/** Claims are open only while the exam itself is valid: 7 days from its date. */
+export async function isExamClaimOpen(examId) {
+  try {
+    const snap = await getDoc(doc(db, "exams", examId));
+    if (!snap.exists()) return false;
+    const ms = snap.data()?.examDate?.toMillis?.();
+    return Number.isFinite(ms) && Date.now() < ms + 7 * 24 * 60 * 60 * 1000;
+  } catch { return false; }
+}
+
 /** The claim this student already made for this exam, or null. */
 export async function getExamClaim(examId, studentId) {
   if (!examId || !studentId) return null;
@@ -349,11 +359,13 @@ export async function getExamClaim(examId, studentId) {
 /**
  * Claim the free card(s) for one exam. Throws:
  *   NO_RESULT        -- this student has no submission for the exam
+ *   CLAIM_EXPIRED    -- the exam's 7-day window is over
  *   ALREADY_CLAIMED  -- already claimed (err.claim holds the earlier claim)
  * Returns { cards: [itemId...], isTop, count }.
  */
 export async function claimExamCards(examId, studentId) {
   if (!examId || !studentId) throw new Error("NO_RESULT");
+  if (!(await isExamClaimOpen(examId))) throw new Error("CLAIM_EXPIRED");
 
   const snap = await getDocs(query(collection(db, "results"), where("examId", "==", examId)));
   const rows = snap.docs.map(d => d.data());
