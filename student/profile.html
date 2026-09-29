@@ -67,13 +67,12 @@
   .pf-srow span { font-size: .76rem; font-weight: 800; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pf-srow b { font-family: var(--font-num); font-size: .78rem; font-weight: 800; text-align: right; color: var(--color-accent); }
 
-  /* invite */
-  .pf-invite { border-color: rgba(var(--color-accent-rgb), .3); background: linear-gradient(140deg, rgba(var(--color-accent-rgb), .1), var(--surface) 60%); }
-  .pf-code { display: inline-block; margin: 2px 0 12px; padding: 6px 12px; border-radius: 10px; background: var(--surface); border: 1px dashed rgba(var(--color-accent-rgb), .55); font-family: var(--font-num); font-weight: 800; letter-spacing: .08em; color: var(--color-accent); }
-  .pf-link { padding: 10px 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--surface-border); font-size: .72rem; font-weight: 700; color: var(--text-secondary); word-break: break-all; margin-bottom: 12px; direction: ltr; }
-  .pf-invite p { font-size: .78rem; line-height: 1.6; color: var(--text-secondary); font-weight: 600; }
-  .pf-invite .row { display: flex; gap: 8px; }
-  .pf-invite .row .pf-btn { flex: 1; }
+  /* scan card */
+  .pf-scan { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 22px 18px; }
+  .pf-qr { width: 176px; height: 176px; padding: 12px; border-radius: 22px; background: #fff; border: 1px solid var(--surface-border); box-shadow: var(--shadow-soft); display: grid; place-items: center; }
+  .pf-qr img { display: block; width: 100%; height: 100%; }
+  .pf-qr .spinner { margin: 0; }
+  .pf-scan-lbl { font-size: .78rem; font-weight: 900; letter-spacing: .32em; text-indent: .32em; color: var(--color-accent); }
 
   /* ---------- badges ---------- */
   .pf-bsum { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -548,7 +547,7 @@ async function fetchData() {
   return { results, rank, overall, subjectStats, badges };
 }
 
-const referralLink = () => new URL(`../join.html?ref=${encodeURIComponent(student.studentId)}`, window.location.href).href;
+const referralLink = () => new URL(`../invite.html?ref=${encodeURIComponent(student.studentId)}`, window.location.href).href;
 
 async function copyText(text) {
   try { await navigator.clipboard.writeText(text); return true; }
@@ -599,7 +598,7 @@ function renderPage() {
       <section id="tab-overview" class="tab-content pf-pane active">
         <div class="pf-card" id="recordsSection"><div class="spinner" style="margin:18px auto"></div></div>
         <div class="pf-card" id="strengthSection" style="display:none"></div>
-        <div class="pf-card pf-invite" id="inviteSection"></div>
+        <div class="pf-card pf-scan" id="inviteSection"></div>
       </section>
 
       <section id="tab-badges" class="tab-content pf-pane">
@@ -666,7 +665,7 @@ function renderHeroShell() {
     </div>
     <div class="pf-actions">
       <button class="pf-btn primary" id="shareProfileBtn" type="button">${ICON.share}প্রোফাইল শেয়ার</button>
-      <button class="pf-btn" id="copyLinkBtn" type="button">${ICON.link}আমন্ত্রণ লিংক</button>
+      <button class="pf-btn" id="copyLinkBtn" type="button">${ICON.link}লিংক কপি</button>
     </div>`;
   $("shareProfileBtn").addEventListener("click", openShareChoice);
   $("copyLinkBtn").addEventListener("click", async () => showToast(await copyText(referralLink()) ? "লিংক কপি হয়েছে" : "কপি করা যায়নি", "success"));
@@ -714,26 +713,16 @@ function renderStrength(d) {
     </div>`;
 }
 
-function renderInvite() {
-  const link = referralLink();
-  $("inviteSection").innerHTML = `
-    <div class="pf-head"><div><h2 class="pf-h">বন্ধুকে আমন্ত্রণ করো</h2><div class="pf-note">তোমার রেফারেল কোড ও লিংক</div></div></div>
-    <div class="pf-code">${esc(student.studentId)}</div>
-    <div class="pf-link">${esc(link)}</div>
-    <p>প্রোফাইল শেয়ার করলে PDF/ছবির সাথে এই লিংক আর QR কোড যায়। বন্ধু লিংকে ট্যাপ করলে যুক্ত হওয়ার পেজ খুলবে আর তোমার কোড নিজে থেকে বসে যাবে। অ্যাডমিন অনুমোদন দিলে তার ফ্রেন্ড রিকোয়েস্ট সরাসরি তোমার কাছে আসবে।</p>
-    <div class="row" style="margin-top:14px">
-      <button class="pf-btn" id="inviteCopy" type="button">${ICON.link}লিংক কপি</button>
-      <button class="pf-btn primary" id="inviteShare" type="button">${ICON.share}লিংক পাঠাও</button>
-    </div>`;
-  $("inviteCopy").addEventListener("click", async () => showToast(await copyText(link) ? "লিংক কপি হয়েছে" : "কপি করা যায়নি", "success"));
-  $("inviteShare").addEventListener("click", async () => {
-    const text = inviteText(link);
-    if (navigator.share) { try { await navigator.share({ title: "পরীক্ষা প্রস্তুতি", text }); return; } catch (e) { if (e && e.name === "AbortError") return; } }
-    showToast(await copyText(text) ? "মেসেজ কপি হয়েছে, পেস্ট করে পাঠাও" : "শেয়ার করা যায়নি", "success");
-  });
+async function renderInvite() {
+  const el = $("inviteSection");
+  el.innerHTML = `<div class="pf-qr"><div class="spinner"></div></div><div class="pf-scan-lbl">SCAN</div>`;
+  const qr = await makeQr(referralLink(), 320);
+  const box = el.querySelector(".pf-qr");
+  if (box) box.innerHTML = qr ? `<img src="${qr}" alt="QR">` : "";
 }
 
-const inviteText = link => `${student.name} তোমাকে পরীক্ষার প্রস্তুতিতে যুক্ত হতে ডাকছে।\nএই লিংকে ট্যাপ করে আবেদন করো (রেফারেল কোড ${student.studentId}):\n${link}`;
+// what goes along with the shared file / gets copied: just the link
+const inviteText = link => link;
 
 /* ---------- badges ---------- */
 let badgeFilter = null;   // null = choose a sensible default on first render
@@ -953,8 +942,8 @@ function openShareChoice() {
   overlay.className = "pf-modal";
   overlay.innerHTML = `
     <div class="pf-modal-card" style="--rc:var(--color-accent)">
-      <h3 style="margin-bottom:6px">প্রোফাইল শেয়ার করো</h3>
-      <p style="font-size:.78rem;line-height:1.6;font-weight:600;color:var(--text-secondary);margin-bottom:16px">কার্ডের সাথে তোমার আমন্ত্রণ লিংক আর QR কোড যাবে। বন্ধু ট্যাপ করলেই যুক্ত হওয়ার পেজ খুলবে, তোমার কোড নিজে থেকে বসে যাবে।</p>
+      <h3 style="margin-bottom:16px">প্রোফাইল শেয়ার করো</h3>
+      
       <div style="display:flex;gap:10px">
         <button type="button" class="pf-btn" id="choosePngBtn" style="flex:1">ছবি (PNG)</button>
         <button type="button" class="pf-btn primary" id="choosePdfBtn" style="flex:1">PDF</button>
@@ -968,7 +957,7 @@ function openShareChoice() {
   overlay.querySelector("#choosePdfBtn").addEventListener("click", () => { overlay.remove(); generateProfileCard("pdf"); });
 }
 
-function makeQr(text, size = 132) {
+function makeQr(text, size = 320) {
   return new Promise(resolve => {
     if (typeof QRCode === "undefined") return resolve("");
     const box = document.createElement("div");
@@ -984,69 +973,61 @@ function makeQr(text, size = 132) {
   });
 }
 
-function buildProfileCardHtml(d, qrUrl, link) {
+function buildProfileCardHtml(d, qrUrl) {
   const xp = Number(d.rank?.totalPoints || 0);
   const lv = getLevelInfo(xp);
   const got = d.badges.filter(b => b.earned);
-  const rankText = d.rank?.rank ? `#${d.rank.rank}${d.rank.totalStudents ? ` / ${d.rank.totalStudents}` : ""}` : "—";
-  const gold = "#d4a244";
-  const initial = esc((student.name || "?").charAt(0));
-  const avatar = student.photoURL
-    ? `<img id="cardPhoto" src="${esc(student.photoURL)}" crossorigin="anonymous" style="width:100px;height:100px;border-radius:50%;object-fit:cover;margin:16px auto 12px;display:block;border:3px solid ${gold};box-shadow:0 0 0 5px rgba(212,162,68,.15);">`
-    : "";
-  const fallback = `<div id="cardAvatarFb" style="${student.photoURL ? "display:none;" : ""}width:100px;height:100px;border-radius:50%;margin:16px auto 12px;background:linear-gradient(145deg,#e8c988,${gold});align-items:center;justify-content:center;font-size:38px;font-weight:800;color:#1c1509;box-shadow:0 0 0 5px rgba(212,162,68,.15);${student.photoURL ? "" : "display:flex;"}">${initial}</div>`;
-  const host = link.replace(/^https?:\/\//, "");
+  const rankText = d.rank?.rank ? "#" + d.rank.rank : "—";
+  const title = xp >= 10000 ? "Physics Legend" : xp >= 5000 ? "Physics Master" : xp >= 2500 ? "Problem Solver" : xp >= 1000 ? "Concept Builder" : "Physics Explorer";
+  const initial = esc((student.name || "?").charAt(0).toUpperCase());
+  const A = "#b8863c", INK = "#21262f", MUTED = "#8d94a0", SOFT = "#5b6270", LINE = "#e5e2d9";
+  const num = "'Space Grotesk','Inter',sans-serif";
+  const metric = (v, l) => `<div style="flex:1;padding:11px 4px;text-align:center;border-radius:14px;background:#fff;border:1px solid ${LINE};">
+      <div style="font-family:${num};font-size:16px;font-weight:800;color:${INK};line-height:1.3;">${v}</div>
+      <div style="margin-top:2px;font-size:10px;font-weight:700;color:${MUTED};line-height:1.3;">${l}</div></div>`;
 
   return `
-  <div id="profileCardInner" style="width:400px;font-family:'Noto Sans Bengali','Inter',sans-serif;background:linear-gradient(160deg,#0c0a06 0%,#1c1509 55%,#0c0a06 100%);color:#fff;border-radius:26px;overflow:hidden;position:relative;">
-    <div style="height:5px;background:linear-gradient(90deg,#8a6a2a,#e8c988,#8a6a2a);"></div>
-    <div style="padding:26px 28px 16px;text-align:center;">
-      <p style="margin:0;line-height:1.4;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#e8c988;font-weight:800;">EXAM PREPARATION • STUDENT CARD</p>
-      ${avatar}${fallback}
-      <h1 style="margin:0;line-height:1.25;font-size:27px;font-weight:900;color:#fff;">${esc(student.name)}</h1>
-      <div style="margin-top:9px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
-        <span style="display:inline-block;padding:4px 12px;border-radius:999px;background:rgba(255,255,255,.08);color:#cbd5e1;font-size:11px;font-weight:700;">${esc(student.className || "CLASS NOT SET")} • ${esc(student.studentId)}</span>
-        <span style="display:inline-block;padding:4px 12px;border-radius:999px;background:rgba(212,162,68,.16);border:1px solid rgba(212,162,68,.35);color:#e8c988;font-size:11px;font-weight:800;">LEVEL ${lv.level}</span>
+  <div id="profileCardInner" style="width:400px;box-sizing:border-box;padding:16px;font-family:'Noto Sans Bengali','Inter',sans-serif;background:#f6f5f1;color:${INK};border-radius:26px;">
+
+    <div style="padding:20px;border-radius:24px;border:1px solid rgba(184,134,60,.28);background:linear-gradient(140deg,rgba(184,134,60,.16),#ffffff 64%);">
+      <div style="display:flex;gap:16px;align-items:center;">
+        <div style="position:relative;width:84px;height:84px;flex:none;border-radius:26px;overflow:hidden;background:linear-gradient(135deg,${A},#7c5a22);border:2px solid rgba(184,134,60,.45);">
+          <div id="cardAvatarFb" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:32px;font-weight:900;">${initial}</div>
+          ${student.photoURL ? `<img id="cardPhoto" src="${esc(student.photoURL)}" crossorigin="anonymous" style="position:absolute;left:0;top:0;width:84px;height:84px;object-fit:cover;display:block;">` : ""}
+        </div>
+        <div style="min-width:0;">
+          <div style="font-size:21px;font-weight:900;line-height:1.3;color:${INK};word-break:break-word;">${esc(student.name)}</div>
+          <div style="margin-top:3px;font-size:12px;font-weight:700;color:${SOFT};line-height:1.4;">${esc(student.className || "—")} · ${esc(student.studentId)}</div>
+          <div style="display:inline-block;margin-top:8px;padding:4px 10px;border-radius:999px;background:rgba(184,134,60,.12);border:1px solid rgba(184,134,60,.25);color:${A};font-size:11px;font-weight:900;line-height:1.4;">★ ${title}</div>
+        </div>
       </div>
-    </div>
 
-    <div style="margin:0 20px;background:rgba(212,162,68,.08);border-radius:18px;padding:18px;text-align:center;border:1px solid rgba(212,162,68,.22);">
-      <p style="margin:0;font-size:44px;font-weight:900;color:#e8c988;font-family:sans-serif;line-height:1;">${xp.toLocaleString()}</p>
-      <p style="margin:6px 0 0;font-size:12px;color:#cbd5e1;font-weight:700;letter-spacing:.5px;">TOTAL XP</p>
-    </div>
+      <div style="margin-top:18px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;color:${SOFT};margin-bottom:6px;line-height:1.4;">
+          <span>লেভেল ${lv.level}</span><span>${lv.isMax ? "সর্বোচ্চ লেভেল" : lv.xpNeeded.toLocaleString() + " XP বাকি"}</span>
+        </div>
+        <div style="height:8px;border-radius:99px;background:#efede4;overflow:hidden;"><div style="height:8px;width:${Math.max(3, lv.percentage)}%;border-radius:99px;background:linear-gradient(90deg,#d9a84e,${A});"></div></div>
+      </div>
 
-    <div style="display:flex;gap:8px;margin:12px 20px 0;">
-      ${[[rankText, "RANK"], [`${got.length}/${d.badges.length || 0}`, "BADGES"], [d.overall?.examsTaken || 0, "EXAMS"]].map(([v, l]) => `
-      <div style="flex:1;background:rgba(255,255,255,.06);border-radius:16px;padding:11px 6px;text-align:center;">
-        <p style="margin:0;line-height:1.3;font-size:17px;font-weight:800;color:#fff;">${v}</p>
-        <p style="margin:4px 0 0;line-height:1.3;font-size:10px;color:#94a3b8;font-weight:700;letter-spacing:.5px;">${l}</p>
-      </div>`).join("")}
+      <div style="display:flex;gap:8px;margin-top:16px;">
+        ${metric(rankText, "র‍্যাঙ্ক")}${metric(xp.toLocaleString(), "মোট XP")}${metric(d.overall?.examsTaken || 0, "পরীক্ষা")}${metric(`${got.length}/${d.badges.length || 0}`, "ব্যাজ")}
+      </div>
     </div>
 
     ${got.length ? `
-    <div style="margin:12px 20px 0;padding:12px 14px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.1);border-radius:16px;">
-      <p style="margin:0 0 9px;font-size:11px;color:#cbd5e1;font-weight:800;text-align:left;">অর্জিত ব্যাজ</p>
+    <div style="margin-top:12px;padding:16px;border-radius:20px;background:#fff;border:1px solid ${LINE};">
+      <div style="font-size:13px;font-weight:900;color:${INK};margin-bottom:11px;line-height:1.4;">অর্জিত ব্যাজ</div>
       <div style="display:flex;flex-wrap:wrap;gap:7px;">
-        ${got.slice(0, 8).map(b => `<span style="padding:6px 10px;border-radius:999px;background:rgba(212,162,68,.16);border:1px solid rgba(212,162,68,.32);color:#e8c988;font-size:10px;font-weight:800;">${esc(b.title)}</span>`).join("")}
-        ${got.length > 8 ? `<span style="padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.06);color:#94a3b8;font-size:10px;font-weight:800;">+${got.length - 8} আরও</span>` : ""}
+        ${got.slice(0, 8).map(b => `<span style="padding:6px 11px;border-radius:999px;background:rgba(184,134,60,.12);border:1px solid rgba(184,134,60,.28);color:#8a6222;font-size:11px;font-weight:800;line-height:1.4;">${esc(b.title)}</span>`).join("")}
+        ${got.length > 8 ? `<span style="padding:6px 11px;border-radius:999px;background:#efede4;color:${SOFT};font-size:11px;font-weight:800;line-height:1.4;">+${got.length - 8}</span>` : ""}
       </div>
     </div>` : ""}
 
-    <div id="cardCta" style="display:flex;align-items:center;gap:14px;margin:14px 20px 0;padding:14px;border-radius:18px;background:#fffaf0;color:#1c1509;">
-      ${qrUrl ? `<img src="${qrUrl}" style="width:96px;height:96px;flex:none;border-radius:10px;display:block;background:#fff;">` : ""}
-      <div style="min-width:0;text-align:left;">
-        <p style="margin:0;font-size:15px;font-weight:900;line-height:1.35;">আমার সাথে যুক্ত হও</p>
-        <p style="margin:3px 0 8px;font-size:11px;font-weight:600;line-height:1.5;color:#5b5240;">QR স্ক্যান করো বা লিংকে ট্যাপ করো — রেফারেল কোড নিজে থেকে বসে যাবে।</p>
-        <span style="display:inline-block;padding:4px 10px;border-radius:8px;background:#1c1509;color:#e8c988;font-size:12px;font-weight:800;letter-spacing:1px;font-family:sans-serif;">${esc(student.studentId)}</span>
-        <p style="margin:7px 0 0;font-size:9px;font-weight:700;color:#8a7a55;word-break:break-all;font-family:sans-serif;">${esc(host)}</p>
-      </div>
-    </div>
-
-    <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin:16px 0 18px;">
-      <span style="width:5px;height:5px;border-radius:50%;background:#8a6a2a;"></span>
-      <p style="margin:0;font-size:10px;color:#7d7362;font-weight:700;letter-spacing:.5px;">${new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</p>
-      <span style="width:5px;height:5px;border-radius:50%;background:#8a6a2a;"></span>
-    </div>
+    ${qrUrl ? `
+    <div id="cardCta" style="margin-top:12px;padding:20px 16px 18px;border-radius:20px;background:#fff;border:1px solid ${LINE};text-align:center;">
+      <div style="display:inline-block;padding:12px;border-radius:20px;background:#fff;border:1px solid ${LINE};line-height:0;"><img src="${qrUrl}" style="width:148px;height:148px;display:block;"></div>
+      <div style="margin-top:12px;font-size:13px;font-weight:900;letter-spacing:.32em;text-indent:.32em;color:${A};line-height:1.4;">SCAN</div>
+    </div>` : ""}
   </div>`;
 }
 
@@ -1058,16 +1039,16 @@ async function generateProfileCard(format) {
   try {
     const d = await loadData();
     const link = referralLink();
-    const qrUrl = await makeQr(link);
+    const qrUrl = await makeQr(link, 320);
 
     const area = $("shareCardArea");
-    area.innerHTML = buildProfileCardHtml(d, qrUrl, link);
+    area.innerHTML = buildProfileCardHtml(d, qrUrl);
 
     // photo: if it can't load (blocked / bad link), fall back to the initial — never a broken image
     const photo = area.querySelector("#cardPhoto");
     if (photo) {
       await new Promise(res => { if (photo.complete) return res(); photo.onload = res; photo.onerror = res; });
-      if (!photo.naturalWidth) { photo.remove(); area.querySelector("#cardAvatarFb").style.display = "flex"; }
+      if (!photo.naturalWidth) photo.remove();
     }
     try { await document.fonts.load('800 14px "Noto Sans Bengali"', "অআক"); await document.fonts.ready; } catch {}
 
@@ -1104,7 +1085,7 @@ async function generateProfileCard(format) {
     // Fallback (desktop / browsers that can't share files): save the file + copy the invite link
     const a = document.createElement("a"); a.href = dataUrl; a.download = file.name; a.click();
     const copied = await copyText(text);
-    showToast(copied ? "ফাইল সেভ হয়েছে, আমন্ত্রণ মেসেজ কপি হয়েছে — সাথে পেস্ট করে পাঠাও" : "ফাইল সেভ হয়েছে", "success");
+    showToast(copied ? "ফাইল সেভ হয়েছে, লিংক কপি হয়েছে" : "ফাইল সেভ হয়েছে", "success");
   } catch (err) {
     console.error("Profile card failed", err);
     showToast("কার্ড তৈরি করা যায়নি।", "error");
