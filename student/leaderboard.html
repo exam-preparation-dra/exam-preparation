@@ -7,109 +7,66 @@
 <link rel="stylesheet" href="../css/style.css">
 <style>
   @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration:.001ms!important; transition-duration:.001ms!important; } }
+  .lx { display:flex; flex-direction:column; gap:12px; }
+  .lx-ico { width:14px; height:14px; flex:none; }
+  .lx-card { background:var(--surface); border:1px solid var(--surface-border); border-radius:16px; padding:6px 12px; }
+  .lx-empty { text-align:center; color:var(--text-muted); font-size:.82rem; padding:26px 10px; }
+  .lx-title { font-size:.74rem; font-weight:800; color:var(--text-muted); margin:6px 2px -4px; }
 
-  .lx { display:flex; flex-direction:column; gap:14px; }
-  .lx-ico { width:16px; height:16px; flex:none; }
-  .lx-card { background:var(--surface); border:1px solid var(--surface-border); border-radius:var(--radius-xl); padding:16px; box-shadow:var(--shadow-soft); }
-  .lx-h { font-size:1rem; font-weight:800; }
-  .lx-note { font-size:.74rem; color:var(--text-muted); margin-top:2px; line-height:1.5; }
-  .lx-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
-  .lx-empty { text-align:center; color:var(--text-muted); font-size:.82rem; padding:22px 10px; line-height:1.6; }
-
-  /* buttons */
-  .lx-btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:10px 14px; border-radius:12px; border:1px solid var(--surface-border); background:var(--surface-solid); color:var(--text-primary); font:inherit; font-size:.8rem; font-weight:700; cursor:pointer; text-decoration:none; white-space:nowrap; }
-  .lx-btn:active { transform:scale(.98); }
+  .lx-btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:9px 14px; border-radius:11px; border:1px solid var(--surface-border); background:var(--surface-solid); color:var(--text-primary); font:inherit; font-size:.78rem; font-weight:700; cursor:pointer; text-decoration:none; white-space:nowrap; }
   .lx-btn.primary { background:var(--color-accent); border-color:var(--color-accent); color:#fff; }
-  .lx-btn.danger { color:var(--color-danger); border-color:rgba(166,64,47,.35); background:transparent; }
   .lx-btn.ok { background:var(--color-success); border-color:var(--color-success); color:#fff; }
-  .lx-btn.sm { padding:7px 11px; font-size:.72rem; border-radius:10px; }
+  .lx-btn.danger { color:var(--color-danger); background:transparent; }
+  .lx-btn.sm { padding:6px 11px; font-size:.72rem; border-radius:9px; }
   .lx-btn[disabled] { opacity:.5; cursor:default; }
 
-  /* hero */
-  .lx-hero { display:flex; flex-direction:column; gap:12px; }
-  .lx-me { display:flex; align-items:center; gap:12px; }
-  .lx-me-rank { margin-left:auto; text-align:right; }
-  .lx-me-rank b { display:block; font-family:var(--font-num); font-size:1.9rem; line-height:1; color:var(--color-accent); }
-  .lx-me-rank span { font-size:.68rem; color:var(--text-muted); font-weight:700; }
-  .lx-me-name { font-weight:800; font-size:1.02rem; line-height:1.2; }
-  .lx-me-sub { font-size:.74rem; color:var(--text-muted); margin-top:2px; }
-  .lx-lv { display:flex; justify-content:space-between; font-size:.72rem; font-weight:700; color:var(--text-secondary); margin-bottom:5px; }
-  .lx-bar { height:8px; border-radius:99px; background:var(--surface-edge); overflow:hidden; }
-  .lx-bar i { display:block; height:100%; background:var(--color-accent); border-radius:99px; }
-  .lx-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
-  .lx-stat { background:var(--surface-highlight); border:1px solid var(--surface-edge); border-radius:12px; padding:10px 6px; text-align:center; }
-  .lx-stat b { display:block; font-family:var(--font-num); font-size:1.05rem; }
-  .lx-stat span { font-size:.66rem; color:var(--text-muted); font-weight:700; }
-
-  /* avatar */
   .lx-av { position:relative; flex:none; border-radius:50%; background:var(--color-accent); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-weight:800; overflow:hidden; }
   .lx-av img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 
-  /* segmented controls */
-  .lx-seg { display:flex; gap:4px; padding:4px; border-radius:14px; background:var(--surface-edge); border:1px solid var(--surface-border); }
-  .lx-seg button { flex:1; position:relative; padding:9px 6px; border:0; border-radius:10px; background:transparent; color:var(--text-secondary); font:inherit; font-size:.8rem; font-weight:700; cursor:pointer; }
+  .lx-me { display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--surface); border:1px solid var(--surface-border); border-radius:16px; }
+  .lx-me b { font-size:.92rem; display:block; }
+  .lx-me small { font-size:.72rem; color:var(--text-muted); }
+  .lx-me .r { margin-left:auto; text-align:right; }
+  .lx-me .r b { font-family:var(--font-num); font-size:1.2rem; color:var(--color-accent); }
+
+  .lx-seg { display:flex; gap:3px; padding:3px; border-radius:12px; background:var(--surface-edge); }
+  .lx-seg button { flex:1; padding:8px 4px; border:0; border-radius:9px; background:transparent; color:var(--text-secondary); font:inherit; font-size:.8rem; font-weight:700; cursor:pointer; }
   .lx-seg button.on { background:var(--surface-solid); color:var(--text-primary); box-shadow:var(--shadow-soft); }
-  .lx-dot { display:inline-flex; align-items:center; justify-content:center; min-width:17px; height:17px; padding:0 5px; margin-left:5px; border-radius:99px; background:var(--color-danger); color:#fff; font-size:.62rem; font-weight:800; }
-  .lx-chips { display:flex; gap:6px; overflow-x:auto; padding-bottom:2px; }
-  .lx-chip { flex:none; padding:7px 13px; border-radius:99px; border:1px solid var(--surface-border); background:var(--surface-solid); color:var(--text-secondary); font:inherit; font-size:.76rem; font-weight:700; cursor:pointer; }
+  .lx-dot { display:inline-block; min-width:16px; height:16px; line-height:16px; padding:0 4px; margin-left:4px; border-radius:99px; background:var(--color-danger); color:#fff; font-size:.62rem; font-weight:800; }
+  .lx-filters { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+  .lx-chip { padding:6px 12px; border-radius:99px; border:1px solid var(--surface-border); background:var(--surface-solid); color:var(--text-secondary); font:inherit; font-size:.74rem; font-weight:700; cursor:pointer; }
   .lx-chip.on { background:var(--color-accent); border-color:var(--color-accent); color:#fff; }
+  .lx-sel, .lx-inp { padding:9px 12px; border-radius:11px; border:1px solid var(--surface-border); background:var(--surface-solid); color:inherit; font:inherit; font-size:.85rem; }
+  .lx-inp { width:100%; }
 
-  /* podium */
-  .lx-podium { display:grid; grid-template-columns:1fr 1.12fr 1fr; gap:8px; align-items:end; }
-  .lx-pod { text-align:center; background:var(--surface); border:1px solid var(--surface-border); border-radius:16px; padding:12px 6px 12px; cursor:pointer; box-shadow:var(--shadow-soft); }
-  .lx-pod.first { padding-top:16px; border-color:rgba(var(--color-accent-rgb),.5); box-shadow:var(--shadow-glow); }
-  .lx-pod .lx-av { margin:0 auto 6px; }
-  .lx-pod-n { font-size:.78rem; font-weight:800; line-height:1.25; word-break:break-word; }
-  .lx-pod-x { font-family:var(--font-num); font-weight:800; font-size:.86rem; color:var(--color-accent); margin-top:3px; }
-  .lx-pos { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; font-family:var(--font-num); font-size:.78rem; font-weight:800; background:var(--surface-edge); color:var(--text-secondary); margin-bottom:6px; }
-  .lx-pos.p1 { background:#c99a3b; color:#fff; } .lx-pos.p2 { background:#8d94a0; color:#fff; } .lx-pos.p3 { background:#a7683c; color:#fff; }
-
-  /* list rows */
-  .lx-row { display:flex; align-items:center; gap:11px; padding:11px 6px; border-top:1px solid var(--surface-edge); cursor:pointer; border-radius:10px; }
+  .lx-row { display:flex; align-items:center; gap:10px; padding:10px 2px; border-top:1px solid var(--surface-edge); cursor:pointer; }
   .lx-row:first-child { border-top:0; }
-  .lx-row.me { background:rgba(var(--color-accent-rgb),.09); }
-  .lx-rk { width:28px; text-align:center; font-family:var(--font-num); font-weight:800; color:var(--text-muted); font-size:.9rem; flex:none; }
-  .lx-nm { font-weight:700; font-size:.88rem; line-height:1.25; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-  .lx-sub { font-size:.7rem; color:var(--text-muted); margin-top:2px; }
-  .lx-val { margin-left:auto; text-align:right; flex:none; }
-  .lx-val b { display:block; font-family:var(--font-num); font-size:.95rem; }
-  .lx-val small { font-size:.62rem; color:var(--text-muted); font-weight:700; }
-  .lx-tag { font-size:.62rem; font-weight:800; padding:2px 7px; border-radius:99px; background:var(--color-accent); color:#fff; }
-  .lx-tag.fr { background:rgba(47,125,94,.14); color:var(--color-success); }
-  .lx-mv { display:inline-flex; align-items:center; gap:2px; font-size:.66rem; font-weight:800; }
+  .lx-row.me { background:rgba(var(--color-accent-rgb),.09); margin:0 -8px; padding-left:10px; padding-right:10px; border-radius:10px; }
+  .lx-rk { width:24px; text-align:center; font-family:var(--font-num); font-weight:800; color:var(--text-muted); font-size:.85rem; flex:none; }
+  .lx-rk.t1 { color:#c99a3b; } .lx-rk.t2 { color:#8d94a0; } .lx-rk.t3 { color:#a7683c; }
+  .lx-nm { font-weight:700; font-size:.86rem; line-height:1.25; }
+  .lx-sub { font-size:.68rem; color:var(--text-muted); margin-top:1px; }
+  .lx-val { margin-left:auto; text-align:right; flex:none; font-family:var(--font-num); font-weight:800; font-size:.9rem; }
+  .lx-tag { font-size:.6rem; font-weight:800; padding:2px 6px; border-radius:99px; background:var(--color-accent); color:#fff; margin-left:5px; vertical-align:1px; }
+  .lx-mv { font-size:.64rem; font-weight:800; margin-left:4px; }
   .lx-mv.up { color:var(--color-success); } .lx-mv.down { color:var(--color-danger); }
-
-  /* awards */
-  .lx-awards { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; }
-  .lx-award { flex:none; width:128px; background:var(--surface-highlight); border:1px solid var(--surface-edge); border-radius:14px; padding:11px 10px; cursor:pointer; }
-  .lx-award small { display:block; font-size:.64rem; font-weight:800; color:var(--color-accent); letter-spacing:.2px; }
-  .lx-award b { display:block; font-size:.82rem; margin:4px 0 2px; line-height:1.25; }
-  .lx-award span { font-size:.7rem; color:var(--text-muted); font-weight:700; }
-
-  /* challenge cards */
-  .lx-ch { border-top:1px solid var(--surface-edge); padding:12px 0; }
-  .lx-ch:first-of-type { border-top:0; }
-  .lx-ch-top { display:flex; align-items:center; gap:10px; }
-  .lx-ch-txt { font-size:.74rem; color:var(--text-secondary); margin-top:8px; line-height:1.55; }
-  .lx-ch-act { display:flex; gap:8px; margin-top:10px; }
-  .lx-badge { margin-left:auto; flex:none; font-size:.66rem; font-weight:800; padding:4px 10px; border-radius:99px; background:var(--surface-edge); color:var(--text-secondary); }
+  .lx-badge { margin-left:auto; flex:none; font-size:.66rem; font-weight:800; padding:3px 9px; border-radius:99px; background:var(--surface-edge); color:var(--text-secondary); }
   .lx-badge.win { background:rgba(47,125,94,.14); color:var(--color-success); }
   .lx-badge.lose { background:rgba(166,64,47,.12); color:var(--color-danger); }
   .lx-badge.wait { background:rgba(var(--color-accent-rgb),.14); color:var(--color-accent); }
-  .lx-h2h { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
-  .lx-steps { margin:0; padding-left:18px; font-size:.78rem; color:var(--text-secondary); line-height:1.75; }
+  .lx-acts { display:flex; gap:6px; margin-left:auto; flex:none; }
 
-  /* sheet + modal */
-  .lx-ov { position:fixed; inset:0; z-index:9000; background:rgba(15,15,20,.55); display:flex; align-items:flex-end; justify-content:center; }
-  .lx-sheet { width:100%; max-width:520px; max-height:88vh; overflow:auto; background:var(--surface-solid); border-radius:22px 22px 0 0; padding:18px 18px calc(22px + env(safe-area-inset-bottom)); box-shadow:0 -12px 40px rgba(0,0,0,.3); }
+  .lx-top { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .lx-rec { font-size:.8rem; font-weight:700; color:var(--text-secondary); }
+
+  .lx-ov { position:fixed; inset:0; z-index:9000; background:rgba(15,15,20,.5); display:flex; align-items:flex-end; justify-content:center; }
+  .lx-sheet { width:100%; max-width:480px; background:var(--surface-solid); border-radius:18px 18px 0 0; padding:16px 16px calc(18px + env(safe-area-inset-bottom)); }
   .lx-ov.center { align-items:center; padding:16px; }
-  .lx-ov.center .lx-sheet { border-radius:20px; }
-  .lx-grab { width:40px; height:4px; border-radius:99px; background:var(--surface-border); margin:0 auto 14px; }
-  .lx-acts { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px; }
-  .lx-acts .full { grid-column:1 / -1; }
-  .lx-sel { width:100%; padding:12px 14px; border-radius:12px; border:1.5px solid var(--surface-border); background:var(--surface-solid); color:inherit; font:inherit; font-size:.9rem; margin-bottom:10px; }
-  .lx-lbl { font-size:.74rem; font-weight:800; color:var(--text-secondary); margin-bottom:6px; display:block; }
-  .lx-info { background:rgba(var(--color-accent-rgb),.10); border-radius:12px; padding:11px 13px; font-size:.76rem; line-height:1.6; color:var(--text-secondary); margin-bottom:12px; }
+  .lx-ov.center .lx-sheet { border-radius:18px; }
+  .lx-sheet .lx-inp, .lx-sheet .lx-sel { width:100%; margin-bottom:10px; }
+  .lx-sheet-h { font-weight:800; margin-bottom:12px; }
+  .lx-list { display:flex; flex-direction:column; gap:8px; }
+  .lx-list .lx-btn { width:100%; padding:12px; }
 </style>
 </head>
 <body>
@@ -123,8 +80,7 @@ import { buildLeaderboardRows, getUpcomingExams, getAllApprovedResults } from ".
 import { getBattleXPMap } from "../js/utils/battle-utils.js?v=roomcard1";
 import { getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival, setRival, clearRival } from "../js/utils/friend-utils.js";
 import { getIncomingChallenges, getOutgoingChallenges, sendChallenge, acceptChallenge, rejectChallenge, cancelChallenge, resolveCompletedChallenges, getChallengeBonusMap, CHALLENGE_REWARDS } from "../js/utils/challenge-utils.js";
-import { buildStudentExtras, computeRankMovement, getHeadToHeadMap, buildAwards, getCheerData, sendCheer, CHEER_TYPES, toMillis, DAY_MS } from "../js/utils/friend-stats-utils.js";
-import { getLevelInfo } from "../js/utils/xp-utils.js";
+import { buildStudentExtras, computeRankMovement, getHeadToHeadMap, getCheerData, sendCheer, toMillis, DAY_MS } from "../js/utils/friend-stats-utils.js";
 import { getCompletedImprovementAttemptsByStudent } from "../js/utils/improvement-xp-integration.js";
 
 initTheme();
@@ -133,6 +89,7 @@ let student = getActiveStudent();
 
 /* ---------------- state ---------------- */
 const S = {
+  q: "",
   tab: "rank",            // rank | challenges | friends
   scope: "overall",       // overall | batch | friends
   period: "all",          // all | week
@@ -140,7 +97,7 @@ const S = {
   students: [], studentMap: {}, results: [], rows: [], extras: {}, movement: {}, overallRank: {},
   friendIds: [], incoming: [], outgoing: [], inChalls: [], outChalls: [], h2h: {},
   challengeBonusMap: {}, improvementResultsMap: {}, battleXPMap: {},
-  rivalId: null, cheers: { received: [], sentToday: new Set() }
+  rivalId: null, q: "", cheers: { received: [], sentToday: new Set() }
 };
 const NO_BATCH = "ব্যাচ নেই";
 let examsCache = null;
@@ -247,26 +204,10 @@ function renderAll() { renderHero(); renderTabs(); renderBody(); }
 
 function renderHero() {
   const r = S.rows.find(x => x.studentId === me());
-  const xp = num(r?.totalPoints), lv = getLevelInfo(xp), ex = S.extras[me()] || {};
   const rank = S.overallRank[me()];
-  document.getElementById("lxHero").innerHTML = `<div class="lx-card lx-hero">
-    <div class="lx-me">
-      ${avatar(student, 48)}
-      <div style="min-width:0">
-        <div class="lx-me-name">${esc(student.name)}</div>
-        <div class="lx-me-sub">${esc(student.className || "ব্যাচ নেই")} · ${esc(student.studentId)}</div>
-      </div>
-      <div class="lx-me-rank"><b>${rank ? "#" + rank : "—"}</b><span>${S.rows.length ? `মোট ${S.rows.length} জনের মধ্যে` : "র‍্যাঙ্ক নেই"}</span></div>
-    </div>
-    <div>
-      <div class="lx-lv"><span>লেভেল ${lv.level}</span><span>${lv.isMax ? "সর্বোচ্চ লেভেল" : `পরের লেভেলে ${fmt(lv.xpNeeded)} XP বাকি`}</span></div>
-      <div class="lx-bar"><i style="width:${Math.max(3, lv.percentage)}%"></i></div>
-    </div>
-    <div class="lx-stats">
-      <div class="lx-stat"><b>${fmt(xp)}</b><span>মোট XP</span></div>
-      <div class="lx-stat"><b>${fmt(ex.weeklyXP)}</b><span>এই সপ্তাহে XP</span></div>
-      <div class="lx-stat"><b>${num(ex.streak)}</b><span>সাপ্তাহিক স্ট্রিক</span></div>
-    </div></div>`;
+  document.getElementById("lxHero").innerHTML = `<div class="lx-me">${avatar(student, 38)}
+    <div style="min-width:0"><b>${esc(student.name)}</b><small>${esc(student.className || "")}</small></div>
+    <div class="r"><b>${rank ? "#" + rank : "-"}</b><br><small>${fmt(r?.totalPoints)} XP</small></div></div>`;
 }
 
 function renderTabs() {
@@ -276,42 +217,27 @@ function renderTabs() {
 }
 
 function renderBody() {
-  const el = document.getElementById("lxBody");
-  el.innerHTML = S.tab === "challenges" ? viewChallenges() : S.tab === "friends" ? viewFriends() : viewRank();
+  document.getElementById("lxBody").innerHTML = S.tab === "challenges" ? viewChallenges() : S.tab === "friends" ? viewFriends() : viewRank();
 }
 
 /* ---- ranking ---- */
 function viewRank() {
   const rows = scopeRows();
   const batches = [...new Set(S.rows.map(batchOf))].filter(b => b !== NO_BATCH).sort();
-  const seg = (group, items) => `<div class="lx-seg">${items.map(([k, t]) => `<button class="${S[group] === k ? "on" : ""}" data-act="${group}" data-id="${k}">${t}</button>`).join("")}</div>`;
+  const chip = (group, k, t) => `<button class="lx-chip ${S[group] === k ? "on" : ""}" data-act="${group}" data-id="${k}">${t}</button>`;
   const val = r => S.period === "week" ? weeklyXP(r.studentId) : num(r.totalPoints);
-  const unit = S.period === "week" ? "সাপ্তাহিক XP" : "XP";
-
-  const top = rows.slice(0, 3), rest = rows.slice(3);
-  const podCell = (r, pos) => r ? `<div class="lx-pod ${pos === 1 ? "first" : ""}" data-act="sheet" data-id="${esc(r.studentId)}">
-      <span class="lx-pos p${pos}">${pos}</span>${avatar(r, pos === 1 ? 54 : 44).replace('class="lx-av"', 'class="lx-av"')}
-      <div class="lx-pod-n">${esc(r.name)}</div><div class="lx-pod-x">${fmt(val(r))}</div></div>` : `<div></div>`;
-
-  const awards = buildAwards(rows, S.extras, S.movement);
-  const AW = { accuracy: ["সেরা গড়", v => Math.round(v) + "%"], streak: ["সেরা স্ট্রিক", v => v + " সপ্তাহ"], weekly: ["সাপ্তাহিক সেরা", v => fmt(v) + " XP"], perfect: ["পারফেক্ট স্কোর", v => v + "টি"], active: ["সবচেয়ে সক্রিয়", v => v + "টি পরীক্ষা"], climber: ["সেরা উন্নতি", v => "+" + v + " ধাপ"] };
-
-  return `<div style="display:flex;flex-direction:column;gap:12px">
-    ${seg("scope", [["overall", "সবাই"], ["batch", "ব্যাচ"], ["friends", "বন্ধুরা"]])}
-    ${S.scope === "batch" ? `<div class="lx-chips">${batches.map(b => `<button class="lx-chip ${S.batch === b ? "on" : ""}" data-act="batch" data-id="${esc(b)}">${esc(b)}</button>`).join("")}</div>` : ""}
-    ${seg("period", [["all", "সর্বমোট"], ["week", "এই সপ্তাহ"]])}
-    ${rows.length === 0 ? `<div class="lx-card lx-empty">${S.scope === "friends" ? "বন্ধু যোগ করলে এখানে তাদের সাথে তোমার র‍্যাঙ্কিং দেখা যাবে।" : "এখানে এখনো কেউ নেই।"}</div>` : `
-    <div class="lx-podium">${podCell(top[1], 2)}${podCell(top[0], 1)}${podCell(top[2], 3)}</div>
-    ${rest.length ? `<div class="lx-card" style="padding:6px 10px">${rest.map((r, i) => {
-      const mine = r.studentId === me(), ex = S.extras[r.studentId] || {};
-      return `<div class="lx-row ${mine ? "me" : ""}" data-act="sheet" data-id="${esc(r.studentId)}">
-        <span class="lx-rk">${i + 4}</span>${avatar(r, 40)}
-        <div style="min-width:0"><div class="lx-nm">${esc(r.name)}${mine ? `<span class="lx-tag">তুমি</span>` : isFriend(r.studentId) ? `<span class="lx-tag fr">বন্ধু</span>` : ""}</div>
-        <div class="lx-sub">${esc(batchOf(r))} · লেভেল ${r.level ?? 1}${num(ex.streak) ? ` · স্ট্রিক ${ex.streak}` : ""}</div></div>
-        <div class="lx-val"><b>${fmt(val(r))}</b><small>${unit}</small>${S.period === "all" ? `<div>${mvChip(S.movement[r.studentId])}</div>` : ""}</div></div>`;
-    }).join("")}</div>` : ""}
-    ${awards.length ? `<div class="lx-card"><div class="lx-head"><div><div class="lx-h">হল অফ ফেম</div><div class="lx-note">এই তালিকার সেরারা</div></div></div>
-      <div class="lx-awards">${awards.map(a => { const m = AW[a.key]; return m ? `<div class="lx-award" data-act="sheet" data-id="${esc(a.student.studentId)}"><small>${m[0]}</small><b>${esc(a.student.name)}</b><span>${m[1](a.value)}</span></div>` : ""; }).join("")}</div></div>` : ""}`}
+  return `<div style="display:flex;flex-direction:column;gap:10px">
+    <div class="lx-filters">${chip("scope", "overall", "সবাই")}${chip("scope", "batch", "ব্যাচ")}${chip("scope", "friends", "বন্ধুরা")}
+      <span style="flex:1"></span>${chip("period", "all", "সর্বমোট")}${chip("period", "week", "এই সপ্তাহ")}</div>
+    ${S.scope === "batch" ? `<select class="lx-sel" data-sel="batch">${batches.map(b => `<option value="${esc(b)}" ${S.batch === b ? "selected" : ""}>${esc(b)}</option>`).join("")}</select>` : ""}
+    ${rows.length === 0 ? `<div class="lx-card lx-empty">কেউ নেই</div>` : `<div class="lx-card">${rows.map((r, i) => {
+      const mine = r.studentId === me();
+      return `<div class="lx-row ${mine ? "me" : ""}" data-act="go" data-id="${esc(r.studentId)}">
+        <span class="lx-rk ${i < 3 ? "t" + (i + 1) : ""}">${i + 1}</span>${avatar(r, 34)}
+        <div style="min-width:0"><div class="lx-nm">${esc(r.name)}${mine ? `<span class="lx-tag">তুমি</span>` : ""}</div>
+        <div class="lx-sub">${esc(batchOf(r))}</div></div>
+        <div class="lx-val">${fmt(val(r))}${S.period === "all" ? mvChip(S.movement[r.studentId]) : ""}</div></div>`;
+    }).join("")}</div>`}
   </div>`;
 }
 
@@ -322,117 +248,80 @@ function viewChallenges() {
   const active = all.filter(c => c.status === "accepted");
   const sent = all.filter(c => c.dir === "out" && c.status === "pending");
   const hist = all.filter(c => c.status === "completed" || c.status === "expired")
-    .sort((a, b) => (toMillis(b.resolvedAt) || toMillis(b.createdAt)) - (toMillis(a.resolvedAt) || toMillis(a.createdAt))).slice(0, 15);
+    .sort((a, b) => (toMillis(b.resolvedAt) || toMillis(b.createdAt)) - (toMillis(a.resolvedAt) || toMillis(a.createdAt))).slice(0, 10);
   let w = 0, l = 0, d = 0;
   Object.values(S.h2h).forEach(x => { w += x.wins; l += x.losses; d += x.draws; });
 
-  const card = (c, actions, badge) => {
-    const oid = otherOf(c), o = S.studentMap[oid];
-    return `<div class="lx-ch"><div class="lx-ch-top">${avatar(o, 38)}
-      <div style="min-width:0"><div class="lx-nm">${esc(nameOf(oid))}</div><div class="lx-sub">${esc(c.examName || "পরবর্তী পরীক্ষা")}</div></div>
-      ${badge || ""}</div>${actions.text ? `<div class="lx-ch-txt">${actions.text}</div>` : ""}
-      ${actions.btns ? `<div class="lx-ch-act">${actions.btns}</div>` : ""}</div>`;
+  const row = (c, right) => {
+    const oid = otherOf(c);
+    return `<div class="lx-row" style="cursor:default">${avatar(S.studentMap[oid], 34)}
+      <div style="min-width:0"><div class="lx-nm">${esc(nameOf(oid))}</div><div class="lx-sub">${esc(c.examName || "পরবর্তী পরীক্ষা")}</div></div>${right}</div>`;
   };
-  const isAuto = c => !c.examId || c.examId === "__NEXT_EXAM__";
+  const sec = (title, list) => list.length ? `<div class="lx-title">${title}</div><div class="lx-card">${list.join("")}</div>` : "";
 
-  const sec = (title, note, body, count) => count ? `<div class="lx-card"><div class="lx-head"><div><div class="lx-h">${title} (${count})</div>${note ? `<div class="lx-note">${note}</div>` : ""}</div></div>${body}</div>` : "";
-
-  return `<div style="display:flex;flex-direction:column;gap:12px">
-    <div class="lx-card">
-      <div class="lx-head"><div><div class="lx-h">আমার রেকর্ড</div><div class="lx-note">সব বন্ধুর বিপক্ষে মোট ফল</div></div>
-        <button class="lx-btn primary sm" data-act="ch-new">${I.swords} নতুন চ্যালেঞ্জ</button></div>
-      <div class="lx-h2h"><div class="lx-stat"><b style="color:var(--color-success)">${w}</b><span>জিত</span></div>
-        <div class="lx-stat"><b style="color:var(--color-danger)">${l}</b><span>হার</span></div>
-        <div class="lx-stat"><b>${d}</b><span>ড্র</span></div></div>
-    </div>
-    ${sec("আসা চ্যালেঞ্জ", "গ্রহণ করলে দুজনের পরীক্ষার ফল মিলিয়ে বিজয়ী ঠিক হবে", inc.map(c => card(c, {
-      text: isAuto(c) ? "দুজনেই যে পরীক্ষা আগে দেবে, সেটার ফল ধরা হবে।" : "",
-      btns: `<button class="lx-btn ok sm" data-act="ch-accept" data-id="${c.id}">গ্রহণ করো</button><button class="lx-btn danger sm" data-act="ch-reject" data-id="${c.id}">বাদ দাও</button>`
-    }, `<span class="lx-badge wait">নতুন</span>`)).join(""), inc.length)}
-    ${sec("চলমান চ্যালেঞ্জ", "দুজনের ফল অনুমোদিত হলেই নিজে থেকে ফল ঠিক হয়ে যাবে", active.map(c => card(c, {
-      text: isAuto(c) ? "অপেক্ষা: গ্রহণের পর দুজনেই যে পরীক্ষা আগে দেবে সেটাই ধরা হবে।" : "অপেক্ষা: দুজনের পরীক্ষার ফল অনুমোদিত হওয়ার জন্য।"
-    }, `<span class="lx-badge wait">চলছে</span>`)).join(""), active.length)}
-    ${sec("পাঠানো চ্যালেঞ্জ", "উত্তরের অপেক্ষায়", sent.map(c => card(c, {
-      btns: `<button class="lx-btn danger sm" data-act="ch-cancel" data-id="${c.id}">বাতিল করো</button>`
-    }, `<span class="lx-badge">অপেক্ষমাণ</span>`)).join(""), sent.length)}
-    ${sec("আগের চ্যালেঞ্জ", "", hist.map(c => {
-      if (c.status === "expired") return card(c, { text: "সময় শেষ, কেউ সাড়া দেয়নি বা পরীক্ষা হয়নি।" }, `<span class="lx-badge">মেয়াদ শেষ</span>`);
+  const out = `
+    <div class="lx-top"><div class="lx-rec">জিত ${w} · হার ${l} · ড্র ${d}</div>
+      <button class="lx-btn primary sm" data-act="ch-new">${I.swords} নতুন চ্যালেঞ্জ</button></div>
+    ${sec("আসা চ্যালেঞ্জ", inc.map(c => row(c, `<div class="lx-acts"><button class="lx-btn ok sm" data-act="ch-accept" data-id="${c.id}">গ্রহণ</button><button class="lx-btn danger sm" data-act="ch-reject" data-id="${c.id}">বাদ</button></div>`)))}
+    ${sec("চলছে", active.map(c => row(c, `<span class="lx-badge wait">চলছে</span>`)))}
+    ${sec("পাঠানো", sent.map(c => row(c, `<div class="lx-acts"><span class="lx-badge">অপেক্ষমাণ</span><button class="lx-btn danger sm" data-act="ch-cancel" data-id="${c.id}">বাতিল</button></div>`)))}
+    ${sec("আগের", hist.map(c => {
+      if (c.status === "expired") return row(c, `<span class="lx-badge">মেয়াদ শেষ</span>`);
       const won = c.winnerStudentId === me(), lost = c.loserStudentId === me();
-      const xp = won ? num(c.winnerBonus) : lost ? num(c.loserBonus) : num(c.drawBonus);
-      const mine = c.dir === "out" ? c.fromPercentage : c.toPercentage, theirs = c.dir === "out" ? c.toPercentage : c.fromPercentage;
-      const score = (mine !== undefined && theirs !== undefined) ? `তোমার ${num(mine).toFixed(1)}% বনাম ${num(theirs).toFixed(1)}% · ` : "";
-      return card(c, { text: `${score}+${xp} XP পেয়েছো` },
-        `<span class="lx-badge ${won ? "win" : lost ? "lose" : ""}">${won ? "জিতেছো" : lost ? "হেরেছো" : "ড্র"}</span>`);
-    }).join(""), hist.length)}
-    ${!inc.length && !active.length && !sent.length && !hist.length ? `<div class="lx-card lx-empty">এখনো কোনো চ্যালেঞ্জ নেই। "নতুন চ্যালেঞ্জ" চেপে কোনো বন্ধুকে চ্যালেঞ্জ করো।</div>` : ""}
-    <div class="lx-card"><div class="lx-h" style="margin-bottom:8px">কীভাবে কাজ করে</div>
-      <ol class="lx-steps">
-        <li>শুধু বন্ধুকে চ্যালেঞ্জ করা যায়।</li>
-        <li>বন্ধু গ্রহণ করলে চ্যালেঞ্জ শুরু। নির্দিষ্ট পরীক্ষা বা "পরবর্তী পরীক্ষা" বেছে নাও।</li>
-        <li>দুজনের ফল আসলে বেশি শতাংশ যে পাবে সে জিতবে। সমান হলে প্রাপ্ত নম্বর দেখা হবে।</li>
-        <li>পুরস্কার: জিতলে +${CHALLENGE_REWARDS.winner} XP, হারলে +${CHALLENGE_REWARDS.loser} XP, ড্র হলে +${CHALLENGE_REWARDS.draw} XP।</li>
-        <li>৩ দিনে সাড়া না পেলে বা ১৪ দিনে ফল না এলে চ্যালেঞ্জ মেয়াদ শেষ হয়।</li>
-      </ol></div>
-  </div>`;
+      return row(c, `<span class="lx-badge ${won ? "win" : lost ? "lose" : ""}">${won ? "জিত" : lost ? "হার" : "ড্র"}</span>`);
+    }))}
+    ${!inc.length && !active.length && !sent.length && !hist.length ? `<div class="lx-card lx-empty">কোনো চ্যালেঞ্জ নেই</div>` : ""}`;
+  return `<div style="display:flex;flex-direction:column;gap:10px">${out}</div>`;
 }
 
 /* ---- friends ---- */
+function frStatusBtn(sid) {
+  const inc = S.incoming.find(x => x.fromStudentId === sid), out = S.outgoing.find(x => x.toStudentId === sid);
+  if (isFriend(sid)) return `<span class="lx-badge">বন্ধু</span>`;
+  if (inc) return `<button class="lx-btn ok sm" data-act="fr-accept" data-id="${inc.id}">গ্রহণ</button>`;
+  if (out) return `<span class="lx-badge">পাঠানো হয়েছে</span>`;
+  return `<button class="lx-btn primary sm" data-act="fr-add" data-id="${esc(sid)}">+ বন্ধু</button>`;
+}
+function searchResultsHtml() {
+  const q = (S.q || "").trim().toLowerCase();
+  if (!q) return "";
+  const list = S.students.filter(x => x.studentId !== me() &&
+    ((x.name || "").toLowerCase().includes(q) || (x.studentId || "").toLowerCase().includes(q) || (x.className || "").toLowerCase().includes(q))).slice(0, 8);
+  if (!list.length) return `<div class="lx-card lx-empty">পাওয়া যায়নি</div>`;
+  return `<div class="lx-card">${list.map(x => `<div class="lx-row" data-act="go" data-id="${esc(x.studentId)}">${avatar(x, 34)}
+    <div style="min-width:0"><div class="lx-nm">${esc(x.name)}</div><div class="lx-sub">${esc(x.className || "")}</div></div>
+    <div class="lx-acts" data-stop="1">${frStatusBtn(x.studentId)}</div></div>`).join("")}</div>`;
+}
 function viewFriends() {
   const friends = S.friendIds.map(id => S.studentMap[id]).filter(Boolean)
     .sort((a, b) => ((b.studentId === S.rivalId) - (a.studentId === S.rivalId)) || (num(S.overallRank[a.studentId]) || 9999) - (num(S.overallRank[b.studentId]) || 9999));
-  const cheerCount = S.cheers.received.length;
-  return `<div style="display:flex;flex-direction:column;gap:12px">
-    ${S.incoming.length ? `<div class="lx-card"><div class="lx-head"><div><div class="lx-h">বন্ধুত্বের অনুরোধ (${S.incoming.length})</div></div></div>
-      ${S.incoming.map(r => `<div class="lx-ch"><div class="lx-ch-top">${avatar(S.studentMap[r.fromStudentId], 38)}
-        <div><div class="lx-nm">${esc(nameOf(r.fromStudentId))}</div><div class="lx-sub">${esc(S.studentMap[r.fromStudentId]?.className || "")}</div></div></div>
-        <div class="lx-ch-act"><button class="lx-btn ok sm" data-act="fr-accept" data-id="${r.id}">গ্রহণ করো</button><button class="lx-btn danger sm" data-act="fr-reject" data-id="${r.id}">বাদ দাও</button></div></div>`).join("")}</div>` : ""}
-    <div class="lx-card">
-      <div class="lx-head"><div><div class="lx-h">আমার বন্ধুরা</div><div class="lx-note">${friends.length} / ${MAX_FRIENDS}${cheerCount ? ` · গত ৭ দিনে ${cheerCount}টি উৎসাহ পেয়েছো` : ""}</div></div></div>
-      ${friends.length === 0 ? `<div class="lx-empty">এখনো কোনো বন্ধু নেই।<br>র‍্যাঙ্কিং থেকে কারো নামে চেপে "বন্ধু হও" দাও।</div>` :
-      friends.map(f => { const rec = S.h2h[f.studentId], isRival = f.studentId === S.rivalId; return `<div class="lx-row" data-act="sheet" data-id="${esc(f.studentId)}">
-        ${avatar(f, 40)}<div style="min-width:0"><div class="lx-nm">${esc(f.name)}${isRival ? `<span class="lx-tag">রাইভাল</span>` : ""}</div>
-        <div class="lx-sub">${esc(f.className || "ব্যাচ নেই")}${S.overallRank[f.studentId] ? ` · র‍্যাঙ্ক #${S.overallRank[f.studentId]}` : ""}${rec ? ` · ${rec.wins}জিত ${rec.losses}হার` : ""}</div></div>
-        <div class="lx-val"><b>${fmt(S.rows.find(r => r.studentId === f.studentId)?.totalPoints)}</b><small>XP</small></div></div>`; }).join("")}
-    </div>
-    <div class="lx-card"><div class="lx-note">নতুন বন্ধু খুঁজতে <a href="profile.html" style="color:var(--color-accent);font-weight:800">প্রোফাইল</a> এর "বন্ধু" ট্যাবে যাও, অথবা র‍্যাঙ্কিং থেকে কারো নামে চাপো।</div></div>
+  return `<div style="display:flex;flex-direction:column;gap:10px">
+    <input class="lx-inp" id="frSearch" placeholder="নাম বা ID দিয়ে খোঁজো" value="${esc(S.q || "")}" autocomplete="off">
+    <div id="frRes">${searchResultsHtml()}</div>
+    ${S.incoming.length ? `<div class="lx-title">অনুরোধ</div><div class="lx-card">${S.incoming.map(r => `<div class="lx-row" style="cursor:default">${avatar(S.studentMap[r.fromStudentId], 34)}
+      <div style="min-width:0"><div class="lx-nm">${esc(nameOf(r.fromStudentId))}</div><div class="lx-sub">${esc(S.studentMap[r.fromStudentId]?.className || "")}</div></div>
+      <div class="lx-acts"><button class="lx-btn ok sm" data-act="fr-accept" data-id="${r.id}">গ্রহণ</button><button class="lx-btn danger sm" data-act="fr-reject" data-id="${r.id}">বাদ</button></div></div>`).join("")}</div>` : ""}
+    <div class="lx-title">বন্ধুরা (${friends.length})</div>
+    ${friends.length === 0 ? `<div class="lx-card lx-empty">এখনো কোনো বন্ধু নেই</div>` : `<div class="lx-card">${friends.map(f => {
+      const isRival = f.studentId === S.rivalId, rk = S.overallRank[f.studentId];
+      return `<div class="lx-row" data-act="go" data-id="${esc(f.studentId)}">${avatar(f, 34)}
+        <div style="min-width:0"><div class="lx-nm">${esc(f.name)}${isRival ? `<span class="lx-tag">রাইভাল</span>` : ""}</div>
+        <div class="lx-sub">${esc(f.className || "")}${rk ? ` · #${rk}` : ""}</div></div>
+        <div class="lx-acts" data-stop="1"><button class="lx-btn sm" data-act="menu" data-id="${esc(f.studentId)}">আরও</button></div></div>`;
+    }).join("")}</div>`}
   </div>`;
 }
 
-/* ---------------- student sheet ---------------- */
-function openSheet(sid) {
+/* ---------------- friend menu (small) ---------------- */
+function openMenu(sid) {
   closeOverlay();
-  const s = S.studentMap[sid]; if (!s) return;
-  const r = S.rows.find(x => x.studentId === sid) || { ...s, totalPoints: 0, avgPercentage: 0, examsTaken: 0, level: 1 };
-  const ex = S.extras[sid] || {}, mine = sid === me(), friend = isFriend(sid);
-  const inc = S.incoming.find(x => x.fromStudentId === sid), out = S.outgoing.find(x => x.toStudentId === sid);
   const busy = allChalls().some(c => ["pending", "accepted"].includes(c.status) && otherOf(c) === sid);
-  const rec = S.h2h[sid];
-  const sent = S.cheers.sentToday.has(sid);
-
-  let acts = `<a class="lx-btn primary full" href="${linkProfile(sid)}">${mine ? "আমার প্রোফাইল" : "প্রোফাইল দেখো"}</a>`;
-  if (!mine && friend) {
-    acts += `<button class="lx-btn" data-act="ch-new" data-id="${esc(sid)}" ${busy ? "disabled" : ""}>${I.swords} ${busy ? "চ্যালেঞ্জ চলছে" : "চ্যালেঞ্জ"}</button>
-      <a class="lx-btn" href="comparison.html?friendId=${encodeURIComponent(sid)}">তুলনা দেখো</a>
-      ${S.rivalId === sid ? `<button class="lx-btn" data-act="rival-clear">রাইভাল সরাও</button>` : `<button class="lx-btn" data-act="rival-set" data-id="${esc(sid)}">রাইভাল বানাও</button>`}
-      <button class="lx-btn danger" data-act="fr-remove" data-id="${esc(sid)}">বন্ধুত্ব শেষ</button>
-      <div class="full"><span class="lx-lbl">উৎসাহ পাঠাও ${sent ? "(আজ পাঠানো হয়েছে)" : ""}</span>
-        <div style="display:flex;gap:8px">${CHEER_TYPES.map(t => `<button class="lx-btn sm" style="flex:1" data-act="cheer" data-id="${esc(sid)}" data-x="${t.key}" ${sent ? "disabled" : ""}>${esc(t.label)}</button>`).join("")}</div></div>`;
-  } else if (!mine) {
-    acts += inc ? `<button class="lx-btn ok full" data-act="fr-accept" data-id="${inc.id}">বন্ধুত্বের অনুরোধ গ্রহণ করো</button>`
-      : out ? `<button class="lx-btn full" disabled>অনুরোধ পাঠানো হয়েছে</button>`
-      : `<button class="lx-btn full" data-act="fr-add" data-id="${esc(sid)}">+ বন্ধু হও</button>`;
-  }
-
-  overlay(`<div class="lx-grab"></div>
-    <div class="lx-me">${avatar(s, 52)}<div style="min-width:0"><div class="lx-me-name">${esc(s.name)}</div>
-      <div class="lx-me-sub">${esc(s.className || "ব্যাচ নেই")} · লেভেল ${r.level ?? 1}${friend ? " · বন্ধু" : ""}</div></div>
-      <div class="lx-me-rank"><b>${S.overallRank[sid] ? "#" + S.overallRank[sid] : "—"}</b><span>র‍্যাঙ্ক</span></div></div>
-    <div class="lx-stats" style="margin-top:14px">
-      <div class="lx-stat"><b>${fmt(r.totalPoints)}</b><span>মোট XP</span></div>
-      <div class="lx-stat"><b>${num(r.avgPercentage) ? Math.round(r.avgPercentage) + "%" : "—"}</b><span>গড় স্কোর</span></div>
-      <div class="lx-stat"><b>${num(r.examsTaken)}</b><span>পরীক্ষা</span></div></div>
-    ${rec ? `<div class="lx-note" style="margin-top:10px;text-align:center">তোমার সাথে চ্যালেঞ্জ: ${rec.wins} জিত · ${rec.losses} হার · ${rec.draws} ড্র</div>` : ""}
-    <div class="lx-acts">${acts}</div>`, false);
+  overlay(`<div class="lx-sheet-h">${esc(nameOf(sid))}</div><div class="lx-list">
+    <a class="lx-btn primary" href="${linkProfile(sid)}">প্রোফাইল</a>
+    <button class="lx-btn" data-act="ch-new" data-id="${esc(sid)}" ${busy ? "disabled" : ""}>${busy ? "চ্যালেঞ্জ চলছে" : "চ্যালেঞ্জ"}</button>
+    <a class="lx-btn" href="comparison.html?friendId=${encodeURIComponent(sid)}">তুলনা</a>
+    ${S.rivalId === sid ? `<button class="lx-btn" data-act="rival-clear">রাইভাল সরাও</button>` : `<button class="lx-btn" data-act="rival-set" data-id="${esc(sid)}">রাইভাল বানাও</button>`}
+    <button class="lx-btn danger" data-act="fr-remove" data-id="${esc(sid)}">বন্ধুত্ব শেষ</button></div>`, false);
 }
 
 function overlay(html, center) {
@@ -451,15 +340,11 @@ async function openChallengeModal(preId) {
   const friends = S.friendIds.map(id => S.studentMap[id]).filter(Boolean);
   if (!friends.length) { showToast("আগে কাউকে বন্ধু বানাও।", "error"); return; }
   const busy = new Set(allChalls().filter(c => ["pending", "accepted"].includes(c.status)).map(otherOf));
-  const ov = overlay(`<div class="lx-h" style="margin-bottom:4px">নতুন চ্যালেঞ্জ</div>
-    <div class="lx-note" style="margin-bottom:12px">জিতলে +${CHALLENGE_REWARDS.winner} XP, হারলেও +${CHALLENGE_REWARDS.loser} XP, ড্র হলে +${CHALLENGE_REWARDS.draw} XP।</div>
-    <label class="lx-lbl">কাকে চ্যালেঞ্জ করবে?</label>
-    <select class="lx-sel" id="chFriend">${friends.map(f => `<option value="${esc(f.studentId)}" ${busy.has(f.studentId) ? "disabled" : ""} ${f.studentId === preId ? "selected" : ""}>${esc(f.name)}${busy.has(f.studentId) ? " (চ্যালেঞ্জ চলছে)" : ""}</option>`).join("")}</select>
-    <label class="lx-lbl">কোন পরীক্ষায়?</label>
-    <select class="lx-sel" id="chExam"><option value="__NEXT_EXAM__">পরবর্তী পরীক্ষা (যেটা দুজনেই আগে দেবে)</option></select>
-    <div class="lx-info">"পরবর্তী পরীক্ষা" বেছে নিলে বন্ধু গ্রহণের পর দুজনেই যে পরীক্ষা আগে দেবে সেটার ফল ধরা হবে।</div>
+  const ov = overlay(`<div class="lx-sheet-h">নতুন চ্যালেঞ্জ</div>
+    <select class="lx-sel" id="chFriend">${friends.map(f => `<option value="${esc(f.studentId)}" ${busy.has(f.studentId) ? "disabled" : ""} ${f.studentId === preId ? "selected" : ""}>${esc(f.name)}${busy.has(f.studentId) ? " (চলছে)" : ""}</option>`).join("")}</select>
+    <select class="lx-sel" id="chExam"><option value="__NEXT_EXAM__">পরবর্তী পরীক্ষা</option></select>
     <div style="display:flex;gap:8px"><button class="lx-btn" style="flex:1" data-act="close">বাতিল</button>
-      <button class="lx-btn primary" style="flex:1" id="chSend">চ্যালেঞ্জ পাঠাও</button></div>`, true);
+      <button class="lx-btn primary" style="flex:1" id="chSend">পাঠাও</button></div>`, true);
   try {
     if (!examsCache) examsCache = await getUpcomingExams();
     const sel = ov.querySelector("#chExam");
@@ -469,13 +354,13 @@ async function openChallengeModal(preId) {
   if (first.selectedOptions[0]?.disabled) { const ok = [...first.options].find(o => !o.disabled); if (ok) first.value = ok.value; }
   ov.querySelector("#chSend").addEventListener("click", async (e) => {
     const btn = e.currentTarget, fsel = ov.querySelector("#chFriend"), xsel = ov.querySelector("#chExam");
-    if (fsel.selectedOptions[0]?.disabled) { showToast("এই বন্ধুর সাথে আগের চ্যালেঞ্জ চলছে।", "error"); return; }
-    btn.disabled = true; btn.textContent = "পাঠানো হচ্ছে...";
+    if (fsel.selectedOptions[0]?.disabled) { showToast("এই বন্ধুর সাথে চ্যালেঞ্জ চলছে।", "error"); return; }
+    btn.disabled = true;
     try {
       await sendChallenge({ fromStudentId: me(), toStudentId: fsel.value, examId: xsel.value,
         examName: xsel.value === "__NEXT_EXAM__" ? "পরবর্তী পরীক্ষা" : (xsel.selectedOptions[0]?.text || "পরীক্ষা") });
       showToast("চ্যালেঞ্জ পাঠানো হয়েছে", "success"); closeOverlay(); await reload("challenges");
-    } catch (err) { showToast(err.message || friendlyError(err), "error"); btn.disabled = false; btn.textContent = "চ্যালেঞ্জ পাঠাও"; }
+    } catch (err) { showToast(err.message || friendlyError(err), "error"); btn.disabled = false; }
   });
 }
 
@@ -485,15 +370,27 @@ async function run(fn, okMsg, tab) {
   catch (err) { showToast(err.message || friendlyError(err), "error"); }
 }
 
+document.addEventListener("change", (e) => {
+  if (e.target.dataset?.sel === "batch") { S.batch = e.target.value; renderBody(); }
+});
+document.addEventListener("input", (e) => {
+  if (e.target.id === "frSearch") { S.q = e.target.value; const r = document.getElementById("frRes"); if (r) r.innerHTML = searchResultsHtml(); }
+});
+
 document.addEventListener("click", (e) => {
   const t = e.target.closest("[data-act]"); if (!t || t.disabled) return;
+  if (t.dataset.act === "go" && e.target.closest("[data-stop]")) {
+    const inner = e.target.closest("[data-act]");
+    if (inner === t) return;
+  }
   const a = t.dataset.act, id = t.dataset.id;
   switch (a) {
     case "tab": S.tab = id; renderTabs(); renderBody(); break;
     case "scope": S.scope = id; renderBody(); break;
     case "period": S.period = id; renderBody(); break;
     case "batch": S.batch = id; renderBody(); break;
-    case "sheet": openSheet(id); break;
+    case "go": if (!e.target.closest("[data-stop]")) window.location.href = linkProfile(id); break;
+    case "menu": openMenu(id); break;
     case "close": closeOverlay(); break;
     case "ch-new": openChallengeModal(id); break;
     case "ch-accept": run(() => acceptChallenge(id, me()), "চ্যালেঞ্জ গ্রহণ করা হয়েছে", "challenges"); break;
