@@ -168,6 +168,12 @@ loadPlatformTitle();
 const listEl = document.getElementById("studentList");
 const filterEl = document.getElementById("classFilter");
 const searchInput = document.getElementById("studentSearchInput");
+if (safeNext()) {
+  const note = document.createElement("div");
+  note.style.cssText = "margin:0 0 12px;padding:12px 14px;border-radius:12px;background:rgba(201,151,63,.14);font-size:.84rem;font-weight:700;line-height:1.5";
+  note.textContent = "Battle-এ যোগ দিতে আগে নিজের নাম বেছে পাসওয়ার্ড দাও। তারপর নিজে থেকেই Battle-এ যোগ হবে।";
+  searchInput?.parentElement?.insertAdjacentElement("beforebegin", note);
+}
 const searchClear = document.getElementById("studentSearchClear");
 const countEl = document.getElementById("studentCount");
 const CACHE_KEY = "cachedStudentList";
@@ -468,6 +474,12 @@ function askStudentPassword(student) {
   });
 }
 
+// After login, go back to where the student came from (e.g. a Battle QR link).
+function safeNext() {
+  const n = new URLSearchParams(location.search).get("next") || "";
+  return /^student\/[A-Za-z0-9_-]+\.html(\?[A-Za-z0-9=&_%-]*)?$/.test(n) ? "./" + n : null;
+}
+
 async function selectStudent(student, btnElement) {
   if (btnElement) { btnElement.classList.add("is-loading"); }
 
@@ -479,6 +491,8 @@ async function selectStudent(student, btnElement) {
   }
 
   setActiveStudent(student); 
+  const nextUrl = safeNext();
+  if (nextUrl) { window.location.href = nextUrl; return; }
   const active = await findActiveAttempt(student.studentId);
   if (active) {
     window.location.href = `./student/exam.html?examId=${active.examId}&resume=1`;
