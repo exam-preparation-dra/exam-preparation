@@ -140,6 +140,7 @@
 <script type="module">
 import { initTheme, icons, renderState } from "./js/utils/ui-utils.js";
 import { getActiveStudents, setActiveStudent, findActiveAttempt } from "./js/utils/student-utils.js";
+import { currentStudentSession, studentLogin, setNewPassword, friendlyStudentAuthError } from "./js/utils/student-auth.js";
 import { getPlatformSettings } from "./js/utils/settings-utils.js";
 
 // Initialize Theme
@@ -275,9 +276,80 @@ function renderList(list, fromCache = false) {
   });
 }
 
+// Password gate. Resolves true once the student is authenticated (and has
+// replaced the admin's setup code, if it was their first login).
+function askStudentPassword(student) {
+  return new Promise((resolve) => {
+    const ov = document.createElement("div");
+    ov.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:18px;";
+    ov.innerHTML = `
+      <div style="background:var(--surface-solid,#fff);color:var(--text-main,#222);border:1px solid var(--surface-border,#ddd);border-radius:16px;padding:22px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+        <h3 id="pwTitle" style="margin:0 0 4px;font-size:1.05rem"></h3>
+        <p id="pwHint" style="margin:0 0 14px;font-size:.82rem;opacity:.7"></p>
+        <input id="pwInput1" type="password" autocomplete="current-password" class="input-glass" style="width:100%;margin-bottom:8px">
+        <input id="pwInput2" type="password" autocomplete="new-password" placeholder="আবার লেখো" class="input-glass" style="width:100%;margin-bottom:8px;display:none">
+        <div id="pwErr" style="color:#dc2626;font-size:.8rem;min-height:18px;margin-bottom:8px"></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button id="pwCancel" type="button" class="btn-join" style="padding:9px 16px">বাতিল</button>
+          <button id="pwOk" type="button" class="btn-join" style="padding:9px 16px;font-weight:800">এগিয়ে যাও</button>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    const $ = id => ov.querySelector("#" + id);
+    let mode = "login";
+    const setMode = (m) => {
+      mode = m;
+      if (m === "login") {
+        $("pwTitle").textContent = `${student.name}, পাসওয়ার্ড দাও`;
+        $("pwHint").textContent = "প্রথমবার হলে অ্যাডমিনের দেওয়া সেটআপ কোড লেখো।";
+        $("pwInput1").placeholder = "পাসওয়ার্ড / সেটআপ কোড";
+      } else {
+        $("pwTitle").textContent = "নিজের নতুন পাসওয়ার্ড বানাও";
+        $("pwHint").textContent = "কমপক্ষে ৬ অক্ষর। এটাই ভবিষ্যতে তোমার পাসওয়ার্ড।";
+        $("pwInput1").value = ""; $("pwInput1").autocomplete = "new-password";
+        $("pwInput1").placeholder = "নতুন পাসওয়ার্ড";
+        $("pwInput2").style.display = "block";
+      }
+      $("pwErr").textContent = ""; $("pwInput1").focus();
+    };
+    const done = (v) => { ov.remove(); resolve(v); };
+    const submit = async () => {
+      const p1 = $("pwInput1").value;
+      $("pwErr").textContent = "";
+      if (!p1) { $("pwErr").textContent = "পাসওয়ার্ড লেখো।"; return; }
+      $("pwOk").disabled = true;
+      try {
+        if (mode === "login") {
+          const { needsNewPassword } = await studentLogin(student.studentId, p1);
+          if (needsNewPassword) { setMode("set"); } else { return done(true); }
+        } else {
+          if (p1.length < 6) throw { code: "auth/weak-password" };
+          if (p1 !== $("pwInput2").value) throw { message: "দুটি পাসওয়ার্ড মেলেনি।" };
+          await setNewPassword(student.studentId, p1);
+          return done(true);
+        }
+      } catch (err) {
+        $("pwErr").textContent = friendlyStudentAuthError(err);
+      }
+      $("pwOk").disabled = false;
+    };
+    $("pwOk").addEventListener("click", submit);
+    ov.addEventListener("keydown", e => { if (e.key === "Enter") submit(); });
+    $("pwCancel").addEventListener("click", () => done(false));
+    setMode("login");
+  });
+}
+
 async function selectStudent(student, btnElement) {
   if (btnElement) { btnElement.classList.add("is-loading"); }
-  
+
+  // Already signed in as this exact student on this device? Skip the prompt.
+  const sessionSid = await currentStudentSession();
+  if (sessionSid !== student.studentId) {
+    const ok = await askStudentPassword(student);
+    if (!ok) { btnElement?.classList.remove("is-loading"); return; }
+  }
+
   setActiveStudent(student); 
   const active = await findActiveAttempt(student.studentId);
   if (active) {
