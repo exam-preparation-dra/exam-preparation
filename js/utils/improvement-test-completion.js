@@ -14,7 +14,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-const ADMIN_EMAIL = "physicslover2312@gmail.com";
+const ADMIN_EMAIL = "diptendu769@gmail.com";
 
 function isAdmin() {
   return auth.currentUser?.email === ADMIN_EMAIL;

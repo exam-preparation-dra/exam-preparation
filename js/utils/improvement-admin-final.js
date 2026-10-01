@@ -9,7 +9,7 @@ import {
   createImprovementTestFromRequest
 } from "./improvement-admin-workflow.js";
 
-const ADMIN = "physicslover2312@gmail.com";
+const ADMIN = "diptendu769@gmail.com";
 
 function assertAdmin() {
   if ((auth.currentUser?.email || "").toLowerCase() !== ADMIN) {

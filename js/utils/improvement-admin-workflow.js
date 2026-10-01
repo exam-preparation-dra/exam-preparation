@@ -4,7 +4,7 @@ import {
   addDoc, setDoc, updateDoc, serverTimestamp, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-const ADMIN_EMAIL = "physicslover2312@gmail.com";
+const ADMIN_EMAIL = "diptendu769@gmail.com";
 
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, m => ({
   "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
