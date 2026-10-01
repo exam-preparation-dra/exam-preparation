@@ -115,6 +115,51 @@
   .pf-unlock .pf-bico { animation: pfPop .7s cubic-bezier(.18,.9,.2,1); }
   @keyframes pfPop { 0% { transform: scale(.4) rotate(-8deg); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: none; } }
 
+  /* ---------- premium badges v2 ---------- */
+  .pf-bico { position: relative; isolation: isolate; width: 58px; height: 58px; border-radius: 50%; margin-bottom: 6px; color: #fff; border: 0;
+    background: radial-gradient(circle at 30% 22%, color-mix(in srgb, var(--rc) 55%, #fff) 0%, var(--rc) 52%, color-mix(in srgb, var(--rc) 68%, #000) 100%);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--rc) 30%, var(--surface)), 0 0 0 4px color-mix(in srgb, var(--rc) 55%, transparent), 0 8px 18px color-mix(in srgb, var(--rc) 34%, transparent), inset 0 2px 3px rgba(255,255,255,.55), inset 0 -4px 6px rgba(0,0,0,.22); }
+  .pf-bico svg { position: relative; z-index: 1; width: 27px; height: 27px; stroke-width: 1.9; filter: drop-shadow(0 1px 1.5px rgba(0,0,0,.4)); }
+  .pf-bico::after { content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+    background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,.6) 50%, transparent 62%); background-size: 260% 100%; background-position: 160% 0; }
+  .pf-badge.earned .pf-bico::after, .pf-modal-card .pf-bico::after { animation: pfShine 3.4s ease-in-out infinite; }
+  @keyframes pfShine { 0%, 55% { background-position: 160% 0; } 100% { background-position: -60% 0; } }
+  .pf-bico.sm { width: 44px; height: 44px; margin: 0; flex: none; box-shadow: 0 0 0 2px color-mix(in srgb, var(--rc) 30%, var(--surface)), 0 0 0 3px color-mix(in srgb, var(--rc) 50%, transparent), 0 5px 12px color-mix(in srgb, var(--rc) 30%, transparent), inset 0 2px 2px rgba(255,255,255,.5), inset 0 -3px 4px rgba(0,0,0,.2); }
+  .pf-bico.sm svg { width: 21px; height: 21px; }
+  .pf-badge { padding: 20px 10px 14px; border-radius: 20px; overflow: hidden; }
+  .pf-badge.earned { background: radial-gradient(120% 70% at 50% 0%, color-mix(in srgb, var(--rc) 22%, transparent), transparent 72%), linear-gradient(180deg, color-mix(in srgb, var(--rc) 7%, var(--surface)), var(--surface));
+    box-shadow: 0 8px 22px color-mix(in srgb, var(--rc) 15%, transparent); }
+  .pf-badge.earned::before { content: ""; position: absolute; top: 0; left: 20%; right: 20%; height: 3px; border-radius: 0 0 6px 6px; background: linear-gradient(90deg, transparent, var(--rc), transparent); }
+  .pf-badge.earned.tier-legendary { animation: pfGlow 3s ease-in-out infinite; }
+  @keyframes pfGlow { 50% { box-shadow: 0 8px 30px color-mix(in srgb, var(--rc) 42%, transparent); } }
+  .pf-badge.locked .pf-bico { color: var(--text-muted); filter: grayscale(1); opacity: .72;
+    background: linear-gradient(145deg, var(--surface-edge), var(--surface-highlight)); box-shadow: 0 0 0 3px var(--surface-border), inset 0 2px 3px rgba(255,255,255,.18); }
+  .pf-badge.locked .pf-bico svg { filter: none; }
+  .pf-badge .rar { padding: 2px 9px; border-radius: 99px; background: color-mix(in srgb, var(--rc) 14%, transparent); }
+  .pf-badge.locked .rar { background: var(--surface-edge); }
+  .pf-lock { position: absolute; top: 9px; right: 9px; width: 18px; height: 18px; color: var(--text-muted); opacity: .7; }
+  .pf-lock svg { width: 100%; height: 100%; }
+  .pf-bhero { display: flex; align-items: center; gap: 16px; }
+  .pf-ring { --p: 0; position: relative; flex: none; width: 78px; height: 78px; border-radius: 50%; display: grid; place-items: center;
+    background: conic-gradient(var(--color-accent) calc(var(--p) * 1%), var(--surface-edge) 0); }
+  .pf-ring::before { content: ""; position: absolute; inset: 8px; border-radius: 50%; background: var(--surface); }
+  .pf-ring b { position: relative; font-family: var(--font-num); font-size: 1.1rem; font-weight: 800; color: var(--color-accent); }
+  .pf-tally { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .pf-tally span { padding: 3px 9px; border-radius: 99px; font-size: .64rem; font-weight: 900; color: var(--rc); background: color-mix(in srgb, var(--rc) 13%, transparent); }
+  .pf-gh { display: flex; align-items: center; justify-content: space-between; margin: 20px 2px 10px; font-size: .84rem; font-weight: 900; color: var(--text-primary); }
+  .pf-gh:first-child { margin-top: 4px; }
+  .pf-gh small { font-family: var(--font-num); font-size: .72rem; font-weight: 800; color: var(--text-muted); }
+  .pf-chips + .pf-chips { margin-top: -4px; }
+  .pf-modal-card { position: relative; overflow: hidden; }
+  .pf-modal-card > * { position: relative; }
+  .pf-modal-card > .pf-rays { position: absolute; top: -90px; left: 50%; width: 320px; height: 320px; margin-left: -160px; border-radius: 50%; opacity: .5; pointer-events: none;
+    background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--rc) 30%, transparent) 0 8deg, transparent 8deg 20deg);
+    -webkit-mask-image: radial-gradient(circle, #000 0%, transparent 68%); mask-image: radial-gradient(circle, #000 0%, transparent 68%); animation: pfSpin 22s linear infinite; }
+  @keyframes pfSpin { to { transform: rotate(360deg); } }
+  .pf-modal-card .pf-bico { width: 96px; height: 96px; border-radius: 50%; }
+  .pf-modal-card .pf-bico svg { width: 46px; height: 46px; }
+  @media (prefers-reduced-motion: reduce) { .pf-badge.earned .pf-bico::after, .pf-modal-card .pf-bico::after, .pf-badge.earned.tier-legendary, .pf-modal-card > .pf-rays { animation: none; } }
+
   /* ---------- friends ---------- */
   .pf-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 11px 12px; border-radius: 14px; background: var(--surface-highlight); border: 1px solid var(--surface-border); }
   .pf-row + .pf-row { margin-top: 8px; }
@@ -325,12 +370,13 @@ let getApprovedResults, getStudentRank, getUpcomingExams;
 let computeOverallStats, computeSubjectStats, computeChapterStats, computeTopicStats;
 let computeGamificationData;
 let db;
-let doc, getDoc, collection, getDocs;
+let doc, getDoc, collection, getDocs, query, where;
 let getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival;
 let getChallengeWinCount, sendChallenge;
 let requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, savePinnedBadges, friendlyStudentAuthError;
 let viewPrivacy = { records: true, subjects: true, badges: true, publicStats: false };
 let getLevelInfo;
+let badgeGroup = "all";
 
 async function loadModule(path, run) {
   try {
@@ -356,7 +402,7 @@ const __ok = (
   await loadModule("../js/utils/analytics-utils.js", m => ({ computeOverallStats, computeSubjectStats, computeChapterStats, computeTopicStats } = m)) &&
   await loadModule("../js/utils/gamification-utils.js", m => ({ computeGamificationData } = m)) &&
   await loadModule("../js/firebase/firebase-config.js", m => ({ db } = m)) &&
-  await loadModule("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js", m => ({ doc, getDoc, collection, getDocs } = m)) &&
+  await loadModule("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js", m => ({ doc, getDoc, collection, getDocs, query, where } = m)) &&
   await loadModule("../js/utils/friend-utils.js?v=ref1", m => ({ getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival } = m)) &&
   await loadModule("../js/utils/student-auth.js", m => ({ requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, savePinnedBadges, friendlyStudentAuthError } = m)) &&
   await loadModule("../js/utils/challenge-utils.js", m => ({ getChallengeWinCount, sendChallenge } = m)) &&
@@ -452,6 +498,45 @@ function buildBadgeCatalog(ctx) {
   add("challenge-champion","চ্যালেঞ্জ চ্যাম্পিয়ন","সামাজিক","বন্ধুদের বিরুদ্ধে কমপক্ষে ৫টি চ্যালেঞ্জ জিতো।","Epic","M23",
     c=>c.challengeWins>=5,c=>({value:Math.min(c.challengeWins,5),max:5,text:`${Math.min(c.challengeWins,5)} / 5`}));
 
+
+  // ---- Referral / Improvement practice / Battle collections ----
+  const bt = ctx.battle || {}, pr = ctx.practice || {}, refs = Number(ctx.referralCount || 0);
+  const prog = (v, max) => ({ value: Math.min(v, max), max, text: `${Math.min(v, max)} / ${max}` });
+
+  [[1,"প্রথম আমন্ত্রণ","Common","M26"],[3,"বন্ধু-আনিয়ে","Uncommon","M27"],[5,"কমিউনিটি বিল্ডার","Rare","M21"],
+   [10,"ইনফ্লুয়েন্সার","Epic","M27"],[20,"রেফারেল লেজেন্ড","Legendary","M34"]]
+    .forEach(([n, t, r, i]) => add(`referral-${n}`, t, "রেফারেল", `তোমার ইনভাইট লিঙ্কে ${n} জন বন্ধুকে জয়েন করাও।`, r, i, () => refs >= n, () => prog(refs, n)));
+
+  [["imp-1",1,"প্রথম অনুশীলন","Common","M30","count"],["imp-5",5,"নিয়মিত অনুশীলনকারী","Uncommon","M30","count"],
+   ["imp-10",10,"অনুশীলন যোদ্ধা","Rare","M30","count"],["imp-25",25,"অনুশীলনের মাস্টার","Legendary","M34","count"]]
+    .forEach(([id, n, t, r, i, k]) => add(id, t, "উন্নতি অনুশীলন", `মোট ${n}টি উন্নতি অনুশীলন সম্পূর্ণ করো।`, r, i, () => (pr.count || 0) >= n, () => prog(pr.count || 0, n)));
+  add("imp-target","লক্ষ্যভেদী","উন্নতি অনুশীলন","৩টি উন্নতি অনুশীলনে লক্ষ্য নির্ভুলতা ছুঁয়ে ফেলো।","Rare","M29",
+    () => (pr.target || 0) >= 3, () => prog(pr.target || 0, 3));
+  add("imp-perfect","নিখুঁত অনুশীলন","উন্নতি অনুশীলন","একটি উন্নতি অনুশীলনে ১০০% নির্ভুলতা অর্জন করো।","Epic","M1",
+    () => (pr.perfect || 0) >= 1, () => prog(pr.perfect || 0, 1));
+  add("imp-gain","উন্নতির সিঁড়ি","উন্নতি অনুশীলন","একটি অনুশীলনে আগের তুলনায় অন্তত ২০ শতাংশ-পয়েন্ট উন্নতি করো।","Epic","M31",
+    () => (pr.bestGain || 0) >= 20, () => prog(Math.round(pr.bestGain || 0), 20));
+
+  const B = (id, t, req, r, i, val, n) => add(id, t, "ব্যাটল", req, r, i, () => (bt[val] || 0) >= n, () => prog(bt[val] || 0, n));
+  B("battle-1","প্রথম যুদ্ধ","একটি ব্যাটল ম্যাচ শেষ করো।","Common","M32","played",1);
+  B("battle-5","রণাঙ্গনের সৈনিক","মোট ৫টি ব্যাটল ম্যাচ খেলো।","Uncommon","M32","played",5);
+  B("battle-15","অভিজ্ঞ যোদ্ধা","মোট ১৫টি ব্যাটল ম্যাচ খেলো।","Rare","M32","played",15);
+  B("battle-30","ব্যাটল ভেটেরান","মোট ৩০টি ব্যাটল ম্যাচ খেলো।","Epic","M32","played",30);
+  B("battle-win-1","প্রথম জয়","একটি ব্যাটল ম্যাচে জেতো।","Common","M33","wins",1);
+  B("battle-win-5","বিজয়ী দল","৫টি ব্যাটল ম্যাচে জেতো।","Uncommon","M33","wins",5);
+  B("battle-win-15","বিজয়ের কারিগর","১৫টি ব্যাটল ম্যাচে জেতো।","Rare","M33","wins",15);
+  B("battle-win-30","অপ্রতিরোধ্য","৩০টি ব্যাটল ম্যাচে জেতো।","Legendary","M34","wins",30);
+  B("battle-streak-3","টানা তিন জয়","টানা ৩টি ব্যাটলে জেতো।","Rare","M39","bestStreak",3);
+  B("battle-streak-5","অপরাজেয়","টানা ৫টি ব্যাটলে জেতো।","Epic","M39","bestStreak",5);
+  B("battle-mvp-1","ম্যাচ MVP","একটি ব্যাটলে MVP হও।","Rare","M35","mvp",1);
+  B("battle-mvp-5","MVP কালেক্টর","৫টি ব্যাটলে MVP হও।","Epic","M35","mvp",5);
+  B("battle-mvp-10","MVP কিংবদন্তি","১০টি ব্যাটলে MVP হও।","Legendary","M35","mvp",10);
+  B("battle-buzz-3","বাজ কিং","৩টি ব্যাটলে ম্যাচের সবচেয়ে বেশি প্রশ্নে উত্তর দাও।","Rare","M36","buzz",3);
+  B("battle-fighter","হার না মানা যোদ্ধা","হেরে গিয়েও দলের মধ্যে সবচেয়ে বেশি প্রশ্নে উত্তর দাও।","Uncommon","M37","attender",1);
+  B("battle-host-5","ব্যাটল হোস্ট","৫টি ব্যাটল ম্যাচ হোস্ট করো।","Uncommon","M38","hosted",5);
+  B("battle-xp-10000","ব্যাটল XP চ্যাম্পিয়ন","ব্যাটল থেকে মোট ১০,০০০ XP অর্জন করো।","Epic","M40","xp",10000);
+  B("battle-xp-30000","ব্যাটল XP লেজেন্ড","ব্যাটল থেকে মোট ৩০,০০০ XP অর্জন করো।","Legendary","M40","xp",30000);
+
   // ---- গোপন (no visible requirement until earned — a surprise) ----
   add("night-owl","রাতজাগা","বিশেষ","গোপন ব্যাজ।","Secret","M24",
     c=>c.nightOwl,null);
@@ -487,7 +572,21 @@ function badgeIconSvg(code) {
     M22:'<path d="M4 4l7 7M20 4l-7 7M4 20l6-6M20 20l-6-6"/><circle cx="12" cy="12" r="1.6"/>',
     M23:'<path d="M8 4h8v4a4 4 0 0 1-8 0V4z"/><path d="M6 6H4a2 2 0 0 0 2 3M18 6h2a2 2 0 0 1-2 3M10 13v4M8 20h8"/>',
     M24:'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
-    M25:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M18 6l-2.5 2.5M8.5 15.5L6 18"/>'
+    M25:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M18 6l-2.5 2.5M8.5 15.5L6 18"/>',
+    M26:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M19 8v6M16 11h6"/>',
+    M27:'<rect x="4" y="9" width="16" height="11" rx="1.5"/><path d="M12 9v11M4 13h16"/><path d="M12 9c-1.500-4-5.500-4-5.500-1.500S10 9 12 9zM12 9c1.500-4 5.500-4 5.500-1.500S14 9 12 9z"/>',
+    M29:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/>',
+    M30:'<path d="M6 8v8M18 8v8M3 10v4M21 10v4M6 12h12"/>',
+    M31:'<path d="M3 20h5v-4h4v-4h4V8h5"/>',
+    M32:'<path d="M4 4l10 10M20 4L10 14"/><path d="M13 17l4 4M11 17l-4 4M14.500 12.500L17 15M9.500 12.500L7 15"/>',
+    M33:'<path d="M6 21V4M6 5h11l-2 4 2 4H6"/>',
+    M34:'<path d="M4 8l4 4 4-7 4 7 4-4-2 11H6L4 8z"/>',
+    M35:'<circle cx="12" cy="9" r="5"/><path d="M8.500 13.500L7 21l5-3 5 3-1.500-7.500"/>',
+    M36:'<path d="M6 17v-6a6 6 0 0 1 12 0v6l1.500 2h-15L6 17z"/><path d="M10 21a2 2 0 0 0 4 0"/>',
+    M37:'<path d="M12 21s-7-4.500-7-10a4 4 0 0 1 7-2.500A4 4 0 0 1 19 11c0 5.500-7 10-7 10z"/>',
+    M38:'<path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-6h4v6"/>',
+    M39:'<path d="M12 3s5 4.500 5 10a5 5 0 0 1-10 0c0-2 1-3.500 2-4.500 0 1.500 1 2.500 2 2.500 0-3-1-5.500 1-8z"/>',
+    M40:'<circle cx="12" cy="12" r="9"/><path d="M13 6l-4 7h3l-1 5 4-7h-3l1-5z"/>'
   };
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${paths[code]||paths.M20}</svg>`;
 }
@@ -534,6 +633,9 @@ function getBadgeContext(results, gData, rank, subjectStats, chapterStats, topic
     friendCount: Number(social.friendCount || 0),
     hasRival: !!social.hasRival,
     challengeWins: Number(social.challengeWins || 0),
+    referralCount: Number(social.referralCount || 0),
+    battle: social.battle || {},
+    practice: social.practice || {},
     nightOwl, perfectFirstExam,
     realMaxImprovement, realLongestStreak,
     examCount:arr.length,totalCorrect:nums("correctCount"),totalPoints:Number(rank?.totalPoints ?? nums("obtainedMarks")),
@@ -594,9 +696,41 @@ function loadData(force = false) {
   return dataPromise;
 }
 
+
+async function fetchBattleStats(sid) {
+  const s = { played: 0, wins: 0, losses: 0, mvp: 0, buzz: 0, attender: 0, hosted: 0, xp: 0, bestStreak: 0 };
+  const snap = await getDocs(query(collection(db, "battleMatches"), where("participantIds", "array-contains", sid)));
+  const matches = [];
+  snap.forEach(x => { const m = x.data(); if (m.status === "finished" && m.result) matches.push(m); });
+  matches.sort((a, b) => (Number(a.result.finishedAt) || 0) - (Number(b.result.finishedAt) || 0));
+  let run = 0;
+  matches.forEach(m => {
+    const r = m.result, team = (m.teamA?.members || []).some(x => x.studentId === sid) ? "A" : "B";
+    s.played++;
+    if (r.winnerTeam === team) { s.wins++; run++; s.bestStreak = Math.max(s.bestStreak, run); } else { s.losses++; run = 0; }
+    if (r.winMvp === sid || r.loseMvp === sid) s.mvp++;
+    if (r.topBuzzer === sid) s.buzz++;
+    if (r.loseTopAttender === sid) s.attender++;
+    if (m.hostStudentId === sid) s.hosted++;
+    s.xp += Number(r.xpLog?.[sid] || 0);
+  });
+  return s;
+}
+
+async function fetchPracticeStats(sid) {
+  const snap = await getDocs(query(collection(db, "improvementAttempts"), where("studentId", "==", sid), where("status", "==", "completed")));
+  const list = snap.docs.map(x => x.data());
+  return {
+    count: list.length,
+    target: list.filter(p => p.targetReached === true).length,
+    perfect: list.filter(p => Number(p.accuracy || 0) >= 100).length,
+    bestGain: Math.max(0, ...list.map(p => Number(p.improvementPercent || 0)))
+  };
+}
+
 async function fetchData() {
   const sid = student.studentId;
-  const [results, rank, gData, subjectsSnap, chaptersSnap, topicsSnap, friendIds, rival, wins] = await Promise.all([
+  const [results, rank, gData, subjectsSnap, chaptersSnap, topicsSnap, friendIds, rival, wins, allStudents, battle, practice] = await Promise.all([
     getApprovedResults(sid).catch(() => []),
     getStudentRank(sid).catch(() => null),
     computeGamificationData().catch(() => ({})),
@@ -605,8 +739,12 @@ async function fetchData() {
     getDocs(collection(db, "topics")).catch(() => null),
     getMyFriendIds(sid).catch(() => []),
     getRival(sid).catch(() => null),
-    getChallengeWinCount(sid).catch(() => 0)
+    getChallengeWinCount(sid).catch(() => 0),
+    getActiveStudents().catch(() => []),
+    fetchBattleStats(sid).catch(() => ({})),
+    fetchPracticeStats(sid).catch(() => ({}))
   ]);
+  const referralCount = (allStudents || []).filter(x => x.referredBy === sid).length;
   const nameMap = snap => { const m = {}; snap?.forEach(d => { const x = d.data(); m[d.id] = x.name_bn || x.name_en || d.id; }); return m; };
   const overall = computeOverallStats(results);
   let subjectStats = [], badges = [];
@@ -615,7 +753,7 @@ async function fetchData() {
     const chapterStats = computeChapterStats(results, nameMap(chaptersSnap)).map(x => ({ ...x, id: x.chapterId }));
     const topicStats = computeTopicStats(results, nameMap(topicsSnap)).map(x => ({ ...x, id: x.topicId }));
     const ctx = getBadgeContext(results, gData, rank, subjectStats, chapterStats, topicStats,
-      { friendCount: friendIds.length, hasRival: !!rival, challengeWins: wins });
+      { friendCount: friendIds.length, hasRival: !!rival, challengeWins: wins, referralCount, battle, practice });
     badges = buildBadgeCatalog(ctx).map(b => ({ ...b, earned: !!b.check(ctx), progress: b.progress ? b.progress(ctx) : null }));
   } catch (e) { console.warn("Badge calculation failed", e); }
   return { results, rank, overall, subjectStats, badges, friendCount: friendIds.length };
@@ -1092,6 +1230,34 @@ let badgeFilter = null;   // null = choose a sensible default on first render
 
 function badgeIcon(b) { return badgeIconSvg(b.icon); }
 
+const BADGE_GROUPS = [
+  { id: "all", bn: "সব" }, { id: "battle", bn: "ব্যাটল" }, { id: "referral", bn: "রেফারেল" },
+  { id: "practice", bn: "উন্নতি অনুশীলন" }, { id: "exam", bn: "পরীক্ষা" }, { id: "board", bn: "লিডারবোর্ড" }, { id: "social", bn: "সামাজিক" }
+];
+function badgeGroupOf(b) {
+  const id = b.id || "";
+  if (id.startsWith("battle-")) return "battle";
+  if (id.startsWith("referral-")) return "referral";
+  if (id.startsWith("imp-")) return "practice";
+  if (b.category === "লিডারবোর্ড") return "board";
+  if (b.category === "সামাজিক") return "social";
+  return "exam";
+}
+const LOCK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+
+function badgeCardHtml(x) {
+  const r = rarityOf(x), rk = rarityKey(x.rarity);
+  return `<button type="button" class="pf-badge tier-${rk} ${x.earned ? "earned" : "locked"}" data-badge="${x.id}" style="--rc:${r.color}">
+    ${x.earned ? "" : `<span class="pf-lock">${LOCK_SVG}</span>`}
+    <div class="pf-bico">${badgeIcon(x)}</div>
+    <strong>${isSecretLocked(x) ? "গোপন ব্যাজ" : x.title}</strong>
+    <span class="rar">${r.bn}</span>
+    ${x.earned ? `<span class="got">অর্জিত</span>`
+      : isSecretLocked(x) ? `<span class="sec">শর্ত অজানা</span>`
+      : x.progress ? `<div class="prog"><div class="pf-bar"><i style="width:${Math.min(100, x.progress.value / x.progress.max * 100)}%"></i></div><small>${x.progress.text}</small></div>` : ""}
+  </button>`;
+}
+
 function renderBadges(d) {
   const host = $("badgeCollection");
   const state = d.badges;
@@ -1099,16 +1265,20 @@ function renderBadges(d) {
 
   const got = state.filter(x => x.earned), locked = state.filter(x => !x.earned);
   if (badgeFilter === null) badgeFilter = got.length ? "earned" : "all";
+  const pct = Math.round(got.length / state.length * 100);
+  const tally = Object.keys(RARITY).map(k => ({ k, n: got.filter(x => rarityKey(x.rarity) === k).length, t: state.filter(x => rarityKey(x.rarity) === k).length })).filter(x => x.t);
   const next = locked.filter(x => x.progress && x.progress.max > 1 && x.progress.value > 0)
     .sort((a, b) => (b.progress.value / b.progress.max) - (a.progress.value / a.progress.max)).slice(0, 3);
+  const gCount = id => { const l = state.filter(x => id === "all" || badgeGroupOf(x) === id); return `${l.filter(x => x.earned).length}/${l.length}`; };
 
   host.innerHTML = `
-    <div class="pf-card">
-      <div class="pf-bsum">
-        <div><h2 class="pf-h">${viewMode ? "ব্যাজ সংগ্রহ" : "আমার ব্যাজ সংগ্রহ"}</h2><div class="pf-note">${got.length}টি অর্জিত, ${locked.length}টি বাকি</div></div>
-        <big>${got.length}<small>/${state.length}</small></big>
+    <div class="pf-card pf-bhero">
+      <div class="pf-ring" style="--p:${pct}"><b>${pct}%</b></div>
+      <div style="flex:1;min-width:0">
+        <h2 class="pf-h">${viewMode ? "ব্যাজ সংগ্রহ" : "আমার ব্যাজ সংগ্রহ"}</h2>
+        <div class="pf-note">${got.length}টি অর্জিত, ${locked.length}টি বাকি</div>
+        <div class="pf-tally">${tally.map(t => `<span style="--rc:${RARITY[t.k].color}">${RARITY[t.k].bn} ${t.n}/${t.t}</span>`).join("")}</div>
       </div>
-      <div class="pf-bar" style="margin-top:12px"><i style="width:${state.length ? (got.length / state.length) * 100 : 0}%"></i></div>
     </div>
     ${next.length ? `<div class="pf-card">
       <div class="pf-head" style="margin-bottom:6px"><div><h2 class="pf-h">পরবর্তী অর্জন</h2><div class="pf-note">আর একটু এগোলেই</div></div></div>
@@ -1121,28 +1291,25 @@ function renderBadges(d) {
         </button>`).join("")}</div>
     </div>` : ""}
     <div class="pf-card">
+      <div class="pf-chips">${BADGE_GROUPS.map(g => `<button class="pf-chip ${badgeGroup === g.id ? "active" : ""}" data-g="${g.id}">${g.bn} ${gCount(g.id)}</button>`).join("")}</div>
       <div class="pf-chips">
         <button class="pf-chip ${badgeFilter === "earned" ? "active" : ""}" data-f="earned">অর্জিত ${got.length}</button>
         <button class="pf-chip ${badgeFilter === "locked" ? "active" : ""}" data-f="locked">বাকি ${locked.length}</button>
         <button class="pf-chip ${badgeFilter === "all" ? "active" : ""}" data-f="all">সব ${state.length}</button>
       </div>
-      <div class="pf-bgrid" id="pfBadgeGrid"></div>
+      <div id="pfBadgeGrid"></div>
     </div>`;
 
   const grid = $("pfBadgeGrid");
-  const list = state.filter(x => badgeFilter === "all" || (badgeFilter === "earned" ? x.earned : !x.earned));
-  grid.innerHTML = list.length ? list.map(x => {
-    const r = rarityOf(x);
-    return `<button type="button" class="pf-badge ${x.earned ? "earned" : "locked"}" data-badge="${x.id}" style="--rc:${r.color}">
-      <div class="pf-bico">${badgeIcon(x)}</div>
-      <strong>${isSecretLocked(x) ? "গোপন ব্যাজ" : x.title}</strong>
-      <span class="rar">${r.bn}</span>
-      ${x.earned ? `<span class="got">অর্জিত</span>`
-        : isSecretLocked(x) ? `<span class="sec">শর্ত অজানা</span>`
-        : x.progress ? `<div class="prog"><div class="pf-bar"><i style="width:${Math.min(100, x.progress.value / x.progress.max * 100)}%"></i></div><small>${x.progress.text}</small></div>` : ""}
-    </button>`;
-  }).join("") : `<div class="pf-empty" style="grid-column:1/-1">এখানে কিছু নেই।</div>`;
+  const sections = BADGE_GROUPS.filter(g => g.id !== "all" && (badgeGroup === "all" || badgeGroup === g.id)).map(g => {
+    const all = state.filter(x => badgeGroupOf(x) === g.id);
+    const list = all.filter(x => badgeFilter === "all" || (badgeFilter === "earned" ? x.earned : !x.earned))
+      .sort((a, b) => Number(b.earned) - Number(a.earned));
+    return list.length ? `<div class="pf-gh"><span>${g.bn}</span><small>${all.filter(x => x.earned).length}/${all.length}</small></div><div class="pf-bgrid">${list.map(badgeCardHtml).join("")}</div>` : "";
+  }).join("");
+  grid.innerHTML = sections || `<div class="pf-empty">এখানে কিছু নেই।</div>`;
 
+  host.querySelectorAll("[data-g]").forEach(c => c.addEventListener("click", () => { badgeGroup = c.dataset.g; renderBadges(d); }));
   host.querySelectorAll("[data-f]").forEach(c => c.addEventListener("click", () => { badgeFilter = c.dataset.f; renderBadges(d); }));
   host.querySelectorAll("[data-badge]").forEach(el => el.addEventListener("click", () => showBadgeDetail(state.find(x => x.id === el.dataset.badge))));
 }
@@ -1153,7 +1320,7 @@ function showBadgeDetail(b) {
   const r = rarityOf(b), hide = isSecretLocked(b);
   const div = document.createElement("div");
   div.id = "badgeDetailModal"; div.className = "pf-modal"; div.setAttribute("role", "dialog");
-  div.innerHTML = `<div class="pf-modal-card" style="--rc:${r.color}">
+  div.innerHTML = `<div class="pf-modal-card" style="--rc:${r.color}"><div class="pf-rays"></div>
     <div class="pf-bico">${badgeIcon(b)}</div>
     <div class="rar">${r.bn}</div>
     <h3>${hide ? "গোপন ব্যাজ" : b.title}</h3>
@@ -1177,7 +1344,7 @@ function showBadgeUnlocks(state) {
     const b = fresh[0], r = rarityOf(b);
     const div = document.createElement("div");
     div.className = "pf-modal pf-unlock";
-    div.innerHTML = `<div class="pf-modal-card" style="--rc:${r.color}">
+    div.innerHTML = `<div class="pf-modal-card" style="--rc:${r.color}"><div class="pf-rays"></div>
       <div class="rar" style="margin-bottom:10px">নতুন ব্যাজ অর্জিত</div>
       <div class="pf-bico">${badgeIcon(b)}</div>
       <h3>${b.title}</h3>
