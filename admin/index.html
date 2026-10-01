@@ -88,7 +88,10 @@ form.addEventListener("submit", async (e) => {
     await adminLogin(pw.value);
     window.location.href = "../admin/dashboard.html";
   } catch (e2) {
-    showErr(e2?.code === "auth/not-admin" ? e2.message : friendlyError(e2));
+    showErr(e2?.code === "auth/not-admin" ? e2.message
+      : e2?.code === "auth/invalid-credential" ? "পাসওয়ার্ড ভুল, অথবা এই ইমেইলে অ্যাডমিন অ্যাকাউন্ট নেই। (auth/invalid-credential)"
+      : friendlyError(e2) + " (" + (e2?.code || e2?.message || "unknown") + ")");
+    console.error("adminLogin failed:", e2);
     btn.disabled = false; btn.textContent = "প্রবেশ করো";
   }
 });
