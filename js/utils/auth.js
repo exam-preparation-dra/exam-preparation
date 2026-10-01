@@ -1,6 +1,7 @@
 /* =========================================================
-   ADMIN AUTHENTICATION
-   Students never use this — they only use student-utils.js selection flow.
+   ADMIN AUTHENTICATION (password-only login)
+   Admin email fixed; login page-e shudhu password lage.
+   Students never use this — they use student-auth.js.
    ========================================================= */
 import { auth } from "../firebase/firebase-config.js";
 import {
@@ -11,15 +12,23 @@ import {
   browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
-// Fire this at module load, but explicitly await it before any sign-in call
-// below — otherwise on a slow connection, adminLogin() could race ahead of
-// persistence being configured, silently falling back to session-only
-// persistence for that login.
+// Ei email firestore.rules-er isAdmin()-er email-er sathe mile thakte hobe.
+export const ADMIN_EMAIL = "diptendu769@gmail.com";
+
 const persistenceReady = setPersistence(auth, browserLocalPersistence);
 
-export async function adminLogin(email, password) {
+const isAdminUser = (user) =>
+  String(user?.email || "").toLowerCase() === ADMIN_EMAIL;
+
+export async function adminLogin(password) {
   await persistenceReady;
-  const cred = await signInWithEmailAndPassword(auth, email, password);
+  const cred = await signInWithEmailAndPassword(auth, ADMIN_EMAIL, password);
+  if (!isAdminUser(cred.user)) {
+    await signOut(auth);
+    const err = new Error("এই অ্যাকাউন্ট দিয়ে অ্যাডমিন প্যানেলে ঢোকা যাবে না।");
+    err.code = "auth/not-admin";
+    throw err;
+  }
   return cred.user;
 }
 
@@ -28,10 +37,10 @@ export async function adminLogout() {
   window.location.href = "../admin/index.html";
 }
 
-// Redirects to login if not authenticated. Call at the top of every admin page.
+// Redirects to login if not the admin. Call at the top of every admin page.
 export function requireAdmin(onReady) {
   onAuthStateChanged(auth, (user) => {
-    if (!user) {
+    if (!user || !isAdminUser(user)) {
       window.location.href = "../admin/index.html";
     } else {
       onReady(user);
@@ -39,9 +48,9 @@ export function requireAdmin(onReady) {
   });
 }
 
-// For the login page itself: if already logged in, skip straight to dashboard.
+// For the login page itself: if admin already logged in, skip to dashboard.
 export function redirectIfLoggedIn() {
   onAuthStateChanged(auth, (user) => {
-    if (user) window.location.href = "../admin/dashboard.html";
+    if (user && isAdminUser(user)) window.location.href = "../admin/dashboard.html";
   });
 }
