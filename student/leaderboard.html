@@ -337,7 +337,7 @@ async function loadFeed(force) {
   try {
     if (force || !S.feed || Date.now() - S.feedAt > 60000) {
       if (!S.feed) host.innerHTML = `<div class="state-block"><div class="spinner"></div></div>`;
-      S.feed = await getFriendFeed([...S.friendIds, me()]);
+      S.feed = await getFriendFeed(S.friendIds);
       S.feedAt = Date.now();
     }
     paintFeed();
