@@ -147,6 +147,7 @@ import { buildLeaderboardRows, getUpcomingExams, getAllApprovedResults } from ".
 import { getBattleXPMap } from "../js/utils/battle-utils.js?v=roomcard1";
 import { getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival, setRival, clearRival } from "../js/utils/friend-utils.js";
 import { getIncomingChallenges, getOutgoingChallenges, sendChallenge, acceptChallenge, rejectChallenge, cancelChallenge, resolveCompletedChallenges, getChallengeBonusMap, CHALLENGE_REWARDS } from "../js/utils/challenge-utils.js";
+import { publishMyActivity, getFriendFeed, activityFeedHtml, bindActivityFeed } from "../js/utils/activity-utils.js";
 import { buildStudentExtras, computeRankMovement, getHeadToHeadMap, getCheerData, sendCheer, toMillis, DAY_MS } from "../js/utils/friend-stats-utils.js";
 import { getCompletedImprovementAttemptsByStudent } from "../js/utils/improvement-xp-integration.js";
 
@@ -164,6 +165,7 @@ const S = {
   students: [], studentMap: {}, results: [], rows: [], extras: {}, movement: {}, overallRank: {},
   friendIds: [], incoming: [], outgoing: [], inChalls: [], outChalls: [], h2h: {},
   challengeBonusMap: {}, improvementResultsMap: {}, battleXPMap: {},
+  feed: null, feedAt: 0, feedShow: 8,
   rivalId: null, q: "", rq: "", cheers: { received: [], sentToday: new Set() }
 };
 const NO_BATCH = "ব্যাচ নেই";
@@ -244,6 +246,8 @@ async function loadAll() {
   S.extras = buildStudentExtras(S.results);
   S.overallRank = {}; rows.forEach((r, i) => { S.overallRank[r.studentId] = i + 1; });
   S.studentMap = {}; S.students.forEach(s => { S.studentMap[s.studentId] = s; });
+  // post my new milestones for friends (silent, never blocks the page)
+  publishMyActivity(student, { results: S.results.filter(r => r.studentId === id), xp: rows.find(r => r.studentId === id)?.totalPoints ?? null });
   if (!S.batch) S.batch = student.className || [...new Set(rows.map(batchOf))].filter(b => b !== NO_BATCH).sort()[0] || null;
   renderAll();
 }
@@ -323,6 +327,34 @@ function renderTabs() {
 
 function renderBody() {
   document.getElementById("lxBody").innerHTML = S.tab === "challenges" ? viewChallenges() : S.tab === "friends" ? viewFriends() : viewRank();
+  if (S.tab === "friends") loadFeed();
+}
+
+/* ---- friend activity feed ---- */
+async function loadFeed(force) {
+  const host = document.getElementById("afHost");
+  if (!host) return;
+  try {
+    if (force || !S.feed || Date.now() - S.feedAt > 60000) {
+      if (!S.feed) host.innerHTML = `<div class="state-block"><div class="spinner"></div></div>`;
+      S.feed = await getFriendFeed([...S.friendIds, me()]);
+      S.feedAt = Date.now();
+    }
+    paintFeed();
+  } catch (e) {
+    console.warn("feed failed", e);
+    host.innerHTML = `<div class="af-empty">খবর লোড করা যায়নি। একটু পরে আবার চেষ্টা করো।</div>`;
+  }
+}
+function paintFeed() {
+  const host = document.getElementById("afHost");
+  if (!host || !S.feed) return;
+  const ctx = { meId: me(), studentMap: S.studentMap, linkProfile };
+  const shown = S.feed.slice(0, S.feedShow);
+  host.innerHTML = `<div class="af-list">${activityFeedHtml(shown, ctx)}</div>` +
+    (S.feed.length > S.feedShow ? `<button type="button" class="af-more" id="afMore">আরও দেখো (${S.feed.length - S.feedShow})</button>` : "");
+  bindActivityFeed(host, S.feed, ctx, paintFeed);
+  document.getElementById("afMore")?.addEventListener("click", () => { S.feedShow += 8; paintFeed(); });
 }
 
 /* ---- ranking ---- */
@@ -485,6 +517,7 @@ function viewFriends() {
   return `<div style="display:flex;flex-direction:column;gap:10px">
     <input class="lx-inp" id="frSearch" placeholder="নাম বা ID দিয়ে খোঁজো" value="${esc(S.q || "")}" autocomplete="off">
     <div id="frRes">${searchResultsHtml()}</div>
+    ${friends.length ? `<div class="lx-title">বন্ধুদের খবর</div><div class="lx-card" id="afHost" style="padding:4px 14px"></div>` : ""}
     ${S.incoming.length ? `<div class="lx-title">অনুরোধ</div><div class="lx-card">${S.incoming.map(r => `<div class="lx-row" style="cursor:default">${avatar(S.studentMap[r.fromStudentId], 34)}
       <div style="min-width:0"><div class="lx-nm">${esc(nameOf(r.fromStudentId))}</div><div class="lx-sub">${esc(S.studentMap[r.fromStudentId]?.className || "")}</div></div>
       <div class="lx-acts"><button class="lx-btn ok sm" data-act="fr-accept" data-id="${r.id}">গ্রহণ</button><button class="lx-btn danger sm" data-act="fr-reject" data-id="${r.id}">বাদ</button></div></div>`).join("")}</div>` : ""}

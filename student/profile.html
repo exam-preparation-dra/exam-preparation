@@ -350,6 +350,27 @@
   @keyframes cmPop { from { transform: scale(.4); opacity: 0; } to { transform: none; opacity: 1; } }
   @media (max-width: 340px) { .cm-bl { grid-template-columns: repeat(3, minmax(0, 1fr)); } .cm-row { grid-template-columns: 44px 1fr 44px; } }
 
+
+  /* ===== stage design v2 ===== */
+  .pf-subj { display: inline-block; padding: 1px 8px; border-radius: 999px; font-weight: 900; font-size: .68rem; color: var(--color-accent); background: rgba(var(--color-accent-rgb), .12); }
+  .pf-sm { position: relative; }
+  .pf-stage.now .pf-sm::before, .pf-sm.big::before { content: ""; position: absolute; inset: -6px; border-radius: 50%; background: conic-gradient(var(--rc) calc(var(--p, 0) * 1%), color-mix(in srgb, var(--rc) 16%, transparent) 0); -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2.5px)); mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2.5px)); }
+  .pf-stage.now .pf-sm { animation: pfNow 2.6s ease-in-out infinite; }
+  @keyframes pfNow { 50% { transform: scale(1.06); } }
+  .pf-stage.done .pf-sm::after { content: "✓"; position: absolute; right: -4px; bottom: -3px; width: 17px; height: 17px; border-radius: 50%; display: grid; place-items: center; font-size: .6rem; font-weight: 900; color: #fff; background: var(--color-success, #2f7d5e); box-shadow: 0 0 0 2px var(--surface); }
+  .pf-stage { transition: transform .15s, box-shadow .2s; }
+  .pf-sthero { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 4px 0 6px; }
+  .pf-sthero h3 { margin: 12px 0 4px; font-size: 1.15rem; font-weight: 900; color: var(--rc); overflow-wrap: anywhere; }
+  .pf-sm.big { width: 68px; height: 68px; font-size: 1.7rem; margin-top: 6px; animation: pfNow 2.6s ease-in-out infinite; }
+  .pf-sm.big::before { inset: -8px; -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3.5px)); mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3.5px)); }
+  .pf-ladder { position: relative; }
+  .pf-ladder::before { content: ""; position: absolute; left: 31px; top: 24px; bottom: 24px; width: 3px; border-radius: 3px; background: linear-gradient(to bottom, var(--color-accent) var(--fill, 0%), var(--surface-edge) var(--fill, 0%)); }
+  .pf-lrow { position: relative; background: var(--surface); }
+  .pf-lrow.now { background: color-mix(in srgb, var(--rc) 11%, var(--surface)); }
+  .pf-lrow.lock { opacity: .85; }
+  .pf-how { padding: 12px 14px; margin-bottom: 14px; border-radius: 14px; background: var(--surface-highlight); font-size: .76rem; font-weight: 700; line-height: 1.6; color: var(--text-secondary); }
+  .pf-how b { color: var(--text-primary); }
+  @media (prefers-reduced-motion: reduce) { .pf-stage.now .pf-sm, .pf-sm.big { animation: none; } }
 </style>
 </head>
 <body oncontextmenu="return false;">
@@ -495,7 +516,8 @@ let getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest,
 let getChallengeWinCount, sendChallenge;
 let requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, savePinnedBadges, friendlyStudentAuthError;
 let viewPrivacy = { records: true, subjects: true, badges: true, publicStats: false };
-let getLevelInfo, LEVEL_THRESHOLDS;
+let getLevelInfo, LEVEL_THRESHOLDS, STAGES, stageOf, detectMainSubject, stageTitle, publishMyActivity;
+let mainSubject = null, subjectVisible = true;   // auto-detected subject for the profile on screen
 let badgeGroup = "all";
 
 async function loadModule(path, run) {
@@ -526,7 +548,9 @@ const __ok = (await Promise.all([
   loadModule("../js/utils/friend-utils.js?v=ref1", m => ({ getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival } = m)),
   loadModule("../js/utils/student-auth.js", m => ({ requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, savePinnedBadges, friendlyStudentAuthError } = m)),
   loadModule("../js/utils/challenge-utils.js", m => ({ getChallengeWinCount, sendChallenge } = m)),
-  loadModule("../js/utils/xp-utils.js", m => ({ getLevelInfo, LEVEL_THRESHOLDS } = m))
+  loadModule("../js/utils/xp-utils.js", m => ({ getLevelInfo, LEVEL_THRESHOLDS } = m)),
+  loadModule("../js/utils/stage-utils.js", m => ({ STAGES, stageOf, detectMainSubject, stageTitle } = m)),
+  loadModule("../js/utils/activity-utils.js", m => ({ publishMyActivity } = m))
 ])).every(Boolean);
 
 if (__ok) {
@@ -937,6 +961,7 @@ async function renderViewPage() {
   viewPrivacy = await getPrivacy(student.studentId);
   const canRec = viewIsFriend && viewPrivacy.records;
   const canSub = viewIsFriend && viewPrivacy.subjects;
+  subjectVisible = canSub;
   const canBadge = viewIsFriend && viewPrivacy.badges;
   shell.innerHTML = `
     ${renderStudentHeader(viewer, "profile")}
@@ -1154,6 +1179,10 @@ function renderPage() {
     renderPinCard(d);
     renderBadges(d);
     showBadgeUnlocks(d.badges);
+    publishMyActivity(student, {
+      results: d.results, xp: Number(d.rank?.totalPoints || 0),
+      badges: d.badges.filter(b => b.earned && rarityKey(b.rarity) !== "common").map(b => ({ id: b.id, title: b.title, rarity: rarityKey(b.rarity) }))
+    });
   }).catch(err => {
     console.warn("Profile data failed", err);
     $("badgeCollection").innerHTML = `<div class="pf-card"><div class="pf-empty">তথ্য লোড করা যায়নি। পেজ রিফ্রেশ করো।</div></div>`;
@@ -1198,7 +1227,8 @@ function fillHero(d) {
   if (!$("pfHero")) return;
   const xp = Number(d.rank?.totalPoints || 0);
   const lv = getLevelInfo(xp);
-  const title = stageOf(xp).name;
+  mainSubject = subjectVisible ? (detectMainSubject(d.subjectStats)?.name || null) : null;
+  const title = stageTitle(stageOf(xp), mainSubject);
   $("pfTitle").innerHTML = `${ICON.star}<span>${title}</span><em class="pf-i">i</em>`;
   $("pfTitle").onclick = () => openStageModal(xp);
   $("pfLvText").textContent = `লেভেল ${lv.level}`;
@@ -1486,25 +1516,6 @@ function showBadgeUnlocks(state) {
   } catch {}
 }
 
-/* ==========================================================
-   STAGES — one stage per dashboard level (LEVEL_THRESHOLDS).
-   Edit names / colours here; everything else follows.
-   ========================================================== */
-const STAGES = [
-  { name: "Physics Explorer", color: "#8b95a5", bn: "যাত্রা শুরু — ফিজিক্সের জগৎ চেনার ধাপ" },
-  { name: "Concept Builder",  color: "#0ea5e9", bn: "ধারণা গড়ে তোলার ধাপ" },
-  { name: "Problem Solver",   color: "#14b8a6", bn: "সমস্যা সমাধানে হাত পাকানোর ধাপ" },
-  { name: "Physics Master",   color: "#8b5cf6", bn: "বিষয়ের ওপর দখল তৈরির ধাপ" },
-  { name: "Physics Legend",   color: "#d99a1f", bn: "কিংবদন্তির আসন" },
-  { name: "Quantum Thinker",  color: "#ec4899", bn: "গভীর চিন্তার ধাপ" },
-  { name: "Cosmic Mind",      color: "#f97316", bn: "মহাবিশ্ব বোঝার ধাপ" },
-  { name: "Grandmaster",      color: "#ef4444", bn: "শীর্ষ কয়েকজনের ধাপ" },
-  { name: "Physics Immortal", color: "#6366f1", bn: "সর্বোচ্চ স্টেজ — অমর" }
-];
-function stageOf(xp) {
-  const lv = getLevelInfo(Number(xp) || 0).level;
-  return { ...STAGES[Math.min(lv, STAGES.length) - 1], level: lv };
-}
 const fmtN = n => Number(n || 0).toLocaleString();
 
 function stageCollectionHtml(xp) {
@@ -1512,12 +1523,12 @@ function stageCollectionHtml(xp) {
   const next = cur.isMax ? null : STAGES[cur.level];
   return `<div class="pf-card pf-stg">
     <div class="pf-head" style="margin-bottom:12px">
-      <div><h2 class="pf-h">স্টেজ কালেকশন</h2><div class="pf-note">${have}/${STAGES.length} স্টেজ আনলক</div></div>
+      <div><h2 class="pf-h">স্টেজ কালেকশন</h2><div class="pf-note">${have}/${STAGES.length} স্টেজ আনলক${mainSubject ? ` · <span class="pf-subj">${esc(mainSubject)}</span>` : ""}</div></div>
       <button class="pf-btn sm" type="button" data-stage-info>${ICON.info}বিস্তারিত</button>
     </div>
     <div class="pf-stages">${STAGES.map((st, i) => {
       const st8 = i + 1 < have ? "done" : i + 1 === have ? "now" : "lock";
-      return `<button type="button" class="pf-stage ${st8}" data-stage-info style="--rc:${st.color}">
+      return `<button type="button" class="pf-stage ${st8}" data-stage-info style="--rc:${st.color};--p:${st8 === "now" ? Math.max(4, cur.percentage) : st8 === "done" ? 100 : 0}">
         <span class="pf-sm">${st8 === "lock" ? LOCK_SVG : i + 1}</span>
         <strong>${st.name}</strong>
         <small>${st8 === "now" ? "বর্তমান" : fmtN(LEVEL_THRESHOLDS[i]) + " XP"}</small>
@@ -1538,9 +1549,13 @@ function openStageModal(xp) {
   const div = document.createElement("div");
   div.id = "stageModal"; div.className = "pf-modal"; div.setAttribute("role", "dialog");
   div.innerHTML = `<div class="pf-modal-card pf-stm">
-    <h3>লেভেল ও স্টেজ</h3>
-    <div class="pf-note" style="text-align:center">${who} বর্তমান XP <b>${fmtN(xp)}</b> · লেভেল ${have}</div>
-    <div class="pf-ladder">${STAGES.map((st, i) => {
+    <div class="pf-sthero" style="--rc:${STAGES[Math.min(have, STAGES.length) - 1].color};--p:${Math.max(4, cur.percentage)}">
+      <span class="pf-sm big">${have}</span>
+      <h3>${esc(stageTitle(stageOf(xp), mainSubject))}</h3>
+      <div class="pf-note">${who} বর্তমান XP <b>${fmtN(xp)}</b> · লেভেল ${have}${mainSubject ? `<br>প্রধান বিষয় (সবচেয়ে বেশি অনুশীলন): <span class="pf-subj">${esc(mainSubject)}</span>` : ""}</div>
+      ${cur.isMax ? "" : `<div class="pf-bar" style="margin:10px auto 0;width:100%;max-width:240px"><i style="width:${Math.max(3, cur.percentage)}%"></i></div><div class="pf-note" style="margin-top:5px">পরের স্টেজে আর ${fmtN(cur.xpNeeded)} XP</div>`}
+    </div>
+    <div class="pf-ladder" style="--fill:${have >= STAGES.length ? 100 : (have - 1) / (STAGES.length - 1) * 100 + 100 / (STAGES.length - 1) * Math.min(1, cur.percentage / 100)}%">${STAGES.map((st, i) => {
       const lv = i + 1, need = LEVEL_THRESHOLDS[i];
       const state = lv < have ? "done" : lv === have ? "now" : "lock";
       const sub = state === "lock" ? `আর ${fmtN(need - xp)} XP লাগবে` : state === "now" ? "এখন এই স্টেজে" : "পার হয়েছে";
@@ -1589,6 +1604,8 @@ async function renderCompare(dThem, canBadge) {
   const xpMe = Number(dMe.rank?.totalPoints || 0), xpTh = Number(dThem.rank?.totalPoints || 0);
   const lvMe = getLevelInfo(xpMe), lvTh = getLevelInfo(xpTh);
   const sMe = stageOf(xpMe), sTh = stageOf(xpTh);
+  const subMe = detectMainSubject(dMe.subjectStats)?.name || null;
+  const subTh = subjectVisible ? (detectMainSubject(dThem.subjectStats)?.name || null) : null;
   const nameTh = esc(student.name || "শিক্ষার্থী");
   const gotMe = dMe.badges.filter(b => b.earned), gotTh = dThem.badges.filter(b => b.earned);
 
@@ -1629,9 +1646,9 @@ async function renderCompare(dThem, canBadge) {
   host.innerHTML = `<div class="pf-card pf-cmp" id="cmpCard">
     <div class="pf-head" style="margin-bottom:14px"><div><h2 class="pf-h">তুলনা</h2><div class="pf-note">${verdict}</div></div></div>
     <div class="cm-duel">
-      <div class="cm-p">${avatarHtml(viewer)}<strong>তুমি</strong><small>${sMe.name}</small></div>
+      <div class="cm-p">${avatarHtml(viewer)}<strong>তুমি</strong><small>${esc(stageTitle(sMe, subMe))}</small></div>
       <div class="cm-vs">VS</div>
-      <div class="cm-p">${avatarHtml(student)}<strong>${nameTh}</strong><small>${sTh.name}</small></div>
+      <div class="cm-p">${avatarHtml(student)}<strong>${nameTh}</strong><small>${esc(stageTitle(sTh, subTh))}</small></div>
     </div>
     <div class="cm-rows">${rows.map(rowHtml).join("")}</div>
     <div class="cm-sub">স্টেজের পথ</div>
@@ -1817,7 +1834,7 @@ function buildProfileCardHtml(d, qrUrl) {
   const shown = pinned.map(id => d.badges.find(b => b.id === id)).filter(Boolean);
   const showList = shown.length ? shown : got.slice(0, 8);
   const rankText = d.rank?.rank ? "#" + d.rank.rank : "—";
-  const title = stageOf(xp).name;
+  const title = stageTitle(stageOf(xp), mainSubject);
   const initial = esc((student.name || "?").charAt(0).toUpperCase());
   const A = "#b8863c", INK = "#21262f", MUTED = "#8d94a0", SOFT = "#5b6270", LINE = "#e5e2d9";
   const num = "'Space Grotesk','Inter',sans-serif";
