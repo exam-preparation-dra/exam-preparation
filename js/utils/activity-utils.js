@@ -36,12 +36,12 @@ export const REACTIONS = [
 
 /* ---------------- publishing ---------------- */
 function loadStore(sid) {
-  try { const s = JSON.parse(localStorage.getItem("actPub_" + sid)); if (s && s.seen) return s; } catch { /* ignore */ }
+  try { const s = JSON.parse(localStorage.getItem("actPub2_" + sid)); if (s && s.seen) return s; } catch { /* ignore */ }
   return { base: {}, seen: [], pruned: 0 };
 }
 function saveStore(sid, st) {
   st.seen = st.seen.slice(-500);
-  try { localStorage.setItem("actPub_" + sid, JSON.stringify(st)); } catch { /* ignore */ }
+  try { localStorage.setItem("actPub2_" + sid, JSON.stringify(st)); } catch { /* ignore */ }
 }
 const docId = (sid, key) => `${sid}__${key.replace(/[^\w-]/g, "_")}`;
 
@@ -63,7 +63,13 @@ export async function publishMyActivity(student, data = {}) {
 
     // cands: [{ key, post }]  — allowed=false marks them seen without posting
     const consider = (cat, cands, allowed = true) => {
-      if (!st.base[cat]) { cands.forEach(c => seen.add(c.key)); st.base[cat] = 1; return; }
+      if (!st.base[cat]) {
+        // First run on this device: old history is NOT posted (no flood), but
+        // anything flagged `seed` (very recent) is, so the feed isn't empty
+        // right after launch.
+        cands.forEach(c => { seen.add(c.key); if (allowed && c.seed) out.push(c); });
+        st.base[cat] = 1; return;
+      }
       cands.forEach(c => {
         if (seen.has(c.key)) return;
         seen.add(c.key);
@@ -77,6 +83,8 @@ export async function publishMyActivity(student, data = {}) {
     const exams = mine.filter(r => Number(r.percentage) >= GOOD_PCT)
       .sort((a, b) => toMillis(b.submittedAt) - toMillis(a.submittedAt))
       .map(r => ({
+        at: toMillis(r.submittedAt) || now,
+        seed: now - (toMillis(r.submittedAt) || 0) < 7 * DAY_MS,
         key: `exam:${r.id || r.resultId || `${r.examId}_${toMillis(r.submittedAt)}`}`,
         post: {
           type: "exam", color: "#2f7d5e",
@@ -92,6 +100,7 @@ export async function publishMyActivity(student, data = {}) {
     if (data.xp !== null && data.xp !== undefined) {
       const stg = stageOf(data.xp);
       consider("stage", [{
+        seed: true,
         key: `stage:${stg.level}`,
         post: { type: "stage", color: stg.color, title: `${stg.name} স্টেজে উঠেছে`, sub: `লেভেল ${stg.level}` }
       }]);
@@ -115,7 +124,7 @@ export async function publishMyActivity(student, data = {}) {
 
     if (out.length) {
       await Promise.all(out.map(c => setDoc(doc(db, COL, docId(sid, c.key)), {
-        studentId: sid, ...c.post, createdMs: now, createdAt: serverTimestamp(), reactions: {}
+        studentId: sid, ...c.post, createdMs: c.at || now, createdAt: serverTimestamp(), reactions: {}
       })));
     }
     st.seen = [...seen];
