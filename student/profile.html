@@ -515,19 +515,19 @@ async function loadModule(path, run) {
   }
 }
 
-const __ok = (
-  await loadModule("../js/utils/ui-utils.js", m => ({ initTheme, toggleTheme, renderState, renderStudentHeader, showToast, friendlyError } = m)) &&
-  await loadModule("../js/utils/student-utils.js", m => ({ getActiveStudent, refreshActiveStudent, getActiveStudents } = m)) &&
-  await loadModule("../js/utils/results-utils.js", m => ({ getApprovedResults, getStudentRank, getUpcomingExams } = m)) &&
-  await loadModule("../js/utils/analytics-utils.js", m => ({ computeOverallStats, computeSubjectStats, computeChapterStats, computeTopicStats } = m)) &&
-  await loadModule("../js/utils/gamification-utils.js", m => ({ computeGamificationData } = m)) &&
-  await loadModule("../js/firebase/firebase-config.js", m => ({ db } = m)) &&
-  await loadModule("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js", m => ({ doc, getDoc, collection, getDocs, query, where } = m)) &&
-  await loadModule("../js/utils/friend-utils.js?v=ref1", m => ({ getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival } = m)) &&
-  await loadModule("../js/utils/student-auth.js", m => ({ requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, savePinnedBadges, friendlyStudentAuthError } = m)) &&
-  await loadModule("../js/utils/challenge-utils.js", m => ({ getChallengeWinCount, sendChallenge } = m)) &&
-  await loadModule("../js/utils/xp-utils.js", m => ({ getLevelInfo, LEVEL_THRESHOLDS } = m))
-);
+const __ok = (await Promise.all([
+  loadModule("../js/utils/ui-utils.js", m => ({ initTheme, toggleTheme, renderState, renderStudentHeader, showToast, friendlyError } = m)),
+  loadModule("../js/utils/student-utils.js", m => ({ getActiveStudent, refreshActiveStudent, getActiveStudents } = m)),
+  loadModule("../js/utils/results-utils.js", m => ({ getApprovedResults, getStudentRank, getUpcomingExams } = m)),
+  loadModule("../js/utils/analytics-utils.js", m => ({ computeOverallStats, computeSubjectStats, computeChapterStats, computeTopicStats } = m)),
+  loadModule("../js/utils/gamification-utils.js", m => ({ computeGamificationData } = m)),
+  loadModule("../js/firebase/firebase-config.js", m => ({ db } = m)),
+  loadModule("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js", m => ({ doc, getDoc, collection, getDocs, query, where } = m)),
+  loadModule("../js/utils/friend-utils.js?v=ref1", m => ({ getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival } = m)),
+  loadModule("../js/utils/student-auth.js", m => ({ requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, savePinnedBadges, friendlyStudentAuthError } = m)),
+  loadModule("../js/utils/challenge-utils.js", m => ({ getChallengeWinCount, sendChallenge } = m)),
+  loadModule("../js/utils/xp-utils.js", m => ({ getLevelInfo, LEVEL_THRESHOLDS } = m))
+])).every(Boolean);
 
 if (__ok) {
 
