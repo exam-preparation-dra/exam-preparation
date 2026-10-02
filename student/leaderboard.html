@@ -147,8 +147,8 @@ import { buildLeaderboardRows, getUpcomingExams, getAllApprovedResults } from ".
 import { getBattleXPMap } from "../js/utils/battle-utils.js?v=roomcard1";
 import { getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival, setRival, clearRival } from "../js/utils/friend-utils.js";
 import { getIncomingChallenges, getOutgoingChallenges, sendChallenge, acceptChallenge, rejectChallenge, cancelChallenge, resolveCompletedChallenges, getChallengeBonusMap, CHALLENGE_REWARDS } from "../js/utils/challenge-utils.js";
-import { publishMyActivity, getFriendFeed, activityFeedHtml, bindActivityFeed } from "../js/utils/activity-utils.js";
-import { buildStudentExtras, computeRankMovement, getHeadToHeadMap, getCheerData, sendCheer, cheerWaitMs, CHEER_TYPES, toMillis, DAY_MS } from "../js/utils/friend-stats-utils.js";
+import { publishMyActivity, getFriendFeed, localExamFeed, activityFeedHtml, bindActivityFeed } from "../js/utils/activity-utils.js";
+import { buildStudentExtras, computeRankMovement, getHeadToHeadMap, getCheerData, sendCheer, cheerWaitMs, CHEER_TYPES, cheerIcon, CHEER_ICONS, stripEmoji, toMillis, DAY_MS } from "../js/utils/friend-stats-utils.js";
 import { getCompletedImprovementAttemptsByStudent } from "../js/utils/improvement-xp-integration.js";
 
 initTheme();
@@ -337,7 +337,11 @@ async function loadFeed(force) {
   try {
     if (force || !S.feed || Date.now() - S.feedAt > 60000) {
       if (!S.feed) host.innerHTML = `<div class="state-block"><div class="spinner"></div></div>`;
-      S.feed = await getFriendFeed(S.friendIds);
+      const real = await getFriendFeed(S.friendIds).catch(e => { console.warn("feed read failed", e); return []; });
+      const local = await localExamFeed(S.friendIds, S.results).catch(() => []);
+      // drop local items that a published post already covers (same friend, same exam title/sub within a minute)
+      const dup = l => real.some(r => r.studentId === l.studentId && r.type === "exam" && r.sub === l.sub && r.title === l.title);
+      S.feed = [...real, ...local.filter(l => !dup(l))].sort((a, b) => (b.createdMs || 0) - (a.createdMs || 0));
       S.feedAt = Date.now();
     }
     paintFeed();
@@ -528,7 +532,7 @@ function viewFriends() {
       return `<div class="lx-row" data-act="go" data-id="${esc(f.studentId)}">${avatar(f, 34)}
         <div style="min-width:0"><div class="lx-nm">${esc(f.name)}${isRival ? `<span class="lx-tag">রাইভাল</span>` : ""}</div>
         <div class="lx-sub">${esc(f.className || "")}${rk ? ` · #${rk}` : ""}</div></div>
-        <div class="lx-acts" data-stop="1"><button class="lx-btn sm" data-act="msg" data-id="${esc(f.studentId)}" aria-label="বার্তা">💬</button><button class="lx-btn sm" data-act="menu" data-id="${esc(f.studentId)}">আরও</button></div></div>`;
+        <div class="lx-acts" data-stop="1"><button class="lx-btn sm" data-act="msg" data-id="${esc(f.studentId)}" aria-label="বার্তা">${CHEER_ICONS.message}</button><button class="lx-btn sm" data-act="menu" data-id="${esc(f.studentId)}">আরও</button></div></div>`;
     }).join("")}</div>`}
   </div>`;
 }
@@ -549,7 +553,7 @@ function receivedHtml() {
     const t = CHEER_TYPES.find(x => x.key === c.type);
     return `<div class="lx-row" style="cursor:default">${avatar(S.studentMap[c.fromStudentId], 34)}
       <div style="min-width:0"><div class="lx-nm">${esc(nameOf(c.fromStudentId))}</div>
-      <div class="lx-sub" style="white-space:normal">${esc(c.text || (t && t.text) || "")} · ${timeAgo(toMillis(c.createdAt))}</div></div></div>`;
+      <div class="lx-sub" style="white-space:normal;display:flex;align-items:center;gap:6px">${t ? cheerIcon(t.icon) : ""}<span>${esc(t ? t.text : stripEmoji(c.text))} · ${timeAgo(toMillis(c.createdAt))}</span></div></div></div>`;
   }).join("")}</div>`;
 }
 let cheerTimer = null;
@@ -558,7 +562,7 @@ function openMsgSheet(sid) {
   overlay(`<div class="lx-sheet-h">${esc(nameOf(sid))}-কে বার্তা পাঠাও</div>
     <div id="msgWait" class="lx-sub" style="margin-bottom:8px"></div>
     <div class="lx-list" id="msgList" style="max-height:55vh;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:8px">
-    ${CHEER_TYPES.map(t => `<button class="lx-btn" style="white-space:normal;font-size:.8rem" data-act="cheer" data-id="${esc(sid)}" data-x="${t.key}">${esc(t.text)}</button>`).join("")}</div>`, false);
+    ${CHEER_TYPES.map(t => `<button class="lx-btn" style="white-space:normal;font-size:.8rem;display:flex;align-items:center;gap:6px;text-align:left" data-act="cheer" data-id="${esc(sid)}" data-x="${t.key}">${cheerIcon(t.icon)}<span>${esc(t.text)}</span></button>`).join("")}</div>`, false);
   clearInterval(cheerTimer);
   const tick = () => {
     const ov = document.getElementById("lxOv");
