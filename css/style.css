@@ -919,3 +919,6 @@ a.hdr-menu-item:active, a.hdr-menu-item.active { background: var(--color-accent-
 .af-empty { padding: 22px 12px; text-align: center; font-size: .8rem; font-weight: 700; line-height: 1.6; color: var(--text-muted); }
 .af-more { display: block; width: 100%; margin-top: 4px; padding: 10px; border: 0; border-top: 1px solid var(--surface-border); background: none; color: var(--color-accent); font: inherit; font-size: .78rem; font-weight: 900; cursor: pointer; }
 @media (prefers-reduced-motion: reduce) { .af-item, .af-react button.on { animation: none; } }
+
+/* preset-message icons (replace native emoji) */
+.cheer-ico { width: 16px; height: 16px; flex: 0 0 auto; }
