@@ -165,6 +165,24 @@ export async function reactToActivity(item, myId, type) {
 const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const bnDigits = s => String(s).replace(/\d/g, d => "০১২৩৪৫৬৭৮৯"[d]);
 
+/* Feed items built straight from friends' already-loaded results, so the
+   feed is never empty just because a friend's browser hasn't published yet.
+   Respects each friend's "records" privacy switch. No reactions (no doc). */
+export async function localExamFeed(friendIds, results) {
+  const cutoff = Date.now() - FEED_DAYS * DAY_MS;
+  const ids = new Set(friendIds || []);
+  const recent = (results || []).filter(r => ids.has(r.studentId) && toMillis(r.submittedAt) >= cutoff && Number(r.percentage) >= 0);
+  const owners = [...new Set(recent.map(r => r.studentId))];
+  const priv = {};
+  await Promise.all(owners.map(async id => { priv[id] = await getPrivacy(id); }));
+  return recent.filter(r => priv[r.studentId]?.records).map(r => ({
+    id: `local:${r.studentId}:${r.id || r.examId}_${toMillis(r.submittedAt)}`, local: true,
+    studentId: r.studentId, type: "exam", color: "#2f7d5e", reactions: {},
+    title: `${Math.round(Number(r.percentage))}% স্কোর করেছে`, sub: String(r.examName || "পরীক্ষা"),
+    createdMs: toMillis(r.submittedAt)
+  }));
+}
+
 export function timeAgo(ms) {
   const m = Math.floor((Date.now() - ms) / 60000);
   if (m < 1) return "এইমাত্র";
@@ -207,7 +225,7 @@ export function activityFeedHtml(items, ctx) {
       <div class="af-main">
         <div class="af-line"><a class="af-nm" href="${esc(ctx.linkProfile(it.studentId))}">${esc(name)}</a> ${esc(it.title)}</div>
         <div class="af-sub"><span class="af-ic">${TYPE_ICON[it.type] || ""}</span><span class="af-subt">${esc(it.sub || "")}</span><span class="af-dot">·</span><time>${timeAgo(it.createdMs || 0)}</time></div>
-        <div class="af-react">${REACTIONS.map(r => `<button type="button" class="${my === r.key ? "on" : ""}" data-react="${r.key}" aria-pressed="${my === r.key}">${REACT_ICON[r.key]}<span>${r.label}</span>${counts[r.key] ? `<b>${counts[r.key]}</b>` : ""}</button>`).join("")}</div>
+        ${it.local ? "" : `<div class="af-react">${REACTIONS.map(r => `<button type="button" class="${my === r.key ? "on" : ""}" data-react="${r.key}" aria-pressed="${my === r.key}">${REACT_ICON[r.key]}<span>${r.label}</span>${counts[r.key] ? `<b>${counts[r.key]}</b>` : ""}</button>`).join("")}</div>`}
       </div>
     </article>`;
   }).join("");
