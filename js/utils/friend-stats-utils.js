@@ -143,14 +143,62 @@ export function buildAwards(rows, extras, movement) {
   return out;
 }
 
-// ---------- Cheers (friend-only encouragement) ----------
-// One doc per (sender, receiver, day): doc id = `${from}_${to}_${YYYY-MM-DD}`,
-// so a student can cheer each friend once a day without any extra reads.
-// Collection `friendCheers` — see firestore.rules for the (optional) rule.
+// ---------- Cheers (ready-made messages to friends) ----------
+// No typing: a student picks one of the preset messages below.
+// One doc per message: `${from}_${to}_${timestamp}` in collection `friendCheers`.
+// Limit: one message per CHEER_COOLDOWN_MS (checked on the client).
+export const CHEER_COOLDOWN_MS = 30 * 1000;
 export const CHEER_TYPES = [
-  { key: "clap", label: "দারুণ!" },
-  { key: "fire", label: "আগুন!" },
-  { key: "book", label: "পড়তে বসো" }
+  { key: "m01", text: "Hello 👋" },
+  { key: "m02", text: "কেমন আছো? 😊" },
+  { key: "m03", text: "Tomorrow exam, best of luck 🍀" },
+  { key: "m04", text: "All the best! 💯" },
+  { key: "m05", text: "দারুণ করেছো! 👏" },
+  { key: "m06", text: "আগুন! 🔥" },
+  { key: "m07", text: "পড়তে বসো 📚" },
+  { key: "m08", text: "আজ পড়া হলো? 📖" },
+  { key: "m09", text: "অসাধারণ রেজাল্ট! 🏆" },
+  { key: "m10", text: "Congratulations 🎉" },
+  { key: "m11", text: "তুমি পারবে 💪" },
+  { key: "m12", text: "চিন্তা করো না, ঠিক হয়ে যাবে 🤗" },
+  { key: "m13", text: "Good morning ☀️" },
+  { key: "m14", text: "Good night 🌙" },
+  { key: "m15", text: "শুভ সকাল 🌅" },
+  { key: "m16", text: "শুভ রাত্রি 😴" },
+  { key: "m17", text: "Keep it up 👍" },
+  { key: "m18", text: "লিডারবোর্ডে এগিয়ে যাও 🚀" },
+  { key: "m19", text: "আমি তোমাকে ধরে ফেলবো 😎" },
+  { key: "m20", text: "Rival, ready? ⚔️" },
+  { key: "m21", text: "চ্যালেঞ্জ নেবে? 🎯" },
+  { key: "m22", text: "Battle-এ আসো 🎮" },
+  { key: "m23", text: "Revision শুরু করো 📝" },
+  { key: "m24", text: "আজকের টার্গেট শেষ? ✅" },
+  { key: "m25", text: "Mock test দাও 🧪" },
+  { key: "m26", text: "Exam hall-এ দেখা হবে 🏫" },
+  { key: "m27", text: "শান্ত থেকো, ভালো করবে 🧘" },
+  { key: "m28", text: "Thanks বন্ধু 🙏" },
+  { key: "m29", text: "Sorry 😅🙏" },
+  { key: "m30", text: "Welcome 🤝" },
+  { key: "m31", text: "শুভ জন্মদিন 🎂" },
+  { key: "m32", text: "শুভ উৎসব 🎊" },
+  { key: "m33", text: "ভালো থেকো ❤️" },
+  { key: "m34", text: "Miss you 🥺" },
+  { key: "m35", text: "পরে কথা বলবো 👋" },
+  { key: "m36", text: "আজ exam কেমন হলো? 🤔" },
+  { key: "m37", text: "Question কঠিন ছিলো 😵" },
+  { key: "m38", text: "Question সোজা ছিলো 😄" },
+  { key: "m39", text: "Notes দেবে? 📒" },
+  { key: "m40", text: "একসাথে পড়বো? 👫" },
+  { key: "m41", text: "Study streak ধরে রাখো 🔥📅" },
+  { key: "m42", text: "সময় নষ্ট করো না ⏰" },
+  { key: "m43", text: "Phone রাখো, পড়ো 📵" },
+  { key: "m44", text: "Top 10-এ আসছো 🔟" },
+  { key: "m45", text: "Proud of you 🌟" },
+  { key: "m46", text: "Don't give up 💫" },
+  { key: "m47", text: "Wow! 😲" },
+  { key: "m48", text: "হাহা 😂" },
+  { key: "m49", text: "জলদি আসো ⚡" },
+  { key: "m50", text: "Result-এর জন্য best of luck 🤞" }
 ];
 
 export function dayKey(ms = Date.now()) {
@@ -158,26 +206,38 @@ export function dayKey(ms = Date.now()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-export async function sendCheer(fromId, toId, type) {
-  if (!fromId || !toId || fromId === toId) throw new Error("নিজেকে উৎসাহ পাঠানো যায় না।");
-  if (!CHEER_TYPES.some(t => t.key === type)) throw new Error("অজানা উৎসাহ।");
-  const day = dayKey();
-  await setDoc(doc(db, "friendCheers", `${fromId}_${toId}_${day}`), {
-    fromStudentId: fromId, toStudentId: toId, type, dayKey: day, createdAt: serverTimestamp()
-  });
+const lastKey = (id) => `cheerLast_${id}`;
+export function cheerWaitMs(fromId, serverLastMs = 0) {
+  let local = 0;
+  try { local = Number(localStorage.getItem(lastKey(fromId))) || 0; } catch (e) {}
+  const last = Math.max(local, serverLastMs || 0);
+  return Math.max(0, last + CHEER_COOLDOWN_MS - Date.now());
 }
 
-// received: cheers from the last 7 days, newest first
-// sentToday: Set of friend ids this student already cheered today
+export async function sendCheer(fromId, toId, type, serverLastMs = 0) {
+  if (!fromId || !toId || fromId === toId) throw new Error("নিজেকে বার্তা পাঠানো যায় না।");
+  const t = CHEER_TYPES.find(x => x.key === type);
+  if (!t) throw new Error("অজানা বার্তা।");
+  const wait = cheerWaitMs(fromId, serverLastMs);
+  if (wait > 0) throw new Error(`আরও ${Math.ceil(wait / 1000)} সেকেন্ড পরে পাঠাও।`);
+  const now = Date.now();
+  await setDoc(doc(db, "friendCheers", `${fromId}_${toId}_${now}`), {
+    fromStudentId: fromId, toStudentId: toId, type, text: t.text, dayKey: dayKey(now), createdAt: serverTimestamp()
+  });
+  try { localStorage.setItem(lastKey(fromId), String(now)); } catch (e) {}
+}
+
+// received: messages from the last 7 days, newest first
+// lastSentMs: time of this student's most recent sent message
 export async function getCheerData(studentId) {
   const [rec, sent] = await Promise.all([
     getDocs(query(collection(db, "friendCheers"), where("toStudentId", "==", studentId))),
     getDocs(query(collection(db, "friendCheers"), where("fromStudentId", "==", studentId)))
   ]);
   const from7 = dayKey(Date.now() - 6 * DAY_MS);
-  const today = dayKey();
+  const ms = (c) => toMillis(c.createdAt) || 0;
   const received = rec.docs.map(d => d.data()).filter(c => (c.dayKey || "") >= from7)
-    .sort((a, b) => String(b.dayKey).localeCompare(String(a.dayKey)));
-  const sentToday = new Set(sent.docs.map(d => d.data()).filter(c => c.dayKey === today).map(c => c.toStudentId));
-  return { received, sentToday };
+    .sort((a, b) => ms(b) - ms(a) || String(b.dayKey).localeCompare(String(a.dayKey)));
+  const lastSentMs = sent.docs.reduce((m, d) => Math.max(m, ms(d.data())), 0);
+  return { received, sentToday: new Set(), lastSentMs };
 }
