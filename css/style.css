@@ -889,3 +889,33 @@ a.hdr-menu-item:active, a.hdr-menu-item.active { background: var(--color-accent-
   box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform var(--transition, .2s); }
 .hdr-switch.on { background: var(--color-accent, #b8863b); }
 .hdr-switch.on span { transform: translateX(18px); }
+
+/* =========================================================
+   Friend activity feed (js/utils/activity-utils.js)
+   ========================================================= */
+.af-list { display: flex; flex-direction: column; }
+.af-item { --ac: #8b95a5; display: flex; gap: 12px; padding: 14px 4px; border-bottom: 1px solid var(--surface-border); animation: afIn .4s both; }
+.af-item:last-child { border-bottom: 0; }
+.af-item:nth-child(2) { animation-delay: .05s; } .af-item:nth-child(3) { animation-delay: .1s; }
+.af-item:nth-child(4) { animation-delay: .15s; } .af-item:nth-child(n+5) { animation-delay: .2s; }
+@keyframes afIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.af-av { position: relative; flex: none; width: 42px; height: 42px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; font-weight: 900; color: #fff; text-decoration: none; background: linear-gradient(135deg, var(--ac), color-mix(in srgb, var(--ac) 55%, #000)); box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px color-mix(in srgb, var(--ac) 55%, transparent); }
+.af-av img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.af-main { min-width: 0; flex: 1; }
+.af-line { font-size: .86rem; font-weight: 700; line-height: 1.45; color: var(--text-primary); overflow-wrap: anywhere; }
+.af-nm { font-weight: 900; color: var(--text-primary); text-decoration: none; }
+.af-sub { display: flex; align-items: center; gap: 6px; margin-top: 3px; font-size: .72rem; font-weight: 700; color: var(--text-muted); min-width: 0; }
+.af-ic { flex: none; width: 20px; height: 20px; border-radius: 6px; display: grid; place-items: center; color: var(--ac); background: color-mix(in srgb, var(--ac) 14%, transparent); }
+.af-ic svg { width: 12px; height: 12px; }
+.af-subt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.af-sub time, .af-dot { flex: none; }
+.af-react { display: flex; gap: 6px; margin-top: 9px; flex-wrap: wrap; }
+.af-react button { display: inline-flex; align-items: center; gap: 5px; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--surface-border); background: var(--surface-highlight); color: var(--text-secondary); font: inherit; font-size: .7rem; font-weight: 800; cursor: pointer; transition: transform .15s, background .2s, border-color .2s, color .2s; }
+.af-react button svg { width: 13px; height: 13px; }
+.af-react button:active { transform: scale(.92); }
+.af-react button b { font-family: var(--font-num, inherit); font-size: .7rem; }
+.af-react button.on { color: var(--ac); border-color: color-mix(in srgb, var(--ac) 55%, transparent); background: color-mix(in srgb, var(--ac) 13%, var(--surface)); animation: afPop .3s; }
+@keyframes afPop { 50% { transform: scale(1.12); } }
+.af-empty { padding: 22px 12px; text-align: center; font-size: .8rem; font-weight: 700; line-height: 1.6; color: var(--text-muted); }
+.af-more { display: block; width: 100%; margin-top: 4px; padding: 10px; border: 0; border-top: 1px solid var(--surface-border); background: none; color: var(--color-accent); font: inherit; font-size: .78rem; font-weight: 900; cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .af-item, .af-react button.on { animation: none; } }
