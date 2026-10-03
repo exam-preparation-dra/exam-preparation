@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>ড্যাশবোর্ড — পরীক্ষা প্রস্তুতি</title>
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#b8863c">
+<link rel="icon" type="image/png" href="../icons/favicon.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="EP2.0">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="stylesheet" href="../css/style.css">
 <style>
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
@@ -283,6 +291,14 @@
   .d-weak span { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
   .d-weak em { font-style: normal; font-family: var(--font-num); font-weight: 700; color: var(--color-danger); }
 
+  /* ---------- PWA install card (very bottom, optional) ---------- */
+  .pwa-card { position: relative; display: flex; align-items: center; gap: 12px; padding: 12px 40px 12px 12px; border-radius: 18px; border: 1px dashed var(--surface-border); background: var(--surface-highlight); }
+  .pwa-card img { width: 46px; height: 46px; border-radius: 12px; flex: none; }
+  .pwa-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.35; }
+  .pwa-txt b { font-size: .84rem; font-weight: 800; }
+  .pwa-txt small { font-size: .7rem; font-weight: 600; color: var(--text-muted); }
+  .pwa-btn { flex: none; height: 36px; padding: 0 14px; border: 0; border-radius: 11px; background: var(--color-accent); color: #211a0d; font: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; }
+  .pwa-x { position: absolute; top: 4px; right: 4px; width: 28px; height: 28px; border: 0; background: transparent; color: var(--text-muted); font-size: .8rem; cursor: pointer; }
   .d-last { padding-bottom: 24px; }
   [hidden] { display: none !important; }
   /* next-exam countdown chip */
@@ -317,6 +333,7 @@ import { resolveCompletedChallenges, getChallengeBonusXP } from "../js/utils/cha
 import { getCompletedImprovementAttempts } from "../js/utils/improvement-xp-integration.js";
 import { getStudentBattleXP } from "../js/utils/battle-utils.js?v=roomcard1";
 import { openInviteSheet, makeInviteQr, inviteLink, copyInvite, whatsappInvite, shareInvite } from "../js/utils/invite-sheet.js";
+import { mountInstallCard } from "../js/utils/pwa-install.js";
 import { mountExamClaim } from "../js/utils/exam-claim-ui.js";
 import { STORE_ITEMS, getStoreInventory, getSpentXP, getAvailableBattleRoomCardCount } from "../js/utils/store-utils.js?v=roomcard1";
 
@@ -417,8 +434,10 @@ async function render() {
 
     <div id="walletSection" class="d-sec"><div class="skeleton" style="height:128px;border-radius:16px;"></div></div>
     <div id="referralSection" class="d-sec"><div class="skeleton" style="height:150px;border-radius:20px;"></div></div>
-    <div id="recentSection" class="d-sec d-last"></div>
+    <div id="recentSection" class="d-sec"></div>
+    <div id="installSection" class="d-sec d-last"></div>
   `;
+  mountInstallCard($("installSection"));
   loadUpcoming();
   loadMain();
   loadWallet();
