@@ -15,7 +15,11 @@
      voucher, a different kind of object) but flat, accent-solid fill —
      no gradients, no blur, everything else quiet hairline cards.
      ========================================================= */
-  .d-sec { margin-top: 20px; }
+  .d-sec { margin-top: 18px; }
+  .d-greet { margin-top: 2px; }
+  .d-greet h1 { font-size: 1.4rem; font-weight: 800; line-height: 1.3; letter-spacing: -0.01em; }
+  .d-greet h1 span { color: var(--color-accent); }
+  .d-greet p { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); margin-top: 2px; }
   .d-h { font-size: 0.98rem; font-weight: 800; color: var(--text-primary); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
   .d-h svg { color: var(--color-accent); flex-shrink: 0; }
   .d-sub { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); }
@@ -85,11 +89,12 @@
   /* ---------- quick links ---------- */
   .d-links { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
   .d-link {
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 68px; padding: 8px 2px; text-align: center;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; min-height: 86px; padding: 10px 2px; text-align: center;
     border-radius: var(--radius-md); border: 1px solid var(--surface-border); background: var(--surface-solid);
     font-weight: 700; font-size: 0.74rem; color: var(--text-primary);
     transition: background var(--transition);
   }
+  .d-link-ico { width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; background: var(--color-accent-soft); }
   .d-link svg { color: var(--color-accent); }
   .d-link:active { background: var(--surface-highlight); }
   .d-link:focus-visible, .d-btn:focus-visible, .d-rules summary:focus-visible, .d-row-link:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
@@ -98,9 +103,16 @@
   .d-hero {
     position: relative; overflow: hidden; color: #f3f1ea;
     border-radius: var(--radius-lg); padding: 18px 16px 14px;
-    background: #21262f;
+    background: #21262f; isolation: isolate;
     display: grid; grid-template-columns: 1fr auto; column-gap: 12px; align-items: center;
   }
+  .d-hero::before { content: ""; position: absolute; z-index: -1; right: -60px; top: -80px; width: 240px; height: 240px; border-radius: 50%; background: radial-gradient(circle, rgba(184,134,60,.28), rgba(184,134,60,0) 68%); }
+  .d-hero-stats { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(243,241,234,0.14); }
+  .d-hs { text-align: center; }
+  .d-hs + .d-hs { border-left: 1px solid rgba(243,241,234,0.14); }
+  .d-hs b { display: block; font-family: var(--font-num); font-size: 1.25rem; font-weight: 700; color: #f3f1ea; line-height: 1.2; }
+  .d-hs b small { font-size: .7rem; color: rgba(243,241,234,.55); font-weight: 600; }
+  .d-hs span { font-size: 0.68rem; font-weight: 700; color: rgba(243,241,234,0.6); }
   .d-hero-label { font-size: 0.78rem; font-weight: 700; color: rgba(243,241,234,0.68); }
   .d-hero-xp {
     font-family: var(--font-num); font-weight: 700; font-size: 2.7rem; line-height: 1.08; letter-spacing: -0.02em; margin: 2px 0 8px;
@@ -122,7 +134,7 @@
   .d-seal-center span { font-size: 0.65rem; font-weight: 700; color: rgba(243,241,234,0.6); }
   .d-seal-center b { font-family: var(--font-num); font-size: 2rem; line-height: 1; font-weight: 700; color: var(--color-accent); }
 
-  .d-hero-foot { grid-column: 1 / -1; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(243,241,234,0.14); font-size: 0.78rem; font-weight: 600; color: rgba(243,241,234,0.8); line-height: 1.6; }
+  .d-hero-foot { grid-column: 1 / -1; margin-top: 12px; padding-top: 10px; border-top: 1px dashed rgba(243,241,234,0.14); font-size: 0.78rem; font-weight: 600; color: rgba(243,241,234,0.8); line-height: 1.6; }
   .d-hero-foot b { font-family: var(--font-num); color: var(--color-accent); font-weight: 700; }
 
   /* ---------- upcoming exam ---------- */
@@ -149,49 +161,59 @@
   .d-btn-ok { color: var(--color-success); border-color: rgba(47,125,94,0.4); }
   .d-note { text-align: center; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-top: 10px; }
 
-  /* ---------- referral ticket (redeemable voucher shape, flat accent fill) ---------- */
-  .d-ticket { --perf: 88px; --r: 11px; color: #241d10; border-radius: 18px; overflow: hidden; background: var(--color-accent);
-    -webkit-mask: radial-gradient(circle var(--r) at 0 var(--perf), #0000 calc(var(--r) - 1px), #000 var(--r)) left / 51% 100% no-repeat,
-                  radial-gradient(circle var(--r) at 100% var(--perf), #0000 calc(var(--r) - 1px), #000 var(--r)) right / 51% 100% no-repeat;
-            mask: radial-gradient(circle var(--r) at 0 var(--perf), #0000 calc(var(--r) - 1px), #000 var(--r)) left / 51% 100% no-repeat,
-                  radial-gradient(circle var(--r) at 100% var(--perf), #0000 calc(var(--r) - 1px), #000 var(--r)) right / 51% 100% no-repeat;
+  /* ---------- referral (compact: QR + progress + share dropdown) ---------- */
+  .d-ref { padding: 14px; }
+  .d-ref-row { display: flex; gap: 14px; align-items: center; }
+  .d-ref-qr {
+    position: relative; flex: none; width: 96px; height: 96px; padding: 7px; border-radius: 18px; cursor: pointer;
+    background: #fff; border: 1px solid var(--surface-border); display: grid; place-items: center;
+    transition: transform .15s ease, border-color .15s ease;
   }
-  .d-ticket h3, .d-ticket p { color: inherit; }
-  .d-ticket-top { height: var(--perf); padding: 0 18px; display: flex; align-items: center; gap: 12px; }
-  .d-ticket-amt { font-family: var(--font-num); font-weight: 700; font-size: 2.5rem; line-height: 1; letter-spacing: -0.02em; white-space: nowrap; }
-  .d-ticket-amt small { font-size: 0.95rem; letter-spacing: 0; margin-left: 3px; }
-  .d-ticket-top h3 { font-size: 0.98rem; font-weight: 800; line-height: 1.3; }
-  .d-ticket-top p { font-size: 0.74rem; font-weight: 600; color: rgba(36,29,16,0.72); margin-top: 3px; line-height: 1.45; }
-  .d-ticket-perf { height: 0; margin: 0 16px; border-top: 2px dashed rgba(36,29,16,0.3); }
-  .d-ticket-body { padding: 14px 16px 16px; }
-
-  .d-linkrow { display: flex; gap: 8px; }
-  .d-linkrow input {
-    flex: 1; min-width: 0; min-height: 44px; padding: 0 12px; border-radius: var(--radius-md); font-family: var(--font-en); font-size: 0.78rem; font-weight: 600;
-    color: #241d10; background: rgba(255,255,255,0.55); border: 1px solid rgba(36,29,16,0.3); text-overflow: ellipsis;
+  .d-ref-qr:active { transform: scale(.96); border-color: var(--color-accent); }
+  .d-ref-qr img { display: block; width: 100%; height: 100%; }
+  .d-ref-qr .spinner { margin: 0; }
+  .d-ref-qr-zoom { position: absolute; right: -6px; bottom: -6px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--color-accent); color: #211a0d; border: 2px solid var(--surface); }
+  .d-ref-main { flex: 1; min-width: 0; }
+  .d-ref-title { font-size: 0.95rem; font-weight: 800; line-height: 1.35; }
+  .d-ref-title b { font-family: var(--font-num); color: var(--color-accent); }
+  .d-ref-sub { font-size: 0.73rem; font-weight: 600; color: var(--text-muted); margin-top: 2px; line-height: 1.45; }
+  .d-ref-sub b { color: var(--text-secondary); font-family: var(--font-num); }
+  .d-ref-bar { height: 6px; border-radius: 6px; background: var(--surface-edge); overflow: hidden; margin-top: 9px; }
+  .d-ref-bar i { display: block; height: 100%; border-radius: 6px; background: var(--color-accent); transition: width 1s cubic-bezier(0.22, 1, 0.36, 1); }
+  .d-ref-actions { position: relative; display: flex; gap: 8px; margin-top: 12px; }
+  .d-rbtn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 38px; padding: 0 13px; border-radius: 12px;
+    font: inherit; font-size: 0.8rem; font-weight: 800; cursor: pointer; border: 1px solid var(--surface-border);
+    background: var(--surface-solid); color: var(--text-primary); transition: background var(--transition);
   }
-  .d-linkrow .d-btn { width: auto; margin: 0; padding: 0 16px; background: #21262f; color: var(--color-accent); border: none; }
-  .d-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
-  .d-actions .d-btn { margin: 0; background: rgba(255,255,255,0.5); color: #241d10; border: 1px solid rgba(36,29,16,0.22); }
-
-  .d-ladder { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 14px; }
-  .d-step { text-align: center; padding: 8px 2px; border-radius: var(--radius-sm); border: 1px solid rgba(36,29,16,0.25); }
-  .d-step p:first-child { font-size: 0.7rem; font-weight: 700; color: rgba(36,29,16,0.7); }
-  .d-step p:last-child { font-family: var(--font-num); font-size: 0.94rem; font-weight: 700; margin-top: 1px; }
-  .d-step-done { background: #21262f; border-color: #21262f; }
-  .d-step-done p:first-child { color: rgba(184,134,60,0.75); }
-  .d-step-done p:last-child { color: var(--color-accent); }
-
-  .d-ladder-msg { font-size: 0.8rem; font-weight: 700; margin-top: 10px; line-height: 1.55; }
-  .d-ladder-msg b { font-family: var(--font-num); }
-
-  .d-joined { margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(36,29,16,0.22); }
-  .d-joined-h { display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 800; }
-  .d-joined-h b { font-family: var(--font-num); }
-  .d-joined-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-  .d-joined-pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 3px; border-radius: 999px; background: rgba(255,255,255,0.55); font-size: 0.76rem; font-weight: 700; }
-  .d-joined-pill i { width: 22px; height: 22px; border-radius: 50%; background: #21262f; color: var(--color-accent); font-style: normal; display: inline-flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; }
-  .d-foot { font-size: 0.7rem; font-weight: 600; color: rgba(36,29,16,0.65); margin-top: 10px; line-height: 1.5; }
+  .d-rbtn:active { background: var(--surface-highlight); }
+  .d-rbtn.pri { background: var(--color-accent); color: #211a0d; border-color: transparent; flex: 1; }
+  .d-rbtn svg { flex: none; }
+  .d-rbtn .d-caret { transition: transform .18s ease; }
+  .d-rbtn[aria-expanded="true"] .d-caret { transform: rotate(180deg); }
+  .d-menu {
+    position: absolute; right: 0; top: calc(100% + 8px); z-index: 25; min-width: 220px; padding: 6px;
+    background: var(--surface-solid); border: 1px solid var(--surface-border); border-radius: 16px;
+    box-shadow: 0 16px 38px rgba(20,18,10,0.2); transform-origin: top right;
+  }
+  .d-menu[hidden] { display: none; }
+  .d-menu:not([hidden]) { animation: dMenuIn .16s cubic-bezier(.22,1,.36,1); }
+  @keyframes dMenuIn { from { opacity: 0; transform: translateY(-6px) scale(.97); } to { opacity: 1; transform: none; } }
+  .d-menu button {
+    display: flex; align-items: center; gap: 11px; width: 100%; min-height: 44px; padding: 8px 10px; border: 0; border-radius: 11px; text-align: left;
+    background: none; color: var(--text-primary); font: inherit; font-size: 0.86rem; font-weight: 700; cursor: pointer;
+  }
+  .d-menu button:active { background: var(--color-accent-soft); }
+  .d-menu button i { width: 30px; height: 30px; border-radius: 9px; flex: none; display: grid; place-items: center; background: var(--color-accent-soft); color: var(--color-accent); }
+  .d-ref-how { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--surface-border); font-size: 0.7rem; font-weight: 700; color: var(--text-secondary); }
+  .d-ref-how span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .d-ref-how em { font-style: normal; width: 18px; height: 18px; border-radius: 50%; display: inline-grid; place-items: center; background: var(--color-accent-soft); color: var(--color-accent); font-family: var(--font-num); font-size: 0.66rem; font-weight: 800; }
+  .d-ref-how svg { color: var(--text-muted); flex: none; }
+  .d-ref-joined { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: 0.74rem; font-weight: 700; color: var(--text-secondary); }
+  .d-ref-av { display: flex; }
+  .d-ref-av i { width: 26px; height: 26px; border-radius: 50%; margin-left: -8px; display: grid; place-items: center; font-style: normal; font-size: 0.7rem; font-weight: 800; background: #21262f; color: var(--color-accent); border: 2px solid var(--surface); }
+  .d-ref-av i:first-child { margin-left: 0; }
+  @media (max-width: 359px) { .d-ref-qr { width: 80px; height: 80px; } .d-ref-how { font-size: 0.64rem; } }
 
   /* ---------- XP breakdown ---------- */
   .d-stack { display: flex; height: 10px; border-radius: 6px; overflow: hidden; background: var(--surface-edge); }
@@ -294,6 +316,7 @@ import { showPendingExamAlert } from "../js/utils/pending-exam-alert.js";
 import { resolveCompletedChallenges, getChallengeBonusXP } from "../js/utils/challenge-utils.js";
 import { getCompletedImprovementAttempts } from "../js/utils/improvement-xp-integration.js";
 import { getStudentBattleXP } from "../js/utils/battle-utils.js?v=roomcard1";
+import { openInviteSheet, makeInviteQr, inviteLink, copyInvite, whatsappInvite, shareInvite } from "../js/utils/invite-sheet.js";
 import { mountExamClaim } from "../js/utils/exam-claim-ui.js";
 import { STORE_ITEMS, getStoreInventory, getSpentXP, getAvailableBattleRoomCardCount } from "../js/utils/store-utils.js?v=roomcard1";
 
@@ -356,6 +379,9 @@ const ic = {
   clockc: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   bulb: '<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.45.9 1.15.9 1.9V16h5.4v-.3c0-.75.3-1.45.9-1.9A6 6 0 0 0 12 3z"/>',
   swords: '<path d="M13 2 4 11l3 3 9-9V2z"/><path d="m11 13 6 6"/><path d="m20 16-4 4"/>',
+  qr: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3M21 14v.01M14 21h.01M17.5 21H21v-3.5"/>',
+  expand: '<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>',
+  chev: '<path d="m9 6 6 6-6 6"/>',
   store: '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>'
 };
 const svg = (name, size = 18) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ic[name]}</svg>`;
@@ -365,26 +391,33 @@ const CAT_COLORS = {
   flawless: "#d27a3a", mastery: "#a05a8a", improvement: "#5b8f3a", streak: "#a6402f", referral: "#d9b06a"
 };
 
+const greeting = () => { const h = new Date().getHours(); return h < 5 ? "শুভ রাত্রি" : h < 12 ? "শুভ সকাল" : h < 16 ? "শুভ দুপুর" : h < 19 ? "শুভ বিকেল" : "শুভ সন্ধ্যা"; };
+
 /* ---------------- page skeleton ---------------- */
 async function render() {
   shell.innerHTML = `
     ${renderStudentHeader(student, "dashboard")}
 
+    <div class="d-greet d-sec">
+      <h1>${greeting()}, <span>${esc(String(student.name || "শিক্ষার্থী").trim().split(/\s+/)[0])}</span></h1>
+      <p>${new Date().toLocaleDateString("bn-BD", { weekday: "long", day: "numeric", month: "long" })}</p>
+    </div>
+
     <div id="timerSection" class="d-sec d-timer-wrap" hidden></div>
     <div id="cardReminderSection" class="d-sec" hidden></div>
 
-    <div id="heroSection" class="d-sec"><div class="skeleton" style="height:190px;border-radius:24px;"></div></div>
+    <div id="heroSection" class="d-sec"><div class="skeleton" style="height:230px;border-radius:24px;"></div></div>
     <div id="upcomingSection" class="d-sec" hidden></div>
     <div class="d-links d-sec">
-      <a href="../student/analytics.html" class="d-link">${svg("chart")} বিশ্লেষণ</a>
-      <a href="../student/comparison.html" class="d-link">${svg("compare")} তুলনা</a>
-      <a href="../student/battle-lobby.html" class="d-link">${svg("bolt")} ব্যাটল মোড</a>
-      <a href="../student/store.html" class="d-link">${svg("store")} XP স্টোর</a>
+      <a href="../student/analytics.html" class="d-link"><span class="d-link-ico">${svg("chart")}</span>বিশ্লেষণ</a>
+      <a href="../student/comparison.html" class="d-link"><span class="d-link-ico">${svg("compare")}</span>তুলনা</a>
+      <a href="../student/battle-lobby.html" class="d-link"><span class="d-link-ico">${svg("bolt")}</span>ব্যাটল মোড</a>
+      <a href="../student/store.html" class="d-link"><span class="d-link-ico">${svg("store")}</span>XP স্টোর</a>
     </div>
 
     <div id="walletSection" class="d-sec"><div class="skeleton" style="height:128px;border-radius:16px;"></div></div>
-    <div id="recentSection" class="d-sec"></div>
-    <div id="referralSection" class="d-sec d-last"><div class="skeleton" style="height:300px;border-radius:22px;"></div></div>
+    <div id="referralSection" class="d-sec"><div class="skeleton" style="height:150px;border-radius:20px;"></div></div>
+    <div id="recentSection" class="d-sec d-last"></div>
   `;
   loadUpcoming();
   loadMain();
@@ -674,7 +707,7 @@ async function loadMain() {
 }
 
 /* ---------------- hero ---------------- */
-function renderHero({ xp, rank, leaderboard }) {
+function renderHero({ xp, rank, leaderboard, overall, results }) {
   const lv = getLevelInfo(xp.totalXP);
   const R = 50, C = 2 * Math.PI * R;
   const last = xp.exams[0];
@@ -695,7 +728,6 @@ function renderHero({ xp, rank, leaderboard }) {
           ${xp.spentXP > 0 ? `<span class="d-hero-spent">(খরচ হয়েছে ${fmt(xp.spentXP)})</span>` : ""}
         </a>
         <div class="d-chips">
-          <span class="d-chip">র‍্যাঙ্ক <b>${rank ? rank.rank : "—"}</b>${rank ? ` / ${rank.total}` : ""}</span>
           ${last ? `<span class="d-chip d-chip-gain">শেষ পরীক্ষায় +<b>${fmt(last.xp)}</b></span>` : ""}
         </div>
       </div>
@@ -708,6 +740,11 @@ function renderHero({ xp, rank, leaderboard }) {
         </svg>
         <div class="d-seal-center"><span>লেভেল</span><b>${lv.level}</b></div>
       </div>
+      <div class="d-hero-stats">
+        <div class="d-hs"><b>${rank ? "#" + rank.rank : "—"}${rank ? `<small> /${rank.total}</small>` : ""}</b><span>র‍্যাঙ্ক</span></div>
+        <div class="d-hs"><b>${fmt(results.length)}</b><span>পরীক্ষা দিয়েছ</span></div>
+        <div class="d-hs"><b>${overall && overall.avgPercentage != null ? overall.avgPercentage + "<small>%</small>" : "—"}</b><span>গড় স্কোর</span></div>
+      </div>
       <p class="d-hero-foot">
         ${lv.isMax ? "তুমি সর্বোচ্চ লেভেলে পৌঁছে গেছো।" : `লেভেল ${lv.nextLevel}-এ যেতে আর <b>${fmt(lv.xpNeeded)}</b> XP দরকার।`}
         ${footTop ? `<br>${footTop}` : ""}
@@ -717,76 +754,76 @@ function renderHero({ xp, rank, leaderboard }) {
   countUp($("heroXp"), xp.totalXP, 1200);
 }
 
-/* ---------------- referral ticket ---------------- */
+/* ---------------- referral (compact) ---------------- */
 function renderReferral({ myRefs }) {
   const count = myRefs.length;
-  const link = new URL(`../join.html?ref=${encodeURIComponent(student.studentId)}`, window.location.href).href;
-  const shareText = "আমার সাথে পরীক্ষার প্রস্তুতিতে যুক্ত হও:";
   const steps = [1, 3, 5, 10];
   const next = steps.find(n => n > count);
+  const prev = [...steps].reverse().find(n => n <= count) || 0;
+  const pct = next ? Math.round(((count - prev) / (next - prev)) * 100) : 100;
+  const shown = myRefs.slice(0, 4);
 
-  let msg;
-  if (count === 0) msg = `প্রথম বন্ধু যুক্ত হলেই <b>+${REFERRAL_XP} XP</b> তোমার।`;
-  else if (next) msg = `এখন পর্যন্ত <b>${fmt(count * REFERRAL_XP)} XP</b>। আর <b>${next - count}</b> জন এলে মোট <b>${fmt(next * REFERRAL_XP)} XP</b>।`;
-  else msg = `দারুণ! ${count} জনে মোট <b>${fmt(count * REFERRAL_XP)} XP</b> — প্রতি নতুন বন্ধুতে আরও +${REFERRAL_XP}।`;
+  const sub = count === 0
+    ? `প্রথম বন্ধু যুক্ত হলেই <b>+${REFERRAL_XP} XP</b> তোমার।`
+    : next
+      ? `এখন পর্যন্ত <b>${fmt(count * REFERRAL_XP)} XP</b> · আর <b>${next - count}</b> জন এলে মোট <b>${fmt(next * REFERRAL_XP)}</b>`
+      : `${count} জনে মোট <b>${fmt(count * REFERRAL_XP)} XP</b> — প্রতি নতুন বন্ধুতে আরও +${REFERRAL_XP}`;
 
-  const shown = myRefs.slice(0, 6);
   $("referralSection").innerHTML = `
-    <p class="d-h">${svg("gift", 20)} বন্ধু রেফার করো, XP জেতো</p>
-    <div class="d-ticket-wrap">
-      <div class="d-ticket">
-        <div class="d-ticket-top">
-          <div class="d-ticket-amt">+${REFERRAL_XP}<small>XP</small></div>
-          <div>
-            <h3>প্রতি বন্ধু রেফারে</h3>
-            <p>বন্ধু তোমার লিংক দিয়ে যুক্ত হলেই XP তোমার অ্যাকাউন্টে জমা হবে।</p>
-          </div>
-        </div>
-        <div class="d-ticket-perf"></div>
-        <div class="d-ticket-body">
-          <div class="d-linkrow">
-            <input id="refLink" type="text" readonly value="${esc(link)}" aria-label="তোমার রেফার লিংক">
-            <button class="d-btn" id="copyRef" type="button">${svg("copy", 16)} কপি</button>
-          </div>
-          <div class="d-actions">
-            <button class="d-btn" id="waRef" type="button">${svg("msg", 16)} WhatsApp</button>
-            <button class="d-btn" id="shareRef" type="button">${svg("share", 16)} শেয়ার</button>
-          </div>
-
-          <div class="d-ladder">
-            ${steps.map(n => `<div class="d-step ${count >= n ? "d-step-done" : ""}"><p>${n} জন</p><p>+${fmt(n * REFERRAL_XP)}</p></div>`).join("")}
-          </div>
-          <p class="d-ladder-msg">${msg}</p>
-
-          <div class="d-joined">
-            <div class="d-joined-h"><span>তোমার মাধ্যমে যুক্ত</span><b>${count} জন</b></div>
-            ${count === 0
-              ? `<p class="d-foot" style="margin-top:6px;">এখনো কেউ যুক্ত হয়নি। লিংকটা গ্রুপে বা বন্ধুকে পাঠিয়ে দাও।</p>`
-              : `<div class="d-joined-list">${shown.map(s => `<span class="d-joined-pill"><i>${esc(String(s.name || "?").charAt(0))}</i>${esc(s.name)}</span>`).join("")}${count > shown.length ? `<span class="d-joined-pill" style="padding:3px 10px;">+${count - shown.length}</span>` : ""}</div>`}
-          </div>
-          <p class="d-foot">বন্ধুর আবেদন অ্যাডমিন অনুমোদন করলে সে তালিকায় আসবে এবং তোমার XP যুক্ত হবে।</p>
+    <p class="d-h">${svg("gift", 20)} বন্ধু আনো, XP জেতো</p>
+    <div class="d-card d-ref">
+      <div class="d-ref-row">
+        <button type="button" class="d-ref-qr" id="refQr" aria-label="QR বড় করে দেখো"><div class="spinner"></div></button>
+        <div class="d-ref-main">
+          <p class="d-ref-title">প্রতি বন্ধুতে <b>+${REFERRAL_XP} XP</b></p>
+          <p class="d-ref-sub">${sub}</p>
+          <div class="d-ref-bar"><i style="width:0" data-w="${pct}"></i></div>
         </div>
       </div>
+
+      <div class="d-ref-actions">
+        <button type="button" class="d-rbtn pri" id="refQrBtn">${svg("qr", 16)} QR দেখো</button>
+        <button type="button" class="d-rbtn" id="refMenuBtn" aria-haspopup="true" aria-expanded="false">শেয়ার ${svg("down", 14).replace("<svg", '<svg class="d-caret"')}</button>
+        <div class="d-menu" id="refMenu" role="menu" hidden>
+          <button type="button" role="menuitem" data-a="copy"><i>${svg("copy", 16)}</i>লিংক কপি করো</button>
+          <button type="button" role="menuitem" data-a="wa"><i>${svg("msg", 16)}</i>WhatsApp-এ পাঠাও</button>
+          <button type="button" role="menuitem" data-a="share"><i>${svg("share", 16)}</i>অন্য অ্যাপে শেয়ার</button>
+        </div>
+      </div>
+
+      <div class="d-ref-how" aria-label="কীভাবে কাজ করে">
+        <span><em>১</em>QR স্ক্যান</span>${svg("chev", 12)}
+        <span><em>২</em>আবেদন</span>${svg("chev", 12)}
+        <span><em>৩</em>অনুমোদন</span>${svg("chev", 12)}
+        <span><em>+</em>XP জমা</span>
+      </div>
+
+      ${count > 0 ? `<div class="d-ref-joined"><div class="d-ref-av">${shown.map(s => `<i>${esc(String(s.name || "?").charAt(0))}</i>`).join("")}</div><span>${count} জন তোমার মাধ্যমে যুক্ত</span></div>` : ""}
     </div>`;
 
-  const copyBtn = $("copyRef");
-  copyBtn.addEventListener("click", async () => {
-    const ok = await copyText(link);
-    if (ok) {
-      copyBtn.innerHTML = `${svg("check", 16)} হয়েছে`;
-      setTimeout(() => { copyBtn.innerHTML = `${svg("copy", 16)} কপি`; }, 1600);
-      showToast("লিংক কপি হয়েছে", "success");
-    } else { $("refLink").select(); showToast("কপি করা যায়নি — লিংকটা সিলেক্ট করা আছে, ধরে কপি করো।", "error"); }
+  const open = () => openInviteSheet(student, { xpPerFriend: REFERRAL_XP });
+  $("refQr").addEventListener("click", open);
+  $("refQrBtn").addEventListener("click", open);
+  makeInviteQr(student, 320).then(url => {
+    const b = $("refQr"); if (!b) return;
+    b.innerHTML = url
+      ? `<img src="${url}" alt="QR"><span class="d-ref-qr-zoom">${svg("expand", 12)}</span>`
+      : `<span class="d-sub" style="text-align:center">QR নেই</span>`;
   });
-  $("refLink").addEventListener("focus", (e) => e.target.select());
-  $("waRef").addEventListener("click", () => {
-    window.open(`https://wa.me/?text=${encodeURIComponent(shareText + " " + link)}`, "_blank", "noopener");
+
+  // share dropdown
+  const btn = $("refMenuBtn"), menu = $("refMenu");
+  const setMenu = (on) => { menu.hidden = !on; btn.setAttribute("aria-expanded", on ? "true" : "false"); };
+  btn.addEventListener("click", (e) => { e.stopPropagation(); setMenu(menu.hidden); });
+  menu.addEventListener("click", (e) => {
+    const a = e.target.closest("button[data-a]"); if (!a) return;
+    e.stopPropagation(); setMenu(false);
+    if (a.dataset.a === "copy") copyInvite(student);
+    else if (a.dataset.a === "wa") whatsappInvite(student);
+    else shareInvite(student);
   });
-  $("shareRef").addEventListener("click", async () => {
-    if (navigator.share) { try { await navigator.share({ title: "যুক্ত হও", text: shareText, url: link }); } catch {} return; }
-    const ok = await copyText(`${shareText} ${link}`);
-    showToast(ok ? "লিংক কপি হয়েছে — যেকোনো জায়গায় পেস্ট করো" : "শেয়ার সাপোর্ট নেই — লিংক কপি করো", ok ? "success" : "error");
-  });
+  document.addEventListener("click", () => { if (!menu.hidden) setMenu(false); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !menu.hidden) setMenu(false); });
 }
 
 
@@ -828,6 +865,7 @@ function animateBars() {
     const ring = $("sealRing");
     if (ring) ring.style.strokeDashoffset = (Number(ring.dataset.c) * (1 - Number(ring.dataset.pct) / 100)).toFixed(2);
     document.querySelectorAll(".d-trend i").forEach(b => { b.style.height = b.dataset.h + "%"; });
+    document.querySelectorAll(".d-ref-bar i").forEach(b => { b.style.width = b.dataset.w + "%"; });
     document.querySelectorAll(".d-bar i").forEach(b => { b.style.width = b.dataset.w + "%"; });
   }));
 }
