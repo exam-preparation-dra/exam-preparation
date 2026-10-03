@@ -17,6 +17,7 @@ import {
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { getUpcomingExams } from "./results-utils.js";
+import { watchChatBadge } from "./chat-utils.js";
 
 // ---------- Theme (light/dark) ----------
 export function initTheme() {
@@ -333,6 +334,27 @@ function paintNotificationBadge() {
   const unread = open ? 0 : lastNotificationItems.filter(i => notificationMillis(i.createdAt) > seen).length;
   count.style.display = unread ? "grid" : "none";
   count.textContent = unread > 9 ? "9+" : String(unread);
+}
+
+// ---------- Friend chat (student/chat.html) -> bell + nav badge ----------
+// Fed live by watchChatBadge(); renderGlobalNotifications() turns it into
+// "new messages" / "group invite" cards, and the Leaderboard nav tab gets a red count.
+let chatNotif = { total: 0, rooms: [], inviteRooms: [] };
+function paintChatNavBadge(total) {
+  const ico = document.querySelector('.hdr-nav-tab[href*="leaderboard"] .hdr-nav-ico');
+  if (!ico) return;
+  ico.querySelector(".hdr-nav-badge")?.remove();
+  if (total > 0) {
+    const b = document.createElement("span");
+    b.className = "hdr-nav-badge";
+    b.textContent = total > 9 ? "9+" : String(total);
+    ico.appendChild(b);
+  }
+}
+function chatPreviewText(m, names) {
+  if (!m) return "নতুন বার্তা";
+  if (m.deleted || (!m.key && !m.text)) return "বার্তা মুছে ফেলা হয়েছে";
+  return `${m.from && names[m.from] ? String(names[m.from]).split(/\s+/)[0] + ": " : ""}${m.text || ""}`;
 }
 
 const NOTIF_TRASH_ICON = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>`;
@@ -916,7 +938,27 @@ async function renderGlobalNotifications(student) {
     const hidden =
       getHiddenNotificationKeys();
 
+    const myChatId = student.studentId;
+    const chatItems = [
+      ...(chatNotif.rooms || []).filter(r => Number(r.unread?.[myChatId]) > 0).map(r => {
+        const other = (r.members || []).find(x => x !== myChatId);
+        return {
+          key: `chat:${r.id}`, type: "chat", id: r.id, count: Number(r.unread[myChatId]),
+          sender: r.type === "group" ? (r.name || "গ্রুপ চ্যাট") : (names[other] || "একজন বন্ধু"),
+          text: chatPreviewText(r.lastMsg, names),
+          createdAt: r.lastAt || new Date()
+        };
+      }),
+      ...(chatNotif.inviteRooms || []).map(r => ({
+        key: `chatinv:${r.id}`, type: "chatinvite", id: r.id,
+        sender: names[r.createdBy] || "একজন বন্ধু",
+        text: r.name || "নতুন গ্রুপ",
+        createdAt: r.createdAt || new Date()
+      }))
+    ];
+
     const allItems = [
+      ...chatItems,
       ...cheerItems,
       ...requests.map(
         request => ({
@@ -1074,6 +1116,26 @@ async function renderGlobalNotifications(student) {
       items
         .map(item => {
 
+          if (item.type === "chat" || item.type === "chatinvite") {
+            const invite = item.type === "chatinvite";
+            return `
+              <div class="global-notification-item gn-cheer" data-notification-key="${escapeNotification(item.key)}">
+                <div class="gn-cheer-top">
+                  <div class="global-notification-icon">${NOTIF_MSG_ICON}</div>
+                  <strong class="gn-cheer-from">${escapeNotification(item.sender)}</strong>
+                  <span class="gn-cheer-tag">${invite ? "আমন্ত্রণ" : `${item.count}টি নতুন`}</span>
+                </div>
+                <p class="gn-cheer-text">${invite ? `“${escapeNotification(item.text)}” গ্রুপে যোগ দিতে আমন্ত্রণ জানিয়েছে` : escapeNotification(item.text)}</p>
+                <div class="gn-cheer-time">
+                  <b>${notificationClock(item.createdAt)}</b>
+                  <span>${notificationAge(item.createdAt)}</span>
+                </div>
+                <div class="global-notification-actions">
+                  <button type="button" class="global-notif-open-chat" data-room="${invite ? "" : escapeNotification(item.id)}">${invite ? "আমন্ত্রণ দেখো" : "চ্যাট খোলো"}</button>
+                </div>
+              </div>
+            `;
+          }
           if (item.type === "cheer") {
             return `
               <div class="global-notification-item gn-cheer" data-notification-key="${escapeNotification(item.key)}">
@@ -1399,6 +1461,15 @@ async function renderGlobalNotifications(student) {
       button.onclick = event => {
         event.stopPropagation();
         window.location.href = "../student/leaderboard.html?tab=friends";
+      };
+    });
+
+    // ---------- Open chat ----------
+    list.querySelectorAll(".global-notif-open-chat").forEach(button => {
+      button.onclick = event => {
+        event.stopPropagation();
+        const room = button.dataset.room;
+        window.location.href = "../student/chat.html" + (room ? `?room=${encodeURIComponent(room)}` : "");
       };
     });
 
@@ -1733,6 +1804,17 @@ function startGlobalNotificationSystem(
       () => {}
     )
   );
+
+  // friend chat: unread messages + group invites -> bell cards and nav badge
+  try {
+    notificationUnsubs.push(
+      watchChatBadge(student.studentId, state => {
+        chatNotif = state;
+        paintChatNavBadge(state.total);
+        renderGlobalNotifications(student);
+      })
+    );
+  } catch (e) { console.warn("chat badge unavailable", e); }
 
   renderGlobalNotifications(
     student
