@@ -943,3 +943,11 @@ a.hdr-menu-item:active, a.hdr-menu-item.active, button.hdr-menu-item:active { ba
 
 /* preset-message icons (replace native emoji) */
 .cheer-ico { width: 16px; height: 16px; flex: 0 0 auto; }
+
+/* unread chat count on the Leaderboard nav tab (set by ui-utils paintChatNavBadge) */
+.hdr-nav-ico { position: relative; }
+.hdr-nav-badge {
+  position: absolute; top: -5px; right: -9px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px;
+  background: #ef4444; color: #fff; font-size: 10px; font-weight: 800; line-height: 16px; text-align: center;
+  box-shadow: 0 0 0 2px var(--surface-solid, #fff); pointer-events: none;
+}
