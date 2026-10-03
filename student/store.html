@@ -585,7 +585,7 @@ async function loadAll() {
   const myRefs = allStudents.filter(s => s.referredBy === student.studentId && s.studentId !== student.studentId);
   const xp = computeStudentXP(results, {
     referralCount: myRefs.length, challengeBonusXP,
-    improvementPracticeResults: improvementResults, battleXP, spentXP
+    improvementPracticeResults: improvementResults, battleXP, spentXP, student
   });
 
   currentTotalXP = xp.totalXP;

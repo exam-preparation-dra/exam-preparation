@@ -289,7 +289,8 @@ import { subscribeToUpcomingExams, getApprovedResults, getStudentResultStatusMap
 import { getSubjects, getTopics, buildNameMap } from "../js/utils/syllabus-utils.js";
 import { computeOverallStats, computeSubjectStats, computeTopicStats } from "../js/utils/analytics-utils.js";
 import { generateMotivation } from "../js/utils/motivation-utils.js";
-import { computeStudentXP, computeMaxExamXP, getLevelInfo, XP_CATEGORIES, REFERRAL_XP } from "../js/utils/xp-utils.js";
+import { computeStudentXP, computeMaxExamXP, getLevelInfo, XP_CATEGORIES, REFERRAL_XP, getEarlyBonus, EXAM_BONUS } from "../js/utils/xp-utils.js";
+import { showPendingExamAlert } from "../js/utils/pending-exam-alert.js";
 import { resolveCompletedChallenges, getChallengeBonusXP } from "../js/utils/challenge-utils.js";
 import { getCompletedImprovementAttempts } from "../js/utils/improvement-xp-integration.js";
 import { getStudentBattleXP } from "../js/utils/battle-utils.js?v=roomcard1";
@@ -581,6 +582,10 @@ function renderUpcoming(el, exams, resultMap) {
   // if everything is submitted, the latest submitted one (so the result stays reachable).
   const notDone = eligible.find(e => !resultMap[e.id]);
   const list = notDone ? [notDone] : (eligible.length ? [eligible[eligible.length - 1]] : []);
+  // Pending-exam popup: every time the dashboard opens (animated, name shown big).
+  if (notDone && notDone.status === "published" && now >= startOf(notDone)) {
+    showPendingExamAlert({ student, exam: notDone, examUrl: "../student/exam.html?examId=" + encodeURIComponent(notDone.id) });
+  }
   if (list.length === 0) {
     el.hidden = false;
     el.innerHTML = `<p class="d-h">${svg("clock", 20)} চলমান পরীক্ষা</p><div class="d-card"><p class="d-sub" style="text-align:center;padding:6px 0;">এখন কোনো পরীক্ষা চালু নেই।</p></div>`;
@@ -622,6 +627,7 @@ function renderUpcoming(el, exams, resultMap) {
           <p>এই পরীক্ষায় সর্বোচ্চ XP<br><span class="d-sub">উন্নতি ও ধারাবাহিকতা বোনাস আলাদা</span></p>
           <strong>${fmt(maxXP)}</strong>
         </div>
+        ${(() => { const eb = !own && getEarlyBonus(exam, now); return eb ? `<div class="d-xp-line"><p>আজ দিলে এক্সট্রা বোনাস<br><span class="d-sub">${eb.day}ম দিন · যত দেরি তত কম, ${EXAM_BONUS.days.length} দিনে শেষ</span></p><strong>+${fmt(eb.bonus)}</strong></div>` : ""; })()}
         ${action}
       </div>`;
   }).join("");
@@ -645,7 +651,7 @@ async function loadMain() {
     const leaderboard = await getLeaderboardData(allStudents);
 
     const myRefs = allStudents.filter(s => s.referredBy === student.studentId && s.studentId !== student.studentId);
-    const xp = computeStudentXP(results, { referralCount: myRefs.length, challengeBonusXP, improvementPracticeResults: improvementResults, battleXP, spentXP });
+    const xp = computeStudentXP(results, { referralCount: myRefs.length, challengeBonusXP, improvementPracticeResults: improvementResults, battleXP, spentXP, student });
     const myIdx = leaderboard.findIndex(r => r.studentId === student.studentId);
     const rank = myIdx >= 0 ? { rank: myIdx + 1, total: leaderboard.length } : null;
 
