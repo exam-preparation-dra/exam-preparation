@@ -2037,20 +2037,40 @@ export function renderStudentHeader(
       </div>
 
       <div class="hdr-menu" id="hdrMenu" role="menu">
-        <a href="../student/history.html" class="hdr-menu-item ${activeKey === "history" ? "active" : ""}" role="menuitem">${icons.history}<span>ইতিহাস</span></a>
-        <div class="hdr-menu-item hdr-menu-row">
-          <span>ডার্ক মোড</span>
-          <button class="theme-toggle" id="themeToggle" type="button" aria-label="থিম পরিবর্তন" title="থিম পরিবর্তন"><span class="theme-toggle-thumb"></span></button>
+        <div class="hdr-menu-head">
+          <span class="brand-mark hdr-menu-av">${
+            student?.photoURL
+              ? `<img src="${escapeNotification(student.photoURL)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;" />`
+              : escapeNotification(initial)
+          }</span>
+          <span class="hdr-menu-who"><b>${safeName}</b><small>${safeStudentId}</small></span>
         </div>
-        <div class="hdr-menu-item hdr-menu-row">
-          <span>পরীক্ষার টাইমার</span>
-          <button class="hdr-switch" id="examTimerToggle" type="button" role="switch" aria-checked="true" aria-label="পরীক্ষার টাইমার দেখাও বা লুকাও"><span></span></button>
-        </div>
-        <a href="../index.html" class="hdr-menu-item" role="menuitem">${icons.arrowLeft}<span>Back</span></a>
-        <button type="button" class="hdr-menu-item" id="hdrLogoutBtn" role="menuitem" style="width:100%;background:none;border:0;font:inherit;color:var(--color-danger);cursor:pointer;text-align:left">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
-          <span>লগআউট</span>
+
+        <button type="button" class="hdr-menu-qr" id="hdrQrBtn" role="menuitem">
+          <span class="hdr-menu-qr-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3M21 14v.01M14 21h.01M17.5 21H21v-3.5"/></svg></span>
+          <span class="hdr-menu-qr-txt"><b>আমার ইনভাইট QR</b><small>বন্ধু স্ক্যান করলেই XP</small></span>
+          <svg class="hdr-menu-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
         </button>
+
+        <div class="hdr-menu-group">
+          <a href="../student/history.html" class="hdr-menu-item ${activeKey === "history" ? "active" : ""}" role="menuitem">${icons.history}<span>ইতিহাস</span></a>
+          <div class="hdr-menu-item hdr-menu-row">
+            <span>ডার্ক মোড</span>
+            <button class="theme-toggle" id="themeToggle" type="button" aria-label="থিম পরিবর্তন" title="থিম পরিবর্তন"><span class="theme-toggle-thumb"></span></button>
+          </div>
+          <div class="hdr-menu-item hdr-menu-row">
+            <span>পরীক্ষার টাইমার</span>
+            <button class="hdr-switch" id="examTimerToggle" type="button" role="switch" aria-checked="true" aria-label="পরীক্ষার টাইমার দেখাও বা লুকাও"><span></span></button>
+          </div>
+        </div>
+
+        <div class="hdr-menu-group">
+          <a href="../index.html" class="hdr-menu-item" role="menuitem">${icons.arrowLeft}<span>Back</span></a>
+          <button type="button" class="hdr-menu-item hdr-menu-danger" id="hdrLogoutBtn" role="menuitem">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+            <span>লগআউট</span>
+          </button>
+        </div>
       </div>
     </header>
 
@@ -2118,6 +2138,18 @@ export function renderStudentHeader(
       document.addEventListener("click", () => setMenu(false));
       document.addEventListener("keydown", e => { if (e.key === "Escape") setMenu(false); });
     }
+
+    // ---------- Invite QR (opens the shared bottom sheet) ----------
+    const qrBtn = document.getElementById("hdrQrBtn");
+    if (qrBtn) qrBtn.onclick = async () => {
+      if (menu) { menu.classList.remove("open"); userBtn?.setAttribute("aria-expanded", "false"); }
+      try {
+        const m = await import("./invite-sheet.js");
+        let xpEach = 0;
+        try { xpEach = (await import("./xp-utils.js")).REFERRAL_XP || 0; } catch {}
+        m.openInviteSheet(student, { xpPerFriend: xpEach });
+      } catch (e) { console.error(e); showToast("QR খোলা যায়নি", "error"); }
+    };
 
     // ---------- Logout ----------
     const logoutBtn = document.getElementById("hdrLogoutBtn");
