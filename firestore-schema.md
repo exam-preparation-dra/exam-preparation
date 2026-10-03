@@ -147,6 +147,39 @@ results. The shape below is what those functions compute in memory:
 }
 ```
 
+### Friend chat — `chatRooms`, `chatRooms/{roomId}/messages`, `chatMeta`
+WhatsApp-style chat between friends (`student/chat.html`). Nobody types a
+message: every message is a ready-made preset (emoji + text) from
+`js/utils/chat-utils.js`. These rules use the student's real Firebase Auth
+identity (`stu-0001@students...` => `STU-0001`).
+```
+chatRooms/{roomId}            // dm: roomId = "dm_" + the two studentIds sorted, joined by "_"
+{
+  type: "dm" | "group",
+  members: [studentId],       // accepted members (dm: both)
+  invited: [studentId],       // group invites waiting for approval (never for dm)
+  name: string,               // group name ("" => auto name), max 24 chars
+  createdBy: studentId,
+  createdAt, lastAt: timestamp,
+  lastMsg: { id, from, key, text } | null,   // chat-list preview
+  unread: { [studentId]: number }            // unread counter per member (drives the red badges)
+}
+chatRooms/{roomId}/messages/{msgId}          // only the latest 30 are kept / shown
+{
+  from: studentId, key: "m01"…, text: "👋 Hello",   // text = fallback copy of the preset (<= 100 chars)
+  createdAt: timestamp,
+  deletedFor: [studentId],    // "delete for me"
+  deletedForAll: boolean      // "delete for everyone" (sender only; text/key are cleared)
+}
+chatMeta/{studentId}          // { lastSentAt } -> ONE message per 2 minutes, enforced in firestore.rules
+```
+* Group = max 5 people incl. the creator. The creator is the only member at the
+  start; each invited friend must **approve** (moves from `invited` to `members`).
+* A member can leave a group; the last member leaving deletes the room.
+* Unread counts feed: the "চ্যাট" tab on the leaderboard, the nav badge on the
+  Leaderboard tab, and the notification bell.
+* Needs no composite index (single `array-contains` queries, single-field `orderBy`).
+
 ## Relationships
 ```
 subjects 1—* chapters 1—* topics 1—* questions
