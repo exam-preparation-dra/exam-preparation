@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>চ্যাট — পরীক্ষা প্রস্তুতি</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration:.001ms!important; transition-duration:.001ms!important; } }
+  .cx-ico { width:20px; height:20px; flex:none; }
+  .cx button { font:inherit; color:inherit; }
+
+  /* ---------- layout: list view  <->  full-screen conversation (same single-column look as the rest of the app) ---------- */
+  .cx { display:block; }
+  .cx-side { display:flex; flex-direction:column; gap:10px; }
+  .cx-main { display:none; }
+  .cx.open .cx-side { display:none; }
+  .cx.open .cx-main { display:flex; position:fixed; top:0; bottom:0; left:50%; width:min(100%, 560px); transform:translateX(-50%); z-index:8500; background:var(--bg-app); flex-direction:column; box-shadow:0 0 0 1px var(--surface-border); }
+  body.cx-open .hdr, body.cx-open .hdr-nav { display:none !important; }
+  body.cx-open { overflow:hidden; }
+
+
+  /* ---------- list ---------- */
+  .cx-top { display:flex; align-items:center; gap:8px; }
+  .cx-top h1 { flex:1; margin:0; font-size:1.25rem; font-weight:800; }
+  .cx-ib { width:38px; height:38px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%; border:1px solid var(--surface-border); background:var(--surface-solid); cursor:pointer; color:var(--text-primary); }
+  .cx-ib:hover { background:var(--color-accent-soft); }
+  .cx-search { width:100%; padding:10px 14px; border-radius:99px; border:1px solid var(--surface-border); background:var(--surface-solid); color:inherit; font:inherit; font-size:.85rem; }
+  .cx-title { font-size:.72rem; font-weight:800; color:var(--text-muted); margin:6px 2px -4px; }
+  .cx-card { background:var(--surface); border:1px solid var(--surface-border); border-radius:16px; overflow:hidden; }
+  .cx-empty { text-align:center; color:var(--text-muted); font-size:.84rem; padding:34px 16px; line-height:1.7; }
+  .cx-empty b { display:block; font-size:2rem; margin-bottom:6px; }
+
+  .cx-av { position:relative; flex:none; border-radius:50%; background:var(--color-accent); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-weight:800; overflow:hidden; }
+  .cx-av img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .cx-av.grp { color:#fff; }
+  .cx-av svg { width:55%; height:55%; }
+
+  .cx-row { display:flex; align-items:center; gap:12px; padding:11px 14px; border-top:1px solid var(--surface-edge); cursor:pointer; }
+  .cx-row:first-child { border-top:0; }
+  .cx-row:hover, .cx-row.on { background:rgba(var(--color-accent-rgb),.08); }
+  .cx-mid { min-width:0; flex:1; }
+  .cx-nm { font-weight:800; font-size:.92rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .cx-pv { font-size:.78rem; color:var(--text-muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .cx-row.unread .cx-pv { color:var(--text-primary); font-weight:700; }
+  .cx-meta-r { flex:none; display:flex; flex-direction:column; align-items:flex-end; gap:5px; }
+  .cx-time { font-size:.66rem; color:var(--text-muted); font-weight:700; }
+  .cx-row.unread .cx-time { color:var(--color-accent); }
+  .cx-badge { min-width:20px; height:20px; padding:0 6px; border-radius:99px; background:var(--color-accent); color:#fff; font-size:.7rem; font-weight:800; display:inline-flex; align-items:center; justify-content:center; animation:cxPop .35s ease; }
+  @keyframes cxPop { 0% { transform:scale(.4); } 70% { transform:scale(1.18); } 100% { transform:scale(1); } }
+
+  .cx-inv { display:flex; align-items:center; gap:12px; padding:12px 14px; border-top:1px solid var(--surface-edge); }
+  .cx-inv:first-child { border-top:0; }
+  .cx-inv-acts { display:flex; gap:6px; flex:none; }
+  .cx-btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:9px 14px; border-radius:11px; border:1px solid var(--surface-border); background:var(--surface-solid); color:var(--text-primary); font-size:.78rem; font-weight:700; cursor:pointer; text-decoration:none; }
+  .cx-btn.primary { background:var(--color-accent); border-color:var(--color-accent); color:#fff; }
+  .cx-btn.ok { background:var(--color-success); border-color:var(--color-success); color:#fff; }
+  .cx-btn.danger { color:var(--color-danger); background:transparent; }
+  .cx-btn.sm { padding:7px 12px; font-size:.72rem; border-radius:9px; }
+  .cx-btn[disabled] { opacity:.5; cursor:default; }
+
+  /* ---------- conversation ---------- */
+  .cx-ch { display:flex; align-items:center; gap:10px; padding:10px 12px; padding-top:calc(10px + env(safe-area-inset-top)); background:var(--surface-solid); border-bottom:1px solid var(--surface-border); }
+  .cx-back { width:36px; height:36px; display:inline-flex; align-items:center; justify-content:center; border:0; background:transparent; border-radius:50%; cursor:pointer; color:var(--text-primary); }
+  .cx-ch .cx-mid { cursor:pointer; }
+  .cx-ch .cx-nm { font-size:.98rem; }
+  .cx-ch .cx-pv { margin-top:1px; }
+
+  .cx-msgs { flex:1; min-height:0; overflow-y:auto; padding:14px 12px 10px; display:flex; flex-direction:column; gap:3px; overscroll-behavior:contain;
+    background-color:var(--surface-highlight); background-image:radial-gradient(rgba(var(--color-accent-rgb),.10) 1px, transparent 1.4px); background-size:18px 18px; }
+  .cx-sys { align-self:center; max-width:88%; text-align:center; font-size:.68rem; font-weight:700; color:var(--text-muted); background:var(--surface-solid); border:1px solid var(--surface-border); border-radius:99px; padding:5px 12px; margin:2px 0 8px; }
+  .cx-day { align-self:center; margin:10px 0 6px; }
+  .cx-day span { font-size:.68rem; font-weight:800; color:var(--text-secondary); background:var(--surface-solid); border:1px solid var(--surface-border); border-radius:99px; padding:4px 12px; }
+  .cx-bw { display:flex; max-width:100%; }
+  .cx-bw.me { justify-content:flex-end; }
+  .cx-bw.first { margin-top:7px; }
+  .cx-bub { position:relative; max-width:min(78%, 420px); padding:7px 11px 5px; border-radius:14px; background:var(--surface-solid); border:1px solid var(--surface-border); box-shadow:var(--shadow-soft); cursor:pointer; word-break:break-word; animation:cxIn .22s ease both; }
+  @keyframes cxIn { from { opacity:0; transform:translateY(6px) scale(.97); } to { opacity:1; transform:none; } }
+  .cx-bw.them .cx-bub { border-top-left-radius:4px; }
+  .cx-bw.me .cx-bub { border-top-right-radius:4px; background:var(--color-accent); border-color:var(--color-accent); color:#fff; }
+  .cx-bw.pending .cx-bub { opacity:.7; }
+  .cx-sender { font-size:.68rem; font-weight:800; margin-bottom:2px; }
+  .cx-body { display:flex; align-items:center; gap:8px; font-size:.92rem; font-weight:600; line-height:1.4; }
+  .cx-em { font-size:1.45rem; line-height:1; flex:none; }
+  .cx-bub.emo { background:transparent; border-color:transparent; box-shadow:none; padding:2px 6px; }
+  .cx-bw.me .cx-bub.emo { color:var(--text-primary); background:transparent; }
+  .cx-bub.emo .cx-em { font-size:3rem; }
+  .cx-bub.emo .cx-t { display:block; text-align:right; }
+  .cx-t { font-size:.6rem; font-weight:700; opacity:.65; text-align:right; margin-top:2px; font-family:var(--font-num); }
+  .cx-bub.del { background:transparent; border-style:dashed; box-shadow:none; color:var(--text-muted); cursor:pointer; }
+  .cx-bw.me .cx-bub.del { background:transparent; color:var(--text-muted); border-color:var(--surface-border); }
+  .cx-bub.del .cx-body { font-style:italic; font-size:.8rem; font-weight:600; }
+
+  /* ---------- composer (preset-only) ---------- */
+  .cx-comp-wrap { background:var(--surface-solid); border-top:1px solid var(--surface-border); padding-bottom:env(safe-area-inset-bottom); }
+  .cx-wait { display:none; align-items:center; justify-content:center; gap:6px; padding:6px 12px 0; font-size:.7rem; font-weight:800; color:var(--text-muted); }
+  .cx-wait.on { display:flex; }
+  .cx-wait b { font-family:var(--font-num); color:var(--color-accent); }
+  .cx-comp { display:flex; align-items:center; gap:8px; padding:8px 10px; }
+  .cx-pick { width:42px; height:42px; flex:none; display:inline-flex; align-items:center; justify-content:center; border-radius:50%; border:1px solid var(--surface-border); background:var(--surface-highlight); font-size:1.35rem; cursor:pointer; }
+  .cx-pick.on { background:var(--color-accent-soft); border-color:var(--color-accent); }
+  .cx-prev { flex:1; min-width:0; min-height:42px; display:flex; align-items:center; gap:8px; padding:6px 14px; border-radius:22px; border:1px solid var(--surface-border); background:var(--surface-highlight); font-size:.86rem; font-weight:700; cursor:pointer; }
+  .cx-prev.empty { color:var(--text-muted); font-weight:600; }
+  .cx-prev .cx-em { font-size:1.3rem; }
+  .cx-prev .txt { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cx-prev .x { flex:none; width:22px; height:22px; border-radius:50%; border:0; background:var(--surface-edge); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
+  .cx-send { width:46px; height:46px; flex:none; border-radius:50%; border:0; background:var(--color-accent); color:#fff; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; font-family:var(--font-num); font-weight:800; font-size:.72rem; transition:transform .15s ease, opacity .15s ease; }
+  .cx-send:active { transform:scale(.92); }
+  .cx-send[disabled] { background:var(--surface-edge); color:var(--text-muted); cursor:default; }
+  .cx-send .cx-ico { width:21px; height:21px; }
+
+  .cx-tray { display:none; border-top:1px solid var(--surface-edge); }
+  .cx-tray.on { display:block; animation:cxUp .2s ease; }
+  @keyframes cxUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+  .cx-cats { display:flex; gap:6px; overflow-x:auto; padding:9px 10px 6px; scrollbar-width:none; }
+  .cx-cats::-webkit-scrollbar { display:none; }
+  .cx-cat { flex:none; display:inline-flex; align-items:center; gap:5px; padding:6px 12px; border-radius:99px; border:1px solid var(--surface-border); background:var(--surface-solid); font-size:.74rem; font-weight:800; color:var(--text-secondary); cursor:pointer; }
+  .cx-cat.on { background:var(--color-accent); border-color:var(--color-accent); color:#fff; }
+  .cx-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:7px; padding:4px 10px 12px; max-height:min(34vh, 280px); overflow-y:auto; }
+  .cx-grid.emo { grid-template-columns:repeat(6, minmax(0,1fr)); }
+  .cx-pre { display:flex; align-items:center; gap:8px; padding:9px 10px; border-radius:12px; border:1px solid var(--surface-border); background:var(--surface-highlight); text-align:left; font-size:.78rem; font-weight:700; cursor:pointer; line-height:1.3; }
+  .cx-pre .e { font-size:1.25rem; flex:none; }
+  .cx-pre.on { border-color:var(--color-accent); background:var(--color-accent-soft); }
+  .cx-grid.emo .cx-pre { justify-content:center; padding:8px 0; }
+  .cx-grid.emo .cx-pre .e { font-size:1.7rem; }
+
+  /* ---------- overlay sheets ---------- */
+  .cx-ov { position:fixed; inset:0; z-index:9500; background:rgba(15,15,20,.5); display:flex; align-items:flex-end; justify-content:center; }
+  .cx-sheet { width:100%; max-width:480px; max-height:86dvh; overflow-y:auto; background:var(--surface-solid); border-radius:18px 18px 0 0; padding:16px 16px calc(18px + env(safe-area-inset-bottom)); animation:cxUp .2s ease; }
+  .cx-ov.center { align-items:center; padding:16px; }
+  .cx-ov.center .cx-sheet { border-radius:18px; }
+  .cx-sheet-h { font-weight:800; margin-bottom:12px; font-size:1rem; }
+  .cx-list { display:flex; flex-direction:column; gap:8px; }
+  .cx-list .cx-btn { width:100%; padding:13px; }
+  .cx-inp { width:100%; padding:11px 14px; border-radius:11px; border:1px solid var(--surface-border); background:var(--surface-highlight); color:inherit; font:inherit; font-size:.9rem; margin-bottom:10px; }
+  .cx-note { font-size:.72rem; color:var(--text-muted); line-height:1.6; margin:2px 0 10px; }
+  .cx-pk { display:flex; align-items:center; gap:10px; padding:9px 4px; border-top:1px solid var(--surface-edge); cursor:pointer; }
+  .cx-pk:first-child { border-top:0; }
+  .cx-pk input { width:18px; height:18px; accent-color:var(--color-accent); flex:none; }
+  .cx-pk .cx-nm { font-size:.86rem; }
+  .cx-pk .sub { font-size:.68rem; color:var(--text-muted); }
+  .cx-tag { font-size:.6rem; font-weight:800; padding:2px 7px; border-radius:99px; background:var(--color-accent); color:#fff; margin-left:6px; vertical-align:1px; }
+  .cx-tag.wait { background:var(--surface-edge); color:var(--text-secondary); }
+</style>
+</head>
+<body>
+<div class="app-shell" id="shell"><div class="state-block"><div class="spinner"></div></div></div>
+
+<script type="module">
+import { initTheme, renderStudentHeader, showToast, friendlyError } from "../js/utils/ui-utils.js";
+import { getActiveStudent, refreshActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
+import { requireStudentSession } from "../js/utils/student-auth.js";
+import { getMyFriendIds } from "../js/utils/friend-utils.js";
+import * as C from "../js/utils/chat-utils.js";
+
+initTheme();
+const shell = document.getElementById("shell");
+let student = getActiveStudent();
+const me = () => student.studentId;
+
+/* ---------------- state ---------------- */
+const S = {
+  students: [], stuMap: {}, friendIds: new Set(),
+  rooms: [], invites: [], roomCache: {},
+  activeId: null, msgs: [], oldest: null,
+  sel: null, trayOpen: false, cat: "greet", sending: false,
+  metaLast: 0, q: "", loaded: false, error: false
+};
+let pushedRoom = false, unsubRooms = null, unsubMsgs = null, tickTimer = null, lastMsgSeen = null, lastTrim = {}, readBusy = false, forceBottom = true;
+
+/* ---------------- helpers ---------------- */
+const $ = s => document.querySelector(s);
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const nameOf = id => S.stuMap[id]?.name || id;
+const firstName = id => String(nameOf(id)).trim().split(/\s+/)[0];
+const COLORS = ["#b8863c", "#2f7d5e", "#3e6e8c", "#6b4e96", "#a6402f", "#8a6d1f", "#2a7f86", "#9a4a7a"];
+const colorOf = id => { let h = 0; for (const ch of String(id)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return COLORS[h % COLORS.length]; };
+const ic = (p, sw = 2.2) => `<svg class="cx-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+const I = {
+  back: ic(`<path d="M15 18l-6-6 6-6"/>`),
+  send: ic(`<path d="M22 2 11 13"/><path d="M22 2l-7 20-4-9-9-4z"/>`),
+  users: ic(`<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>`),
+  chat: ic(`<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 8v4M10 10h4"/>`),
+  info: ic(`<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>`),
+  x: ic(`<path d="M18 6 6 18M6 6l12 12"/>`, 2.6)
+};
+const timeStr = ms => new Date(ms).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+const dayStart = ms => { const d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime(); };
+function dayLabel(ms) {
+  const diff = Math.round((dayStart(Date.now()) - dayStart(ms)) / 86400000);
+  if (diff <= 0) return "আজ";
+  if (diff === 1) return "গতকাল";
+  return new Date(ms).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+}
+function listTime(ms) {
+  if (!ms) return "";
+  const diff = Math.round((dayStart(Date.now()) - dayStart(ms)) / 86400000);
+  return diff <= 0 ? timeStr(ms) : diff === 1 ? "গতকাল" : new Date(ms).toLocaleDateString("en-GB", { day: "numeric", month: "numeric" });
+}
+const mmss = ms => { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
+const roomMs = r => C.toMs(r.lastAt) || C.toMs(r.createdAt) || Date.now();
+
+function avatar(stu, size = 44) {
+  const inner = stu?.photoURL ? `<img src="${esc(stu.photoURL)}" alt="" draggable="false" onerror="this.remove()">` : "";
+  return `<span class="cx-av" style="width:${size}px;height:${size}px;font-size:${Math.round(size * .4)}px">${esc((stu?.name || "শ").charAt(0))}${inner}</span>`;
+}
+function roomAvatar(room, size = 46) {
+  if (room.type === "group") return `<span class="cx-av grp" style="width:${size}px;height:${size}px;background:${colorOf(room.id)}">${I.users}</span>`;
+  return avatar(S.stuMap[C.otherMember(room, me())], size);
+}
+function roomTitle(room) {
+  if (room.type === "dm") return nameOf(C.otherMember(room, me()));
+  if (room.name) return room.name;
+  const others = [...(room.members || []), ...(room.invited || [])].filter(x => x !== me()).map(firstName);
+  return others.length ? others.slice(0, 3).join(", ") + (others.length > 3 ? "…" : "") : "গ্রুপ";
+}
+function roomSub(room) {
+  if (room.type === "dm") return S.stuMap[C.otherMember(room, me())]?.className || "বন্ধু";
+  const inv = (room.invited || []).length;
+  return `${(room.members || []).length} জন সদস্য${inv ? ` · ${inv} জন অপেক্ষমাণ` : ""}`;
+}
+function visibleRooms() {
+  // a 1-to-1 chat only shows while you are still friends
+  return S.rooms.filter(r => r.type === "group" || S.friendIds.has(C.otherMember(r, me())));
+}
+const activeRoom = () => S.rooms.find(r => r.id === S.activeId) || S.roomCache[S.activeId] || null;
+const unreadOf = r => (r.id === S.activeId ? 0 : Number(r.unread?.[me()]) || 0);
+function previewOf(r) {
+  const m = r.lastMsg;
+  if (!m) return { t: "কথা শুরু করো 👋", muted: true };
+  if (m.deleted || (!m.key && !m.text)) return { t: "🚫 বার্তা মুছে ফেলা হয়েছে" };
+  const p = C.presetByKey(m.key);
+  const line = p ? C.presetLine(p) : m.text;
+  const who = m.from === me() ? "তুমি: " : r.type === "group" ? firstName(m.from) + ": " : "";
+  return { t: who + line };
+}
+
+/* ---------------- boot ---------------- */
+(async function boot() {
+  if (!student) { window.location.href = "../index.html"; return; }
+  if (!(await requireStudentSession(student.studentId))) {
+    localStorage.removeItem("activeStudent"); window.location.href = "../index.html"; return;
+  }
+  const fresh = await refreshActiveStudent(student.docId).catch(() => null);
+  if (fresh) student = fresh;
+  shell.innerHTML = `<div id="cxHdr">${renderStudentHeader(student, "leaderboard")}</div>
+    <div class="cx" id="cx">
+      <aside class="cx-side" id="cxSide"><div class="state-block"><div class="spinner"></div></div></aside>
+      <main class="cx-main" id="cxMain">${emptyMain()}</main>
+    </div>`;
+  try {
+    const [students, friends, last] = await Promise.all([
+      getActiveStudents(), getMyFriendIds(me()).catch(() => []), C.loadChatMeta(me())
+    ]);
+    S.students = students; S.stuMap = {}; students.forEach(s => { S.stuMap[s.studentId] = s; });
+    S.friendIds = new Set(friends); S.metaLast = last;
+  } catch (err) { console.error(err); S.error = true; }
+  unsubRooms = C.watchRooms(me(), onRooms, e => { console.error("chat rooms", e); S.error = true; S.loaded = true; renderList(); });
+  window.addEventListener("popstate", onPop);
+  window.addEventListener("beforeunload", () => { try { unsubRooms && unsubRooms(); unsubMsgs && unsubMsgs(); } catch (e) {} });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) maybeMarkRead(); });
+})();
+
+function emptyMain() {
+  return `<div class="cx-empty" style="margin:auto"><b>💬</b>একটি চ্যাট বেছে নাও<br>অথবা বন্ধুর সাথে নতুন চ্যাট শুরু করো</div>`;
+}
+
+/* ---------------- rooms feed ---------------- */
+function onRooms({ rooms, invites }) {
+  const first = !S.loaded;
+  // toast for a new message in a room I'm NOT looking at
+  if (!first) {
+    rooms.forEach(r => {
+      const m = r.lastMsg, prev = S.rooms.find(x => x.id === r.id)?.lastMsg;
+      if (!m || m.from === me() || (prev && prev.id === m.id) || m.deleted) return;
+      if (r.id === S.activeId && !document.hidden) return;
+      const p = C.presetByKey(m.key);
+      showToast(`${r.type === "group" ? roomTitle(r) + " · " : ""}${firstName(m.from)}: ${p ? C.presetLine(p) : m.text}`, "success");
+    });
+    invites.forEach(r => { if (!S.invites.some(x => x.id === r.id)) showToast(`${firstName(r.createdBy)} তোমাকে গ্রুপে আমন্ত্রণ জানিয়েছে`, "success"); });
+  }
+  S.rooms = rooms; S.invites = invites; S.loaded = true; S.error = false;
+  rooms.forEach(r => { delete S.roomCache[r.id]; });
+  renderList(); updateTitle();
+  if (first) openFromUrl();
+  if (S.activeId) { renderConvHead(); maybeMarkRead(); }
+}
+function updateTitle() {
+  const n = visibleRooms().reduce((a, r) => a + unreadOf(r), 0) + S.invites.length;
+  document.title = (n ? `(${n}) ` : "") + "চ্যাট — পরীক্ষা প্রস্তুতি";
+}
+
+/* ---------------- list ---------------- */
+function renderList() {
+  const host = $("#cxSide"); if (!host) return;
+  const q = S.q.trim().toLowerCase();
+  const rooms = visibleRooms().filter(r => !q || roomTitle(r).toLowerCase().includes(q)).sort((a, b) => roomMs(b) - roomMs(a));
+  const searchVal = document.getElementById("cxSearch")?.value ?? S.q;
+  const hadFocus = document.activeElement?.id === "cxSearch";
+
+  let body;
+  if (S.error && !S.rooms.length) {
+    body = `<div class="cx-card cx-empty"><b>⚠️</b>চ্যাট লোড করা যায়নি।<br>ইন্টারনেট দেখো, তারপর পেজ রিফ্রেশ করো।</div>`;
+  } else if (!S.loaded) {
+    body = `<div class="state-block"><div class="spinner"></div></div>`;
+  } else if (!rooms.length && !S.invites.length) {
+    body = `<div class="cx-card cx-empty"><b>💬</b>${q ? "কিছু পাওয়া যায়নি" : "এখনো কোনো চ্যাট নেই।<br>উপরের বাটন থেকে বন্ধুর সাথে চ্যাট শুরু করো,<br>অথবা বন্ধুদের নিয়ে গ্রুপ বানাও।"}</div>`;
+  } else {
+    body = `${S.invites.length ? `<div class="cx-title">গ্রুপের আমন্ত্রণ</div><div class="cx-card">${S.invites.map(inviteHtml).join("")}</div>` : ""}
+      ${rooms.length ? `<div class="cx-card">${rooms.map(rowHtml).join("")}</div>` : ""}`;
+  }
+  host.innerHTML = `<div class="cx-top"><h1>চ্যাট</h1>
+      <button class="cx-ib" data-act="new-dm" aria-label="নতুন চ্যাট" title="নতুন চ্যাট">${I.chat}</button>
+      <button class="cx-ib" data-act="new-group" aria-label="নতুন গ্রুপ" title="নতুন গ্রুপ">${I.users}</button></div>
+    <input class="cx-search" id="cxSearch" type="search" placeholder="চ্যাট খোঁজো" autocomplete="off" value="${esc(searchVal)}">
+    ${body}`;
+  if (hadFocus) { const el = document.getElementById("cxSearch"); el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+}
+function rowHtml(r) {
+  const u = unreadOf(r), pv = previewOf(r);
+  return `<div class="cx-row ${u ? "unread" : ""} ${r.id === S.activeId ? "on" : ""}" data-act="open" data-id="${esc(r.id)}">
+    ${roomAvatar(r)}
+    <div class="cx-mid"><div class="cx-nm">${esc(roomTitle(r))}</div><div class="cx-pv" ${pv.muted ? 'style="font-style:italic"' : ""}>${esc(pv.t)}</div></div>
+    <div class="cx-meta-r"><span class="cx-time">${listTime(r.lastMsg ? roomMs(r) : 0)}</span>${u ? `<span class="cx-badge">${u > 99 ? "99+" : u}</span>` : ""}</div></div>`;
+}
+function inviteHtml(r) {
+  return `<div class="cx-inv">${roomAvatar(r, 42)}
+    <div class="cx-mid"><div class="cx-nm">${esc(roomTitle(r))}</div>
+      <div class="cx-pv">${esc(firstName(r.createdBy))} আমন্ত্রণ জানিয়েছে · ${(r.members || []).length + (r.invited || []).length} জন</div></div>
+    <div class="cx-inv-acts"><button class="cx-btn ok sm" data-act="inv-yes" data-id="${esc(r.id)}">যোগ দাও</button>
+      <button class="cx-btn danger sm" data-act="inv-no" data-id="${esc(r.id)}">না</button></div></div>`;
+}
+
+/* ---------------- opening / closing a conversation ---------------- */
+function openFromUrl() {
+  const p = new URLSearchParams(location.search);
+  const room = p.get("room"), withId = (p.get("with") || "").toUpperCase();
+  if (room && S.rooms.some(r => r.id === room)) openRoom(room, { push: false });
+  else if (withId) startDm(withId, { push: false });
+}
+function onPop() {
+  const id = new URLSearchParams(location.search).get("room");
+  if (id && (S.rooms.some(r => r.id === id) || S.roomCache[id])) { pushedRoom = true; openRoom(id, { push: false }); }
+  else { pushedRoom = false; closeRoom(false); }
+}
+async function startDm(otherId, opts = {}) {
+  if (!S.friendIds.has(otherId)) { showToast("শুধু বন্ধুদের সাথেই চ্যাট করা যায়।", "error"); return; }
+  try {
+    const room = await C.ensureDm(me(), otherId);
+    S.roomCache[room.id] = room;
+    openRoom(room.id, opts);
+  } catch (err) { console.error(err); showToast(friendlyError(err), "error"); }
+}
+function openRoom(id, { push = true } = {}) {
+  closeOverlay();
+  if (unsubMsgs) { try { unsubMsgs(); } catch (e) {} unsubMsgs = null; }
+  S.activeId = id; S.msgs = []; S.oldest = null; S.sel = null; S.trayOpen = false; forceBottom = true; lastMsgSeen = null;
+  // first open pushes a history entry (phone Back returns to the list); switching rooms just replaces it
+  try {
+    if (push && !pushedRoom) { history.pushState({ cx: id }, "", `?room=${encodeURIComponent(id)}`); pushedRoom = true; }
+    else history.replaceState({ cx: id }, "", `?room=${encodeURIComponent(id)}`);
+  } catch (e) {}
+  $("#cx").classList.add("open"); document.body.classList.add("cx-open");
+  buildConv();
+  unsubMsgs = C.watchMessages(id, (list, oldest) => {
+    S.msgs = list; S.oldest = oldest; renderMsgs(); maybeTrim(id); maybeMarkRead();
+  }, err => { console.error("messages", err); const h = $("#cxMsgs"); if (h) h.innerHTML = `<div class="cx-sys">বার্তা লোড করা যায়নি</div>`; });
+  renderList(); maybeMarkRead();
+}
+function closeRoom(updateUrl = true) {
+  if (unsubMsgs) { try { unsubMsgs(); } catch (e) {} unsubMsgs = null; }
+  clearInterval(tickTimer); tickTimer = null;
+  S.activeId = null; S.msgs = []; S.sel = null; S.trayOpen = false; pushedRoom = false;
+  $("#cx").classList.remove("open"); document.body.classList.remove("cx-open");
+  $("#cxMain").innerHTML = emptyMain();
+  if (updateUrl) { try { history.replaceState(null, "", location.pathname); } catch (e) {} }
+  renderList(); updateTitle();
+}
+function goBack() {
+  if (pushedRoom) history.back();      // popstate -> onPop() closes the room
+  else closeRoom();
+}
+
+function buildConv() {
+  $("#cxMain").innerHTML = `
+    <div class="cx-ch" id="cxHead"></div>
+    <div class="cx-msgs" id="cxMsgs"><div class="state-block"><div class="spinner"></div></div></div>
+    <div class="cx-comp-wrap">
+      <div class="cx-wait" id="cxWait"></div>
+      <div class="cx-comp">
+        <button class="cx-pick" id="cxPick" data-act="tray" aria-label="বার্তা বেছে নাও">😊</button>
+        <div class="cx-prev empty" id="cxPrev" data-act="tray"></div>
+        <button class="cx-send" id="cxSend" data-act="send" aria-label="পাঠাও">${I.send}</button>
+      </div>
+      <div class="cx-tray" id="cxTray"></div>
+    </div>`;
+  renderConvHead(); renderComposer(); renderTray();
+  clearInterval(tickTimer); tickTimer = setInterval(tick, 500); tick();
+}
+function renderConvHead() {
+  const room = activeRoom(), h = $("#cxHead"); if (!room || !h) return;
+  h.innerHTML = `<button class="cx-back" data-act="back" aria-label="পেছনে">${I.back}</button>
+    ${roomAvatar(room, 40)}
+    <div class="cx-mid" data-act="info"><div class="cx-nm">${esc(roomTitle(room))}</div><div class="cx-pv">${esc(roomSub(room))}</div></div>
+    <button class="cx-ib" data-act="info" aria-label="তথ্য" style="border:0;background:transparent">${I.info}</button>`;
+}
+
+/* ---------------- messages ---------------- */
+function renderMsgs() {
+  const host = $("#cxMsgs"), room = activeRoom(); if (!host || !room) return;
+  const near = host.scrollHeight - host.scrollTop - host.clientHeight < 140;
+  const list = S.msgs.filter(m => !(m.deletedFor || []).includes(me()));
+  let html = `<div class="cx-sys">শুধু শেষ ${C.CHAT_KEEP}টি বার্তা থাকে · বার্তা বেছে পাঠাতে হয়</div>`;
+  if (!list.length) html += `<div class="cx-empty" style="margin:auto"><b>👋</b>প্রথম বার্তাটা তুমিই পাঠাও!</div>`;
+  let lastDay = "", lastFrom = null;
+  list.forEach(m => {
+    const ms = C.toMs(m.createdAt) || Date.now();
+    const dk = dayStart(ms);
+    if (dk !== lastDay) { html += `<div class="cx-day"><span>${dayLabel(ms)}</span></div>`; lastDay = dk; lastFrom = null; }
+    const mine = m.from === me();
+    const first = m.from !== lastFrom; lastFrom = m.from;
+    const deleted = m.deletedForAll;
+    const p = deleted ? null : C.presetByKey(m.key);
+    const emo = p && C.isEmojiOnly(p);
+    let inner;
+    if (deleted) inner = `<div class="cx-body">🚫 এই বার্তা মুছে ফেলা হয়েছে</div>`;
+    else if (p) inner = `<div class="cx-body"><span class="cx-em">${p.emoji}</span>${p.text ? `<span>${esc(p.text)}</span>` : ""}</div>`;
+    else inner = `<div class="cx-body">${esc(m.text || "")}</div>`;
+    const sender = room.type === "group" && !mine && first
+      ? `<div class="cx-sender" style="color:${colorOf(m.from)}">${esc(nameOf(m.from))}</div>` : "";
+    html += `<div class="cx-bw ${mine ? "me" : "them"} ${first ? "first" : ""} ${m.pending ? "pending" : ""}">
+      <div class="cx-bub ${emo ? "emo" : ""} ${deleted ? "del" : ""}" data-act="msg" data-id="${esc(m.id)}">${sender}${inner}<div class="cx-t">${timeStr(ms)}</div></div></div>`;
+  });
+  host.innerHTML = html;
+  if (near || forceBottom) { host.scrollTop = host.scrollHeight; forceBottom = false; }
+}
+function maybeTrim(roomId) {
+  if (!S.oldest) return;
+  const now = Date.now();
+  if (now - (lastTrim[roomId] || 0) < 30000) return;
+  lastTrim[roomId] = now;
+  C.trimRoom(roomId, S.oldest);
+}
+async function maybeMarkRead() {
+  const room = activeRoom();
+  if (!room || document.hidden || readBusy) return;
+  if (!(Number(room.unread?.[me()]) > 0)) return;
+  readBusy = true;
+  try { await C.markRead(room.id, me()); } catch (e) { /* not critical */ }
+  readBusy = false;
+}
+
+/* ---------------- composer (presets only) ---------------- */
+function waitMs() { return C.chatWaitMs(me(), S.metaLast); }
+function renderComposer() {
+  const prev = $("#cxPrev"), send = $("#cxSend"), pick = $("#cxPick"); if (!prev) return;
+  const s = S.sel;
+  prev.className = "cx-prev" + (s ? "" : " empty");
+  prev.innerHTML = s
+    ? `<span class="cx-em">${s.emoji}</span><span class="txt">${esc(s.text || "")}</span><button class="x" data-act="clear" aria-label="বাদ দাও">${I.x.replace('class="cx-ico"', 'class="cx-ico" style="width:12px;height:12px"')}</button>`
+    : `<span class="txt">বার্তা বেছে নাও…</span>`;
+  pick.classList.toggle("on", S.trayOpen);
+  $("#cxTray").classList.toggle("on", S.trayOpen);
+  updateSendBtn();
+}
+function updateSendBtn() {
+  const send = $("#cxSend"); if (!send) return;
+  const w = waitMs();
+  send.disabled = !S.sel || w > 0 || S.sending;
+  send.innerHTML = w > 0 ? mmss(w) : I.send;
+}
+function tick() {
+  const el = $("#cxWait"); if (!el) { clearInterval(tickTimer); return; }
+  const w = waitMs();
+  el.classList.toggle("on", w > 0);
+  el.innerHTML = w > 0 ? `পরের বার্তা পাঠাতে পারবে <b>${mmss(w)}</b> পরে` : "";
+  updateSendBtn();
+}
+function renderTray() {
+  const tray = $("#cxTray"); if (!tray) return;
+  const items = C.CHAT_PRESETS.filter(p => p.cat === S.cat);
+  const emo = S.cat === "emoji";
+  tray.innerHTML = `<div class="cx-cats">${C.CHAT_CATS.map(c => `<button class="cx-cat ${c.key === S.cat ? "on" : ""}" data-act="cat" data-id="${c.key}"><span>${c.emoji}</span>${c.label}</button>`).join("")}</div>
+    <div class="cx-grid ${emo ? "emo" : ""}">${items.map(p => `<button class="cx-pre ${S.sel?.key === p.key ? "on" : ""}" data-act="pre" data-id="${p.key}"><span class="e">${p.emoji}</span>${p.text ? `<span>${esc(p.text)}</span>` : ""}</button>`).join("")}</div>`;
+}
+function markSel() {
+  document.querySelectorAll("#cxTray .cx-pre").forEach(b => b.classList.toggle("on", b.dataset.id === S.sel?.key));
+}
+async function doSend() {
+  const room = activeRoom();
+  if (!room || !S.sel || S.sending) return;
+  const w = waitMs();
+  if (w > 0) { showToast(`আরও ${mmss(w)} পরে পাঠাতে পারবে।`, "error"); return; }
+  S.sending = true; updateSendBtn();
+  try {
+    await C.sendMessage(room, me(), S.sel, S.metaLast);
+    S.metaLast = Date.now(); S.sel = null; S.trayOpen = false; forceBottom = true;
+  } catch (err) {
+    console.error(err); showToast(err.message || friendlyError(err), "error");
+  } finally {
+    S.sending = false; renderComposer(); renderTray(); tick();
+  }
+}
+
+/* ---------------- sheets ---------------- */
+function overlay(html, center) {
+  closeOverlay();
+  const ov = document.createElement("div");
+  ov.className = "cx-ov" + (center ? " center" : ""); ov.id = "cxOv";
+  ov.innerHTML = `<div class="cx-sheet">${html}</div>`;
+  ov.addEventListener("mousedown", e => { if (e.target === ov) closeOverlay(); });
+  document.body.appendChild(ov);
+  return ov;
+}
+function closeOverlay() { document.getElementById("cxOv")?.remove(); }
+
+function openMsgSheet(id) {
+  const room = activeRoom(), m = S.msgs.find(x => x.id === id); if (!room || !m) return;
+  const mine = m.from === me();
+  const p = m.deletedForAll ? null : C.presetByKey(m.key);
+  const line = m.deletedForAll ? "🚫 এই বার্তা মুছে ফেলা হয়েছে" : p ? C.presetLine(p) : m.text;
+  overlay(`<div class="cx-sheet-h">${esc(mine ? "তোমার বার্তা" : nameOf(m.from))}<div class="cx-note" style="margin:4px 0 0;font-size:.82rem">${esc(line)}</div></div>
+    <div class="cx-list">
+      <button class="cx-btn" data-act="del-me" data-id="${esc(id)}">আমার জন্য মুছো</button>
+      ${mine && !m.deletedForAll ? `<button class="cx-btn danger" data-act="del-all" data-id="${esc(id)}">সবার জন্য মুছো</button>` : ""}
+      <button class="cx-btn" data-act="close">বাতিল</button></div>`, false);
+}
+function openInfo() {
+  const room = activeRoom(); if (!room) return;
+  if (room.type === "dm") {
+    const o = C.otherMember(room, me());
+    overlay(`<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">${avatar(S.stuMap[o], 52)}
+      <div><div class="cx-nm" style="font-size:1rem">${esc(nameOf(o))}</div><div class="cx-pv">${esc(S.stuMap[o]?.className || "বন্ধু")}</div></div></div>
+      <div class="cx-list"><a class="cx-btn primary" href="profile.html?sid=${encodeURIComponent(o)}">প্রোফাইল দেখো</a>
+      <button class="cx-btn" data-act="close">বন্ধ করো</button></div>`, false);
+    return;
+  }
+  const mem = (room.members || []), inv = (room.invited || []);
+  overlay(`<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">${roomAvatar(room, 52)}
+      <div><div class="cx-nm" style="font-size:1rem">${esc(roomTitle(room))}</div><div class="cx-pv">${esc(roomSub(room))}</div></div></div>
+    <div class="cx-card" style="margin-bottom:12px">${mem.map(id => `<div class="cx-row" style="cursor:default">${avatar(S.stuMap[id], 36)}
+      <div class="cx-mid"><div class="cx-nm" style="font-size:.86rem">${esc(nameOf(id))}${id === me() ? `<span class="cx-tag">তুমি</span>` : ""}${id === room.createdBy ? `<span class="cx-tag" style="background:var(--color-success)">অ্যাডমিন</span>` : ""}</div></div></div>`).join("")}
+      ${inv.map(id => `<div class="cx-row" style="cursor:default;opacity:.7">${avatar(S.stuMap[id], 36)}
+      <div class="cx-mid"><div class="cx-nm" style="font-size:.86rem">${esc(nameOf(id))}<span class="cx-tag wait">অনুমোদনের অপেক্ষায়</span></div></div></div>`).join("")}</div>
+    <div class="cx-list"><button class="cx-btn danger" data-act="leave">গ্রুপ ছাড়ো</button><button class="cx-btn" data-act="close">বন্ধ করো</button></div>`, false);
+}
+function friendsSorted() {
+  return [...S.friendIds].map(id => S.stuMap[id]).filter(Boolean).sort((a, b) => String(a.name).localeCompare(String(b.name), "bn"));
+}
+function openNewDm() {
+  const friends = friendsSorted();
+  overlay(`<div class="cx-sheet-h">কার সাথে চ্যাট করবে?</div>
+    ${friends.length ? `<div class="cx-card">${friends.map(f => `<div class="cx-row" data-act="dm" data-id="${esc(f.studentId)}">${avatar(f, 38)}
+      <div class="cx-mid"><div class="cx-nm">${esc(f.name)}</div><div class="cx-pv">${esc(f.className || "")}</div></div></div>`).join("")}</div>`
+    : `<div class="cx-empty"><b>🤝</b>আগে কাউকে বন্ধু বানাও।</div><a class="cx-btn primary" style="width:100%" href="leaderboard.html?tab=friends">বন্ধু খোঁজো</a>`}`, false);
+}
+function openNewGroup() {
+  const friends = friendsSorted();
+  if (!friends.length) { openNewDm(); return; }
+  const max = C.GROUP_MAX - 1;
+  const ov = overlay(`<div class="cx-sheet-h">নতুন গ্রুপ</div>
+    <input class="cx-inp" id="gName" maxlength="${C.GROUP_NAME_MAX}" placeholder="গ্রুপের নাম (ঐচ্ছিক)" autocomplete="off">
+    <div class="cx-note">বন্ধুদের বেছে নাও — তুমিসহ সর্বোচ্চ ${C.GROUP_MAX} জন। যাদের বাছবে, তারা <b>অনুমোদন দিলে</b> তবেই গ্রুপে যোগ হবে।</div>
+    <div class="cx-card" style="margin-bottom:12px;max-height:38dvh;overflow-y:auto">${friends.map(f => `<label class="cx-pk">${avatar(f, 34)}
+      <div class="cx-mid"><div class="cx-nm">${esc(f.name)}</div><div class="sub">${esc(f.className || "")}</div></div>
+      <input type="checkbox" value="${esc(f.studentId)}"></label>`).join("")}</div>
+    <div style="display:flex;gap:8px;align-items:center"><span class="cx-note" id="gCount" style="margin:0;flex:1">০ / ${max} বাছা হয়েছে</span>
+      <button class="cx-btn" data-act="close">বাতিল</button>
+      <button class="cx-btn primary" id="gMake" disabled>আমন্ত্রণ পাঠাও</button></div>`, false);
+  const boxes = [...ov.querySelectorAll("input[type=checkbox]")], make = ov.querySelector("#gMake");
+  const upd = () => {
+    const n = boxes.filter(b => b.checked).length;
+    boxes.forEach(b => { b.disabled = !b.checked && n >= max; });
+    ov.querySelector("#gCount").textContent = `${n} / ${max} বাছা হয়েছে`;
+    make.disabled = n < 1;
+  };
+  boxes.forEach(b => b.addEventListener("change", upd));
+  make.addEventListener("click", async () => {
+    const ids = boxes.filter(b => b.checked).map(b => b.value);
+    make.disabled = true;
+    try {
+      const id = await C.createGroup(me(), ov.querySelector("#gName").value, ids);
+      showToast("আমন্ত্রণ পাঠানো হয়েছে — অনুমোদনের অপেক্ষা", "success");
+      closeOverlay();
+      const room = { id, type: "group", members: [me()], invited: ids, name: ov.querySelector("#gName")?.value || "", createdBy: me(), lastMsg: null, unread: {} };
+      S.roomCache[id] = room;
+      openRoom(id);
+    } catch (err) { console.error(err); showToast(err.message || friendlyError(err), "error"); make.disabled = false; }
+  });
+}
+
+/* ---------------- actions ---------------- */
+async function run(fn, okMsg) {
+  try { await fn(); if (okMsg) showToast(okMsg, "success"); }
+  catch (err) { console.error(err); showToast(err.message || friendlyError(err), "error"); }
+}
+
+document.addEventListener("input", e => {
+  if (e.target.id === "cxSearch") { S.q = e.target.value; renderList(); }
+});
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-act]"); if (!t || t.disabled) return;
+  const a = t.dataset.act, id = t.dataset.id;
+  switch (a) {
+    case "open": openRoom(id); break;
+    case "back": goBack(); break;
+    case "close": closeOverlay(); break;
+    case "new-dm": openNewDm(); break;
+    case "new-group": openNewGroup(); break;
+    case "dm": closeOverlay(); startDm(id); break;
+    case "info": openInfo(); break;
+    case "tray": S.trayOpen = !S.trayOpen; renderComposer(); renderTray(); if (S.trayOpen) setTimeout(() => { const h = $("#cxMsgs"); if (h) h.scrollTop = h.scrollHeight; }, 30); break;
+    case "cat": S.cat = id; renderTray(); break;
+    case "pre": S.sel = C.presetByKey(id); renderComposer(); markSel(); break;
+    case "clear": S.sel = null; renderComposer(); markSel(); break;
+    case "send": doSend(); break;
+    case "msg": openMsgSheet(id); break;
+    case "del-me": { const room = activeRoom(); closeOverlay(); if (room) run(() => C.deleteForMe(room.id, id, me())); break; }
+    case "del-all": {
+      const room = activeRoom(), m = S.msgs.find(x => x.id === id); closeOverlay();
+      if (room && m) run(() => C.deleteForEveryone(room, m), "সবার জন্য মুছে ফেলা হয়েছে");
+      break;
+    }
+    case "inv-yes": {
+      const inv = S.invites.find(r => r.id === id);
+      run(async () => {
+        await C.acceptInvite(id, me());
+        if (inv) S.roomCache[id] = { ...inv, members: [...(inv.members || []), me()], invited: (inv.invited || []).filter(x => x !== me()) };
+        openRoom(id);
+      }, "গ্রুপে যোগ দিয়েছো");
+      break;
+    }
+    case "inv-no": if (confirm("এই আমন্ত্রণ বাদ দেবে?")) run(() => C.declineInvite(id, me()), "আমন্ত্রণ বাদ দেওয়া হয়েছে"); break;
+    case "leave": {
+      const room = activeRoom(); if (!room) break;
+      if (!confirm("এই গ্রুপ ছেড়ে দেবে?")) break;
+      closeOverlay();
+      run(async () => { await C.leaveGroup(room, me()); closeRoom(); }, "গ্রুপ ছেড়েছো");
+      break;
+    }
+  }
+});
+</script>
+</body>
+</html>

@@ -148,7 +148,8 @@ import { getBattleXPMap } from "../js/utils/battle-utils.js?v=roomcard1";
 import { getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival, setRival, clearRival } from "../js/utils/friend-utils.js";
 import { getIncomingChallenges, getOutgoingChallenges, sendChallenge, acceptChallenge, rejectChallenge, cancelChallenge, resolveCompletedChallenges, getChallengeBonusMap, CHALLENGE_REWARDS } from "../js/utils/challenge-utils.js";
 import { publishMyActivity, getFriendFeed, localExamFeed, activityFeedHtml, bindActivityFeed } from "../js/utils/activity-utils.js";
-import { buildStudentExtras, computeRankMovement, getHeadToHeadMap, getCheerData, sendCheer, cheerWaitMs, CHEER_TYPES, cheerIcon, CHEER_ICONS, stripEmoji, toMillis, DAY_MS } from "../js/utils/friend-stats-utils.js";
+import { buildStudentExtras, computeRankMovement, getHeadToHeadMap, CHEER_ICONS, toMillis, DAY_MS } from "../js/utils/friend-stats-utils.js";
+import { watchChatBadge } from "../js/utils/chat-utils.js";
 import { getCompletedImprovementAttemptsByStudent } from "../js/utils/improvement-xp-integration.js";
 
 initTheme();
@@ -166,7 +167,7 @@ const S = {
   friendIds: [], incoming: [], outgoing: [], inChalls: [], outChalls: [], h2h: {},
   challengeBonusMap: {}, improvementResultsMap: {}, battleXPMap: {},
   feed: null, feedAt: 0, feedShow: 8,
-  rivalId: null, q: "", rq: "", cheers: { received: [], sentToday: new Set(), lastSentMs: 0 }
+  rivalId: null, q: "", rq: "", chatUnread: 0
 };
 const NO_BATCH = "ব্যাচ নেই";
 let examsCache = null;
@@ -209,6 +210,8 @@ const linkProfile = sid => sid === me() ? "profile.html" : `profile.html?sid=${e
       <div id="lxTabs"></div>
       <div id="lxBody"><div class="state-block"><div class="spinner"></div></div></div>
     </div>`;
+  // live unread count for the "চ্যাট" tab
+  try { watchChatBadge(student.studentId, b => { S.chatUnread = b.total; if (document.getElementById("lxTabs")?.firstChild) renderTabs(); }); } catch (e) { console.warn("chat badge", e); }
   try { await loadAll(); }
   catch (err) { console.error(err); document.getElementById("lxBody").innerHTML = `<div class="lx-card lx-empty">তথ্য লোড করা যায়নি। পেজ রিফ্রেশ করো।</div>`; }
 })();
@@ -219,7 +222,7 @@ async function loadAll() {
   const id = me();
   await resolveCompletedChallenges(id).catch(e => { console.warn("resolve failed", e); return []; });
 
-  const [results, friendIds, incoming, outgoing, outChalls, inChalls, h2h, bonus, rival, impr, battle, cheers] = await Promise.all([
+  const [results, friendIds, incoming, outgoing, outChalls, inChalls, h2h, bonus, rival, impr, battle] = await Promise.all([
     getAllApprovedResults(),
     getMyFriendIds(id).catch(() => []),
     getIncomingRequests(id).catch(() => []),
@@ -230,12 +233,11 @@ async function loadAll() {
     getChallengeBonusMap().catch(() => ({})),
     getRival(id).catch(() => null),
     getCompletedImprovementAttemptsByStudent().catch(() => ({})),
-    getBattleXPMap().catch(() => ({})),
-    getCheerData(id).catch(() => ({ received: [], sentToday: new Set(), lastSentMs: 0 }))
+    getBattleXPMap().catch(() => ({}))
   ]);
   S.results = results; S.friendIds = Array.isArray(friendIds) ? friendIds : [];
   S.incoming = incoming; S.outgoing = outgoing; S.outChalls = outChalls; S.inChalls = inChalls; S.h2h = h2h;
-  S.challengeBonusMap = bonus; S.improvementResultsMap = impr; S.battleXPMap = battle; S.cheers = cheers;
+  S.challengeBonusMap = bonus; S.improvementResultsMap = impr; S.battleXPMap = battle;
   S.rivalId = S.friendIds.includes(rival?.rivalId) ? rival.rivalId : null;
 
   const rows = buildLeaderboardRows(S.results, S.students, S.challengeBonusMap, S.improvementResultsMap, S.battleXPMap);
@@ -322,7 +324,9 @@ function renderHero() {
 function renderTabs() {
   const chN = pendingIncomingChalls().length, frN = S.incoming.length;
   const tab = (k, t, n) => `<button class="${S.tab === k ? "on" : ""}" data-act="tab" data-id="${k}">${t}${n ? `<span class="lx-dot">${n}</span>` : ""}</button>`;
-  document.getElementById("lxTabs").innerHTML = `<div class="lx-seg">${tab("rank", "র‍্যাঙ্কিং")}${tab("challenges", "চ্যালেঞ্জ", chN)}${tab("friends", "বন্ধু", frN)}</div>`;
+  // "চ্যাট" opens the full chat page; its red count = unread messages + group invites
+  const chat = `<button data-act="chat">চ্যাট${S.chatUnread ? `<span class="lx-dot">${S.chatUnread > 99 ? "99+" : S.chatUnread}</span>` : ""}</button>`;
+  document.getElementById("lxTabs").innerHTML = `<div class="lx-seg">${tab("rank", "র‍্যাঙ্কিং")}${tab("challenges", "চ্যালেঞ্জ", chN)}${tab("friends", "বন্ধু", frN)}${chat}</div>`;
 }
 
 function renderBody() {
@@ -525,54 +529,15 @@ function viewFriends() {
     ${S.incoming.length ? `<div class="lx-title">অনুরোধ</div><div class="lx-card">${S.incoming.map(r => `<div class="lx-row" style="cursor:default">${avatar(S.studentMap[r.fromStudentId], 34)}
       <div style="min-width:0"><div class="lx-nm">${esc(nameOf(r.fromStudentId))}</div><div class="lx-sub">${esc(S.studentMap[r.fromStudentId]?.className || "")}</div></div>
       <div class="lx-acts"><button class="lx-btn ok sm" data-act="fr-accept" data-id="${r.id}">গ্রহণ</button><button class="lx-btn danger sm" data-act="fr-reject" data-id="${r.id}">বাদ</button></div></div>`).join("")}</div>` : ""}
-    ${receivedHtml()}
     <div class="lx-title">বন্ধুরা (${friends.length})</div>
     ${friends.length === 0 ? `<div class="lx-card lx-empty">এখনো কোনো বন্ধু নেই</div>` : `<div class="lx-card">${friends.map(f => {
       const isRival = f.studentId === S.rivalId, rk = S.overallRank[f.studentId];
       return `<div class="lx-row" data-act="go" data-id="${esc(f.studentId)}">${avatar(f, 34)}
         <div style="min-width:0"><div class="lx-nm">${esc(f.name)}${isRival ? `<span class="lx-tag">রাইভাল</span>` : ""}</div>
         <div class="lx-sub">${esc(f.className || "")}${rk ? ` · #${rk}` : ""}</div></div>
-        <div class="lx-acts" data-stop="1"><button class="lx-btn sm" data-act="msg" data-id="${esc(f.studentId)}" aria-label="বার্তা">${CHEER_ICONS.message}</button><button class="lx-btn sm" data-act="menu" data-id="${esc(f.studentId)}">আরও</button></div></div>`;
+        <div class="lx-acts" data-stop="1"><button class="lx-btn sm" data-act="chat-with" data-id="${esc(f.studentId)}" aria-label="চ্যাট">${CHEER_ICONS.message}</button><button class="lx-btn sm" data-act="menu" data-id="${esc(f.studentId)}">আরও</button></div></div>`;
     }).join("")}</div>`}
   </div>`;
-}
-
-/* ---------------- ready-made messages ---------------- */
-function timeAgo(ms) {
-  if (!ms) return "";
-  const m = Math.floor((Date.now() - ms) / 60000);
-  if (m < 1) return "এইমাত্র";
-  if (m < 60) return m + " মিনিট আগে";
-  const h = Math.floor(m / 60);
-  return h < 24 ? h + " ঘণ্টা আগে" : Math.floor(h / 24) + " দিন আগে";
-}
-function receivedHtml() {
-  const list = (S.cheers.received || []).filter(c => S.friendIds.includes(c.fromStudentId)).slice(0, 10);
-  if (!list.length) return "";
-  return `<div class="lx-title">বন্ধুদের বার্তা</div><div class="lx-card">${list.map(c => {
-    const t = CHEER_TYPES.find(x => x.key === c.type);
-    return `<div class="lx-row" style="cursor:default">${avatar(S.studentMap[c.fromStudentId], 34)}
-      <div style="min-width:0"><div class="lx-nm">${esc(nameOf(c.fromStudentId))}</div>
-      <div class="lx-sub" style="white-space:normal;display:flex;align-items:center;gap:6px">${t ? cheerIcon(t.icon) : ""}<span>${esc(t ? t.text : stripEmoji(c.text))} · ${timeAgo(toMillis(c.createdAt))}</span></div></div></div>`;
-  }).join("")}</div>`;
-}
-let cheerTimer = null;
-function openMsgSheet(sid) {
-  closeOverlay();
-  overlay(`<div class="lx-sheet-h">${esc(nameOf(sid))}-কে বার্তা পাঠাও</div>
-    <div id="msgWait" class="lx-sub" style="margin-bottom:8px"></div>
-    <div class="lx-list" id="msgList" style="max-height:55vh;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:8px">
-    ${CHEER_TYPES.map(t => `<button class="lx-btn" style="white-space:normal;font-size:.8rem;display:flex;align-items:center;gap:6px;text-align:left" data-act="cheer" data-id="${esc(sid)}" data-x="${t.key}">${cheerIcon(t.icon)}<span>${esc(t.text)}</span></button>`).join("")}</div>`, false);
-  clearInterval(cheerTimer);
-  const tick = () => {
-    const ov = document.getElementById("lxOv");
-    if (!ov) { clearInterval(cheerTimer); return; }
-    const w = cheerWaitMs(me(), S.cheers.lastSentMs);
-    const el = document.getElementById("msgWait");
-    if (el) el.textContent = w > 0 ? `আরও ${Math.ceil(w / 1000)} সেকেন্ড পরে পাঠাতে পারবে` : "একটি বার্তা বেছে নাও";
-    ov.querySelectorAll("[data-act=cheer]").forEach(b => b.disabled = w > 0);
-  };
-  tick(); cheerTimer = setInterval(tick, 500);
 }
 
 /* ---------------- friend menu (small) ---------------- */
@@ -674,8 +639,8 @@ document.addEventListener("click", (e) => {
       el.classList.remove("lx-flash"); void el.offsetWidth; el.classList.add("lx-flash");
       break;
     }
-    case "msg": openMsgSheet(id); break;
-    case "cheer": run(() => sendCheer(me(), id, t.dataset.x, S.cheers.lastSentMs), "বার্তা পাঠানো হয়েছে"); break;
+    case "chat": window.location.href = "chat.html"; break;
+    case "chat-with": window.location.href = `chat.html?with=${encodeURIComponent(id)}`; break;
   }
 });
 </script>
