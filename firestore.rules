@@ -96,6 +96,13 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    // Per-student list of notifications the student deleted (so they stay deleted
+    // after re-login / on another device). Same trust model as the rules above.
+    match /studentNotifState/{studentId} {
+      allow read, create, update: if true;
+      allow delete: if isAdmin();
+    }
+
     match /improvementAttempts/{id} {
       allow read, create, update, delete: if true;
     }
