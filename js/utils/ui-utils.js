@@ -254,28 +254,75 @@ const NOTIF_HIDE_KEY = "studentHiddenNotifications";
 let notificationUnsubs = [];
 let notificationOutsideClickBound = false;
 
-// ---------- Hidden notification IDs ----------
-function getHiddenNotificationKeys() {
+// ---------- Hidden / deleted notification IDs ----------
+// Stored as { key: hiddenAtMs }. Entries are purged after 7 days (by then the
+// notification itself is older than 7 days and is never shown anyway).
+const NOTIF_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000;
+const NOTIF_MAX_VISIBLE = 5;
+const NOTIF_SEEN_KEY = "studentNotificationsSeenAt";
+let lastNotificationItems = [];
+
+function readHiddenMap() {
   try {
-    return new Set(
-      JSON.parse(
-        localStorage.getItem(NOTIF_HIDE_KEY) || "[]"
-      )
-    );
-  } catch {
-    return new Set();
-  }
+    const raw = JSON.parse(localStorage.getItem(NOTIF_HIDE_KEY) || "{}");
+    if (Array.isArray(raw)) { const o = {}; raw.forEach(k => { o[k] = Date.now(); }); return o; }
+    return raw && typeof raw === "object" ? raw : {};
+  } catch { return {}; }
+}
+function writeHiddenMap(map) {
+  try { localStorage.setItem(NOTIF_HIDE_KEY, JSON.stringify(map)); } catch {}
+}
+function getHiddenNotificationKeys() {
+  const map = readHiddenMap();
+  const cutoff = Date.now() - NOTIF_LIFETIME_MS;
+  let dirty = false;
+  Object.keys(map).forEach(k => { if (Number(map[k]) < cutoff) { delete map[k]; dirty = true; } });
+  if (dirty) writeHiddenMap(map);
+  return new Set(Object.keys(map));
+}
+function hideNotification(key) {
+  const map = readHiddenMap();
+  map[key] = Date.now();
+  writeHiddenMap(map);
+}
+function getNotificationsSeenAt() {
+  try { return Number(localStorage.getItem(NOTIF_SEEN_KEY)) || 0; } catch { return 0; }
+}
+function markNotificationsSeen() {
+  try { localStorage.setItem(NOTIF_SEEN_KEY, String(Date.now())); } catch {}
 }
 
-function hideNotification(key) {
-  const keys = getHiddenNotificationKeys();
+// Red count badge: how many of the shown notifications are new since the
+// panel was last opened. Opening the panel marks everything as seen.
+function paintNotificationBadge() {
+  const dot = document.getElementById("globalNotificationDot");
+  const count = document.getElementById("globalNotificationCount");
+  const panel = document.getElementById("globalNotificationPanel");
+  if (dot) dot.style.display = "none";
+  if (!count) return;
+  const open = !!(panel && panel.classList.contains("show"));
+  if (open) markNotificationsSeen();
+  const seen = getNotificationsSeenAt();
+  const unread = open ? 0 : lastNotificationItems.filter(i => notificationMillis(i.createdAt) > seen).length;
+  count.style.display = unread ? "grid" : "none";
+  count.textContent = unread > 9 ? "9+" : String(unread);
+}
 
-  keys.add(key);
+const NOTIF_TRASH_ICON = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>`;
+const NOTIF_MSG_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
+const stripNotifEmoji = t => String(t || "").replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B50}\u{2705}\u{2764}\u{FE0F}\u{200D}]+/gu, "").replace(/\s+/g, " ").trim();
 
-  localStorage.setItem(
-    NOTIF_HIDE_KEY,
-    JSON.stringify([...keys])
-  );
+// "আজ, ৩:১৫ PM" / "গতকাল, ..." / "৩ অক্টো, ..."
+function notificationClock(value) {
+  const ms = notificationMillis(value);
+  if (!ms) return "";
+  const d = new Date(ms), now = new Date();
+  const day0 = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diffDays = Math.round((day0(now) - day0(d)) / 86400000);
+  const time = d.toLocaleTimeString("bn-BD", { hour: "numeric", minute: "2-digit" });
+  if (diffDays <= 0) return `আজ, ${time}`;
+  if (diffDays === 1) return `গতকাল, ${time}`;
+  return `${d.toLocaleDateString("bn-BD", { day: "numeric", month: "short" })}, ${time}`;
 }
 
 // ---------- HTML escaping ----------
@@ -582,6 +629,25 @@ function injectNotificationStyles() {
         max-height: 70vh;
       }
     }
+
+    /* ---- count-only badge (no dot), delete button, friend message card ---- */
+    .global-notification-dot { display: none !important; }
+    .global-notification-count { top: -6px; right: -6px; min-width: 20px; height: 20px; font-size: 11px;
+      border: 2px solid var(--surface-solid, #fff); box-shadow: 0 3px 10px rgba(239,68,68,.35); animation: gnBadgePop .35s cubic-bezier(.2,1.4,.4,1) both; }
+    @keyframes gnBadgePop { from { transform: scale(.3); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+    .global-notif-hide { display: inline-flex; align-items: center; justify-content: center; gap: 5px; color: var(--color-danger, #a6402f) !important;
+      border-color: color-mix(in srgb, var(--color-danger, #a6402f) 35%, transparent) !important; }
+    .global-notif-hide:hover { background: color-mix(in srgb, var(--color-danger, #a6402f) 10%, transparent) !important; }
+    .gn-cheer { border-left: 3px solid var(--color-accent, #b8863c); animation: gnCheerIn .35s ease both; }
+    @keyframes gnCheerIn { from { transform: translateY(6px); opacity: 0 } to { transform: none; opacity: 1 } }
+    .gn-cheer-top { display: flex; align-items: center; gap: 10px; }
+    .gn-cheer-from { flex: 1; min-width: 0; font-size: 15px; font-weight: 900; color: var(--text-primary, #21262f); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .gn-cheer-tag { font-size: 10px; font-weight: 900; padding: 3px 9px; border-radius: 99px; color: var(--color-accent, #b8863c);
+      background: color-mix(in srgb, var(--color-accent, #b8863c) 14%, transparent); }
+    .gn-cheer-text { margin: 10px 0 8px; font-size: 17px; line-height: 1.45; font-weight: 900; color: var(--text-primary, #21262f); word-break: break-word; }
+    .gn-cheer-time { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; font-weight: 700; color: var(--text-muted, #777); }
+    .gn-cheer-time b { color: var(--color-accent, #b8863c); font-weight: 900; }
+    .global-notif-open-feed { flex: 1; }
   `;
 
   document.head.appendChild(style);
@@ -799,11 +865,31 @@ async function renderGlobalNotifications(student) {
         })
       );
 
+    // ---------- Friend messages (cheers) ----------
+    let cheerDocs = [];
+    try {
+      const cs = await getDocs(query(collection(db, "friendCheers"), where("toStudentId", "==", student.studentId)));
+      cheerDocs = cs.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (e) {}
+    const cutoffMs = Date.now() - NOTIF_LIFETIME_MS;
+    // 7 days later the message is deleted for good (only the receiver cleans up their own inbox).
+    cheerDocs.filter(c => { const m = notificationMillis(c.createdAt); return m && m < cutoffMs; })
+      .slice(0, 25).forEach(c => { deleteDoc(doc(db, "friendCheers", c.id)).catch(() => {}); });
+    const cheerItems = cheerDocs
+      .filter(c => { const m = notificationMillis(c.createdAt); return !m || m >= cutoffMs; })
+      .map(c => ({
+        key: `cheer:${c.id}`, type: "cheer", id: c.id,
+        sender: names[c.fromStudentId] || "একজন বন্ধু",
+        text: stripNotifEmoji(c.text) || "তোমাকে একটি বার্তা পাঠিয়েছে",
+        createdAt: c.createdAt || new Date()
+      }));
+
     // ---------- Hidden ----------
     const hidden =
       getHiddenNotificationKeys();
 
-    const items = [
+    const allItems = [
+      ...cheerItems,
       ...requests.map(
         request => ({
           key:
@@ -924,10 +1010,9 @@ async function renderGlobalNotifications(student) {
           })
         )
     ]
-      .filter(
-        item =>
-          !hidden.has(item.key)
-      )
+      .filter(item => !hidden.has(item.key))
+      // every notification lives 7 days at most
+      .filter(item => { const m = notificationMillis(item.createdAt); return !m || m >= cutoffMs; })
       .sort(
         (a, b) =>
           notificationMillis(
@@ -938,24 +1023,12 @@ async function renderGlobalNotifications(student) {
           )
       );
 
+    // Only the latest 5 are shown; older ones stay hidden until they expire (7 days).
+    const items = allItems.slice(0, NOTIF_MAX_VISIBLE);
+    lastNotificationItems = items;
+
     // ---------- Badge ----------
-    const unreadCount =
-      items.length;
-
-    badge.style.display =
-      unreadCount
-        ? "block"
-        : "none";
-
-    count.style.display =
-      unreadCount
-        ? "grid"
-        : "none";
-
-    count.textContent =
-      unreadCount > 9
-        ? "9+"
-        : String(unreadCount);
+    paintNotificationBadge();
 
     // ---------- Empty ----------
     if (!items.length) {
@@ -973,6 +1046,26 @@ async function renderGlobalNotifications(student) {
       items
         .map(item => {
 
+          if (item.type === "cheer") {
+            return `
+              <div class="global-notification-item gn-cheer" data-notification-key="${escapeNotification(item.key)}">
+                <div class="gn-cheer-top">
+                  <div class="global-notification-icon">${NOTIF_MSG_ICON}</div>
+                  <strong class="gn-cheer-from">${escapeNotification(item.sender)}</strong>
+                  <span class="gn-cheer-tag">বার্তা</span>
+                </div>
+                <p class="gn-cheer-text">${escapeNotification(item.text)}</p>
+                <div class="gn-cheer-time">
+                  <b>${notificationClock(item.createdAt)}</b>
+                  <span>${notificationAge(item.createdAt)}</span>
+                </div>
+                <div class="global-notification-actions">
+                  <button type="button" class="global-notif-open-feed">ফিডে দেখো</button>
+                  <button type="button" class="global-notif-hide" data-key="${escapeNotification(item.key)}">${NOTIF_TRASH_ICON} মুছুন</button>
+                </div>
+              </div>
+            `;
+          }
           if (item.type === "friend") {
             return `
               <div
@@ -1037,7 +1130,7 @@ async function renderGlobalNotifications(student) {
                     class="global-notif-hide"
                     data-key="${escapeNotification(item.key)}"
                   >
-                    লুকান
+                    ${NOTIF_TRASH_ICON} মুছুন
                   </button>
 
                 </div>
@@ -1072,7 +1165,7 @@ async function renderGlobalNotifications(student) {
                 </div>
                 <div class="global-notification-actions">
                   <button type="button" class="global-notif-open-challenges">দেখো</button>
-                  <button type="button" class="global-notif-hide" data-key="${escapeNotification(item.key)}">লুকান</button>
+                  <button type="button" class="global-notif-hide" data-key="${escapeNotification(item.key)}">${NOTIF_TRASH_ICON} মুছুন</button>
                 </div>
               </div>
             `;
@@ -1125,7 +1218,7 @@ async function renderGlobalNotifications(student) {
                     class="global-notif-hide"
                     data-key="${escapeNotification(item.key)}"
                   >
-                    লুকান
+                    ${NOTIF_TRASH_ICON} মুছুন
                   </button>
 
                 </div>
@@ -1189,7 +1282,7 @@ async function renderGlobalNotifications(student) {
                     class="global-notif-hide"
                     data-key="${escapeNotification(item.key)}"
                   >
-                    লুকান
+                    ${NOTIF_TRASH_ICON} মুছুন
                   </button>
 
                 </div>
@@ -1263,7 +1356,7 @@ async function renderGlobalNotifications(student) {
                   class="global-notif-hide"
                   data-key="${escapeNotification(item.key)}"
                 >
-                  লুকান
+                  ${NOTIF_TRASH_ICON} মুছুন
                 </button>
 
               </div>
@@ -1272,6 +1365,14 @@ async function renderGlobalNotifications(student) {
           `;
         })
         .join("");
+
+    // ---------- Open friends feed ----------
+    list.querySelectorAll(".global-notif-open-feed").forEach(button => {
+      button.onclick = event => {
+        event.stopPropagation();
+        window.location.href = "../student/leaderboard.html?tab=friends";
+      };
+    });
 
     // ---------- Open challenges tab ----------
     list.querySelectorAll(".global-notif-open-challenges").forEach(button => {
@@ -1319,6 +1420,10 @@ async function renderGlobalNotifications(student) {
 
               hideNotification(key);
 
+              if (key.startsWith("cheer:")) {
+                // a message is a real document: delete it for good
+                try { await deleteDoc(doc(db, "friendCheers", key.slice(6))); } catch (e) {}
+              }
               await renderGlobalNotifications(
                 student
               );
@@ -1593,9 +1698,26 @@ function startGlobalNotificationSystem(
     )
   );
 
+  notificationUnsubs.push(
+    onSnapshot(
+      query(collection(db, "friendCheers"), where("toStudentId", "==", student.studentId)),
+      () => renderGlobalNotifications(student),
+      () => {}
+    )
+  );
+
   renderGlobalNotifications(
     student
   );
+
+  // Opening the bell marks everything as seen -> the red count goes away.
+  setTimeout(() => {
+    const bellBtn = document.getElementById("globalNotificationBtn");
+    if (bellBtn && !bellBtn.dataset.notifSeenBound) {
+      bellBtn.dataset.notifSeenBound = "1";
+      bellBtn.addEventListener("click", () => setTimeout(paintNotificationBadge, 0));
+    }
+  }, 0);
 
   // ---------- Outside click ----------
   if (
