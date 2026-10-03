@@ -12,6 +12,8 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  getDoc,
+  setDoc,
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { getUpcomingExams } from "./results-utils.js";
@@ -272,18 +274,43 @@ function readHiddenMap() {
 function writeHiddenMap(map) {
   try { localStorage.setItem(NOTIF_HIDE_KEY, JSON.stringify(map)); } catch {}
 }
-function getHiddenNotificationKeys() {
-  const map = readHiddenMap();
-  const cutoff = Date.now() - NOTIF_LIFETIME_MS;
-  let dirty = false;
-  Object.keys(map).forEach(k => { if (Number(map[k]) < cutoff) { delete map[k]; dirty = true; } });
-  if (dirty) writeHiddenMap(map);
-  return new Set(Object.keys(map));
+// The hidden list also lives in Firestore (studentNotifState/{studentId}) so a
+// deleted notification stays deleted after re-login, on another browser, or after
+// the browser data is cleared. localStorage is only the fast local cache.
+let remoteHidden = {};
+let remoteHiddenFor = null;
+async function loadRemoteHidden(studentId) {
+  if (!studentId || remoteHiddenFor === studentId) return;
+  try {
+    const snap = await getDoc(doc(db, "studentNotifState", studentId));
+    remoteHidden = (snap.exists() && snap.data().hidden) || {};
+    remoteHiddenFor = studentId;
+    // make this device remember them too
+    const local = readHiddenMap();
+    let dirty = false;
+    Object.keys(remoteHidden).forEach(k => { if (!local[k]) { local[k] = Number(remoteHidden[k]) || Date.now(); dirty = true; } });
+    if (dirty) writeHiddenMap(local);
+  } catch (e) { console.warn("hidden notifications (remote) load failed", e); }
 }
-function hideNotification(key) {
+function getHiddenNotificationKeys() {
+  const map = { ...remoteHidden, ...readHiddenMap() };
+  const cutoff = Date.now() - NOTIF_LIFETIME_MS;
+  const local = readHiddenMap();
+  let dirty = false;
+  Object.keys(local).forEach(k => { if (Number(local[k]) < cutoff) { delete local[k]; dirty = true; } });
+  if (dirty) writeHiddenMap(local);
+  return new Set(Object.keys(map).filter(k => Number(map[k]) >= cutoff));
+}
+function hideNotification(key, studentId) {
+  const now = Date.now();
   const map = readHiddenMap();
-  map[key] = Date.now();
+  map[key] = now;
   writeHiddenMap(map);
+  remoteHidden[key] = now;
+  if (studentId) {
+    setDoc(doc(db, "studentNotifState", studentId), { hidden: { [key]: now } }, { merge: true })
+      .catch(e => console.warn("hidden notification save failed", e));
+  }
 }
 function getNotificationsSeenAt() {
   try { return Number(localStorage.getItem(NOTIF_SEEN_KEY)) || 0; } catch { return 0; }
@@ -885,6 +912,7 @@ async function renderGlobalNotifications(student) {
       }));
 
     // ---------- Hidden ----------
+    await loadRemoteHidden(student.studentId);
     const hidden =
       getHiddenNotificationKeys();
 
@@ -1418,7 +1446,7 @@ async function renderGlobalNotifications(student) {
                 return;
               }
 
-              hideNotification(key);
+              hideNotification(key, student.studentId);
 
               if (key.startsWith("cheer:")) {
                 // a message is a real document: delete it for good
