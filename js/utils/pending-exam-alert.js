@@ -87,8 +87,6 @@ export function showPendingExamAlert({ student, exam, examUrl } = {}) {
   const eb = getEarlyBonus(exam, now);
   const daysLeft = Math.max(1, Math.ceil((win.endMs - now) / 86400000));
   const urgent = daysLeft <= 2;
-  // Nothing to say if there is no bonus AND no penalty (an old exam from before the bonus system).
-  if (!eb && !urgent) return;
   shownThisLoad = true;
   injectStyles();
 
@@ -107,7 +105,7 @@ export function showPendingExamAlert({ student, exam, examUrl } = {}) {
       <button type="button" class="pea-x" aria-label="বন্ধ করো">${svg("close", 18)}</button>
       <span class="pea-badge">${svg(urgent ? "alert" : "clock", 14)} ${urgent ? `মাত্র ${bn(daysLeft)} দিন বাকি` : `${bn(daysLeft)} দিন সময় আছে`}</span>
       <h2 class="pea-name">${esc(student.name || student.studentId)}</h2>
-      <p class="pea-msg">তোমার এই পরীক্ষাটি এখনও পেন্ডিং।<br>তাড়াতাড়ি পরীক্ষা দাও আর বোনাস নাও!</p>
+      <p class="pea-msg">তোমার এই পরীক্ষাটি এখনও পেন্ডিং।<br>${eb ? "তাড়াতাড়ি পরীক্ষা দাও আর বোনাস নাও!" : "আর দেরি না করে এখনই পরীক্ষাটি দিয়ে ফেলো!"}</p>
       <span class="pea-exam">${esc(exam.name || "পরীক্ষা")}</span>
       ${eb ? `
       <div class="pea-bonus">

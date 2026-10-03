@@ -43,7 +43,7 @@ export const REFERRAL_XP = 250;
    don't suddenly change anyone's XP. */
 export const EXAM_MAX_XP = 1500;
 export const EXAM_BONUS = {
-  launchMs: Date.UTC(2026, 9, 3),            // 3 Oct 2026
+  launchMs: Date.UTC(2026, 8, 30, 18, 0, 0), // 1 Oct 2026, 00:00 Bangladesh time (Life Science #2 onwards)
   days: [500, 450, 400, 350, 300, 250, 200], // bonus for day 1..7
   windowDays: 7,
   missPenalty: 500,
