@@ -4,7 +4,7 @@
 import { db } from "../firebase/firebase-config.js";
 import { collection, doc, getDoc, getDocs, query, where, onSnapshot, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { getActiveStudents, buildReferralCountMap } from "./student-utils.js";
-import { computeStudentXP, compareRank } from "./xp-utils.js";
+import { computeStudentXP, compareRank, setXPExams } from "./xp-utils.js";
 
 // ---------- SMART AUTO APPROVAL LOGIC (Error Proof) ----------
 export async function autoApproveOldResults() {
@@ -76,6 +76,20 @@ export function isExamAvailableNow(exam, now = Date.now()) {
   return now >= startMs && now < expiryMs;
 }
 
+/* Loads every non-draft exam once (cached 60s) and hands it to the XP engine,
+   so early-bird bonus + missed-exam penalty are identical on every page. */
+let _xpExamsAt = 0, _xpExamsPromise = null;
+export async function ensureXPExams(force = false) {
+  if (!force && Date.now() - _xpExamsAt < 60000) return;
+  if (!_xpExamsPromise) {
+    _xpExamsPromise = getDocs(query(collection(db, "exams"), where("status", "in", ["upcoming", "published", "active", "completed"])))
+      .then(snap => { setXPExams(snap.docs.map(d => ({ id: d.id, ...d.data() }))); _xpExamsAt = Date.now(); })
+      .catch(e => console.warn("ensureXPExams failed", e))
+      .finally(() => { _xpExamsPromise = null; });
+  }
+  await _xpExamsPromise;
+}
+
 export async function getUpcomingExams() {
   const q = query(collection(db, "exams"), where("status", "in", ["upcoming", "published"]));
   const snap = await getDocs(q);
@@ -92,6 +106,7 @@ export function subscribeToUpcomingExams(onChange, onError) {
 }
 
 export async function getAllApprovedResults() {
+  await ensureXPExams();
   // Using 'in' is safer and doesn't require composite indexes
   const q = query(collection(db, "results"), where("status", "in", ["approved", "pending"]));
   const snap = await getDocs(q);
@@ -104,6 +119,7 @@ export async function getAllApprovedResults() {
 }
 
 export async function getApprovedResults(studentId) {
+  await ensureXPExams();
   const q = query(collection(db, "results"), where("studentId", "==", studentId));
   const snap = await getDocs(q);
   const now = Date.now();
@@ -157,13 +173,19 @@ function buildStatsByStudent(results, studentsList, challengeBonusMap = {}, impr
     if (activeIds.has(sid) && !grouped[sid]) grouped[sid] = [];
   });
   const stats = {};
+  const studentById = Object.fromEntries(studentsList.map(s => [s.studentId, s]));
+  // every active student is counted, so a student who skipped an exam still gets the penalty
+  const hadEntry = new Set(Object.keys(grouped));
+  studentsList.forEach(s => { if (!grouped[s.studentId]) grouped[s.studentId] = []; });
   for (const [sid, list] of Object.entries(grouped)) {
     stats[sid] = computeStudentXP(list, {
+      student: studentById[sid] || null,
       referralCount: referralCounts[sid] || 0,
       challengeBonusXP: challengeBonusMap[sid] || 0,
       improvementPracticeResults: improvementResultsMap[sid] || [],
       battleXP: battleXPMap[sid] || 0
     });
+    if (!hadEntry.has(sid) && !stats[sid].missedXP) delete stats[sid];
   }
   return stats;
 }

@@ -34,6 +34,53 @@
 
 export const REFERRAL_XP = 250;
 
+/* ---------- Per-exam XP ceiling + early-bird bonus ----------
+   A perfect paper earns EXAM_MAX_XP (1500) no matter how big the exam is.
+   On top of that, whoever takes a freshly published exam early gets an
+   extra bonus: day 1 = +500, then it drops each day (see days[]).
+   Not taking the exam in its 7-day window costs missPenalty once.
+   Only exams that start on/after launchMs are affected, so old exams
+   don't suddenly change anyone's XP. */
+export const EXAM_MAX_XP = 1500;
+export const EXAM_BONUS = {
+  launchMs: Date.UTC(2026, 9, 3),            // 3 Oct 2026
+  days: [500, 450, 400, 350, 300, 250, 200], // bonus for day 1..7
+  windowDays: 7,
+  missPenalty: 500,
+  penaltyGraceMs: 24 * 60 * 60 * 1000        // results may wait up to 24h for approval
+};
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+// Exams are loaded once by results-utils.js (ensureXPExams) and kept here so
+// every page's computeStudentXP() sees the same exam windows.
+let _xpExams = new Map();
+export function setXPExams(list) { _xpExams = new Map((list || []).map(e => [e.id, e])); }
+export function getXPExams() { return [..._xpExams.values()]; }
+
+// { startMs, endMs } of the 7-day window in which an exam can be taken.
+export function getExamWindow(exam) {
+  const examMs = tms(exam?.examDate), pubMs = tms(exam?.publishDate);
+  if (!examMs) return null;
+  const startMs = Math.max(examMs, pubMs || examMs);
+  return { startMs, endMs: examMs + EXAM_BONUS.windowDays * DAY_MS };
+}
+// Bonus for taking `exam` at time atMs -> { day, bonus, daysLeft } or null.
+export function getEarlyBonus(exam, atMs = Date.now()) {
+  const w = getExamWindow(exam);
+  if (!w || w.startMs < EXAM_BONUS.launchMs) return null;
+  if (atMs < w.startMs || atMs >= w.endMs) return null;
+  const day = Math.min(EXAM_BONUS.days.length, Math.floor((atMs - w.startMs) / DAY_MS) + 1);
+  return { day, bonus: EXAM_BONUS.days[day - 1], daysLeft: Math.max(0, Math.ceil((w.endMs - atMs) / DAY_MS)) };
+}
+function tms(ts) {
+  if (!ts) return 0;
+  if (typeof ts.toMillis === "function") return ts.toMillis();
+  if (typeof ts.toDate === "function") return ts.toDate().getTime();
+  if (typeof ts.seconds === "number") return ts.seconds * 1000;
+  const t = new Date(ts).getTime();
+  return Number.isFinite(t) ? t : 0;
+}
+
 export const XP_RULES = {
   participationBase: 20,
   participationPerQuestion: 2,
@@ -68,19 +115,21 @@ export const XP_RULES = {
 
 // Bengali labels + display order for every category (used by the UI).
 export const XP_CATEGORIES = [
-  { key: "correct",       label: "সঠিক উত্তর",            hint: "প্রতি মার্কে 8 XP" },
+  { key: "correct",       label: "সঠিক উত্তর",            hint: "প্রতিটি সঠিক মার্কে XP" },
   { key: "participation", label: "পরীক্ষায় অংশগ্রহণ",     hint: "বড় পরীক্ষা = বেশি XP" },
-  { key: "effort",        label: "প্রশ্নে চেষ্টা",         hint: "প্রতিটি চেষ্টা করা প্রশ্নে 1 XP" },
+  { key: "effort",        label: "প্রশ্নে চেষ্টা",         hint: "প্রতিটি চেষ্টা করা প্রশ্নে XP" },
   { key: "accuracy",      label: "নির্ভুলতা বোনাস",        hint: "যত কম ভুল, তত বেশি" },
   { key: "tier",          label: "স্কোর বোনাস",            hint: "40% / 60% / 75% / 90% ধাপ" },
-  { key: "flawless",      label: "পারফেক্ট ও ক্লিন রান",    hint: "100% হলে +60, শূন্য ভুলে +20" },
-  { key: "mastery",       label: "টপিক ও চ্যাপ্টার দক্ষতা", hint: "টপিকে সব সঠিক হলে +4, চ্যাপ্টারে 80%+ হলে +6" },
+  { key: "flawless",      label: "পারফেক্ট ও ক্লিন রান",    hint: "100% হলে বা শূন্য ভুলে বোনাস" },
+  { key: "mastery",       label: "টপিক ও চ্যাপ্টার দক্ষতা", hint: "টপিকে সব সঠিক বা চ্যাপ্টারে 80%+ হলে" },
   { key: "improvement",   label: "উন্নতি বোনাস",           hint: "নিজের গড়ের চেয়ে ভালো করলে" },
   { key: "streak",        label: "সাপ্তাহিক ধারাবাহিকতা",   hint: "টানা সপ্তাহে পরীক্ষা দিলে" },
+  { key: "early",         label: "দ্রুত পরীক্ষা বোনাস",     hint: "পরীক্ষা প্রকাশের প্রথম দিনে সর্বোচ্চ বোনাস" },
   { key: "referral",      label: "বন্ধু রেফার",             hint: "প্রতি বন্ধুতে 250 XP" },
   { key: "challenge",     label: "চ্যালেঞ্জ বোনাস",         hint: "বন্ধুর সাথে challenge জিতলে/হারলে বোনাস XP" },
   { key: "improvementPractice", label: "উন্নতি প্র্যাকটিস", hint: "দুর্বল জায়গা ঠিক করার প্র্যাকটিসে XP" },
-  { key: "battle", label: "ব্যাটল মোড", hint: "ব্যাটল ম্যাচ জিতলে/MVP হলে XP" }
+  { key: "battle", label: "ব্যাটল মোড", hint: "ব্যাটল ম্যাচ জিতলে/MVP হলে XP" },
+  { key: "missed", label: "পরীক্ষা মিস পেনাল্টি", hint: "৭ দিনে পরীক্ষা না দিলে -500 XP" }
 ];
 
 export const LEVEL_THRESHOLDS = [0, 1000, 3000, 6000, 10000, 15000, 25000, 40000, 60000];
@@ -185,6 +234,13 @@ export function computeExamXP(result, { prevAvgPct = null, streakRun = 0 } = {})
 
   if (streakRun > 1) parts.streak = R.streakPerWeek * Math.min(streakRun - 1, R.streakCapWeeks);
 
+  // Scale so a perfect paper of ANY size is worth EXAM_MAX_XP (1500), then
+  // clamp so the exam itself (before the early-bird bonus) never exceeds it.
+  const rawMax = rawMaxExamXP({ questionCount: totalQ, totalMarks: num(result.totalMarks) });
+  const scale = rawMax > 0 ? EXAM_MAX_XP / rawMax : 1;
+  let sum = Object.values(parts).reduce((a, b) => a + num(b), 0) * scale;
+  const k = sum > EXAM_MAX_XP ? (EXAM_MAX_XP / sum) * scale : scale;
+  Object.keys(parts).forEach(key => { parts[key] = parts[key] * k; });
   const xp = Math.round(Object.values(parts).reduce((a, b) => a + num(b), 0));
   return { xp, parts };
 }
@@ -206,6 +262,9 @@ export function getExamXPLines(parts = {}) {
 // Used on the "upcoming exam" cards. Mastery/improvement/streak depend on the
 // student, so they're shown as extra "+ বোনাস" rather than folded in.
 export function computeMaxExamXP({ questionCount = 0, totalMarks = 0 } = {}) {
+  return Math.max(0, num(questionCount)) > 0 || num(totalMarks) > 0 ? EXAM_MAX_XP : 0;
+}
+function rawMaxExamXP({ questionCount = 0, totalMarks = 0 } = {}) {
   const R = XP_RULES;
   const q = Math.max(0, num(questionCount));
   const marks = Math.max(0, num(totalMarks));
@@ -268,7 +327,7 @@ export function computeImprovementPracticeTotalXP(practiceResults = []) {
 
 // ---------- whole student ----------
 // results: this student's counted (approved / auto-approved) results, any order.
-export function computeStudentXP(results, { referralCount = 0, challengeBonusXP = 0, improvementPracticeResults = [], battleXP = 0, spentXP = 0 } = {}) {
+export function computeStudentXP(results, { referralCount = 0, challengeBonusXP = 0, improvementPracticeResults = [], battleXP = 0, spentXP = 0, student = null } = {}) {
   const sorted = [...(results || [])].sort((a, b) => toMillis(a.submittedAt) - toMillis(b.submittedAt));
 
   const weeksAttended = new Set(sorted.map(r => weekIndex(toMillis(r.submittedAt))));
@@ -289,7 +348,11 @@ export function computeStudentXP(results, { referralCount = 0, challengeBonusXP 
     }
 
     const prevAvgPct = i > 0 ? pctSum / i : null;
-    const { xp, parts } = computeExamXP(r, { prevAvgPct, streakRun });
+    const { xp: baseXP, parts } = computeExamXP(r, { prevAvgPct, streakRun });
+    // Early-bird bonus: depends on which day of the exam's 7-day window it was submitted.
+    const eb = r.examId && _xpExams.has(r.examId) ? getEarlyBonus(_xpExams.get(r.examId), ms) : null;
+    parts.early = eb ? eb.bonus : 0;
+    const xp = baseXP + parts.early;
     Object.entries(parts).forEach(([k, v]) => { breakdown[k] += v; });
 
     const pct = num(r.percentage);
@@ -317,8 +380,32 @@ export function computeStudentXP(results, { referralCount = 0, challengeBonusXP 
 
   Object.keys(breakdown).forEach(k => { breakdown[k] = Math.round(breakdown[k]); });
 
+  // Missed-exam penalty: -missPenalty once per exam whose 7-day window is over
+  // (plus a 24h grace for result approval) and that this student never took.
+  let missedXP = 0, missedExams = [];
+  if (student && student.studentId) {
+    const taken = new Set(sorted.map(r => r.examId));
+    const joinedMs = tms(student.createdAt);
+    const now = Date.now();
+    _xpExams.forEach(exam => {
+      if (!exam || ["draft", "archived"].includes(exam.status)) return;
+      const w = getExamWindow(exam);
+      if (!w || w.startMs < EXAM_BONUS.launchMs) return;
+      if (now < w.endMs + EXAM_BONUS.penaltyGraceMs) return;
+      if (taken.has(exam.id)) return;
+      if (joinedMs && joinedMs > w.startMs) return;
+      const target = exam.targetBatch || "all";
+      if (target !== "all" && student.className && target !== student.className) return;
+      const allowed = exam.allowedStudents || [];
+      if (allowed.length > 0 && !allowed.includes(student.studentId)) return;
+      missedXP += EXAM_BONUS.missPenalty;
+      missedExams.push({ examId: exam.id, examName: exam.name || "পরীক্ষা" });
+    });
+  }
+  breakdown.missed = missedXP;
+
   const examXP = exams.reduce((a, e) => a + e.xp, 0);
-  const totalXP = examXP + referralXP + challengeXP + improvementPracticeXP + battleXPRounded;
+  const totalXP = Math.max(0, examXP + referralXP + challengeXP + improvementPracticeXP + battleXPRounded - missedXP);
   const avgPercentage = sorted.length ? Math.round((pctSum / sorted.length) * 10) / 10 : 0;
 
   // Lifetime XP (totalXP, above) never shrinks -- it's what drives level and
@@ -328,7 +415,7 @@ export function computeStudentXP(results, { referralCount = 0, challengeBonusXP 
   const spendableXP = Math.max(0, totalXP - spentXPRounded);
 
   return {
-    totalXP, examXP, referralXP, referralCount: refCount, challengeXP, improvementPracticeXP, battleXP: battleXPRounded,
+    totalXP, examXP, missedXP, missedExams, referralXP, referralCount: refCount, challengeXP, improvementPracticeXP, battleXP: battleXPRounded,
     spentXP: spentXPRounded, spendableXP,
     breakdown, exams: exams.reverse(),   // newest first
     examsTaken: sorted.length, perfectExams, avgPercentage,
