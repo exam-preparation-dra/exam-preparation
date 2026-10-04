@@ -3,61 +3,143 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>অ্যাডমিন লগইন — পরীক্ষা প্রস্তুতি</title>
+<title>অ্যাডমিন লগইন — EP2.0</title>
+<link rel="icon" type="image/png" href="./favicon.png">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<meta name="theme-color" content="#b8863c">
 <link rel="stylesheet" href="../css/style.css">
 <style>
-  body { min-height: 100vh; margin: 0; display: flex; align-items: center; justify-content: center; padding: 20px; background: var(--bg-app); color: var(--text-primary); font-family: var(--font-bn); }
-  .box { width: 100%; max-width: 380px; }
-  .card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 20px; padding: 28px 22px; box-shadow: var(--shadow-soft); }
-  .logo { width: 48px; height: 48px; border-radius: 14px; background: var(--color-accent); color: #fff; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
-  .logo svg { width: 24px; height: 24px; }
-  h1 { font-size: 1.3rem; font-weight: 800; margin: 0 0 4px; }
-  .sub { font-size: .85rem; color: var(--text-muted); margin: 0 0 22px; }
-  label { display: block; font-size: .8rem; font-weight: 700; color: var(--text-secondary); margin: 0 0 6px; }
-  .field { margin-bottom: 14px; }
+  @keyframes rise { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+  @keyframes shake { 20%,60% { transform:translateX(-6px); } 40%,80% { transform:translateX(6px); } }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001ms !important; } }
+  body { min-height: 100vh; min-height: 100dvh; margin: 0; background: var(--bg-app); color: var(--text-primary); font-family: var(--font-bn); }
+
+  .page { min-height: 100vh; min-height: 100dvh; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); }
+
+  /* ---- Brand side (desktop) ---- */
+  .showcase { position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; padding: 44px 52px;
+    background: radial-gradient(90% 70% at 0% 0%, rgba(var(--color-accent-rgb), .22), transparent 60%), radial-gradient(80% 60% at 100% 100%, rgba(var(--color-accent-rgb), .16), transparent 60%), var(--surface-highlight);
+    border-right: 1px solid var(--surface-border); }
+  .showcase::after { content: ""; position: absolute; right: -90px; top: 38%; width: 300px; height: 300px; border-radius: 50%; border: 1px dashed rgba(var(--color-accent-rgb), .35); pointer-events: none; }
+  .showcase-top { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 1.05rem; }
+  .mark { width: 42px; height: 42px; border-radius: 12px; background: var(--color-accent); color: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px rgba(var(--color-accent-rgb), .35); }
+  .mark svg { width: 24px; height: 24px; }
+  .showcase h2 { margin: 0 0 10px; font-size: 2rem; line-height: 1.25; font-weight: 800; letter-spacing: -.4px; max-width: 420px; }
+  .showcase p.lead { margin: 0 0 28px; max-width: 400px; color: var(--text-secondary); font-size: .96rem; line-height: 1.7; font-weight: 500; }
+  .feats { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+  .feats li { display: flex; align-items: center; gap: 12px; font-size: .92rem; font-weight: 700; color: var(--text-primary); }
+  .feats .fi { flex: none; width: 36px; height: 36px; border-radius: 10px; background: var(--surface); border: 1px solid var(--surface-border); color: var(--color-accent); display: flex; align-items: center; justify-content: center; }
+  .feats svg { width: 18px; height: 18px; }
+  .showcase-foot { font-size: .78rem; color: var(--text-muted); font-weight: 600; }
+
+  /* ---- Form side ---- */
+  .side { display: flex; align-items: center; justify-content: center; padding: 28px 20px; }
+  .box { width: 100%; max-width: 400px; animation: rise .5s cubic-bezier(.22,1,.36,1) both; }
+  .mobile-brand { display: none; align-items: center; gap: 10px; margin-bottom: 26px; font-weight: 800; }
+  .mobile-brand .mark { width: 38px; height: 38px; }
+  .lock-badge { width: 52px; height: 52px; border-radius: 16px; background: var(--color-accent-soft); color: var(--color-accent); display: flex; align-items: center; justify-content: center; margin-bottom: 18px; }
+  .lock-badge svg { width: 26px; height: 26px; }
+  h1 { font-size: 1.6rem; font-weight: 800; margin: 0 0 6px; letter-spacing: -.3px; }
+  .sub { font-size: .9rem; color: var(--text-secondary); margin: 0 0 26px; line-height: 1.6; font-weight: 500; }
+
+  label { display: block; font-size: .8rem; font-weight: 700; color: var(--text-secondary); margin: 0 0 8px; }
   .wrap { position: relative; }
-  input { width: 100%; box-sizing: border-box; padding: 13px 14px; border-radius: 12px; border: 1.5px solid var(--surface-border); background: var(--surface-solid); color: inherit; font: inherit; font-size: .95rem; outline: none; transition: border-color var(--transition); }
-  input:focus { border-color: var(--color-accent); }
-  .wrap input { padding-right: 46px; }
-  .eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border: 0; background: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
-  .eye:hover { color: var(--text-primary); }
-  .eye svg { width: 19px; height: 19px; }
-  .err { display: none; margin: 0 0 14px; padding: 10px 12px; border-radius: 10px; background: rgba(166,64,47,.10); color: var(--color-danger); font-size: .8rem; font-weight: 700; line-height: 1.45; }
+  .wrap .lead-ic { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 19px; height: 19px; color: var(--text-muted); pointer-events: none; transition: color var(--transition); }
+  input { width: 100%; box-sizing: border-box; height: 52px; padding: 0 50px 0 44px; border-radius: 14px; border: 1.5px solid var(--surface-border); background: var(--surface); color: inherit; font: inherit; font-size: 1rem; font-weight: 600; outline: none; transition: border-color var(--transition), box-shadow var(--transition); }
+  input::placeholder { color: var(--text-muted); font-weight: 500; }
+  input:focus { border-color: var(--color-accent); box-shadow: 0 0 0 4px rgba(var(--color-accent-rgb), .15); }
+  .wrap:focus-within .lead-ic { color: var(--color-accent); }
+  .wrap.bad input { border-color: var(--color-danger); box-shadow: 0 0 0 4px rgba(166,64,47,.12); }
+  .eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border: 0; background: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+  .eye:hover { color: var(--text-primary); background: var(--surface-edge); }
+  .eye svg { width: 20px; height: 20px; }
+  .caps { display: none; align-items: center; gap: 6px; margin: 8px 2px 0; font-size: .78rem; font-weight: 700; color: #a8761f; }
+  .caps.show { display: flex; }
+  .caps svg { width: 14px; height: 14px; }
+
+  .err { display: none; margin: 14px 0 0; padding: 11px 13px; border-radius: 12px; background: rgba(166,64,47,.10); border: 1px solid rgba(166,64,47,.25); color: var(--color-danger); font-size: .82rem; font-weight: 700; line-height: 1.5; }
   .err.show { display: block; }
-  .btn { width: 100%; padding: 14px; border: 0; border-radius: 12px; background: var(--color-accent); color: #fff; font: inherit; font-size: .95rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
-  .btn:active { transform: scale(.99); }
-  .btn:disabled { opacity: .65; cursor: default; }
-  .back { display: block; text-align: center; margin-top: 18px; font-size: .82rem; font-weight: 700; color: var(--text-muted); text-decoration: none; }
+  .err small { display: block; margin-top: 3px; font-family: var(--font-num); font-weight: 600; opacity: .75; font-size: .72rem; }
+  form.shake { animation: shake .4s ease; }
+
+  .btn { width: 100%; height: 52px; margin-top: 20px; border: 0; border-radius: 14px; background: var(--color-accent); color: #fff; font: inherit; font-size: 1rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 20px rgba(var(--color-accent-rgb), .32); transition: transform var(--transition-lift), box-shadow var(--transition), opacity var(--transition); }
+  .btn:hover { box-shadow: 0 10px 24px rgba(var(--color-accent-rgb), .42); }
+  .btn:active { transform: scale(.985); }
+  .btn:disabled { opacity: .75; cursor: default; pointer-events: none; }
+  .btn svg { width: 18px; height: 18px; }
+  .spin { width: 18px; height: 18px; border: 2.5px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
+
+  .secure { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 18px; font-size: .75rem; color: var(--text-muted); font-weight: 600; }
+  .secure svg { width: 13px; height: 13px; }
+  .back { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--surface-border); font-size: .84rem; font-weight: 700; color: var(--text-secondary); text-decoration: none; }
   .back:hover { color: var(--color-accent); }
+  .back svg { width: 16px; height: 16px; }
+
+  /* ---- Responsive ---- */
+  @media (max-width: 900px) {
+    .page { grid-template-columns: 1fr; }
+    .showcase { display: none; }
+    .mobile-brand { display: flex; }
+    .side { align-items: flex-start; padding-top: 8vh; }
+  }
+  @media (max-width: 420px) { .side { padding: 6vh 18px 24px; } h1 { font-size: 1.45rem; } }
 </style>
 </head>
 <body>
-<div class="box">
-  <div class="card">
-    <div class="logo">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-    </div>
-    <h1>অ্যাডমিন লগইন</h1>
-    <p class="sub">চালিয়ে যেতে পাসওয়ার্ড দাও</p>
+<div class="page">
 
-    <form id="loginForm" novalidate>
-      <div class="field">
+  <aside class="showcase" aria-hidden="true">
+    <div class="showcase-top">
+      <div class="mark"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4 2 10l14 6 14-6z"/><path d="M6 13v6c0 2.5 4.5 5 10 5s10-2.5 10-5v-6"/></svg></div>
+      EP2.0
+    </div>
+    <div>
+      <h2>পুরো প্ল্যাটফর্ম, এক জায়গা থেকে।</h2>
+      <p class="lead">পরীক্ষা তৈরি করো, শিক্ষার্থীদের পরিচালনা করো আর ফলাফল দেখো — সব এই অ্যাডমিন প্যানেল থেকে।</p>
+      <ul class="feats">
+        <li><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></span>পরীক্ষা ও প্রশ্ন ব্যাংক</li>
+        <li><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>শিক্ষার্থী ও সেটআপ কোড</li>
+        <li><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>ফলাফল ও অ্যানালিটিক্স</li>
+      </ul>
+    </div>
+    <div class="showcase-foot">শুধুমাত্র অনুমোদিত অ্যাডমিনের জন্য</div>
+  </aside>
+
+  <main class="side">
+    <div class="box">
+      <div class="mobile-brand">
+        <div class="mark"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4 2 10l14 6 14-6z"/><path d="M6 13v6c0 2.5 4.5 5 10 5s10-2.5 10-5v-6"/></svg></div>
+        EP2.0
+      </div>
+
+      <div class="lock-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <h1>অ্যাডমিন লগইন</h1>
+      <p class="sub">অ্যাডমিন প্যানেলে ঢুকতে তোমার পাসওয়ার্ড দাও।</p>
+
+      <form id="loginForm" novalidate>
         <label for="password">পাসওয়ার্ড</label>
-        <div class="wrap">
-          <input type="password" id="password" required autocomplete="current-password" placeholder="পাসওয়ার্ড" autofocus>
+        <div class="wrap" id="pwWrap">
+          <svg class="lead-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3"/></svg>
+          <input type="password" id="password" required autocomplete="current-password" placeholder="পাসওয়ার্ড লেখো" autofocus>
           <button type="button" class="eye" id="eyeBtn" aria-label="পাসওয়ার্ড দেখাও">
             <svg id="eyeOff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
             <svg id="eyeOn" style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
-      </div>
+        <div class="caps" id="caps"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>Caps Lock চালু আছে</div>
 
-      <div id="err" class="err" role="alert"></div>
+        <div id="err" class="err" role="alert"></div>
 
-      <button type="submit" class="btn" id="loginBtn">প্রবেশ করো</button>
-    </form>
-  </div>
-  <a href="../index.html" class="back">← শিক্ষার্থী পেজে ফিরে যাও</a>
+        <button type="submit" class="btn" id="loginBtn"><span>প্রবেশ করো</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      </form>
+
+      <div class="secure"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>সুরক্ষিত সংযোগ</div>
+      <a href="../index.html" class="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>শিক্ষার্থী পেজে ফিরে যাও</a>
+    </div>
+  </main>
 </div>
 
 <script type="module">
@@ -77,22 +159,36 @@ $("eyeBtn").addEventListener("click", () => {
   $("eyeOn").style.display = show ? "" : "none";
 });
 
-const showErr = (m) => { err.textContent = m; err.classList.add("show"); };
+const wrap = $("pwWrap"), caps = $("caps");
+const BTN_HTML = btn.innerHTML;
+const showErr = (m, code) => {
+  err.innerHTML = "";
+  err.append(document.createTextNode(m));
+  if (code) { const sm = document.createElement("small"); sm.textContent = code; err.append(sm); }
+  err.classList.add("show"); wrap.classList.add("bad");
+  form.classList.remove("shake"); void form.offsetWidth; form.classList.add("shake");
+};
+const clearErr = () => { err.classList.remove("show"); wrap.classList.remove("bad"); };
+pw.addEventListener("input", clearErr);
+const capsCheck = (e) => caps.classList.toggle("show", !!e.getModifierState?.("CapsLock"));
+pw.addEventListener("keydown", capsCheck); pw.addEventListener("keyup", capsCheck);
+pw.addEventListener("blur", () => caps.classList.remove("show"));
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
-  err.classList.remove("show");
-  if (!pw.value) { showErr("পাসওয়ার্ড লেখো।"); return; }
-  btn.disabled = true; btn.textContent = "যাচাই হচ্ছে…";
+  clearErr();
+  if (!pw.value) { showErr("পাসওয়ার্ড লেখো।"); pw.focus(); return; }
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span><span>যাচাই হচ্ছে…</span>';
   try {
     await adminLogin(pw.value);
     window.location.href = "../admin/dashboard.html";
   } catch (e2) {
+    const code = e2?.code || e2?.message || "unknown";
     showErr(e2?.code === "auth/not-admin" ? e2.message
-      : e2?.code === "auth/invalid-credential" ? "পাসওয়ার্ড ভুল, অথবা এই ইমেইলে অ্যাডমিন অ্যাকাউন্ট নেই। (auth/invalid-credential)"
-      : friendlyError(e2) + " (" + (e2?.code || e2?.message || "unknown") + ")");
+      : e2?.code === "auth/invalid-credential" ? "পাসওয়ার্ড ভুল, অথবা এই ইমেইলে অ্যাডমিন অ্যাকাউন্ট নেই।"
+      : friendlyError(e2), e2?.code === "auth/not-admin" ? "" : code);
     console.error("adminLogin failed:", e2);
-    btn.disabled = false; btn.textContent = "প্রবেশ করো";
+    btn.disabled = false; btn.innerHTML = BTN_HTML; pw.select();
   }
 });
 </script>
