@@ -514,7 +514,7 @@ let db;
 let doc, getDoc, collection, getDocs, query, where;
 let getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival;
 let getChallengeWinCount, sendChallenge;
-let requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, savePinnedBadges, friendlyStudentAuthError;
+let requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, savePinnedBadges, friendlyStudentAuthError, validatePin;
 let viewPrivacy = { records: true, subjects: true, badges: true, publicStats: false };
 let getLevelInfo, LEVEL_THRESHOLDS, STAGES, stageOf, detectMainSubject, stageTitle, publishMyActivity;
 let mainSubject = null, subjectVisible = true;   // auto-detected subject for the profile on screen
@@ -546,7 +546,7 @@ const __ok = (await Promise.all([
   loadModule("../js/firebase/firebase-config.js", m => ({ db } = m)),
   loadModule("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js", m => ({ doc, getDoc, collection, getDocs, query, where } = m)),
   loadModule("../js/utils/friend-utils.js?v=ref1", m => ({ getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival } = m)),
-  loadModule("../js/utils/student-auth.js", m => ({ requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, savePinnedBadges, friendlyStudentAuthError } = m)),
+  loadModule("../js/utils/student-auth.js", m => ({ requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, savePinnedBadges, friendlyStudentAuthError, validatePin } = m)),
   loadModule("../js/utils/challenge-utils.js", m => ({ getChallengeWinCount, sendChallenge } = m)),
   loadModule("../js/utils/xp-utils.js", m => ({ getLevelInfo, LEVEL_THRESHOLDS } = m)),
   loadModule("../js/utils/stage-utils.js", m => ({ STAGES, stageOf, detectMainSubject, stageTitle } = m)),
@@ -1082,12 +1082,12 @@ async function renderSettings() {
       <div class="pf-note" style="margin-top:8px">নাম, ক্লাস, লেভেল ও XP সবসময় দেখা যাবে।</div>
     </div>
     <div class="pf-card">
-      <div class="pf-head"><div><h2 class="pf-h">পাসওয়ার্ড বদলাও</h2><div class="pf-note">কমপক্ষে ৬ অক্ষর</div></div></div>
-      <input class="pf-inp" id="pwOld" type="password" placeholder="বর্তমান পাসওয়ার্ড" autocomplete="current-password">
-      <input class="pf-inp" id="pwNew" type="password" placeholder="নতুন পাসওয়ার্ড" autocomplete="new-password">
-      <input class="pf-inp" id="pwNew2" type="password" placeholder="নতুন পাসওয়ার্ড আবার লেখো" autocomplete="new-password">
+      <div class="pf-head"><div><h2 class="pf-h">PIN বদলাও</h2><div class="pf-note">ঠিক ৬ সংখ্যা</div></div></div>
+      <input class="pf-inp" id="pwOld" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="বর্তমান PIN" autocomplete="current-password">
+      <input class="pf-inp" id="pwNew" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="নতুন PIN" autocomplete="new-password">
+      <input class="pf-inp" id="pwNew2" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="নতুন PIN আবার লেখো" autocomplete="new-password">
       <div id="pwMsg" style="color:var(--color-danger);font-size:.8rem;min-height:18px;margin-bottom:6px"></div>
-      <button class="pf-btn primary" id="pwSave" type="button">পাসওয়ার্ড বদলাও</button>
+      <button class="pf-btn primary" id="pwSave" type="button">PIN বদলাও</button>
     </div>
     <div class="pf-card">
       <div class="pf-head"><div><h2 class="pf-h">লগআউট</h2><div class="pf-note">অন্য কেউ এই ডিভাইসে ঢুকতে চাইলে আগে লগআউট করো</div></div></div>
@@ -1101,22 +1101,23 @@ async function renderSettings() {
     catch (e) { cb.checked = !cb.checked; showToast("সেভ করা যায়নি", "error"); }
   }));
 
+  ["pwOld","pwNew","pwNew2"].forEach(id => $(id).addEventListener("input", e => { e.target.value = e.target.value.replace(/\D/g, "").slice(0, 6); }));
   $("pwSave").addEventListener("click", async () => {
     const o = $("pwOld").value, n = $("pwNew").value, n2 = $("pwNew2").value, msg = $("pwMsg");
     msg.textContent = "";
-    if (!o) { msg.textContent = "বর্তমান পাসওয়ার্ড লেখো।"; return; }
-    if (n.length < 6) { msg.textContent = "নতুন পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।"; return; }
-    if (n !== n2) { msg.textContent = "নতুন পাসওয়ার্ড দুটি মেলেনি।"; return; }
-    if (n === o) { msg.textContent = "নতুন পাসওয়ার্ড আগেরটার থেকে আলাদা হতে হবে।"; return; }
+    if (!o) { msg.textContent = "বর্তমান PIN লেখো।"; return; }
+    const bad = validatePin(n); if (bad) { msg.textContent = bad; return; }
+    if (n !== n2) { msg.textContent = "নতুন PIN দুটি মেলেনি।"; return; }
+    if (n === o) { msg.textContent = "নতুন PIN আগেরটার থেকে আলাদা হতে হবে।"; return; }
     const btn = $("pwSave"); btn.disabled = true;
     try {
       await changeMyPassword(student.studentId, o, n);
-      showToast("পাসওয়ার্ড বদলানো হয়েছে", "success");
+      showToast("PIN বদলানো হয়েছে", "success");
       $("pwOld").value = $("pwNew").value = $("pwNew2").value = "";
     } catch (e) {
       const c = e?.code || "";
       msg.textContent = (c === "auth/invalid-credential" || c === "auth/wrong-password")
-        ? "বর্তমান পাসওয়ার্ড ভুল।" : friendlyStudentAuthError(e);
+        ? "বর্তমান PIN ভুল।" : friendlyStudentAuthError(e);
     }
     btn.disabled = false;
   });
