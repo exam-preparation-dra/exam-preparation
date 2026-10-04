@@ -54,14 +54,26 @@ export async function studentLogin(studentId, password) {
   await persistenceReady;
   await signInWithEmailAndPassword(auth, studentEmail(studentId), password);
   const snap = await getDoc(doc(db, "studentAuthState", studentId));
-  return { needsNewPassword: snap.exists() && snap.data().passwordSet === false };
+  const d = snap.exists() ? snap.data() : {};
+  // Needs a new PIN if: first time (setup code) OR still on an old letter password (no pinSet flag yet).
+  return { needsNewPassword: snap.exists() && (d.passwordSet === false || d.pinSet !== true) };
+}
+
+/* ---------- 6-DIGIT PIN RULES (client-side) ---------- */
+export const PIN_LENGTH = 6;
+export function validatePin(pin) {
+  if (!/^\d+$/.test(pin) || pin.length !== PIN_LENGTH) return `PIN ঠিক ${PIN_LENGTH} সংখ্যার হতে হবে।`;
+  if (/^(\d)\1+$/.test(pin)) return "একই সংখ্যা বারবার দেওয়া যাবে না (যেমন 111111)।";
+  const asc = "0123456789", desc = "9876543210";
+  if (asc.includes(pin) || desc.includes(pin)) return "পরপর সংখ্যা দেওয়া যাবে না (যেমন 123456)।";
+  return "";
 }
 
 export async function setNewPassword(studentId, newPassword) {
   if (!auth.currentUser) throw new Error("আবার লগইন করো।");
   await updatePassword(auth.currentUser, newPassword);
   await setDoc(doc(db, "studentAuthState", studentId),
-    { passwordSet: true, updatedAt: serverTimestamp() }, { merge: true });
+    { passwordSet: true, pinSet: true, updatedAt: serverTimestamp() }, { merge: true });
 }
 
 export async function studentLogout() {
@@ -72,9 +84,9 @@ export async function studentLogout() {
 export function friendlyStudentAuthError(err) {
   const c = err?.code || "";
   if (c === "auth/invalid-credential" || c === "auth/wrong-password" || c === "auth/user-not-found")
-    return "পাসওয়ার্ড ভুল, অথবা অ্যাডমিন এখনো তোমার সেটআপ কোড দেয়নি।";
+    return "PIN ভুল, অথবা অ্যাডমিন এখনো তোমার সেটআপ কোড দেয়নি।";
   if (c === "auth/too-many-requests") return "অনেকবার ভুল হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করো।";
-  if (c === "auth/weak-password") return "পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।";
+  if (c === "auth/weak-password") return "PIN ঠিক ৬ সংখ্যার হতে হবে।";
   if (c === "auth/network-request-failed") return "ইন্টারনেট সংযোগ নেই।";
   if (c === "auth/operation-not-allowed") return "Firebase Console-এ Email/Password sign-in চালু করা হয়নি।";
   return err?.message || "কিছু একটা ভুল হয়েছে।";
@@ -86,6 +98,8 @@ export async function changeMyPassword(studentId, oldPassword, newPassword) {
   if (!user) throw new Error("আবার লগইন করো।");
   await reauthenticateWithCredential(user, EmailAuthProvider.credential(studentEmail(studentId), oldPassword));
   await updatePassword(user, newPassword);
+  await setDoc(doc(db, "studentAuthState", studentId),
+    { passwordSet: true, pinSet: true, updatedAt: serverTimestamp() }, { merge: true });
 }
 
 // What OTHER students may see on my profile. Stored in `studentPrivacy/{studentId}`.
@@ -129,6 +143,7 @@ export async function getStudentAuthStatus(studentId) {
   return {
     hasAccount: a.exists(),
     passwordSet: a.exists() && a.data().passwordSet === true,
+    pinSet: a.exists() && a.data().pinSet === true,
     pending: r.exists() ? r.data() : null
   };
 }
@@ -148,7 +163,7 @@ export async function requestSetupCode(student, type = "setup") {
 }
 
 /* ---------- ADMIN SIDE ---------- */
-const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I
+const CODE_ALPHABET = "0123456789"; // digits only, so students can type it on the on-screen keypad
 function genCode(len = 8) {
   const a = new Uint32Array(len);
   crypto.getRandomValues(a);
