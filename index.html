@@ -157,7 +157,7 @@
 <script type="module">
 import { initTheme, icons, renderState } from "./js/utils/ui-utils.js";
 import { getActiveStudents, setActiveStudent, findActiveAttempt } from "./js/utils/student-utils.js";
-import { currentStudentSession, studentLogin, setNewPassword, friendlyStudentAuthError, getStudentAuthStatus, requestSetupCode } from "./js/utils/student-auth.js";
+import { currentStudentSession, studentLogin, setNewPassword, friendlyStudentAuthError, getStudentAuthStatus, requestSetupCode, studentLogout, validatePin, PIN_LENGTH } from "./js/utils/student-auth.js";
 import { getPlatformSettings } from "./js/utils/settings-utils.js";
 
 // Initialize Theme
@@ -188,7 +188,7 @@ const searchInput = document.getElementById("studentSearchInput");
 if (safeNext()) {
   const note = document.createElement("div");
   note.style.cssText = "margin:0 0 12px;padding:12px 14px;border-radius:var(--radius-md);background:var(--color-accent-soft);border:1px solid rgba(var(--color-accent-rgb),.28);color:var(--text-primary);font-size:.84rem;font-weight:700;line-height:1.5";
-  note.textContent = "Battle-এ যোগ দিতে আগে নিজের নাম বেছে পাসওয়ার্ড দাও। তারপর নিজে থেকেই Battle-এ যোগ হবে।";
+  note.textContent = "Battle-এ যোগ দিতে আগে নিজের নাম বেছে PIN দাও। তারপর নিজে থেকেই Battle-এ যোগ হবে।";
   searchInput?.parentElement?.insertAdjacentElement("beforebegin", note);
 }
 const searchClear = document.getElementById("studentSearchClear");
@@ -403,6 +403,23 @@ function injectPwStyle() {
   .pw-link:hover, .pw-link:active { color:var(--color-accent); }
   .pw-note { display:flex; gap:8px; align-items:flex-start; background:var(--color-accent-soft); border:1px solid rgba(var(--color-accent-rgb),.28); color:var(--text-primary); border-radius:var(--radius-md); padding:10px 12px; font-size:.8rem; font-weight:600; line-height:1.5; margin-bottom:12px; }
   .pw-note svg { flex:none; margin-top:2px; color:var(--color-accent); }
+  .pw-dots { display:flex; justify-content:center; gap:12px; margin:6px 0 10px; }
+  .pw-dots i { width:14px; height:14px; border-radius:50%; border:2px solid var(--surface-border); background:transparent; transition:all .12s; }
+  .pw-dots i.on { background:var(--color-accent); border-color:var(--color-accent); transform:scale(1.1); }
+  .pw-dots.boxes { gap:6px; }
+  .pw-dots.boxes i { width:30px; height:40px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-style:normal; font-family:var(--font-num); font-weight:700; font-size:1.15rem; color:var(--text-primary); background:var(--surface-highlight); transform:none; }
+  .pw-dots.boxes i.on { background:var(--color-accent-soft); }
+  .pw-dots.bad i { border-color:var(--color-danger); }
+  .pw-dots.bad i.on { background:var(--color-danger); border-color:var(--color-danger); }
+  .pw-status { text-align:center; font-size:.8rem; font-weight:700; min-height:20px; margin:0 0 6px; color:var(--text-muted); }
+  .pw-status.err { color:var(--color-danger); }
+  .pw-pad { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; max-width:290px; margin:0 auto 4px; }
+  .pw-pad.lock { opacity:.55; pointer-events:none; }
+  .pw-key { height:54px; border:0; border-radius:16px; background:var(--surface-edge); color:var(--text-primary); font-family:var(--font-num); font-size:1.4rem; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; user-select:none; -webkit-user-select:none; touch-action:manipulation; transition:background .1s, transform .1s; }
+  .pw-key:active { background:var(--surface-border); transform:scale(.94); }
+  .pw-key.fn { background:transparent; color:var(--text-secondary); }
+  .pw-key.fn:active { background:var(--surface-edge); }
+  .pw-key.ghost { visibility:hidden; pointer-events:none; }
   .pw-foot { display:flex; align-items:center; justify-content:center; gap:6px; padding:12px; border-top:1px solid var(--surface-border); font-size:.72rem; font-weight:600; color:var(--text-muted); }`;
   document.head.appendChild(st);
 }
@@ -421,7 +438,8 @@ const PW_ICON = {
   x:      '<path d="M18 6L6 18M6 6l12 12"/>',
   right:  '<path d="M5 12h14M13 6l6 6-6 6"/>',
   left:   '<path d="M19 12H5M11 6l-6 6 6 6"/>',
-  info:   '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>'
+  info:   '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+  backspace: '<path d="M21 5H9l-6 7 6 7h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1z"/><path d="M17 9l-5 6M12 9l5 6"/>'
 };
 const pwSvg = (name, size = 20) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PW_ICON[name]}</svg>`;
 
@@ -458,15 +476,15 @@ function askStudentPassword(student) {
     const body = ov.querySelector("#pwBody");
     const stepsEl = ov.querySelector("#pwSteps");
     const onKey = (e) => { if (e.key === "Escape") done(false); };
-    const done = (v) => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prevOverflow; ov.remove(); try { prevFocus?.focus?.({ preventScroll: true }); } catch {} resolve(v); };
+    const done = (v) => { dropPadKey(); document.removeEventListener("keydown", onKey); if (!v && migrating) studentLogout().catch(() => {}); document.body.style.overflow = prevOverflow; ov.remove(); try { prevFocus?.focus?.({ preventScroll: true }); } catch {} resolve(v); };
     document.addEventListener("keydown", onKey);
     ov.querySelector(".pw-x").addEventListener("click", () => done(false));
     ov.addEventListener("mousedown", (e) => { if (e.target === ov) done(false); });
 
     const field = (id, ph, ac, extra = "") => `<div class="pw-f ${extra}"><input id="${id}" type="password" placeholder="${ph}" autocomplete="${ac}"><button type="button" class="pw-eye" data-for="${id}" aria-label="দেখাও">${pwSvg("eye", 20)}</button></div>`;
     const steps = (n) => { stepsEl.innerHTML = `<div class="pw-steps">
-        <div class="pw-step ${n === 1 ? "on" : "done"}">${n === 1 ? `<span class="pw-sn">১</span>` : pwSvg("check", 15)} সেটআপ কোড</div>
-        <div class="pw-step ${n === 2 ? "on" : ""}"><span class="pw-sn">২</span> নিজের পাসওয়ার্ড</div></div>`; };
+        <div class="pw-step ${n === 1 ? "on" : "done"}">${n === 1 ? `<span class="pw-sn">১</span>` : pwSvg("check", 15)} যাচাই</div>
+        <div class="pw-step ${n === 2 ? "on" : ""}"><span class="pw-sn">২</span> নতুন PIN</div></div>`; };
     const wireCommon = () => {
       body.querySelectorAll(".pw-eye").forEach(b => b.addEventListener("click", () => {
         const i = body.querySelector("#" + b.dataset.for);
@@ -496,82 +514,145 @@ function askStudentPassword(student) {
     // ---- screens ----
     function viewChecking() { stepsEl.innerHTML = ""; body.innerHTML = `<p class="pw-p" style="text-align:center;margin:18px 0">একটু অপেক্ষা করো…</p>`; }
 
+    // ---- on-screen number pad (no system keyboard is ever opened) ----
+    let padKey = null;
+    const dropPadKey = () => { if (padKey) { document.removeEventListener("keydown", padKey); padKey = null; } };
+    const mountPad = (len, mask, onFull) => {
+      dropPadKey();
+      const dots = body.querySelector(".pw-dots"), pad = body.querySelector(".pw-pad");
+      let val = "", locked = false;
+      const paint = () => { dots.querySelectorAll("i").forEach((el, i) => { el.classList.toggle("on", i < val.length); el.textContent = mask ? "" : (val[i] || ""); }); };
+      const press = (k) => {
+        if (locked) return;
+        dots.classList.remove("bad"); setStatus("");
+        if (k === "del") val = val.slice(0, -1);
+        else if (val.length < len) { val += k; try { navigator.vibrate?.(6); } catch {} }
+        paint();
+        if (val.length === len && mask) onFull(val);
+      };
+      pad.addEventListener("click", (e) => { const b = e.target.closest("[data-k]"); if (b) press(b.dataset.k); });
+      padKey = (e) => {
+        if (/^\d$/.test(e.key)) press(e.key); else if (e.key === "Backspace") press("del");
+        else if (e.key === "Enter" && !mask && val.length === len) onFull(val);
+      };
+      document.addEventListener("keydown", padKey);
+      paint();
+      return {
+        get: () => val,
+        lock: (v) => { locked = v; pad.classList.toggle("lock", v); },
+        fail: (m) => { val = ""; paint(); dots.classList.add("bad"); setStatus(m, true); const c = ov.querySelector(".pw-card"); c.classList.remove("shake"); void c.offsetWidth; c.classList.add("shake"); }
+      };
+    };
+    const setStatus = (m, isErr) => { const e = body.querySelector(".pw-status"); if (e) { e.textContent = m || ""; e.classList.toggle("err", !!isErr); } };
+    const padHtml = (len, mask) => `<div class="pw-dots${mask ? "" : " boxes"}">${"<i></i>".repeat(len)}</div>
+      <div class="pw-status"></div>
+      <div class="pw-pad">${[1,2,3,4,5,6,7,8,9].map(n => `<button type="button" class="pw-key" data-k="${n}">${n}</button>`).join("")}
+        <button type="button" class="pw-key ghost" tabindex="-1" aria-hidden="true"></button>
+        <button type="button" class="pw-key" data-k="0">0</button>
+        <button type="button" class="pw-key fn" data-k="del" aria-label="মুছো">${pwSvg("backspace", 24)}</button></div>`;
+
+    let migrating = false;
+    let legacyMode = false;
+    const backToLogin = () => (legacyMode ? viewLegacy() : viewLogin());
+
+    // Normal login: 6-digit PIN
     function viewLogin(note) {
       stepsEl.innerHTML = "";
-      body.innerHTML = `<h3 class="pw-h">স্বাগতম! পাসওয়ার্ড দাও</h3>
-        <p class="pw-p">তোমার নিজের পাসওয়ার্ড লিখে ঢোকো।</p>
+      body.innerHTML = `<h3 class="pw-h">তোমার PIN দাও</h3>
+        <p class="pw-p">${PIN_LENGTH} সংখ্যার PIN লিখে ঢোকো।</p>
         ${note ? `<div class="pw-note">${pwSvg("info", 16)}<span>${note}</span></div>` : ""}
-        ${field("pw1", "পাসওয়ার্ড", "current-password")}
+        ${padHtml(PIN_LENGTH, true)}
+        <button class="pw-link" id="pwForgot" type="button">PIN ভুলে গেছো?</button>`;
+      const pad = mountPad(PIN_LENGTH, true, async (v) => {
+        pad.lock(true); setStatus("যাচাই হচ্ছে…");
+        try { const r = await studentLogin(student.studentId, v); r.needsNewPassword ? viewNewPin() : done(true); }
+        catch (e) { pad.lock(false); pad.fail(friendlyStudentAuthError(e)); }
+      });
+      body.querySelector("#pwForgot").addEventListener("click", viewForgot);
+    }
+
+    // Old students: still on a letter password -> sign in once with the normal keyboard, then pick a PIN.
+    function viewTextEntry(title, text, ph, errMsg) {
+      stepsEl.innerHTML = "";
+      body.innerHTML = `<div class="pw-ic">${pwSvg("key", 22)}</div>
+        <h3 class="pw-h">${title}</h3>
+        <p class="pw-p">${text}</p>
+        ${field("pw1", ph, "current-password")}
         <div class="pw-err"></div>
-        <button class="pw-btn" id="pwGo" type="button">প্রবেশ করো</button>
-        <button class="pw-link" id="pwForgot" type="button">পাসওয়ার্ড ভুলে গেছো?</button>`;
+        <button class="pw-btn" id="pwGo" type="button"><span>পরের ধাপ</span>${pwSvg("right", 18)}</button>
+        <button class="pw-link" id="pwForgot" type="button">পাসওয়ার্ড মনে নেই?</button>`;
       wireCommon();
       const go = async () => {
-        const v = body.querySelector("#pw1").value; if (!v) return setErr("পাসওয়ার্ড লেখো।");
+        const v = body.querySelector("#pw1").value; if (!v) return setErr("লেখো।");
         const b = body.querySelector("#pwGo"); busy(b, "যাচাই হচ্ছে…"); setErr("");
-        try { const r = await studentLogin(student.studentId, v); r.needsNewPassword ? viewNewPass() : done(true); }
-        catch (e) { setErr(friendlyStudentAuthError(e)); idle(b); }
+        try { const r = await studentLogin(student.studentId, v); r.needsNewPassword ? viewNewPin() : done(true); }
+        catch (e) { setErr(errMsg || friendlyStudentAuthError(e)); idle(b); }
       };
       body.querySelector("#pwGo").addEventListener("click", go);
       body.querySelector("#pw1").addEventListener("keydown", e => { if (e.key === "Enter") go(); });
       body.querySelector("#pwForgot").addEventListener("click", viewForgot);
     }
+    const viewLegacy = () => { legacyMode = true; viewTextEntry("নতুন নিয়ম: এবার থেকে PIN",
+      "নিরাপত্তার জন্য এখন শুধু <b>৬ সংখ্যার PIN</b> দিয়ে ঢুকতে হবে। আজ একবার তোমার <b>পুরোনো পাসওয়ার্ড</b> লিখে ঢোকো, তারপর নতুন PIN বানাবে।",
+      "পুরোনো পাসওয়ার্ড"); };
 
+    // First time: numeric setup code from admin (8 digits)
     function viewCode() {
       steps(1);
-      body.innerHTML = `<div class="pw-ic">${pwSvg("code", 22)}</div>
-        <h3 class="pw-h">সেটআপ কোড লেখো</h3>
-        <p class="pw-p">অ্যাডমিন তোমাকে যে কোডটা পাঠিয়েছে সেটা এখানে লেখো। এটা শুধু প্রথমবারের জন্য — এরপর তুমি নিজের পাসওয়ার্ড বানাবে।</p>
-        ${field("pw1", "K7M2XQ4P", "one-time-code", "code")}
-        <div class="pw-err"></div>
-        <button class="pw-btn" id="pwGo" type="button"><span>পরের ধাপ</span>${pwSvg("right", 18)}</button>`;
-      wireCommon();
-      const go = async () => {
-        const v = body.querySelector("#pw1").value.trim(); if (!v) return setErr("কোডটা লেখো।");
-        const b = body.querySelector("#pwGo"); busy(b, "যাচাই হচ্ছে…"); setErr("");
-        try { const r = await studentLogin(student.studentId, v); r.needsNewPassword ? viewNewPass() : done(true); }
-        catch (e) { setErr("কোডটা মেলেনি। অ্যাডমিনের পাঠানো কোড আবার দেখে লেখো।"); idle(b); }
-      };
-      body.querySelector("#pwGo").addEventListener("click", go);
-      body.querySelector("#pw1").addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+      body.innerHTML = `<h3 class="pw-h">সেটআপ কোড লেখো</h3>
+        <p class="pw-p">অ্যাডমিন যে <b>৮ সংখ্যার কোড</b> দিয়েছে সেটা লেখো। এটা শুধু প্রথমবারের জন্য।</p>
+        ${padHtml(8, false)}
+        <button class="pw-btn" id="pwGo" type="button"><span>পরের ধাপ</span>${pwSvg("right", 18)}</button>
+        <button class="pw-link" id="pwOld" type="button">কোডে অক্ষর আছে?</button>`;
+      const pad = mountPad(8, false, submit);
+      async function submit(v) {
+        v = v || pad.get();
+        if (v.length !== 8) return pad.fail("৮ সংখ্যার কোড লেখো।");
+        const b = body.querySelector("#pwGo"); pad.lock(true); busy(b, "যাচাই হচ্ছে…"); setStatus("");
+        try { const r = await studentLogin(student.studentId, v); r.needsNewPassword ? viewNewPin() : done(true); }
+        catch (e) { pad.lock(false); idle(b); pad.fail("কোডটা মেলেনি। অ্যাডমিনের দেওয়া কোড আবার দেখে লেখো।"); }
+      }
+      body.querySelector("#pwGo").addEventListener("click", () => submit());
+      body.querySelector("#pwOld").addEventListener("click", () => viewTextEntry("সেটআপ কোড লেখো", "অ্যাডমিনের পাঠানো কোডটা এখানে লেখো।", "সেটআপ কোড", "কোডটা মেলেনি। অ্যাডমিনের পাঠানো কোড আবার দেখে লেখো।"));
     }
 
-    function viewNewPass() {
+    // Choose a new 6-digit PIN (enter, then confirm)
+    function viewNewPin() {
+      migrating = true;
       steps(2);
-      body.innerHTML = `<div class="pw-ic">${pwSvg("key", 22)}</div>
-        <h3 class="pw-h">নিজের পাসওয়ার্ড বানাও</h3>
-        <p class="pw-p">কোড ঠিক আছে। এখন থেকে এই পাসওয়ার্ড দিয়েই তুমি ঢুকবে। কমপক্ষে ৬ অক্ষর দাও, আর নিজে মনে রাখো।</p>
-        ${field("pw1", "নতুন পাসওয়ার্ড", "new-password")}
-        <div class="pw-meter" id="pwMeter"><i></i><i></i><i></i><i></i></div><div class="pw-meter-l" id="pwMeterL"></div>
-        ${field("pw2", "আবার লেখো", "new-password")}
-        <div class="pw-err"></div>
-        <button class="pw-btn" id="pwGo" type="button">পাসওয়ার্ড সেভ করে ঢোকো</button>`;
-      wireCommon();
-      body.querySelector("#pw1").addEventListener("input", (e) => {
-        const v = e.target.value;
-        let n = 0; if (v.length >= 6) n++; if (v.length >= 9) n++; if (/[a-z]/.test(v) && /[A-Z]/.test(v)) n++; if (/\d/.test(v) && /[^A-Za-z0-9]/.test(v) || v.length >= 12) n++;
-        if (!v) n = 0;
-        const cols = ["", "#a6402f", "#c9822b", "#b8863c", "#2f7d5e"], labels = ["", "দুর্বল", "মোটামুটি", "ভালো", "শক্তিশালী"];
-        body.querySelectorAll("#pwMeter i").forEach((el, i) => el.style.background = i < n ? cols[n] : "");
-        const l = body.querySelector("#pwMeterL"); l.textContent = labels[n]; l.style.color = cols[n] || "";
-      });
-      const go = async () => {
-        const p1 = body.querySelector("#pw1").value, p2 = body.querySelector("#pw2").value;
-        if (p1.length < 6) return setErr("পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।");
-        if (p1 !== p2) return setErr("দুটি পাসওয়ার্ড মেলেনি।");
-        const b = body.querySelector("#pwGo"); busy(b, "সেভ হচ্ছে…"); setErr("");
-        try { await setNewPassword(student.studentId, p1); done(true); }
-        catch (e) { setErr(friendlyStudentAuthError(e)); idle(b); }
+      let first = "";
+      const stage1 = () => {
+        first = "";
+        body.innerHTML = `<h3 class="pw-h">নিজের PIN বানাও</h3>
+          <p class="pw-p">এখন থেকে এই <b>${PIN_LENGTH} সংখ্যার PIN</b> দিয়েই ঢুকবে। সহজ PIN (111111, 123456) চলবে না, আর নিজে মনে রাখো।</p>
+          ${padHtml(PIN_LENGTH, true)}`;
+        const pad = mountPad(PIN_LENGTH, true, (v) => {
+          const bad = validatePin(v);
+          if (bad) return pad.fail(bad);
+          first = v; stage2();
+        });
       };
-      body.querySelector("#pwGo").addEventListener("click", go);
-      body.querySelector("#pw2").addEventListener("keydown", e => { if (e.key === "Enter") go(); });
+      const stage2 = () => {
+        body.innerHTML = `<h3 class="pw-h">আবার লেখো</h3>
+          <p class="pw-p">নিশ্চিত হতে একই PIN আরেকবার লেখো।</p>
+          ${padHtml(PIN_LENGTH, true)}
+          <button class="pw-link" id="pwRedo" type="button">${pwSvg("left", 16)}<span>PIN বদলাবো</span></button>`;
+        const pad = mountPad(PIN_LENGTH, true, async (v) => {
+          if (v !== first) return pad.fail("দুটি PIN মেলেনি। আবার লেখো।");
+          pad.lock(true); setStatus("সেভ হচ্ছে…");
+          try { await setNewPassword(student.studentId, v); migrating = false; done(true); }
+          catch (e) { pad.lock(false); pad.fail(friendlyStudentAuthError(e)); }
+        });
+        body.querySelector("#pwRedo").addEventListener("click", stage1);
+      };
+      stage1();
     }
 
     function viewApply() {
       stepsEl.innerHTML = "";
       body.innerHTML = `<div class="pw-ic">${pwSvg("user", 22)}</div>
         <h3 class="pw-h">প্রথমবার এসেছো?</h3>
-        <p class="pw-p">তোমার প্রোফাইল এখনো চালু হয়নি। নিজের পাসওয়ার্ড বানাতে আগে অ্যাডমিনের কাছ থেকে একটা <b>সেটআপ কোড</b> লাগবে। নিচের বাটনে চাপলে অ্যাডমিন তোমার আবেদন দেখতে পাবে।</p>
+        <p class="pw-p">তোমার প্রোফাইল এখনো চালু হয়নি। নিজের PIN বানাতে আগে অ্যাডমিনের কাছ থেকে একটা <b>সেটআপ কোড</b> লাগবে। নিচের বাটনে চাপলে অ্যাডমিন তোমার আবেদন দেখতে পাবে।</p>
         <div class="pw-err"></div>
         <button class="pw-btn" id="pwGo" type="button">সেটআপ কোডের জন্য আবেদন করো</button>
         <button class="pw-link" id="pwHave" type="button">আমার কাছে কোড আছে</button>`;
@@ -595,12 +676,12 @@ function askStudentPassword(student) {
     function viewForgot() {
       stepsEl.innerHTML = "";
       body.innerHTML = `<div class="pw-ic">${pwSvg("help", 22)}</div>
-        <h3 class="pw-h">পাসওয়ার্ড ভুলে গেছো?</h3>
-        <p class="pw-p">সমস্যা নেই। আবেদন পাঠাও — অ্যাডমিন তোমার পাসওয়ার্ড রিসেট করে নতুন সেটআপ কোড দেবে, তারপর তুমি নতুন পাসওয়ার্ড বানাবে।</p>
+        <h3 class="pw-h">PIN ভুলে গেছো?</h3>
+        <p class="pw-p">সমস্যা নেই। আবেদন পাঠাও — অ্যাডমিন তোমার PIN রিসেট করে নতুন সেটআপ কোড দেবে, তারপর তুমি নতুন PIN বানাবে।</p>
         <div class="pw-err"></div>
         <button class="pw-btn" id="pwGo" type="button">রিসেটের আবেদন পাঠাও</button>
         <button class="pw-link" id="pwBack" type="button">${pwSvg("left", 16)}<span>ফিরে যাও</span></button>`;
-      body.querySelector("#pwBack").addEventListener("click", () => viewLogin());
+      body.querySelector("#pwBack").addEventListener("click", () => backToLogin());
       body.querySelector("#pwGo").addEventListener("click", async (e) => {
         const b = e.currentTarget; busy(b, "পাঠানো হচ্ছে…");
         try { await requestSetupCode(student, "reset"); viewPending("reset"); }
@@ -611,7 +692,8 @@ function askStudentPassword(student) {
     // ---- decide which screen to open first ----
     viewChecking();
     getStudentAuthStatus(student.studentId).then(st => {
-      if (st.hasAccount && st.passwordSet) viewLogin(st.pending ? "তোমার রিসেটের আবেদন অ্যাডমিনের কাছে পাঠানো আছে।" : "");
+      if (st.hasAccount && st.passwordSet && !st.pinSet) viewLegacy();
+      else if (st.hasAccount && st.passwordSet) viewLogin(st.pending ? "তোমার রিসেটের আবেদন অ্যাডমিনের কাছে পাঠানো আছে।" : "");
       else if (st.hasAccount) viewCode();
       else if (st.pending) viewPending(st.pending.type);
       else viewApply();
@@ -629,7 +711,12 @@ async function selectStudent(student, btnElement) {
   if (btnElement) { btnElement.classList.add("is-loading"); }
 
   // Already signed in as this exact student on this device? Skip the prompt.
-  const sessionSid = await currentStudentSession();
+  let sessionSid = await currentStudentSession();
+  if (sessionSid === student.studentId) {
+    // Old session on a letter password? Force the one-time PIN switch.
+    const st = await getStudentAuthStatus(student.studentId).catch(() => null);
+    if (st && st.hasAccount && st.passwordSet && !st.pinSet) { await studentLogout().catch(() => {}); sessionSid = null; }
+  }
   if (sessionSid !== student.studentId) {
     const ok = await askStudentPassword(student);
     if (!ok) { btnElement?.classList.remove("is-loading"); return; }
