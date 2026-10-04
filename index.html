@@ -99,6 +99,15 @@
   .empty-search-icon { width: 38px; height: 38px; margin: 0 auto 12px; color: var(--color-accent); }
   .empty-search strong { display: block; color: var(--text-primary); font-size: .95rem; margin-bottom: 6px; font-weight: 800; }
 
+  /* Install card */
+  .pwa-card { position: relative; display: flex; align-items: center; gap: 12px; padding: 12px 40px 12px 12px; border-radius: 16px; border: 1px solid rgba(var(--color-accent-rgb), .3); background: var(--color-accent-soft); }
+  .pwa-card img { width: 44px; height: 44px; border-radius: 12px; flex: none; }
+  .pwa-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.4; }
+  .pwa-txt b { font-size: .86rem; font-weight: 800; color: var(--text-primary); }
+  .pwa-txt small { font-size: .72rem; font-weight: 600; color: var(--text-secondary); }
+  .pwa-btn { flex: none; height: 36px; padding: 0 16px; border: 0; border-radius: 99px; background: var(--color-accent); color: #fff; font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }
+  .pwa-x { position: absolute; top: 4px; right: 4px; width: 28px; height: 28px; border: 0; background: transparent; color: var(--text-muted); font-size: .8rem; cursor: pointer; }
+
   /* Footer */
   .foot-section { margin-top: 22px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; border-radius: 16px; background: var(--surface); border: 1px solid var(--surface-border); }
   .foot-section p { font-size: .84rem; font-weight: 600; color: var(--text-secondary); line-height: 1.4; }
@@ -147,6 +156,8 @@
     <div class="skel-card"><div class="skel-circle"></div><div class="skel-lines"><div class="skel-line" style="width:65%"></div><div class="skel-line" style="width:35%"></div></div></div>
   </div>
 
+  <div id="pwaHost" style="margin-top:22px"></div>
+
   <div class="foot-section">
     <p>তালিকায় নাম নেই?<br>নতুন হলে যুক্ত হওয়ার আবেদন করো।</p>
     <a href="./join.html" class="btn-join">আবেদন করো
@@ -159,6 +170,7 @@ import { initTheme, icons, renderState } from "./js/utils/ui-utils.js";
 import { getActiveStudents, setActiveStudent, findActiveAttempt } from "./js/utils/student-utils.js";
 import { currentStudentSession, studentLogin, setNewPassword, friendlyStudentAuthError, getStudentAuthStatus, requestSetupCode, studentLogout, validatePin, PIN_LENGTH } from "./js/utils/student-auth.js";
 import { getPlatformSettings } from "./js/utils/settings-utils.js";
+import { mountInstallCard } from "./js/utils/pwa-install.js";
 
 // Initialize Theme
 initTheme();
@@ -181,6 +193,7 @@ async function loadPlatformTitle() {
   } catch (err) { console.error(err); }
 }
 loadPlatformTitle();
+mountInstallCard(document.getElementById("pwaHost"));
 
 const listEl = document.getElementById("studentList");
 const filterEl = document.getElementById("classFilter");
@@ -516,7 +529,8 @@ function askStudentPassword(student) {
 
     // ---- on-screen number pad (no system keyboard is ever opened) ----
     let padKey = null;
-    const dropPadKey = () => { if (padKey) { document.removeEventListener("keydown", padKey); padKey = null; } };
+    let lockTimer = null;
+    const dropPadKey = () => { clearInterval(lockTimer); if (padKey) { document.removeEventListener("keydown", padKey); padKey = null; } };
     const mountPad = (len, mask, onFull) => {
       dropPadKey();
       const dots = body.querySelector(".pw-dots"), pad = body.querySelector(".pw-pad");
@@ -563,11 +577,41 @@ function askStudentPassword(student) {
         ${note ? `<div class="pw-note">${pwSvg("info", 16)}<span>${note}</span></div>` : ""}
         ${padHtml(PIN_LENGTH, true)}
         <button class="pw-link" id="pwForgot" type="button">PIN ভুলে গেছো?</button>`;
+      const LK = "pinLock:" + student.studentId;
+      const getLk = () => { try { return JSON.parse(localStorage.getItem(LK) || "{}"); } catch { return {}; } };
+      const setLk = (o) => { try { localStorage.setItem(LK, JSON.stringify(o)); } catch {} };
+      const bn = (n) => String(n).replace(/\d/g, d => "০১২৩৪৫৬৭৮৯"[d]);
+      const fmt = (sec) => sec >= 60 ? `${bn(Math.ceil(sec / 60))} মিনিট` : `${bn(sec)} সেকেন্ড`;
+      const startLock = () => {
+        clearInterval(lockTimer);
+        const tick = () => {
+          const left = Math.ceil(((getLk().until || 0) - Date.now()) / 1000);
+          if (left <= 0) { clearInterval(lockTimer); pad.lock(false); setStatus(""); body.querySelector(".pw-dots")?.classList.remove("bad"); return false; }
+          pad.lock(true); body.querySelector(".pw-dots")?.classList.add("bad");
+          setStatus(`অনেকবার ভুল হয়েছে। ${fmt(left)} পরে আবার চেষ্টা করো।`, true);
+          return true;
+        };
+        if (tick()) lockTimer = setInterval(tick, 1000);
+      };
       const pad = mountPad(PIN_LENGTH, true, async (v) => {
         pad.lock(true); setStatus("যাচাই হচ্ছে…");
-        try { const r = await studentLogin(student.studentId, v); r.needsNewPassword ? viewNewPin() : done(true); }
-        catch (e) { pad.lock(false); pad.fail(friendlyStudentAuthError(e)); }
+        try { const r = await studentLogin(student.studentId, v); setLk({}); r.needsNewPassword ? viewNewPin() : done(true); }
+        catch (e) {
+          pad.lock(false);
+          const c = e?.code || "", L = getLk();
+          if (c === "auth/invalid-credential" || c === "auth/wrong-password") {
+            L.fails = (L.fails || 0) + 1;
+            if (L.fails % 5 === 0) { const secs = [30, 120, 600, 1800][Math.min(L.fails / 5 - 1, 3)]; L.until = Date.now() + secs * 1000; }
+            setLk(L);
+            if ((L.until || 0) > Date.now()) { pad.fail(""); startLock(); return; }
+            const rem = 5 - (L.fails % 5);
+            pad.fail("PIN ভুল" + (rem <= 2 ? ` (আর ${bn(rem)} বার চেষ্টা করা যাবে)` : ""));
+          } else if (c === "auth/too-many-requests") {
+            L.until = Date.now() + 300000; setLk(L); pad.fail(""); startLock();
+          } else pad.fail(friendlyStudentAuthError(e));
+        }
       });
+      startLock();
       body.querySelector("#pwForgot").addEventListener("click", viewForgot);
     }
 
