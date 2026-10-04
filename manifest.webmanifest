@@ -1,5 +1,5 @@
 {
-  "name": "EP2.0 — পরীক্ষা প্রস্তুতি",
+  "name": "EP2.0",
   "short_name": "EP2.0",
   "description": "পরীক্ষা, XP, ব্যাটল আর লিডারবোর্ড — সব এক অ্যাপে।",
   "id": "./",
@@ -11,8 +11,23 @@
   "theme_color": "#b8863c",
   "lang": "bn",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
