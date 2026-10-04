@@ -77,6 +77,30 @@
   .batch-option{width:100%;border:0;background:transparent;color:var(--text-primary);text-align:left;padding:11px 12px;border-radius:9px;font:800 .88rem/1.2 inherit;cursor:pointer}
   .batch-option:hover,.batch-option:focus-visible{outline:none;background:rgba(var(--color-accent-rgb),.12);color:var(--color-accent)}
   .batch-empty{padding:12px;text-align:center;color:var(--text-muted);font-size:.82rem;font-weight:700}
+
+  /* ===== Pending join requests ===== */
+  .rq-head { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .rq-head-ico { width:38px; height:38px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:rgba(245,158,11,.14); color:#f59e0b; flex-shrink:0; }
+  .rq-head h3 { margin:0; font-size:1rem; font-weight:900; color:var(--text-primary); line-height:1.2; }
+  .rq-head small { display:block; font-size:.72rem; font-weight:700; color:var(--text-muted); margin-top:2px; }
+  .rq-count { margin-left:auto; min-width:28px; height:28px; padding:0 9px; border-radius:99px; background:#f59e0b; color:#fff; font-weight:900; font-size:.85rem; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(245,158,11,.35); }
+  .rq-card { position:relative; background:var(--surface); border:1px solid var(--surface-border); border-radius:18px; padding:14px; margin-bottom:12px; box-shadow:0 6px 22px rgba(0,0,0,.05); overflow:hidden; transition:opacity .25s, transform .25s, max-height .3s; animation:slideUp .3s ease both; }
+  .rq-card::before { content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:linear-gradient(#f59e0b,#fbbf24); }
+  .rq-card.rq-leaving { opacity:0; transform:translateX(24px) scale(.97); }
+  .rq-top { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+  .rq-avatar { width:44px; height:44px; border-radius:14px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1.1rem; color:#fff; background:linear-gradient(135deg,var(--color-accent),#f59e0b); }
+  .rq-who { min-width:0; flex:1; }
+  .rq-who b { display:block; font-size:1rem; font-weight:900; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rq-who span { font-size:.72rem; font-weight:700; color:var(--text-muted); }
+  .rq-chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+  .rq-chip { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:99px; font-size:.74rem; font-weight:800; background:rgba(128,128,128,.1); color:var(--text-secondary); }
+  .rq-chip.ref { background:rgba(16,185,129,.12); color:#10b981; }
+  .rq-label { display:block; font-size:.74rem; font-weight:800; color:var(--text-secondary); margin-bottom:6px; }
+  .rq-actions { display:flex; gap:10px; margin-top:12px; }
+  .rq-actions .btn-glass { flex:1; padding:12px; }
+  .rq-reject { color:#ef4444; border-color:rgba(239,68,68,.3); background:rgba(239,68,68,.05); }
+  .rq-actions button:disabled { opacity:.55; pointer-events:none; }
+  @media (max-width:380px){ .rq-actions { flex-direction:column-reverse; } }
 </style>
 </head>
 <body>
@@ -208,10 +232,11 @@ requireAdmin(() => {
     </form>
 
     <div id="requestsSection" style="display:none; margin-bottom:24px;">
-      <p style="font-size:1rem; font-weight:900; color:var(--text-primary); margin-bottom:12px; display:flex; align-items:center; gap:8px;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        যুক্ত হওয়ার অনুরোধ (Pending)
-      </p>
+      <div class="rq-head">
+        <div class="rq-head-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></div>
+        <div><h3>যুক্ত হওয়ার অনুরোধ</h3><small>নাম ঠিক করে অনুমোদন দিন</small></div>
+        <span class="rq-count" id="rqCount">0</span>
+      </div>
       <div id="requestsList"></div>
     </div>
 
@@ -643,62 +668,101 @@ function askForPhotoLink(currentUrl, studentIdHint) {
   });
 }
 
+function rqTimeAgo(ts) {
+  const d = ts && ts.toDate ? ts.toDate() : null;
+  if (!d) return "";
+  const m = Math.floor((Date.now() - d.getTime()) / 60000);
+  if (m < 1) return "এইমাত্র";
+  if (m < 60) return m + " মিনিট আগে";
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + " ঘণ্টা আগে";
+  return Math.floor(h / 24) + " দিন আগে";
+}
+
 async function loadPendingRequests() {
   const reqSection = document.getElementById("requestsSection");
   const el = document.getElementById("requestsList");
   try {
     const requests = await getPendingRequests();
-    if (requests.length === 0) { reqSection.style.display = "none"; return; }
-    
+    if (requests.length === 0) { reqSection.style.display = "none"; el.innerHTML = ""; return; }
+    requests.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
     reqSection.style.display = "block";
+    document.getElementById("rqCount").textContent = requests.length;
     el.innerHTML = requests.map(r => `
-      <div class="glass-float-card mb-3" data-req-id="${r.id}" style="border-left:4px solid #f59e0b;">
-        <p class="text-xs text-muted mb-3" style="font-weight:700;">আবেদনকারী: <span style="font-weight:900; color:var(--text-primary); font-size:0.95rem;">${safeText(r.rawName)}</span> <span style="background:rgba(128,128,128,0.1); padding:2px 8px; border-radius:6px; margin-left:6px;">${safeText(r.className)}</span>${r.referredBy ? ` <span style="background:rgba(16,185,129,0.12); color:#10b981; padding:2px 8px; border-radius:6px; margin-left:6px; font-weight:800;">রেফার: ${safeText(r.referredBy)}</span>` : ""}</p>
-        <div class="field" style="margin-bottom:12px;">
-          <input class="input-glass req-name-input" value="${safeText(r.rawName)}" placeholder="অপ্রয়োজনে এডিট করুন">
+      <div class="rq-card" data-req-id="${r.id}">
+        <div class="rq-top">
+          <div class="rq-avatar">${safeText((r.rawName || "?").trim().charAt(0).toUpperCase())}</div>
+          <div class="rq-who"><b>${safeText(r.rawName)}</b><span>${rqTimeAgo(r.createdAt)}</span></div>
         </div>
-        <div class="flex gap-2">
-          <button class="btn-glass req-reject-btn" style="flex:1; color:#ef4444; border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.05); padding:12px;">বাতিল</button>
-          <button class="btn-glass btn-primary req-approve-btn" style="flex:1; padding:12px;">অনুমোদন দিন</button>
+        <div class="rq-chips">
+          <span class="rq-chip">🎓 ${safeText(r.className)}</span>
+          ${r.referredBy ? `<span class="rq-chip ref">🤝 রেফার: ${safeText(r.referredBy)}</span>` : ""}
+        </div>
+        <label class="rq-label">চূড়ান্ত নাম (বাংলা/ইংরেজি ঠিক করে নিন)</label>
+        <input class="input-glass req-name-input" value="${safeText(r.rawName)}" placeholder="শিক্ষার্থীর নাম">
+        <div class="rq-actions">
+          <button class="btn-glass rq-reject req-reject-btn" type="button">✕ বাতিল</button>
+          <button class="btn-glass btn-primary req-approve-btn" type="button">✓ অনুমোদন দিন</button>
         </div>
       </div>
     `).join("");
-
     requests.forEach(r => wireRequestCard(r));
-  } catch (err) { console.error(err); }
+  } catch (err) {
+    console.error(err);
+    showToast(friendlyError(err), "error");
+  }
+}
+
+function rqRemoveCard(card) {
+  card.classList.add("rq-leaving");
+  setTimeout(() => { card.remove(); loadPendingRequests(); }, 260);
 }
 
 function wireRequestCard(request) {
   const card = document.querySelector(`[data-req-id="${request.id}"]`);
   if (!card) return;
   const nameInput = card.querySelector(".req-name-input");
+  const approveBtn = card.querySelector(".req-approve-btn");
+  const rejectBtn = card.querySelector(".req-reject-btn");
+  const setBusy = (b, label) => {
+    approveBtn.disabled = b; rejectBtn.disabled = b; nameInput.disabled = b;
+    if (label) approveBtn.textContent = label;
+  };
 
-  card.querySelector(".req-approve-btn").addEventListener("click", async () => {
+  approveBtn.addEventListener("click", async () => {
     const finalName = nameInput.value.trim();
-    if (!finalName) { showToast("নাম খালি রাখা যাবে বায় না।", "error"); return; }
+    if (!finalName) { showToast("নাম খালি রাখা যাবে না।", "error"); nameInput.focus(); return; }
     if (!confirm(`"${finalName}" কে অনুমোদন দেবেন?`)) return;
+    setBusy(true, "অপেক্ষা করুন…");
     try {
       const created = await createStudent(finalName, request.className, request.referredBy || null);
       await deleteStudentRequest(request.id);
-      // Referral link -> new student automatically sends a friend request to
-      // the friend who invited them (they accept it from Profile > বন্ধু).
       let friendSent = false;
       if (request.referredBy) {
         try { friendSent = await sendReferralFriendRequest(created.studentId, request.referredBy); }
         catch (e) { console.warn("Referral friend request skipped", e); }
       }
       showToast(friendSent ? "শিক্ষার্থী যোগ হয়েছে — বন্ধুকে ফ্রেন্ড রিকোয়েস্টও চলে গেছে।" : "শিক্ষার্থী যোগ করা হয়েছে।", "success");
-      loadPendingRequests(); loadStudents();
-    } catch (err) { showToast(friendlyError(err), "error"); }
+      loadStudents();
+      rqRemoveCard(card);
+    } catch (err) {
+      console.error(err);
+      setBusy(false, "✓ অনুমোদন দিন");
+      showToast(friendlyError(err), "error");
+    }
   });
 
-  card.querySelector(".req-reject-btn").addEventListener("click", async () => {
+  rejectBtn.addEventListener("click", async () => {
     if (!confirm("আবেদন বাতিল করবেন?")) return;
+    setBusy(true);
     try {
       await deleteStudentRequest(request.id);
       showToast("আবেদন বাতিল করা হয়েছে।", "success");
-      loadPendingRequests();
-    } catch (err) { showToast(friendlyError(err), "error"); }
+      rqRemoveCard(card);
+    } catch (err) {
+      setBusy(false);
+      showToast(friendlyError(err), "error");
+    }
   });
 }
 </script>
