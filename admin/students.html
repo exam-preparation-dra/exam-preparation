@@ -119,6 +119,7 @@ import { sendReferralFriendRequest } from "../js/utils/friend-utils.js?v=ref1";
 import { getLeaderboardData } from "../js/utils/results-utils.js"; // Added Import for XP Calculation
 import { toDirectImageUrl } from "../js/utils/image-utils.js";
 import { uploadStudentPhoto, deleteStudentPhoto } from "../js/utils/storage-utils.js";
+import { FACE_URIS, isFaceUri } from "../js/utils/avatar-faces.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { adminCreateStudentAccount, friendlyStudentAuthError } from "../js/utils/student-auth.js";
 import { collection, getDocs, orderBy, query, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
@@ -557,9 +558,9 @@ function bindStudentActions(students) {
       if (input === null) return; 
       const trimmed = input.trim();
       try {
-        const finalUrl = trimmed ? toDirectImageUrl(trimmed) : null;
+        const finalUrl = trimmed ? (isFaceUri(trimmed) ? trimmed : toDirectImageUrl(trimmed)) : null;
         await updateStudentPhoto(docId, finalUrl);
-        if (currentUrl && currentUrl !== finalUrl) deleteStudentPhoto(currentUrl);
+        if (currentUrl && currentUrl !== finalUrl && !isFaceUri(currentUrl)) deleteStudentPhoto(currentUrl);
         showToast(finalUrl ? "ছবি আপডেট হয়েছে।" : "ছবি মুছে ফেলা হয়েছে।", "success");
         loadStudents();
       } catch (err) { showToast(friendlyError(err), "error"); }
@@ -630,6 +631,8 @@ function askForPhotoLink(currentUrl, studentIdHint) {
         <input type="file" id="photoFileInput" accept="image/*" style="width:100%; font-size:0.85rem; margin-bottom:12px; padding:12px; background:rgba(128,128,128,0.05); border-radius:12px; border:1px dashed var(--surface-border);">
         <p id="photoUploadStatus" class="text-xs mb-3" style="font-weight:700; min-height:16px;"></p>
         
+        <p class="text-xs text-muted mb-2 font-bold">অ্যানিমেটেড ফেস বেছে নিন:</p>
+        <div id="faceRow" style="display:grid; grid-template-columns:repeat(6,1fr); gap:8px; margin-bottom:14px;">${FACE_URIS.map(f => `<button type="button" class="face-pick" data-uri="${f.id}" title="${f.label}" style="padding:0; border:3px solid transparent; border-radius:14px; overflow:hidden; aspect-ratio:1; background:none; cursor:pointer;"><img src="${f.uri}" alt="" style="width:100%;height:100%;display:block;pointer-events:none;"></button>`).join("")}</div>
         <p class="text-xs text-muted mb-2 font-bold">— অথবা — লিংক পেস্ট করুন:</p>
         <textarea id="photoLinkInput" rows="3" class="input-glass" style="width:100%; resize:vertical; padding:12px; font-size:0.9rem;"></textarea>
         
@@ -645,6 +648,19 @@ function askForPhotoLink(currentUrl, studentIdHint) {
     const fileInput = overlay.querySelector("#photoFileInput");
     const statusEl = overlay.querySelector("#photoUploadStatus");
     textarea.value = currentUrl || "";
+    textarea.style.fontSize = "0.7rem";
+    const markFace = () => overlay.querySelectorAll(".face-pick").forEach(b => {
+      const f = FACE_URIS.find(x => x.id === b.dataset.uri);
+      b.style.borderColor = f && f.uri === textarea.value.trim() ? "var(--color-accent)" : "transparent";
+    });
+    overlay.querySelector("#faceRow").addEventListener("click", (e) => {
+      const b = e.target.closest(".face-pick");
+      if (!b) return;
+      textarea.value = FACE_URIS.find(x => x.id === b.dataset.uri).uri;
+      markFace();
+    });
+    textarea.addEventListener("input", markFace);
+    markFace();
 
     fileInput.addEventListener("change", async () => {
       const file = fileInput.files?.[0];
