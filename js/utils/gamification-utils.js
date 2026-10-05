@@ -9,6 +9,7 @@
    awarded it at the time — just computed lazily. Cheap enough for a
    small class's worth of data.
    ========================================================= */
+import { normalizeBatch } from "./batch-utils.js";
 import { getAllApprovedResults } from "./results-utils.js";
 import { getActiveStudents } from "./student-utils.js";
 
@@ -97,7 +98,7 @@ export async function computeGamificationData() {
   const [results, students] = await Promise.all([getAllApprovedResults(), getActiveStudents()]);
 
   const classOf = {}, nameOf = {};
-  students.forEach(s => { classOf[s.studentId] = s.className || null; nameOf[s.studentId] = s.name; });
+  students.forEach(s => { classOf[s.studentId] = normalizeBatch(s.className) || null; nameOf[s.studentId] = s.name; });
 
   const monthlyBuckets = bucketByPeriod(results, getMonthKey);
   const weeklyBuckets = bucketByPeriod(results, getWeekKey);

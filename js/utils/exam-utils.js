@@ -9,9 +9,13 @@ import {
   query, where, orderBy, serverTimestamp, Timestamp, writeBatch, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { getQuestionsByIds } from "./question-utils.js";
+import { normalizeBatch } from "./batch-utils.js";
 
 // ---------- Create a new exam (status: draft) ----------
 export async function createExam(data) {
+  // Batch must be chosen on purpose ("all" = shared by every batch).
+  const targetBatch = normalizeBatch(data.targetBatch);
+  if (!targetBatch) throw new Error("পরীক্ষা কোন ব্যাচের জন্য তা নির্বাচন করুন।");
   const totalMarks = (data.questionIds?.length || 0) * (data.marksPerQuestion || 1);
   return addDoc(collection(db, "exams"), {
     name: data.name,
@@ -20,7 +24,8 @@ export async function createExam(data) {
     
     // --- নতুন যুক্ত হওয়া ফিল্ডগুলো ---
     publishDate: data.publishDate ? Timestamp.fromDate(new Date(data.publishDate)) : serverTimestamp(),
-    targetBatch: data.targetBatch || "all", 
+    targetBatch,
+    batchConfirmed: true,
     allowedStudents: data.allowedStudents || [], 
     // ----------------------------------
 
@@ -54,10 +59,25 @@ export async function updateExam(examId, data) {
     
     // --- আপডেট হওয়ার সময় নতুন ফিল্ডগুলো ---
     publishDate: data.publishDate ? Timestamp.fromDate(new Date(data.publishDate)) : exam.publishDate,
-    targetBatch: data.targetBatch || exam.targetBatch || "all",
+    targetBatch: normalizeBatch(data.targetBatch) || normalizeBatch(exam.targetBatch) || "all",
+    batchConfirmed: data.targetBatch ? true : (exam.batchConfirmed === true),
     allowedStudents: data.allowedStudents || exam.allowedStudents || [],
     // -------------------------------------
     
+    updatedAt: serverTimestamp()
+  });
+}
+
+// ---------- Set ONLY the target batch (works for any status) ----------
+// Old exams were created with targetBatch "all" and therefore show to every
+// batch. This changes nothing else (questions, marks, results stay locked),
+// so it is safe to use on published / completed exams too.
+export async function setExamTargetBatch(examId, batch) {
+  const targetBatch = normalizeBatch(batch);
+  if (!targetBatch) throw new Error("ব্যাচ নির্বাচন করুন।");
+  return updateDoc(doc(db, "exams", examId), {
+    targetBatch,
+    batchConfirmed: true,
     updatedAt: serverTimestamp()
   });
 }

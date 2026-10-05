@@ -5,6 +5,7 @@ import { db } from "../firebase/firebase-config.js";
 import { collection, doc, getDoc, getDocs, query, where, onSnapshot, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { getActiveStudents, buildReferralCountMap } from "./student-utils.js";
 import { computeStudentXP, compareRank, setXPExams } from "./xp-utils.js";
+import { sameBatch, normalizeBatch } from "./batch-utils.js";
 
 // ---------- SMART AUTO APPROVAL LOGIC (Error Proof) ----------
 export async function autoApproveOldResults() {
@@ -204,7 +205,7 @@ export function buildLeaderboardRows(results, studentsList, challengeBonusMap = 
   studentsList.forEach(s => { infoOf[s.studentId] = s; });
 
   const rows = Object.entries(stats).map(([studentId, st]) => ({
-    studentId, name: infoOf[studentId]?.name || studentId, photoURL: infoOf[studentId]?.photoURL || null, className: infoOf[studentId]?.className || null,
+    studentId, name: infoOf[studentId]?.name || studentId, photoURL: infoOf[studentId]?.photoURL || null, className: normalizeBatch(infoOf[studentId]?.className) || infoOf[studentId]?.className || null,
     avgPercentage: st.avgPercentage, examsTaken: st.examsTaken, totalPoints: st.totalXP, level: st.level,
     referralCount: st.referralCount, referralBonus: st.referralXP, xpBreakdown: st.breakdown
   }));
@@ -252,7 +253,7 @@ export async function getStudentRank(studentId, classOf = null, studentsList = n
   if (classOf) {
     const myClass = classOf[studentId];
     if (myClass) {
-      const classStats = stats.filter(a => classOf[a.studentId] === myClass);
+      const classStats = stats.filter(a => sameBatch(classOf[a.studentId], myClass));
       const classRank = classStats.findIndex(a => a.studentId === studentId) + 1;
       if (classRank > 0) { result.classRank = classRank; result.classTotalStudents = classStats.length; result.className = myClass; }
     }

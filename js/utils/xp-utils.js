@@ -31,6 +31,8 @@
                   attendance: +8 x (run-1), max 4 weeks
    Account-level: referral  +250 for EVERY friend who joins via your link.
    ========================================================= */
+import { examMatchesBatch } from "./batch-utils.js";
+
 
 export const REFERRAL_XP = 250;
 
@@ -394,8 +396,8 @@ export function computeStudentXP(results, { referralCount = 0, challengeBonusXP 
       if (now < w.endMs + EXAM_BONUS.penaltyGraceMs) return;
       if (taken.has(exam.id)) return;
       if (joinedMs && joinedMs > w.startMs) return;
-      const target = exam.targetBatch || "all";
-      if (target !== "all" && student.className && target !== student.className) return;
+      // Only exams of the student's own batch (or shared ones) can be "missed".
+      if (!examMatchesBatch(exam, student.className)) return;
       const allowed = exam.allowedStudents || [];
       if (allowed.length > 0 && !allowed.includes(student.studentId)) return;
       missedXP += EXAM_BONUS.missPenalty;
