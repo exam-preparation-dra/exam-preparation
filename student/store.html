@@ -254,6 +254,7 @@
 
 <script type="module">
 import { getActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
+import { isExamForStudent } from "../js/utils/batch-utils.js";
 import { getApprovedResults, getUpcomingExams, getStudentResultStatusMap, getExamSnapshotsMap } from "../js/utils/results-utils.js";
 import { getSubjects, buildNameMap } from "../js/utils/syllabus-utils.js";
 import { computeSubjectStats, buildQuestionRecords, computeTimeManagementStats } from "../js/utils/analytics-utils.js";
@@ -325,10 +326,7 @@ async function buildRecommendation(results, subjectNameMap) {
     ]);
     const now = Date.now();
     const eligible = exams.filter(exam => {
-      const target = exam.targetBatch || "all";
-      if (target !== "all" && target !== student.className) return false;
-      const allowed = exam.allowedStudents || [];
-      if (allowed.length > 0 && !allowed.includes(student.studentId)) return false;
+      if (!isExamForStudent(exam, student)) return false;
       if (resultMap[exam.id]) return false; // already submitted/approved for this one
       const examMs = exam.examDate?.toMillis?.();
       return !Number.isFinite(examMs) || examMs >= now - 24 * 60 * 60 * 1000;

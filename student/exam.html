@@ -25,6 +25,7 @@
 <script type="module">
 import { initTheme, icons, renderState, showToast } from "../js/utils/ui-utils.js";
 import { getActiveStudent, refreshActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
+import { isExamForStudent, examMatchesBatch, examTargetBatch } from "../js/utils/batch-utils.js";
 import { getExamById, getExamSnapshot, isExamAvailableNow } from "../js/utils/results-utils.js";
 import { getSubjects, getChapters, buildNameMap } from "../js/utils/syllabus-utils.js";
 import {
@@ -86,6 +87,11 @@ async function boot() {
     if (!exam) {
       renderState(shell, "error", "এই পরীক্ষাটি এখন উপলব্ধ নয়।"); return;
     }
+    // Batch guard: an exam made for another batch can never be opened,
+    // not even by typing/pasting its link.
+    if (!isExamForStudent(exam, student)) {
+      renderState(shell, "error", "এই পরীক্ষাটি আপনার ব্যাচের জন্য নয়।"); return;
+    }
     snapshot = await getExamSnapshot(examId);
     if (!snapshot || !snapshot.questions || snapshot.questions.length === 0) {
       renderState(shell, "error", "পরীক্ষার প্রশ্ন এখনো প্রস্তুত হয়নি।"); return;
@@ -132,8 +138,8 @@ async function loadEligible() {
       list = all.filter(s => allowed.includes(s.studentId));
       scope = "নির্বাচিত শিক্ষার্থী";
     } else {
-      list = all.filter(s => target === "all" || target === s.className);
-      scope = target === "all" ? "সব শিক্ষার্থী" : `${target} ব্যাচ`;
+      list = all.filter(s => examMatchesBatch(exam, s.className));
+      scope = target === "all" ? "সব শিক্ষার্থী" : `${examTargetBatch(exam)} ব্যাচ`;
     }
     setEligibleData({ students: list.map(s => ({ studentId: s.studentId, name: s.name })), scope, meId: student.studentId });
   } catch (err) {

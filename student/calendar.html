@@ -114,6 +114,7 @@
 <script type="module">
 import { initTheme, toggleTheme, renderStudentHeader } from "../js/utils/ui-utils.js";
 import { getActiveStudent, refreshActiveStudent } from "../js/utils/student-utils.js";
+import { isExamForStudent } from "../js/utils/batch-utils.js";
 import { subscribeToUpcomingExams, getStudentResultStatusMap, isExamAvailableNow } from "../js/utils/results-utils.js";
 
 initTheme();
@@ -204,10 +205,7 @@ function calendarItems(exams) {
     if (!day) return false;
     const pub = exam.publishDate?.toMillis?.();
     if (Number.isFinite(pub) && pub > now) return false;            // not released to students yet
-    const target = exam.targetBatch || "all";
-    if (target !== "all" && target !== student.className) return false;
-    const allowed = exam.allowedStudents || [];
-    if (allowed.length > 0 && !allowed.includes(student.studentId)) return false;
+    if (!isExamForStudent(exam, student)) return false;
     return true;
   }).sort((a, b) => a.day.utc - b.day.utc || String(a.exam.name).localeCompare(String(b.exam.name)));
 }

@@ -143,6 +143,7 @@
 import { initTheme, renderStudentHeader, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { getActiveStudent, refreshActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
 import { requireStudentSession } from "../js/utils/student-auth.js";
+import { normalizeBatch } from "../js/utils/batch-utils.js";
 import { buildLeaderboardRows, getUpcomingExams, getAllApprovedResults } from "../js/utils/results-utils.js";
 import { getBattleXPMap } from "../js/utils/battle-utils.js?v=roomcard1";
 import { getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival, setRival, clearRival } from "../js/utils/friend-utils.js";
@@ -176,7 +177,7 @@ let examsCache = null;
 const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 const num = v => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
 const fmt = v => Math.round(num(v)).toLocaleString("en-US");
-const batchOf = r => (r && r.className) || NO_BATCH;
+const batchOf = r => normalizeBatch(r && r.className) || NO_BATCH;
 const isFriend = id => S.friendIds.includes(id);
 const me = () => student.studentId;
 const svg = (inner, sw = 2.2) => `<svg class="lx-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
@@ -250,7 +251,7 @@ async function loadAll() {
   S.studentMap = {}; S.students.forEach(s => { S.studentMap[s.studentId] = s; });
   // post my new milestones for friends (silent, never blocks the page)
   publishMyActivity(student, { results: S.results.filter(r => r.studentId === id), xp: rows.find(r => r.studentId === id)?.totalPoints ?? null });
-  if (!S.batch) S.batch = student.className || [...new Set(rows.map(batchOf))].filter(b => b !== NO_BATCH).sort()[0] || null;
+  if (!S.batch) S.batch = normalizeBatch(student.className) || [...new Set(rows.map(batchOf))].filter(b => b !== NO_BATCH).sort()[0] || null;
   renderAll();
 }
 async function reload(tab) { if (tab) S.tab = tab; try { await loadAll(); } catch (e) { showToast(friendlyError(e), "error"); } }

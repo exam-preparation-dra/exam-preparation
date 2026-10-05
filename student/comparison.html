@@ -172,6 +172,7 @@
 <script type="module">
 import { initTheme, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
 import { getActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
+import { normalizeBatch } from "../js/utils/batch-utils.js";
 import { getApprovedResults, getLeaderboardData } from "../js/utils/results-utils.js";
 import { getSubjects, getChapters, getTopics, buildNameMap } from "../js/utils/syllabus-utils.js";
 import { computeStudentSummary, mergeStatsForDisplay } from "../js/utils/comparison-utils.js";
@@ -203,12 +204,12 @@ let S = null;   // page state
 
 /* ---------------- data ---------------- */
 async function renderPage() {
-  const myBatch = student.className || "অজানা ব্যাচ";
+  const myBatch = normalizeBatch(student.className) || "অজানা ব্যাচ";
   shell.innerHTML = `${renderStudentHeader(student, "dashboard")}<div id="body" class="mt-4"><div class="spinner" style="margin:40px auto;"></div></div>`;
   const body = document.getElementById("body");
   try {
     const allStudents = await getActiveStudents();
-    const batchStudents = allStudents.filter(s => (s.className || "অজানা ব্যাচ") === myBatch);
+    const batchStudents = allStudents.filter(s => (normalizeBatch(s.className) || "অজানা ব্যাচ") === myBatch);
     if (batchStudents.length < 2) { renderState(body, "empty", "আপনার ব্যাচে তুলনার জন্য অন্য কোনো শিক্ষার্থী নেই।"); return; }
 
     const leaderboardData = await getLeaderboardData(batchStudents);

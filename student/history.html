@@ -80,6 +80,7 @@
 <script type="module">
 import { initTheme, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
 import { getActiveStudent, refreshActiveStudent } from "../js/utils/student-utils.js";
+import { examMatchesBatch } from "../js/utils/batch-utils.js";
 import { getApprovedResults, getStudentRank } from "../js/utils/results-utils.js";
 import { computeStudentXP, getExamXPLines } from "../js/utils/xp-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
@@ -130,9 +131,7 @@ async function renderPage() {
       const validStatus = ["published", "completed", "archived"].includes(data.status);
 
       // Check if exam is for this student's batch (or open to all)
-      let isForMe = true;
-      if (data.targetBatch && data.targetBatch !== "all" && data.targetBatch !== student.className) isForMe = false;
-      if (data.targetBatches && data.targetBatches.length > 0 && !data.targetBatches.includes(student.className)) isForMe = false;
+      const isForMe = examMatchesBatch(data, student.className);
 
       if (validStatus && isForMe) {
         totalExamsConducted++;

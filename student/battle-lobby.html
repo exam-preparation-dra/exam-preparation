@@ -151,6 +151,7 @@ body{background:var(--bg-app);color:var(--text-primary);font-family:var(--font-b
 import { initTheme } from "../js/utils/ui-utils.js";
 import { getActiveStudent } from "../js/utils/student-utils.js";
 import { getFullSyllabusTree } from "../js/utils/syllabus-utils.js";
+import { filterSyllabusForBatch } from "../js/utils/batch-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { createMatch, joinMatch, startMatch, removeMember, swapMember, syncLobbyTimer, deleteMatch, getMatch } from "../js/utils/battle-utils.js?v=roomcard1";
@@ -191,7 +192,7 @@ function clearLobbyTimer(){ if(lobbyTimerHandle){clearInterval(lobbyTimerHandle)
 
 // Load syllabus once. Chapter and Topic are deliberately separate controls.
 try{
-  syllabusTree=await getFullSyllabusTree();
+  syllabusTree=filterSyllabusForBatch(await getFullSyllabusTree(), getActiveStudent()?.className);
   const chapters=[];
   syllabusTree.forEach(subject=>{
     (subject.chapters||[]).forEach(ch=>chapters.push({id:ch.id,name:ch.name_bn||ch.name_en||ch.id,topics:ch.topics||[],subject:subject.name_bn||subject.name_en||""}));

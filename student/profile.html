@@ -517,6 +517,7 @@ let db;
 let doc, getDoc, collection, getDocs, query, where;
 let getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival;
 let getChallengeWinCount, sendChallenge;
+let normalizeBatch;
 let requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, savePinnedBadges, friendlyStudentAuthError, validatePin;
 let viewPrivacy = { records: true, subjects: true, badges: true, publicStats: false };
 let getLevelInfo, LEVEL_THRESHOLDS, STAGES, stageOf, detectMainSubject, stageTitle, publishMyActivity;
@@ -552,6 +553,7 @@ const __ok = (await Promise.all([
   loadModule("../js/utils/student-auth.js", m => ({ requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, savePinnedBadges, friendlyStudentAuthError, validatePin } = m)),
   loadModule("../js/utils/challenge-utils.js", m => ({ getChallengeWinCount, sendChallenge } = m)),
   loadModule("../js/utils/xp-utils.js", m => ({ getLevelInfo, LEVEL_THRESHOLDS } = m)),
+  loadModule("../js/utils/batch-utils.js", m => ({ normalizeBatch } = m)),
   loadModule("../js/utils/stage-utils.js", m => ({ STAGES, stageOf, detectMainSubject, stageTitle } = m)),
   loadModule("../js/utils/activity-utils.js", m => ({ publishMyActivity } = m))
 ])).every(Boolean);
@@ -1719,7 +1721,7 @@ async function loadNetworkData() {
       getIncomingRequests(student.studentId), getOutgoingRequests(student.studentId)
     ]);
     allNetStudents = students; friendIds = fIds; incomingReqs = inc; outgoingReqs = out;
-    if (dirBatchFilter === "all" && student.className) dirBatchFilter = student.className;
+    if (dirBatchFilter === "all" && student.className) dirBatchFilter = normalizeBatch(student.className);
     const dot = $("pfReqDot");
     if (dot) { dot.textContent = inc.length; dot.classList.toggle("on", inc.length > 0); }
     renderReqsAndFriends();
@@ -1783,7 +1785,7 @@ async function acceptReq(id) {
 
 function renderDirectoryFilters() {
   const el = $("dirFilters");
-  const batches = [...new Set(allNetStudents.map(s => s.className || "Other"))].sort();
+  const batches = [...new Set(allNetStudents.map(s => normalizeBatch(s.className) || "Other"))].sort();
   el.innerHTML = `<button class="pf-chip ${dirBatchFilter === "all" ? "active" : ""}" data-batch="all">সব ব্যাচ</button>` +
     batches.map(b => `<button class="pf-chip ${dirBatchFilter === b ? "active" : ""}" data-batch="${esc(b)}">${esc(b)}</button>`).join("");
   el.querySelectorAll(".pf-chip").forEach(c => c.addEventListener("click", () => { dirBatchFilter = c.dataset.batch; renderDirectoryFilters(); renderDirectory(); }));
@@ -1792,7 +1794,7 @@ function renderDirectoryFilters() {
 function renderDirectory() {
   const list = $("dirList");
   let rows = allNetStudents.filter(s => s.studentId !== student.studentId);
-  if (dirBatchFilter !== "all") rows = rows.filter(s => (s.className || "Other") === dirBatchFilter);
+  if (dirBatchFilter !== "all") rows = rows.filter(s => (normalizeBatch(s.className) || "Other") === dirBatchFilter);
   if (dirSearchTerm) rows = rows.filter(s => String(s.name || "").toLowerCase().includes(dirSearchTerm));
   if (!rows.length) { list.innerHTML = `<div class="pf-empty">কাউকে পাওয়া যায়নি।</div>`; return; }
 

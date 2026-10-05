@@ -323,6 +323,7 @@
 <script type="module">
 import { initTheme, toggleTheme, renderState, renderStudentHeader, showToast, isExamTimerHidden, setExamTimerHidden } from "../js/utils/ui-utils.js";
 import { getActiveStudent, refreshActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
+import { isExamForStudent } from "../js/utils/batch-utils.js";
 import { subscribeToUpcomingExams, getApprovedResults, getStudentResultStatusMap, getLeaderboardData, isExamAvailableNow } from "../js/utils/results-utils.js";
 import { getSubjects, getTopics, buildNameMap } from "../js/utils/syllabus-utils.js";
 import { computeOverallStats, computeSubjectStats, computeTopicStats } from "../js/utils/analytics-utils.js";
@@ -529,10 +530,7 @@ function nextExamFor(exams, resultMap) {
     const st = startOfExam(e);
     if (!st || st <= now) return false;
     if (resultMap[e.id]) return false;
-    const target = e.targetBatch || "all";
-    if (target !== "all" && target !== student.className) return false;
-    const allowed = e.allowedStudents || [];
-    if (allowed.length > 0 && !allowed.includes(student.studentId)) return false;
+    if (!isExamForStudent(e, student)) return false;
     return true;
   }).sort((a, b) => startOfExam(a) - startOfExam(b))[0] || null;
 }
@@ -624,10 +622,7 @@ function renderUpcoming(el, exams, resultMap) {
     if (!Number.isFinite(examMs)) return false;
     if (now >= examMs + DAY7) return false;
     if (startOf(exam) > endOfToday.getTime()) return false;
-    const target = exam.targetBatch || "all";
-    if (target !== "all" && target !== student.className) { console.info("[exam hidden: batch]", exam.name, target, student.className); return false; }
-    const allowed = exam.allowedStudents || [];
-    if (allowed.length > 0 && !allowed.includes(student.studentId)) { console.info("[exam hidden: not allowed]", exam.name); return false; }
+    if (!isExamForStudent(exam, student)) { console.info("[exam hidden: batch/allowed]", exam.name, exam.targetBatch, student.className); return false; }
     return true;
   }).sort((x, y) => x.examDate.toMillis() - y.examDate.toMillis());
   // Only ONE exam at a time: the earliest one the student hasn't submitted yet;
