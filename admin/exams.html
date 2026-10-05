@@ -85,6 +85,9 @@ import { initTheme, toggleTheme, icons, renderState, showToast, friendlyError } 
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
 import { getAllExams, publishExam, duplicateExam, archiveExam, deleteDraftExam, deleteExamPermanently } from "../js/utils/exam-utils.js";
 import { getFullSyllabusTree } from "../js/utils/syllabus-utils.js";
+import { getActiveStudents } from "../js/utils/student-utils.js";
+import { batchChoices, examBatchList, needsBatchReview, examTargetBatch, examMarks, sameBatch } from "../js/utils/batch-utils.js";
+import { renderBatchReviewAlert, openBatchPicker } from "../js/utils/batch-admin-ui.js";
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -92,6 +95,7 @@ let exams = [];
 let tree = [];
 let statusFilter = "";
 let batchFilter = "all";
+let students = [];
 
 const STATUS_LABEL = {
   draft: "খসড়া", upcoming: "আসন্ন", published: "প্রকাশিত",
@@ -105,6 +109,7 @@ const STATUS_CLASS = {
 
 requireAdmin(async () => {
   try { tree = await getFullSyllabusTree(); } catch(err) { console.error(err); }
+  try { students = await getActiveStudents(); } catch(err) { console.error(err); }
 
   shell.innerHTML = `
     <div class="topbar">
@@ -140,6 +145,7 @@ requireAdmin(async () => {
       </a>
     </div>
 
+    <div id="batchAlert" hidden></div>
     <div id="examList"></div>
   `;
   
@@ -148,10 +154,10 @@ requireAdmin(async () => {
   
   // Populate Batch Filter
   const batchSel = document.getElementById("batchFilter");
-  const batches = [...new Set(tree.map(b => b.name_bn))].sort();
-  batches.forEach(b => {
+  batchChoices(students).forEach(b => {
     batchSel.innerHTML += `<option value="${b}">${b}</option>`;
   });
+  batchSel.innerHTML += `<option value="__shared">সব ব্যাচ (shared)</option><option value="__review">⚠ ব্যাচ ঠিক করা নেই</option>`;
 
   document.getElementById("statusFilter").addEventListener("change", (e) => { statusFilter = e.target.value; load(); });
   document.getElementById("batchFilter").addEventListener("change", (e) => { batchFilter = e.target.value; render(); }); // Client-side filtering
@@ -177,8 +183,11 @@ function render() {
   // Apply Batch Filter
   let filteredExams = exams;
   if (batchFilter && batchFilter !== "all") {
-    filteredExams = filteredExams.filter(e => e.targetBatch === batchFilter);
+    if (batchFilter === "__review") filteredExams = filteredExams.filter(needsBatchReview);
+    else if (batchFilter === "__shared") filteredExams = filteredExams.filter(e => examBatchList(e).includes("all"));
+    else filteredExams = filteredExams.filter(e => examBatchList(e).some(b => sameBatch(b, batchFilter)));
   }
+  renderBatchReviewAlert(document.getElementById("batchAlert"), exams, students, () => load());
 
   if (filteredExams.length === 0) {
     el.innerHTML = `<div class="glass-card" style="text-align:center; padding:40px 20px;"><p style="font-size:1rem; font-weight:800; color:var(--text-muted);">এখনো কোনো পরীক্ষা তৈরি হয়নি বা এই স্ট্যাটাসে/ব্যাচে নেই।</p></div>`;
@@ -189,17 +198,16 @@ function render() {
     const dateStr = exam.examDate?.toDate ? exam.examDate.toDate().toLocaleDateString("bn-BD", { day: "numeric", month: "short", year: "numeric" }) : "—";
     
     // Batch Display Logic
-    let targetBatchDisplay = "সকল ব্যাচ";
-    if (exam.targetBatch && exam.targetBatch !== "all") {
-      targetBatchDisplay = exam.targetBatch;
-    }
+    const unreviewed = needsBatchReview(exam);
+    const tb = examTargetBatch(exam);
+    const targetBatchDisplay = unreviewed ? "⚠ ব্যাচ ঠিক করা নেই" : (tb === "all" ? "সব ব্যাচ (shared)" : tb);
 
     return `
     <div class="glass-card" data-id="${exam.id}">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; margin-bottom:12px;">
         <div class="exam-title">
           ${exam.name}
-          <span class="target-batch-badge">${targetBatchDisplay}</span>
+          <span class="target-batch-badge" style="${unreviewed ? "background:rgba(239,68,68,.15);color:#ef4444;border-color:rgba(239,68,68,.4);" : ""}">${targetBatchDisplay}</span>
         </div>
         <span class="st-badge ${STATUS_CLASS[exam.status] || "st-draft"}">${STATUS_LABEL[exam.status] || exam.status}</span>
       </div>
@@ -218,6 +226,7 @@ function render() {
           <button class="btn-glass btn-danger delete-btn" data-id="${exam.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg> মুছুন</button>
         ` : ""}
         
+        <button class="btn-glass batch-btn" data-id="${exam.id}" style="${unreviewed ? "border-color:rgba(239,68,68,.5);color:#ef4444;" : ""}font-weight:800;">ব্যাচ</button>
         <button class="btn-glass dup-btn" data-id="${exam.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> ডুপ্লিকেট</button>
         
         ${["published", "completed"].includes(exam.status) ? `<button class="btn-glass archive-btn" data-id="${exam.id}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> আর্কাইভ করুন</button>` : ""}
@@ -228,6 +237,11 @@ function render() {
   `;
   }).join("");
 
+  el.querySelectorAll(".batch-btn").forEach(b => b.addEventListener("click", async () => {
+    const exam = exams.find(x => x.id === b.dataset.id);
+    const picked = await openBatchPicker({ exam, students });
+    if (picked) { showToast("ব্যাচ আপডেট হয়েছে।", "success"); load(); }
+  }));
   el.querySelectorAll(".publish-btn").forEach(b => b.addEventListener("click", () => handlePublish(b.dataset.id)));
   el.querySelectorAll(".dup-btn").forEach(b => b.addEventListener("click", () => handleDuplicate(b.dataset.id)));
   el.querySelectorAll(".archive-btn").forEach(b => b.addEventListener("click", () => handleArchive(b.dataset.id)));

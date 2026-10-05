@@ -221,6 +221,7 @@ import { getQuestionsByIds, getQuestionsPage, addQuestion } from "../js/utils/qu
 import { createExam, updateExam, getExamById, calculateTotalMarks } from "../js/utils/exam-utils.js";
 import { generateQuestionsFromImage, parseAiImportText, promptForApiKey, fileToImagePart } from "../js/utils/ai-import-utils.js";
 import { getActiveStudents } from "../js/utils/student-utils.js"; 
+import { normalizeBatch, batchChoices, needsBatchReview, examTargetBatch } from "../js/utils/batch-utils.js";
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -335,8 +336,9 @@ function template() {
         <div class="field">
           <label>লক্ষ্য ব্যাচ (Target Batch)</label>
           <select class="input-glass" id="examTargetBatch" required>
-            <option value="all">লোড হচ্ছে...</option>
+            <option value="">লোড হচ্ছে...</option>
           </select>
+          <small id="batchHint" style="display:block;margin-top:6px;font-size:.74rem;font-weight:700;color:var(--text-muted);line-height:1.5;">এই পরীক্ষা শুধু নির্বাচিত ব্যাচের শিক্ষার্থীরা দেখবে ও দিতে পারবে।</small>
         </div>
       </div>
       
@@ -454,10 +456,38 @@ function revealStep2() {
 // ===== Dynamic Batch Loading =====
 function populateTargetBatch() {
   const targetBatchDropdown = document.getElementById("examTargetBatch");
-  const registeredBatches = [...new Set(activeStudentsList.map(s => s.className).filter(Boolean))].sort();
-  
-  targetBatchDropdown.innerHTML = `<option value="all">সকল ব্যাচ (সবার জন্য উন্মুক্ত)</option>` + 
-      registeredBatches.map(b => `<option value="${b}">${b}</option>`).join("");
+  const countOf = {};
+  activeStudentsList.forEach(s => { const b = normalizeBatch(s.className); if (b) countOf[b] = (countOf[b] || 0) + 1; });
+  const choices = batchChoices(activeStudentsList);
+  // batch must be chosen on purpose: no default, no silent "all"
+  targetBatchDropdown.innerHTML =
+    `<option value="" disabled selected>— ব্যাচ নির্বাচন করুন —</option>` +
+    choices.map(b => `<option value="${b}">${b}${countOf[b] ? ` (${countOf[b]} জন)` : ""}</option>`).join("") +
+    `<option value="all">সব ব্যাচ — shared পরীক্ষা (সব ব্যাচের marks-এ যোগ হবে)</option>`;
+  targetBatchDropdown.addEventListener("change", () => {
+    const v = targetBatchDropdown.value;
+    document.getElementById("batchHint").textContent = v === "all"
+      ? "⚠ সব ব্যাচ একই পরীক্ষা পাবে। শুধু তখনই বাছুন যখন প্রশ্ন সব ব্যাচের জন্য উপযোগী।"
+      : "এই পরীক্ষা শুধু " + v + " এর শিক্ষার্থীরা দেখবে ও দিতে পারবে।";
+    refreshSyllabusForBatch();
+  });
+}
+
+// Show only the syllabus (top-level node) that belongs to the chosen batch.
+// If no top-level node name matches the batch, the full tree is shown.
+function visibleTree() {
+  const b = normalizeBatch(document.getElementById("examTargetBatch")?.value);
+  if (!b || b === "all") return tree;
+  const m = tree.filter(n => normalizeBatch(n.name_bn) === b || normalizeBatch(n.name_en) === b || normalizeBatch(n.name) === b);
+  return m.length ? m : tree;
+}
+function refreshSyllabusForBatch() {
+  const subjSel = document.getElementById("autoSubject");
+  if (subjSel) { subjSel.innerHTML = visibleTree().map(s => `<option value="${s.id}">${s.name_bn}</option>`).join(""); updateAutoChapters(); }
+  document.querySelectorAll(".ai-row-subject").forEach(sel => {
+    sel.innerHTML = visibleTree().map(s => `<option value="${s.id}">${s.name_bn}</option>`).join("");
+    sel.dispatchEvent(new Event("change"));
+  });
 }
 
 function fillFormFromExisting() {
@@ -476,7 +506,15 @@ function fillFormFromExisting() {
   document.getElementById("examTime").value = existingExam.informationalTime || "";
   document.getElementById("examDuration").value = existingExam.durationMinutes || "";
   document.getElementById("marksPerQuestion").value = existingExam.marksPerQuestion || 1;
-  document.getElementById("examTargetBatch").value = existingExam.targetBatch || "all";
+  {
+    // Old exams that still say "all" must be re-chosen on purpose.
+    const sel = document.getElementById("examTargetBatch");
+    const tb = needsBatchReview(existingExam) ? "" : examTargetBatch(existingExam);
+    if (tb && ![...sel.options].some(o => o.value === tb)) sel.insertAdjacentHTML("beforeend", `<option value="${tb}">${tb}</option>`);
+    sel.value = tb;
+    if (!tb) showToast("এই পরীক্ষার ব্যাচ এখনো ঠিক করা হয়নি — ব্যাচ নির্বাচন করুন।", "error");
+    else sel.dispatchEvent(new Event("change"));
+  }
   
   document.getElementById("allowedStudents").value = (existingExam.allowedStudents || []).join(", ");
 }
@@ -484,7 +522,7 @@ function fillFormFromExisting() {
 // Auto Select Syllabus Populator & Checker
 function populateAutoSelectSyllabus() {
   const subjSel = document.getElementById("autoSubject");
-  subjSel.innerHTML = tree.map(s => `<option value="${s.id}">${s.name_bn}</option>`).join("");
+  subjSel.innerHTML = visibleTree().map(s => `<option value="${s.id}">${s.name_bn}</option>`).join("");
   subjSel.addEventListener("change", updateAutoChapters);
   document.getElementById("autoChapter").addEventListener("change", updateAutoTopics);
   document.getElementById("autoTopic").addEventListener("change", checkAvailableQuestions);
@@ -597,7 +635,7 @@ function populateAiRowSyllabus(rowId) {
   const rowEl = document.getElementById(`aiRow-${rowId}`);
   const subjSel = rowEl.querySelector(".ai-row-subject");
   const chapSel = rowEl.querySelector(".ai-row-chapter");
-  subjSel.innerHTML = tree.map(s => `<option value="${s.id}">${s.name_bn}</option>`).join("");
+  subjSel.innerHTML = visibleTree().map(s => `<option value="${s.id}">${s.name_bn}</option>`).join("");
   function refreshChapters() {
     const subject = tree.find(s => s.id === subjSel.value);
     chapSel.innerHTML = (subject?.chapters || []).map(c => `<option value="${c.id}">${c.name_bn}</option>`).join("");
@@ -820,6 +858,21 @@ async function handleFinalSubmit(e) {
     return;
   }
 
+  const chosenBatch = normalizeBatch(document.getElementById("examTargetBatch").value);
+  if (!chosenBatch) {
+    errorEl.textContent = "পরীক্ষা কোন ব্যাচের জন্য তা নির্বাচন করুন।";
+    errorEl.classList.remove("hidden");
+    document.getElementById("examTargetBatch").focus();
+    return;
+  }
+  if (chosenBatch === "all" && !confirm("এই পরীক্ষা সব ব্যাচ পাবে এবং সবার marks-এ যোগ হবে। নিশ্চিত?")) return;
+  // soft warning if the questions come from another batch's syllabus
+  if (chosenBatch !== "all") {
+    const batchNodeOf = id => { const n = tree.find(t => t.id === id); return n ? (normalizeBatch(n.name_bn) || normalizeBatch(n.name_en)) : ""; };
+    const otherBatch = [...new Set(selectedQuestions.map(q => batchNodeOf(q.subjectId)).filter(b => /^Batch \d+$/.test(b) && b !== chosenBatch))];
+    if (otherBatch.length && !confirm("কিছু প্রশ্ন " + otherBatch.join(", ") + " এর সিলেবাস থেকে এসেছে, কিন্তু পরীক্ষা " + chosenBatch + " এর জন্য। তবুও সেভ করবেন?")) return;
+  }
+
   const subjectIds = [...new Set(selectedQuestions.map(q => q.subjectId))];
   const chapterIds = [...new Set(selectedQuestions.map(q => q.chapterId))];
 
@@ -837,7 +890,7 @@ async function handleFinalSubmit(e) {
     informationalTime: document.getElementById("examTime").value.trim(),
     durationMinutes: Number(document.getElementById("examDuration").value),
     marksPerQuestion: Number(document.getElementById("marksPerQuestion").value),
-    targetBatch: document.getElementById("examTargetBatch").value,
+    targetBatch: chosenBatch,
     subjectIds, chapterIds,
     questionIds: selectedQuestions.map(q => q.id)
   };

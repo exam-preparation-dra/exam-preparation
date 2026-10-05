@@ -133,6 +133,16 @@
     </a>
   </div>
 
+  <!-- Batch alert + balance -->
+  <div id="batchAlert" hidden></div>
+  <div class="section-title">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    ব্যাচ অনুযায়ী পরীক্ষা
+  </div>
+  <div id="batchBalance" class="stat-card" style="display:block;padding:14px;margin-bottom:24px;">
+    <div class="spinner" style="margin:12px auto;"></div>
+  </div>
+
   <!-- Stats Grid -->
   <div class="section-title">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
@@ -150,6 +160,9 @@ import { requireAdmin, adminLogout } from "../js/utils/auth.js";
 import { getPlatformSettings, canChangeTitle, setPlatformTitle } from "../js/utils/settings-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { computeMaxExamXP } from "../js/utils/xp-utils.js";
+import { getActiveStudents } from "../js/utils/student-utils.js";
+import { computeBatchBalance } from "../js/utils/batch-utils.js";
+import { renderBatchReviewAlert, renderBatchBalance } from "../js/utils/batch-admin-ui.js";
 import { collection, getCountFromServer, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 initTheme();
@@ -157,6 +170,7 @@ document.getElementById("logoutBtn").addEventListener("click", adminLogout);
 
 requireAdmin(async (user) => {
   document.getElementById("adminEmail").textContent = user.email;
+  await loadBatchSection();
   await loadStats();
   await loadPlatformTitle();
 });
@@ -216,6 +230,31 @@ function openTitleModal(mandatory) {
   });
 }
 
+const xpOfExam = (d) => {
+  const marks = Number(d.totalMarks) || 0;
+  const qCount = d.questionIds ? d.questionIds.length : marks;
+  return computeMaxExamXP({ questionCount: qCount, totalMarks: marks });
+};
+let leaderMaxXP = null;
+
+async function loadBatchSection() {
+  try {
+    const [examsSnap, students] = await Promise.all([getDocs(collection(db, "exams")), getActiveStudents()]);
+    const exams = examsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const draw = () => {
+      renderBatchReviewAlert(document.getElementById("batchAlert"), exams, students, async () => { await loadBatchSection(); });
+      renderBatchBalance(document.getElementById("batchBalance"), exams, students, xpOfExam);
+    };
+    draw();
+    const rep = computeBatchBalance(exams, students, xpOfExam);
+    const leader = rep.rows.find(r => r.isLeader);
+    leaderMaxXP = leader ? leader.totalLiveXP : 0;
+  } catch (err) {
+    console.error(err);
+    document.getElementById("batchBalance").innerHTML = `<p style="font-size:.82rem;font-weight:700;color:#ef4444;">ব্যাচের তথ্য লোড করা যায়নি।</p>`;
+  }
+}
+
 async function safeCount(colName, ...whereClauses) {
   try {
     const base = collection(db, colName);
@@ -228,20 +267,8 @@ async function safeCount(colName, ...whereClauses) {
 async function loadStats() {
   const grid = document.getElementById("statsGrid");
   
-  // ক্যালকুলেট গ্লোবাল ম্যাক্স XP
-  let globalMaxXP = 0;
-  try {
-    const examsSnap = await getDocs(query(collection(db, "exams"), where("status", "in", ["published", "completed", "archived"])));
-    examsSnap.docs.forEach(doc => {
-      const d = doc.data();
-      // শুধুমাত্র 'all' ব্যাচের পরীক্ষাগুলোই গ্লোবাল বেসলাইন হিসেবে ধরা হবে
-      if (d.targetBatch === "all" || !d.targetBatch) {
-        const marks = Number(d.totalMarks) || 0;
-        const qCount = d.questionIds ? d.questionIds.length : marks;
-        globalMaxXP += computeMaxExamXP({ questionCount: qCount, totalMarks: marks });
-      }
-    });
-  } catch(e) { console.error("XP Calculation Error:", e); }
+  // সর্বোচ্চ ব্যাচের Max XP (টার্গেট) — ব্যাচ অনুযায়ী হিসাব, শুধু 'all' পরীক্ষা নয়
+  const globalMaxXP = leaderMaxXP ?? 0;
 
   const [
     activeStudents, subjects, chapters, questions,
@@ -258,7 +285,7 @@ async function loadStats() {
   ]);
 
   const cards = [
-    { label: "গ্লোবাল ম্যাক্স XP (টার্গেট)", val: globalMaxXP + " XP", icon: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>', color: "#d97706", bg: "rgba(245, 158, 11, 0.15)" },
+    { label: "সর্বোচ্চ ব্যাচের Max XP (টার্গেট)", val: globalMaxXP + " XP", icon: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>', color: "#d97706", bg: "rgba(245, 158, 11, 0.15)" },
     { label: "শিক্ষার্থী", val: activeStudents, icon: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>' },
     { label: "মোট বিষয়", val: subjects, icon: '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>' },
     { label: "অধ্যায়", val: chapters, icon: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>' },
