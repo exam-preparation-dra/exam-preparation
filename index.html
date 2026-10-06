@@ -120,8 +120,11 @@
   .topbar-actions { display: flex; align-items: center; gap: 8px; flex: none; }
   @media (max-width: 420px) { .topbar-actions .theme-toggle { transform: scale(.88); } .topbar-actions .admin-link { padding: 7px 10px; } .topbar { gap: 8px; } }
   .me-hero { display: none; }
-  .hero-mode .me-hero { display: block; }
-  .hero-mode .intro, .hero-mode .resume, .hero-mode .searchbar, .hero-mode .tabs, .hero-mode #classFilter, .hero-mode .directory, .hero-mode .foot-section, .hero-mode #meBack, .hero-mode .battle-note { display: none !important; }
+  .hero-mode .me-hero { display: flex; flex-direction: column; justify-content: center; }
+  /* Phone: in hero mode only the personal card is shown (nobody else's name). PC re-shows the list on the right. */
+  @media (max-width: 959px) {
+    .hero-mode .intro, .hero-mode .resume, .hero-mode .searchbar, .hero-mode .tabs, .hero-mode #classFilter, .hero-mode .directory, .hero-mode .foot-section, .hero-mode #meBack, .hero-mode .battle-note, .hero-mode .side-head, .hero-mode #pwaHost { display: none !important; }
+  }
   .has-remembered .resume { display: none !important; }
   .me-back { display: none; align-items: center; gap: 8px; margin: 14px 0 0; padding: 9px 14px 9px 10px; border-radius: 99px; background: var(--color-accent-soft); border: 1px solid rgba(var(--color-accent-rgb), .3); color: var(--text-primary); font: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; max-width: 100%; }
   .list-mode.has-remembered .me-back { display: inline-flex; animation: fadeUp .4s cubic-bezier(.22,1,.36,1) backwards; }
@@ -161,6 +164,82 @@
   .me-hero.in .me-other { animation: fadeUp .6s cubic-bezier(.22,1,.36,1) backwards .5s; }
   @keyframes meAvIn { from { opacity: 0; transform: scale(.6) rotate(-10deg); } to { opacity: 1; transform: none; } }
   @media (prefers-reduced-motion: reduce) { .me-glow, .me-ring, .me-go::after { animation: none; } }
+
+  /* =====================================================================
+     FULL-SCREEN LAYOUT  (phone = one column, PC = hero left + students right)
+     ===================================================================== */
+  .app-shell { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+  .topbar { flex: none; }
+  .layout { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .col-main, .col-side { display: contents; }   /* phone: children flow in one column, ordered below */
+  .me-hero { order: 0; } .me-back { order: 1; } .intro { order: 2; } .side-head { display: none; order: 3; }
+  .resume, .battle-note { order: 4; } .searchbar { order: 5; } #classFilter { order: 6; } .directory { order: 7; } #pwaHost { order: 8; } .foot-section { order: 9; }
+
+  /* Hero fills the whole phone screen, content centred */
+  .hero-mode .me-hero { flex: 1; margin: 6px 0 0; padding: clamp(24px, 5dvh, 44px) 22px clamp(22px, 4dvh, 36px); }
+  .me-hero::before { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(rgba(var(--color-accent-rgb), .18) 1.2px, transparent 1.5px); background-size: 22px 22px; -webkit-mask-image: radial-gradient(75% 60% at 50% 42%, transparent 38%, #000 100%); mask-image: radial-gradient(75% 60% at 50% 42%, transparent 38%, #000 100%); }
+  .me-av-wrap { flex: none; width: clamp(132px, 24dvh, 196px); height: clamp(132px, 24dvh, 196px); margin: clamp(14px, 3dvh, 28px) auto; }
+  .me-av { width: calc(100% - 20px); height: calc(100% - 20px); font-size: clamp(3rem, 8dvh, 4.6rem); }
+  .me-hello { font-size: .9rem; margin-top: auto; }
+  .me-meta { margin-bottom: clamp(20px, 4dvh, 40px); }
+  .me-go { margin-top: auto; }
+
+  /* Student rows: "you" tag + active (previewed) state */
+  .student-card .st-me { flex: none; font-size: .66rem; font-weight: 800; padding: 2px 9px; border-radius: 99px; background: var(--color-accent); color: #fff; letter-spacing: .02em; }
+  .student-card.is-active { background: var(--color-accent-soft); }
+  .student-card.is-active .st-go { color: var(--color-accent); }
+
+  /* ---------------- PC ---------------- */
+  @media (min-width: 960px) {
+    .app-shell { max-width: 1260px; padding: 0 44px 30px; height: 100vh; height: 100dvh; min-height: 640px; }
+    .topbar { padding: 24px 0 18px; }
+    .brand { font-size: 1.02rem; } .brand-mark { width: 38px; height: 38px; border-radius: 12px; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) clamp(390px, 34vw, 470px); gap: 28px; }
+    .col-main { display: flex; flex-direction: column; gap: 16px; min-height: 0; min-width: 0; }
+    .col-side { display: flex; flex-direction: column; min-height: 0; min-width: 0; padding: 24px 20px 10px; border-radius: 32px; background: var(--surface); border: 1px solid var(--surface-border); box-shadow: var(--shadow-lift); overflow: hidden; animation: fadeUp .5s cubic-bezier(.22,1,.36,1) backwards .12s; }
+
+    /* these are replaced by the hero's own buttons / the side list */
+    .resume, .me-back { display: none !important; }
+    .hero-mode .intro { display: none !important; }
+
+    /* Left: hero fills the column */
+    .hero-mode .me-hero { margin: 0; padding: 36px 40px 32px; border-radius: 36px; }
+    .me-name { font-size: clamp(2.6rem, 4.6vw, 4rem); }
+    .me-go { max-width: 440px; margin-left: auto; margin-right: auto; }
+    .me-other { margin-top: 16px; }
+    .me-hello { font-size: .98rem; }
+    .me-pill { font-size: .86rem; padding: 6px 16px; } .me-id { font-size: .86rem; }
+
+    /* Left, nothing chosen yet: welcome panel */
+    .app-shell:not(.hero-mode) .intro { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px; margin: 0; border-radius: 36px; border: 1px solid var(--surface-border); box-shadow: var(--shadow-lift); background: radial-gradient(120% 85% at 50% 0%, rgba(var(--color-accent-rgb), .20), transparent 64%), var(--surface); }
+    .app-shell:not(.hero-mode) .intro { position: relative; overflow: hidden; }
+    .app-shell:not(.hero-mode) .intro::before { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(rgba(var(--color-accent-rgb), .18) 1.2px, transparent 1.5px); background-size: 22px 22px; -webkit-mask-image: radial-gradient(70% 55% at 50% 50%, transparent 40%, #000 100%); mask-image: radial-gradient(70% 55% at 50% 50%, transparent 40%, #000 100%); }
+    .app-shell:not(.hero-mode) .intro > * { position: relative; }
+    .intro h1 { font-size: clamp(2.2rem, 3.6vw, 3.1rem); line-height: 1.22; }
+    .intro p { font-size: 1.02rem; margin-top: 14px; }
+    #pwaHost { margin-top: 0 !important; } #pwaHost:empty { display: none; }
+    .foot-section { margin-top: 0; padding: 14px 20px; border-radius: 20px; }
+
+    /* Right: students panel */
+    .side-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 4px 16px; }
+    .side-head h2 { font-size: 1.12rem; font-weight: 800; color: var(--text-primary); letter-spacing: -.1px; }
+    .side-head h2 small { display: block; margin-top: 3px; font-size: .76rem; font-weight: 600; color: var(--text-muted); letter-spacing: 0; }
+    .side-count { flex: none; font-family: var(--font-num); font-size: .8rem; font-weight: 800; padding: 4px 12px; border-radius: 99px; background: var(--color-accent-soft); color: var(--color-accent); border: 1px solid rgba(var(--color-accent-rgb), .25); }
+    .col-side .searchbar { background: var(--surface-highlight); border-radius: 16px; }
+    .col-side .tabs { margin-top: 12px; }
+    .col-side .directory { flex: 1; min-height: 0; position: relative; margin: 12px -10px 0; padding: 4px 10px 22px; overflow-y: auto; overscroll-behavior: contain; border: 0; border-radius: 0; background: transparent; display: flex; flex-direction: column; gap: 8px; scrollbar-width: thin; scrollbar-color: var(--surface-border) transparent; -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 10px, #000 calc(100% - 26px), transparent 100%); mask-image: linear-gradient(to bottom, transparent 0, #000 10px, #000 calc(100% - 26px), transparent 100%); }
+    .col-side .directory::-webkit-scrollbar { width: 6px; } .col-side .directory::-webkit-scrollbar-thumb { background: var(--surface-border); border-radius: 6px; }
+    .col-side .student-card, .col-side .student-card:last-child { flex: none; padding: 10px 14px; border: 1px solid var(--surface-border); border-radius: 18px; background: var(--surface); transition: border-color var(--transition), background var(--transition), transform .2s ease, box-shadow var(--transition); }
+    .col-side .student-card:hover { border-color: rgba(var(--color-accent-rgb), .55); background: var(--surface-highlight); transform: translateX(-3px); box-shadow: 0 6px 16px rgba(var(--color-accent-rgb), .12); }
+    .col-side .student-card.is-active, .col-side .student-card.is-active:hover { border-color: var(--color-accent); background: var(--color-accent-soft); box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), .15); transform: none; }
+    .col-side .st-avatar { width: 46px; height: 46px; }
+    .col-side .student-card.is-active .st-avatar { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--color-accent); }
+    .col-side .st-batch { display: inline-block; padding: 3px 10px; border-radius: 99px; background: var(--surface-edge); font-size: .7rem; }
+    .col-side .student-card.is-active .st-batch { background: var(--surface); }
+    .col-side .skel-card { border: 1px solid var(--surface-border); border-radius: 18px; padding: 12px 14px; }
+    .col-side .empty-search, .col-side .directory > div:not(.skel-card) { padding-top: 30px; }
+  }
+  @media (min-width: 960px) and (max-height: 720px) { .hero-mode .me-hero { padding: 36px 28px 24px; } .me-av-wrap { width: 128px; height: 128px; margin: 10px auto; } }
 </style>
 </head>
 <body>
@@ -178,6 +257,8 @@
     </div>
   </div>
 
+  <div class="layout">
+    <div class="col-main">
   <!-- Personal welcome-back: shown when this device remembers a student (localStorage) -->
   <section class="me-hero" id="meHero" aria-live="polite">
     <div class="me-glow"></div>
@@ -196,6 +277,17 @@
     <p><b id="statStudents">–</b> জন শিক্ষার্থী · <b id="statBatches">–</b> টি ব্যাচ</p>
   </div>
 
+  <div id="pwaHost" style="margin-top:22px"></div>
+
+  <div class="foot-section">
+    <p>তালিকায় নাম নেই?<br>নতুন হলে যুক্ত হওয়ার আবেদন করো।</p>
+    <a href="./join.html" class="btn-join">আবেদন করো
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+  </div>
+    </div>
+
+    <aside class="col-side" id="colSide" aria-label="শিক্ষার্থীর তালিকা">
+      <div class="side-head"><h2>অন্যান্য শিক্ষার্থী<small>নাম চাপলে প্রোফাইল দেখা যাবে</small></h2><span class="side-count" id="sideCount">–</span></div>
   <button class="resume" id="resumeBtn" type="button">
     <span class="st-avatar" id="resumeAv"></span>
     <div style="min-width:0"><small>সর্বশেষ প্রবেশ</small><strong id="resumeName"></strong></div>
@@ -219,12 +311,7 @@
     <div class="skel-card"><div class="skel-circle"></div><div class="skel-lines"><div class="skel-line" style="width:65%"></div><div class="skel-line" style="width:35%"></div></div></div>
   </div>
 
-  <div id="pwaHost" style="margin-top:22px"></div>
-
-  <div class="foot-section">
-    <p>তালিকায় নাম নেই?<br>নতুন হলে যুক্ত হওয়ার আবেদন করো।</p>
-    <a href="./join.html" class="btn-join">আবেদন করো
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </aside>
   </div>
 </div>
 
@@ -358,6 +445,7 @@ function applySearchAndClassFilter() {
   renderView();
   const total = filtered.length;
   if (countEl) countEl.textContent = `${bnNum(total)} জন`;
+  const sc = document.getElementById("sideCount"); if (sc) sc.textContent = `${bnNum(total)} জন`;
   if (searchClear) searchClear.style.display = activeSearch ? "flex" : "none";
 }
 
@@ -365,14 +453,16 @@ function rowHtml(s, i, fromCache) {
   const name = esc(safeStudentName(s));
   const studentId = esc(safeStudentId(s));
   const batch = s?.className ? `<span class="st-batch">${esc(s.className)}</span>` : "";
+  const sid = safeStudentId(s);
+  const meTag = rememberedId && sid === rememberedId ? `<span class="st-me">তুমি</span>` : "";
   return `
-    <button class="student-card${fromCache ? " from-cache" : ""}" data-idx="${i}" style="animation-delay:${fromCache ? 0 : Math.min(i, 14) * 25}ms;">
+    <button class="student-card${fromCache ? " from-cache" : ""}${sid === shownId ? " is-active" : ""}" data-idx="${i}" data-sid="${esc(sid)}" style="animation-delay:${fromCache ? 0 : Math.min(i, 14) * 25}ms;">
       ${avatarHtml(s)}
       <div class="st-info">
         <div class="st-name">${name}</div>
         <div class="st-id">${studentId}</div>
       </div>
-      ${batch}
+      ${meTag}${batch}
       <span class="st-go"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></span>
     </button>`;
 }
@@ -401,7 +491,7 @@ function renderList(list, fromCache = false) {
     btn.addEventListener("click", function() {
       const picked = students[Number(this.dataset.idx)];
       // This device knows someone -> show the picked name in the personal design first.
-      if (rememberedId) { heroStudent = picked; view = "hero"; renderView(true); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+      if (rememberedId || isDesktop()) { heroStudent = picked; view = "hero"; renderView(true); if (!isDesktop()) window.scrollTo({ top: 0, behavior: "smooth" }); return; }
       selectStudent(picked, this);
     });
   });
@@ -866,6 +956,9 @@ try {
   const p = JSON.parse(localStorage.getItem(PROFILE_KEY) || "null");
   if (p && p.studentId === rememberedId) remembered = p;
 } catch {}
+const desktopMq = window.matchMedia("(min-width: 960px)");   // PC: hero left + student list right
+function isDesktop() { return desktopMq.matches; }
+let shownId = "";                             // id of the student currently previewed in the hero (PC list highlight)
 let view = rememberedId ? "hero" : "list";   // "hero" | "list"
 let heroStudent = null;                       // student shown in the hero (null = the remembered one)
 const appShell = document.getElementById("appShell");
@@ -885,16 +978,18 @@ let shownKey = "";
 function renderView(animate = false) {
   const me = rememberedStudent();
   appShell.classList.toggle("has-remembered", !!me);
-  if (!me) { view = "list"; heroStudent = null; }
+  if (!me && !heroStudent) view = "list";
+  if (isDesktop() && me && !heroStudent) view = "hero";   // PC always shows a profile on the left when it knows you
   const st = view === "hero" ? (heroStudent || me) : null;
   appShell.classList.toggle("hero-mode", !!st);
   appShell.classList.toggle("list-mode", !st);
+  markActive(st ? safeStudentId(st) : "");
   if (!st) {
     const back = document.getElementById("meBack");
     if (me) back.innerHTML = `${avatarHtml(me)}<span class="t">${esc(safeStudentName(me))} হিসেবে ফিরে যাও</span>`;
     return;
   }
-  const picked = heroStudent && safeStudentId(heroStudent) !== rememberedId;
+  const picked = !!heroStudent && safeStudentId(heroStudent) !== rememberedId;
   const key = safeStudentId(st) + "|" + safeStudentName(st) + "|" + (picked ? "p" : "m");
   if (key === shownKey && !animate) return;     // list refreshed in the background — nothing changed
   shownKey = key;
@@ -904,9 +999,18 @@ function renderView(animate = false) {
   const batch = document.getElementById("meBatch");
   batch.textContent = st.className || ""; batch.style.display = st.className ? "" : "none";
   document.getElementById("meId").textContent = safeStudentId(st);
-  document.getElementById("meOther").innerHTML = picked
-    ? `${pwSvg("left", 16)} অন্য নাম দেখো`
-    : `আমি নই — অন্য প্রোফাইল খুঁজুন ${pwSvg("right", 16)}`;
+  const other = document.getElementById("meOther");
+  other.style.display = "";
+  if (isDesktop()) {
+    if (picked && me) { other.dataset.act = "back"; other.innerHTML = `${pwSvg("left", 16)} ${esc(safeStudentName(me))} হিসেবে ফিরে যাও`; }
+    else if (picked) { other.dataset.act = ""; other.style.display = "none"; }
+    else { other.dataset.act = "search"; other.innerHTML = `আমি নই — ডানদিকের তালিকা থেকে বেছে নাও ${pwSvg("right", 16)}`; }
+  } else {
+    other.dataset.act = "list";
+    other.innerHTML = picked
+      ? `${pwSvg("left", 16)} অন্য নাম দেখো`
+      : `আমি নই — অন্য প্রোফাইল খুঁজুন ${pwSvg("right", 16)}`;
+  }
   document.getElementById("meGo").dataset.sid = safeStudentId(st);
   heroEl.classList.remove("in"); void heroEl.offsetWidth; heroEl.classList.add("in");
 }
@@ -915,10 +1019,30 @@ document.getElementById("meGo").addEventListener("click", function () {
   const st = (view === "hero" && (heroStudent || rememberedStudent())) || null;
   if (st) selectStudent(st, this);
 });
-document.getElementById("meOther").addEventListener("click", () => {
+// Highlight (and on PC scroll to) the row whose profile is shown on the left.
+let scrolledToActive = false;
+function markActive(id) {
+  shownId = id;
+  let row = null;
+  listEl.querySelectorAll(".student-card").forEach(el => {
+    const on = !!id && el.dataset.sid === id;
+    el.classList.toggle("is-active", on);
+    if (on) row = el;
+  });
+  if (row && isDesktop() && !scrolledToActive) {
+    scrolledToActive = true;
+    listEl.scrollTop = Math.max(0, row.offsetTop - listEl.clientHeight / 2 + row.offsetHeight / 2);
+  }
+}
+document.getElementById("meOther").addEventListener("click", function () {
+  const act = this.dataset.act;
+  if (act === "search") { searchInput?.focus(); return; }
+  if (act === "back") { heroStudent = null; shownKey = ""; renderView(true); return; }
   view = "list"; heroStudent = null; shownKey = ""; renderView();
   window.scrollTo({ top: 0 });
 });
+// Crossing the PC/phone breakpoint (rotate, resize): redraw the right layout.
+desktopMq.addEventListener?.("change", () => { shownKey = ""; scrolledToActive = false; renderView(true); });
 document.getElementById("meBack").addEventListener("click", () => {
   view = "hero"; heroStudent = null; renderView(true);
   window.scrollTo({ top: 0 });
