@@ -461,11 +461,32 @@ p { color: var(--text-secondary); }
   background: var(--bg-app);
   animation: ldIn .25s .12s both;
 }
-.app-shell > .state-block:only-child .spinner { width: 46px; height: 46px; border-width: 4px; }
+/* Branded splash: the app icon breathes with a soft glow, with a slim
+   indeterminate progress bar underneath (replaces the old spinner ring). */
+.app-shell > .state-block:only-child .spinner {
+  width: 84px; height: 84px; border: 0; border-radius: 22px;
+  background: url("../icons/icon-192.png") center / cover no-repeat;
+  box-shadow: 0 10px 30px rgba(var(--color-accent-rgb, 184,134,60), .35);
+  animation: splashBreathe 1.8s ease-in-out infinite;
+}
+.app-shell > .state-block:only-child .spinner::after { display: none; }
+.app-shell > .state-block:only-child::after {
+  content: ""; order: 3; width: 120px; height: 3px; margin-top: 8px; border-radius: 99px;
+  background: linear-gradient(90deg, transparent 0, var(--color-accent) 50%, transparent 100%) 0 0 / 200% 100%,
+              rgba(var(--color-accent-rgb, 184,134,60), .16);
+  background-repeat: no-repeat;
+  animation: splashBar 1.3s cubic-bezier(.4,0,.2,1) infinite;
+}
+@keyframes splashBreathe {
+  0%, 100% { transform: scale(.94); box-shadow: 0 8px 22px rgba(var(--color-accent-rgb, 184,134,60), .22); }
+  50%      { transform: scale(1.04); box-shadow: 0 14px 40px rgba(var(--color-accent-rgb, 184,134,60), .45); }
+}
+@keyframes splashBar { 0% { background-position: 150% 0, 0 0; } 100% { background-position: -50% 0, 0 0; } }
 .app-shell > .state-block:only-child p { margin: 0; font-weight: 800; color: var(--text-secondary); }
 @media (prefers-reduced-motion: reduce) {
   .spinner { animation-duration: 1.6s; }
   .spinner::after { animation: none; }
+  .app-shell > .state-block:only-child .spinner, .app-shell > .state-block:only-child::after { animation: none; }
 }
 
 .skeleton {
