@@ -14,6 +14,10 @@ service cloud.firestore {
         && request.auth.token.email == 'diptendu769@gmail.com';
     }
 
+    function myId() {
+      return request.auth.token.email.split('@')[0].upper();
+    }
+
     match /studentAuthState/{studentId} {
       allow read: if true;
       allow write: if isAdmin()
@@ -45,11 +49,20 @@ service cloud.firestore {
     match /students/{studentId} {
       allow read: if true;
       allow write: if isAdmin();
+
+      // A student may change ONLY their own photoURL (animated face)
+      allow update: if isStudentUser()
+        && resource.data.studentId == myId()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['photoURL'])
+        && (request.resource.data.photoURL == null
+          || (request.resource.data.photoURL is string
+            && request.resource.data.photoURL.size() < 12000
+            && request.resource.data.photoURL.matches('data:image/svg\\+xml.*')));
     }
 
+    // admin must be able to READ the counter (createStudent transaction)
     match /counters/{counterId} {
-      allow read: if false;
-      allow write: if isAdmin();
+      allow read, write: if isAdmin();
     }
 
     match /subjects/{id} {
@@ -153,6 +166,14 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // Public waiting-screen status for a join application (id == studentRequests id).
+    // Holds NO secrets (never the PIN): { status, name, className, studentId?, needsCode? }
+    match /applicationStatus/{id} {
+      allow read: if true;
+      allow create: if request.resource.data.status == 'pending';
+      allow update, delete: if isAdmin();
+    }
+
     match /studentRequests/{id} {
       allow create: if true;
       allow read, update, delete: if isAdmin();
@@ -200,10 +221,6 @@ service cloud.firestore {
     //  - delete for me  = add my id to deletedFor
     //    delete for all = sender only (deletedForAll = true, text cleared)
     // =====================================================================
-    function myId() {
-      return request.auth.token.email.split('@')[0].upper();
-    }
-
     match /chatMeta/{sid} {
       allow read: if isStudentUser() && myId() == sid;
       allow create: if isStudentUser() && myId() == sid

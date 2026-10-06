@@ -643,8 +643,8 @@ function askStudentPassword(student) {
     // First time: numeric setup code from admin (8 digits)
     function viewCode() {
       steps(1);
-      body.innerHTML = `<h3 class="pw-h">সেটআপ কোড লেখো</h3>
-        <p class="pw-p">অ্যাডমিন যে <b>৮ সংখ্যার কোড</b> দিয়েছে সেটা লেখো। এটা শুধু প্রথমবারের জন্য।</p>
+      body.innerHTML = `<h3 class="pw-h">৮ সংখ্যার কোড লেখো</h3>
+        <p class="pw-p">অ্যাডমিন যে <b>৮ সংখ্যার কোড</b> দিয়েছে সেটা লেখো। এই কোড দিয়ে ঢুকে তুমি নতুন PIN বানাবে।</p>
         ${padHtml(8, false)}
         <button class="pw-btn" id="pwGo" type="button"><span>পরের ধাপ</span>${pwSvg("right", 18)}</button>
         <button class="pw-link" id="pwOld" type="button">কোডে অক্ষর আছে?</button>`;
@@ -695,10 +695,10 @@ function askStudentPassword(student) {
     function viewApply() {
       stepsEl.innerHTML = "";
       body.innerHTML = `<div class="pw-ic">${pwSvg("user", 22)}</div>
-        <h3 class="pw-h">প্রথমবার এসেছো?</h3>
-        <p class="pw-p">তোমার প্রোফাইল এখনো চালু হয়নি। নিজের PIN বানাতে আগে অ্যাডমিনের কাছ থেকে একটা <b>সেটআপ কোড</b> লাগবে। নিচের বাটনে চাপলে অ্যাডমিন তোমার আবেদন দেখতে পাবে।</p>
+        <h3 class="pw-h">PIN এখনো সেট নেই</h3>
+        <p class="pw-p">তোমার প্রোফাইলে এখনো PIN বানানো হয়নি। PIN বানাতে অ্যাডমিনের কাছ থেকে একটা <b>৮ সংখ্যার কোড</b> লাগবে। নিচের বাটনে চাপলে অ্যাডমিন তোমার আবেদন দেখতে পাবে।</p>
         <div class="pw-err"></div>
-        <button class="pw-btn" id="pwGo" type="button">সেটআপ কোডের জন্য আবেদন করো</button>
+        <button class="pw-btn" id="pwGo" type="button">কোডের জন্য আবেদন করো</button>
         <button class="pw-link" id="pwHave" type="button">আমার কাছে কোড আছে</button>`;
       body.querySelector("#pwGo").addEventListener("click", async (e) => {
         const b = e.currentTarget; busy(b, "পাঠানো হচ্ছে…");
@@ -712,7 +712,7 @@ function askStudentPassword(student) {
       stepsEl.innerHTML = "";
       body.innerHTML = `<div class="pw-ic ok">${pwSvg("check", 22)}</div>
         <h3 class="pw-h">আবেদন পাঠানো হয়েছে</h3>
-        <p class="pw-p">অ্যাডমিন তোমার আবেদন দেখতে পাবে এবং তোমাকে ${type === "reset" ? "নতুন " : ""}সেটআপ কোড পাঠাবে। কোড পেলে আবার এখানে এসে <b>নিজের নাম চাপো</b>, তারপর কোডটা লিখবে।</p>
+        <p class="pw-p">অ্যাডমিন তোমার আবেদন দেখতে পাবে এবং তোমাকে ${type === "reset" ? "নতুন " : ""}৮ সংখ্যার কোড পাঠাবে। কোড পেলে আবার এখানে এসে <b>নিজের নাম চাপো</b>, তারপর কোডটা লিখবে।</p>
         <button class="pw-btn" id="pwOk" type="button">ঠিক আছে</button>`;
       body.querySelector("#pwOk").addEventListener("click", () => done(false));
     }
@@ -721,7 +721,7 @@ function askStudentPassword(student) {
       stepsEl.innerHTML = "";
       body.innerHTML = `<div class="pw-ic">${pwSvg("help", 22)}</div>
         <h3 class="pw-h">PIN ভুলে গেছো?</h3>
-        <p class="pw-p">সমস্যা নেই। আবেদন পাঠাও — অ্যাডমিন তোমার PIN রিসেট করে নতুন সেটআপ কোড দেবে, তারপর তুমি নতুন PIN বানাবে।</p>
+        <p class="pw-p">সমস্যা নেই। আবেদন পাঠাও — অ্যাডমিন তোমার PIN রিসেট করে নতুন ৮ সংখ্যার কোড দেবে, তারপর তুমি নতুন PIN বানাবে।</p>
         <div class="pw-err"></div>
         <button class="pw-btn" id="pwGo" type="button">রিসেটের আবেদন পাঠাও</button>
         <button class="pw-link" id="pwBack" type="button">${pwSvg("left", 16)}<span>ফিরে যাও</span></button>`;

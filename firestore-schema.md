@@ -193,3 +193,11 @@ Nothing in this schema is hard-coded to 2 students. `students/` is an open colle
 comparison and analytics queries filter `where isActive == true` rather than assuming
 a fixed count. The only "2-student" UI assumption lives in the comparison screen's
 layout, which is explicitly called out as swappable in the app code.
+
+## applicationStatus/{id}  (new)
+Public waiting-screen status for a join application. `id` equals the `studentRequests` doc id.
+`{ status: "pending" | "approved" | "rejected", name, className, studentId?, needsCode?, createdAt, decidedAt? }`
+Never contains the PIN. Created by the applicant (pending only), updated/deleted by admin.
+
+## studentRequests/{id}  (changed)
+Now also carries `pin` (6 digits, chosen by the applicant). Admin-only readable; deleted on approve/reject.

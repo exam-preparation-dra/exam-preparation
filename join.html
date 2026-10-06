@@ -93,6 +93,84 @@
   /* ===== Success state ===== */
   .success-box { text-align: center; padding: 20px 10px; }
   .success-icon { width: 48px; height: 48px; color: var(--color-success); margin: 0 auto 16px; background: rgba(47,125,94,.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+  /* ===== PIN fields ===== */
+  .pin-sep { height: 1px; background: var(--surface-border); margin: 4px 0 18px; }
+  .pin-title { display:flex; align-items:center; gap:8px; font-size:.86rem; font-weight:900; color:var(--text-primary); margin-bottom:4px; }
+  .pin-title svg { color: var(--color-accent); }
+  .pin-note { font-size:.74rem; font-weight:600; color:var(--text-muted); line-height:1.55; margin-bottom:12px; }
+  .pin-input { text-align:center; letter-spacing:.7em; font-family:var(--font-num, inherit); font-size:1.15rem; padding-left:calc(15px + .7em); }
+  .pin-input::placeholder { letter-spacing:.3em; font-size:.9rem; }
+  .pin-err { min-height:1.1em; margin-top:-6px; margin-bottom:10px; font-size:.76rem; font-weight:700; color:var(--color-danger); }
+
+  /* ===== Application status screen (pending / approved / rejected) ===== */
+  #statusView { display:none; }
+  #statusView.on { display:block; animation: fadeUp .5s cubic-bezier(.22,1,.36,1) backwards; }
+  .st-card { text-align:center; padding: 26px 20px 22px; }
+  .st-stage { position:relative; width:168px; height:168px; margin: 4px auto 20px; display:grid; place-items:center; --tone: var(--color-accent); --tone-rgb: var(--color-accent-rgb, 184,134,60); }
+  .st-ring { position:absolute; inset:14px; border-radius:50%; border:2px solid rgba(var(--tone-rgb), .45); animation: ringPulse 2.6s ease-out infinite; }
+  .st-ring:nth-child(2) { animation-delay:.87s; } .st-ring:nth-child(3) { animation-delay:1.74s; }
+  @keyframes ringPulse { 0% { transform:scale(.62); opacity:.9; } 100% { transform:scale(1.18); opacity:0; } }
+  .st-orbit { position:absolute; inset:6px; border-radius:50%; border:2px dashed rgba(var(--tone-rgb), .4); animation: orbitSpin 16s linear infinite; }
+  .st-orbit::before { content:""; position:absolute; top:-6px; left:50%; width:10px; height:10px; margin-left:-5px; border-radius:50%; background:var(--tone); box-shadow:0 0 12px rgba(var(--tone-rgb), .8); }
+  @keyframes orbitSpin { to { transform: rotate(360deg); } }
+  .st-logo { position:relative; width:88px; height:88px; border-radius:24px; object-fit:cover; box-shadow:0 10px 30px rgba(var(--tone-rgb), .35); animation: logoFloat 3.2s ease-in-out infinite; }
+  @keyframes logoFloat { 0%,100% { transform:translateY(3px); } 50% { transform:translateY(-5px); } }
+  .st-hourglass { position:absolute; right:22px; bottom:20px; width:34px; height:34px; border-radius:50%; display:grid; place-items:center; background:var(--surface-solid); border:1px solid var(--surface-border); color:var(--tone); box-shadow:0 4px 14px rgba(0,0,0,.14); }
+  .st-hourglass svg { animation: hgFlip 3s ease-in-out infinite; }
+  @keyframes hgFlip { 0%,40% { transform:rotate(0); } 60%,100% { transform:rotate(180deg); } }
+
+  .st-h { font-size:1.28rem; font-weight:900; letter-spacing:-.3px; color:var(--text-primary); }
+  .st-p { margin:7px auto 0; max-width:300px; font-size:.82rem; font-weight:600; line-height:1.6; color:var(--text-muted); }
+  .st-p b { color:var(--text-primary); }
+
+  .st-steps { margin:22px 4px 4px; text-align:left; position:relative; }
+  .st-step { display:flex; align-items:center; gap:12px; padding:9px 0; position:relative; font-size:.82rem; font-weight:800; color:var(--text-muted); }
+  .st-step:not(:last-child)::after { content:""; position:absolute; left:13px; top:36px; bottom:-9px; width:2px; background:var(--surface-border); }
+  .st-step.done:not(:last-child)::after { background:var(--color-success); }
+  .st-dot { flex:none; width:28px; height:28px; border-radius:50%; display:grid; place-items:center; background:var(--surface-highlight); border:2px solid var(--surface-border); color:var(--text-muted); position:relative; z-index:1; }
+  .st-step.done { color:var(--text-primary); }
+  .st-step.done .st-dot { background:var(--color-success); border-color:var(--color-success); color:#fff; }
+  .st-step.active { color:var(--text-primary); }
+  .st-step.active .st-dot { border-color:var(--color-accent); color:var(--color-accent); background:var(--color-accent-soft); }
+  .st-step.active .st-dot::after { content:""; position:absolute; inset:-5px; border-radius:50%; border:2px solid var(--color-accent); opacity:0; animation: dotPing 1.8s ease-out infinite; }
+  @keyframes dotPing { 0% { transform:scale(.7); opacity:.8; } 100% { transform:scale(1.35); opacity:0; } }
+  .st-step.fail .st-dot { background:var(--color-danger); border-color:var(--color-danger); color:#fff; }
+  .st-typing { display:inline-flex; gap:3px; margin-left:6px; vertical-align:middle; }
+  .st-typing i { width:5px; height:5px; border-radius:50%; background:var(--color-accent); animation: typing 1.2s ease-in-out infinite; }
+  .st-typing i:nth-child(2) { animation-delay:.18s; } .st-typing i:nth-child(3) { animation-delay:.36s; }
+  @keyframes typing { 0%,60%,100% { transform:translateY(0); opacity:.35; } 30% { transform:translateY(-4px); opacity:1; } }
+
+  .st-tip { margin-top:16px; padding:11px 13px; border-radius:var(--radius-md); background:var(--surface-highlight); border:1px dashed var(--surface-border); font-size:.74rem; font-weight:700; line-height:1.55; color:var(--text-secondary); text-align:left; }
+
+  /* approved */
+  .st-stage.ok { --tone: var(--color-success); --tone-rgb: 47,125,94; }
+  .st-stage.ok .st-ring { animation-duration:2s; }
+  .st-check { position:absolute; right:18px; bottom:16px; width:44px; height:44px; border-radius:50%; background:var(--color-success); color:#fff; display:grid; place-items:center; box-shadow:0 6px 18px rgba(47,125,94,.5); animation: popIn .55s cubic-bezier(.34,1.56,.64,1) both .15s; }
+  .st-check svg path { stroke-dasharray: 26; stroke-dashoffset: 26; animation: drawCheck .5s ease forwards .55s; }
+  @keyframes popIn { from { transform:scale(0); } to { transform:scale(1); } }
+  @keyframes drawCheck { to { stroke-dashoffset: 0; } }
+  .st-idcard { margin:18px auto 0; max-width:300px; padding:14px 16px; border-radius:var(--radius-lg); border:1px solid rgba(47,125,94,.35); background:rgba(47,125,94,.08); animation: fadeUp .6s cubic-bezier(.22,1,.36,1) backwards .35s; }
+  .st-idcard small { display:block; font-size:.68rem; font-weight:800; color:var(--text-muted); letter-spacing:.04em; }
+  .st-idcard b { display:block; margin-top:2px; font-size:1.02rem; font-weight:900; color:var(--text-primary); }
+  .st-idcard code { display:inline-block; margin-top:7px; padding:4px 12px; border-radius:99px; background:var(--color-success); color:#fff; font-family:var(--font-num, monospace); font-weight:900; font-size:.9rem; letter-spacing:.06em; }
+  .st-confetti { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+  .st-confetti i { position:absolute; top:-12px; left:var(--x); width:8px; height:14px; border-radius:2px; background:var(--c); opacity:0; animation: confettiFall var(--d) cubic-bezier(.3,.6,.4,1) var(--dl) forwards; transform:rotate(var(--r)); }
+  @keyframes confettiFall { 0% { opacity:1; transform:translateY(0) rotate(var(--r)); } 100% { opacity:0; transform:translateY(340px) rotate(calc(var(--r) + 540deg)); } }
+  #statusCard { position:relative; overflow:hidden; }
+
+  /* rejected */
+  .st-stage.bad { --tone: var(--color-danger); --tone-rgb: 200,60,60; }
+  .st-stage.bad .st-ring, .st-stage.bad .st-orbit { animation-play-state: paused; opacity:.35; }
+  .st-stage.bad .st-logo { animation:none; filter:grayscale(.7); }
+  .st-cross { position:absolute; right:18px; bottom:16px; width:44px; height:44px; border-radius:50%; background:var(--color-danger); color:#fff; display:grid; place-items:center; animation: popIn .5s cubic-bezier(.34,1.56,.64,1) both .1s; }
+  .st-actions { display:flex; flex-direction:column; gap:10px; margin-top:20px; }
+  .st-actions .btn-submit { margin-top:0; text-decoration:none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .st-ring, .st-orbit, .st-logo, .st-hourglass svg, .st-typing i, .st-step.active .st-dot::after, .st-confetti i { animation: none !important; }
+    .st-confetti { display:none; }
+  }
 </style>
 </head>
 <body>
@@ -115,7 +193,7 @@
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
     </div>
     <h1>যুক্ত হওয়ার আবেদন করো</h1>
-    <p>নাম আর ব্যাচ দাও, অ্যাডমিন অনুমোদন করলেই তালিকায় দেখা যাবে</p>
+    <p>নাম, ব্যাচ আর নিজের PIN দাও — অ্যাডমিন অনুমোদন করলেই ঢুকতে পারবে</p>
   </div>
 
   <div id="referralBanner"></div>
@@ -147,11 +225,30 @@
       </div>
       <div class="ref-hint" id="refHint"></div>
     </div>
+    <div class="pin-sep"></div>
+    <div class="pin-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      নিজের PIN বানাও
+    </div>
+    <p class="pin-note">এই <b>৬ সংখ্যার PIN</b> দিয়েই পরে ঢুকবে। সহজ PIN (111111, 123456) চলবে না — নিজে মনে রাখো, কাউকে বলবে না।</p>
+    <div class="field">
+      <input class="input-glass pin-input" id="pinInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="• • • • • •" autocomplete="new-password" aria-label="PIN">
+    </div>
+    <div class="field">
+      <label for="pinConfirm">PIN আবার লেখো</label>
+      <input class="input-glass pin-input" id="pinConfirm" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="• • • • • •" autocomplete="new-password">
+    </div>
+    <div class="pin-err" id="pinErr"></div>
     <button type="submit" class="btn-submit" id="submitBtn">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
       আবেদন পাঠাও
     </button>
   </form>
+
+  <!-- Application status: pending / approved / rejected (live) -->
+  <div id="statusView" aria-live="polite">
+    <div class="glass-float-card st-card" id="statusCard"></div>
+  </div>
 
 </div>
 
@@ -163,9 +260,9 @@
       কীভাবে যুক্ত হবে?
     </div>
     <div style="margin-bottom: 20px;">
-      <p class="modal-text">• তোমার সঠিক নাম এবং ব্যাচ নির্বাচন করে আবেদন পাঠাও।</p>
+      <p class="modal-text">• তোমার সঠিক নাম, ব্যাচ আর নিজের ৬ সংখ্যার PIN দিয়ে আবেদন পাঠাও।</p>
       <p class="modal-text">• আবেদন পাঠানোর পর সাথে সাথেই তালিকায় নাম আসবে না।</p>
-      <p class="modal-text">• অ্যাডমিন ম্যানুয়ালি তোমার আবেদন দেখে অনুমোদন দেবেন। অনুমোদন পেলে তবেই তুমি মূল তালিকায় নিজের নাম দেখতে পারবে।</p>
+      <p class="modal-text">• অ্যাডমিন তোমার আবেদন দেখে অনুমোদন দেবেন। অনুমোদন হলে এই পেজেই জানতে পারবে, তারপর নিজের PIN দিয়ে ঢুকবে — আলাদা কোডের দরকার নেই।</p>
     </div>
     <button class="btn-glass" id="closeGuideModal" style="width: 100%;">বুঝতে পেরেছি</button>
   </div>
@@ -173,7 +270,8 @@
 
 <script type="module">
 import { initTheme, showToast, friendlyError } from "./js/utils/ui-utils.js";
-import { submitStudentRequest } from "./js/utils/student-requests-utils.js";
+import { submitStudentRequest, watchApplication, getApplication } from "./js/utils/student-requests-utils.js";
+import { validatePin } from "./js/utils/student-auth.js";
 import { findStudentByStudentId } from "./js/utils/friend-utils.js?v=ref1";
 
 // Initialize theme
@@ -248,19 +346,144 @@ closeGuideModal.addEventListener("click", () => {
   guideModal.style.display = "none";
 });
 
+// ---------- PIN inputs: digits only ----------
+const pinInput = document.getElementById("pinInput");
+const pinConfirm = document.getElementById("pinConfirm");
+const pinErr = document.getElementById("pinErr");
+[pinInput, pinConfirm].forEach(el => el.addEventListener("input", () => {
+  el.value = el.value.replace(/\D/g, "").slice(0, 6);
+  pinErr.textContent = "";
+}));
+
+// ---------- Application status screen ----------
+const APP_KEY = "joinApplicationId";
+const joinForm = document.getElementById("joinForm");
+const statusView = document.getElementById("statusView");
+const statusCard = document.getElementById("statusCard");
+const pageTitle = document.querySelector(".page-title");
+let unwatch = null;
+let lastState = "";
+
+const SVG = {
+  check: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  cross: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  hour: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12M7 2v4a5 5 0 0 0 2 4l3 2-3 2a5 5 0 0 0-2 4v4M17 2v4a5 5 0 0 1-2 4l-3 2 3 2a5 5 0 0 1 2 4v4"/></svg>',
+  dotSm: '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg>'
+};
+
+function stage(kind) {
+  const extra = kind === "ok" ? `<div class="st-check">${SVG.check}</div>`
+              : kind === "bad" ? `<div class="st-cross">${SVG.cross}</div>`
+              : `<div class="st-hourglass">${SVG.hour}</div>`;
+  return `<div class="st-stage ${kind}">
+    <span class="st-ring"></span><span class="st-ring"></span><span class="st-ring"></span>
+    <span class="st-orbit"></span>
+    <img class="st-logo" src="./icons/icon-192.png" alt="">
+    ${extra}
+  </div>`;
+}
+
+function confetti() {
+  const colors = ["#2f7d5e", "#b8863c", "#e0b25a", "#4aa883", "#d96b5f", "#6c8cd5"];
+  return `<div class="st-confetti">${Array.from({ length: 26 }, (_, i) =>
+    `<i style="--x:${Math.round(Math.random() * 100)}%;--c:${colors[i % colors.length]};--d:${(2.2 + Math.random() * 1.6).toFixed(2)}s;--dl:${(Math.random() * 0.7).toFixed(2)}s;--r:${Math.round(Math.random() * 180)}deg"></i>`
+  ).join("")}</div>`;
+}
+
+function showStatus(data) {
+  const state = data?.status || "pending";
+  if (state === lastState && state !== "approved") return; // no needless re-render
+  lastState = state;
+  joinForm.style.display = "none";
+  pageTitle.style.display = "none";
+  document.getElementById("referralBanner").style.display = "none";
+  statusView.classList.add("on");
+  const name = esc(data?.name || "");
+
+  if (state === "approved") {
+    statusCard.innerHTML = `${confetti()}
+      ${stage("ok")}
+      <div class="st-h">অনুমোদন হয়ে গেছে!</div>
+      <p class="st-p">স্বাগতম${name ? `, <b>${name}</b>` : ""}। ${data.needsCode
+        ? "তবে তোমার PIN এখনো চালু হয়নি — অ্যাডমিনের কাছ থেকে ৮ সংখ্যার কোড নিয়ে লগইন পেজে নিজের নাম চাপো।"
+        : "এখন তালিকায় নিজের নাম চেপে <b>তোমার PIN</b> দিয়ে ঢুকে পড়ো।"}</p>
+      ${data.studentId ? `<div class="st-idcard"><small>তোমার স্টুডেন্ট আইডি</small><b>${name || "—"}</b><code>${esc(data.studentId)}</code></div>` : ""}
+      <div class="st-actions"><a href="./index.html" class="btn-submit" id="goLogin">লগইন করতে যাও</a></div>`;
+    document.getElementById("goLogin").addEventListener("click", () => { try { localStorage.removeItem(APP_KEY); } catch {} });
+    try { navigator.vibrate?.([30, 40, 30]); } catch {}
+    return;
+  }
+
+  if (state === "rejected") {
+    statusCard.innerHTML = `${stage("bad")}
+      <div class="st-h">আবেদন অনুমোদন হয়নি</div>
+      <p class="st-p">অ্যাডমিন এই আবেদনটি গ্রহণ করেননি। নাম বা ব্যাচ ঠিক করে আবার আবেদন করতে পারো, অথবা অ্যাডমিনের সাথে কথা বলো।</p>
+      <div class="st-steps">
+        <div class="st-step done"><span class="st-dot">${SVG.check}</span>আবেদন পাঠানো হয়েছে</div>
+        <div class="st-step fail"><span class="st-dot">${SVG.cross}</span>অ্যাডমিন গ্রহণ করেননি</div>
+      </div>
+      <div class="st-actions"><button type="button" class="btn-submit" id="retryBtn">আবার আবেদন করো</button></div>`;
+    document.getElementById("retryBtn").addEventListener("click", () => {
+      try { localStorage.removeItem(APP_KEY); } catch {}
+      location.reload();
+    });
+    return;
+  }
+
+  // pending
+  statusCard.innerHTML = `${stage("")}
+    <div class="st-h">অনুমোদনের অপেক্ষায়</div>
+    <p class="st-p">${name ? `<b>${name}</b>, ` : ""}তোমার আবেদন অ্যাডমিনের কাছে পৌঁছে গেছে। অনুমোদন হলে এই পেজেই সাথে সাথে দেখতে পাবে।</p>
+    <div class="st-steps">
+      <div class="st-step done"><span class="st-dot">${SVG.check}</span>আবেদন পাঠানো হয়েছে</div>
+      <div class="st-step active"><span class="st-dot">${SVG.dotSm}</span><span>অ্যাডমিন যাচাই করছেন<span class="st-typing"><i></i><i></i><i></i></span></span></div>
+      <div class="st-step"><span class="st-dot">${SVG.dotSm}</span>অনুমোদন ও লগইন</div>
+    </div>
+    <div class="st-tip">পেজটা খোলা রাখতে হবে না — পরে আবার এই লিংকে এলেও তোমার আবেদনের অবস্থা দেখা যাবে।</div>`;
+}
+
+function startWatching(id) {
+  unwatch?.();
+  unwatch = watchApplication(id, (data) => {
+    if (!data) { // doc vanished / unreadable -> back to the form
+      try { localStorage.removeItem(APP_KEY); } catch {}
+      return;
+    }
+    showStatus(data);
+  });
+}
+
+// Came back later? Resume the waiting screen for this device's application.
+(async () => {
+  let id = null;
+  try { id = localStorage.getItem(APP_KEY); } catch {}
+  if (!id) return;
+  try {
+    const data = await getApplication(id);
+    if (!data) { try { localStorage.removeItem(APP_KEY); } catch {} return; }
+    showStatus(data);
+    startWatching(id);
+  } catch { /* offline / rules not ready -> just show the form */ }
+})();
+
 // Form Logic
-document.getElementById("joinForm").addEventListener("submit", async (e) => {
+joinForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const nameInput = document.getElementById("nameInput");
   const classInput = document.getElementById("classInput");
   const btn = document.getElementById("submitBtn");
   const name = nameInput.value.trim();
   const className = classInput.value; // Dropdown value
-  
+  const pin = pinInput.value;
+
   if (!name || !className) {
     showToast("দয়া করে নাম এবং ব্যাচ নির্বাচন করো", "error");
     return;
   }
+
+  const badPin = validatePin(pin);
+  if (badPin) { pinErr.textContent = badPin; pinInput.focus(); return; }
+  if (pin !== pinConfirm.value) { pinErr.textContent = "দুটি PIN মেলেনি। আবার লেখো।"; pinConfirm.focus(); return; }
 
   // A typed code must be a real student — otherwise the friend request could never be delivered.
   if (refInput.value.trim() && !referredBy) {
@@ -268,29 +491,21 @@ document.getElementById("joinForm").addEventListener("submit", async (e) => {
     if (!referredBy) { showToast("রেফারেল কোড সঠিক নয় — ঠিক করো অথবা ফাঁকা রাখো।", "error"); return; }
   }
 
+  const original = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = `<span class="spinner" style="width:16px; height:16px; border-width:2px; border-color:#fff; border-top-color:transparent;"></span> পাঠানো হচ্ছে...`;
-  
+
   try {
-    await submitStudentRequest(name, className, referredBy);
-    // Success State with SVG
-    document.getElementById("joinForm").innerHTML = `
-      <div class="success-box">
-        <div class="success-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        </div>
-        <p style="font-weight:800; font-size:1.1rem; color:var(--text-primary); margin-bottom:8px;">আবেদন সফলভাবে পাঠানো হয়েছে</p>
-        <p class="text-sm text-muted">অ্যাডমিন অনুমোদন দিলেই তালিকায় নিজের নাম দেখতে পারবে।</p>
-        <a href="./index.html" class="btn-glass" style="margin-top:20px; display:inline-flex; width:auto; padding:10px 20px;">তালিকায় ফিরে যাও</a>
-      </div>
-    `;
+    const id = await submitStudentRequest(name, className, referredBy, pin);
+    try { localStorage.setItem(APP_KEY, id); } catch {}
+    pinInput.value = ""; pinConfirm.value = "";
+    showStatus({ status: "pending", name });
+    startWatching(id);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   } catch (err) {
     showToast(friendlyError(err), "error");
     btn.disabled = false;
-    btn.innerHTML = `
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-      আবেদন পাঠাও
-    `;
+    btn.innerHTML = original;
   }
 });
 </script>
