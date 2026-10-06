@@ -20,23 +20,10 @@ import { getUpcomingExams } from "./results-utils.js";
 import { watchChatBadge } from "./chat-utils.js";
 
 // ---------- Theme (light/dark) ----------
-export function initTheme() {
-  const saved = localStorage.getItem("theme") || "light";
-  document.documentElement.setAttribute("data-theme", saved);
-  return saved;
-}
-
-export function toggleTheme() {
-  const current =
-    document.documentElement.getAttribute("data-theme") || "light";
-
-  const next = current === "light" ? "dark" : "light";
-
-  document.documentElement.setAttribute("data-theme", next);
-  localStorage.setItem("theme", next);
-
-  return next;
-}
+// Theme (dark / light / manual time-range) lives in theme.js; first paint is done by
+// theme-boot.js. Re-exported here so every page keeps importing from ui-utils.js.
+import { initTheme, toggleTheme, openThemeSheet, getThemeSettings, saveThemeSettings, themeStatusText } from "./theme.js";
+export { initTheme, toggleTheme, openThemeSheet, getThemeSettings, saveThemeSettings, themeStatusText };
 
 // ---------- Toast ----------
 let toastTimer = null;
@@ -2165,8 +2152,11 @@ export function renderStudentHeader(
 
         <div class="hdr-menu-group">
           <a href="../student/history.html" class="hdr-menu-item ${activeKey === "history" ? "active" : ""}" role="menuitem">${icons.history}<span>ইতিহাস</span></a>
-          <div class="hdr-menu-item hdr-menu-row">
-            <span>ডার্ক মোড</span>
+          <div class="hdr-menu-item hdr-menu-row hdr-theme-row">
+            <button type="button" class="hdr-theme-info" id="themeSettingsBtn" aria-label="থিম সেটিংস খোলো">
+              <span class="hdr-theme-title">ডার্ক মোড</span>
+              <small data-theme-status>${themeStatusText()}</small>
+            </button>
             <button class="theme-toggle" id="themeToggle" type="button" aria-label="থিম পরিবর্তন" title="থিম পরিবর্তন"><span class="theme-toggle-thumb"></span></button>
           </div>
           <div class="hdr-menu-item hdr-menu-row">
@@ -2221,7 +2211,8 @@ export function renderStudentHeader(
 
     // ---------- Theme switch (single binding for all student pages) ----------
     const themeBtn = document.getElementById("themeToggle");
-    if (themeBtn) themeBtn.addEventListener("click", () => { toggleTheme(); });
+    if (themeBtn) themeBtn.addEventListener("click", toggleTheme);
+    document.getElementById("themeSettingsBtn")?.addEventListener("click", openThemeSheet);
 
     // ---------- Exam timer show/hide switch ----------
     const timerSwitch = document.getElementById("examTimerToggle");
@@ -2590,29 +2581,9 @@ export function setButtonLoading(
 // =========================================================
 
 export function bindThemeToggle() {
-
-  const button =
-    document.getElementById(
-      "themeToggle"
-    );
-
-  if (!button) {
-    return;
-  }
-
-  button.onclick = () => {
-
-    const next =
-      toggleTheme();
-
-    button.setAttribute(
-      "aria-label",
-      next === "dark"
-        ? "লাইট মোড"
-        : "ডার্ক মোড"
-    );
-
-  };
+  const button = document.getElementById("themeToggle");
+  if (!button) return;
+  button.onclick = toggleTheme;
 }
 
 
