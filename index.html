@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
+<script src="./js/utils/theme-boot.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>EP2.0</title>
@@ -114,6 +115,52 @@
   .btn-join { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 99px; background: var(--text-primary); color: var(--bg-app); font-size: .82rem; font-weight: 700; text-decoration: none; transition: opacity var(--transition); }
   .btn-join:hover { opacity: .86; }
   @media (max-width: 420px) { .foot-section { flex-direction: column; align-items: stretch; text-align: center; } .btn-join { justify-content: center; } }
+
+  /* ===== Personal welcome-back (this device remembers who you are) ===== */
+  .topbar-actions { display: flex; align-items: center; gap: 8px; flex: none; }
+  @media (max-width: 420px) { .topbar-actions .theme-toggle { transform: scale(.88); } .topbar-actions .admin-link { padding: 7px 10px; } .topbar { gap: 8px; } }
+  .me-hero { display: none; }
+  .hero-mode .me-hero { display: block; }
+  .hero-mode .intro, .hero-mode .resume, .hero-mode .searchbar, .hero-mode .tabs, .hero-mode #classFilter, .hero-mode .directory, .hero-mode .foot-section, .hero-mode #meBack, .hero-mode .battle-note { display: none !important; }
+  .has-remembered .resume { display: none !important; }
+  .me-back { display: none; align-items: center; gap: 8px; margin: 14px 0 0; padding: 9px 14px 9px 10px; border-radius: 99px; background: var(--color-accent-soft); border: 1px solid rgba(var(--color-accent-rgb), .3); color: var(--text-primary); font: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; max-width: 100%; }
+  .list-mode.has-remembered .me-back { display: inline-flex; animation: fadeUp .4s cubic-bezier(.22,1,.36,1) backwards; }
+  .me-back .st-avatar { width: 26px; height: 26px; font-size: .75rem; }
+  .me-back span.t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .me-hero { position: relative; margin-top: 10px; padding: 30px 22px 22px; text-align: center; border-radius: 30px; overflow: hidden; border: 1px solid var(--surface-border); background: radial-gradient(120% 85% at 50% 0%, rgba(var(--color-accent-rgb), .20), transparent 64%), var(--surface); box-shadow: var(--shadow-lift); }
+  .me-glow { position: absolute; width: 340px; height: 340px; left: 50%; top: -150px; margin-left: -170px; border-radius: 50%; background: radial-gradient(circle, rgba(var(--color-accent-rgb), .38), transparent 66%); animation: meGlow 6s ease-in-out infinite; pointer-events: none; }
+  @keyframes meGlow { 0%, 100% { transform: scale(.92); opacity: .75; } 50% { transform: scale(1.1); opacity: 1; } }
+  .me-hero > *:not(.me-glow) { position: relative; }
+  .me-hello { font-size: .84rem; font-weight: 800; color: var(--color-accent); letter-spacing: .03em; }
+  .me-av-wrap { position: relative; width: 132px; height: 132px; margin: 18px auto 18px; display: grid; place-items: center; }
+  .me-ring { position: absolute; inset: 6px; border-radius: 50%; border: 2px solid rgba(var(--color-accent-rgb), .55); animation: meRing 3.2s ease-out infinite; }
+  .me-ring.r2 { animation-delay: 1.6s; }
+  @keyframes meRing { 0% { transform: scale(.82); opacity: .9; } 100% { transform: scale(1.2); opacity: 0; } }
+  .me-av { width: 112px; height: 112px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: var(--color-accent-soft); color: var(--color-accent); font-size: 3rem; font-weight: 900; border: 3px solid var(--surface); box-shadow: 0 0 0 3px var(--color-accent), 0 16px 36px rgba(var(--color-accent-rgb), .42); }
+  .me-av .me-av-in { width: 100%; height: 100%; display: grid; place-items: center; border-radius: 50%; }
+  .me-av img { width: 100%; height: 100%; object-fit: cover; }
+  .me-name { font-size: clamp(2.1rem, 10.5vw, 3rem); font-weight: 900; line-height: 1.16; letter-spacing: -.8px; color: var(--text-primary); word-break: break-word; padding: 0 4px; }
+  .me-meta { display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 13px; }
+  .me-pill { padding: 5px 13px; border-radius: 99px; background: var(--color-accent-soft); border: 1px solid rgba(var(--color-accent-rgb), .3); color: var(--text-primary); font-size: .78rem; font-weight: 800; }
+  .me-id { font-family: var(--font-num); font-size: .78rem; font-weight: 700; color: var(--text-muted); letter-spacing: .04em; }
+  .me-go { position: relative; overflow: hidden; width: 100%; min-height: 58px; margin-top: 26px; border: 0; border-radius: 20px; background: var(--color-accent); color: #fff; font: inherit; font-size: 1.05rem; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; box-shadow: 0 14px 30px rgba(var(--color-accent-rgb), .45); transition: transform .25s cubic-bezier(.34,1.56,.64,1); }
+  .me-go:active { transform: scale(.97); }
+  .me-go::after { content: ""; position: absolute; top: 0; bottom: 0; width: 60px; left: -80px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent); transform: skewX(-20deg); animation: meShine 3.4s ease-in-out infinite 1s; }
+  @keyframes meShine { 0% { left: -80px; } 40%, 100% { left: 120%; } }
+  .me-go.is-loading { pointer-events: none; opacity: .85; }
+  .me-go.is-loading svg { display: none; }
+  .me-go.is-loading::before { content: ""; width: 18px; height: 18px; border: 2.5px solid rgba(255,255,255,.45); border-top-color: #fff; border-radius: 50%; animation: spinLoad .7s linear infinite; }
+  .me-other { margin: 12px auto 0; padding: 10px 14px; background: none; border: 0; color: var(--text-secondary); font: inherit; font-size: .85rem; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; border-radius: 99px; }
+  .me-other:hover, .me-other:active { color: var(--color-accent); background: var(--color-accent-soft); }
+  .me-hero.in > .me-hello { animation: fadeUp .5s cubic-bezier(.22,1,.36,1) backwards .05s; }
+  .me-hero.in .me-av-wrap { animation: meAvIn .7s cubic-bezier(.34,1.56,.64,1) backwards .12s; }
+  .me-hero.in .me-name { animation: fadeUp .6s cubic-bezier(.22,1,.36,1) backwards .25s; }
+  .me-hero.in .me-meta { animation: fadeUp .6s cubic-bezier(.22,1,.36,1) backwards .33s; }
+  .me-hero.in .me-go { animation: fadeUp .6s cubic-bezier(.22,1,.36,1) backwards .42s; }
+  .me-hero.in .me-other { animation: fadeUp .6s cubic-bezier(.22,1,.36,1) backwards .5s; }
+  @keyframes meAvIn { from { opacity: 0; transform: scale(.6) rotate(-10deg); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .me-glow, .me-ring, .me-go::after { animation: none; } }
 </style>
 </head>
 <body>
@@ -125,8 +172,24 @@
       <div class="brand-mark"><svg width="20" height="20" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 4 2 10l14 6 14-6z"/><path d="M6 13v6c0 2.5 4.5 5 10 5s10-2.5 10-5v-6"/></svg></div>
       <span id="platformHeading">EXAM PREPARATION</span>
     </div>
+    <div class="topbar-actions">
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="থিম পরিবর্তন"><span class="theme-toggle-thumb"></span></button>
     <a href="./admin/index.html" class="admin-link"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>অ্যাডমিন</a>
+    </div>
   </div>
+
+  <!-- Personal welcome-back: shown when this device remembers a student (localStorage) -->
+  <section class="me-hero" id="meHero" aria-live="polite">
+    <div class="me-glow"></div>
+    <div class="me-hello" id="meHello"></div>
+    <div class="me-av-wrap"><span class="me-ring"></span><span class="me-ring r2"></span><div class="me-av" id="meAv"></div></div>
+    <h1 class="me-name" id="meName"></h1>
+    <div class="me-meta"><span class="me-pill" id="meBatch"></span><span class="me-id" id="meId"></span></div>
+    <button class="me-go" id="meGo" type="button"><span>প্রবেশ করো</span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+    <button class="me-other" id="meOther" type="button"></button>
+  </section>
+
+  <button class="me-back" id="meBack" type="button"></button>
 
   <div class="intro">
     <h1>তুমি কে?<br>নিজের নামটি বেছে নাও</h1>
@@ -166,7 +229,7 @@
 </div>
 
 <script type="module">
-import { initTheme, icons, renderState } from "./js/utils/ui-utils.js";
+import { initTheme, toggleTheme, icons, renderState } from "./js/utils/ui-utils.js";
 import { getActiveStudents, setActiveStudent, findActiveAttempt } from "./js/utils/student-utils.js";
 import { currentStudentSession, studentLogin, setNewPassword, friendlyStudentAuthError, getStudentAuthStatus, requestSetupCode, studentLogout, validatePin, PIN_LENGTH } from "./js/utils/student-auth.js";
 import { getPlatformSettings } from "./js/utils/settings-utils.js";
@@ -174,6 +237,7 @@ import { mountInstallCard } from "./js/utils/pwa-install.js";
 
 // Initialize Theme
 initTheme();
+document.getElementById("themeToggle")?.addEventListener("click", toggleTheme);
 
 // Name fallback logic
 const TITLE_CACHE_KEY = "cachedPlatformTitle";
@@ -201,6 +265,7 @@ const searchInput = document.getElementById("studentSearchInput");
 if (safeNext()) {
   const note = document.createElement("div");
   note.style.cssText = "margin:0 0 12px;padding:12px 14px;border-radius:var(--radius-md);background:var(--color-accent-soft);border:1px solid rgba(var(--color-accent-rgb),.28);color:var(--text-primary);font-size:.84rem;font-weight:700;line-height:1.5";
+  note.className = "battle-note";
   note.textContent = "Battle-এ যোগ দিতে আগে নিজের নাম বেছে PIN দাও। তারপর নিজে থেকেই Battle-এ যোগ হবে।";
   searchInput?.parentElement?.insertAdjacentElement("beforebegin", note);
 }
@@ -290,6 +355,7 @@ function applySearchAndClassFilter() {
   renderList(filtered, false);
   updateStats();
   renderResume();
+  renderView();
   const total = filtered.length;
   if (countEl) countEl.textContent = `${bnNum(total)} জন`;
   if (searchClear) searchClear.style.display = activeSearch ? "flex" : "none";
@@ -333,7 +399,10 @@ function renderList(list, fromCache = false) {
   
   listEl.querySelectorAll("[data-idx]").forEach(btn => {
     btn.addEventListener("click", function() {
-      selectStudent(students[Number(this.dataset.idx)], this);
+      const picked = students[Number(this.dataset.idx)];
+      // This device knows someone -> show the picked name in the personal design first.
+      if (rememberedId) { heroStudent = picked; view = "hero"; renderView(true); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+      selectStudent(picked, this);
     });
   });
 }
@@ -767,7 +836,10 @@ async function selectStudent(student, btnElement) {
   }
 
   setActiveStudent(student);
-  try { localStorage.setItem(LAST_KEY, student.studentId); } catch {}
+  try {
+    localStorage.setItem(LAST_KEY, student.studentId);
+    localStorage.setItem(PROFILE_KEY, JSON.stringify({ studentId: student.studentId, name: student.name || "", className: student.className || "", photoURL: typeof student.photoURL === "string" ? student.photoURL : "" }));
+  } catch {}
   const nextUrl = safeNext();
   if (nextUrl) { window.location.href = nextUrl; return; }
   const active = await findActiveAttempt(student.studentId);
@@ -777,6 +849,82 @@ async function selectStudent(student, btnElement) {
     window.location.href = "./student/dashboard.html";
   }
 }
+
+
+// ---------------------------------------------------------------
+// Personal welcome-back. If this device remembers a student (localStorage),
+// ONLY that student's name is shown — big, in its own design — and nobody
+// else's. "অন্য প্রোফাইল খুঁজুন" opens the normal list; a name picked there is
+// shown in the same personal design before asking for the PIN. With nothing
+// remembered the page is exactly the normal list.
+// ---------------------------------------------------------------
+const PROFILE_KEY = "lastStudentProfile";
+let rememberedId = "";
+let remembered = null;
+try {
+  rememberedId = localStorage.getItem(LAST_KEY) || "";
+  const p = JSON.parse(localStorage.getItem(PROFILE_KEY) || "null");
+  if (p && p.studentId === rememberedId) remembered = p;
+} catch {}
+let view = rememberedId ? "hero" : "list";   // "hero" | "list"
+let heroStudent = null;                       // student shown in the hero (null = the remembered one)
+const appShell = document.getElementById("appShell");
+const heroEl = document.getElementById("meHero");
+
+function rememberedStudent() {
+  if (!rememberedId) return null;
+  if (allStudents.length) return allStudents.find(x => safeStudentId(x) === rememberedId) || null; // list loaded: must still exist
+  return remembered;
+}
+function greeting() {
+  const h = new Date().getHours();
+  return h < 5 ? "শুভ রাত্রি" : h < 12 ? "শুভ সকাল" : h < 15 ? "শুভ দুপুর" : h < 18 ? "শুভ বিকেল" : h < 20 ? "শুভ সন্ধ্যা" : "শুভ রাত্রি";
+}
+
+let shownKey = "";
+function renderView(animate = false) {
+  const me = rememberedStudent();
+  appShell.classList.toggle("has-remembered", !!me);
+  if (!me) { view = "list"; heroStudent = null; }
+  const st = view === "hero" ? (heroStudent || me) : null;
+  appShell.classList.toggle("hero-mode", !!st);
+  appShell.classList.toggle("list-mode", !st);
+  if (!st) {
+    const back = document.getElementById("meBack");
+    if (me) back.innerHTML = `${avatarHtml(me)}<span class="t">${esc(safeStudentName(me))} হিসেবে ফিরে যাও</span>`;
+    return;
+  }
+  const picked = heroStudent && safeStudentId(heroStudent) !== rememberedId;
+  const key = safeStudentId(st) + "|" + safeStudentName(st) + "|" + (picked ? "p" : "m");
+  if (key === shownKey && !animate) return;     // list refreshed in the background — nothing changed
+  shownKey = key;
+  document.getElementById("meHello").textContent = picked ? "এই প্রোফাইলটাই কি তোমার?" : greeting() + " 👋";
+  document.getElementById("meAv").innerHTML = avatarHtml(st, "me-av-in");
+  document.getElementById("meName").textContent = safeStudentName(st);
+  const batch = document.getElementById("meBatch");
+  batch.textContent = st.className || ""; batch.style.display = st.className ? "" : "none";
+  document.getElementById("meId").textContent = safeStudentId(st);
+  document.getElementById("meOther").innerHTML = picked
+    ? `${pwSvg("left", 16)} অন্য নাম দেখো`
+    : `আমি নই — অন্য প্রোফাইল খুঁজুন ${pwSvg("right", 16)}`;
+  document.getElementById("meGo").dataset.sid = safeStudentId(st);
+  heroEl.classList.remove("in"); void heroEl.offsetWidth; heroEl.classList.add("in");
+}
+
+document.getElementById("meGo").addEventListener("click", function () {
+  const st = (view === "hero" && (heroStudent || rememberedStudent())) || null;
+  if (st) selectStudent(st, this);
+});
+document.getElementById("meOther").addEventListener("click", () => {
+  view = "list"; heroStudent = null; shownKey = ""; renderView();
+  window.scrollTo({ top: 0 });
+});
+document.getElementById("meBack").addEventListener("click", () => {
+  view = "hero"; heroStudent = null; renderView(true);
+  window.scrollTo({ top: 0 });
+});
+// First paint: from the saved profile, before any list has loaded.
+if (rememberedId && remembered) renderView(true);
 
 searchInput?.addEventListener("input", () => {
   activeSearch = normalized(searchInput.value);
