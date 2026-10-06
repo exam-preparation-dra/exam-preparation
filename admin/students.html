@@ -114,14 +114,14 @@
 import { initTheme, toggleTheme, renderState, showToast, friendlyError } from "../js/utils/ui-utils.js";
 import { requireAdmin, adminLogout } from "../js/utils/auth.js";
 import { getActiveStudents, createStudent, updateStudentPhoto } from "../js/utils/student-utils.js";
-import { getPendingRequests, deleteStudentRequest } from "../js/utils/student-requests-utils.js";
+import { getPendingRequests, deleteStudentRequest, publishApplicationResult } from "../js/utils/student-requests-utils.js";
 import { sendReferralFriendRequest } from "../js/utils/friend-utils.js?v=ref1";
 import { getLeaderboardData } from "../js/utils/results-utils.js"; // Added Import for XP Calculation
 import { toDirectImageUrl } from "../js/utils/image-utils.js";
 import { uploadStudentPhoto, deleteStudentPhoto } from "../js/utils/storage-utils.js";
 import { FACE_URIS, isFaceUri } from "../js/utils/avatar-faces.js";
 import { db } from "../js/firebase/firebase-config.js";
-import { adminCreateStudentAccount, friendlyStudentAuthError } from "../js/utils/student-auth.js";
+import { adminCreateStudentAccount, adminCreateStudentWithPin, validatePin, friendlyStudentAuthError } from "../js/utils/student-auth.js";
 import { collection, getDocs, orderBy, query, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 initTheme();
@@ -226,6 +226,14 @@ requireAdmin(() => {
           </div>
         </div>
       </div>
+      <div class="field" style="margin:12px 0 0;">
+        <label for="newPin">শিক্ষার্থীর PIN (৬ সংখ্যা)</label>
+        <div style="display:flex; gap:8px;">
+          <input class="input-glass" id="newPin" required inputmode="numeric" maxlength="6" autocomplete="off" placeholder="যেমন: 482915" style="letter-spacing:.3em; font-weight:800;">
+          <button type="button" id="genPinBtn" class="input-glass" style="width:auto; padding:0 14px; cursor:pointer; font-weight:800; white-space:nowrap;">🎲 র‍্যান্ডম</button>
+        </div>
+        <small style="display:block; margin-top:6px; color:var(--text-muted); font-weight:600;">এই PIN দিয়েই শিক্ষার্থী ঢুকবে — যোগ করার পর ওকে জানিয়ে দিন।</small>
+      </div>
       <button type="submit" class="btn-glass btn-primary" id="addBtn" style="width:100%; padding:14px; margin-top:16px;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         তালিকায় যোগ করুন
@@ -250,7 +258,6 @@ requireAdmin(() => {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" id="searchStudent" placeholder="নাম বা আইডি দিয়ে খুঁজুন...">
       </div>
-      <button id="bulkCodesBtn" type="button" class="input-glass" style="padding:12px;cursor:pointer;font-weight:700;white-space:nowrap">🔑 সবার কোড তৈরি</button>
       <div class="filter-box">
         <select id="filterBatch" class="input-glass" style="padding:12px;">
           <option value="all">সব ব্যাচ</option>
@@ -295,18 +302,11 @@ requireAdmin(() => {
   document.getElementById("themeToggle").addEventListener("click", toggleTheme);
   document.getElementById("logoutBtn").addEventListener("click", adminLogout);
   document.getElementById("addForm").addEventListener("submit", handleAdd);
-  document.getElementById("bulkCodesBtn").addEventListener("click", async (e) => {
-    const btn = e.currentTarget;
-    const todo = allAdminStudentsList.filter(s => s.isActive !== false && !(window.__authStateMap || {})[s.studentId]);
-    if (!todo.length) { showToast("সবার অ্যাকাউন্ট আগেই তৈরি আছে।", "success"); return; }
-    if (!confirm(`${todo.length} জনের জন্য সেটআপ কোড তৈরি হবে। এগোবে?`)) return;
-    btn.disabled = true; const lines = [];
-    for (const s of todo) {
-      try { lines.push(`${s.name} (${s.studentId}) — ${await createCodeFor(s)}`); }
-      catch (err) { lines.push(`${s.name} (${s.studentId}) — ব্যর্থ: ${err?.code || err?.message}`); }
-    }
-    btn.disabled = false; renderFilteredList();
-    showCodesModal("সেটআপ কোড", lines);
+  const newPinEl = document.getElementById("newPin");
+  newPinEl.addEventListener("input", () => { newPinEl.value = newPinEl.value.replace(/\D/g, "").slice(0, 6); });
+  document.getElementById("genPinBtn").addEventListener("click", () => {
+    let p; do { const a = new Uint32Array(6); crypto.getRandomValues(a); p = Array.from(a, n => n % 10).join(""); } while (validatePin(p));
+    newPinEl.value = p;
   });
   setupBatchDropdowns();
   
@@ -355,7 +355,7 @@ function showCodesModal(title, lines) {
   ov.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:18px;";
   ov.innerHTML = `<div style="background:var(--surface-solid,#fff);color:var(--text-main,#222);border-radius:16px;padding:20px;width:100%;max-width:460px">
     <h3 style="margin:0 0 6px">${title}</h3>
-    <p style="margin:0 0 10px;font-size:.8rem;opacity:.7">কোডগুলো এখনই কপি করে নাও — পরে আর দেখা যাবে না। ছাত্র প্রথমবার লগইন করলে নিজের পাসওয়ার্ড বানাবে।</p>
+    <p style="margin:0 0 10px;font-size:.8rem;opacity:.7">কোডগুলো এখনই কপি করে নাও — পরে আর দেখা যাবে না। শিক্ষার্থী এই কোড দিয়ে ঢুকে নতুন PIN বানাবে।</p>
     <textarea readonly style="width:100%;height:200px;font-family:monospace;font-size:.85rem;padding:10px;border-radius:10px">${text}</textarea>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
       <button class="cp" type="button" style="padding:8px 14px">কপি</button>
@@ -383,10 +383,10 @@ async function loadSetupRequests() {
   if (!reqs.length) { box.innerHTML = ""; return; }
   const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
   box.innerHTML = `<div style="background:rgba(234,179,8,.10);border:1px solid rgba(234,179,8,.35);border-radius:14px;padding:14px;margin-bottom:16px">
-    <div style="font-weight:800;margin-bottom:8px">🔑 সেটআপ কোডের আবেদন (${reqs.length})</div>
+    <div style="font-weight:800;margin-bottom:8px">🔑 PIN সংশোধনের আবেদন (${reqs.length})</div>
     ${reqs.map(r => `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid rgba(128,128,128,.15);flex-wrap:wrap" data-rid="${esc(r.id)}">
       <div style="flex:1;min-width:150px"><b>${esc(r.name)}</b> <small style="opacity:.7">${esc(r.className)} · ${esc(r.studentId)}</small>
-        <div style="font-size:.75rem;opacity:.75">${r.type === "reset" ? "🔄 পাসওয়ার্ড রিসেট চাইছে (আগে Firebase Console → Authentication থেকে ওর ইউজার ডিলিট করো)" : "🆕 প্রথমবার — পাসওয়ার্ড বানাতে চাইছে"}</div></div>
+        <div style="font-size:.75rem;opacity:.75">${r.type === "reset" ? "🔄 PIN ভুলে গেছে (আগে Firebase Console → Authentication থেকে ওর ইউজার ডিলিট করো)" : "🆕 পুরোনো তালিকার নাম — PIN এখনো সেট নেই"}</div></div>
       <button class="req-code" type="button" style="padding:8px 14px;font-weight:800;cursor:pointer">কোড তৈরি করো</button>
       <button class="req-dismiss" type="button" style="padding:8px 12px;cursor:pointer">বাদ দাও</button>
     </div>`).join("")}
@@ -397,7 +397,7 @@ async function loadSetupRequests() {
       const btn = e.currentTarget; btn.disabled = true;
       try {
         const code = await createCodeFor({ studentId: r.studentId });
-        showCodesModal("সেটআপ কোড", [`${r.name} (${r.studentId}) — ${code}`]);
+        showCodesModal("PIN সংশোধনের কোড", [`${r.name} (${r.studentId}) — ${code}`]);
         loadSetupRequests(); renderFilteredList();
       } catch (err) {
         if (err?.code === "auth/email-already-in-use")
@@ -507,12 +507,12 @@ function renderFilteredList() {
             </span>
             <!-- Live XP Display -->
             <span class="st-badge" style="background:rgba(234, 179, 8, 0.15); color:#a16207; border:1px solid rgba(234, 179, 8, 0.3);">⭐ ${xp} XP</span>
-            ${(() => { const a = (window.__authStateMap || {})[stId]; return a ? (a.passwordSet ? `<span class="st-badge" style="background:rgba(22,163,74,.12);color:#15803d">🔒 পাসওয়ার্ড সেট</span>` : `<span class="st-badge" style="background:rgba(234,179,8,.15);color:#a16207">⏳ কোড অপেক্ষমাণ</span>`) : `<span class="st-badge" style="background:rgba(239,68,68,.1);color:#b91c1c">অ্যাকাউন্ট নেই</span>`; })()}
+            ${(() => { const a = (window.__authStateMap || {})[stId]; return a ? (a.passwordSet ? `<span class="st-badge" style="background:rgba(22,163,74,.12);color:#15803d">🔒 PIN সেট</span>` : `<span class="st-badge" style="background:rgba(234,179,8,.15);color:#a16207">⏳ কোড অপেক্ষমাণ</span>`) : `<span class="st-badge" style="background:rgba(239,68,68,.1);color:#b91c1c">PIN নেই</span>`; })()}
             ${s.isActive === false ? `<span class="st-inactive">নিষ্ক্রিয়</span>` : ""}
           </div>
         </div>
         <div class="st-actions">
-          <button class="action-icon code-btn" title="সেটআপ কোড তৈরি">🔑</button>
+          <button class="action-icon code-btn" title="PIN সংশোধনের ৮ সংখ্যার কোড">🔑</button>
           <button class="action-icon photo-btn" title="ছবি পরিবর্তন"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
           <button class="action-icon edit-btn" title="সম্পাদনা"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
           <button class="action-icon toggle-btn" title="সক্রিয়/নিষ্ক্রিয়" style="${s.isActive === false ? 'color:#ef4444; border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.05);' : ''}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="5" width="22" height="14" rx="7" ry="7"/><circle cx="${s.isActive !== false ? '16' : '8'}" cy="12" r="3"/></svg></button>
@@ -534,7 +534,7 @@ function bindStudentActions(students) {
       const btn = e.currentTarget; btn.disabled = true;
       try {
         const code = await createCodeFor(student);
-        showCodesModal("সেটআপ কোড", [`${student.name} (${student.studentId}) — ${code}`]);
+        showCodesModal("PIN সংশোধনের কোড", [`${student.name} (${student.studentId}) — ${code}`]);
         renderFilteredList();
       } catch (err) {
         if (err?.code === "auth/email-already-in-use")
@@ -604,13 +604,22 @@ async function handleAdd(e) {
   const btn = document.getElementById("addBtn");
   const name = nameInput.value.trim();
   const className = classInput.value.trim();
+  const pin = document.getElementById("newPin").value.trim();
   if (!name || !className) return;
+  const badPin = validatePin(pin);
+  if (badPin) { showToast(badPin, "error"); return; }
 
   btn.disabled = true; btn.textContent = "যোগ করা হচ্ছে...";
   try {
-    await createStudent(name, className);
-    nameInput.value = ""; classInput.value = "";
-    showToast("শিক্ষার্থী সফলভাবে যোগ করা হয়েছে।", "success");
+    const created = await createStudent(name, className);
+    try {
+      await adminCreateStudentWithPin(created.studentId, pin);
+      showToast(`শিক্ষার্থী যোগ হয়েছে (${created.studentId}) — PIN সেট করা হয়েছে।`, "success");
+    } catch (accErr) {
+      console.error(accErr);
+      showToast(`শিক্ষার্থী যোগ হয়েছে (${created.studentId}), কিন্তু PIN সেট হয়নি। তালিকার 🔑 বাটন দিয়ে কোড দিন।`, "error");
+    }
+    nameInput.value = ""; classInput.value = ""; document.getElementById("newPin").value = "";
     loadStudents();
   } catch (err) {
     console.error(err); showToast(friendlyError(err), "error");
@@ -713,6 +722,7 @@ async function loadPendingRequests() {
         <div class="rq-chips">
           <span class="rq-chip">🎓 ${safeText(r.className)}</span>
           ${r.referredBy ? `<span class="rq-chip ref">🤝 রেফার: ${safeText(r.referredBy)}</span>` : ""}
+          <span class="rq-chip">${r.pin ? "🔐 নিজের PIN দিয়েছে" : "⚠️ PIN নেই (পুরোনো আবেদন)"}</span>
         </div>
         <label class="rq-label">চূড়ান্ত নাম (বাংলা/ইংরেজি ঠিক করে নিন)</label>
         <input class="input-glass req-name-input" value="${safeText(r.rawName)}" placeholder="শিক্ষার্থীর নাম">
@@ -752,13 +762,23 @@ function wireRequestCard(request) {
     setBusy(true, "অপেক্ষা করুন…");
     try {
       const created = await createStudent(finalName, request.className, request.referredBy || null);
+      // The applicant chose their own PIN on the join form -> account is made with it.
+      let needsCode = true;
+      if (request.pin) {
+        try { await adminCreateStudentWithPin(created.studentId, request.pin); needsCode = false; }
+        catch (accErr) { console.error("PIN account failed", accErr); }
+      }
+      try {
+        await publishApplicationResult(request.id, { status: "approved", studentId: created.studentId, name: finalName, needsCode });
+      } catch (pubErr) { console.warn("status publish failed", pubErr); }
       await deleteStudentRequest(request.id);
       let friendSent = false;
       if (request.referredBy) {
         try { friendSent = await sendReferralFriendRequest(created.studentId, request.referredBy); }
         catch (e) { console.warn("Referral friend request skipped", e); }
       }
-      showToast(friendSent ? "শিক্ষার্থী যোগ হয়েছে — বন্ধুকে ফ্রেন্ড রিকোয়েস্টও চলে গেছে।" : "শিক্ষার্থী যোগ করা হয়েছে।", "success");
+      if (needsCode) showToast(`${created.studentId} যোগ হয়েছে, কিন্তু PIN ${request.pin ? "সেট হয়নি" : "দেওয়া ছিল না (পুরোনো আবেদন)"} — তালিকার 🔑 বাটন দিয়ে কোড দিন।`, "error");
+      else showToast(friendSent ? "শিক্ষার্থী যোগ হয়েছে — PIN সেট, বন্ধুকে ফ্রেন্ড রিকোয়েস্টও গেছে।" : "শিক্ষার্থী যোগ হয়েছে — PIN সেট করা আছে।", "success");
       loadStudents();
       rqRemoveCard(card);
     } catch (err) {
@@ -772,6 +792,7 @@ function wireRequestCard(request) {
     if (!confirm("আবেদন বাতিল করবেন?")) return;
     setBusy(true);
     try {
+      try { await publishApplicationResult(request.id, { status: "rejected" }); } catch (e) { console.warn(e); }
       await deleteStudentRequest(request.id);
       showToast("আবেদন বাতিল করা হয়েছে।", "success");
       rqRemoveCard(card);
