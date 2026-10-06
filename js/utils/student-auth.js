@@ -1,17 +1,23 @@
 /* =========================================================
-   STUDENT AUTH — password-only login for students.
+   STUDENT AUTH — PIN-only login for students.
    Firebase Auth needs an email, so each student gets a hidden fake email
    built from their studentId (STU-0001 -> stu-0001@students.exam-prep.local).
-   Students only ever see/type a password.
+   Students only ever see/type a 6-digit PIN.
 
-   Flow:
-   1. Admin clicks "Setup code" on admin/students.html -> an account is created
-      with a random one-time setup code as its password (adminCreateStudentAccount).
-   2. Student selects their name on index.html, types the setup code, and is
-      forced to choose their own password (studentLogin -> setNewPassword).
-   3. From then on they log in with their own password.
-   Forgot password: admin deletes the user in Firebase Console (Authentication),
-   then clicks "Setup code" again.
+   Flow (new):
+   1. A new student applies on join.html (name + batch + referral) and picks
+      their OWN PIN right there. The PIN travels inside the studentRequests
+      doc (admin-only readable) and is never shown in the admin UI.
+   2. Admin approves -> createStudent() + adminCreateStudentWithPin():
+      the Firebase Auth account is created with that PIN as its password.
+      The applicant sees "approved" live (applicationStatus doc) and logs in.
+   3. Admin adding a student by hand types the PIN in the add form — same path.
+   Existing students keep the PIN they already have.
+
+   PIN correction (forgot PIN) is the ONLY place the 8-digit code is used:
+   admin deletes the user in Firebase Console (Authentication), then clicks
+   the key button -> adminCreateStudentAccount() makes a one-time 8-digit
+   code; the student enters it and is forced to choose a new PIN.
    ========================================================= */
 import { app, auth, db } from "../firebase/firebase-config.js";
 import {
@@ -170,20 +176,36 @@ function genCode(len = 8) {
   return Array.from(a, n => CODE_ALPHABET[n % CODE_ALPHABET.length]).join("");
 }
 
-// Creates the student's account with a one-time setup code as password.
+// Creates the Firebase Auth account for a student with the given password.
 // Uses a throwaway secondary Firebase app so the admin stays signed in.
-// Throws auth/email-already-in-use if an account already exists
-// (delete it in Firebase Console first to reset).
-export async function adminCreateStudentAccount(studentId) {
-  const code = genCode();
+// Throws auth/email-already-in-use if an account already exists.
+async function createAuthAccount(studentId, password) {
   const secondary = initializeApp(app.options, "secondary-" + Date.now());
   try {
     const secAuth = getAuth(secondary);
-    await createUserWithEmailAndPassword(secAuth, studentEmail(studentId), code);
+    await createUserWithEmailAndPassword(secAuth, studentEmail(studentId), password);
     await signOut(secAuth);
   } finally {
     await deleteApp(secondary);
   }
+}
+
+// NEW STUDENTS: account is created with the PIN the student (or admin) chose,
+// and marked as already set — no setup code, no forced PIN change.
+export async function adminCreateStudentWithPin(studentId, pin) {
+  const bad = validatePin(String(pin || ""));
+  if (bad) throw new Error(bad);
+  await createAuthAccount(studentId, String(pin));
+  await setDoc(doc(db, "studentAuthState", studentId),
+    { passwordSet: true, pinSet: true, createdAt: serverTimestamp() });
+}
+
+// PIN CORRECTION ONLY: account gets a random one-time 8-digit code as password;
+// the student must enter it and then choose a new PIN.
+// (Delete the old user in Firebase Console first to reset.)
+export async function adminCreateStudentAccount(studentId) {
+  const code = genCode();
+  await createAuthAccount(studentId, code);
   await setDoc(doc(db, "studentAuthState", studentId),
     { passwordSet: false, createdAt: serverTimestamp() });
   return code;
