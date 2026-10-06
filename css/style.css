@@ -904,6 +904,19 @@ a.hdr-menu-item:active, a.hdr-menu-item.active, button.hdr-menu-item:active { ba
 .hdr-nav-tab.active .hdr-nav-label { font-weight: 800; }
 .app-shell:has(.hdr-nav) { padding-bottom: calc(104px + env(safe-area-inset-bottom)) !important; }
 
+/* Persistent phone tab bar lives in <body> (js/utils/nav-boot.js), outside .app-shell. */
+body:has(#hdrNavPersist) .app-shell { padding-bottom: calc(104px + env(safe-area-inset-bottom)) !important; }
+/* The full-screen loader sits BEHIND the bar, so the bar never disappears while a page loads. */
+body:has(#hdrNavPersist) .app-shell > .state-block:only-child { z-index: 40; }
+
+/* Cross-page navigation (Chrome/Edge/Safari): the page crossfades quickly while
+   the tab bar stays pinned and does not animate — it feels like one app. */
+@view-transition { navigation: auto; }
+.hdr-nav { view-transition-name: app-nav; }
+::view-transition-old(app-nav) { display: none; }
+::view-transition-new(app-nav) { animation: none; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .16s; }
+
 @media (min-width: 900px) {
   .hdr-nav {
     position: static; transform: none; width: auto; margin: 0 0 var(--space-5); padding: 4px;
