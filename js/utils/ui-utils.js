@@ -341,6 +341,7 @@ function paintNotificationBadge() {
 // "new messages" / "group invite" cards, and the Leaderboard nav tab gets a red count.
 let chatNotif = { total: 0, rooms: [], inviteRooms: [] };
 function paintChatNavBadge(total) {
+  try { sessionStorage.setItem("navChatBadge", String(total || 0)); } catch {}
   const ico = document.querySelector('.hdr-nav-tab[href*="leaderboard"] .hdr-nav-ico');
   if (!ico) return;
   ico.querySelector(".hdr-nav-badge")?.remove();
@@ -2184,13 +2185,13 @@ export function renderStudentHeader(
       </div>
     </header>
 
-    <nav class="hdr-nav" aria-label="প্রধান মেনু">
+    ${document.getElementById("hdrNavPersist") ? "" : `<nav class="hdr-nav" aria-label="প্রধান মেনু">
       ${tabs.map(tab => `
         <a href="${tab.href}" class="hdr-nav-tab ${tab.key === activeKey ? "active" : ""}" ${tab.key === activeKey ? 'aria-current="page"' : ""}>
           <span class="hdr-nav-ico">${tab.icon}</span>
           <span class="hdr-nav-label">${tab.label}</span>
         </a>`).join("")}
-    </nav>
+    </nav>`}
   `;
 
 
