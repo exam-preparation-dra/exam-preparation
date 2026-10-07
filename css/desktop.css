@@ -7,13 +7,16 @@
    grouping used on the dashboard).
    ========================================================= */
 @media (min-width: 1024px) {
-  :root { --pc-side: 256px; --pc-gap: 24px; --pc-max: 1240px; }
+  :root { --pc-side: 256px; --pc-gap: 24px; --pc-max: 1840px; --pc-col: clamp(380px, 27vw, 520px); }
+  html.pc-nav-mini { --pc-side: 80px; }
+  html.pc-nav-off { --pc-side: 0px; }
 
   /* ---------- Page frame: sidebar + wide content ---------- */
   body[data-page] { background: var(--bg-app); }
   body[data-page] .app-shell:has(.hdr-nav) {
     max-width: none; margin: 0 0 0 var(--pc-side);
-    padding: 26px max(40px, calc((100vw - var(--pc-side) - var(--pc-max)) / 2)) 64px;
+    padding: 26px max(36px, calc((100vw - var(--pc-side) - var(--pc-max)) / 2)) 64px;
+    transition: margin-left .22s ease;
   }
   body[data-page] .app-shell:has(.hdr-nav) { padding-bottom: 64px !important; }
 
@@ -49,7 +52,7 @@
   /* Two-column grouping helpers (made by desktop-layout.js) */
   .pc-top { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--pc-gap); margin-top: 6px; }
   .pc-top > * { margin-top: 0 !important; }
-  .pc-cols { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: var(--pc-gap); align-items: start; margin-top: 18px; }
+  .pc-cols { display: grid; grid-template-columns: minmax(0, 1fr) var(--pc-col); gap: var(--pc-gap); align-items: start; margin-top: 18px; }
   .pc-main, .pc-side { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
   .pc-main > *, .pc-side > * { margin-top: 0 !important; }
 
@@ -151,7 +154,7 @@
 
 /* ---------- Pages without the sidebar (store, result, battle…): wide, centred ---------- */
 @media (min-width: 1024px) {
-  body[data-page] .app-shell:not(:has(.hdr-nav)) { max-width: 1180px; margin: 0 auto; padding: 34px 40px 72px; }
+  body[data-page] .app-shell:not(:has(.hdr-nav)) { max-width: 1560px; margin: 0 auto; padding: 34px 40px 72px; }
   [data-page="store"] .store-topbar { margin-bottom: 22px; }
   [data-page="store"] .store-hero { padding: 30px 36px; border-radius: 28px; }
   [data-page="store"] .store-hero-big { font-size: 3.6rem; }
@@ -162,8 +165,45 @@
 
 /* ---------- Result: summary left (sticky) + question review right ---------- */
 @media (min-width: 1024px) {
-  .pc-cols.pc-rev { grid-template-columns: 400px minmax(0, 1fr); }
+  .pc-cols.pc-rev { grid-template-columns: var(--pc-col) minmax(0, 1fr); }
   [data-page="result"] .pc-side { position: sticky; top: 24px; }
   [data-page="result"] .pc-main > p { margin: 0 0 10px; font-size: 1.05rem; }
   [data-page="result"] .glass-card.mt-4, [data-page="result"] .stats-grid { margin-top: 0 !important; }
+}
+
+/* ---------- Collapsible sidebar (button made by desktop-layout.js) ---------- */
+.pc-nav-toggle { display: none; }
+@media (min-width: 1024px) {
+  body[data-page]:has(.hdr-nav) .pc-nav-toggle {
+    display: grid; place-items: center; position: fixed; z-index: 60; top: 30px; left: calc(var(--pc-side) - 52px);
+    width: 36px; height: 36px; padding: 0; border-radius: 11px; cursor: pointer;
+    background: var(--surface-highlight); color: var(--text-secondary); border: 1px solid var(--surface-border);
+    transition: left .22s ease, background var(--transition), color var(--transition);
+  }
+  body[data-page]:has(.hdr-nav) .pc-nav-toggle:hover { background: var(--color-accent-soft); color: var(--color-accent); }
+  .pc-nav-toggle svg { width: 19px; height: 19px; }
+  body[data-page] .hdr-nav { transition: width .22s ease, transform .22s ease, visibility .22s; }
+
+  /* icons-only rail */
+  html.pc-nav-mini .hdr-nav::before, html.pc-nav-mini .hdr-nav::after { display: none; }
+  html.pc-nav-mini body[data-page]:has(.hdr-nav) .pc-nav-toggle { left: 22px; }
+  html.pc-nav-mini body[data-page] .hdr-nav, html.pc-nav-mini .hdr-nav { padding: 92px 12px 24px; align-items: stretch; }
+  html.pc-nav-mini .hdr-nav-tab { justify-content: center; padding: 13px 0; }
+  html.pc-nav-mini .hdr-nav-tab.active { box-shadow: none; }
+  html.pc-nav-mini .hdr-nav-label { display: none; }
+  html.pc-nav-mini .hdr-nav-badge { right: 10px; }
+
+  /* fully hidden: content uses the whole screen */
+  html.pc-nav-off .hdr-nav { transform: translateX(-100%) !important; visibility: hidden; }
+  html.pc-nav-off body[data-page]:has(.hdr-nav) .pc-nav-toggle { left: 14px; top: 14px; }
+  html.pc-nav-off body[data-page] .app-shell:has(.hdr-nav) { padding-top: 66px; }
+}
+
+/* ---------- Extra-wide screens: more columns so nothing is stretched ---------- */
+@media (min-width: 1560px) {
+  [data-page="history"] #bodyContent { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  [data-page="store"] #itemList { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  [data-page="analytics"] #body { column-count: 3; }
+  [data-page="profile"] #tab-overview.active, [data-page="profile"] #tab-settings.active { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  [data-page="dashboard"] .d-links { grid-template-columns: repeat(3, 1fr); }
 }
