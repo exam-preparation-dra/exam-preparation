@@ -1,0 +1,169 @@
+/* =========================================================
+   DESKTOP / PC LAYOUT for student pages
+   ---------------------------------------------------------
+   Everything here lives inside @media (min-width: 1024px), so phones and
+   small tablets render EXACTLY as before. Pages opt in with
+   <body data-page="..."> (see js/utils/desktop-layout.js for the two-column
+   grouping used on the dashboard).
+   ========================================================= */
+@media (min-width: 1024px) {
+  :root { --pc-side: 256px; --pc-gap: 24px; --pc-max: 1240px; }
+
+  /* ---------- Page frame: sidebar + wide content ---------- */
+  body[data-page] { background: var(--bg-app); }
+  body[data-page] .app-shell:has(.hdr-nav) {
+    max-width: none; margin: 0 0 0 var(--pc-side);
+    padding: 26px max(40px, calc((100vw - var(--pc-side) - var(--pc-max)) / 2)) 64px;
+  }
+  body[data-page] .app-shell:has(.hdr-nav) { padding-bottom: 64px !important; }
+
+  /* Left sidebar = the tab bar */
+  body[data-page] .hdr-nav {
+    position: fixed; z-index: 55; left: 0; top: 0; bottom: 0; width: var(--pc-side); margin: 0; transform: none;
+    padding: 92px 14px 24px; display: flex; flex-direction: column; justify-content: flex-start; gap: 6px; overflow-y: auto;
+    background: var(--surface-solid); border: 0; border-right: 1px solid var(--surface-border); border-radius: 0; box-shadow: none;
+  }
+  body[data-page] .hdr-nav::before {
+    content: ""; position: absolute; top: 30px; left: 24px; width: 36px; height: 36px; border-radius: 12px;
+    background: var(--color-accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 4 2 10l14 6 14-6z'/%3E%3Cpath d='M6 13v6c0 2.5 4.5 5 10 5s10-2.5 10-5v-6'/%3E%3C/svg%3E") center / 21px 21px no-repeat;
+  }
+  body[data-page] .hdr-nav::after {
+    content: "EXAM PREP"; position: absolute; top: 30px; left: 70px; height: 36px; display: flex; align-items: center;
+    font-size: .92rem; font-weight: 900; letter-spacing: .08em; color: var(--text-primary);
+  }
+  body[data-page] .hdr-nav-tab {
+    flex: none; flex-direction: row; justify-content: flex-start; align-items: center; gap: 14px; padding: 13px 16px; border-radius: 14px;
+    color: var(--text-secondary); transition: background var(--transition), color var(--transition);
+  }
+  body[data-page] .hdr-nav-tab:hover { background: var(--surface-highlight); color: var(--text-primary); }
+  body[data-page] .hdr-nav-ico svg { width: 22px; height: 22px; }
+  body[data-page] .hdr-nav-label { font-size: .95rem; font-weight: 700; overflow: visible; }
+  body[data-page] .hdr-nav-tab.active { flex-grow: 0; background: var(--color-accent-soft); color: var(--color-accent); box-shadow: inset 3px 0 0 var(--color-accent); }
+  body[data-page] .hdr-nav-tab.active .hdr-nav-label { font-weight: 800; }
+  body[data-page] .hdr-nav-badge { right: -8px; }
+
+  /* Top bar (avatar menu + bell) */
+  body[data-page] .hdr { margin-bottom: 22px; }
+  body[data-page] .hdr-menu { width: 320px; }
+
+  /* Two-column grouping helpers (made by desktop-layout.js) */
+  .pc-top { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--pc-gap); margin-top: 6px; }
+  .pc-top > * { margin-top: 0 !important; }
+  .pc-cols { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: var(--pc-gap); align-items: start; margin-top: 18px; }
+  .pc-main, .pc-side { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+  .pc-main > *, .pc-side > * { margin-top: 0 !important; }
+
+  /* ---------- Dashboard ---------- */
+  [data-page="dashboard"] .d-greet h1 { font-size: 2.1rem; }
+  [data-page="dashboard"] .d-greet p { font-size: .9rem; margin-top: 4px; }
+  [data-page="dashboard"] #timerSection { width: min(460px, 100%); flex: none; }
+  [data-page="dashboard"] .d-links { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  [data-page="dashboard"] .d-link { min-height: 104px; font-size: .86rem; gap: 9px; border-radius: 18px; transition: transform .18s ease, border-color var(--transition), box-shadow var(--transition); }
+  [data-page="dashboard"] .d-link:hover { transform: translateY(-2px); border-color: rgba(var(--color-accent-rgb), .5); box-shadow: 0 8px 20px rgba(var(--color-accent-rgb), .12); }
+  [data-page="dashboard"] .d-link-ico { width: 44px; height: 44px; border-radius: 14px; }
+  [data-page="dashboard"] .d-hero { padding: 28px 30px 22px; border-radius: 28px; }
+  [data-page="dashboard"] .d-hero-xp { font-size: 3.7rem; }
+  [data-page="dashboard"] .d-hero-label { font-size: .9rem; }
+  [data-page="dashboard"] .d-hs b { font-size: 1.6rem; }
+  [data-page="dashboard"] .d-hs span { font-size: .78rem; }
+  [data-page="dashboard"] .d-hero-stats { margin-top: 20px; padding-top: 18px; }
+  [data-page="dashboard"] .d-h { font-size: 1.1rem; }
+  [data-page="dashboard"] #claimMount { margin-bottom: 22px; }
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  :root { --pc-side: 224px; }
+  .pc-cols { grid-template-columns: minmax(0, 1fr) 340px; }
+}
+
+/* ---------- Calendar ---------- */
+@media (min-width: 1024px) {
+  [data-page="calendar"] #nextSection .d-hero { padding: 26px 32px 20px; border-radius: 28px; }
+  [data-page="calendar"] .cal-hero-name { font-size: 1.7rem; }
+  [data-page="calendar"] .d-seal { width: 128px; height: 128px; }
+  [data-page="calendar"] .d-h { font-size: 1.1rem; }
+  [data-page="calendar"] #calendarSection .d-card { display: grid; grid-template-columns: minmax(0, 1fr) 380px; column-gap: 36px; align-items: start; padding: 26px 28px; border-radius: 26px; }
+  [data-page="calendar"] .cal-head { grid-column: 1; grid-row: 1; }
+  [data-page="calendar"] .cal-grid { grid-column: 1; grid-row: 2; gap: 6px; }
+  [data-page="calendar"] .cal-legend { grid-column: 1; grid-row: 3; margin-top: 14px; }
+  [data-page="calendar"] .cal-list-head { grid-column: 2; grid-row: 1; margin: 0; padding-top: 0; border-top: 0; align-self: center; font-size: 1rem; }
+  [data-page="calendar"] .cal-list { grid-column: 2; grid-row: 2 / span 2; margin-top: 14px; padding-top: 0; max-height: 640px; overflow-y: auto; align-content: start; padding-right: 4px; }
+  [data-page="calendar"] .cal-cell { aspect-ratio: 1.25; font-size: 1rem; border-radius: 12px; }
+  [data-page="calendar"] button.cal-cell:hover { border-color: var(--color-accent); transform: translateY(-1px); }
+  [data-page="calendar"] .cal-dow { font-size: .78rem; padding: 6px 0 8px; }
+  [data-page="calendar"] .cal-title { font-size: 1.2rem; }
+  [data-page="calendar"] .cal-btn { min-width: 40px; height: 40px; }
+}
+
+/* ---------- Leaderboard ---------- */
+@media (min-width: 1024px) {
+  [data-page="leaderboard"] .lx { display: grid; grid-template-columns: minmax(0, 1fr) 380px; column-gap: var(--pc-gap); align-items: start; }
+  [data-page="leaderboard"] .lx > .hdr { grid-column: 1 / -1; grid-row: 1; }
+  [data-page="leaderboard"] .lx > #lxTabs { grid-column: 1; grid-row: 2; }
+  [data-page="leaderboard"] .lx > #lxBody { grid-column: 1; grid-row: 3; min-width: 0; }
+  [data-page="leaderboard"] .lx > #lxHero { grid-column: 2; grid-row: 2 / span 2; position: sticky; top: 24px; }
+  [data-page="leaderboard"] .lx > #lxHero .lx-hero { padding: 24px 22px; }
+}
+
+/* ---------- Improvement ---------- */
+@media (min-width: 1024px) {
+  [data-page="improvement"] details.apply[open] { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+  [data-page="improvement"] details.apply > summary, [data-page="improvement"] details.apply > .sec-note { grid-column: 1 / -1; }
+}
+
+/* ---------- Profile ---------- */
+@media (min-width: 1024px) {
+  [data-page="profile"] .pf-pane { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  [data-page="profile"] #tab-overview.active,
+  [data-page="profile"] #tab-settings.active { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  [data-page="profile"] #tab-overview > #pinCard { grid-column: 1 / -1; }
+  [data-page="profile"] #tab-overview .pf-wallet { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  [data-page="profile"] .pf-hero { padding-bottom: 22px; }
+  [data-page="profile"] .pf-tabs { margin-top: 6px; }
+}
+
+/* ---------- Analytics (sections flow into two columns) ---------- */
+@media (min-width: 1024px) {
+  [data-page="analytics"] .page-heading { margin-bottom: 8px; }
+  [data-page="analytics"] #body { column-count: 2; column-gap: 28px; }
+  [data-page="analytics"] #body > * { break-inside: avoid; }
+  [data-page="analytics"] #body > .section-label { break-after: avoid; }
+  [data-page="analytics"] #body > .summary-grid { column-span: all; margin-bottom: 8px; }
+  [data-page="analytics"] #body > .game-card, [data-page="analytics"] #body > .glass-card:has(.trend-wrap) { column-span: none; }
+}
+
+/* ---------- Comparison ---------- */
+@media (min-width: 1024px) {
+  [data-page="comparison"] #cxTop { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px 24px; align-items: start; }
+  [data-page="comparison"] #cxTop > #cxHero, [data-page="comparison"] #cxTop > #cxChips { grid-column: 1 / -1; }
+  [data-page="comparison"] #cxTop > #cxIns { grid-column: 1; }
+  [data-page="comparison"] #cxTop > #cxRadar { grid-column: 2; grid-row: 3 / span 2; }
+  [data-page="comparison"] #cxTabBody > .cx-swap { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; align-items: start; }
+  [data-page="comparison"] #cxTabBody > .cx-swap > .cx-card { grid-column: 1 / -1; }
+}
+
+/* ---------- History ---------- */
+@media (min-width: 1024px) {
+  [data-page="history"] #bodyContent { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 22px; align-items: start; }
+  [data-page="history"] #bodyContent > :not(.history-card) { grid-column: 1 / -1; }
+  [data-page="history"] #bodyContent > .history-card { margin: 0; }
+}
+
+/* ---------- Pages without the sidebar (store, result, battle…): wide, centred ---------- */
+@media (min-width: 1024px) {
+  body[data-page] .app-shell:not(:has(.hdr-nav)) { max-width: 1180px; margin: 0 auto; padding: 34px 40px 72px; }
+  [data-page="store"] .store-topbar { margin-bottom: 22px; }
+  [data-page="store"] .store-hero { padding: 30px 36px; border-radius: 28px; }
+  [data-page="store"] .store-hero-big { font-size: 3.6rem; }
+  [data-page="store"] #itemList { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: start; }
+  [data-page="store"] #itemList > .store-ticket { margin: 0; }
+  [data-page="store"] #historyList { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+}
+
+/* ---------- Result: summary left (sticky) + question review right ---------- */
+@media (min-width: 1024px) {
+  .pc-cols.pc-rev { grid-template-columns: 400px minmax(0, 1fr); }
+  [data-page="result"] .pc-side { position: sticky; top: 24px; }
+  [data-page="result"] .pc-main > p { margin: 0 0 10px; font-size: 1.05rem; }
+  [data-page="result"] .glass-card.mt-4, [data-page="result"] .stats-grid { margin-top: 0 !important; }
+}
