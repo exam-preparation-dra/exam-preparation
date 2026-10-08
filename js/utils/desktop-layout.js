@@ -123,3 +123,22 @@
     apply();
   }
 })();
+
+/* ---- small privacy / terms / FAQ links at the bottom of every student page ---- */
+(function () {
+  function add() {
+    if (document.getElementById("legalFoot") || !document.body || !document.body.getAttribute("data-page")) return;
+    var shell = document.querySelector(".app-shell"); if (!shell) return;
+    var base = location.pathname.indexOf("/student/") >= 0 ? "../" : "./";
+    var n = document.createElement("nav"); n.id = "legalFoot"; n.className = "legal-foot"; n.setAttribute("aria-label", "Policies");
+    n.innerHTML = '<a href="' + base + 'privacy.html">গোপনীয়তা নীতি</a><span>·</span><a href="' + base + 'terms.html">শর্তাবলি</a><span>·</span><a href="' + base + 'faq.html">প্রশ্নোত্তর</a>';
+    shell.appendChild(n);
+  }
+  function watch() {
+    add();
+    var shell = document.querySelector(".app-shell"); if (!shell || !window.MutationObserver) return;
+    // pages that re-render the whole shell drop the footer; put it back (it is the last child)
+    new MutationObserver(function () { var f = document.getElementById("legalFoot"); if (!f || f.parentNode !== shell || shell.lastElementChild !== f) { if (f) f.remove(); add(); } }).observe(shell, { childList: true });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", watch); else watch();
+})();
