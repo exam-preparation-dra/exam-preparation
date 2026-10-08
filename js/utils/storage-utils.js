@@ -25,23 +25,4 @@ export async function deleteQuestionImage(imageUrl) {
   }
 }
 
-// ---------- Upload a student profile photo, returns public download URL ----------
-// Same pattern as uploadQuestionImage above — real Firebase Storage upload,
-// no third-party service, no API key needed.
-export async function uploadStudentPhoto(file, studentIdHint) {
-  const safeName = `${studentIdHint}_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
-  const storageRef = ref(storage, `student-photos/${safeName}`);
-  await uploadBytes(storageRef, file);
-  return getDownloadURL(storageRef);
-}
-
-// ---------- Delete a previously uploaded student photo (best-effort, non-blocking) ----------
-export async function deleteStudentPhoto(photoUrl) {
-  if (!photoUrl) return;
-  try {
-    const storageRef = ref(storage, photoUrl);
-    await deleteObject(storageRef);
-  } catch {
-    // Non-fatal — the URL may already be gone or from an external source.
-  }
-}
+// NOTE: student profile photos are intentionally NOT supported (privacy policy: only name, batch and an animated avatar).
