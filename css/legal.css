@@ -47,3 +47,13 @@ details.faq .a p { margin: 0 0 8px; }
   .lg-main { min-width: 0; }
   .lg-main > .lg-sum:first-child { margin-top: 20px; }
 }
+
+/* bilingual */
+html:not([data-lg="en"]) .en { display: none !important; }
+html[data-lg="en"] .bn { display: none !important; }
+.lg-lang { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--surface-solid); border: 1px solid var(--surface-border); }
+.lg-lang button { border: 0; background: transparent; padding: 7px 14px; border-radius: 999px; font: inherit; font-size: .8rem; font-weight: 800; color: var(--text-secondary); cursor: pointer; }
+.lg-lang button.on { background: var(--color-accent); color: #fff; }
+.lg-tabs { margin: 0 0 18px; }
+.lg-sec h2 span { display: inline; }
+@media (min-width: 1024px) { .lg-body:not(:has(.lg-toc)) { display: block; max-width: 820px; } }

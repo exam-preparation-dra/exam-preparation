@@ -207,3 +207,8 @@
   [data-page="profile"] #tab-overview.active, [data-page="profile"] #tab-settings.active { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   [data-page="dashboard"] .d-links { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* ---------- Legal links footer (all widths) ---------- */
+.legal-foot { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 26px 0 8px; font-size: .74rem; font-weight: 700; color: var(--text-muted); }
+.legal-foot a { color: var(--text-muted); text-decoration: none; }
+.legal-foot a:hover { color: var(--color-accent); text-decoration: underline; }
