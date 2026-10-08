@@ -118,8 +118,7 @@ import { getActiveStudents, createStudent, updateStudentPhoto } from "../js/util
 import { getPendingRequests, deleteStudentRequest, publishApplicationResult } from "../js/utils/student-requests-utils.js";
 import { sendReferralFriendRequest } from "../js/utils/friend-utils.js?v=ref1";
 import { getLeaderboardData } from "../js/utils/results-utils.js"; // Added Import for XP Calculation
-import { toDirectImageUrl } from "../js/utils/image-utils.js";
-import { uploadStudentPhoto, deleteStudentPhoto } from "../js/utils/storage-utils.js";
+import { eraseStudentData } from "../js/utils/student-erase.js";
 import { FACE_URIS, isFaceUri } from "../js/utils/avatar-faces.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { adminCreateStudentAccount, adminCreateStudentWithPin, validatePin, friendlyStudentAuthError } from "../js/utils/student-auth.js";
@@ -559,9 +558,8 @@ function bindStudentActions(students) {
       if (input === null) return; 
       const trimmed = input.trim();
       try {
-        const finalUrl = trimmed ? (isFaceUri(trimmed) ? trimmed : toDirectImageUrl(trimmed)) : null;
+        const finalUrl = trimmed && isFaceUri(trimmed) ? trimmed : null;   // only built-in animated faces, never real photos
         await updateStudentPhoto(docId, finalUrl);
-        if (currentUrl && currentUrl !== finalUrl && !isFaceUri(currentUrl)) deleteStudentPhoto(currentUrl);
         showToast(finalUrl ? "ছবি আপডেট হয়েছে।" : "ছবি মুছে ফেলা হয়েছে।", "success");
         loadStudents();
       } catch (err) { showToast(friendlyError(err), "error"); }
@@ -589,9 +587,9 @@ function bindStudentActions(students) {
       const msg = `সতর্কতা: আপনি কি "${student.name || 'এই শিক্ষার্থী'}" কে স্থায়ীভাবে মুছে ফেলতে চান?\n\nএই কাজটি আর বাতিল (Undo) করা যাবে না এবং এই শিক্ষার্থীর সমস্ত তথ্য মুছে যাবে।`;
       if (!confirm(msg)) return;
       try {
-        if (student.photoURL) { deleteStudentPhoto(student.photoURL).catch(e => console.warn(e)); }
-        await deleteDoc(doc(db, "students", docId));
-        showToast("শিক্ষার্থীকে স্থায়ীভাবে মুছে ফেলা হয়েছে।", "success");
+        const rep = await eraseStudentData(student.studentId, docId);
+        const warn = rep.failed.length ? ` (কিছু ধাপ হয়নি: ${[...new Set(rep.failed)].join(", ")})` : "";
+        showToast(`শিক্ষার্থী ও তার ডেটা মুছে ফেলা হয়েছে।${warn} Firebase Console > Authentication থেকে ${String(student.studentId).toLowerCase()}@students.exam-prep.local ইউজারটিও মুছে দিন।`, rep.failed.length ? "error" : "success");
         loadStudents();
       } catch (err) { showToast(friendlyError(err), "error"); }
     });
@@ -637,16 +635,12 @@ function askForPhotoLink(currentUrl, studentIdHint) {
     overlay.innerHTML = `
       <div class="custom-modal">
         <p style="font-weight:900; font-size:1.15rem; margin-bottom:16px; color:var(--text-primary);">শিক্ষার্থীর ছবি</p>
-        <p class="text-xs text-muted mb-2 font-bold">ফোন থেকে ছবি আপলোড করুন:</p>
-        <input type="file" id="photoFileInput" accept="image/*" style="width:100%; font-size:0.85rem; margin-bottom:12px; padding:12px; background:rgba(128,128,128,0.05); border-radius:12px; border:1px dashed var(--surface-border);">
-        <p id="photoUploadStatus" class="text-xs mb-3" style="font-weight:700; min-height:16px;"></p>
-        
         <p class="text-xs text-muted mb-2 font-bold">অ্যানিমেটেড ফেস বেছে নিন:</p>
         <div id="faceRow" style="display:grid; grid-template-columns:repeat(6,1fr); gap:8px; margin-bottom:14px;">${FACE_URIS.map(f => `<button type="button" class="face-pick" data-uri="${f.id}" title="${f.label}" style="padding:0; border:3px solid transparent; border-radius:14px; overflow:hidden; aspect-ratio:1; background:none; cursor:pointer;"><img src="${f.uri}" alt="" style="width:100%;height:100%;display:block;pointer-events:none;"></button>`).join("")}</div>
-        <p class="text-xs text-muted mb-2 font-bold">— অথবা — লিংক পেস্ট করুন:</p>
-        <textarea id="photoLinkInput" rows="3" class="input-glass" style="width:100%; resize:vertical; padding:12px; font-size:0.9rem;"></textarea>
+        <p class="text-xs text-muted mb-2" style="font-weight:600;">প্রাইভেসির জন্য আসল ছবি আপলোড বা লিংক দেওয়া যায় না — শুধু অ্যানিমেটেড ফেস।</p>
+        <textarea id="photoLinkInput" style="display:none"></textarea>
         
-        <p class="text-xs text-muted mt-3" style="font-weight:600;">খালি রেখে সেভ করলে বর্তমান ছবি মুছে যাবে।</p>
+        <p class="text-xs text-muted mt-3" style="font-weight:600;">খালি রেখে সেভ করলে বর্তমান ফেস মুছে যাবে।</p>
         <div class="flex gap-2 mt-4">
           <button type="button" class="btn-glass" id="photoLinkCancel" style="flex:1; padding:12px;">বাতিল</button>
           <button type="button" class="btn-glass btn-primary" id="photoLinkSave" style="flex:1; padding:12px;">সেভ করুন</button>
@@ -655,8 +649,6 @@ function askForPhotoLink(currentUrl, studentIdHint) {
     `;
     document.body.appendChild(overlay);
     const textarea = overlay.querySelector("#photoLinkInput");
-    const fileInput = overlay.querySelector("#photoFileInput");
-    const statusEl = overlay.querySelector("#photoUploadStatus");
     textarea.value = currentUrl || "";
     textarea.style.fontSize = "0.7rem";
     const markFace = () => overlay.querySelectorAll(".face-pick").forEach(b => {
@@ -671,22 +663,6 @@ function askForPhotoLink(currentUrl, studentIdHint) {
     });
     textarea.addEventListener("input", markFace);
     markFace();
-
-    fileInput.addEventListener("change", async () => {
-      const file = fileInput.files?.[0];
-      if (!file) return;
-      statusEl.textContent = "আপলোড হচ্ছে, অপেক্ষা করুন...";
-      statusEl.style.color = "var(--text-muted)";
-      try {
-        const url = await uploadStudentPhoto(file, studentIdHint);
-        statusEl.textContent = "আপলোড সম্পন্ন! সেভ করুন।";
-        statusEl.style.color = "#10b981";
-        textarea.value = url;
-      } catch (err) {
-        statusEl.textContent = "আপলোড ব্যর্থ। লিংক পেস্ট করুন।";
-        statusEl.style.color = "#ef4444";
-      }
-    });
 
     function cleanup(result) { overlay.remove(); resolve(result); }
     overlay.querySelector("#photoLinkCancel").addEventListener("click", () => cleanup(null));
