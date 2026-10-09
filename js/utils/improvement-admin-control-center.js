@@ -90,7 +90,7 @@ function injectStyles() {
   const style = document.createElement("style");
   style.id = STYLE_ID;
   style.textContent = `
-    #${ROOT_ID} { --iac-rgb: 143,130,255; width:100%; display:grid; gap:16px; }
+    #${ROOT_ID} { --iac-rgb: 201,151,63; width:100%; display:grid; gap:16px; }
 
     #${ROOT_ID} .iac-card {
       background: rgba(128,128,128,.03);
@@ -126,7 +126,7 @@ function injectStyles() {
     #${ROOT_ID} .iac-btn:hover { background: rgba(128,128,128,.1); transform: translateY(-1px); }
     #${ROOT_ID} .iac-btn:active { transform: scale(.97); }
     #${ROOT_ID} .iac-btn:disabled { opacity:.55; cursor:wait; transform:none; }
-    #${ROOT_ID} .iac-btn.primary { color:#fff; border:none; background: var(--accent-fill);
+    #${ROOT_ID} .iac-btn.primary { color:#fff; border:none; background: linear-gradient(135deg, var(--color-accent), #f59e0b);
       box-shadow: 0 4px 15px rgba(var(--iac-rgb),.3); }
     #${ROOT_ID} .iac-btn.primary:hover { box-shadow: 0 6px 20px rgba(var(--iac-rgb),.4); }
     #${ROOT_ID} .iac-btn.danger { color:#ef4444; background: rgba(239,68,68,.08); border-color: rgba(239,68,68,.22); }

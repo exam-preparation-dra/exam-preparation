@@ -27,7 +27,7 @@ function injectStyles() {
     .pea-back { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; padding: 18px;
       background: rgba(10,12,16,.58); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); animation: peaFade .35s ease both; }
     .pea-back.out { animation: peaFadeOut .25s ease both; }
-    .pea-card { --pea: var(--color-accent,#8f82ff); position: relative; width: min(100%, 400px); overflow: hidden;
+    .pea-card { --pea: var(--color-accent,#b8863c); position: relative; width: min(100%, 400px); overflow: hidden;
       background: var(--surface-solid,#fff); color: var(--text-primary,#21262f); border-radius: 26px; padding: 26px 20px 20px; text-align: center;
       border: 1px solid var(--surface-border,rgba(128,128,128,.22)); box-shadow: 0 30px 70px rgba(0,0,0,.35);
       animation: peaPop .6s cubic-bezier(.2,1.2,.3,1) both; }

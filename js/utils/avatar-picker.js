@@ -17,8 +17,8 @@ const CSS = `
 .avpk-it .im{width:100%;aspect-ratio:1;border-radius:22px;overflow:hidden;border:3px solid transparent;box-shadow:0 4px 14px rgba(0,0,0,.12);transition:transform .15s,border-color .15s}
 .avpk-it .im img{width:100%;height:100%;display:block;pointer-events:none}
 .avpk-it:active .im{transform:scale(.93)}
-.avpk-it.sel .im{border-color:var(--color-accent,#8f82ff);transform:scale(1.04)}
-.avpk-it.sel::after{content:"✓";position:absolute;top:-4px;right:-2px;width:20px;height:20px;border-radius:50%;background:var(--color-accent,#8f82ff);color:#fff;font-size:.72rem;font-weight:900;display:grid;place-items:center}
+.avpk-it.sel .im{border-color:var(--color-accent,#b8863c);transform:scale(1.04)}
+.avpk-it.sel::after{content:"✓";position:absolute;top:-4px;right:-2px;width:20px;height:20px;border-radius:50%;background:var(--color-accent,#b8863c);color:#fff;font-size:.72rem;font-weight:900;display:grid;place-items:center}
 .avpk-it small{font-size:.66rem;font-weight:800;color:var(--text-secondary,#666);white-space:nowrap}
 .avpk-err{min-height:18px;margin:10px 0 0;font-size:.78rem;font-weight:800;color:#ef4444}
 .avpk-row{display:flex;gap:10px;margin-top:10px}
