@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>ড্যাশবোর্ড — পরীক্ষা প্রস্তুতি</title>
 <link rel="manifest" href="../manifest.webmanifest">
-<meta name="theme-color" content="#0b0d2a">
+<meta name="theme-color" content="#b8863c">
 <link rel="icon" type="image/png" href="../icons/favicon.png">
 <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -87,7 +87,7 @@
   .wc-bal b { font-family: var(--font-num); font-size: 2.6rem; font-weight: 800; line-height: 1; letter-spacing: -.02em; }
   .wc-bal small { font-size: .78rem; font-weight: 700; opacity: .75; }
   .wc-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; padding-top: 9px; border-top: 1px solid rgba(255,255,255,.16); font-size: .72rem; font-weight: 700; color: rgba(246,243,234,.82); }
-  .wc-plus { flex-shrink: 0; height: 24px; padding: 0 10px; border-radius: 99px; display: inline-flex; align-items: center; font-size: .72rem; font-weight: 800; color: #fff; background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.3); backdrop-filter: blur(8px); }
+  .wc-plus { flex-shrink: 0; height: 24px; padding: 0 10px; border-radius: 99px; display: inline-flex; align-items: center; font-size: .72rem; font-weight: 800; color: #1b1b1b; background: rgba(255,255,255,.88); }
   .wc.empty { filter: saturate(.55) brightness(.9); }
   .wc.empty .wc-bal b { opacity: .55; }
   @media (min-width: 640px) {
@@ -112,10 +112,10 @@
   .d-hero {
     position: relative; overflow: hidden; color: #f3f1ea;
     border-radius: var(--radius-lg); padding: 18px 16px 14px;
-    background: linear-gradient(140deg, rgba(143,130,255,.30), rgba(56,189,248,.10) 60%, rgba(255,255,255,.05)); border: 1px solid rgba(255,255,255,.2); backdrop-filter: blur(18px) saturate(1.5); -webkit-backdrop-filter: blur(18px) saturate(1.5); box-shadow: 0 10px 36px rgba(3,4,20,.45), inset 0 1px 0 rgba(255,255,255,.22); isolation: isolate;
+    background: #21262f; isolation: isolate;
     display: grid; grid-template-columns: 1fr auto; column-gap: 12px; align-items: center;
   }
-  .d-hero::before { content: ""; position: absolute; z-index: -1; right: -60px; top: -80px; width: 240px; height: 240px; border-radius: 50%; background: radial-gradient(circle, rgba(143,130,255,.28), rgba(143,130,255,0) 68%); }
+  .d-hero::before { content: ""; position: absolute; z-index: -1; right: -60px; top: -80px; width: 240px; height: 240px; border-radius: 50%; background: radial-gradient(circle, rgba(184,134,60,.28), rgba(184,134,60,0) 68%); }
   .d-hero-stats { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(243,241,234,0.14); }
   .d-hs { text-align: center; }
   .d-hs + .d-hs { border-left: 1px solid rgba(243,241,234,0.14); }
@@ -166,7 +166,7 @@
     background: var(--surface-solid); color: var(--text-primary); transition: background var(--transition);
   }
   .d-btn:active { background: var(--surface-highlight); }
-  .d-btn-primary { background: var(--accent-fill); color: #fff; border: none; }
+  .d-btn-primary { background: var(--color-accent); color: #211a0d; border: none; }
   .d-btn-ok { color: var(--color-success); border-color: rgba(47,125,94,0.4); }
   .d-note { text-align: center; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-top: 10px; }
 
@@ -181,7 +181,7 @@
   .d-ref-qr:active { transform: scale(.96); border-color: var(--color-accent); }
   .d-ref-qr img { display: block; width: 100%; height: 100%; }
   .d-ref-qr .spinner { margin: 0; }
-  .d-ref-qr-zoom { position: absolute; right: -6px; bottom: -6px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-fill); color: #fff; border: 2px solid var(--surface); }
+  .d-ref-qr-zoom { position: absolute; right: -6px; bottom: -6px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--color-accent); color: #211a0d; border: 2px solid var(--surface); }
   .d-ref-main { flex: 1; min-width: 0; }
   .d-ref-title { font-size: 0.95rem; font-weight: 800; line-height: 1.35; }
   .d-ref-title b { font-family: var(--font-num); color: var(--color-accent); }
@@ -196,7 +196,7 @@
     background: var(--surface-solid); color: var(--text-primary); transition: background var(--transition);
   }
   .d-rbtn:active { background: var(--surface-highlight); }
-  .d-rbtn.pri { background: var(--accent-fill); color: #fff; border-color: transparent; flex: 1; }
+  .d-rbtn.pri { background: var(--color-accent); color: #211a0d; border-color: transparent; flex: 1; }
   .d-rbtn svg { flex: none; }
   .d-rbtn .d-caret { transition: transform .18s ease; }
   .d-rbtn[aria-expanded="true"] .d-caret { transform: rotate(180deg); }
@@ -220,7 +220,7 @@
   .d-ref-how svg { color: var(--text-muted); flex: none; }
   .d-ref-joined { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: 0.74rem; font-weight: 700; color: var(--text-secondary); }
   .d-ref-av { display: flex; }
-  .d-ref-av i { width: 26px; height: 26px; border-radius: 50%; margin-left: -8px; display: grid; place-items: center; font-style: normal; font-size: 0.7rem; font-weight: 800; background: #4b3fb8; color: var(--color-accent); border: 2px solid var(--surface); }
+  .d-ref-av i { width: 26px; height: 26px; border-radius: 50%; margin-left: -8px; display: grid; place-items: center; font-style: normal; font-size: 0.7rem; font-weight: 800; background: #21262f; color: var(--color-accent); border: 2px solid var(--surface); }
   .d-ref-av i:first-child { margin-left: 0; }
   @media (max-width: 359px) { .d-ref-qr { width: 80px; height: 80px; } .d-ref-how { font-size: 0.64rem; } }
 
@@ -298,7 +298,7 @@
   .pwa-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.35; }
   .pwa-txt b { font-size: .84rem; font-weight: 800; }
   .pwa-txt small { font-size: .7rem; font-weight: 600; color: var(--text-muted); }
-  .pwa-btn { flex: none; height: 36px; padding: 0 14px; border: 0; border-radius: 11px; background: var(--accent-fill); color: #fff; font: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; }
+  .pwa-btn { flex: none; height: 36px; padding: 0 14px; border: 0; border-radius: 11px; background: var(--color-accent); color: #211a0d; font: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; }
   .pwa-x { position: absolute; top: 4px; right: 4px; width: 28px; height: 28px; border: 0; background: transparent; color: var(--text-muted); font-size: .8rem; cursor: pointer; }
   .d-last { padding-bottom: 24px; }
   [hidden] { display: none !important; }
@@ -409,7 +409,7 @@ const ic = {
 const svg = (name, size = 18) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ic[name]}</svg>`;
 
 const CAT_COLORS = {
-  correct: "#2f7d5e", participation: "#3e6e8c", effort: "#6f9a8d", accuracy: "#6b4e96", tier: "#8f82ff",
+  correct: "#2f7d5e", participation: "#3e6e8c", effort: "#6f9a8d", accuracy: "#6b4e96", tier: "#b8863c",
   flawless: "#d27a3a", mastery: "#a05a8a", improvement: "#5b8f3a", streak: "#a6402f", referral: "#d9b06a"
 };
 
@@ -751,9 +751,9 @@ function renderHero({ xp, rank, leaderboard, overall, results }) {
       </div>
       <div class="d-seal" role="img" aria-label="লেভেল ${lv.level}, পরের লেভেলের ${lv.percentage}% সম্পন্ন">
         <svg viewBox="0 0 120 120" aria-hidden="true">
-          <circle cx="60" cy="60" r="57" fill="none" stroke="rgba(143,130,255,0.22)" stroke-width="1.5" stroke-dasharray="2 5"/>
+          <circle cx="60" cy="60" r="57" fill="none" stroke="rgba(184,134,60,0.22)" stroke-width="1.5" stroke-dasharray="2 5"/>
           <circle cx="60" cy="60" r="${R}" fill="none" stroke="rgba(243,241,234,0.12)" stroke-width="8"/>
-          <circle class="d-seal-ring" id="sealRing" cx="60" cy="60" r="${R}" fill="none" stroke="#8f82ff" stroke-width="8" stroke-linecap="round"
+          <circle class="d-seal-ring" id="sealRing" cx="60" cy="60" r="${R}" fill="none" stroke="#b8863c" stroke-width="8" stroke-linecap="round"
                   stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${C.toFixed(2)}" data-c="${C.toFixed(2)}" data-pct="${lv.percentage}"/>
         </svg>
         <div class="d-seal-center"><span>লেভেল</span><b>${lv.level}</b></div>

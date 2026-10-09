@@ -10,7 +10,7 @@
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
   body { overflow-x: hidden; }
   .app-shell { max-width: 600px; padding-bottom: 40px; margin: 0 auto; }
-  .acc { --acc-rgb: 143,130,255; }
+  .acc { --acc-rgb: 201,151,63; }
 
   .sec-title { display:flex; align-items:center; justify-content:space-between; margin: 20px 4px 10px;
     font-weight: 900; font-size: 1.02rem; color: var(--text-primary); }
@@ -35,8 +35,8 @@
   .start-btn {
     width:100%; margin-top: 14px; padding: 14px; border:none; border-radius:14px; cursor:pointer;
     font: inherit; font-size:.95rem; font-weight:900; color:#fff;
-    background: var(--accent-fill);
-    box-shadow: 0 4px 15px rgba(143,130,255,.3); transition: transform .18s ease;
+    background: linear-gradient(135deg, var(--color-accent), #f59e0b);
+    box-shadow: 0 4px 15px rgba(201,151,63,.3); transition: transform .18s ease;
   }
   .start-btn:active { transform: scale(.97); }
 
@@ -57,7 +57,7 @@
   .sec-note { margin: -4px 4px 10px; font-size: .74rem; font-weight: 700; line-height: 1.6; color: var(--text-muted); }
   .row-btn {
     flex-shrink: 0; padding: 9px 14px; border-radius: 12px; cursor: pointer; font: inherit; font-size: .78rem; font-weight: 800;
-    color: var(--color-accent); background: rgba(143,130,255,.1); border: 1px solid rgba(143,130,255,.35); transition: transform .18s ease;
+    color: var(--color-accent); background: rgba(201,151,63,.1); border: 1px solid rgba(201,151,63,.35); transition: transform .18s ease;
   }
   .row-btn:active { transform: scale(.96); }
   .row-btn:disabled { opacity: .55; cursor: wait; }

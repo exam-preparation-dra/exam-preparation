@@ -70,7 +70,7 @@
   .lx-list .lx-btn { width:100%; padding:12px; }
 
   /* ===== Leaderboard v2: hero card, podium, rich rows, awards, rival ===== */
-  .lx-hero { position:relative; overflow:hidden; color:#f3f1ea; background:linear-gradient(140deg, rgba(143,130,255,.30), rgba(56,189,248,.10) 60%, rgba(255,255,255,.05)); border: 1px solid rgba(255,255,255,.2); backdrop-filter: blur(18px) saturate(1.5); -webkit-backdrop-filter: blur(18px) saturate(1.5); box-shadow: 0 10px 36px rgba(3,4,20,.45), inset 0 1px 0 rgba(255,255,255,.22); border-radius:var(--radius-lg); padding:16px 16px 12px; display:grid; grid-template-columns:1fr auto; column-gap:12px; align-items:center; }
+  .lx-hero { position:relative; overflow:hidden; color:#f3f1ea; background:#21262f; border-radius:var(--radius-lg); padding:16px 16px 12px; display:grid; grid-template-columns:1fr auto; column-gap:12px; align-items:center; }
   .lx-h-label { font-size:.76rem; font-weight:700; color:rgba(243,241,234,.68); display:flex; align-items:center; gap:8px; }
   .lx-h-label .lx-av { width:22px!important; height:22px!important; font-size:.66rem!important; }
   .lx-h-rank { font-family:var(--font-num); font-weight:700; font-size:2.7rem; line-height:1.08; letter-spacing:-.02em; margin:2px 0 2px; color:var(--color-accent); }
@@ -313,7 +313,7 @@ function renderHero() {
     <div class="lx-h-seal" role="img" aria-label="শীর্ষের ${pct}%">
       <svg class="ring" viewBox="0 0 80 80" aria-hidden="true">
         <circle cx="40" cy="40" r="${R}" fill="none" stroke="rgba(243,241,234,0.12)" stroke-width="7"/>
-        <circle class="lx-h-ring" id="lxRing" cx="40" cy="40" r="${R}" fill="none" stroke="#8f82ff" stroke-width="7" stroke-linecap="round"
+        <circle class="lx-h-ring" id="lxRing" cx="40" cy="40" r="${R}" fill="none" stroke="#b8863c" stroke-width="7" stroke-linecap="round"
           stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${C.toFixed(2)}" data-c="${C.toFixed(2)}" data-pct="${pct}"/>
       </svg>
       <div class="lx-h-seal-c"><b>${pct}%</b><span>শীর্ষের</span></div>
