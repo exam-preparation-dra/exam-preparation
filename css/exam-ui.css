@@ -7,45 +7,28 @@
 
 .exam-page {
   --ex-accent: var(--color-accent);
-  --ex-accent-2: var(--color-accent-2, #e2b568);
-  --ex-accent-rgb: 201, 151, 63;
-  --ex-accent-text: #8a6116;          /* brass that stays readable on parchment */
-  --ex-on-accent: #1d1608;            /* dark ink on brass = high contrast in both themes */
-  --ex-ok: #2f8a55;   --ex-ok-rgb: 47, 138, 85;
-  --ex-warn: #b7791f; --ex-warn-rgb: 183, 121, 31;
-  --ex-bad: #b1503f;  --ex-bad-rgb: 177, 80, 63;
-  --ex-card: rgba(255, 253, 246, 0.82);
-  --ex-card-edge: rgba(36, 28, 16, 0.10);
-  --ex-field: rgba(255, 253, 246, 0.92);
-  --ex-field-edge: rgba(36, 28, 16, 0.15);
-  --ex-field-hover: rgba(201, 151, 63, 0.09);
-  --ex-chip: rgba(36, 28, 16, 0.06);
-  --ex-track: rgba(36, 28, 16, 0.11);
-  --ex-shadow: 0 1px 2px rgba(40, 30, 10, 0.05), 0 12px 32px rgba(40, 30, 10, 0.07);
-  --ex-bar-bg: rgba(250, 246, 234, 0.88);
-  --ex-sheet: #fbf7ec;
-  --ex-overlay: rgba(28, 20, 8, 0.5);
-
-  background: var(--bg-app);
-  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
-}
-
-[data-theme="dark"] .exam-page {
-  --ex-accent-text: #e2b568;
+  --ex-accent-2: var(--color-accent-2, #38bdf8);
+  --ex-accent-rgb: 143, 130, 255;
+  --ex-accent-text: #c4b5fd;
+  --ex-on-accent: #0b0d2a;
   --ex-ok: #4cc283;   --ex-ok-rgb: 76, 194, 131;
-  --ex-warn: #e0b04f; --ex-warn-rgb: 224, 176, 79;
-  --ex-bad: #e58a77;  --ex-bad-rgb: 229, 138, 119;
-  --ex-card: rgba(27, 38, 29, 0.82);
-  --ex-card-edge: rgba(255, 255, 255, 0.09);
-  --ex-field: rgba(255, 255, 255, 0.045);
-  --ex-field-edge: rgba(255, 255, 255, 0.13);
-  --ex-field-hover: rgba(226, 181, 104, 0.10);
-  --ex-chip: rgba(255, 255, 255, 0.07);
-  --ex-track: rgba(255, 255, 255, 0.12);
-  --ex-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 34px rgba(0, 0, 0, 0.38);
-  --ex-bar-bg: rgba(14, 23, 18, 0.88);
-  --ex-sheet: #16211a;
-  --ex-overlay: rgba(3, 7, 4, 0.7);
+  --ex-warn: #fbbf24; --ex-warn-rgb: 251, 191, 36;
+  --ex-bad: #fb7185;  --ex-bad-rgb: 251, 113, 133;
+  /* glass tokens — same in day and night (galaxy background shows through) */
+  --ex-card: rgba(255, 255, 255, 0.09);
+  --ex-card-edge: rgba(255, 255, 255, 0.16);
+  --ex-field: rgba(255, 255, 255, 0.06);
+  --ex-field-edge: rgba(255, 255, 255, 0.18);
+  --ex-field-hover: rgba(143, 130, 255, 0.14);
+  --ex-chip: rgba(255, 255, 255, 0.09);
+  --ex-track: rgba(255, 255, 255, 0.14);
+  --ex-shadow: 0 4px 24px rgba(3, 4, 20, 0.4);
+  --ex-bar-bg: rgba(10, 12, 44, 0.72);
+  --ex-sheet: #12153f;
+  --ex-overlay: rgba(3, 4, 20, 0.7);
+
+  background: transparent;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -108,7 +91,7 @@
   box-shadow: 0 4px 12px rgba(var(--ex-ok-rgb), .3);
   animation: exTimeFloat 1.6s ease both;
 }
-[data-theme="dark"] .exam-page .ex-timer-float { color: #0b1a12; }
+.exam-page .ex-timer-float { color: #0b1a12; }
 @keyframes exTimeFloat {
   0%   { opacity: 0; transform: translate(-50%, -6px); }
   15%, 75% { opacity: 1; transform: translate(-50%, 0); }
@@ -319,7 +302,7 @@
 .ex-btn-ghost { color: var(--text-primary); background: var(--ex-field); border-color: var(--ex-field-edge); }
 .ex-btn-ghost:hover:not(:disabled) { background: var(--ex-field-hover); }
 .ex-btn-danger { color: #fff; background: var(--ex-bad); box-shadow: 0 6px 18px rgba(var(--ex-bad-rgb), .28); }
-[data-theme="dark"] .exam-page .ex-btn-danger { color: #1d0d09; }
+.exam-page .ex-btn-danger { color: #1d0d09; }
 
 /* ---------- Modals ---------- */
 .ex-overlay {
