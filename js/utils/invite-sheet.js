@@ -20,12 +20,12 @@ const CSS = `
 .ivs-id{text-align:center;margin-top:10px;font-family:var(--font-num,monospace);font-weight:700;font-size:.8rem;letter-spacing:.08em;color:var(--text-muted,#8d94a0)}
 .ivs-how{margin:16px 0 0;padding:12px 14px;border-radius:16px;background:var(--surface-highlight,#faf9f5);border:1px solid var(--surface-border,#e5e2d9);display:grid;gap:10px;list-style:none}
 .ivs-how li{display:flex;gap:11px;align-items:flex-start;font-size:.82rem;font-weight:600;color:var(--text-secondary,#5b6270);line-height:1.5}
-.ivs-how li i{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--color-accent,#b8863c);color:#211a0d;font-style:normal;font-weight:800;font-size:.72rem;font-family:var(--font-num,sans-serif)}
+.ivs-how li i{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--accent-fill);color:#fff;font-style:normal;font-weight:800;font-size:.72rem;font-family:var(--font-num,sans-serif)}
 .ivs-how b{color:var(--text-primary,#21262f)}
 .ivs-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
 .ivs-btn{display:flex;align-items:center;justify-content:center;gap:7px;min-height:46px;border-radius:14px;border:1px solid var(--surface-border,#ddd);background:var(--surface-solid,#fff);color:var(--text-primary,#21262f);font:inherit;font-weight:800;font-size:.86rem;cursor:pointer}
 .ivs-btn:active{background:var(--surface-highlight,#faf9f5)}
-.ivs-btn.pri{grid-column:1/-1;background:var(--color-accent,#b8863c);border-color:transparent;color:#211a0d}
+.ivs-btn.pri{grid-column:1/-1;background:var(--accent-fill);border-color:transparent;color:#fff}
 .ivs-btn svg{width:17px;height:17px}
 `;
 const I = {
