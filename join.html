@@ -108,7 +108,7 @@
   #statusView { display:none; }
   #statusView.on { display:block; animation: fadeUp .5s cubic-bezier(.22,1,.36,1) backwards; }
   .st-card { text-align:center; padding: 26px 20px 22px; }
-  .st-stage { position:relative; width:168px; height:168px; margin: 4px auto 20px; display:grid; place-items:center; --tone: var(--color-accent); --tone-rgb: var(--color-accent-rgb, 184,134,60); }
+  .st-stage { position:relative; width:168px; height:168px; margin: 4px auto 20px; display:grid; place-items:center; --tone: var(--color-accent); --tone-rgb: var(--color-accent-rgb, 143,130,255); }
   .st-ring { position:absolute; inset:14px; border-radius:50%; border:2px solid rgba(var(--tone-rgb), .45); animation: ringPulse 2.6s ease-out infinite; }
   .st-ring:nth-child(2) { animation-delay:.87s; } .st-ring:nth-child(3) { animation-delay:1.74s; }
   @keyframes ringPulse { 0% { transform:scale(.62); opacity:.9; } 100% { transform:scale(1.18); opacity:0; } }
@@ -388,7 +388,7 @@ function stage(kind) {
 }
 
 function confetti() {
-  const colors = ["#2f7d5e", "#b8863c", "#e0b25a", "#4aa883", "#d96b5f", "#6c8cd5"];
+  const colors = ["#2f7d5e", "#8f82ff", "#e0b25a", "#4aa883", "#d96b5f", "#6c8cd5"];
   return `<div class="st-confetti">${Array.from({ length: 26 }, (_, i) =>
     `<i style="--x:${Math.round(Math.random() * 100)}%;--c:${colors[i % colors.length]};--d:${(2.2 + Math.random() * 1.6).toFixed(2)}s;--dl:${(Math.random() * 0.7).toFixed(2)}s;--r:${Math.round(Math.random() * 180)}deg"></i>`
   ).join("")}</div>`;
