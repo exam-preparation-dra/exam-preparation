@@ -18,6 +18,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { getUpcomingExams } from "./results-utils.js";
 import { watchChatBadge } from "./chat-utils.js";
+import "./tap-bubble.js"; // bubble on every tap (student pages)
 
 // ---------- Theme (light/dark) ----------
 // Theme (dark / light / manual time-range) lives in theme.js; first paint is done by
@@ -2141,18 +2142,25 @@ export function renderStudentHeader(
               ? `<img src="${escapeNotification(student.photoURL)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;" />`
               : escapeNotification(initial)
           }</span>
-          <span class="hdr-menu-who"><b>${safeName}</b><small>${safeStudentId}</small></span>
+          <span class="hdr-menu-who"><b>${safeName}</b>${safeStudentId ? `<small>${safeStudentId}</small>` : ""}</span>
         </div>
 
-        <button type="button" class="hdr-menu-qr" id="hdrQrBtn" role="menuitem">
-          <span class="hdr-menu-qr-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3M21 14v.01M14 21h.01M17.5 21H21v-3.5"/></svg></span>
-          <span class="hdr-menu-qr-txt"><b>আমার ইনভাইট QR</b><small>বন্ধু স্ক্যান করলেই XP</small></span>
-          <svg class="hdr-menu-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
-        </button>
+        <div class="hdr-menu-group">
+          <a href="../student/history.html" class="hdr-menu-item ${activeKey === "history" ? "active" : ""}" role="menuitem">
+            <span class="hdr-menu-ico">${icons.history}</span><span class="hdr-menu-txt">ইতিহাস</span>
+            <svg class="hdr-menu-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+          </a>
+          <button type="button" class="hdr-menu-item" id="hdrQrBtn" role="menuitem">
+            <span class="hdr-menu-ico hdr-menu-ico--accent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3M21 14v.01M14 21h.01M17.5 21H21v-3.5"/></svg></span>
+            <span class="hdr-menu-txt"><span>ইনভাইট QR</span><small>বন্ধু স্ক্যান করলেই XP</small></span>
+            <svg class="hdr-menu-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+          </button>
+        </div>
 
         <div class="hdr-menu-group">
-          <a href="../student/history.html" class="hdr-menu-item ${activeKey === "history" ? "active" : ""}" role="menuitem">${icons.history}<span>ইতিহাস</span></a>
+          <div class="hdr-menu-label">পছন্দ</div>
           <div class="hdr-menu-item hdr-menu-row hdr-theme-row">
+            <span class="hdr-menu-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></span>
             <button type="button" class="hdr-theme-info" id="themeSettingsBtn" aria-label="থিম সেটিংস খোলো">
               <span class="hdr-theme-title">ডার্ক মোড</span>
               <small data-theme-status>${themeStatusText()}</small>
@@ -2160,16 +2168,19 @@ export function renderStudentHeader(
             <button class="theme-toggle" id="themeToggle" type="button" aria-label="থিম পরিবর্তন" title="থিম পরিবর্তন"><span class="theme-toggle-thumb"></span></button>
           </div>
           <div class="hdr-menu-item hdr-menu-row">
-            <span>পরীক্ষার টাইমার</span>
+            <span class="hdr-menu-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5M9 2h6"/></svg></span>
+            <span class="hdr-menu-txt"><span>পরীক্ষার টাইমার</span></span>
             <button class="hdr-switch" id="examTimerToggle" type="button" role="switch" aria-checked="true" aria-label="পরীক্ষার টাইমার দেখাও বা লুকাও"><span></span></button>
           </div>
         </div>
 
         <div class="hdr-menu-group">
-          <a href="../index.html" class="hdr-menu-item" role="menuitem">${icons.arrowLeft}<span>Back</span></a>
+          <a href="../index.html" class="hdr-menu-item" role="menuitem">
+            <span class="hdr-menu-ico">${icons.arrowLeft}</span><span class="hdr-menu-txt">প্রধান পেজে ফিরুন</span>
+          </a>
           <button type="button" class="hdr-menu-item hdr-menu-danger" id="hdrLogoutBtn" role="menuitem">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
-            <span>লগআউট</span>
+            <span class="hdr-menu-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg></span>
+            <span class="hdr-menu-txt">লগআউট</span>
           </button>
         </div>
       </div>
