@@ -123,7 +123,7 @@
      the student's own topicStats. Guess "strong" or "weak" before the
      timer bar runs out; reveal the real accuracy with a flip + streak combo.
      ===================================================================== */
-  .game-card { position: relative; overflow: hidden; background: #21262f; border-radius: var(--radius-lg); padding: 18px 16px; color: #f3f1ea; }
+  .game-card { position: relative; overflow: hidden; background: linear-gradient(140deg, rgba(143,130,255,.30), rgba(56,189,248,.10) 60%, rgba(255,255,255,.05)); border: 1px solid rgba(255,255,255,.2); backdrop-filter: blur(18px) saturate(1.5); -webkit-backdrop-filter: blur(18px) saturate(1.5); box-shadow: 0 10px 36px rgba(3,4,20,.45), inset 0 1px 0 rgba(255,255,255,.22); border-radius: var(--radius-lg); padding: 18px 16px; color: #f3f1ea; }
   .game-top { display:flex; justify-content:space-between; align-items:center; gap:10px; }
   .game-score { font-family: var(--font-num); font-weight: 800; font-size: 1.05rem; color: var(--color-accent); }
   .game-score span { font-size:.65rem; font-weight:700; color: rgba(243,241,234,.6); margin-left:4px; }
@@ -157,7 +157,7 @@
   .game-final { text-align: center; padding: 6px 0; }
   .game-final .final-score { font-family: var(--font-num); font-size: 2.4rem; font-weight: 900; color: var(--color-accent); animation: gameCardIn .4s cubic-bezier(.22,1,.36,1); }
   .game-final p { font-size: .82rem; font-weight: 700; color: rgba(243,241,234,.8); margin-top: 4px; }
-  .game-replay { margin-top: 16px; min-height: 46px; width: 100%; border-radius: var(--radius-md); border: none; background: var(--color-accent); color: #211a0d; font: inherit; font-weight: 800; font-size: .88rem; cursor: pointer; }
+  .game-replay { margin-top: 16px; min-height: 46px; width: 100%; border-radius: var(--radius-md); border: none; background: var(--accent-fill); color: #fff; font: inherit; font-weight: 800; font-size: .88rem; cursor: pointer; }
   .game-locked { text-align: center; padding: 10px 4px; font-size: .82rem; font-weight: 700; color: rgba(243,241,234,.75); line-height: 1.6; }
 
   .confetti-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
@@ -344,7 +344,7 @@ function shuffle(arr) {
 }
 
 function spawnConfetti(container, count) {
-  const colors = ["#b8863c", "#2f7d5e", "#6b4e96", "#a6402f", "#3e6e8c"];
+  const colors = ["#8f82ff", "#2f7d5e", "#6b4e96", "#a6402f", "#3e6e8c"];
   const layer = document.createElement("div");
   layer.className = "confetti-layer";
   for (let i = 0; i < count; i++) {

@@ -177,7 +177,7 @@ const $ = s => document.querySelector(s);
 const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 const nameOf = id => S.stuMap[id]?.name || id;
 const firstName = id => String(nameOf(id)).trim().split(/\s+/)[0];
-const COLORS = ["#b8863c", "#2f7d5e", "#3e6e8c", "#6b4e96", "#a6402f", "#8a6d1f", "#2a7f86", "#9a4a7a"];
+const COLORS = ["#8f82ff", "#2f7d5e", "#3e6e8c", "#6b4e96", "#a6402f", "#8a6d1f", "#2a7f86", "#9a4a7a"];
 const colorOf = id => { let h = 0; for (const ch of String(id)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return COLORS[h % COLORS.length]; };
 const ic = (p, sw = 2.2) => `<svg class="cx-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
 const I = {

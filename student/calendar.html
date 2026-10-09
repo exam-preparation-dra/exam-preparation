@@ -23,7 +23,7 @@
   .d-hero {
     position: relative; overflow: hidden; color: #f3f1ea;
     border-radius: var(--radius-lg); padding: 18px 16px 14px;
-    background: #21262f;
+    background: linear-gradient(140deg, rgba(143,130,255,.30), rgba(56,189,248,.10) 60%, rgba(255,255,255,.05)); border: 1px solid rgba(255,255,255,.2); backdrop-filter: blur(18px) saturate(1.5); -webkit-backdrop-filter: blur(18px) saturate(1.5); box-shadow: 0 10px 36px rgba(3,4,20,.45), inset 0 1px 0 rgba(255,255,255,.22);
     display: grid; grid-template-columns: 1fr auto; column-gap: 12px; align-items: center;
   }
   .d-hero-label { font-size: 0.78rem; font-weight: 700; color: rgba(243,241,234,0.68); }
@@ -47,7 +47,7 @@
     background: var(--surface-solid); color: var(--text-primary); transition: background var(--transition);
   }
   .d-btn:active { background: var(--surface-highlight); }
-  .d-btn-primary { background: var(--color-accent); color: #211a0d; border: none; }
+  .d-btn-primary { background: var(--accent-fill); color: #fff; border: none; }
   .d-btn-ok { color: var(--color-success); border-color: rgba(47,125,94,0.4); }
 
   /* ---------- month card ---------- */
@@ -74,11 +74,11 @@
   button.cal-cell.past { background: var(--surface-edge); border-color: var(--surface-border); color: var(--text-secondary); }
   button.cal-cell:active { background: rgba(var(--color-accent-rgb), 0.24); }
   .cal-cell.today { border-color: var(--color-accent); box-shadow: inset 0 0 0 1px var(--color-accent); }
-  button.cal-cell.selected, button.cal-cell.selected.past { background: var(--color-accent); border-color: var(--color-accent); color: #211a0d; }
+  button.cal-cell.selected, button.cal-cell.selected.past { background: var(--accent-fill); border-color: var(--color-accent); color: #fff; }
   .cal-dots { display: flex; gap: 3px; height: 5px; }
   .cal-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--color-accent); }
   .cal-cell.past .cal-dot { background: var(--text-muted); }
-  .cal-cell.selected .cal-dot { background: #211a0d; }
+  .cal-cell.selected .cal-dot { background: #fff; }
   .cal-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; font-size: 0.7rem; font-weight: 700; color: var(--text-muted); }
   .cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
   .cal-legend i { width: 7px; height: 7px; border-radius: 50%; background: var(--color-accent); }
@@ -102,7 +102,7 @@
   .cal-day { margin-top: 2px; font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); }
   .cal-meta { margin-top: 2px; font-size: 0.72rem; font-weight: 600; color: var(--text-muted); }
   .cal-chip { flex-shrink: 0; align-self: flex-start; padding: 3px 9px; border-radius: 999px; font-size: 0.68rem; font-weight: 800; white-space: nowrap; color: var(--color-accent); background: var(--color-accent-soft); }
-  .cal-chip.now { color: #211a0d; background: var(--color-accent); }
+  .cal-chip.now { color: #fff; background: var(--accent-fill); }
   .cal-chip.done { color: var(--color-success); background: rgba(47,125,94,0.12); }
   .cal-empty { padding: 18px 10px; text-align: center; font-size: 0.82rem; font-weight: 700; line-height: 1.7; color: var(--text-muted); }
 </style>
@@ -274,9 +274,9 @@ function drawNext() {
       </div>
       <div class="d-seal" role="img" aria-label="${diff === 0 ? "আজ" : `আর ${bn(diff)} দিন`}">
         <svg viewBox="0 0 120 120" aria-hidden="true">
-          <circle cx="60" cy="60" r="57" fill="none" stroke="rgba(184,134,60,0.22)" stroke-width="1.5" stroke-dasharray="2 5"/>
+          <circle cx="60" cy="60" r="57" fill="none" stroke="rgba(143,130,255,0.22)" stroke-width="1.5" stroke-dasharray="2 5"/>
           <circle cx="60" cy="60" r="${R}" fill="none" stroke="rgba(243,241,234,0.12)" stroke-width="8"/>
-          <circle class="d-seal-ring" id="sealRing" cx="60" cy="60" r="${R}" fill="none" stroke="#b8863c" stroke-width="8" stroke-linecap="round"
+          <circle class="d-seal-ring" id="sealRing" cx="60" cy="60" r="${R}" fill="none" stroke="#8f82ff" stroke-width="8" stroke-linecap="round"
                   stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${C.toFixed(2)}" data-c="${C.toFixed(2)}" data-fill="${fill}"/>
         </svg>
         <div class="d-seal-center">

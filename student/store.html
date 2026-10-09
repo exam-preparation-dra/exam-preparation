@@ -15,7 +15,7 @@
   .store-hero {
     position: relative; overflow: hidden; isolation: isolate; color: #f3f1ea; text-align: center;
     border-radius: 22px; padding: 22px 20px 18px;
-    background: linear-gradient(150deg, #21262f, #12151b);
+    background: linear-gradient(140deg, rgba(143,130,255,.30), rgba(56,189,248,.10) 60%, rgba(255,255,255,.05)); border: 1px solid rgba(255,255,255,.2); backdrop-filter: blur(18px) saturate(1.5); -webkit-backdrop-filter: blur(18px) saturate(1.5); box-shadow: 0 10px 36px rgba(3,4,20,.45), inset 0 1px 0 rgba(255,255,255,.22);
     box-shadow: 0 1px 0 rgba(255,255,255,.1) inset, 0 14px 34px rgba(0,0,0,.22);
   }
   .store-hero::before { content: ""; position: absolute; z-index: -1; right: -60px; top: -72px; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, rgba(var(--color-accent-rgb),.35), rgba(var(--color-accent-rgb),0) 70%); }
@@ -28,7 +28,7 @@
   .store-ticket--reco { border-color: rgba(var(--color-accent-rgb), .55); box-shadow: 0 0 0 2px rgba(var(--color-accent-rgb), .28), var(--shadow-soft); }
   .store-reco-badge {
     display: inline-flex; align-items: center; gap: 5px; margin-bottom: 10px; padding: 4px 11px 4px 9px; border-radius: 99px;
-    font-size: .68rem; font-weight: 800; letter-spacing: .01em; color: #1d1608;
+    font-size: .68rem; font-weight: 800; letter-spacing: .01em; color: #fff;
     background: linear-gradient(135deg, #ffe9b8, #f0c264);
     box-shadow: 0 2px 8px rgba(0,0,0,.15);
   }
@@ -70,7 +70,7 @@
   .store-face-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
   .store-face-name { display: flex; align-items: center; gap: 10px; min-width: 0; font-size: .98rem; font-weight: 800; }
   .store-face-ico { flex-shrink: 0; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: rgba(255,255,255,.16); }
-  .store-price { flex-shrink: 0; padding: 5px 12px; border-radius: 99px; font-size: .95rem; font-weight: 800; color: #1b1b1b; background: rgba(255,255,255,.9); white-space: nowrap; }
+  .store-price { flex-shrink: 0; padding: 5px 12px; border-radius: 99px; font-size: .95rem; font-weight: 800; color: #fff; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.28); backdrop-filter: blur(8px); white-space: nowrap; }
   .store-price small { font-size: .66rem; font-weight: 800; margin-left: 2px; opacity: .7; }
   .store-face-main { display: flex; align-items: baseline; gap: 8px; margin-top: 18px; }
   .store-face-big { font-family: var(--font-num); font-size: 2.9rem; font-weight: 800; line-height: 1; letter-spacing: -.02em; }
@@ -109,8 +109,8 @@
   .store-cart-total { font-family: var(--font-num); font-size: 1.2rem; font-weight: 800; color: var(--text-primary); }
   .store-checkout-btn {
     display: inline-flex; align-items: center; gap: 8px; padding: 13px 22px; border: none; border-radius: 14px;
-    cursor: pointer; font: inherit; font-size: 0.9rem; font-weight: 800; color: #1d1608; white-space: nowrap;
-    background: linear-gradient(135deg, var(--color-accent), var(--color-accent-2));
+    cursor: pointer; font: inherit; font-size: 0.9rem; font-weight: 800; color: #fff; white-space: nowrap;
+    background: var(--accent-fill);
     box-shadow: 0 8px 18px rgba(var(--color-accent-rgb), .32);
     transition: transform .15s ease, filter .2s ease;
   }
