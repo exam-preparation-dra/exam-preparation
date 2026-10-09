@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>শিক্ষার্থী ব্যবস্থাপনা — অ্যাডমিন</title>
 <link rel="stylesheet" href="../css/style.css">
-<meta name="theme-color" content="#ff6a2b">
+<meta name="theme-color" content="#0b0d2a">
 <style>
   @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration:.001ms!important; transition-duration:.001ms!important; } }
   
@@ -89,7 +89,7 @@
   .rq-card::before { content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:linear-gradient(#f59e0b,#fbbf24); }
   .rq-card.rq-leaving { opacity:0; transform:translateX(24px) scale(.97); }
   .rq-top { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
-  .rq-avatar { width:44px; height:44px; border-radius:14px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1.1rem; color:#fff; background:linear-gradient(135deg,var(--color-accent),#f59e0b); }
+  .rq-avatar { width:44px; height:44px; border-radius:14px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1.1rem; color:#fff; background:var(--accent-fill); }
   .rq-who { min-width:0; flex:1; }
   .rq-who b { display:block; font-size:1rem; font-weight:900; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .rq-who span { font-size:.72rem; font-weight:700; color:var(--text-muted); }
@@ -506,8 +506,8 @@ function renderFilteredList() {
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
             </span>
             <!-- Live XP Display -->
-            <span class="st-badge" style="background:rgba(234, 179, 8, 0.15); color:#a16207; border:1px solid rgba(234, 179, 8, 0.3);">⭐ ${xp} XP</span>
-            ${(() => { const a = (window.__authStateMap || {})[stId]; return a ? (a.passwordSet ? `<span class="st-badge" style="background:rgba(22,163,74,.12);color:#15803d">🔒 PIN সেট</span>` : `<span class="st-badge" style="background:rgba(234,179,8,.15);color:#a16207">⏳ কোড অপেক্ষমাণ</span>`) : `<span class="st-badge" style="background:rgba(239,68,68,.1);color:#b91c1c">PIN নেই</span>`; })()}
+            <span class="st-badge" style="background:rgba(234, 179, 8, 0.15); color:#fbbf24; border:1px solid rgba(234, 179, 8, 0.3);">⭐ ${xp} XP</span>
+            ${(() => { const a = (window.__authStateMap || {})[stId]; return a ? (a.passwordSet ? `<span class="st-badge" style="background:rgba(22,163,74,.12);color:#34d399">🔒 PIN সেট</span>` : `<span class="st-badge" style="background:rgba(234,179,8,.15);color:#fbbf24">⏳ কোড অপেক্ষমাণ</span>`) : `<span class="st-badge" style="background:rgba(239,68,68,.1);color:#fb7185">PIN নেই</span>`; })()}
             ${s.isActive === false ? `<span class="st-inactive">নিষ্ক্রিয়</span>` : ""}
           </div>
         </div>
