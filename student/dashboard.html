@@ -889,5 +889,11 @@ function animateBars() {
   }));
 }
 </script>
+<style>
+.study-bottom-link{position:fixed;z-index:120;bottom:0;left:0;right:0;padding:8px 12px calc(8px + env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--surface-border);display:flex;justify-content:center}
+.study-bottom-link a{width:min(900px,100%);text-align:center;text-decoration:none;color:var(--text-primary);font-weight:800;padding:9px}
+@media(min-width:900px){.study-bottom-link{left:auto;right:20px;bottom:18px;width:auto;border:1px solid var(--surface-border);border-radius:16px;box-shadow:0 8px 24px #0002}}
+</style>
+<nav class="study-bottom-link"><a href="./study.html">📚 Study Section</a></nav>
 </body>
 </html>
