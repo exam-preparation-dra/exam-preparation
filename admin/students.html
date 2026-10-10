@@ -709,7 +709,7 @@ async function loadPendingRequests() {
           ${r.studentId ? `<span class="rq-chip">🆔 ${safeText(r.studentId)}</span>` : ""}
           ${r.term ? `<span class="rq-chip">📘 ${safeText(r.term)}${r.termSetAt?.seconds ? " · " + rqDate(r.termSetAt) : ""}</span>` : ""}
           ${r.createdAt?.seconds ? `<span class="rq-chip">📅 আবেদন: ${rqDate(r.createdAt)}</span>` : ""}
-${old}
+
           <span class="rq-chip">${r.pin ? "🔐 নিজের PIN দিয়েছে" : "⚠️ PIN নেই (পুরোনো আবেদন)"}</span>
         </div>
         <label class="rq-label">চূড়ান্ত নাম (বাংলা/ইংরেজি ঠিক করে নিন)</label>
