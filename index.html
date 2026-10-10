@@ -564,8 +564,22 @@ function openPendingSheet(app) {
     if (st === "approved") head = `${orb("ok", check)}<div class="pnd-h">অনুমোদন হয়ে গেছে!</div><p class="pnd-p">তালিকায় নিজের নাম চেপে <b>নিজের PIN</b> দিয়ে ঢুকে পড়ো।</p>`;
     else if (st === "rejected") head = `${orb("bad", cross)}<div class="pnd-h">আবেদন বাতিল হয়েছে</div><p class="pnd-p">এই আইডি আর কাজ করবে না। চাইলে আবার আবেদন করতে পারো।</p>`;
     else head = `${orb("", HOURGLASS.replace(/13/g, "28"))}<div class="pnd-h">অনুমোদনের অপেক্ষায়</div><p class="pnd-p">অ্যাডমিন তোমার আবেদন দেখছেন। অনুমোদন হলে এখানেই সাথে সাথে জানতে পারবে।</p>`;
-    sheet.innerHTML = `${head}${info}<button type="button" class="pnd-close">ঠিক আছে</button>`;
+    sheet.innerHTML = `${head}${info}
+      <div class="pnd-download" style="margin-top:18px;padding:14px;border:1px solid var(--surface-border,#333);border-radius:16px;text-align:left">
+        <label for="pndLang" style="display:block;font-weight:800;margin-bottom:8px">আবেদনপত্রের ভাষা / Form language</label>
+        <select id="pndLang" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--surface-border,#555);background:var(--surface,#222);color:var(--text-primary,inherit);font:inherit">
+          <option value="bn">বাংলা (Bengali)</option>
+          <option value="en">English</option>
+        </select>
+        <button type="button" class="pnd-download-btn" style="width:100%;margin-top:10px;padding:13px;border:0;border-radius:12px;background:var(--color-accent,#b8863c);color:white;font:inherit;font-weight:800;cursor:pointer">⬇ আবেদনপত্র PDF ডাউনলোড / Download PDF</button>
+        <p style="font-size:.78rem;color:var(--text-secondary,#999);margin:9px 0 0">নিরাপত্তার জন্য এই PDF-এ PIN থাকবে না। / PIN is never included in this download.</p>
+      </div>
+      <button type="button" class="pnd-close" style="margin-top:12px">ঠিক আছে</button>`;
     sheet.querySelector(".pnd-close").onclick = close;
+    sheet.querySelector(".pnd-download-btn").onclick = () => {
+      const lang = sheet.querySelector("#pndLang").value;
+      downloadPendingApplicationPDF(d || app, lang);
+    };
   }
   // 2) live from the database (no localStorage involved)
   let first = true;
@@ -573,6 +587,114 @@ function openPendingSheet(app) {
     if (!d) { if (first) paint(app); first = false; return; }
     first = false; paint(d);
   });
+}
+
+
+// Download a later copy of the application form. This source is the public
+// applicationStatus record and never contains a PIN; the PDF deliberately
+// has no PIN field under either language.
+function downloadPendingApplicationPDF(data, lang = "bn") {
+  const en = lang === "en";
+  const W = 1240, H = 1500;
+  const canvas = document.createElement("canvas");
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext("2d");
+  const font = '"Noto Sans Bengali","Hind Siliguri","Kalpurush",Arial,sans-serif';
+  const text = en ? {
+    title: "EXAM PREPARATION", subtitle: "APPLICATION FORM",
+    id: "Student ID", name: "Name", batch: "Batch", term: "Term / Semester",
+    date: "Application date", status: "Application status",
+    pending: "Pending approval", approved: "Approved", rejected: "Rejected",
+    footer: "Keep your Student ID safe. This re-download does not contain a PIN."
+  } : {
+    title: "পরীক্ষা প্রস্তুতি", subtitle: "আবেদনপত্র",
+    id: "স্টুডেন্ট আইডি", name: "নাম", batch: "ব্যাচ", term: "টার্ম / সেমিস্টার",
+    date: "আবেদনের তারিখ", status: "আবেদনের অবস্থা",
+    pending: "অনুমোদনের অপেক্ষায়", approved: "অনুমোদিত", rejected: "বাতিল",
+    footer: "স্টুডেন্ট আইডি গোপন রাখো। এই পুনরায় ডাউনলোড করা ফর্মে PIN নেই।"
+  };
+  const roundRect = (x,y,w,h,r) => {
+    ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+  };
+  ctx.fillStyle = "#f7f2e8"; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle = "#fff"; roundRect(55,55,W-110,H-110,34); ctx.fill();
+  const grad = ctx.createLinearGradient(55,55,W-55,300);
+  grad.addColorStop(0,"#a8752d"); grad.addColorStop(1,"#d9ad68");
+  ctx.fillStyle = grad; roundRect(55,55,W-110,260,34); ctx.fill();
+  ctx.fillStyle = "#fff"; ctx.textAlign = "left";
+  ctx.font = `800 54px ${font}`; ctx.fillText(text.title,105,155);
+  ctx.font = `600 36px ${font}`; ctx.fillText(text.subtitle,105,225);
+
+  const value = (v, fallback="—") => String(v ?? "").trim() || fallback;
+  const sid = value(data.studentId || app.studentId, "STU-0000");
+  ctx.textAlign = "center"; ctx.fillStyle="#9a815c"; ctx.font=`700 30px ${font}`;
+  ctx.fillText(text.id, W/2, 395);
+  ctx.fillStyle="#2d261c"; ctx.font="900 74px Arial,sans-serif";
+  ctx.fillText(sid, W/2, 485);
+  ctx.strokeStyle="#e5d9c5"; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(110,540); ctx.lineTo(W-110,540); ctx.stroke();
+
+  const dateValue = (() => {
+    const ts = data.createdAt || app.createdAt;
+    try {
+      const d = ts?.seconds ? new Date(ts.seconds*1000) : ts ? new Date(ts) : null;
+      return d ? d.toLocaleDateString(en ? "en-IN" : "bn-BD",{day:"numeric",month:"long",year:"numeric"}) : "—";
+    } catch { return "—"; }
+  })();
+  const rows = [
+    [text.name, value(data.name || app.name)],
+    [text.batch, value(data.className || app.className)],
+  ];
+  if (data.term || app.term) rows.push([text.term, value(data.term || app.term)]);
+  rows.push([text.date, dateValue]);
+  let y=650;
+  rows.forEach(([label,val]) => {
+    ctx.textAlign="left"; ctx.fillStyle="#8b7656"; ctx.font=`700 30px ${font}`; ctx.fillText(label,115,y);
+    ctx.textAlign="right"; ctx.fillStyle="#2d261c"; ctx.font=`700 34px ${font}`;
+    let v=val; while(ctx.measureText(v).width>600 && v.length>4) v=v.slice(0,-2);
+    if(v!==val) v+="…";
+    ctx.fillText(v,W-115,y); y+=105;
+  });
+  y+=35;
+  const st = value(data.status || "pending");
+  const statusText = st==="approved" ? text.approved : st==="rejected" ? text.rejected : text.pending;
+  ctx.fillStyle = st==="approved" ? "#e4f3e8" : st==="rejected" ? "#fbe8e6" : "#f5ecd9";
+  roundRect(115,y,W-230,135,24); ctx.fill();
+  ctx.textAlign="center"; ctx.fillStyle=st==="approved"?"#28764a":st==="rejected"?"#b72f2f":"#765b2f";
+  ctx.font=`800 34px ${font}`; ctx.fillText(text.status,W/2,y+48);
+  ctx.font=`800 38px ${font}`; ctx.fillText(statusText,W/2,y+100);
+  ctx.fillStyle="#8b7c65"; ctx.font=`600 25px ${font}`;
+  ctx.fillText(text.footer,W/2,H-145,{maxWidth:W-180});
+
+  // Build a standards-compliant, single-page PDF containing the rendered form.
+  // Rendering to JPEG preserves Bengali glyphs without needing a bundled font.
+  const jpeg = canvas.toDataURL("image/jpeg",0.94).split(",")[1];
+  const bin = atob(jpeg); const bytes = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+  const enc = new TextEncoder();
+  const chunks = [];
+  let length = 0;
+  const push = part => { const b = typeof part === "string" ? enc.encode(part) : part; chunks.push(b); length += b.length; };
+  const offsets = [0];
+  push("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n");
+  const obj = (n, body) => { offsets[n]=length; push(`${n} 0 obj\n${body}\nendobj\n`); };
+  obj(1,"<< /Type /Catalog /Pages 2 0 R >>");
+  obj(2,"<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+  obj(3,"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 720] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>");
+  offsets[4]=length; push(`4 0 obj\n<< /Type /XObject /Subtype /Image /Width ${W} /Height ${H} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${bytes.length} >>\nstream\n`); push(bytes); push("\nendstream\nendobj\n");
+  const stream = "q\n595 0 0 720 0 0 cm\n/Im0 Do\nQ\n";
+  obj(5,`<< /Length ${enc.encode(stream).length} >>\nstream\n${stream}endstream`);
+  const xref = length;
+  push(`xref\n0 6\n0000000000 65535 f \n`);
+  for(let n=1;n<=5;n++) push(`${String(offsets[n]).padStart(10,"0")} 00000 n \n`);
+  push(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
+  const blob = new Blob(chunks,{type:"application/pdf"});
+  const url = URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url;
+  a.download=`application-${sid}-${en?"English":"Bangla"}.pdf`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),5000);
 }
 
 function rowHtml(s, i, fromCache) {
