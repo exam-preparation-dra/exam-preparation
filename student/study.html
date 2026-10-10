@@ -1,22 +1,280 @@
-<!doctype html><html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Study Section</title><link rel="stylesheet" href="../css/style.css"><style>
-body{margin:0;background:var(--bg-app);color:var(--text-primary);font-family:var(--font-bn);padding-bottom:78px}.wrap{max-width:900px;margin:auto;padding:18px 14px}.head{display:flex;align-items:center;gap:12px;margin-bottom:18px}.link,.btn{border:1px solid var(--surface-border);background:var(--surface);color:inherit;border-radius:11px;padding:10px 13px;text-decoration:none;font:inherit;font-weight:800;cursor:pointer}.hero{padding:22px;border-radius:22px;background:linear-gradient(135deg,#172033,#33425b);color:white;margin-bottom:16px}.hero h1{margin:0 0 6px}.hero p{margin:0;color:#d7deea}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.tile,.panel,.item{background:var(--surface);border:1px solid var(--surface-border);border-radius:17px;padding:16px}.tile{text-align:left;color:inherit;cursor:pointer}.tile strong{display:block;margin-top:10px}.tile small,.meta,.muted{color:var(--text-muted);font-size:.82rem}.panel{margin-top:16px}.tools{display:flex;gap:8px;margin:12px 0}.tools input,.tools select{min-width:0;flex:1;padding:11px;border:1px solid var(--surface-border);border-radius:10px;background:var(--surface-highlight);color:inherit}.item{margin:10px 0}.item h3{margin:0 0 7px;font-size:1rem}.btn.primary{background:var(--color-accent);color:white}.viewer{display:none;position:fixed;inset:0;background:#0c1019ed;z-index:999;align-items:center;justify-content:center;padding:10px}.viewer.show{display:flex}.viewbox{width:min(1100px,100%);height:92dvh;background:var(--surface);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}.viewhead{display:flex;justify-content:space-between;align-items:center;padding:10px 14px}.viewbox iframe{border:0;flex:1;background:white}.empty{text-align:center;color:var(--text-muted);padding:18px}.bottom{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--surface-border);padding:10px 12px calc(10px + env(safe-area-inset-bottom));text-align:center}.bottom a{color:inherit;text-decoration:none;font-weight:800}@media(max-width:400px){.cards{grid-template-columns:1fr}}@media(min-width:700px){.wrap{padding:28px 22px}}
-</style></head><body><main class="wrap">
-<div class="head"><a class="link" href="./dashboard.html">← Dashboard</a><strong>Study Section</strong></div>
-<section class="hero"><h1>Study Section 📚</h1><p>Batch-wise Notes and yearly Suggestions in one place.</p></section>
-<div class="cards"><button class="tile" id="notes"><span style="font-size:1.8rem">📘</span><strong>Notes</strong><small>Batch → Subject → Chapter → PDF</small></button><button class="tile" id="suggestions"><span style="font-size:1.8rem">🎯</span><strong id="suggestionTitle">Suggestions</strong><small>Year-wise exam suggestions</small></button></div>
-<section class="panel" id="panel" hidden><h2 id="title">Notes</h2><div class="tools"><input id="search" placeholder="Search subject or chapter"><select id="subject"><option value="">All subjects</option></select></div><div id="items" class="empty">Loading…</div></section>
-</main><div class="viewer" id="viewer"><div class="viewbox"><div class="viewhead"><strong id="viewTitle">PDF Preview</strong><button class="btn" id="close">Close ✕</button></div><iframe id="frame" title="PDF preview"></iframe></div></div><nav class="bottom"><a href="./study.html">📚 Study Section</a></nav>
-<script type="module">
-import {db} from "../js/firebase/firebase-config.js";
-import {getActiveStudent,refreshActiveStudent} from "../js/utils/student-utils.js";
-import {collection,query,where,getDocs} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-const $=id=>document.getElementById(id);let all=[],mode="notes",student;const year=new Date().getFullYear();$("suggestionTitle").textContent="Suggestions "+year;
-const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-function view(url,title){$("viewTitle").textContent=title;$("frame").src=url;$("viewer").classList.add("show")}$("close").onclick=()=>{$("viewer").classList.remove("show");$("frame").src="about:blank"};
-function render(){let list=all.filter(x=>mode==="notes"?(x.type||"notes")==="notes":x.type==="suggestion"&&Number(x.year)===year);const q=$("search").value.toLowerCase().trim(),sub=$("subject").value;list=list.filter(x=>(!q||`${x.subject} ${x.chapter} ${x.title||""}`.toLowerCase().includes(q))&&(!sub||x.subject===sub)).sort((a,b)=>String(a.subject).localeCompare(String(b.subject))||String(a.chapter).localeCompare(String(b.chapter)));
-const subjects=[...new Set(all.filter(x=>mode==="notes"?(x.type||"notes")==="notes":x.type==="suggestion"&&Number(x.year)===year).map(x=>x.subject).filter(Boolean))].sort();const old=$("subject").value;$("subject").innerHTML='<option value="">All subjects</option>'+subjects.map(x=>`<option>${esc(x)}</option>`).join("");if(subjects.includes(old))$("subject").value=old;
-$("items").innerHTML=list.length?list.map(x=>`<article class="item"><h3>${esc(x.chapter||x.title||"Study Material")}</h3><div class="meta">${esc(x.batch)} · ${esc(x.subject)}${x.type==="suggestion"?" · "+esc(x.year):""}</div><button class="btn primary" data-view="${esc(x.pdfUrl)}" data-title="${esc(x.chapter||x.title||"PDF")}">View PDF</button> <a class="btn" href="${esc(x.pdfUrl)}" target="_blank" rel="noopener">Open / Download</a></article>`).join(""):'<div class="empty">No materials published for your batch yet.</div>';
-$("items").querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>view(b.dataset.view,b.dataset.title));}
-async function load(){try{student=await refreshActiveStudent().catch(()=>null)||getActiveStudent();if(!student){$("items").textContent="Please log in as a student first.";return;}const batch=String(student.className||student.batch||"").trim();if(!batch){$("items").textContent="Your registered batch is missing. Contact admin.";return;}const snap=await getDocs(query(collection(db,"studyMaterials"),where("batch","==",batch)));all=snap.docs.map(d=>({id:d.id,...d.data()})).filter(x=>x.published!==false);render()}catch(e){console.error(e);$("items").textContent="Could not load study materials. Check login, batch value and Firestore Rules."}}
-function setMode(m){mode=m;$("panel").hidden=false;$("title").textContent=m==="notes"?"Notes":"Suggestions "+year;$("search").value="";$("subject").value="";render()}$("notes").onclick=()=>setMode("notes");$("suggestions").onclick=()=>setMode("suggestions");$("search").oninput=render;$("subject").onchange=render;load();
-</script></body></html>
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <script src="../js/utils/theme-boot.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <title>স্টাডি সেকশন — পরীক্ষা প্রস্তুতি</title>
+  <meta name="theme-color" content="#b8863c">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .study-page { width: 100%; max-width: 920px; margin: 0 auto; padding: 4px 0 28px; }
+    .study-breadcrumb { display:flex; align-items:center; gap:10px; margin: 0 0 20px; color:var(--text-muted); font-size:.8rem; font-weight:700; }
+    .study-back { display:inline-flex; align-items:center; gap:7px; padding:8px 11px; border:1px solid var(--surface-border); border-radius:11px; background:var(--surface-solid); color:var(--text-secondary); transition:background var(--transition),color var(--transition); }
+    .study-back:hover,.study-back:active { background:var(--surface-highlight); color:var(--text-primary); }
+    .study-back svg { width:16px; height:16px; }
+    .study-page-label { color:var(--color-accent); text-transform:uppercase; letter-spacing:.09em; font-family:var(--font-en); font-size:.68rem; font-weight:800; }
+    .study-page-title { margin-top:5px; font-size:clamp(1.5rem,4.5vw,2rem); line-height:1.28; letter-spacing:-.025em; font-weight:900; color:var(--text-primary); }
+    .study-page-desc { margin-top:8px; max-width:610px; color:var(--text-secondary); font-size:.88rem; line-height:1.75; }
+    .study-resource-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:22px; }
+    .study-resource { position:relative; display:flex; align-items:flex-start; gap:13px; min-width:0; min-height:122px; padding:17px 15px; border:1px solid var(--surface-border); border-radius:var(--radius-lg); background:var(--surface-solid); color:var(--text-primary); text-align:left; font:inherit; cursor:pointer; transition:border-color var(--transition),background var(--transition),transform var(--transition); }
+    .study-resource:active { transform:scale(.99); }
+    .study-resource[aria-pressed="true"] { border-color:var(--color-accent); background:color-mix(in srgb,var(--color-accent-soft) 70%,var(--surface-solid)); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--color-accent) 32%,transparent); }
+    .study-resource:focus-visible,.study-action:focus-visible,.study-filter:focus-visible { outline:2px solid var(--color-accent); outline-offset:3px; }
+    .study-resource-icon { flex:none; display:grid; place-items:center; width:43px; height:43px; border-radius:13px; color:var(--color-accent); background:var(--color-accent-soft); }
+    .study-resource-icon svg { width:23px; height:23px; }
+    .study-resource-copy { display:flex; flex:1; min-width:0; flex-direction:column; gap:4px; padding-top:1px; }
+    .study-resource-copy strong { font-size:.94rem; line-height:1.4; font-weight:850; }
+    .study-resource-copy small { color:var(--text-muted); font-size:.75rem; line-height:1.55; font-weight:600; }
+    .study-resource-arrow { position:absolute; right:12px; bottom:10px; color:var(--text-muted); font-size:1rem; font-weight:800; }
+    .study-howto { display:flex; align-items:flex-start; gap:11px; margin-top:14px; padding:13px 14px; border:1px solid var(--surface-border); border-radius:var(--radius-md); background:var(--surface); }
+    .study-howto-mark { flex:none; color:var(--color-accent); font-weight:900; line-height:1.5; }
+    .study-howto p { color:var(--text-secondary); font-size:.76rem; line-height:1.75; }
+    .study-howto strong { color:var(--text-primary); }
+    .study-panel { margin-top:24px; padding:16px; border:1px solid var(--surface-border); border-radius:var(--radius-lg); background:var(--surface); }
+    .study-panel[hidden] { display:none !important; }
+    .study-panel-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:13px; }
+    .study-panel-head h2 { font-size:1.05rem; line-height:1.5; font-weight:850; }
+    .study-panel-head p { margin-top:3px; color:var(--text-muted); font-size:.75rem; line-height:1.6; }
+    .study-count { flex:none; padding:4px 9px; border-radius:999px; border:1px solid var(--surface-border); background:var(--surface-highlight); color:var(--text-secondary); font-family:var(--font-num); font-size:.72rem; font-weight:800; }
+    .study-tools { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(120px,1fr); gap:9px; margin-bottom:13px; }
+    .study-filter { box-sizing:border-box; width:100%; min-width:0; padding:11px 12px; border:1px solid var(--surface-border); border-radius:11px; background:var(--surface-solid); color:var(--text-primary); font:inherit; font-size:.8rem; outline-color:var(--color-accent); }
+    .study-items { display:grid; gap:10px; }
+    .study-item { display:flex; align-items:flex-start; gap:12px; padding:13px; border:1px solid var(--surface-border); border-radius:13px; background:var(--surface-solid); }
+    .study-item-mark { flex:none; display:grid; place-items:center; width:37px; height:37px; border-radius:11px; background:var(--surface-highlight); color:var(--color-accent); }
+    .study-item-mark svg { width:19px; height:19px; }
+    .study-item-main { flex:1; min-width:0; }
+    .study-item h3 { font-size:.88rem; line-height:1.5; font-weight:850; overflow-wrap:anywhere; }
+    .study-item-desc { margin-top:3px; color:var(--text-secondary); font-size:.76rem; line-height:1.65; overflow-wrap:anywhere; }
+    .study-item-meta { display:flex; flex-wrap:wrap; gap:5px 8px; margin-top:7px; color:var(--text-muted); font-size:.68rem; font-weight:700; }
+    .study-item-actions { display:flex; flex-wrap:wrap; gap:7px; margin-top:11px; }
+    .study-action { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:35px; padding:7px 11px; border:1px solid var(--surface-border); border-radius:10px; background:var(--surface-solid); color:var(--text-primary); font:inherit; font-size:.75rem; font-weight:800; cursor:pointer; }
+    .study-action.primary { background:var(--color-accent); border-color:var(--color-accent); color:#211a0d; }
+    .study-action svg { width:15px; height:15px; }
+    .study-state { padding:20px 12px; text-align:center; border:1px dashed var(--surface-border); border-radius:12px; color:var(--text-muted); font-size:.8rem; line-height:1.75; }
+    .study-viewer { display:none; position:fixed; inset:0; z-index:200; align-items:center; justify-content:center; padding:14px; background:rgba(10,13,18,.78); }
+    .study-viewer.show { display:flex; }
+    .study-viewbox { display:flex; flex-direction:column; width:min(1080px,100%); height:min(92dvh,900px); overflow:hidden; border:1px solid var(--surface-border); border-radius:16px; background:var(--surface-solid); box-shadow:var(--shadow-lift); }
+    .study-viewhead { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 13px; border-bottom:1px solid var(--surface-border); }
+    .study-viewtitle { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.86rem; font-weight:850; }
+    .study-viewbox iframe { flex:1; width:100%; min-height:0; border:0; background:#fff; }
+    [hidden] { display:none !important; }
+    @media(max-width:430px) {
+      .study-resource-grid { grid-template-columns:1fr; gap:9px; margin-top:18px; }
+      .study-resource { min-height:94px; padding:14px; }
+      .study-resource-arrow { right:13px; bottom:11px; }
+      .study-tools { grid-template-columns:1fr; }
+      .study-panel { padding:12px; }
+      .study-item { padding:11px; gap:9px; }
+      .study-item-actions .study-action { flex:1; }
+    }
+    @media(min-width:900px) {
+      .study-page { padding-top:8px; }
+      .study-panel { padding:20px; }
+      .study-resource { padding:20px; min-height:136px; }
+    }
+    @media(prefers-reduced-motion:reduce) { .study-resource { transition:none; } }
+  </style>
+  <script src="../js/utils/nav-boot.js"></script>
+  <link rel="stylesheet" href="../css/desktop.css">
+  <script src="../js/utils/desktop-layout.js" defer></script>
+  <script src="../js/popup.js"></script>
+</head>
+<body data-page="study">
+  <div class="app-shell app-shell--wide" id="shell">
+    <div class="state-block"><div class="spinner"></div><p>স্টাডি সেকশন লোড হচ্ছে…</p></div>
+  </div>
+  <div class="study-viewer" id="viewer" role="dialog" aria-modal="true" aria-labelledby="viewTitle">
+    <div class="study-viewbox">
+      <div class="study-viewhead"><strong class="study-viewtitle" id="viewTitle">PDF Preview</strong><button class="study-action" id="closeViewer" type="button">বন্ধ করুন ✕</button></div>
+      <iframe id="pdfFrame" title="PDF preview"></iframe>
+    </div>
+  </div>
+  <script type="module">
+    import { initTheme, renderStudentHeader, showToast } from "../js/utils/ui-utils.js";
+    import { getActiveStudent, refreshActiveStudent } from "../js/utils/student-utils.js";
+    import { db } from "../js/firebase/firebase-config.js";
+    import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+    initTheme();
+    const $ = id => document.getElementById(id);
+    const shell = $("shell");
+    let allMaterials = [];
+    let currentMode = "notes";
+    let loadMessage = "স্টাডি ম্যাটেরিয়াল লোড হচ্ছে…";
+    let student = getActiveStudent();
+    const currentYear = new Date().getFullYear();
+    const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[char]));
+    const icons = {
+      book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 5.5v16M8 7h8M8 11h8"/></svg>',
+      target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/><path d="m16.5 7.5 4-4M17 3.5h3.5V7"/></svg>',
+      file: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10z"/><path d="M13 3v7h7M8 14h8M8 17h8"/></svg>',
+      eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>',
+      external: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3h7v7M21 3l-10 10"/><path d="M18 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"/></svg>'
+    };
+
+    function pageMarkup() {
+      return `
+        <main class="study-page">
+          <div class="study-breadcrumb">
+            <a class="study-back" href="./dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>ড্যাশবোর্ড</a>
+            <span aria-hidden="true">/</span><span>স্টাডি সেকশন</span>
+          </div>
+          <header class="study-intro">
+            <div class="study-page-label">Study resources</div>
+            <h1 class="study-page-title">স্টাডি সেকশন</h1>
+            <p class="study-page-desc">তোমার রেজিস্টার করা ব্যাচের নোটস ও পরীক্ষার Suggestions—সবকিছু এক জায়গায়, গোছানোভাবে।</p>
+          </header>
+          <section class="study-resource-grid" aria-label="স্টাডি রিসোর্স বেছে নাও">
+            <button class="study-resource" id="notesMode" type="button" aria-pressed="false">
+              <span class="study-resource-icon">${icons.book}</span>
+              <span class="study-resource-copy"><strong>নোটস</strong><small>ব্যাচ · বিষয় · অধ্যায় · PDF</small></span>
+              <span class="study-resource-arrow" aria-hidden="true">↗</span>
+            </button>
+            <button class="study-resource" id="suggestionsMode" type="button" aria-pressed="false">
+              <span class="study-resource-icon">${icons.target}</span>
+              <span class="study-resource-copy"><strong>Suggestions ${currentYear}</strong><small>বছর অনুযায়ী পরীক্ষার গুরুত্বপূর্ণ প্রশ্ন</small></span>
+              <span class="study-resource-arrow" aria-hidden="true">↗</span>
+            </button>
+          </section>
+          <div class="study-howto" id="studyHowto">
+            <span class="study-howto-mark" aria-hidden="true">i</span>
+            <p><strong>কীভাবে ব্যবহার করবে?</strong><br>নোটস বা Suggestions বেছে নাও, তারপর বিষয় বা অধ্যায়ের নাম দিয়ে খুঁজে PDF খুলে পড়ো।</p>
+          </div>
+          <section class="study-panel" id="studyPanel" hidden aria-live="polite">
+            <div class="study-panel-head"><div><h2 id="panelTitle">নোটস</h2><p id="panelSubtitle">তোমার ব্যাচের প্রকাশিত স্টাডি ম্যাটেরিয়াল</p></div><span class="study-count" id="resultCount">0</span></div>
+            <div class="study-tools">
+              <input class="study-filter" id="searchMaterials" type="search" placeholder="বিষয় বা অধ্যায় খুঁজুন" autocomplete="off" aria-label="বিষয় বা অধ্যায় খুঁজুন">
+              <select class="study-filter" id="subjectFilter" aria-label="বিষয় অনুযায়ী বাছাই"><option value="">সব বিষয়</option></select>
+            </div>
+            <div class="study-items" id="materialItems"><div class="study-state">স্টাডি ম্যাটেরিয়াল লোড হচ্ছে…</div></div>
+          </section>
+        </main>`;
+    }
+
+    function materialsForMode() {
+      return allMaterials.filter(item => currentMode === "notes"
+        ? (item.type || "notes") === "notes"
+        : item.type === "suggestion" && Number(item.year) === currentYear);
+    }
+
+    function renderMaterials() {
+      if (loadMessage) {
+        $("resultCount").textContent = "—";
+        $("materialItems").innerHTML = `<div class="study-state">${esc(loadMessage)}</div>`;
+        return;
+      }
+      const matchingMode = materialsForMode();
+      const searchText = $("searchMaterials").value.trim().toLocaleLowerCase();
+      const selectedSubject = $("subjectFilter").value;
+      const filtered = matchingMode.filter(item => {
+        const haystack = `${item.subject || ""} ${item.chapter || ""} ${item.title || ""} ${item.description || ""}`.toLocaleLowerCase();
+        return (!searchText || haystack.includes(searchText)) && (!selectedSubject || item.subject === selectedSubject);
+      }).sort((a, b) => String(a.subject || "").localeCompare(String(b.subject || "")) || String(a.chapter || a.title || "").localeCompare(String(b.chapter || b.title || "")));
+
+      const previousSubject = $("subjectFilter").value;
+      const subjects = [...new Set(matchingMode.map(item => item.subject).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b)));
+      $("subjectFilter").innerHTML = '<option value="">সব বিষয়</option>' + subjects.map(subject => `<option value="${esc(subject)}">${esc(subject)}</option>`).join("");
+      if (subjects.includes(previousSubject)) $("subjectFilter").value = previousSubject;
+
+      $("resultCount").textContent = filtered.length.toLocaleString("bn-BD");
+      if (!filtered.length) {
+        const noAny = matchingMode.length === 0;
+        $("materialItems").innerHTML = `<div class="study-state">${noAny ? "এই বিভাগে এখনো কোনো ম্যাটেরিয়াল প্রকাশ করা হয়নি।" : "এই খোঁজের সঙ্গে মেলে এমন কোনো ম্যাটেরিয়াল নেই।"}<br><span>পরে আবার দেখো, অথবা অন্য বিষয় বেছে নাও।</span></div>`;
+        return;
+      }
+      $("materialItems").innerHTML = filtered.map(item => {
+        const title = item.chapter || item.title || "Study Material";
+        const yearLabel = item.type === "suggestion" ? ` <span>· ${esc(item.year || currentYear)}</span>` : "";
+        return `<article class="study-item">
+          <span class="study-item-mark">${icons.file}</span>
+          <div class="study-item-main">
+            <h3>${esc(title)}</h3>
+            ${item.description ? `<p class="study-item-desc">${esc(item.description)}</p>` : ""}
+            <div class="study-item-meta"><span>${esc(item.batch || "")}</span><span>·</span><span>${esc(item.subject || "বিষয় উল্লেখ নেই")}</span>${yearLabel}</div>
+            <div class="study-item-actions">
+              <button class="study-action primary" type="button" data-preview="${esc(item.id)}">${icons.eye} PDF প্রিভিউ</button>
+              <a class="study-action" href="${esc(item.pdfUrl || "#")}" ${item.pdfUrl ? 'target="_blank" rel="noopener noreferrer"' : 'aria-disabled="true"'}>${icons.external} খুলুন / ডাউনলোড</a>
+            </div>
+          </div>
+        </article>`;
+      }).join("");
+
+      const byId = new Map(filtered.map(item => [item.id, item]));
+      $("materialItems").querySelectorAll("[data-preview]").forEach(button => {
+        button.addEventListener("click", () => {
+          const item = byId.get(button.dataset.preview);
+          if (item) openPreview(item.pdfUrl, item.chapter || item.title || "PDF Preview");
+        });
+      });
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+      $("notesMode").setAttribute("aria-pressed", String(mode === "notes"));
+      $("suggestionsMode").setAttribute("aria-pressed", String(mode === "suggestions"));
+      $("studyPanel").hidden = false;
+      $("studyHowto").hidden = true;
+      $("panelTitle").textContent = mode === "notes" ? "নোটস" : `Suggestions ${currentYear}`;
+      $("panelSubtitle").textContent = mode === "notes" ? "তোমার ব্যাচের প্রকাশিত নোটস" : `${currentYear} সালের পরীক্ষার Suggestions`;
+      $("searchMaterials").value = "";
+      $("subjectFilter").value = "";
+      renderMaterials();
+      $("studyPanel").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    }
+
+    function openPreview(url, title) {
+      if (!url || !/^https?:\/\//i.test(url)) { showToast("এই PDF-এর লিংক সঠিক নয়।", "error"); return; }
+      $("viewTitle").textContent = title;
+      $("pdfFrame").src = url;
+      $("viewer").classList.add("show");
+      document.body.style.overflow = "hidden";
+      $("closeViewer").focus();
+    }
+    function closePreview() {
+      $("viewer").classList.remove("show");
+      $("pdfFrame").src = "about:blank";
+      document.body.style.overflow = "";
+    }
+
+    async function loadMaterials() {
+      const currentStudent = student;
+      try {
+        const batch = String(currentStudent.className || currentStudent.batch || "").trim();
+        if (!batch) {
+          loadMessage = "তোমার প্রোফাইলে ব্যাচের তথ্য পাওয়া যায়নি। Admin-এর সঙ্গে যোগাযোগ করো।";
+          renderMaterials();
+          return;
+        }
+        const snapshot = await getDocs(query(collection(db, "studyMaterials"), where("batch", "==", batch)));
+        allMaterials = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() })).filter(item => item.published !== false);
+        loadMessage = "";
+        renderMaterials();
+      } catch (error) {
+        console.error("Study materials load failed:", error);
+        loadMessage = "স্টাডি ম্যাটেরিয়াল লোড করা যায়নি। লগইন, ব্যাচের নাম ও Firestore Rules পরীক্ষা করো।";
+        renderMaterials();
+      }
+    }
+
+    async function start() {
+      if (!student) { window.location.href = "../index.html"; return; }
+      try {
+        const fresh = await refreshActiveStudent(student.docId);
+        if (fresh) student = fresh;
+      } catch {}
+      shell.innerHTML = `${renderStudentHeader(student, "study")}${pageMarkup()}`;
+      $("notesMode").addEventListener("click", () => setMode("notes"));
+      $("suggestionsMode").addEventListener("click", () => setMode("suggestions"));
+      $("searchMaterials").addEventListener("input", renderMaterials);
+      $("subjectFilter").addEventListener("change", renderMaterials);
+      $("closeViewer").addEventListener("click", closePreview);
+      $("viewer").addEventListener("click", event => { if (event.target === $("viewer")) closePreview(); });
+      document.addEventListener("keydown", event => { if (event.key === "Escape" && $("viewer").classList.contains("show")) closePreview(); });
+      await loadMaterials();
+    }
+
+    start();
+  </script>
+</body>
+</html>
