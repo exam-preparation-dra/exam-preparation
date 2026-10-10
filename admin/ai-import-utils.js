@@ -1,0 +1,489 @@
+/* =========================================================
+   AI QUESTION IMPORT PARSER
+   Expected block format (repeatable, blank-line separated):
+
+   Question:
+   English question
+
+   বাংলা প্রশ্ন:
+   Bengali question
+
+   A:
+   Option
+   B:
+   Option
+   C:
+   Option
+   D:
+   Option
+
+   Correct Answer:
+   B
+
+   Subject:
+   Physics
+
+   Chapter:
+   Motion
+
+   Topic:
+   Velocity
+
+   Marks:
+   1
+   ========================================================= */
+
+const FIELD_LABELS = {
+  question_en: /^Question:\s*(.*)$/i,
+  question_bn: /^বাংলা প্রশ্ন:\s*(.*)$/,
+  A: /^A[:.]\s*(.*)$/,
+  B: /^B[:.]\s*(.*)$/,
+  C: /^C[:.]\s*(.*)$/,
+  D: /^D[:.]\s*(.*)$/,
+  correctAnswer: /^Correct Answer:\s*(.*)$/i,
+  explanation: /^ব্যাখ্যা:\s*(.*)$/,
+  subject: /^Subject:\s*(.*)$/i,
+  chapter: /^Chapter:\s*(.*)$/i,
+  topic: /^Topic:\s*(.*)$/i,
+  marks: /^Marks:\s*(.*)$/i,
+};
+
+// Splits raw pasted text into candidate blocks. A new block starts at each
+// "Question:" line so admin can paste many questions back-to-back.
+function splitIntoBlocks(rawText) {
+  const lines = rawText.replace(/\r\n/g, "\n").split("\n");
+  const blocks = [];
+  let current = [];
+  lines.forEach(line => {
+    if (/^Question:/i.test(line.trim()) && current.length > 0) {
+      blocks.push(current);
+      current = [];
+    }
+    current.push(line);
+  });
+  if (current.length > 0) blocks.push(current);
+  return blocks.map(b => b.join("\n").trim()).filter(Boolean);
+}
+
+// Parses one block of lines into a field map by walking label -> value pairs.
+// Tolerant of two common AI output styles for the same template: the label
+// alone on its own line with the value on the next line ("A:\nOption"), or
+// the value inline on the same line ("A: Option") — both are valid renderings
+// of the exact format the admin is asked to request, so both must parse.
+// Some AI outputs ignore the "one option per line" instruction and squeeze
+// all four options onto a single line, e.g. "A: ২৪ B: ৩০ C: ৩২ D: ৩৪". The
+// line-based loop below only matches a label at the START of a line, so
+// without this it would swallow " B: ৩০ C: ৩২ D: ৩৪" whole as option A's
+// value and report B/C/D as missing. Detect 2+ "A:"/"B:"/"C:"/"D:" markers
+// on one line and split it back into one line per option before parsing.
+// A normal single-marker line (the documented format) is returned as-is.
+function expandInlineOptionLine(line) {
+  const markers = [...line.matchAll(/([ABCD])[:.]\s*/g)];
+  if (markers.length < 2) return [line];
+  return markers.map((m, i) => {
+    const start = m.index;
+    const end = i + 1 < markers.length ? markers[i + 1].index : line.length;
+    return line.slice(start, end).trim();
+  });
+}
+
+function parseBlock(blockText) {
+  const lines = blockText.split("\n").map(l => l.trim()).flatMap(expandInlineOptionLine);
+  const fields = {};
+  let currentKey = null;
+  let buffer = [];
+
+  function flush() {
+    if (currentKey) fields[currentKey] = buffer.join("\n").trim();
+    buffer = [];
+  }
+
+  lines.forEach(line => {
+    let matchedKey = null, inlineValue = "";
+    for (const [key, re] of Object.entries(FIELD_LABELS)) {
+      const m = line.match(re);
+      if (m) { matchedKey = key; inlineValue = (m[1] || "").trim(); break; }
+    }
+    if (matchedKey) {
+      flush();
+      currentKey = matchedKey;
+      if (inlineValue) buffer.push(inlineValue);
+    } else if (line !== "") {
+      buffer.push(line);
+    }
+  });
+  flush();
+  return fields;
+}
+
+// Validates one parsed field map against required structure. Returns
+// { valid, errors[], question } — malformed data is never silently imported.
+//
+// NOTE: subject/chapter/topic are NOT matched against pasted text anymore.
+// The admin picks one target chapter (via dropdown, same as Quick Add) for
+// the whole pasted batch, and every parsed question is assigned to that
+// target directly — no name-matching, no "not found in syllabus" errors.
+// Any Subject:/Chapter:/Topic: lines in the pasted text are still parsed so
+// they don't get swallowed into other fields, and are shown as reference
+// text only — they never block the import.
+function validateParsed(fields, target) {
+  const errors = [];
+
+  if (!fields.question_en) errors.push("ইংরেজি প্রশ্ন অনুপস্থিত");
+  if (!fields.question_bn) errors.push("বাংলা প্রশ্ন অনুপস্থিত");
+  ["A", "B", "C", "D"].forEach(k => { if (!fields[k]) errors.push(`অপশন ${k} অনুপস্থিত`); });
+
+  const correct = (fields.correctAnswer || "").trim().toUpperCase();
+  if (!["A", "B", "C", "D"].includes(correct)) errors.push("সঠিক উত্তর A/B/C/D এর একটি হতে হবে");
+
+  const marksNum = Number(fields.marks);
+  const validMarks = fields.marks && !isNaN(marksNum) && marksNum > 0;
+
+  if (!target || !target.subjectId || !target.chapterId || !target.topicId) {
+    errors.push("উপরে থেকে বিষয় / অধ্যায় / টপিক নির্বাচন করুন — সব প্রশ্ন এখানেই যোগ হবে");
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    question: {
+      question_en: fields.question_en || "",
+      question_bn: fields.question_bn || "",
+      options_bn: { A: fields.A || "", B: fields.B || "", C: fields.C || "", D: fields.D || "" },
+      correctAnswer: correct,
+      explanation_bn: fields.explanation || "",
+      marks: validMarks ? marksNum : 1,
+      subjectRaw: fields.subject || "",
+      chapterRaw: fields.chapter || "",
+      topicRaw: fields.topic || "",
+      subjectId: target?.subjectId || null,
+      chapterId: target?.chapterId || null,
+      topicId: target?.topicId || null
+    }
+  };
+}
+
+// ---------- Main entry point ----------
+// target: { subjectId, chapterId, topicId } — chosen once by the admin via
+// dropdown in the import UI (same pattern as Quick Add on exam-create.html).
+// Every question parsed out of rawText is assigned to this same target,
+// regardless of what the AI wrote in its own Subject/Chapter/Topic lines.
+export function parseAiImportText(rawText, target) {
+  const blocks = splitIntoBlocks(rawText);
+  return blocks.map((block, index) => {
+    const fields = parseBlock(block);
+    const result = validateParsed(fields, target);
+    return { index, rawBlock: block, ...result };
+  });
+}
+
+// ---------- Gemini API key (browser-local only, shared across every admin
+// page that needs it — question-import.html and questions.html both read
+// from this same localStorage key, so the admin only has to enter it once). ----------
+const GEMINI_KEY_STORAGE = "gemini_api_key";
+
+export function getStoredApiKey() {
+  return localStorage.getItem(GEMINI_KEY_STORAGE) || "";
+}
+
+export function setStoredApiKey(key) {
+  const trimmed = (key || "").trim();
+  if (trimmed) localStorage.setItem(GEMINI_KEY_STORAGE, trimmed);
+  return trimmed;
+}
+
+export async function promptForApiKey(forceAsk = false) {
+  const existing = getStoredApiKey();
+  if (existing && !forceAsk) return existing;
+  const key = await AppPopup.prompt(
+    { bn: "তোমার Gemini API key দাও (Google AI Studio থেকে ফ্রি নেওয়া যায়) — এটা শুধু এই ব্রাউজারে সেভ থাকবে, সার্ভার/রিপোতে যাবে না:",
+      en: "Enter your Gemini API key (free from Google AI Studio) — it's only saved in this browser, never sent to a server or repo:" },
+    existing || "",
+    { title: { bn: "API Key", en: "API key" }, placeholder: "AIza…" }
+  );
+  if (key && key.trim()) {
+    localStorage.setItem(GEMINI_KEY_STORAGE, key.trim());
+    return key.trim();
+  }
+  return existing || null;
+}
+
+// ---------- Ready-to-copy AI prompt template (requirement: "Copy AI Prompt" helper) ----------
+// Subject/Chapter/Topic are no longer requested from the AI — the admin
+// selects the target chapter once in the import UI, so the AI only needs
+// to produce question content. Kept as optional context lines for the AI's
+// own understanding of the topic, not for parsing/validation.
+export function buildAiPromptTemplate({ subjectName, chapterName, topicName, count }) {
+  return `আমাকে ${count || "N"} টি exam-oriented MCQ তৈরি করে দাও, বিষয়: ${subjectName || "[বিষয়]"}, অধ্যায়: ${chapterName || "[অধ্যায়]"}, টপিক: ${topicName || "[টপিক]"}।
+
+প্রতিটি প্রশ্নের জন্য ঠিক এই ফরম্যাট ব্যবহার করো, প্রতিটি প্রশ্নের মাঝে একটি ফাঁকা লাইন রেখে:
+
+Question:
+[English question]
+
+বাংলা প্রশ্ন:
+[Bengali question]
+
+A:
+[Bengali option]
+B:
+[Bengali option]
+C:
+[Bengali option]
+D:
+[Bengali option]
+
+Correct Answer:
+[A/B/C/D]
+
+ব্যাখ্যা:
+[সঠিক উত্তর কেন সঠিক তার ২-৩ বাক্যের সংক্ষিপ্ত বাংলা ব্যাখ্যা — শিক্ষার্থী রেজাল্টে ভুল উত্তর দিলে এটাই দেখবে]
+
+Marks:
+1
+
+এই ফরম্যাটের বাইরে কোনো অতিরিক্ত টেক্সট বা নম্বরিং দিও না।`;
+}
+
+/* =========================================================
+   GEMINI (Google AI Studio) IMAGE-BASED QUESTION GENERATION
+   Calls the Gemini API directly from the browser using an
+   admin-supplied API key (stored client-side only — never
+   committed to the repo). Reuses buildAiPromptTemplate() so
+   the output format Gemini is asked to produce is identical
+   to the manual copy-paste flow, meaning parseAiImportText()
+   can parse it without any changes.
+   ========================================================= */
+
+// Google renames/retires Gemini models every few months (2.0 -> 2.5 -> 3 ->
+// 3.6 ...). Rather than hardcoding one model id that breaks the whole
+// feature on the next rename, we try a short list in order and fall back
+// to "gemini-flash-latest" (an alias Google keeps pointed at whichever
+// Flash model is current) if all named versions fail with a 404.
+const GEMINI_MODEL_CANDIDATES = ["gemini-3.6-flash", "gemini-2.5-flash", "gemini-flash-latest"];
+
+function geminiEndpoint(model) {
+  return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+}
+
+// Shared low-level caller: sends `parts` (text + optional inline_data image
+// parts) to Gemini, trying each model candidate in turn on 404/retired-model
+// errors. Returns the raw text response. Used by both the full
+// image/topic -> many-questions flow and the single-question explanation flow.
+async function callGeminiApi(apiKey, parts) {
+  const body = { contents: [{ parts }] };
+  let lastError = null;
+  for (const model of GEMINI_MODEL_CANDIDATES) {
+    let res;
+    try {
+      res = await fetch(`${geminiEndpoint(model)}?key=${encodeURIComponent(apiKey)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+    } catch (networkErr) {
+      lastError = new Error("Gemini এ পৌঁছানো যায়নি — ইন্টারনেট চেক করো।");
+      continue;
+    }
+
+    if (res.ok) {
+      const data = await res.json();
+      const text = (data?.candidates?.[0]?.content?.parts || [])
+        .map(p => p.text || "")
+        .join("\n")
+        .trim();
+      if (!text) { lastError = new Error("Gemini থেকে কোনো টেক্সট পাওয়া যায়নি।"); continue; }
+      return text;
+    }
+
+    let detail = "";
+    try { detail = (await res.json())?.error?.message || ""; } catch { /* ignore */ }
+
+    if (res.status === 404 || /no longer available|not found/i.test(detail)) {
+      lastError = new Error(`মডেল "${model}" আর নেই — পরবর্তী মডেল চেষ্টা করা হচ্ছে...`);
+      continue;
+    }
+    if (res.status === 400 && /API key/i.test(detail)) throw new Error("Gemini API key ভুল — সঠিক key দিয়ে আবার চেষ্টা করো।");
+    if (res.status === 429) throw new Error("Gemini free tier এর সীমা শেষ — একটু পরে আবার চেষ্টা করো।");
+    throw new Error(`Gemini API সমস্যা (${res.status}): ${detail || "অজানা সমস্যা"}`);
+  }
+  throw lastError || new Error("কোনো Gemini মডেল দিয়েই কাজ করা গেল না।");
+}
+
+// imageParts: [{ mimeType, base64 }, ...] — base64 WITHOUT the
+// "data:image/...;base64," prefix (already stripped by the caller).
+// Images are OPTIONAL: with none, Gemini generates purely from
+// subject/chapter/topic + extraInstructions (its own knowledge) instead of
+// reading a photo — useful when the admin doesn't have a book-page image
+// and just wants to type a topic.
+// extraInstructions: free-text from the admin — e.g. desired difficulty
+// level, a topic description, or a different marks scheme — appended to
+// the standard prompt so one call covers count + difficulty + marks + (optional) images.
+export async function generateQuestionsFromImage({ apiKey, imageParts, subjectName, chapterName, topicName, count, extraInstructions }) {
+  if (!apiKey) throw new Error("Gemini API key দেওয়া হয়নি।");
+  const hasImages = imageParts && imageParts.length > 0;
+  const hasInstructions = extraInstructions && extraInstructions.trim();
+  if (!hasImages && !hasInstructions) {
+    throw new Error("অন্তত একটি ছবি দাও, অথবা নিচে কী নিয়ে প্রশ্ন চাও তা লিখে দাও।");
+  }
+
+  let instructionText = buildAiPromptTemplate({ subjectName, chapterName, topicName, count });
+  if (hasImages) {
+    instructionText += "\n\nউপরে দেওয়া ছবি(গুলো)র বিষয়বস্তু পড়ে তার ওপর ভিত্তি করে প্রশ্নগুলো তৈরি করো।";
+  }
+  if (hasInstructions) {
+    instructionText += hasImages
+      ? `\n\nঅতিরিক্ত নির্দেশনা (মানো): ${extraInstructions.trim()}`
+      : `\n\nকোনো ছবি দেওয়া হয়নি — নিচের বিষয়/নির্দেশনার ওপর ভিত্তি করে তোমার নিজের জ্ঞান থেকেই প্রশ্নগুলো বানাও:\n${extraInstructions.trim()}`;
+  }
+
+  const parts = [
+    { text: instructionText },
+    ...(hasImages ? imageParts.map(p => ({ inline_data: { mime_type: p.mimeType, data: p.base64 } })) : [])
+  ];
+  return callGeminiApi(apiKey, parts);
+}
+
+// ---------- Single-question explanation generator (used from the question
+// bank page: a "✨ AI দিয়ে ব্যাখ্যা তৈরি করুন" button next to any question
+// that doesn't have one yet). Sends just that one question + its 4 options +
+// correct answer — no image, no bulk formatting — and gets back a short
+// plain-text Bengali explanation, ready to save straight into
+// explanation_bn. ----------
+export async function generateExplanationForQuestion({ apiKey, question_bn, options_bn, correctAnswer }) {
+  if (!apiKey) throw new Error("Gemini API key দেওয়া হয়নি।");
+  const prompt = `নিচের বহুনির্বাচনী প্রশ্নের সঠিক উত্তরটি কেন সঠিক, তার একটি সংক্ষিপ্ত (২-৩ বাক্যের) সহজবোধ্য বাংলা ব্যাখ্যা লেখো। উত্তরে শুধু ব্যাখ্যাটুকুই লিখবে — কোনো ভূমিকা, লেবেল, নম্বরিং বা অতিরিক্ত টেক্সট দেবে চৈতন্য না।
+
+প্রশ্ন: ${question_bn}
+A: ${options_bn.A || ""}
+B: ${options_bn.B || ""}
+C: ${options_bn.C || ""}
+D: ${options_bn.D || ""}
+সঠিক উত্তর: ${correctAnswer}`;
+
+  return callGeminiApi(apiKey, [{ text: prompt }]);
+}
+
+// ---------- Name transliteration (used when admin reviews a student join
+// request typed in English letters — e.g. "Rahim Uddin" -> "রহিম উদ্দিন").
+// Admin can still edit the result before approving, since phonetic
+// transliteration of names is inherently a best-guess. ----------
+export async function transliterateToBengali(apiKey, rawName) {
+  if (!apiKey) throw new Error("Gemini API key দেওয়া হয়নি।");
+  const trimmed = (rawName || "").trim();
+  if (!trimmed) return "";
+  const prompt = `এই নামটা যদি ইংরেজি অক্ষরে লেখা বাংলা নাম হয়, সেটাকে সঠিক বাংলা বানানে লিখে দাও (একটা প্রচলিত বাংলা নাম হিসেবে)। নামটা যদি ইতিমধ্যেই বাংলায় লেখা থাকে, সেটা অপরিবর্তিত রেখে দাও। উত্তরে শুধু নামটাই লিখবে — কোনো ব্যাখ্যা, উপসর্গ, উদ্ধৃতিচিহ্ন বা অতিরিক্ত টেক্সট দেবে না।
+
+নাম: ${trimmed}`;
+
+  return callGeminiApi(apiKey, [{ text: prompt }]);
+}
+
+// ---------- Bengali<->English translation for syllabus terms (chapter/topic
+// names) — auto-detects which language was typed and returns both. Used by
+// the syllabus wizard so the admin only ever has to type a name once, in
+// whichever language is easiest for them. This is TRANSLATION (meaning),
+// not phonetic transliteration — different from transliterateToBengali()
+// above, which is for people's names. ----------
+export async function translateSyllabusTerm(apiKey, text) {
+  if (!apiKey) throw new Error("Gemini API key দেওয়া হয়নি।");
+  const trimmed = (text || "").trim();
+  if (!trimmed) return { bn: "", en: "" };
+  const isBengali = /[\u0980-\u09FF]/.test(trimmed);
+  const prompt = isBengali
+    ? `এটা একটা পাঠ্যবইয়ের অধ্যায়/টপিকের নাম। এর সঠিক, স্বাভাবিক ইংরেজি অনুবাদ দাও। শুধু ইংরেজি অনুবাদটাই লিখবে — কোনো ব্যাখ্যা, উদ্ধৃতিচিহ্ন বা অতিরিক্ত টেক্সট দেবে না।\n\nবাংলা: ${trimmed}`
+    : `This is a textbook chapter/topic name. Give its correct, natural Bengali translation. Return ONLY the Bengali text — no explanation, no quotes, no extra text.\n\nEnglish: ${trimmed}`;
+  const result = (await callGeminiApi(apiKey, [{ text: prompt }])).trim();
+  return isBengali ? { bn: trimmed, en: result } : { bn: result, en: trimmed };
+}
+// ---------- Text-to-speech (used by admin/voice-generator.html) ----------
+// Gemini's TTS models are separate from the text models above, so they get
+// their own candidate list/fallback chain rather than reusing
+// GEMINI_MODEL_CANDIDATES. Same reasoning as there: Google renames/retires
+// preview model ids periodically.
+const GEMINI_TTS_MODEL_CANDIDATES = ["gemini-2.5-flash-preview-tts"];
+
+// Returns raw 16-bit PCM audio bytes (24kHz, mono) as an ArrayBuffer.
+// voiceName: one of Gemini's prebuilt voices (default "Kore" — a warm,
+// natural-sounding voice that works well for Bengali).
+export async function generateSpeechPcm(apiKey, text, { voiceName = "Kore", stylePrompt = "" } = {}) {
+  if (!apiKey) throw new Error("Gemini API key দেওয়া হয়নি।");
+  const trimmed = (text || "").trim();
+  if (!trimmed) throw new Error("খালি লাইন — বলার মতো কিছু নেই।");
+  const promptText = stylePrompt ? `${stylePrompt}: ${trimmed}` : trimmed;
+  const body = {
+    contents: [{ parts: [{ text: promptText }] }],
+    generationConfig: {
+      responseModalities: ["AUDIO"],
+      speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } }
+    }
+  };
+
+  let lastError = null;
+  for (const model of GEMINI_TTS_MODEL_CANDIDATES) {
+    let res;
+    try {
+      res = await fetch(`${geminiEndpoint(model)}?key=${encodeURIComponent(apiKey)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+    } catch (networkErr) {
+      lastError = new Error("Gemini এ পৌঁছানো যায়নি — ইন্টারনেট চেক করো।");
+      continue;
+    }
+
+    if (res.ok) {
+      const data = await res.json();
+      const b64 = data?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      if (!b64) { lastError = new Error("Gemini থেকে অডিও পাওয়া যায়নি।"); continue; }
+      const binary = atob(b64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return bytes.buffer;
+    }
+
+    let detail = "";
+    try { detail = (await res.json())?.error?.message || ""; } catch { /* ignore */ }
+    if (res.status === 404 || /no longer available|not found/i.test(detail)) {
+      lastError = new Error(`TTS মডেল "${model}" আর নেই — পরবর্তী মডেল চেষ্টা করা হচ্ছে...`);
+      continue;
+    }
+    if (res.status === 400 && /API key/i.test(detail)) throw new Error("Gemini API key ভুল — সঠিক key দিয়ে আবার চেষ্টা করো।");
+    if (res.status === 429) throw new Error("Gemini free tier এর সীমা শেষ — একটু পরে আবার চেষ্টা করো।");
+    throw new Error(`Gemini TTS সমস্যা (${res.status}): ${detail || "অজানা সমস্যা"}`);
+  }
+  throw lastError || new Error("কোনো Gemini TTS মডেল দিয়েই কাজ করা গেল না।");
+}
+
+// Wraps raw 16-bit PCM (24kHz, mono -- what Gemini TTS returns) in a
+// minimal WAV header so it plays directly in <audio>/browsers without
+// needing ffmpeg or any audio library.
+export function pcmToWavBlob(pcmArrayBuffer, sampleRate = 24000) {
+  const pcmBytes = new Uint8Array(pcmArrayBuffer);
+  const header = new ArrayBuffer(44);
+  const view = new DataView(header);
+  const writeStr = (offset, str) => { for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)); };
+  const blockAlign = 2; // 1 channel * 16-bit
+  const byteRate = sampleRate * blockAlign;
+  writeStr(0, "RIFF"); view.setUint32(4, 36 + pcmBytes.length, true);
+  writeStr(8, "WAVE"); writeStr(12, "fmt "); view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); view.setUint16(22, 1, true); // PCM, mono
+  view.setUint32(24, sampleRate, true); view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true); view.setUint16(34, 16, true);
+  writeStr(36, "data"); view.setUint32(40, pcmBytes.length, true);
+  return new Blob([header, pcmBytes], { type: "audio/wav" });
+}
+
+export function fileToImagePart(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result || "");
+      const base64 = result.split(",")[1] || "";
+      resolve({ mimeType: file.type || "image/jpeg", base64 });
+    };
+    reader.onerror = () => reject(new Error("ছবি পড়া যায়নি।"));
+    reader.readAsDataURL(file);
+  });
+}
