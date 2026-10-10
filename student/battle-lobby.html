@@ -59,6 +59,7 @@ body{background:var(--bg-app);color:var(--text-primary);font-family:var(--font-b
 </style>
 <link rel="stylesheet" href="../css/desktop.css">
 <script src="../js/utils/desktop-layout.js" defer></script>
+<script src="../js/popup.js"></script>
 </head>
 <body data-page="battle-lobby">
 <div class="battle-page">
@@ -369,7 +370,7 @@ function enterLobby(code){
     startLobbyTimer(m.startsAt,isHost,code,m);
   });
   document.getElementById("startBtn").onclick=async()=>{try{await startMatch(code,student.studentId);}catch(e){showErr(errorNote,e.message||"Battle শুরু করা যায়নি।");}};
-  document.getElementById("deleteBattleBtn")?.addEventListener("click",async()=>{ if(!confirm(`Battle ${code} permanently delete করতে চাও?\n\nBattle-এর XP/History থেকেও এটি বাদ যাবে।`)) return; try{await deleteMatch(code,student.studentId); unsub?.(); clearLobbyTimer(); showOnly("mode");}catch(e){showErr(errorNote,e.message==="NOT_HOST"?"শুধু Host এই Battle delete করতে পারবে।":"Battle delete করা যায়নি।");}});
+  document.getElementById("deleteBattleBtn")?.addEventListener("click",async()=>{ if(!await AppPopup.confirm({ bn: `Battle ${code} permanently delete করতে চাও?\n\nBattle-এর XP/History থেকেও এটি বাদ যাবে।`, en: `Permanently delete battle ${code}?\n\nIt will also be removed from XP and history.` })) return; try{await deleteMatch(code,student.studentId); unsub?.(); clearLobbyTimer(); showOnly("mode");}catch(e){showErr(errorNote,e.message==="NOT_HOST"?"শুধু Host এই Battle delete করতে পারবে।":"Battle delete করা যায়নি।");}});
   document.getElementById("copyCodeBtn").onclick=async()=>{
     try{await navigator.clipboard.writeText(code);showErr(errorNote,"Code কপি হয়েছে।");}catch{showErr(errorNote,"কপি করা যায়নি।");}
   };

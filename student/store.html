@@ -195,6 +195,7 @@
 </style>
 <link rel="stylesheet" href="../css/desktop.css">
 <script src="../js/utils/desktop-layout.js" defer></script>
+<script src="../js/popup.js"></script>
 </head>
 <body data-page="store">
 <div class="app-shell">
@@ -234,15 +235,6 @@
 
 </div>
 
-<div id="confirmOverlay" class="confirm-overlay hidden">
-  <div class="confirm-box">
-    <p class="confirm-box-msg" id="confirmMsg"></p>
-    <div class="confirm-box-actions">
-      <button type="button" class="btn btn-secondary" id="confirmCancelBtn">বাতিল</button>
-      <button type="button" class="btn btn-primary" id="confirmOkBtn">কিনবো</button>
-    </div>
-  </div>
-</div>
 
 <div id="debugErrorPanel" class="debug-error-panel hidden">
   <div class="debug-error-panel-head">
@@ -642,28 +634,7 @@ document.getElementById("debugErrorCopyBtn").addEventListener("click", async () 
     called after an await (i.e. not directly inside the tap), making the
     checkout button look like it does nothing. */
 function showConfirmModal(message) {
-  return new Promise((resolve) => {
-    const overlay = document.getElementById("confirmOverlay");
-    document.getElementById("confirmMsg").textContent = message;
-    overlay.classList.remove("hidden");
-
-    const cleanup = (result) => {
-      overlay.classList.add("hidden");
-      okBtn.removeEventListener("click", onOk);
-      cancelBtn.removeEventListener("click", onCancel);
-      overlay.removeEventListener("click", onOverlay);
-      resolve(result);
-    };
-    const okBtn = document.getElementById("confirmOkBtn");
-    const cancelBtn = document.getElementById("confirmCancelBtn");
-    const onOk = () => cleanup(true);
-    const onCancel = () => cleanup(false);
-    const onOverlay = (e) => { if (e.target === overlay) cleanup(false); };
-
-    okBtn.addEventListener("click", onOk);
-    cancelBtn.addEventListener("click", onCancel);
-    overlay.addEventListener("click", onOverlay);
-  });
+  return AppPopup.confirm(message, { okText: { bn: "কিনবো", en: "Buy" }, title: { bn: "কেনাকাটা নিশ্চিত করো", en: "Confirm purchase" }, icon: "question", danger: false });
 }
 
 // Briefly flashes each just-purchased item's ticket and pops a "+qty" over
@@ -724,7 +695,7 @@ document.getElementById("checkoutBtn").addEventListener("click", async (e) => {
   }
 
   const summary = lines.map(l => `${STORE_ITEMS.find(i => i.id === l.itemId)?.name} × ${l.qty}`).join(", ");
-  const confirmed = await showConfirmModal(`${summary}\n\nমোট ${fmt(totalCost)} XP খরচ হবে। কিনতে চাও?`);
+  const confirmed = await showConfirmModal({ bn: `${summary}\n\nমোট ${fmt(totalCost)} XP খরচ হবে। কিনতে চাও?`, en: `${summary}\n\nThis will cost ${fmt(totalCost)} XP. Buy now?` });
   if (!confirmed) return;
 
   const originalLabel = btn.textContent;

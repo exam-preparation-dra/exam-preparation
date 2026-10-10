@@ -379,6 +379,7 @@
 <script src="../js/utils/nav-boot.js"></script>
 <link rel="stylesheet" href="../css/desktop.css">
 <script src="../js/utils/desktop-layout.js" defer></script>
+<script src="../js/popup.js"></script>
 </head>
 <body data-page="profile" oncontextmenu="return false;">
 <div class="app-shell" id="shell">
@@ -1132,7 +1133,7 @@ async function renderSettings() {
   });
 
   $("logoutBtn").addEventListener("click", async () => {
-    if (!confirm("লগআউট করবে?")) return;
+    if (!await AppPopup.confirm("লগআউট করবে?")) return;
     try { await studentLogout(); } catch (e) {}
     window.location.href = "../index.html";
   });
@@ -1777,7 +1778,7 @@ function renderReqsAndFriends() {
   el.querySelectorAll(".req-accept").forEach(b => b.addEventListener("click", () => acceptReq(b.dataset.id)));
   el.querySelectorAll(".req-reject").forEach(b => b.addEventListener("click", async () => { try { await rejectFriendRequest(b.dataset.id); refreshAfterFriendChange(); } catch (e) { showToast(friendlyError(e), "error"); } }));
   el.querySelectorAll(".friend-remove").forEach(b => b.addEventListener("click", async () => {
-    if (!confirm("এই বন্ধুকে তালিকা থেকে সরাতে চাও?")) return;
+    if (!await AppPopup.confirm("এই বন্ধুকে তালিকা থেকে সরাতে চাও?")) return;
     try { await removeFriend(student.studentId, b.dataset.id); showToast("সরানো হয়েছে", "success"); refreshAfterFriendChange(); } catch (e) { showToast(friendlyError(e), "error"); }
   }));
 }

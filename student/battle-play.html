@@ -75,6 +75,7 @@
   .score-bump{animation:scoreBump .7s cubic-bezier(.2,.9,.2,1)}
   @keyframes scoreBump{0%{transform:scale(1)}35%{transform:scale(1.3)}100%{transform:scale(1)}}
 </style>
+<script src="../js/popup.js"></script>
 </head>
 <body class="battle-page">
 <div class="app-shell" id="shell">
@@ -307,9 +308,9 @@ setInterval(() => {
 }, 1000);
 
 function showToast(msg, ms = 3000) {
-  toast.innerHTML = msg;
-  toast.classList.remove("hidden");
-  setTimeout(() => toast.classList.add("hidden"), ms);
+  // shared themed toast; keep the old API (messages may contain <br>/<b>)
+  const text = String(msg).replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "");
+  AppPopup.toast(text, "info", ms);
 }
 
 function nameOf(m, studentId) {

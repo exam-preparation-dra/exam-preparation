@@ -139,6 +139,7 @@
 <script src="../js/utils/nav-boot.js"></script>
 <link rel="stylesheet" href="../css/desktop.css">
 <script src="../js/utils/desktop-layout.js" defer></script>
+<script src="../js/popup.js"></script>
 </head>
 <body data-page="leaderboard">
 <div class="app-shell" id="shell"><div class="state-block"><div class="spinner"></div></div></div>
@@ -611,7 +612,7 @@ document.addEventListener("input", (e) => {
   if (e.target.id === "frSearch") { S.q = e.target.value; const r = document.getElementById("frRes"); if (r) r.innerHTML = searchResultsHtml(); }
 });
 
-document.addEventListener("click", (e) => {
+document.addEventListener("click", async (e) => {
   const t = e.target.closest("[data-act]"); if (!t || t.disabled) return;
   if (t.dataset.act === "go" && e.target.closest("[data-stop]")) {
     const inner = e.target.closest("[data-act]");
@@ -633,7 +634,7 @@ document.addEventListener("click", (e) => {
     case "fr-add": run(() => sendFriendRequest(me(), id), "অনুরোধ পাঠানো হয়েছে"); break;
     case "fr-accept": run(() => acceptFriendRequest(id, me()), "বন্ধু যুক্ত হলো"); break;
     case "fr-reject": run(() => rejectFriendRequest(id), "বাদ দেওয়া হয়েছে"); break;
-    case "fr-remove": if (confirm("এই বন্ধুকে তালিকা থেকে সরাবে?")) run(() => removeFriend(me(), id), "বন্ধুত্ব শেষ হয়েছে"); break;
+    case "fr-remove": if (await AppPopup.confirm("এই বন্ধুকে তালিকা থেকে সরাবে?")) run(() => removeFriend(me(), id), "বন্ধুত্ব শেষ হয়েছে"); break;
     case "rival-set": run(() => setRival(me(), id), "রাইভাল ঠিক করা হয়েছে"); break;
     case "rival-clear": run(() => clearRival(me()), "রাইভাল সরানো হয়েছে"); break;
     case "jump": {

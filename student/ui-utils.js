@@ -36,34 +36,11 @@ export function toggleTheme() {
 }
 
 // ---------- Toast ----------
-let toastTimer = null;
+import "../js/popup.js";
 
 export function showToast(message, type = "default") {
-  let el = document.getElementById("app-toast");
-
-  if (!el) {
-    el = document.createElement("div");
-    el.id = "app-toast";
-    document.body.appendChild(el);
-  }
-
-  el.className =
-    `toast ${
-      type === "error"
-        ? "toast-error"
-        : type === "success"
-          ? "toast-success"
-          : ""
-    }`;
-
-  el.textContent = message;
-  el.style.display = "block";
-
-  clearTimeout(toastTimer);
-
-  toastTimer = setTimeout(() => {
-    el.style.display = "none";
-  }, 3200);
+  // Themed toast lives in popup.js (shared by every page, EN/বাংলা aware).
+  AppPopup.toast(message, type);
 }
 
 // ---------- Firebase error → Bengali-friendly message ----------

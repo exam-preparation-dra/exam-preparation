@@ -146,6 +146,7 @@
 <script src="../js/utils/nav-boot.js"></script>
 <link rel="stylesheet" href="../css/desktop.css">
 <script src="../js/utils/desktop-layout.js" defer></script>
+<script src="../js/popup.js"></script>
 </head>
 <body data-page="chat">
 <div class="app-shell" id="shell"><div class="state-block"><div class="spinner"></div></div></div>
@@ -602,7 +603,7 @@ async function run(fn, okMsg) {
 document.addEventListener("input", e => {
   if (e.target.id === "cxSearch") { S.q = e.target.value; renderList(); }
 });
-document.addEventListener("click", e => {
+document.addEventListener("click", async e => {
   const t = e.target.closest("[data-act]"); if (!t || t.disabled) return;
   const a = t.dataset.act, id = t.dataset.id;
   switch (a) {
@@ -634,10 +635,10 @@ document.addEventListener("click", e => {
       }, "গ্রুপে যোগ দিয়েছো");
       break;
     }
-    case "inv-no": if (confirm("এই আমন্ত্রণ বাদ দেবে?")) run(() => C.declineInvite(id, me()), "আমন্ত্রণ বাদ দেওয়া হয়েছে"); break;
+    case "inv-no": if (await AppPopup.confirm("এই আমন্ত্রণ বাদ দেবে?")) run(() => C.declineInvite(id, me()), "আমন্ত্রণ বাদ দেওয়া হয়েছে"); break;
     case "leave": {
       const room = activeRoom(); if (!room) break;
-      if (!confirm("এই গ্রুপ ছেড়ে দেবে?")) break;
+      if (!await AppPopup.confirm("এই গ্রুপ ছেড়ে দেবে?")) break;
       closeOverlay();
       run(async () => { await C.leaveGroup(room, me()); closeRoom(); }, "গ্রুপ ছেড়েছো");
       break;
