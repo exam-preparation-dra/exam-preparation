@@ -1108,7 +1108,7 @@ body:has(#hdrNavPersist) .app-shell > .state-block:only-child { z-index: 40; }
    v3 — tap bubble · loader · professional name dropdown
    ========================================================= */
 
-/* ---------- 1. No blue tap flash anywhere; bubble instead ---------- */
+/* ---------- 1. No blue tap flash anywhere ---------- */
 *, *::before, *::after { -webkit-tap-highlight-color: transparent; }
 a, button, summary, [role="button"], [role="tab"], [role="menuitem"], [role="switch"],
 .btn, .card--tap, .hdr-nav-tab, .hdr-menu-item, .hdr-user {
@@ -1122,26 +1122,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, [role="button"]:fo
   outline: 2px solid var(--color-accent); outline-offset: 2px;
 }
 
-.tap-bubble-layer { position: fixed; inset: 0; z-index: 2147483000; pointer-events: none; overflow: hidden; }
-.tap-bubble {
-  position: absolute; width: var(--d, 64px); height: var(--d, 64px);
-  margin: calc(var(--d, 64px) / -2) 0 0 calc(var(--d, 64px) / -2);
-  border-radius: 50%; pointer-events: none;
-  background: radial-gradient(circle at 36% 34%, rgba(255,255,255,.55) 0, rgba(255,255,255,0) 22%),
-              radial-gradient(circle, rgba(var(--color-accent-rgb), .06) 52%, rgba(var(--color-accent-rgb), .30) 100%);
-  box-shadow: inset 0 0 0 1.5px rgba(var(--color-accent-rgb), .42), 0 0 14px rgba(var(--color-accent-rgb), .22);
-  transform: scale(.15); opacity: 0;
-  animation: tapBubble .6s cubic-bezier(.22,1,.36,1) forwards;
-  will-change: transform, opacity;
-}
-.tap-bubble.cancel { animation: tapBubbleOut .16s ease-out forwards; }
-@keyframes tapBubble {
-  0%   { transform: scale(.15); opacity: .95; }
-  55%  { transform: scale(1);   opacity: .75; }
-  100% { transform: scale(1.35); opacity: 0; }
-}
-@keyframes tapBubbleOut { to { opacity: 0; transform: scale(.6); } }
-@media (prefers-reduced-motion: reduce) { .tap-bubble-layer { display: none; } }
+/* (tap-bubble circle effect removed — buttons use the rubber squash in the section at the end of this file) */
 
 /* ---------- 2. Loader (full-screen splash + small inline spinner) ---------- */
 .spinner {
@@ -1398,4 +1379,68 @@ body[data-page] .d-link:active { background: var(--g-bg-hover); transform: scale
 
 @media (prefers-reduced-motion: reduce) {
   .btn, .g-btn, .g-chip { transition: none; }
+}
+
+
+/* =========================================================
+   v4 — rubber press · glass floating tab bar
+   ========================================================= */
+
+/* ---------- Rubber press (js/utils/rubber-press.js) ---------- */
+.rb-down {
+  transform: scale(var(--rbx, 1.06), var(--rby, .93)) !important;
+  transition: transform .14s cubic-bezier(.2,.8,.3,1), background-color .18s ease, color .18s ease,
+              border-color .18s ease, box-shadow .18s ease, opacity .18s ease !important;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) { .rb-down { transform: none !important; } }
+
+/* ---------- Glass floating tab bar (phones) ---------- */
+@media (max-width: 899.98px) {
+  #hdrNavPersist.hdr-nav {
+    --nav-ease: cubic-bezier(.32, 1.28, .46, 1);   /* soft spring */
+    --nav-dur: .56s;
+    position: fixed; left: 50%; bottom: calc(10px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+    z-index: 50; width: min(calc(100% - 20px), 500px); height: 58px; margin: 0; padding: 5px; gap: 2px;
+    display: flex; align-items: center; overflow: visible;
+    background: color-mix(in srgb, var(--surface-solid) 56%, transparent);
+    -webkit-backdrop-filter: blur(22px) saturate(1.7); backdrop-filter: blur(22px) saturate(1.7);
+    border: 1px solid color-mix(in srgb, var(--text-primary) 10%, transparent);
+    border-radius: 999px;
+    box-shadow: 0 12px 32px rgba(10,12,20,.20), 0 2px 6px rgba(10,12,20,.08), inset 0 1px 0 rgba(255,255,255,.22);
+  }
+  /* sliding glass pill behind the selected tab */
+  #hdrNavPersist .hdr-nav-pill {
+    position: absolute; top: 5px; bottom: 5px; left: 0; width: 0; z-index: 0; border-radius: 999px; pointer-events: none;
+    background: linear-gradient(180deg, rgba(var(--color-accent-rgb), .30), rgba(var(--color-accent-rgb), .15));
+    border: 1px solid rgba(var(--color-accent-rgb), .34);
+    box-shadow: 0 4px 14px rgba(var(--color-accent-rgb), .22), inset 0 1px 0 rgba(255,255,255,.28);
+    transition: left var(--nav-dur) var(--nav-ease), width var(--nav-dur) var(--nav-ease), opacity .2s ease;
+  }
+  #hdrNavPersist.nav-still .hdr-nav-pill,
+  #hdrNavPersist.nav-still .hdr-nav-tab,
+  #hdrNavPersist.nav-still .hdr-nav-label { transition: none !important; }
+
+  #hdrNavPersist .hdr-nav-tab {
+    position: relative; z-index: 1; flex: 1 1 0; min-width: 0; height: 100%; padding: 0; border-radius: 999px;
+    display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 0;
+    color: var(--text-secondary); background: none; box-shadow: none; overflow: hidden;
+    transition: flex-grow var(--nav-dur) var(--nav-ease), color .3s ease;
+  }
+  #hdrNavPersist .hdr-nav-tab.on { flex-grow: 2.6; color: var(--color-accent); }
+  #hdrNavPersist .hdr-nav-tab.active:not(.on), #hdrNavPersist .hdr-nav-tab.on { background: none; box-shadow: none; }
+  #hdrNavPersist .hdr-nav-ico { flex: none; }
+  #hdrNavPersist .hdr-nav-ico svg { width: 23px; height: 23px; transition: transform var(--nav-dur) var(--nav-ease); }
+  #hdrNavPersist .hdr-nav-tab.on .hdr-nav-ico svg { transform: scale(1.04); }
+  /* label only on the selected tab; the others are icon-only */
+  #hdrNavPersist .hdr-nav-label {
+    max-width: 0; margin-left: 0; opacity: 0; font-size: .72rem; font-weight: 800; white-space: nowrap; overflow: hidden;
+    transition: max-width var(--nav-dur) var(--nav-ease), margin-left var(--nav-dur) var(--nav-ease), opacity .28s ease;
+  }
+  #hdrNavPersist .hdr-nav-tab.on .hdr-nav-label { max-width: 84px; margin-left: 6px; opacity: 1; transition-delay: 0s, 0s, .08s; }
+  #hdrNavPersist .hdr-nav-badge { top: -6px; right: -8px; }
+  .app-shell:has(.hdr-nav), body:has(#hdrNavPersist) .app-shell { padding-bottom: calc(96px + env(safe-area-inset-bottom)) !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #hdrNavPersist .hdr-nav-pill, #hdrNavPersist .hdr-nav-tab, #hdrNavPersist .hdr-nav-label, #hdrNavPersist .hdr-nav-ico svg { transition: none !important; }
 }
