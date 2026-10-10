@@ -684,11 +684,6 @@ function rqTimeAgo(ts) {
   return Math.floor(h / 24) + " দিন আগে";
 }
 
-function rqDate(ts) {
-  try { return new Date(ts.seconds * 1000).toLocaleDateString("bn-BD", { day: "numeric", month: "short", year: "numeric" }); }
-  catch { return ""; }
-}
-
 async function loadPendingRequests() {
   const reqSection = document.getElementById("requestsSection");
   const el = document.getElementById("requestsList");
@@ -706,10 +701,7 @@ async function loadPendingRequests() {
         </div>
         <div class="rq-chips">
           <span class="rq-chip">🎓 ${safeText(r.className)}</span>
-          ${r.studentId ? `<span class="rq-chip">🆔 ${safeText(r.studentId)}</span>` : ""}
-          ${r.term ? `<span class="rq-chip">📘 ${safeText(r.term)}${r.termSetAt?.seconds ? " · " + rqDate(r.termSetAt) : ""}</span>` : ""}
-          ${r.createdAt?.seconds ? `<span class="rq-chip">📅 আবেদন: ${rqDate(r.createdAt)}</span>` : ""}
-
+          ${r.referredBy ? `<span class="rq-chip ref">🤝 রেফার: ${safeText(r.referredBy)}</span>` : ""}
           <span class="rq-chip">${r.pin ? "🔐 নিজের PIN দিয়েছে" : "⚠️ PIN নেই (পুরোনো আবেদন)"}</span>
         </div>
         <label class="rq-label">চূড়ান্ত নাম (বাংলা/ইংরেজি ঠিক করে নিন)</label>
@@ -749,12 +741,7 @@ function wireRequestCard(request) {
     if (!await AppPopup.confirm({ bn: `"${finalName}" কে অনুমোদন দেবেন?`, en: `Approve "${finalName}"?` })) return;
     setBusy(true, "অপেক্ষা করুন…");
     try {
-      const created = await createStudent(finalName, request.className, request.referredBy || null, {
-        studentId: request.studentId || null,
-        sequenceNumber: Number.isInteger(request.sequenceNumber) ? request.sequenceNumber : null,
-        term: request.term || null,
-        termSetAt: request.termSetAt || null
-      });
+      const created = await createStudent(finalName, request.className, request.referredBy || null);
       // The applicant chose their own PIN on the join form -> account is made with it.
       let needsCode = true;
       if (request.pin) {
@@ -785,7 +772,7 @@ function wireRequestCard(request) {
     if (!await AppPopup.confirm("আবেদন বাতিল করবেন?")) return;
     setBusy(true);
     try {
-      try { await publishApplicationResult(request.id, { status: "rejected", studentId: null, idVoided: true }); } catch (e) { console.warn(e); }
+      try { await publishApplicationResult(request.id, { status: "rejected" }); } catch (e) { console.warn(e); }
       await deleteStudentRequest(request.id);
       showToast("আবেদন বাতিল করা হয়েছে।", "success");
       rqRemoveCard(card);
