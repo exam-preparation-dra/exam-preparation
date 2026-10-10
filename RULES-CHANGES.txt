@@ -1,0 +1,57 @@
+FIRESTORE RULES — এই ৩টা অংশ বদলাও (Firebase Console -> Firestore -> Rules), তারপর Publish।
+আগে এটা করো, তারপর সাইট আপলোড করো। না করলে আবেদন পাঠাতে "permission denied" আসবে।
+
+------------------------------------------------------------------
+1) counters — আগের ব্লকের নিচে নতুন ব্লকটা যোগ করো
+------------------------------------------------------------------
+    match /counters/{counterId} {
+      allow read, write: if isAdmin();
+    }
+
+    // আবেদনকারী আবেদনের সময় নিজের আইডি রিজার্ভ করে (শুধু +১ করতে পারবে)
+    match /counters/studentCounter {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['lastSequence'])
+        && request.resource.data.lastSequence == 1;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastSequence'])
+        && request.resource.data.lastSequence == resource.data.lastSequence + 1;
+    }
+
+------------------------------------------------------------------
+2) studentRequests — পুরো ব্লক এটা দিয়ে বদলাও
+------------------------------------------------------------------
+    match /studentRequests/{id} {
+      allow create: if
+        request.resource.data.keys().hasOnly(
+          ['rawName', 'className', 'referredBy', 'pin', 'status', 'createdAt',
+           'studentId', 'sequenceNumber', 'term', 'termSetAt'])
+        && request.resource.data.status == 'pending'
+        && request.resource.data.rawName is string
+        && request.resource.data.rawName.size() > 0
+        && request.resource.data.rawName.size() <= 80
+        && request.resource.data.className is string
+        && request.resource.data.className.size() <= 30
+        && request.resource.data.pin is string
+        && request.resource.data.pin.size() == 6
+        && request.resource.data.pin.matches('[0-9]{6}')
+        && request.resource.data.studentId is string
+        && request.resource.data.studentId.matches('STU-[0-9]{4,}')
+        && request.resource.data.sequenceNumber is int
+        && (request.resource.data.term == null
+          || (request.resource.data.term is string && request.resource.data.term.size() <= 30));
+      allow read, update, delete: if isAdmin();
+    }
+
+------------------------------------------------------------------
+3) applicationStatus — পুরো ব্লক এটা দিয়ে বদলাও
+------------------------------------------------------------------
+    match /applicationStatus/{id} {
+      allow read: if true;
+      allow create: if
+        request.resource.data.keys().hasOnly(
+          ['status', 'name', 'className', 'createdAt', 'studentId', 'term', 'termSetAt'])
+        && request.resource.data.status == 'pending'
+        && request.resource.data.name is string
+        && request.resource.data.name.size() <= 80;
+      allow update, delete: if isAdmin();
+    }
