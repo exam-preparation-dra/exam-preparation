@@ -350,9 +350,26 @@ async function checkRef(raw, { fromLink = false } = {}) {
   }
 }
 const urlRef = new URLSearchParams(location.search).get("ref");
-if (urlRef) { refInput.value = urlRef.trim().toUpperCase(); checkRef(urlRef, { fromLink: true }); }
-refInput.addEventListener("input", () => { clearTimeout(refTimer); refTimer = setTimeout(() => checkRef(refInput.value), 450); });
-$("skipRef").onclick = () => { refInput.value = ""; state.referredBy = null; banner.innerHTML = ""; refHint.textContent = ""; next(); };
+const referralLocked = Boolean(urlRef && urlRef.trim());
+if (referralLocked) {
+  // Referral links and QR scans carry ?ref=CODE. Keep that code fixed.
+  refInput.value = urlRef.trim().toUpperCase();
+  refInput.readOnly = true;
+  refInput.setAttribute("aria-readonly", "true");
+  refInput.title = "Referral from this invitation link cannot be removed.";
+  $("skipRef").style.display = "none";
+  refInput.style.opacity = "0.85";
+  refInput.style.cursor = "not-allowed";
+  checkRef(urlRef, { fromLink: true });
+}
+refInput.addEventListener("input", () => {
+  if (referralLocked) { refInput.value = urlRef.trim().toUpperCase(); return; }
+  clearTimeout(refTimer); refTimer = setTimeout(() => checkRef(refInput.value), 450);
+});
+$("skipRef").onclick = () => {
+  if (referralLocked) return;
+  refInput.value = ""; state.referredBy = null; banner.innerHTML = ""; refHint.textContent = ""; next();
+};
 
 // ---------- pin ----------
 const EYE = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
@@ -369,7 +386,7 @@ function renderReview() {
   const row = (k, v, step) => `<div class="rv-row"><span>${k}</span><b>${v}${step ? `<button type="button" class="rv-edit" data-edit="${step}">বদলাও</button>` : ""}</b></div>`;
   let h = row("নাম", esc(state.name.trim()), "name") + row("ব্যাচ", esc(batchLabel(state.batch)), "batch");
   if (termOptionsForBatch(state.batch).length) h += row("চলতি টার্ম", esc(state.term), "term");
-  h += row("রেফারেল", state.referredBy ? esc(state.referredBy) : "নেই", "ref");
+  h += row("রেফারেল", state.referredBy ? esc(state.referredBy) : "নেই", referralLocked ? "" : "ref");
   h += row("PIN", "• • • • • •", "pin");
   $("rv").innerHTML = h;
 }
@@ -538,14 +555,45 @@ function downloadTicket(res) {
   g.fillStyle = "#a2927a"; g.font = `600 26px ${FONT}`;
   g.fillText("PIN ও আইডি গোপন রাখো — কাউকে দেখাবে না।", W / 2, H - 130);
 
-  c.toBlob((blob) => {
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `আবেদনপত্র-${res.studentId}.png`;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-    showToast("আবেদনপত্র ডাউনলোড হয়েছে", "success");
-  }, "image/png");
+  // Export the first-application ticket as a PDF. This canvas intentionally
+  // includes the PIN; later downloads from index.html use a separate PIN-free form.
+  const jpegData = c.toDataURL("image/jpeg", 0.95).split(",")[1];
+  const binary = atob(jpegData);
+  const imageBytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) imageBytes[i] = binary.charCodeAt(i);
+  const encoder = new TextEncoder();
+  const parts = [];
+  let byteLength = 0;
+  const push = (part) => {
+    const bytes = typeof part === "string" ? encoder.encode(part) : part;
+    parts.push(bytes); byteLength += bytes.length;
+  };
+  const offsets = [];
+  push("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n");
+  const addObject = (id, body) => {
+    offsets[id] = byteLength;
+    push(`${id} 0 obj\n${body}\nendobj\n`);
+  };
+  addObject(1, "<< /Type /Catalog /Pages 2 0 R >>");
+  addObject(2, "<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+  addObject(3, "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 518.4 720] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>");
+  offsets[4] = byteLength;
+  push(`4 0 obj\n<< /Type /XObject /Subtype /Image /Width ${W} /Height ${H} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imageBytes.length} >>\nstream\n`);
+  push(imageBytes); push("\nendstream\nendobj\n");
+  const contentStream = "q\n518.4 0 0 720 0 0 cm\n/Im0 Do\nQ\n";
+  addObject(5, `<< /Length ${encoder.encode(contentStream).length} >>\nstream\n${contentStream}endstream`);
+  const xrefOffset = byteLength;
+  push("xref\n0 6\n0000000000 65535 f \n");
+  for (let id = 1; id <= 5; id++) push(`${String(offsets[id]).padStart(10, "0")} 00000 n \n`);
+  push(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`);
+  const pdfBlob = new Blob(parts, { type: "application/pdf" });
+  const pdfUrl = URL.createObjectURL(pdfBlob);
+  const a = document.createElement("a");
+  a.href = pdfUrl;
+  a.download = `আবেদনপত্র-${res.studentId}.pdf`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(pdfUrl), 5000);
+  showToast("আবেদনপত্র PDF ডাউনলোড হয়েছে", "success");
 }
 
 go("name", "fwd");
