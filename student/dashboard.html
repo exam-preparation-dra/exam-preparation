@@ -314,24 +314,6 @@
   .d-timer-confirm .d-timer-time { color: var(--text-muted); }
   .d-timer-urgent .d-timer-time { color: #ef4444; animation: dTmrPulse 1s ease-in-out infinite; }
   @keyframes dTmrPulse { 50% { opacity: .55; } }
-
-  /* Study Section entry — normal document flow, never a second fixed nav. */
-  .d-study-entry {
-    display: flex; align-items: center; gap: 12px; min-width: 0;
-    padding: 13px 14px; border: 1px solid var(--surface-border);
-    border-left: 3px solid var(--color-accent); border-radius: var(--radius-lg);
-    background: var(--surface-solid); color: var(--text-primary);
-    transition: background var(--transition), border-color var(--transition);
-  }
-  .d-study-entry:active { background: var(--surface-highlight); }
-  .d-study-entry-ico { flex: none; width: 42px; height: 42px; display: grid; place-items: center;
-    border-radius: 13px; background: var(--color-accent-soft); color: var(--color-accent); }
-  .d-study-entry-ico svg { width: 22px; height: 22px; }
-  .d-study-entry-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 2px; }
-  .d-study-entry-copy strong { font-size: .88rem; font-weight: 800; }
-  .d-study-entry-copy small { color: var(--text-muted); font-size: .72rem; line-height: 1.5; }
-  .d-study-entry-arrow { color: var(--color-accent); font-size: 1.1rem; font-weight: 900; }
-  .d-study-entry:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
 </style>
 <script src="../js/utils/nav-boot.js"></script>
 <link rel="stylesheet" href="../css/desktop.css">
@@ -455,12 +437,6 @@ async function render() {
       <a href="../student/battle-lobby.html" class="d-link"><span class="d-link-ico">${svg("bolt")}</span>ব্যাটল মোড</a>
       <a href="../student/store.html" class="d-link"><span class="d-link-ico">${svg("store")}</span>XP স্টোর</a>
     </div>
-
-    <a class="d-study-entry d-sec" href="../student/study.html">
-      <span class="d-study-entry-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 5.5v16M8 7h8M8 11h8"/></svg></span>
-      <span class="d-study-entry-copy"><strong>স্টাডি সেকশন</strong><small>ব্যাচ অনুযায়ী Notes ও পরীক্ষার Suggestions</small></span>
-      <span class="d-study-entry-arrow" aria-hidden="true">↗</span>
-    </a>
 
     <div id="walletSection" class="d-sec"><div class="skeleton" style="height:128px;border-radius:16px;"></div></div>
     <div id="referralSection" class="d-sec"><div class="skeleton" style="height:150px;border-radius:20px;"></div></div>
