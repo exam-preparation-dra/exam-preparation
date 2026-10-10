@@ -7,596 +7,514 @@
 <title>যুক্ত হওয়ার আবেদন — পরীক্ষা প্রস্তুতি</title>
 <link rel="stylesheet" href="./css/style.css">
 <style>
-  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; } }
   body { overflow-x: hidden; background: var(--bg-app); }
   .app-shell { max-width: 460px; padding-bottom: 40px; }
-  @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
-  @keyframes slideFwd { from { opacity:0; transform:translateX(28px); } to { opacity:1; transform:none; } }
-  @keyframes slideBack { from { opacity:0; transform:translateX(-28px); } to { opacity:1; transform:none; } }
 
-  .btn-glass { background: var(--surface-solid); border: 1px solid var(--surface-border); border-radius: var(--radius-md); color: var(--text-primary); padding: 10px; font-weight: 700; font-size: .85rem; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; text-decoration: none; font-family: inherit; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  .top-nav, .page-title, #referralBanner, .glass-float-card { animation: fadeUp .5s cubic-bezier(.22,1,.36,1) backwards; }
+  .top-nav { animation-delay: .02s; }
+  .page-title { animation-delay: .06s; }
+  #referralBanner { animation-delay: .09s; }
+  .glass-float-card { animation-delay: .12s; }
+
+  /* ===== Flat card (no blur) ===== */
+  .glass-float-card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius-lg); padding: 20px; }
+
+  .btn-glass {
+    background: var(--surface-solid); border: 1px solid var(--surface-border); border-radius: var(--radius-md);
+    color: var(--text-primary); padding: 10px; font-weight: 700; font-size: 0.85rem;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    cursor: pointer; transition: background var(--transition); text-decoration: none;
+  }
   .btn-glass:active { background: var(--surface-highlight); }
-  .top-nav { display: flex; align-items: center; justify-content: space-between; margin: 12px 0 18px; }
+
+  /* ===== Topbar ===== */
+  .top-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; margin-bottom: 22px; }
   .nav-btn { width: 42px; height: 42px; padding: 0; border-radius: 50%; }
 
-  .card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius-lg); padding: 20px; position: relative; overflow: hidden; animation: fadeUp .45s cubic-bezier(.22,1,.36,1) backwards; }
+  .page-title { text-align: center; margin-bottom: 24px; }
+  .page-title .pt-icon { width: 44px; height: 44px; margin: 0 auto 10px; border-radius: 50%; background: var(--color-accent-soft); color: var(--color-accent); display: flex; align-items: center; justify-content: center; }
+  .page-title h1 { font-size: 1.35rem; font-weight: 900; color: var(--text-primary); letter-spacing: -0.3px; }
+  .page-title p { margin-top: 5px; font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
 
-  /* ===== progress ===== */
-  .prog { margin: 0 2px 16px; }
-  .prog-top { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; font-size:.74rem; font-weight:800; color:var(--text-muted); }
-  .prog-top b { color: var(--text-primary); font-size:.8rem; }
-  .prog-bar { height:6px; border-radius:99px; background: var(--surface-highlight); overflow:hidden; }
-  .prog-fill { height:100%; width:0; border-radius:99px; background: linear-gradient(90deg, var(--color-accent), #e0b25a); transition: width .45s cubic-bezier(.22,1,.36,1); }
+  /* ===== Form ===== */
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 7px; }
 
-  /* ===== steps ===== */
-  .step { display:none; }
-  .step.active { display:block; }
-  .step.active.fwd { animation: slideFwd .38s cubic-bezier(.22,1,.36,1); }
-  .step.active.back { animation: slideBack .38s cubic-bezier(.22,1,.36,1); }
-  .s-ico { width:46px; height:46px; border-radius:14px; display:grid; place-items:center; background: var(--color-accent-soft); color: var(--color-accent); margin-bottom:12px; }
-  .s-h { font-size:1.28rem; font-weight:900; letter-spacing:-.3px; color:var(--text-primary); line-height:1.3; }
-  .s-p { margin:6px 0 18px; font-size:.82rem; font-weight:600; color:var(--text-muted); line-height:1.6; }
-  .s-p b { color: var(--text-primary); }
-
-  .input-glass { width:100%; box-sizing:border-box; padding:14px 15px; background:var(--surface-highlight); border:1px solid var(--surface-border); border-radius:var(--radius-md); color:var(--text-primary); font-family:inherit; font-size:1rem; font-weight:700; outline:none; transition:border-color var(--transition), background var(--transition); }
+  .input-glass {
+    width: 100%; box-sizing: border-box; padding: 13px 15px;
+    background: var(--surface-highlight); border: 1px solid var(--surface-border); border-radius: var(--radius-md);
+    color: var(--text-primary); font-family: inherit; font-size: 0.92rem; font-weight: 600;
+    outline: none; transition: border-color var(--transition), background var(--transition);
+    appearance: none;
+  }
   .input-glass:focus { border-color: var(--color-accent); background: var(--surface); }
-  .input-glass::placeholder { color: var(--text-muted); font-weight:500; }
-  .err { min-height:1.2em; margin-top:10px; font-size:.78rem; font-weight:800; color:var(--color-danger); }
+  .input-glass::placeholder { color: var(--text-muted); font-weight: 500; }
 
-  /* choice chips */
-  .chips { display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; }
-  .chips.col1 { grid-template-columns: 1fr; }
-  .chip { padding:14px 8px; text-align:center; border-radius:14px; border:1.5px solid var(--surface-border); background:var(--surface-highlight); color:var(--text-primary); font-family:inherit; font-size:.92rem; font-weight:800; cursor:pointer; transition: transform .15s, border-color .2s, background .2s; }
-  .chip:active { transform: scale(.96); }
-  .chip.on { border-color: var(--color-accent); background: var(--color-accent-soft); color: var(--color-accent); box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), .12); }
-  .chips.col1 .chip { text-align:left; padding:15px 16px; display:flex; align-items:center; justify-content:space-between; }
-  .chip .tick { opacity:0; transition: opacity .2s; }
-  .chip.on .tick { opacity:1; }
+  select.input-glass {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1.1rem center;
+    background-size: 1.1em;
+    padding-right: 40px;
+  }
+  select.input-glass option { background: var(--bg-app); color: var(--text-primary); font-weight:700; padding:12px; }
 
-  /* referral */
-  .inviter { display:flex; align-items:center; gap:12px; padding:12px 14px; margin-top:12px; border-radius:var(--radius-lg); border:1px solid rgba(47,125,94,.3); background:rgba(47,125,94,.07); }
-  .inviter-av { width:40px; height:40px; border-radius:50%; flex-shrink:0; display:grid; place-items:center; background:var(--color-success); color:#fff; font-weight:900; }
-  .inviter small { display:block; font-size:.68rem; font-weight:700; color:var(--text-muted); }
-  .inviter b { display:block; font-size:.95rem; font-weight:900; color:var(--text-primary); }
-  .ref-hint { margin-top:8px; font-size:.76rem; font-weight:700; min-height:1em; color:var(--text-muted); }
-  .ref-hint.bad { color: var(--color-danger); }
-  .ref-input { text-transform:uppercase; letter-spacing:.06em; font-family:var(--font-num, inherit); }
+  .btn-submit {
+    width: 100%; background: var(--color-accent); color: #fff;
+    border: none; border-radius: var(--radius-md); padding: 14px;
+    font-size: 0.95rem; font-weight: 800; font-family: inherit;
+    cursor: pointer; transition: transform 0.15s ease;
+    display: flex; justify-content: center; align-items: center; gap: 8px;
+    margin-top: 8px;
+  }
+  .btn-submit:active { transform: scale(0.98); }
+  .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; }
 
-  /* pin */
-  .pin-wrap { position:relative; margin-bottom:12px; }
-  .pin-input { text-align:center; letter-spacing:.7em; font-family:var(--font-num, inherit); font-size:1.2rem; padding-left:calc(15px + .7em); padding-right:48px; }
+  /* ===== Guide modal (flat, scrim only, no blur) ===== */
+  .modal-overlay { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(0,0,0,.55); }
+  .guide-modal { width: 100%; max-width: 400px; padding: 22px; background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius-lg); }
+  .modal-title { display: flex; align-items: center; gap: 8px; font-size: 1.1rem; font-weight: 900; margin-bottom: 12px; color: var(--text-primary); }
+  .modal-text { font-size: 0.83rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 8px; }
+
+  /* ===== Inviter card ===== */
+  .inviter { display:flex; align-items:center; gap:12px; padding:14px 16px; margin-bottom:16px; border-radius:var(--radius-lg); border:1px solid rgba(47,125,94,.3); background:rgba(47,125,94,.07); }
+  .inviter-av { width:42px; height:42px; border-radius:50%; flex-shrink:0; display:grid; place-items:center; background:var(--color-success); color:#fff; font-weight:900; font-size:1.05rem; }
+  .inviter small { display:block; font-size:.7rem; font-weight:700; color:var(--text-muted); }
+  .inviter b { display:block; font-size:.98rem; font-weight:900; color:var(--text-primary); margin-top:1px; }
+  .inviter em { display:block; font-style:normal; font-size:.72rem; font-weight:700; color:var(--color-success); margin-top:2px; }
+  .ref-row { display:flex; gap:8px; }
+  .ref-row .input-glass { text-transform:uppercase; letter-spacing:.06em; font-family:var(--font-num); }
+  .ref-hint { margin-top:7px; font-size:.75rem; font-weight:700; min-height:1em; color:var(--text-muted); }
+  .ref-hint.ok { color:var(--color-success); }
+  .ref-hint.bad { color:var(--color-danger); }
+
+  /* ===== Success state ===== */
+  .success-box { text-align: center; padding: 20px 10px; }
+  .success-icon { width: 48px; height: 48px; color: var(--color-success); margin: 0 auto 16px; background: rgba(47,125,94,.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+  /* ===== PIN fields ===== */
+  .pin-sep { height: 1px; background: var(--surface-border); margin: 4px 0 18px; }
+  .pin-title { display:flex; align-items:center; gap:8px; font-size:.86rem; font-weight:900; color:var(--text-primary); margin-bottom:4px; }
+  .pin-title svg { color: var(--color-accent); }
+  .pin-note { font-size:.74rem; font-weight:600; color:var(--text-muted); line-height:1.55; margin-bottom:12px; }
+  .pin-input { text-align:center; letter-spacing:.7em; font-family:var(--font-num, inherit); font-size:1.15rem; padding-left:calc(15px + .7em); }
   .pin-input::placeholder { letter-spacing:.3em; font-size:.9rem; }
-  .eye { position:absolute; right:6px; top:50%; transform:translateY(-50%); width:38px; height:38px; display:grid; place-items:center; background:none; border:0; color:var(--text-muted); cursor:pointer; border-radius:50%; }
-  .pin-lbl { display:block; font-size:.78rem; font-weight:800; color:var(--text-secondary); margin:0 0 7px 2px; }
+  .pin-err { min-height:1.1em; margin-top:-6px; margin-bottom:10px; font-size:.76rem; font-weight:700; color:var(--color-danger); }
 
-  /* review */
-  .rv { border:1px solid var(--surface-border); border-radius:var(--radius-md); overflow:hidden; background:var(--surface-highlight); }
-  .rv-row { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 14px; font-size:.86rem; }
-  .rv-row + .rv-row { border-top:1px solid var(--surface-border); }
-  .rv-row span { color:var(--text-muted); font-weight:700; }
-  .rv-row b { color:var(--text-primary); font-weight:900; text-align:right; word-break:break-word; }
-  .rv-edit { margin-left:8px; font-size:.7rem; font-weight:800; color:var(--color-accent); background:none; border:0; cursor:pointer; font-family:inherit; }
-  .consent-box { display:flex; gap:10px; align-items:flex-start; margin:14px 0 4px; padding:12px 14px; border-radius:14px; background:var(--surface-solid); border:1px solid var(--surface-border); font-size:.76rem; line-height:1.65; font-weight:600; color:var(--text-secondary); cursor:pointer; }
-  .consent-box input { width:18px; height:18px; margin-top:2px; flex:none; accent-color:var(--color-accent); }
-  .consent-box a { color:var(--color-accent); font-weight:800; }
+  /* ===== Application status screen (pending / approved / rejected) ===== */
+  #statusView { display:none; }
+  #statusView.on { display:block; animation: fadeUp .5s cubic-bezier(.22,1,.36,1) backwards; }
+  .st-card { text-align:center; padding: 26px 20px 22px; }
+  .st-stage { position:relative; width:168px; height:168px; margin: 4px auto 20px; display:grid; place-items:center; --tone: var(--color-accent); --tone-rgb: var(--color-accent-rgb, 184,134,60); }
+  .st-ring { position:absolute; inset:14px; border-radius:50%; border:2px solid rgba(var(--tone-rgb), .45); animation: ringPulse 2.6s ease-out infinite; }
+  .st-ring:nth-child(2) { animation-delay:.87s; } .st-ring:nth-child(3) { animation-delay:1.74s; }
+  @keyframes ringPulse { 0% { transform:scale(.62); opacity:.9; } 100% { transform:scale(1.18); opacity:0; } }
+  .st-orbit { position:absolute; inset:6px; border-radius:50%; border:2px dashed rgba(var(--tone-rgb), .4); animation: orbitSpin 16s linear infinite; }
+  .st-orbit::before { content:""; position:absolute; top:-6px; left:50%; width:10px; height:10px; margin-left:-5px; border-radius:50%; background:var(--tone); box-shadow:0 0 12px rgba(var(--tone-rgb), .8); }
+  @keyframes orbitSpin { to { transform: rotate(360deg); } }
+  .st-logo { position:relative; width:88px; height:88px; border-radius:24px; object-fit:cover; box-shadow:0 10px 30px rgba(var(--tone-rgb), .35); animation: logoFloat 3.2s ease-in-out infinite; }
+  @keyframes logoFloat { 0%,100% { transform:translateY(3px); } 50% { transform:translateY(-5px); } }
+  .st-hourglass { position:absolute; right:22px; bottom:20px; width:34px; height:34px; border-radius:50%; display:grid; place-items:center; background:var(--surface-solid); border:1px solid var(--surface-border); color:var(--tone); box-shadow:0 4px 14px rgba(0,0,0,.14); }
+  .st-hourglass svg { animation: hgFlip 3s ease-in-out infinite; }
+  @keyframes hgFlip { 0%,40% { transform:rotate(0); } 60%,100% { transform:rotate(180deg); } }
 
-  /* nav buttons */
-  .nav-row { display:flex; gap:10px; margin-top:20px; }
-  .btn-back { flex:0 0 52px; height:50px; padding:0; border-radius:var(--radius-md); }
-  .btn-next { flex:1; height:50px; background:var(--color-accent); color:#fff; border:0; border-radius:var(--radius-md); font-size:.95rem; font-weight:800; font-family:inherit; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition: transform .15s; }
-  .btn-next:active { transform: scale(.98); }
-  .btn-next:disabled { opacity:.65; cursor:not-allowed; }
-  .skip { display:block; margin:12px auto 0; background:none; border:0; color:var(--text-muted); font-weight:800; font-size:.8rem; font-family:inherit; cursor:pointer; text-decoration:underline; }
+  .st-h { font-size:1.28rem; font-weight:900; letter-spacing:-.3px; color:var(--text-primary); }
+  .st-p { margin:7px auto 0; max-width:300px; font-size:.82rem; font-weight:600; line-height:1.6; color:var(--text-muted); }
+  .st-p b { color:var(--text-primary); }
 
-  /* ===== done: application preview ===== */
-  .done-h { text-align:center; margin-bottom:14px; }
-  .done-h .ok { width:54px; height:54px; margin:0 auto 10px; border-radius:50%; background:var(--color-success); color:#fff; display:grid; place-items:center; animation: pop .5s cubic-bezier(.34,1.56,.64,1) both; }
-  @keyframes pop { from { transform:scale(0); } to { transform:scale(1); } }
-  .done-h h2 { font-size:1.2rem; font-weight:900; color:var(--text-primary); }
-  .done-h p { margin-top:5px; font-size:.78rem; font-weight:600; color:var(--text-muted); }
-  .ticket { border-radius:20px; border:1px solid var(--surface-border); background:linear-gradient(160deg, var(--surface-solid), var(--surface-highlight)); overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,.08); }
-  .tk-head { padding:14px 16px; background:linear-gradient(135deg, #b8863c, #d9a85a); color:#fff; display:flex; align-items:center; justify-content:space-between; }
-  .tk-head b { font-size:.95rem; font-weight:900; }
-  .tk-head small { font-size:.68rem; font-weight:700; opacity:.9; }
-  .tk-id { padding:16px; text-align:center; border-bottom:2px dashed var(--surface-border); }
-  .tk-id small { display:block; font-size:.68rem; font-weight:800; color:var(--text-muted); letter-spacing:.05em; }
-  .tk-id code { display:inline-block; margin-top:5px; font-size:1.55rem; font-weight:900; letter-spacing:.08em; color:var(--text-primary); font-family:var(--font-num, monospace); }
-  .tk-id code.void { text-decoration:line-through; color:var(--color-danger); opacity:.8; }
-  .tk-body { padding:6px 16px 14px; }
-  .tk-pin { margin:14px 0 4px; padding:12px; text-align:center; border-radius:14px; background:var(--color-accent-soft); border:1px solid rgba(var(--color-accent-rgb), .3); }
-  .tk-pin small { display:block; font-size:.68rem; font-weight:800; color:var(--text-muted); }
-  .tk-pin b { display:inline-block; margin-top:3px; font-size:1.5rem; letter-spacing:.35em; padding-left:.35em; font-family:var(--font-num, monospace); color:var(--color-accent); }
-  .tk-status { margin:12px 16px 16px; padding:10px 12px; border-radius:12px; text-align:center; font-size:.8rem; font-weight:800; border:1px solid var(--surface-border); background:var(--surface-highlight); color:var(--text-secondary); }
-  .tk-status.ok { background:rgba(47,125,94,.1); border-color:rgba(47,125,94,.35); color:var(--color-success); }
-  .tk-status.bad { background:rgba(200,60,60,.08); border-color:rgba(200,60,60,.35); color:var(--color-danger); }
-  .typing { display:inline-flex; gap:3px; margin-left:6px; vertical-align:middle; }
-  .typing i { width:5px; height:5px; border-radius:50%; background:var(--color-accent); animation: typing 1.2s ease-in-out infinite; }
-  .typing i:nth-child(2) { animation-delay:.18s; } .typing i:nth-child(3) { animation-delay:.36s; }
+  .st-steps { margin:22px 4px 4px; text-align:left; position:relative; }
+  .st-step { display:flex; align-items:center; gap:12px; padding:9px 0; position:relative; font-size:.82rem; font-weight:800; color:var(--text-muted); }
+  .st-step:not(:last-child)::after { content:""; position:absolute; left:13px; top:36px; bottom:-9px; width:2px; background:var(--surface-border); }
+  .st-step.done:not(:last-child)::after { background:var(--color-success); }
+  .st-dot { flex:none; width:28px; height:28px; border-radius:50%; display:grid; place-items:center; background:var(--surface-highlight); border:2px solid var(--surface-border); color:var(--text-muted); position:relative; z-index:1; }
+  .st-step.done { color:var(--text-primary); }
+  .st-step.done .st-dot { background:var(--color-success); border-color:var(--color-success); color:#fff; }
+  .st-step.active { color:var(--text-primary); }
+  .st-step.active .st-dot { border-color:var(--color-accent); color:var(--color-accent); background:var(--color-accent-soft); }
+  .st-step.active .st-dot::after { content:""; position:absolute; inset:-5px; border-radius:50%; border:2px solid var(--color-accent); opacity:0; animation: dotPing 1.8s ease-out infinite; }
+  @keyframes dotPing { 0% { transform:scale(.7); opacity:.8; } 100% { transform:scale(1.35); opacity:0; } }
+  .st-step.fail .st-dot { background:var(--color-danger); border-color:var(--color-danger); color:#fff; }
+  .st-typing { display:inline-flex; gap:3px; margin-left:6px; vertical-align:middle; }
+  .st-typing i { width:5px; height:5px; border-radius:50%; background:var(--color-accent); animation: typing 1.2s ease-in-out infinite; }
+  .st-typing i:nth-child(2) { animation-delay:.18s; } .st-typing i:nth-child(3) { animation-delay:.36s; }
   @keyframes typing { 0%,60%,100% { transform:translateY(0); opacity:.35; } 30% { transform:translateY(-4px); opacity:1; } }
-  .warn { margin-top:12px; font-size:.72rem; font-weight:700; color:var(--text-muted); line-height:1.6; text-align:center; }
-  .done-actions { display:flex; flex-direction:column; gap:10px; margin-top:16px; }
-  .done-actions .btn-next { text-decoration:none; }
-  .done-actions .btn-glass { height:48px; }
 
-  .modal-overlay { position:fixed; inset:0; z-index:9999; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(0,0,0,.55); }
-  .guide-modal { width:100%; max-width:400px; padding:22px; background:var(--surface); border:1px solid var(--surface-border); border-radius:var(--radius-lg); }
-  .modal-title { display:flex; align-items:center; gap:8px; font-size:1.1rem; font-weight:900; margin-bottom:12px; color:var(--text-primary); }
-  .modal-text { font-size:.83rem; color:var(--text-secondary); line-height:1.6; margin-bottom:8px; }
+  .st-tip { margin-top:16px; padding:11px 13px; border-radius:var(--radius-md); background:var(--surface-highlight); border:1px dashed var(--surface-border); font-size:.74rem; font-weight:700; line-height:1.55; color:var(--text-secondary); text-align:left; }
+
+  /* approved */
+  .st-stage.ok { --tone: var(--color-success); --tone-rgb: 47,125,94; }
+  .st-stage.ok .st-ring { animation-duration:2s; }
+  .st-check { position:absolute; right:18px; bottom:16px; width:44px; height:44px; border-radius:50%; background:var(--color-success); color:#fff; display:grid; place-items:center; box-shadow:0 6px 18px rgba(47,125,94,.5); animation: popIn .55s cubic-bezier(.34,1.56,.64,1) both .15s; }
+  .st-check svg path { stroke-dasharray: 26; stroke-dashoffset: 26; animation: drawCheck .5s ease forwards .55s; }
+  @keyframes popIn { from { transform:scale(0); } to { transform:scale(1); } }
+  @keyframes drawCheck { to { stroke-dashoffset: 0; } }
+  .st-idcard { margin:18px auto 0; max-width:300px; padding:14px 16px; border-radius:var(--radius-lg); border:1px solid rgba(47,125,94,.35); background:rgba(47,125,94,.08); animation: fadeUp .6s cubic-bezier(.22,1,.36,1) backwards .35s; }
+  .st-idcard small { display:block; font-size:.68rem; font-weight:800; color:var(--text-muted); letter-spacing:.04em; }
+  .st-idcard b { display:block; margin-top:2px; font-size:1.02rem; font-weight:900; color:var(--text-primary); }
+  .st-idcard code { display:inline-block; margin-top:7px; padding:4px 12px; border-radius:99px; background:var(--color-success); color:#fff; font-family:var(--font-num, monospace); font-weight:900; font-size:.9rem; letter-spacing:.06em; }
+  .st-confetti { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+  .st-confetti i { position:absolute; top:-12px; left:var(--x); width:8px; height:14px; border-radius:2px; background:var(--c); opacity:0; animation: confettiFall var(--d) cubic-bezier(.3,.6,.4,1) var(--dl) forwards; transform:rotate(var(--r)); }
+  @keyframes confettiFall { 0% { opacity:1; transform:translateY(0) rotate(var(--r)); } 100% { opacity:0; transform:translateY(340px) rotate(calc(var(--r) + 540deg)); } }
+  #statusCard { position:relative; overflow:hidden; }
+
+  /* rejected */
+  .st-stage.bad { --tone: var(--color-danger); --tone-rgb: 200,60,60; }
+  .st-stage.bad .st-ring, .st-stage.bad .st-orbit { animation-play-state: paused; opacity:.35; }
+  .st-stage.bad .st-logo { animation:none; filter:grayscale(.7); }
+  .st-cross { position:absolute; right:18px; bottom:16px; width:44px; height:44px; border-radius:50%; background:var(--color-danger); color:#fff; display:grid; place-items:center; animation: popIn .5s cubic-bezier(.34,1.56,.64,1) both .1s; }
+  .st-actions { display:flex; flex-direction:column; gap:10px; margin-top:20px; }
+  .st-actions .btn-submit { margin-top:0; text-decoration:none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .st-ring, .st-orbit, .st-logo, .st-hourglass svg, .st-typing i, .st-step.active .st-dot::after, .st-confetti i { animation: none !important; }
+    .st-confetti { display:none; }
+  }
+.consent-box{display:flex;gap:10px;align-items:flex-start;margin:14px 0 14px;padding:12px 14px;border-radius:14px;background:var(--surface-solid);border:1px solid var(--surface-border);font-size:.78rem;line-height:1.65;font-weight:600;color:var(--text-secondary);cursor:pointer}.consent-box input{width:18px;height:18px;margin-top:2px;flex:none;accent-color:var(--color-accent)}.consent-box a{color:var(--color-accent);font-weight:800}.consent-note{margin:12px 2px 0;font-size:.74rem;line-height:1.65;font-weight:600;color:var(--text-muted);text-align:center}.consent-note a{color:var(--color-accent);font-weight:800}
 </style>
 <script src="js/popup.js"></script>
 </head>
 <body>
+
 <div class="app-shell">
 
+  <!-- Top Navigation (No Theme Toggle) -->
   <div class="top-nav">
     <a href="./index.html" class="btn-glass nav-btn" aria-label="ফিরে যান">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
     </a>
-    <button class="btn-glass" id="guideBtn" type="button" style="border-radius:99px;padding:8px 14px;">
+    <button class="btn-glass" id="guideBtn" style="border-radius: 99px; padding: 8px 14px;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
       গাইড
     </button>
   </div>
 
-  <div class="prog" id="prog">
-    <div class="prog-top"><span id="progLabel">ধাপ ১</span><b id="progName">নাম</b></div>
-    <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+  <div class="page-title">
+    <div class="pt-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+    </div>
+    <h1>যুক্ত হওয়ার আবেদন করো</h1>
+    <p>নাম, ব্যাচ আর নিজের PIN দাও — অ্যাডমিন অনুমোদন করলেই ঢুকতে পারবে</p>
   </div>
 
-  <form class="card" id="wizard" novalidate autocomplete="off">
+  <div id="referralBanner"></div>
 
-    <!-- 1 NAME -->
-    <section class="step" data-step="name">
-      <div class="s-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-      <div class="s-h">তোমার নাম কী?</div>
-      <p class="s-p">বাংলা বা ইংরেজি — যেভাবে সহজ। অ্যাডমিন দরকার হলে বানানটা ঠিক করে নেবেন।</p>
-      <input class="input-glass" id="nameInput" placeholder="পুরো নাম লেখো" maxlength="80" autocomplete="off">
-      <div class="err" id="err-name"></div>
-    </section>
-
-    <!-- 2 BATCH -->
-    <section class="step" data-step="batch">
-      <div class="s-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg></div>
-      <div class="s-h">কোন ব্যাচে পড়ো?</div>
-      <p class="s-p">একটা বেছে নাও।</p>
-      <div class="chips" id="batchChips"></div>
-      <div class="err" id="err-batch"></div>
-    </section>
-
-    <!-- 3 TERM -->
-    <section class="step" data-step="term">
-      <div class="s-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
-      <div class="s-h">এখন কোন টার্মে আছো?</div>
-      <p class="s-p" id="termSub">চলতি টার্ম/সেমিস্টারটা বেছে নাও। যোগ দেওয়ার তারিখসহ এটা সেভ থাকবে।</p>
-      <div class="chips col1" id="termChips"></div>
-      <div class="err" id="err-term"></div>
-    </section>
-
-    <!-- 4 REFERRAL -->
-    <section class="step" data-step="ref">
-      <div class="s-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg></div>
-      <div class="s-h">কোনো বন্ধু কি আমন্ত্রণ করেছে?</div>
-      <p class="s-p">বন্ধুর রেফারেল কোড থাকলে দাও — না থাকলে এড়িয়ে যাও।</p>
-      <input class="input-glass ref-input" id="refInput" placeholder="যেমন: STU-0001" maxlength="12" autocomplete="off">
-      <div class="ref-hint" id="refHint"></div>
-      <div id="referralBanner"></div>
-      <button type="button" class="skip" id="skipRef">কোড নেই — এড়িয়ে যাও</button>
-    </section>
-
-    <!-- 5 PIN -->
-    <section class="step" data-step="pin">
-      <div class="s-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-      <div class="s-h">নিজের PIN বানাও</div>
-      <p class="s-p">এই <b>৬ সংখ্যার PIN</b> দিয়েই পরে ঢুকবে। সহজ PIN (111111, 123456) চলবে না।</p>
-      <label class="pin-lbl" for="pinInput">PIN</label>
-      <div class="pin-wrap">
-        <input class="input-glass pin-input" id="pinInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="• • • • • •" autocomplete="new-password">
-        <button type="button" class="eye" data-eye="pinInput" aria-label="দেখাও/লুকাও"></button>
-      </div>
-      <label class="pin-lbl" for="pinConfirm">PIN আবার লেখো</label>
-      <div class="pin-wrap">
-        <input class="input-glass pin-input" id="pinConfirm" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="• • • • • •" autocomplete="new-password">
-        <button type="button" class="eye" data-eye="pinConfirm" aria-label="দেখাও/লুকাও"></button>
-      </div>
-      <div class="err" id="err-pin"></div>
-    </section>
-
-    <!-- 6 REVIEW -->
-    <section class="step" data-step="review">
-      <div class="s-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
-      <div class="s-h">সব ঠিক আছে তো?</div>
-      <p class="s-p">পাঠানোর আগে একবার দেখে নাও। ভুল থাকলে "বদলাও" চাপো।</p>
-      <div class="rv" id="rv"></div>
-      <label class="consent-box" for="consentChk"><input type="checkbox" id="consentChk"><span>আমি <a href="./privacy.html" target="_blank" rel="noopener">গোপনীয়তা নীতি</a> ও <a href="./terms.html" target="_blank" rel="noopener">শর্তাবলি</a> পড়েছি এবং মানছি। আমার বয়স ১৮ বছরের কম হলে আমার অভিভাবক আমাকে এই আবেদনের অনুমতি দিয়েছেন।</span></label>
-      <div class="err" id="err-review"></div>
-    </section>
-
-    <div class="nav-row" id="navRow">
-      <button type="button" class="btn-glass btn-back" id="backBtn" aria-label="পিছনে">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
-      </button>
-      <button type="submit" class="btn-next" id="nextBtn">পরের ধাপ</button>
+  <!-- Application Form -->
+  <form id="joinForm" class="glass-float-card">
+    <div class="field">
+      <label for="nameInput">তোমার নাম</label>
+      <input class="input-glass" id="nameInput" required placeholder="বাংলা বা ইংরেজি অক্ষরে লেখো">
     </div>
+    <div class="field">
+      <label for="classInput">ব্যাচ নির্বাচন করো</label>
+      <select class="input-glass" id="classInput" required>
+        <option value="" disabled selected>ব্যাচ বেছে নাও...</option>
+        <option value="Batch 6">ব্যাচ ৬</option>
+        <option value="Batch 7">ব্যাচ ৭</option>
+        <option value="Batch 8">ব্যাচ ৮</option>
+        <option value="Batch 9">ব্যাচ ৯</option>
+        <option value="Batch 10">ব্যাচ ১০</option>
+        <option value="Batch 11">ব্যাচ ১১</option>
+        <option value="Batch 12">ব্যাচ ১২</option>
+        <option value="Other">অন্যান্য</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="refInput">বন্ধুর রেফারেল কোড <span style="font-weight:600;color:var(--text-muted);">(ঐচ্ছিক)</span></label>
+      <div class="ref-row">
+        <input class="input-glass" id="refInput" placeholder="যেমন: STU-0001" maxlength="12" autocomplete="off">
+      </div>
+      <div class="ref-hint" id="refHint"></div>
+    </div>
+    <div class="pin-sep"></div>
+    <div class="pin-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      নিজের PIN বানাও
+    </div>
+    <p class="pin-note">এই <b>৬ সংখ্যার PIN</b> দিয়েই পরে ঢুকবে। সহজ PIN (111111, 123456) চলবে না — নিজে মনে রাখো, কাউকে বলবে না।</p>
+    <div class="field">
+      <input class="input-glass pin-input" id="pinInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="• • • • • •" autocomplete="new-password" aria-label="PIN">
+    </div>
+    <div class="field">
+      <label for="pinConfirm">PIN আবার লেখো</label>
+      <input class="input-glass pin-input" id="pinConfirm" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="• • • • • •" autocomplete="new-password">
+    </div>
+    <div class="pin-err" id="pinErr"></div>
+    <label class="consent-box" for="consentChk"><input type="checkbox" id="consentChk"><span>আমি <a href="./privacy.html" target="_blank" rel="noopener">গোপনীয়তা নীতি</a> ও <a href="./terms.html" target="_blank" rel="noopener">শর্তাবলি</a> পড়েছি এবং মানছি। আমার বয়স ১৮ বছরের কম হলে আমার অভিভাবক আমাকে এই আবেদনের অনুমতি দিয়েছেন।</span></label>
+    <button type="submit" class="btn-submit" id="submitBtn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      আবেদন পাঠাও
+    </button>
+    
   </form>
 
-  <!-- 7 DONE: application preview + download -->
-  <div class="card" id="doneCard" style="display:none"></div>
+  <!-- Application status: pending / approved / rejected (live) -->
+  <div id="statusView" aria-live="polite">
+    <div class="glass-float-card st-card" id="statusCard"></div>
+  </div>
+
 </div>
 
-<div id="guideModal" class="modal-overlay">
-  <div class="guide-modal">
-    <div class="modal-title">কীভাবে যুক্ত হবে?</div>
-    <p class="modal-text">• এক এক ধাপে নাম, ব্যাচ, টার্ম, (রেফারেল) আর নিজের ৬ সংখ্যার PIN দাও।</p>
-    <p class="modal-text">• আবেদন পাঠালেই তোমার স্টুডেন্ট আইডি তৈরি হয়ে যাবে। আবেদনপত্র ডাউনলোড করে রেখো।</p>
-    <p class="modal-text">• লগইন পেজে তোমার নাম ঝাপসা হয়ে থাকবে — চাপলে অনুমোদনের অবস্থা দেখবে।</p>
-    <p class="modal-text">• অ্যাডমিন অনুমোদন দিলে নিজের PIN দিয়ে ঢুকতে পারবে। বাতিল করলে আইডিটা আর কাজ করবে না।</p>
-    <button class="btn-glass" id="closeGuideModal" type="button" style="width:100%;margin-top:6px">বুঝতে পেরেছি</button>
+<!-- Guide Modal -->
+<div id="guideModal" class="modal-overlay" style="display:none;">
+  <div class="guide-modal glass-float-card">
+    <div class="modal-title">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+      কীভাবে যুক্ত হবে?
+    </div>
+    <div style="margin-bottom: 20px;">
+      <p class="modal-text">• তোমার সঠিক নাম, ব্যাচ আর নিজের ৬ সংখ্যার PIN দিয়ে আবেদন পাঠাও।</p>
+      <p class="modal-text">• আবেদন পাঠানোর পর সাথে সাথেই তালিকায় নাম আসবে না।</p>
+      <p class="modal-text">• অ্যাডমিন তোমার আবেদন দেখে অনুমোদন দেবেন। অনুমোদন হলে এই পেজেই জানতে পারবে, তারপর নিজের PIN দিয়ে ঢুকবে — আলাদা কোডের দরকার নেই।</p>
+    </div>
+    <button class="btn-glass" id="closeGuideModal" style="width: 100%;">বুঝতে পেরেছি</button>
   </div>
 </div>
 
 <script type="module">
 import { initTheme, showToast, friendlyError } from "./js/utils/ui-utils.js";
-import { submitStudentRequest, watchApplication, termOptionsForBatch } from "./js/utils/student-requests-utils.js";
+import { submitStudentRequest, watchApplication, getApplication } from "./js/utils/student-requests-utils.js";
 import { validatePin } from "./js/utils/student-auth.js";
 import { findStudentByStudentId } from "./js/utils/friend-utils.js?v=ref1";
 
+// Initialize theme
 initTheme();
 
-const $ = (id) => document.getElementById(id);
-const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
-const BN = ["০","১","২","৩","৪","৫","৬","৭","৮","৯"];
-const bn = (n) => String(n).replace(/\d/g, d => BN[d]);
-
-const BATCHES = ["6","7","8","9","10","11","12"].map(n => ({ value: `Batch ${n}`, label: `ব্যাচ ${bn(n)}` })).concat([{ value: "Other", label: "অন্যান্য" }]);
-const batchLabel = (v) => (BATCHES.find(b => b.value === v) || {}).label || v;
-
-const state = { name: "", batch: "", term: "", referredBy: null, pin: "" };
-
-// ---------- guide ----------
-$("guideBtn").onclick = () => { $("guideModal").style.display = "flex"; };
-$("closeGuideModal").onclick = () => { $("guideModal").style.display = "none"; };
-
-// ---------- step engine ----------
-const STEP_META = {
-  name:   { title: "নাম" }, batch: { title: "ব্যাচ" }, term: { title: "চলতি টার্ম" },
-  ref:    { title: "রেফারেল" }, pin: { title: "PIN" }, review: { title: "যাচাই ও পাঠানো" }
-};
-function stepList() {
-  const list = ["name", "batch"];
-  if (termOptionsForBatch(state.batch).length) list.push("term");
-  list.push("ref", "pin", "review");
-  return list;
-}
-let cur = "name";
-const wizard = $("wizard");
-
-function go(step, dir = "fwd") {
-  cur = step;
-  const list = stepList();
-  wizard.querySelectorAll(".step").forEach(el => {
-    const on = el.dataset.step === step;
-    el.classList.remove("active", "fwd", "back");
-    if (on) { el.classList.add("active", dir); }
-  });
-  const i = list.indexOf(step);
-  $("progLabel").textContent = `ধাপ ${bn(i + 1)} / ${bn(list.length)}`;
-  $("progName").textContent = STEP_META[step].title;
-  $("progFill").style.width = Math.round(((i + 1) / list.length) * 100) + "%";
-  $("backBtn").style.visibility = i === 0 ? "hidden" : "visible";
-  $("nextBtn").innerHTML = step === "review"
-    ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> আবেদন পাঠাও`
-    : "পরের ধাপ";
-  if (step === "review") renderReview();
-  if (step === "term") renderTerms();
-  window.scrollTo({ top: 0, behavior: "smooth" });
-  setTimeout(() => {
-    const f = wizard.querySelector(".step.active input.input-glass");
-    if (f) f.focus({ preventScroll: true });
-  }, 60);
-}
-const clearErr = () => wizard.querySelectorAll(".err").forEach(e => e.textContent = "");
-const setErr = (k, m) => { $("err-" + k).textContent = m; };
-
-// ---------- name ----------
-$("nameInput").addEventListener("input", () => { state.name = $("nameInput").value; clearErr(); });
-
-// ---------- batch chips ----------
-$("batchChips").innerHTML = BATCHES.map(b => `<button type="button" class="chip" data-v="${esc(b.value)}">${esc(b.label)}</button>`).join("");
-$("batchChips").addEventListener("click", (e) => {
-  const c = e.target.closest(".chip"); if (!c) return;
-  if (state.batch !== c.dataset.v) state.term = "";        // term list depends on batch
-  state.batch = c.dataset.v;
-  $("batchChips").querySelectorAll(".chip").forEach(x => x.classList.toggle("on", x === c));
-  clearErr();
-  setTimeout(() => next(), 220);                              // feels like a stepper: tap and move on
-});
-
-// ---------- term chips ----------
-const TICK = '<svg class="tick" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
-function renderTerms() {
-  const opts = termOptionsForBatch(state.batch);
-  $("termSub").innerHTML = `<b>${esc(batchLabel(state.batch))}</b> — চলতি টার্ম/সেমিস্টারটা বেছে নাও। যোগ দেওয়ার তারিখসহ এটা সেভ থাকবে।`;
-  $("termChips").innerHTML = opts.map(o => `<button type="button" class="chip${state.term === o ? " on" : ""}" data-v="${esc(o)}">${esc(o)}${TICK}</button>`).join("");
-}
-$("termChips").addEventListener("click", (e) => {
-  const c = e.target.closest(".chip"); if (!c) return;
-  state.term = c.dataset.v;
-  $("termChips").querySelectorAll(".chip").forEach(x => x.classList.toggle("on", x === c));
-  clearErr();
-  setTimeout(() => next(), 220);
-});
-
-// ---------- referral ----------
-const refInput = $("refInput"), refHint = $("refHint"), banner = $("referralBanner");
+// ---------- Referral link (?ref=STU-0001) ----------
+// A friend's share link / QR lands here with their studentId in the query
+// string. The code is auto-filled into the referral field and the inviter's
+// real name is looked up (students collection is publicly readable) and shown.
+// After the admin approves this request, a friend request from the new
+// student is sent automatically to the inviter (see admin/students.html).
+const refInput = document.getElementById("refInput");
+const refHint = document.getElementById("refHint");
+const banner = document.getElementById("referralBanner");
+let referredBy = null;      // validated code (or null)
 let refTimer = null;
+
+function esc(v) { return String(v ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+
 async function checkRef(raw, { fromLink = false } = {}) {
   const code = String(raw || "").trim().toUpperCase();
-  state.referredBy = null; banner.innerHTML = ""; refHint.className = "ref-hint"; refHint.textContent = "";
+  referredBy = null;
+  banner.innerHTML = "";
+  refHint.className = "ref-hint"; refHint.textContent = "";
   if (!code) return;
   refHint.textContent = "যাচাই হচ্ছে...";
   try {
     const inviter = await findStudentByStudentId(code);
-    if (refInput.value.trim().toUpperCase() !== code) return;
+    if (refInput.value.trim().toUpperCase() !== code) return; // user kept typing
     if (!inviter) {
       refHint.className = "ref-hint bad";
-      refHint.textContent = fromLink ? "এই লিংকের কোডটি সঠিক নয় — চাইলে কোড ছাড়াই এগোতে পারো।" : "এই কোডে কাউকে পাওয়া যায়নি।";
+      refHint.textContent = fromLink ? "এই লিংকের কোডটি সঠিক নয় — চাইলে কোড ছাড়াই আবেদন করতে পারো।" : "এই কোডে কাউকে পাওয়া যায়নি।";
       return;
     }
-    state.referredBy = inviter.studentId;
+    referredBy = inviter.studentId;
+    refHint.className = "ref-hint ok";
     refHint.textContent = "";
-    banner.innerHTML = `<div class="inviter"><div class="inviter-av">${esc((inviter.name || "?").charAt(0))}</div><div><small>আমন্ত্রণ</small><b>${esc(inviter.name)}</b></div></div>`;
-  } catch {
-    refHint.className = "ref-hint bad"; refHint.textContent = "কোড যাচাই করা যায়নি। নেট চেক করো।";
+    banner.innerHTML = `
+      <div class="inviter">
+        <div class="inviter-av">${esc((inviter.name || "?").charAt(0))}</div>
+        <div>
+          <small>আমন্ত্রণ</small>
+          <b>${esc(inviter.name)}</b>
+        </div>
+      </div>`;
+  } catch (e) {
+    refHint.className = "ref-hint bad";
+    refHint.textContent = "কোড যাচাই করা যায়নি। নেট চেক করো।";
   }
 }
-const urlRef = new URLSearchParams(location.search).get("ref");
-const referralLocked = Boolean(urlRef && urlRef.trim());
-if (referralLocked) {
-  // Referral links and QR scans carry ?ref=CODE. Keep that code fixed.
+
+const urlRef = new URLSearchParams(window.location.search).get("ref");
+if (urlRef) {
   refInput.value = urlRef.trim().toUpperCase();
-  refInput.readOnly = true;
-  refInput.setAttribute("aria-readonly", "true");
-  refInput.title = "Referral from this invitation link cannot be removed.";
-  $("skipRef").style.display = "none";
-  refInput.style.opacity = "0.85";
-  refInput.style.cursor = "not-allowed";
   checkRef(urlRef, { fromLink: true });
 }
 refInput.addEventListener("input", () => {
-  if (referralLocked) { refInput.value = urlRef.trim().toUpperCase(); return; }
-  clearTimeout(refTimer); refTimer = setTimeout(() => checkRef(refInput.value), 450);
+  clearTimeout(refTimer);
+  refTimer = setTimeout(() => checkRef(refInput.value), 450);
 });
-$("skipRef").onclick = () => {
-  if (referralLocked) return;
-  refInput.value = ""; state.referredBy = null; banner.innerHTML = ""; refHint.textContent = ""; next();
-};
 
-// ---------- pin ----------
-const EYE = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
-document.querySelectorAll("[data-eye]").forEach(b => {
-  b.innerHTML = EYE;
-  b.onclick = () => { const i = $(b.dataset.eye); i.type = i.type === "password" ? "text" : "password"; };
+// Modal Logic
+const guideBtn = document.getElementById("guideBtn");
+const guideModal = document.getElementById("guideModal");
+const closeGuideModal = document.getElementById("closeGuideModal");
+
+guideBtn.addEventListener("click", () => {
+  guideModal.style.display = "flex";
 });
-["pinInput", "pinConfirm"].forEach(id => $(id).addEventListener("input", () => {
-  $(id).value = $(id).value.replace(/\D/g, "").slice(0, 6); clearErr();
+
+closeGuideModal.addEventListener("click", () => {
+  guideModal.style.display = "none";
+});
+
+// ---------- PIN inputs: digits only ----------
+const pinInput = document.getElementById("pinInput");
+const pinConfirm = document.getElementById("pinConfirm");
+const pinErr = document.getElementById("pinErr");
+[pinInput, pinConfirm].forEach(el => el.addEventListener("input", () => {
+  el.value = el.value.replace(/\D/g, "").slice(0, 6);
+  pinErr.textContent = "";
 }));
 
-// ---------- review ----------
-function renderReview() {
-  const row = (k, v, step) => `<div class="rv-row"><span>${k}</span><b>${v}${step ? `<button type="button" class="rv-edit" data-edit="${step}">বদলাও</button>` : ""}</b></div>`;
-  let h = row("নাম", esc(state.name.trim()), "name") + row("ব্যাচ", esc(batchLabel(state.batch)), "batch");
-  if (termOptionsForBatch(state.batch).length) h += row("চলতি টার্ম", esc(state.term), "term");
-  h += row("রেফারেল", state.referredBy ? esc(state.referredBy) : "নেই", referralLocked ? "" : "ref");
-  h += row("PIN", "• • • • • •", "pin");
-  $("rv").innerHTML = h;
-}
-$("rv").addEventListener("click", (e) => {
-  const b = e.target.closest("[data-edit]"); if (b) go(b.dataset.edit, "back");
-});
+// ---------- Application status screen ----------
+const APP_KEY = "joinApplicationId";
+const joinForm = document.getElementById("joinForm");
+const statusView = document.getElementById("statusView");
+const statusCard = document.getElementById("statusCard");
+const pageTitle = document.querySelector(".page-title");
+let unwatch = null;
+let lastState = "";
 
-// ---------- validation + navigation ----------
-function validate(step) {
-  clearErr();
-  if (step === "name") {
-    if (state.name.trim().length < 2) { setErr("name", "নামটা লেখো (কমপক্ষে ২ অক্ষর)।"); return false; }
-  } else if (step === "batch") {
-    if (!state.batch) { setErr("batch", "একটা ব্যাচ বেছে নাও।"); return false; }
-  } else if (step === "term") {
-    if (!state.term) { setErr("term", "চলতি টার্ম বেছে নাও।"); return false; }
-  } else if (step === "ref") {
-    if (refInput.value.trim() && !state.referredBy) { setErr("review", ""); refHint.className = "ref-hint bad"; refHint.textContent = "কোডটা সঠিক নয় — ঠিক করো অথবা এড়িয়ে যাও।"; return false; }
-  } else if (step === "pin") {
-    const p = $("pinInput").value, c = $("pinConfirm").value;
-    const bad = validatePin(p);
-    if (bad) { setErr("pin", bad); return false; }
-    if (p !== c) { setErr("pin", "দুটি PIN মেলেনি। আবার লেখো।"); return false; }
-    state.pin = p;
-  } else if (step === "review") {
-    if (!$("consentChk").checked) { setErr("review", "এগোতে গোপনীয়তা নীতি ও শর্তাবলিতে সম্মতি দাও।"); return false; }
+const SVG = {
+  check: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  cross: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  hour: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12M7 2v4a5 5 0 0 0 2 4l3 2-3 2a5 5 0 0 0-2 4v4M17 2v4a5 5 0 0 1-2 4l-3 2 3 2a5 5 0 0 1 2 4v4"/></svg>',
+  dotSm: '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg>'
+};
+
+function stage(kind) {
+  const extra = kind === "ok" ? `<div class="st-check">${SVG.check}</div>`
+              : kind === "bad" ? `<div class="st-cross">${SVG.cross}</div>`
+              : `<div class="st-hourglass">${SVG.hour}</div>`;
+  return `<div class="st-stage ${kind}">
+    <span class="st-ring"></span><span class="st-ring"></span><span class="st-ring"></span>
+    <span class="st-orbit"></span>
+    <img class="st-logo" src="./icons/icon-192.png" alt="">
+    ${extra}
+  </div>`;
+}
+
+function confetti() {
+  const colors = ["#2f7d5e", "#b8863c", "#e0b25a", "#4aa883", "#d96b5f", "#6c8cd5"];
+  return `<div class="st-confetti">${Array.from({ length: 26 }, (_, i) =>
+    `<i style="--x:${Math.round(Math.random() * 100)}%;--c:${colors[i % colors.length]};--d:${(2.2 + Math.random() * 1.6).toFixed(2)}s;--dl:${(Math.random() * 0.7).toFixed(2)}s;--r:${Math.round(Math.random() * 180)}deg"></i>`
+  ).join("")}</div>`;
+}
+
+function showStatus(data) {
+  const state = data?.status || "pending";
+  if (state === lastState && state !== "approved") return; // no needless re-render
+  lastState = state;
+  joinForm.style.display = "none";
+  pageTitle.style.display = "none";
+  document.getElementById("referralBanner").style.display = "none";
+  statusView.classList.add("on");
+  const name = esc(data?.name || "");
+
+  if (state === "approved") {
+    statusCard.innerHTML = `${confetti()}
+      ${stage("ok")}
+      <div class="st-h">অনুমোদন হয়ে গেছে!</div>
+      <p class="st-p">স্বাগতম${name ? `, <b>${name}</b>` : ""}। ${data.needsCode
+        ? "তবে তোমার PIN এখনো চালু হয়নি — অ্যাডমিনের কাছ থেকে ৮ সংখ্যার কোড নিয়ে লগইন পেজে নিজের নাম চাপো।"
+        : "এখন তালিকায় নিজের নাম চেপে <b>তোমার PIN</b> দিয়ে ঢুকে পড়ো।"}</p>
+      ${data.studentId ? `<div class="st-idcard"><small>তোমার স্টুডেন্ট আইডি</small><b>${name || "—"}</b><code>${esc(data.studentId)}</code></div>` : ""}
+      <div class="st-actions"><a href="./index.html" class="btn-submit" id="goLogin">লগইন করতে যাও</a></div>`;
+    document.getElementById("goLogin").addEventListener("click", () => { try { localStorage.removeItem(APP_KEY); } catch {} });
+    try { navigator.vibrate?.([30, 40, 30]); } catch {}
+    return;
   }
-  return true;
-}
-function next() {
-  if (!validate(cur)) return;
-  const list = stepList(), i = list.indexOf(cur);
-  if (cur === "review") { submit(); return; }
-  go(list[i + 1], "fwd");
-}
-function back() {
-  const list = stepList(), i = list.indexOf(cur);
-  if (i > 0) go(list[i - 1], "back");
-}
-wizard.addEventListener("submit", (e) => { e.preventDefault(); next(); });
-$("backBtn").onclick = back;
 
-// ---------- submit ----------
-let appliedAt = null;
-async function submit() {
-  const btn = $("nextBtn"), orig = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = `<span class="spinner" style="width:16px;height:16px;border-width:2px;border-color:#fff;border-top-color:transparent;"></span> পাঠানো হচ্ছে...`;
+  if (state === "rejected") {
+    statusCard.innerHTML = `${stage("bad")}
+      <div class="st-h">আবেদন অনুমোদন হয়নি</div>
+      <p class="st-p">অ্যাডমিন এই আবেদনটি গ্রহণ করেননি। নাম বা ব্যাচ ঠিক করে আবার আবেদন করতে পারো, অথবা অ্যাডমিনের সাথে কথা বলো।</p>
+      <div class="st-steps">
+        <div class="st-step done"><span class="st-dot">${SVG.check}</span>আবেদন পাঠানো হয়েছে</div>
+        <div class="st-step fail"><span class="st-dot">${SVG.cross}</span>অ্যাডমিন গ্রহণ করেননি</div>
+      </div>
+      <div class="st-actions"><button type="button" class="btn-submit" id="retryBtn">আবার আবেদন করো</button></div>`;
+    document.getElementById("retryBtn").addEventListener("click", () => {
+      try { localStorage.removeItem(APP_KEY); } catch {}
+      location.reload();
+    });
+    return;
+  }
+
+  // pending
+  statusCard.innerHTML = `${stage("")}
+    <div class="st-h">অনুমোদনের অপেক্ষায়</div>
+    <p class="st-p">${name ? `<b>${name}</b>, ` : ""}তোমার আবেদন অ্যাডমিনের কাছে পৌঁছে গেছে। অনুমোদন হলে এই পেজেই সাথে সাথে দেখতে পাবে।</p>
+    <div class="st-steps">
+      <div class="st-step done"><span class="st-dot">${SVG.check}</span>আবেদন পাঠানো হয়েছে</div>
+      <div class="st-step active"><span class="st-dot">${SVG.dotSm}</span><span>অ্যাডমিন যাচাই করছেন<span class="st-typing"><i></i><i></i><i></i></span></span></div>
+      <div class="st-step"><span class="st-dot">${SVG.dotSm}</span>অনুমোদন ও লগইন</div>
+    </div>
+    <div class="st-tip">পেজটা খোলা রাখতে হবে না — পরে আবার এই লিংকে এলেও তোমার আবেদনের অবস্থা দেখা যাবে।</div>`;
+}
+
+function startWatching(id) {
+  unwatch?.();
+  unwatch = watchApplication(id, (data) => {
+    if (!data) { // doc vanished / unreadable -> back to the form
+      try { localStorage.removeItem(APP_KEY); } catch {}
+      return;
+    }
+    showStatus(data);
+  });
+}
+
+// Came back later? Resume the waiting screen for this device's application.
+(async () => {
+  let id = null;
+  try { id = localStorage.getItem(APP_KEY); } catch {}
+  if (!id) return;
   try {
-    const res = await submitStudentRequest(state.name.trim(), state.batch, state.referredBy, state.pin, state.term);
-    appliedAt = new Date();
-    showDone(res);
+    const data = await getApplication(id);
+    if (!data) { try { localStorage.removeItem(APP_KEY); } catch {} return; }
+    showStatus(data);
+    startWatching(id);
+  } catch { /* offline / rules not ready -> just show the form */ }
+})();
+
+// Form Logic
+joinForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const nameInput = document.getElementById("nameInput");
+  const classInput = document.getElementById("classInput");
+  const btn = document.getElementById("submitBtn");
+  const name = nameInput.value.trim();
+  const className = classInput.value; // Dropdown value
+  const pin = pinInput.value;
+
+  if (!name || !className) {
+    showToast("দয়া করে নাম এবং ব্যাচ নির্বাচন করো", "error");
+    return;
+  }
+
+  if (!document.getElementById("consentChk").checked) { showToast("এগিয়ে যেতে গোপনীয়তা নীতি ও শর্তাবলিতে সম্মতি দাও", "error"); return; }
+
+  const badPin = validatePin(pin);
+  if (badPin) { pinErr.textContent = badPin; pinInput.focus(); return; }
+  if (pin !== pinConfirm.value) { pinErr.textContent = "দুটি PIN মেলেনি। আবার লেখো।"; pinConfirm.focus(); return; }
+
+  // A typed code must be a real student — otherwise the friend request could never be delivered.
+  if (refInput.value.trim() && !referredBy) {
+    await checkRef(refInput.value);
+    if (!referredBy) { showToast("রেফারেল কোড সঠিক নয় — ঠিক করো অথবা ফাঁকা রাখো।", "error"); return; }
+  }
+
+  const original = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner" style="width:16px; height:16px; border-width:2px; border-color:#fff; border-top-color:transparent;"></span> পাঠানো হচ্ছে...`;
+
+  try {
+    const id = await submitStudentRequest(name, className, referredBy, pin);
+    try { localStorage.setItem(APP_KEY, id); } catch {}
+    pinInput.value = ""; pinConfirm.value = "";
+    showStatus({ status: "pending", name });
+    startWatching(id);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   } catch (err) {
     showToast(friendlyError(err), "error");
-    setErr("review", err?.message && !err.code ? err.message : "আবেদন পাঠানো যায়নি। আবার চেষ্টা করো।");
-    btn.disabled = false; btn.innerHTML = orig;
+    btn.disabled = false;
+    btn.innerHTML = original;
   }
-}
-
-// ---------- done: preview + download + live status ----------
-const fmtDate = (d) => d.toLocaleString("bn-BD", { day: "numeric", month: "long", year: "numeric", hour: "numeric", minute: "2-digit" });
-let unwatch = null, finalStatus = "pending";
-
-function ticketRows(res) {
-  const r = (k, v) => `<div class="rv-row"><span>${k}</span><b>${v}</b></div>`;
-  let h = r("নাম", esc(state.name.trim())) + r("ব্যাচ", esc(batchLabel(state.batch)));
-  if (state.term) h += r("চলতি টার্ম", esc(state.term));
-  if (state.referredBy) h += r("রেফার করেছে", esc(state.referredBy));
-  h += r("আবেদনের তারিখ", esc(fmtDate(appliedAt)));
-  return h;
-}
-function showDone(res) {
-  $("prog").style.display = "none"; wizard.style.display = "none";
-  const d = $("doneCard"); d.style.display = "block";
-  d.innerHTML = `
-    <div class="done-h">
-      <div class="ok"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
-      <h2>আবেদন পাঠানো হয়েছে!</h2>
-      <p>তোমার আবেদনপত্র নিচে — ডাউনলোড করে রেখে দাও।</p>
-    </div>
-    <div class="ticket" id="ticket">
-      <div class="tk-head"><b>পরীক্ষা প্রস্তুতি</b><small>আবেদনপত্র</small></div>
-      <div class="tk-id"><small>তোমার স্টুডেন্ট আইডি</small><code id="tkId">${esc(res.studentId)}</code></div>
-      <div class="tk-body">
-        <div class="rv" style="background:transparent;border:0">${ticketRows(res)}</div>
-        <div class="tk-pin"><small>তোমার PIN</small><b>${esc(state.pin)}</b></div>
-      </div>
-      <div class="tk-status" id="tkStatus">অনুমোদনের অপেক্ষায়<span class="typing"><i></i><i></i><i></i></span></div>
-    </div>
-    <p class="warn">⚠️ PIN আর আইডি গোপন রাখো। অনুমোদন হলে লগইন পেজে নাম চেপে এই PIN দিয়ে ঢুকবে। অ্যাডমিন বাতিল করলে এই আইডি আর কাজ করবে না।</p>
-    <div class="done-actions">
-      <button type="button" class="btn-next" id="dlBtn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg> আবেদনপত্র ডাউনলোড</button>
-      <a href="./index.html" class="btn-glass">লগইন পেজে যাও</a>
-    </div>`;
-  $("dlBtn").onclick = () => downloadTicket(res);
-  window.scrollTo({ top: 0, behavior: "smooth" });
-
-  // live status straight from the database
-  unwatch?.();
-  unwatch = watchApplication(res.id, (data) => {
-    if (!data) return;
-    const el = $("tkStatus"), idEl = $("tkId"); if (!el) return;
-    finalStatus = data.status || "pending";
-    if (finalStatus === "approved") {
-      el.className = "tk-status ok"; el.textContent = "✓ অনুমোদিত — এখন লগইন পেজে নাম চেপে PIN দিয়ে ঢোকো";
-    } else if (finalStatus === "rejected") {
-      el.className = "tk-status bad"; el.textContent = "✕ আবেদন বাতিল — এই আইডি ও PIN আর কাজ করবে না";
-      idEl.classList.add("void");
-    } else {
-      el.className = "tk-status"; el.innerHTML = 'অনুমোদনের অপেক্ষায়<span class="typing"><i></i><i></i><i></i></span>';
-    }
-  });
-}
-
-function downloadTicket(res) {
-  const W = 1080, H = 1500, c = document.createElement("canvas");
-  c.width = W; c.height = H;
-  const g = c.getContext("2d");
-  const FONT = '"Hind Siliguri","Noto Sans Bengali","Kalpurush",system-ui,sans-serif';
-  // background
-  g.fillStyle = "#faf6ee"; g.fillRect(0, 0, W, H);
-  // card
-  const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
-  g.save(); g.shadowColor = "rgba(0,0,0,.12)"; g.shadowBlur = 40; g.shadowOffsetY = 12;
-  g.fillStyle = "#ffffff"; rr(70, 70, W - 140, H - 140, 44); g.fill(); g.restore();
-  g.save(); rr(70, 70, W - 140, H - 140, 44); g.clip();
-  const grad = g.createLinearGradient(70, 70, W - 70, 330); grad.addColorStop(0, "#b8863c"); grad.addColorStop(1, "#d9a85a");
-  g.fillStyle = grad; g.fillRect(70, 70, W - 140, 220);
-  g.restore();
-  g.fillStyle = "#fff"; g.textAlign = "left"; g.font = `800 58px ${FONT}`; g.fillText("পরীক্ষা প্রস্তুতি", 130, 185);
-  g.font = `600 32px ${FONT}`; g.fillText("আবেদনপত্র", 130, 240);
-  // id
-  g.textAlign = "center"; g.fillStyle = "#8a7a62"; g.font = `700 32px ${FONT}`; g.fillText("স্টুডেন্ট আইডি", W / 2, 380);
-  g.fillStyle = "#2a2118"; g.font = `900 100px ${FONT}`; g.fillText(res.studentId, W / 2, 490);
-  g.setLineDash([14, 12]); g.strokeStyle = "#d8cdb9"; g.lineWidth = 3;
-  g.beginPath(); g.moveTo(130, 540); g.lineTo(W - 130, 540); g.stroke(); g.setLineDash([]);
-  // rows
-  const rows = [["নাম", state.name.trim()], ["ব্যাচ", batchLabel(state.batch)]];
-  if (state.term) rows.push(["চলতি টার্ম", state.term]);
-  if (state.referredBy) rows.push(["রেফার করেছে", state.referredBy]);
-  rows.push(["আবেদনের তারিখ", fmtDate(appliedAt)]);
-  let y = 620;
-  rows.forEach(([k, v]) => {
-    g.textAlign = "left"; g.fillStyle = "#8a7a62"; g.font = `700 32px ${FONT}`; g.fillText(k, 130, y);
-    g.textAlign = "right"; g.fillStyle = "#2a2118"; g.font = `800 36px ${FONT}`;
-    let t = String(v); while (g.measureText(t).width > 560 && t.length > 4) t = t.slice(0, -2);
-    if (t !== String(v)) t += "…";
-    g.fillText(t, W - 130, y);
-    y += 92;
-  });
-  // pin
-  y += 20;
-  g.fillStyle = "rgba(184,134,60,.12)"; rr(130, y, W - 260, 210, 28); g.fill();
-  g.strokeStyle = "rgba(184,134,60,.45)"; g.lineWidth = 3; rr(130, y, W - 260, 210, 28); g.stroke();
-  g.textAlign = "center"; g.fillStyle = "#8a7a62"; g.font = `700 30px ${FONT}`; g.fillText("তোমার PIN", W / 2, y + 62);
-  g.fillStyle = "#b8863c"; g.font = `900 92px ${FONT}`;
-  g.fillText(state.pin.split("").join("  "), W / 2, y + 160);
-  y += 280;
-  // status
-  const ok = finalStatus === "approved", bad = finalStatus === "rejected";
-  g.fillStyle = ok ? "rgba(47,125,94,.12)" : bad ? "rgba(200,60,60,.1)" : "#f3ecdd";
-  rr(130, y, W - 260, 100, 24); g.fill();
-  g.fillStyle = ok ? "#2f7d5e" : bad ? "#c83c3c" : "#6b5b43"; g.font = `800 34px ${FONT}`;
-  g.fillText(ok ? "অনুমোদিত" : bad ? "বাতিল" : "অনুমোদনের অপেক্ষায়", W / 2, y + 64);
-  // footer
-  g.fillStyle = "#a2927a"; g.font = `600 26px ${FONT}`;
-  g.fillText("PIN ও আইডি গোপন রাখো — কাউকে দেখাবে না।", W / 2, H - 130);
-
-  // Export the first-application ticket as a PDF. This canvas intentionally
-  // includes the PIN; later downloads from index.html use a separate PIN-free form.
-  const jpegData = c.toDataURL("image/jpeg", 0.95).split(",")[1];
-  const binary = atob(jpegData);
-  const imageBytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) imageBytes[i] = binary.charCodeAt(i);
-  const encoder = new TextEncoder();
-  const parts = [];
-  let byteLength = 0;
-  const push = (part) => {
-    const bytes = typeof part === "string" ? encoder.encode(part) : part;
-    parts.push(bytes); byteLength += bytes.length;
-  };
-  const offsets = [];
-  push("%PDF-1.4\n%\xE2\xE3\xCF\xD3\n");
-  const addObject = (id, body) => {
-    offsets[id] = byteLength;
-    push(`${id} 0 obj\n${body}\nendobj\n`);
-  };
-  addObject(1, "<< /Type /Catalog /Pages 2 0 R >>");
-  addObject(2, "<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
-  addObject(3, "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 518.4 720] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>");
-  offsets[4] = byteLength;
-  push(`4 0 obj\n<< /Type /XObject /Subtype /Image /Width ${W} /Height ${H} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${imageBytes.length} >>\nstream\n`);
-  push(imageBytes); push("\nendstream\nendobj\n");
-  const contentStream = "q\n518.4 0 0 720 0 0 cm\n/Im0 Do\nQ\n";
-  addObject(5, `<< /Length ${encoder.encode(contentStream).length} >>\nstream\n${contentStream}endstream`);
-  const xrefOffset = byteLength;
-  push("xref\n0 6\n0000000000 65535 f \n");
-  for (let id = 1; id <= 5; id++) push(`${String(offsets[id]).padStart(10, "0")} 00000 n \n`);
-  push(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`);
-  const pdfBlob = new Blob(parts, { type: "application/pdf" });
-  const pdfUrl = URL.createObjectURL(pdfBlob);
-  const a = document.createElement("a");
-  a.href = pdfUrl;
-  a.download = `আবেদনপত্র-${res.studentId}.pdf`;
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(pdfUrl), 5000);
-  showToast("আবেদনপত্র PDF ডাউনলোড হয়েছে", "success");
-}
-
-go("name", "fwd");
+});
 </script>
 </body>
 </html>
