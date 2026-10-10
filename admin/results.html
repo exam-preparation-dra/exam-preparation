@@ -97,6 +97,7 @@
   .tabs-group { display: flex; gap: 10px; flex: 1; min-width: 280px; }
   .filter-group { flex-shrink: 0; display: flex; gap: 10px; align-items: center; }
 </style>
+<script src="../js/popup.js"></script>
 </head>
 <body>
 <div class="app-shell app-shell--wide" id="shell">
@@ -420,17 +421,18 @@ function statusUpdatePayload(action) {
 
 const ACTION_LABEL = { approve: "অনুমোদন", reject: "বাতিল", revert: "পেন্ডিং এ ফেরত" };
 const ACTION_CONFIRM = {
-  approve: "এই ফলাফলটি অনুমোদন করবেন? অনুমোদনের পর এটি শিক্ষার্থীর স্থায়ী ইতিহাসে যুক্ত হবে।",
-  reject: "এই ফলাফলটি বাতিল করবেন? বাতিল করা ফলাফল শিক্ষার্থীর ইতিহাসে যুক্ত হবে না।",
-  revert: "এই ফলাফলটি আবার পেন্ডিং তালিকায় ফেরত পাঠাবেন?",
+  approve: { bn: "এই ফলাফলটি অনুমোদন করবেন? অনুমোদনের পর এটি শিক্ষার্থীর স্থায়ী ইতিহাসে যুক্ত হবে।", en: "Approve this result? Once approved it becomes part of the student's permanent history." },
+  reject: { bn: "এই ফলাফলটি বাতিল করবেন? বাতিল করা ফলাফল শিক্ষার্থীর ইতিহাসে যুক্ত হবে না।", en: "Reject this result? Rejected results are not added to the student's history." },
+  revert: { bn: "এই ফলাফলটি আবার পেন্ডিং তালিকায় ফেরত পাঠাবেন?", en: "Send this result back to the pending list?" },
 };
+const ACTION_LABEL_EN = { approve: "approved", reject: "rejected", revert: "moved back to pending" };
 
 async function handleSingleAction(id, action) {
-  if (!confirm(ACTION_CONFIRM[action])) return;
+  if (!await AppPopup.confirm(ACTION_CONFIRM[action])) return;
   try {
     await updateDoc(doc(db, "results", id), statusUpdatePayload(action));
     invalidateApprovedCache();
-    showToast(`ফলাফল সফলভাবে ${ACTION_LABEL[action]} করা হয়েছে।`, "success");
+    showToast({ bn: `ফলাফল সফলভাবে ${ACTION_LABEL[action]} করা হয়েছে।`, en: `Result ${ACTION_LABEL_EN[action]} successfully.` }, "success");
     selectedIds.delete(id);
     load();
   } catch (err) {
@@ -441,7 +443,7 @@ async function handleSingleAction(id, action) {
 async function handleBulkAction(action) {
   const ids = [...selectedIds].filter(id => currentFilteredResults.some(r => r.id === id));
   if (ids.length === 0) return;
-  if (!confirm(`নির্বাচিত ${ids.length} টি ফলাফল ${ACTION_LABEL[action]} করবেন?`)) return;
+  if (!await AppPopup.confirm({ bn: `নির্বাচিত ${ids.length} টি ফলাফল ${ACTION_LABEL[action]} করবেন?`, en: `${ids.length} selected result(s): ${ACTION_LABEL_EN[action]}?` }, { danger: action === "reject" })) return;
 
   document.querySelectorAll(".bulk-action-btn").forEach(b => b.disabled = true);
 
@@ -451,7 +453,7 @@ async function handleBulkAction(action) {
     ids.forEach(id => batch.update(doc(db, "results", id), payload));
     await batch.commit();
     invalidateApprovedCache();
-    showToast(`${ids.length} টি ফলাফল সফলভাবে ${ACTION_LABEL[action]} করা হয়েছে।`, "success");
+    showToast({ bn: `${ids.length} টি ফলাফল সফলভাবে ${ACTION_LABEL[action]} করা হয়েছে।`, en: `${ids.length} result(s) ${ACTION_LABEL_EN[action]} successfully.` }, "success");
     ids.forEach(id => selectedIds.delete(id));
     load();
   } catch (err) {

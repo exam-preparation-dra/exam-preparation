@@ -103,6 +103,7 @@
   .rq-actions button:disabled { opacity:.55; pointer-events:none; }
   @media (max-width:380px){ .rq-actions { flex-direction:column-reverse; } }
 </style>
+<script src="../js/popup.js"></script>
 </head>
 <body>
 <div class="app-shell app-shell--wide" id="shell">
@@ -574,18 +575,20 @@ function bindStudentActions(students) {
 
     row.querySelector(".toggle-btn").addEventListener("click", async () => {
       const willActivate = student.isActive === false ? true : false;
-      const msg = willActivate ? `${student.name || 'শিক্ষার্থী'} কে সক্রিয় করবেন?` : `${student.name || 'শিক্ষার্থী'} কে নিষ্ক্রিয় করবেন?`;
-      if (!confirm(msg)) return;
+      const msg = { bn: willActivate ? `${student.name || 'শিক্ষার্থী'} কে সক্রিয় করবেন?` : `${student.name || 'শিক্ষার্থী'} কে নিষ্ক্রিয় করবেন?`,
+                    en: willActivate ? `Activate ${student.name || 'this student'}?` : `Deactivate ${student.name || 'this student'}?` };
+      if (!await AppPopup.confirm(msg)) return;
       try {
         await updateDoc(doc(db, "students", docId), { isActive: willActivate });
-        showToast(willActivate ? "সক্রিয় করা হয়েছে।" : "নিষ্ক্রিয় করা হয়েছে।", "success");
+        showToast(willActivate ? { bn: "সক্রিয় করা হয়েছে।", en: "Activated." } : { bn: "নিষ্ক্রিয় করা হয়েছে।", en: "Deactivated." }, "success");
         loadStudents();
       } catch (err) { showToast(friendlyError(err), "error"); }
     });
 
     row.querySelector(".delete-btn").addEventListener("click", async () => {
-      const msg = `সতর্কতা: আপনি কি "${student.name || 'এই শিক্ষার্থী'}" কে স্থায়ীভাবে মুছে ফেলতে চান?\n\nএই কাজটি আর বাতিল (Undo) করা যাবে না এবং এই শিক্ষার্থীর সমস্ত তথ্য মুছে যাবে।`;
-      if (!confirm(msg)) return;
+      const msg = { bn: `সতর্কতা: আপনি কি "${student.name || 'এই শিক্ষার্থী'}" কে স্থায়ীভাবে মুছে ফেলতে চান?\n\nএই কাজটি আর বাতিল (Undo) করা যাবে না এবং এই শিক্ষার্থীর সমস্ত তথ্য মুছে যাবে।`,
+                    en: `Warning: permanently delete "${student.name || 'this student'}"?\n\nThis can't be undone and all of this student's data will be removed.` };
+      if (!await AppPopup.confirm(msg)) return;
       try {
         const rep = await eraseStudentData(student.studentId, docId);
         const warn = rep.failed.length ? ` (কিছু ধাপ হয়নি: ${[...new Set(rep.failed)].join(", ")})` : "";
@@ -735,7 +738,7 @@ function wireRequestCard(request) {
   approveBtn.addEventListener("click", async () => {
     const finalName = nameInput.value.trim();
     if (!finalName) { showToast("নাম খালি রাখা যাবে না।", "error"); nameInput.focus(); return; }
-    if (!confirm(`"${finalName}" কে অনুমোদন দেবেন?`)) return;
+    if (!await AppPopup.confirm({ bn: `"${finalName}" কে অনুমোদন দেবেন?`, en: `Approve "${finalName}"?` })) return;
     setBusy(true, "অপেক্ষা করুন…");
     try {
       const created = await createStudent(finalName, request.className, request.referredBy || null);
@@ -766,7 +769,7 @@ function wireRequestCard(request) {
   });
 
   rejectBtn.addEventListener("click", async () => {
-    if (!confirm("আবেদন বাতিল করবেন?")) return;
+    if (!await AppPopup.confirm("আবেদন বাতিল করবেন?")) return;
     setBusy(true);
     try {
       try { await publishApplicationResult(request.id, { status: "rejected" }); } catch (e) { console.warn(e); }

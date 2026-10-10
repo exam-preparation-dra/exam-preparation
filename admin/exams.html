@@ -75,6 +75,7 @@
   .controls-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; margin-top: 16px; }
   .filter-group { display: flex; gap: 12px; flex-wrap: wrap; flex: 1; }
 </style>
+<script src="../js/popup.js"></script>
 </head>
 <body>
 <div class="app-shell app-shell--wide" id="shell">
@@ -251,7 +252,7 @@ function render() {
 }
 
 async function handlePublish(id) {
-  if (!confirm("পরীক্ষা প্রকাশ করলে প্রশ্নগুলো স্থায়ীভাবে লক হয়ে যাবে। এগিয়ে যাবেন?")) return;
+  if (!await AppPopup.confirm("পরীক্ষা প্রকাশ করলে প্রশ্নগুলো স্থায়ীভাবে লক হয়ে যাবে। এগিয়ে যাবেন?")) return;
   try {
     await publishExam(id);
     showToast("পরীক্ষা প্রকাশ করা হয়েছে।", "success");
@@ -262,7 +263,7 @@ async function handlePublish(id) {
 }
 
 async function handleDuplicate(id) {
-  if (!confirm("এই পরীক্ষাটি ডুপ্লিকেট করবেন?")) return;
+  if (!await AppPopup.confirm("এই পরীক্ষাটি ডুপ্লিকেট করবেন?")) return;
   try {
     await duplicateExam(id);
     showToast("পরীক্ষা ডুপ্লিকেট করা হয়েছে (খসড়া হিসেবে)।", "success");
@@ -271,7 +272,7 @@ async function handleDuplicate(id) {
 }
 
 async function handleArchive(id) {
-  if (!confirm("এই পরীক্ষাটি সংরক্ষণাগারে পাঠাবেন?")) return;
+  if (!await AppPopup.confirm("এই পরীক্ষাটি সংরক্ষণাগারে পাঠাবেন?")) return;
   try {
     await archiveExam(id);
     showToast("সংরক্ষণাগারে পাঠানো হয়েছে।", "success");
@@ -280,7 +281,7 @@ async function handleArchive(id) {
 }
 
 async function handleDelete(id) {
-  if (!confirm("এই খসড়া পরীক্ষাটি স্থায়ীভাবে মুছে ফেলবেন?")) return;
+  if (!await AppPopup.confirm("এই খসড়া পরীক্ষাটি স্থায়ীভাবে মুছে ফেলবেন?")) return;
   try {
     await deleteDraftExam(id);
     showToast("মুছে ফেলা হয়েছে।", "success");
@@ -289,8 +290,8 @@ async function handleDelete(id) {
 }
 
 async function handlePermanentDelete(id, name) {
-  if (!confirm(`"${name}" পরীক্ষাটি এবং এর সাথে জড়িত সব শিক্ষার্থীর attempt ও ফলাফল স্থায়ীভাবে মুছে ফেলবেন? এটি আর ফেরত আনা যাবে না।`)) return;
-  if (!confirm("নিশ্চিত? এই পরীক্ষার সব রেকর্ড চিরতরে হারিয়ে যাবে।")) return;
+  if (!await AppPopup.confirm({ bn: `"${name}" পরীক্ষাটি এবং এর সাথে জড়িত সব শিক্ষার্থীর attempt ও ফলাফল স্থায়ীভাবে মুছে ফেলবেন? এটি আর ফেরত আনা যাবে না।`, en: `Permanently delete "${name}" along with every student's attempts and results? This can't be undone.` })) return;
+  if (!await AppPopup.confirm("নিশ্চিত? এই পরীক্ষার সব রেকর্ড চিরতরে হারিয়ে যাবে।")) return;
   try {
     await deleteExamPermanently(id);
     showToast("পরীক্ষা ও এর সব রেকর্ড মুছে ফেলা হয়েছে।", "success");

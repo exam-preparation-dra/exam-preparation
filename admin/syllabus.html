@@ -120,6 +120,7 @@
   .remove-row-btn:hover { background: #ef4444; color: #fff; box-shadow: 0 4px 12px rgba(239,68,68,0.2); transform: scale(1.05); }
   .remove-row-btn:active { transform: scale(0.95); }
 </style>
+<script src="../js/popup.js"></script>
 </head>
 <body>
 <div class="app-shell" id="shell">
@@ -454,51 +455,51 @@ function attachEvents() {
   });
 
   document.querySelectorAll(".delete-batch").forEach(btn => btn.addEventListener("click", async () => {
-    if(confirm("সতর্কতা: এই ব্যাচটি মুছলে এর ভেতরের সব বিষয় ও টপিক মুছে যাবে! নিশ্চিত?")) {
+    if(await AppPopup.confirm("সতর্কতা: এই ব্যাচটি মুছলে এর ভেতরের সব বিষয় ও টপিক মুছে যাবে! নিশ্চিত?")) {
       try { await deleteDoc(doc(db, "subjects", btn.dataset.id)); showToast("মুছে ফেলা হয়েছে", "success"); loadTree(); } catch (err) { showToast(friendlyError(err), "error"); }
     }
   }));
   document.querySelectorAll(".toggle-batch").forEach(btn => btn.addEventListener("click", async () => {
     const batch = findBatch(btn.dataset.id);
-    if(confirm(`এই ব্যাচটি ${batch.isActive !== false ? "বন্ধ" : "চালু"} করবেন?`)) {
+    if(await AppPopup.confirm({ bn: `এই ব্যাচটি ${batch.isActive !== false ? "বন্ধ" : "চালু"} করবেন?`, en: `${batch.isActive !== false ? "Deactivate" : "Activate"} this batch?` })) {
       try { await setSubjectActive(btn.dataset.id, batch.isActive === false ? true : false); showToast("আপডেট হয়েছে", "success"); loadTree(); } catch (err) { showToast(friendlyError(err), "error"); }
     }
   }));
 
   document.querySelectorAll(".edit-subject").forEach(btn => btn.addEventListener("click", async () => {
     const subject = findSubject(btn.dataset.id);
-    const name = prompt("বিষয়ের নতুন নাম:", subject.name_bn);
+    const name = await AppPopup.prompt("বিষয়ের নতুন নাম:", subject.name_bn);
     if (name && name.trim()) {
       try { await updateChapter(subject.id, { name_bn: name.trim(), name_en: name.trim() }); showToast("আপডেট হয়েছে!", "success"); loadTree(); } catch (err) {}
     }
   }));
   document.querySelectorAll(".toggle-subject").forEach(btn => btn.addEventListener("click", async () => {
     const subject = findSubject(btn.dataset.id);
-    if(confirm(`এই বিষয়টি ${subject.isActive !== false ? "বন্ধ" : "চালু"} করবেন?`)) {
+    if(await AppPopup.confirm({ bn: `এই বিষয়টি ${subject.isActive !== false ? "বন্ধ" : "চালু"} করবেন?`, en: `${subject.isActive !== false ? "Deactivate" : "Activate"} this subject?` })) {
       try { await setChapterActive(subject.id, subject.isActive === false ? true : false); showToast("আপডেট হয়েছে!", "success"); loadTree(); } catch (err) {}
     }
   }));
   document.querySelectorAll(".delete-subject").forEach(btn => btn.addEventListener("click", async () => {
-    if(confirm("সতর্কতা: এই বিষয়টি মুছলে এর ভেতরের সব টপিক মুছে যাবে! নিশ্চিত?")) {
+    if(await AppPopup.confirm("সতর্কতা: এই বিষয়টি মুছলে এর ভেতরের সব টপিক মুছে যাবে! নিশ্চিত?")) {
       try { await deleteDoc(doc(db, "chapters", btn.dataset.id)); showToast("মুছে ফেলা হয়েছে", "success"); loadTree(); } catch (err) {}
     }
   }));
 
   document.querySelectorAll(".edit-topic").forEach(btn => btn.addEventListener("click", async () => {
     const topic = findTopic(btn.dataset.id);
-    const name = prompt("টপিকের নতুন নাম (টপিক - সাবটপিক ফরম্যাটে দিতে পারেন):", topic.name_bn);
+    const name = await AppPopup.prompt("টপিকের নতুন নাম (টপিক - সাবটপিক ফরম্যাটে দিতে পারেন):", topic.name_bn);
     if (name && name.trim()) {
       try { await updateTopic(topic.id, { name_bn: name.trim(), name_en: name.trim() }); showToast("আপডেট হয়েছে!", "success"); loadTree(); } catch (err) {}
     }
   }));
   document.querySelectorAll(".toggle-topic").forEach(btn => btn.addEventListener("click", async () => {
     const topic = findTopic(btn.dataset.id);
-    if(confirm(`এই টপিকটি ${topic.isActive !== false ? "বন্ধ" : "চালু"} করবেন?`)) {
+    if(await AppPopup.confirm({ bn: `এই টপিকটি ${topic.isActive !== false ? "বন্ধ" : "চালু"} করবেন?`, en: `${topic.isActive !== false ? "Deactivate" : "Activate"} this topic?` })) {
       try { await setTopicActive(topic.id, topic.isActive === false ? true : false); showToast("আপডেট হয়েছে!", "success"); loadTree(); } catch (err) {}
     }
   }));
   document.querySelectorAll(".delete-topic").forEach(btn => btn.addEventListener("click", async () => {
-    if(confirm("টপিকটি মুছে ফেলতে চান?")) {
+    if(await AppPopup.confirm("টপিকটি মুছে ফেলতে চান?")) {
       try { await deleteDoc(doc(db, "topics", btn.dataset.id)); showToast("মুছে ফেলা হয়েছে", "success"); loadTree(); } catch (err) {}
     }
   }));

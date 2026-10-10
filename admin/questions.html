@@ -98,6 +98,7 @@
 </script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   
+<script src="../js/popup.js"></script>
 </head>
 <body>
 <div class="app-shell" id="shell">
@@ -695,7 +696,7 @@ function setupVoiceButton() {
 async function handleGenerateExplanation(id, btn) {
   const q = allQuestions.find(x => x.id === id);
   if (!q) return;
-  const apiKey = promptForApiKey(false);
+  const apiKey = await promptForApiKey(false);
   if (!apiKey) { showToast("API key ছাড়া ব্যাখ্যা তৈরি করা যাবে অমর।", "error"); return; }
 
   btn.disabled = true; btn.innerHTML = `<span class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px;"></span> তৈরি হচ্ছে...`;
@@ -713,19 +714,21 @@ async function handleGenerateExplanation(id, btn) {
 
 async function handleDuplicate(id) {
   const q = allQuestions.find(x => x.id === id);
-  if (!q || !confirm("এই প্রশ্নটি ডুপ্লিকেট করবেন?")) return;
+  if (!q || !await AppPopup.confirm("এই প্রশ্নটি ডুপ্লিকেট করবেন?")) return;
   try { await duplicateQuestion(q); showToast("প্রশ্ন ডুপ্লিকেট করা হয়েছে।", "success"); reloadList(); } catch (err) { showToast(friendlyError(err), "error"); }
 }
 
 async function handleToggleActive(id) {
   const q = allQuestions.find(x => x.id === id);
   if (!q) return;
-  if (!confirm(!q.isActive ? "এই প্রশ্নটি আবার সক্রিয় করবেন?" : "এই প্রশ্নটি নিষ্ক্রিয় করবেন? এটি নতুন পরীক্ষায় দেখা যাবে না, তবে পুরনো ফলাফলে অপরিবর্তিত থাকবে।")) return;
+  if (!await AppPopup.confirm(!q.isActive
+    ? { bn: "এই প্রশ্নটি আবার সক্রিয় করবেন?", en: "Activate this question again?" }
+    : { bn: "এই প্রশ্নটি নিষ্ক্রিয় করবেন? এটি নতুন পরীক্ষায় দেখা যাবে না, তবে পুরনো ফলাফলে অপরিবর্তিত থাকবে।", en: "Deactivate this question? It won't appear in new exams, but past results stay unchanged." })) return;
   try { await setQuestionActive(id, !q.isActive); showToast("আপডেট করা হয়েছে।", "success"); reloadList(); } catch (err) { showToast(friendlyError(err), "error"); }
 }
 
 async function handleDelete(id) {
-  if (!confirm("এই প্রশ্নটি স্থায়ীভাবে মুছে ফেলবেন? যেসব পরীক্ষা ইতিমধ্যে প্রকাশিত হয়ে গেছে সেখানে এই প্রশ্নের একটি কপি থেকে যাবে, কিন্তু এটি আর নতুন পরীক্ষায় যোগ করা যাবে না।")) return;
+  if (!await AppPopup.confirm({ bn: "এই প্রশ্নটি স্থায়ীভাবে মুছে ফেলবেন? যেসব পরীক্ষা ইতিমধ্যে প্রকাশিত হয়ে গেছে সেখানে এই প্রশ্নের একটি কপি থেকে যাবে, কিন্তু এটি আর নতুন পরীক্ষায় যোগ করা যাবে না।", en: "Permanently delete this question? Exams that are already published keep a copy of it, but it can't be added to new exams." })) return;
   try { await deleteQuestion(id); showToast("প্রশ্ন মুছে ফেলা হয়েছে।", "success"); reloadList(); } catch (err) { showToast(friendlyError(err), "error"); }
 }
 </script>

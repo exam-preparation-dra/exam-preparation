@@ -111,6 +111,7 @@
     display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(0,0,0,0.02);
   }
 </style>
+<script src="../js/popup.js"></script>
 </head>
 <body>
 <div class="app-shell app-shell--wide" id="shell">
@@ -655,7 +656,7 @@ async function handleAiGenerate() {
   const rows = Array.from(document.querySelectorAll("#aiRowsContainer > .ai-row"));
   if (rows.length === 0) { showToast("অন্তত একটা সিলেকশন যোগ করুন।", "error"); return; }
 
-  const apiKey = promptForApiKey(false);
+  const apiKey = await promptForApiKey(false);
   if (!apiKey) { showToast("API key ছাড়া তৈরি করা যাবে না।", "error"); return; }
 
   const marksPerQ = Number(document.getElementById("marksPerQuestion").value) || 1;
@@ -866,12 +867,12 @@ async function handleFinalSubmit(e) {
     document.getElementById("examTargetBatch").focus();
     return;
   }
-  if (chosenBatch === "all" && !confirm("এই পরীক্ষা সব ব্যাচ পাবে এবং সবার marks-এ যোগ হবে। নিশ্চিত?")) return;
+  if (chosenBatch === "all" && !await AppPopup.confirm("এই পরীক্ষা সব ব্যাচ পাবে এবং সবার marks-এ যোগ হবে। নিশ্চিত?")) return;
   // soft warning if the questions come from another batch's syllabus
   if (chosenBatch !== "all") {
     const batchNodeOf = id => { const n = tree.find(t => t.id === id); return n ? (normalizeBatch(n.name_bn) || normalizeBatch(n.name_en)) : ""; };
     const otherBatch = [...new Set(selectedQuestions.map(q => batchNodeOf(q.subjectId)).filter(b => /^Batch \d+$/.test(b) && b !== chosenBatch))];
-    if (otherBatch.length && !confirm("কিছু প্রশ্ন " + otherBatch.join(", ") + " এর সিলেবাস থেকে এসেছে, কিন্তু পরীক্ষা " + chosenBatch + " এর জন্য। তবুও সেভ করবেন?")) return;
+    if (otherBatch.length && !await AppPopup.confirm({ bn: "কিছু প্রশ্ন " + otherBatch.join(", ") + " এর সিলেবাস থেকে এসেছে, কিন্তু পরীক্ষা " + chosenBatch + " এর জন্য। তবুও সেভ করবেন?", en: "Some questions come from the " + otherBatch.join(", ") + " syllabus, but this exam is for " + chosenBatch + ". Save anyway?" })) return;
   }
 
   const subjectIds = [...new Set(selectedQuestions.map(q => q.subjectId))];

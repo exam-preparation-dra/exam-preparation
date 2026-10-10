@@ -12,6 +12,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
+        /* tokens so the shared popup (js/popup.js) matches this dark admin theme */
+        :root{--surface-solid:#111a2e;--surface:rgba(255,255,255,.05);--surface-border:rgba(255,255,255,.12);--text-primary:#F8FAFC;--text-secondary:#CBD5E1;--color-accent:#8B5CF6;--color-success:#10B981;--color-danger:#EF4444}
         /* =========================================
            VARIABLES & THEME
            ========================================= */
@@ -325,11 +327,6 @@
         <p style="margin-top: 20px; color: var(--text-muted); font-size: 0.9rem;">Verifying Secure Connection...</p>
     </div>
 
-    <!-- Toast Notification -->
-    <div id="app-toast" class="toast">
-        <div id="toast-icon" class="toast-icon"></div>
-        <div id="toast-message" style="font-size: 0.9rem; font-weight: 500;"></div>
-    </div>
 
     <!-- LEFT SIDEBAR -->
     <aside class="admin-sidebar" id="sidebar">
@@ -657,18 +654,7 @@
         }
 
         function showToast(message, isError = false) {
-            const toast = document.getElementById('app-toast');
-            const icon = document.getElementById('toast-icon');
-            const msg = document.getElementById('toast-message');
-            
-            icon.className = `toast-icon ${isError ? 'error' : 'success'}`;
-            icon.innerHTML = isError 
-                ? '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
-                : '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
-            
-            msg.textContent = message;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
+            AppPopup.toast(message, isError ? 'error' : 'success');
         }
 
              // ==========================================
@@ -824,7 +810,7 @@
                 return;
             }
 
-            const confirmAction = confirm(`Approve ${or_selectedRequest.name} as an Offline Student?`);
+            const confirmAction = await AppPopup.confirm(`Approve ${or_selectedRequest.name} as an Offline Student?`);
             if (!confirmAction) return;
 
             setModalButtonsState(true, "Approving...");
@@ -861,7 +847,7 @@
                 return;
             }
 
-            const confirmAction = confirm(`Reject this offline student request?`);
+            const confirmAction = await AppPopup.confirm(`Reject this offline student request?`);
             if (!confirmAction) return;
 
             setModalButtonsState(true, "Rejecting...", true);
