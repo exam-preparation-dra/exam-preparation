@@ -19,11 +19,11 @@ const MIN_DAYS_BETWEEN_CHANGES = 30;
 export async function getPlatformSettings() {
   try {
     const snap = await getDoc(doc(db, "settings", "general"));
-    if (!snap.exists()) return { platformTitle: null, titleUpdatedAt: null, contactEmail: "" };
+    if (!snap.exists()) return { platformTitle: null, titleUpdatedAt: null };
     const data = snap.data();
-    return { platformTitle: data.platformTitle ?? null, titleUpdatedAt: data.titleUpdatedAt ?? null, contactEmail: data.contactEmail ?? "" };
+    return { platformTitle: data.platformTitle ?? null, titleUpdatedAt: data.titleUpdatedAt ?? null };
   } catch {
-    return { platformTitle: null, titleUpdatedAt: null, contactEmail: "" };
+    return { platformTitle: null, titleUpdatedAt: null };
   }
 }
 
@@ -43,17 +43,5 @@ export async function setPlatformTitle(title) {
   await setDoc(doc(db, "settings", "general"), {
     platformTitle: trimmed,
     titleUpdatedAt: serverTimestamp()
-  }, { merge: true });
-}
-
-// Store the public contact email in the same permanent settings document.
-export async function setPlatformContactEmail(email) {
-  const trimmed = (email || "").trim();
-  if (trimmed && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
-    throw new Error("Please enter a valid email address.");
-  }
-  await setDoc(doc(db, "settings", "general"), {
-    contactEmail: trimmed,
-    contactEmailUpdatedAt: serverTimestamp()
   }, { merge: true });
 }

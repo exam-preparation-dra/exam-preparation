@@ -325,6 +325,18 @@ function chatPreviewText(m, names) {
 
 const NOTIF_TRASH_ICON = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>`;
 const NOTIF_MSG_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
+
+// ---- WhatsApp-style notification helpers (see notif-ui.js) ----
+import "./notif-ui.js";
+const nxT = (bn, en) => (window.AppPopup ? window.AppPopup.t({ bn, en }) : bn);
+const NX_REPLY_ICON = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 6 6v3"/></svg>`;
+function nxAvatar(name, glyph) {
+  const s = String(name || "?");
+  let h = 0;
+  for (const ch of s) h = (h * 31 + ch.codePointAt(0)) % 360;
+  const first = glyph || (Array.from(s.trim())[0] || "?").toUpperCase();
+  return `<span class="nx-av" style="--h:${h}" aria-hidden="true">${escapeNotification(first)}</span>`;
+}
 const stripNotifEmoji = t => String(t || "").replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B50}\u{2705}\u{2764}\u{FE0F}\u{200D}]+/gu, "").replace(/\s+/g, " ").trim();
 
 // "আজ, ৩:১৫ PM" / "গতকাল, ..." / "৩ অক্টো, ..."
@@ -768,6 +780,9 @@ async function renderGlobalNotifications(student) {
     return;
   }
 
+  // a reply box is open / a card is being swiped: don't rebuild under the user's finger
+  if (window.__nxBusy) { window.__nxPending = true; return; }
+
   try {
     const requestQuery = query(
       collection(db, "friendRequests"),
@@ -893,7 +908,7 @@ async function renderGlobalNotifications(student) {
     const cheerItems = cheerDocs
       .filter(c => { const m = notificationMillis(c.createdAt); return !m || m >= cutoffMs; })
       .map(c => ({
-        key: `cheer:${c.id}`, type: "cheer", id: c.id,
+        key: `cheer:${c.id}`, type: "cheer", id: c.id, senderId: c.fromStudentId,
         sender: names[c.fromStudentId] || "একজন বন্ধু",
         text: stripNotifEmoji(c.text) || "তোমাকে একটি বার্তা পাঠিয়েছে",
         createdAt: c.createdAt || new Date()
@@ -915,14 +930,14 @@ async function renderGlobalNotifications(student) {
       ...(chatNotif.rooms || []).filter(r => Number(r.unread?.[myChatId]) > 0).map(r => {
         const other = (r.members || []).find(x => x !== myChatId);
         return {
-          key: `chat:${r.id}`, type: "chat", id: r.id, count: Number(r.unread[myChatId]),
+          key: `chat:${r.id}:${r.lastMsg?.id || ""}`, type: "chat", id: r.id, isGroup: r.type === "group", count: Number(r.unread[myChatId]),
           sender: r.type === "group" ? (r.name || "গ্রুপ চ্যাট") : (names[other] || "একজন বন্ধু"),
           text: chatPreviewText(r.lastMsg, names),
           createdAt: r.lastAt || new Date()
         };
       }),
       ...(chatNotif.inviteRooms || []).map(r => ({
-        key: `chatinv:${r.id}`, type: "chatinvite", id: r.id,
+        key: `chatinv:${r.id}`, type: "chatinvite", id: r.id, isGroup: true,
         sender: names[r.createdBy] || "একজন বন্ধু",
         text: r.name || "নতুন গ্রুপ",
         createdAt: r.createdAt || new Date()
@@ -1070,14 +1085,30 @@ async function renderGlobalNotifications(student) {
     const items = allItems.slice(0, NOTIF_MAX_VISIBLE);
     lastNotificationItems = items;
 
+    // hook for notif-ui.js (swipe / inline reply / clear all)
+    window.__nxNotif = {
+      me: student.studentId,
+      names,
+      getRoom: id => (chatNotif.rooms || []).concat(chatNotif.inviteRooms || []).find(r => r.id === id) || null,
+      visibleKeys: () => lastNotificationItems.map(i => i.key),
+      hide: async key => {
+        hideNotification(key, student.studentId);
+        if (String(key).startsWith("cheer:")) { try { await deleteDoc(doc(db, "friendCheers", key.slice(6))); } catch (e) {} }
+        paintNotificationBadge();
+      },
+      refresh: () => renderGlobalNotifications(student)
+    };
+
     // ---------- Badge ----------
     paintNotificationBadge();
 
     // ---------- Empty ----------
     if (!items.length) {
       list.innerHTML = `
-        <div class="global-notification-empty">
-          এখন কোনো নতুন notification নেই।
+        <div class="global-notification-empty nx-empty">
+          <span class="nx-empty-ico">${notificationBellIcon()}</span>
+          <b>${nxT("সব দেখা শেষ!", "You're all caught up")}</b>
+          <span>${nxT("এখন কোনো নতুন notification নেই।", "No new notifications right now.")}</span>
         </div>
       `;
 
@@ -1094,41 +1125,47 @@ async function renderGlobalNotifications(student) {
           }
           if (item.type === "chat" || item.type === "chatinvite") {
             const invite = item.type === "chatinvite";
+            const nm = escapeNotification(item.sender);
             return `
-              <div class="global-notification-item gn-cheer" data-notification-key="${escapeNotification(item.key)}">
-                <div class="gn-cheer-top">
-                  <div class="global-notification-icon">${NOTIF_MSG_ICON}</div>
-                  <strong class="gn-cheer-from">${escapeNotification(item.sender)}</strong>
-                  <span class="gn-cheer-tag">${invite ? "আমন্ত্রণ" : `${item.count}টি নতুন`}</span>
+              <div class="global-notification-item nx-card nx-chat" data-notification-key="${escapeNotification(item.key)}" data-nx="${invite ? "invite" : "chat"}" data-room="${escapeNotification(item.id)}" data-group="${item.isGroup ? 1 : 0}">
+                <div class="nx-row">
+                  ${nxAvatar(item.sender, item.isGroup ? "👥" : "")}
+                  <div class="nx-body">
+                    <div class="nx-top"><strong class="nx-name">${nm}</strong><time class="nx-time">${notificationAge(item.createdAt)}</time></div>
+                    <div class="nx-line">
+                      <span class="nx-prev">${invite ? nxT(`“${escapeNotification(item.text)}” গ্রুপে যোগ দিতে আমন্ত্রণ জানিয়েছে`, `Invited you to join “${escapeNotification(item.text)}”`) : escapeNotification(item.text)}</span>
+                      ${invite ? "" : `<span class="nx-badge">${item.count > 99 ? "99+" : item.count}</span>`}
+                    </div>
+                  </div>
                 </div>
-                <p class="gn-cheer-text">${invite ? `“${escapeNotification(item.text)}” গ্রুপে যোগ দিতে আমন্ত্রণ জানিয়েছে` : escapeNotification(item.text)}</p>
-                <div class="gn-cheer-time">
-                  <b>${notificationClock(item.createdAt)}</b>
-                  <span>${notificationAge(item.createdAt)}</span>
+                <div class="nx-acts">
+                  ${invite
+                    ? `<button type="button" class="nx-btn nx-primary" data-nx-act="inv-yes">${nxT("যোগ দাও", "Join")}</button>
+                       <button type="button" class="nx-btn" data-nx-act="inv-no">${nxT("বাদ দাও", "Decline")}</button>`
+                    : `<button type="button" class="nx-btn nx-primary" data-nx-act="reply">${NX_REPLY_ICON}${nxT("রিপ্লাই", "Reply")}</button>
+                       <button type="button" class="nx-btn" data-nx-act="read">${nxT("পড়া হয়েছে", "Mark read")}</button>
+                       <button type="button" class="nx-btn nx-ghost global-notif-open-chat" data-room="${escapeNotification(item.id)}">${nxT("চ্যাট খোলো", "Open chat")}</button>`}
                 </div>
-                <div class="global-notification-actions">
-                  <button type="button" class="global-notif-open-chat" data-room="${invite ? "" : escapeNotification(item.id)}">${invite ? "আমন্ত্রণ দেখো" : "চ্যাট খোলো"}</button>
-                </div>
+                <div class="nx-composer" hidden></div>
               </div>
             `;
           }
           if (item.type === "cheer") {
             return `
-              <div class="global-notification-item gn-cheer" data-notification-key="${escapeNotification(item.key)}">
-                <div class="gn-cheer-top">
-                  <div class="global-notification-icon">${NOTIF_MSG_ICON}</div>
-                  <strong class="gn-cheer-from">${escapeNotification(item.sender)}</strong>
-                  <span class="gn-cheer-tag">বার্তা</span>
+              <div class="global-notification-item nx-card nx-cheer" data-notification-key="${escapeNotification(item.key)}" data-nx="cheer" data-reply-to="${escapeNotification(item.senderId || "")}">
+                <div class="nx-row">
+                  ${nxAvatar(item.sender, "")}
+                  <div class="nx-body">
+                    <div class="nx-top"><strong class="nx-name">${escapeNotification(item.sender)}</strong><time class="nx-time">${notificationAge(item.createdAt)}</time></div>
+                    <div class="nx-line"><span class="nx-prev nx-prev-big">${escapeNotification(item.text)}</span></div>
+                  </div>
                 </div>
-                <p class="gn-cheer-text">${escapeNotification(item.text)}</p>
-                <div class="gn-cheer-time">
-                  <b>${notificationClock(item.createdAt)}</b>
-                  <span>${notificationAge(item.createdAt)}</span>
+                <div class="nx-acts">
+                  ${item.senderId ? `<button type="button" class="nx-btn nx-primary" data-nx-act="reply">${NX_REPLY_ICON}${nxT("রিপ্লাই", "Reply")}</button>` : ""}
+                  <button type="button" class="nx-btn nx-ghost global-notif-open-feed">${nxT("ফিডে দেখো", "View in feed")}</button>
+                  <button type="button" class="nx-btn nx-ghost global-notif-hide" data-key="${escapeNotification(item.key)}">${NOTIF_TRASH_ICON} ${nxT("মুছুন", "Delete")}</button>
                 </div>
-                <div class="global-notification-actions">
-                  <button type="button" class="global-notif-open-feed">ফিডে দেখো</button>
-                  <button type="button" class="global-notif-hide" data-key="${escapeNotification(item.key)}">${NOTIF_TRASH_ICON} মুছুন</button>
-                </div>
+                <div class="nx-composer" hidden></div>
               </div>
             `;
           }
@@ -1829,9 +1866,9 @@ function startGlobalNotificationSystem(
         }
 
         if (
-          !wrap.contains(
-            event.target
-          )
+          event.target.isConnected &&
+          !wrap.contains(event.target) &&
+          !panel.contains(event.target)
         ) {
           panel.classList.remove(
             "show"
@@ -2083,22 +2120,31 @@ export function renderStudentHeader(
           <div
             class="global-notification-panel"
             id="globalNotificationPanel"
+            role="dialog"
+            aria-label="Notifications"
           >
+
+            <span class="nx-grab" aria-hidden="true"></span>
+            <span class="nx-timer" aria-hidden="true"></span>
 
             <div
               class="global-notification-head"
             >
 
-              <strong>
-                Notifications
-              </strong>
+              <div class="nx-head-t">
+                <strong>${nxT("নোটিফিকেশন", "Notifications")}</strong>
+                <small id="nxSub"></small>
+              </div>
 
-              <button
-                type="button"
-                id="globalNotificationClose"
-              >
-                বন্ধ করুন
-              </button>
+              <div class="nx-head-a">
+                <button type="button" id="nxClearAll" class="nx-clear">${nxT("সব মুছো", "Clear all")}</button>
+                <button
+                  type="button"
+                  id="globalNotificationClose"
+                  class="nx-x"
+                  aria-label="${nxT("বন্ধ করো", "Close")}"
+                ><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+              </div>
 
             </div>
 

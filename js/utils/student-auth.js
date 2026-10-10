@@ -197,23 +197,7 @@ export async function adminCreateStudentWithPin(studentId, pin) {
   if (bad) throw new Error(bad);
   await createAuthAccount(studentId, String(pin));
   await setDoc(doc(db, "studentAuthState", studentId),
-    { passwordSet: true, pinSet: true, welcomePending: true, createdAt: serverTimestamp() });
-}
-
-// First entry after the admin approved the application: the login page shows the
-// approval animation once. State lives in the database (studentAuthState), so it
-// works on any device. Needs the student to be signed in (they can write their own doc).
-export async function getWelcomePending(studentId) {
-  try {
-    const snap = await getDoc(doc(db, "studentAuthState", studentId));
-    return snap.exists() && snap.data().welcomePending === true;
-  } catch { return false; }
-}
-export async function markWelcomeSeen(studentId) {
-  try {
-    await setDoc(doc(db, "studentAuthState", studentId),
-      { welcomePending: false, welcomeSeenAt: serverTimestamp() }, { merge: true });
-  } catch (e) { console.warn("welcome flag not saved", e); }
+    { passwordSet: true, pinSet: true, createdAt: serverTimestamp() });
 }
 
 // PIN CORRECTION ONLY: account gets a random one-time 8-digit code as password;
