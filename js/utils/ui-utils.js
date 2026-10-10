@@ -18,7 +18,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { getUpcomingExams } from "./results-utils.js";
 import { watchChatBadge } from "./chat-utils.js";
-import "./tap-bubble.js"; // bubble on every tap (student pages)
+import "./rubber-press.js"; // rubber squash + spring on every button / option
 
 // ---------- Theme (light/dark) ----------
 // Theme (dark / light / manual time-range) lives in theme.js; first paint is done by
@@ -1947,6 +1947,21 @@ export const icons = {
     </svg>
   `,
 
+  study: `
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.7"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M2 9.5 12 4.5l10 5-10 5-10-5z"/>
+      <path d="M6 12v4.5c0 1.4 2.7 3 6 3s6-1.6 6-3V12"/>
+      <path d="M22 9.5v6"/>
+    </svg>
+  `,
+
   improvement: `
     <svg
       viewBox="0 0 24 24"
@@ -2044,6 +2059,7 @@ export function renderStudentHeader(
   const tabs = [
     { key: "dashboard", href: "../student/dashboard.html", icon: icons.home, label: "হোম" },
     { key: "calendar", href: "../student/calendar.html", icon: icons.calendar, label: "ক্যালেন্ডার" },
+    { key: "study", href: "../student/study.html", icon: icons.study, label: "স্টাডি" },
     { key: "leaderboard", href: "../student/leaderboard.html", icon: icons.chart, label: "লিডারবোর্ড" },
     { key: "improvement", href: "../student/improvement.html", icon: icons.improvement, label: "উন্নতি" },
     { key: "profile", href: "../student/profile.html", icon: icons.user, label: "প্রোফাইল" }
