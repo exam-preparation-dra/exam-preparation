@@ -1263,3 +1263,139 @@ a.hdr-menu-item.active .hdr-menu-ico { background: var(--color-accent-soft); col
 .hdr-menu-danger .hdr-menu-ico { background: rgba(166,64,47,.10); color: var(--color-danger); }
 .hdr-menu-danger:hover { background: rgba(166,64,47,.07); }
 .hdr-menu-danger:active { background: rgba(166,64,47,.14) !important; }
+
+/* =========================================================
+   v4 — GLASS UI
+   Frosted buttons · options · chips · panels for all student
+   pages. Order: tokens → ambient backdrop (glass needs
+   something to blur) → shared buttons → page-local families.
+   ========================================================= */
+:root {
+  --g-bg: rgba(255, 255, 255, 0.55);
+  --g-bg-hover: rgba(255, 255, 255, 0.78);
+  --g-edge: rgba(120, 100, 60, 0.20);
+  --g-shine: rgba(255, 255, 255, 0.85);
+  --g-shadow: 0 1px 2px rgba(40, 30, 10, 0.05), 0 8px 22px rgba(40, 30, 10, 0.07);
+  --g-blur: 14px;
+  --g-sel-bg: rgba(184, 134, 60, 0.16);
+  --g-sel-edge: rgba(184, 134, 60, 0.70);
+  --g-brass-hi: #dcae62;
+  --g-brass-lo: #b8863c;
+  --amb-1: rgba(184, 134, 60, 0.20);
+  --amb-2: rgba(107, 78, 150, 0.12);
+  --amb-3: rgba(62, 110, 140, 0.12);
+}
+[data-theme="dark"] {
+  --g-bg: rgba(255, 255, 255, 0.065);
+  --g-bg-hover: rgba(255, 255, 255, 0.115);
+  --g-edge: rgba(255, 255, 255, 0.14);
+  --g-shine: rgba(255, 255, 255, 0.16);
+  --g-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 10px 26px rgba(0, 0, 0, 0.32);
+  --g-sel-bg: rgba(184, 134, 60, 0.22);
+  --g-sel-edge: rgba(214, 168, 88, 0.75);
+  --amb-1: rgba(184, 134, 60, 0.20);
+  --amb-2: rgba(107, 78, 150, 0.22);
+  --amb-3: rgba(62, 110, 140, 0.20);
+}
+/* no backdrop-filter support → near-opaque fallback so text stays readable */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root { --g-bg: rgba(255, 255, 255, 0.92); --g-bg-hover: #fff; }
+  [data-theme="dark"] { --g-bg: rgba(38, 43, 52, 0.96); --g-bg-hover: rgba(46, 52, 62, 1); }
+}
+
+/* ---------- ambient backdrop (student + battle + exam pages only) ---------- */
+body[data-page]::before, body.battle-page::before, body.exam-page::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(55% 38% at 8% 0%, var(--amb-1), transparent 70%),
+    radial-gradient(48% 34% at 100% 28%, var(--amb-2), transparent 70%),
+    radial-gradient(52% 38% at 0% 100%, var(--amb-3), transparent 70%);
+}
+
+/* ---------- reusable glass pieces ---------- */
+.g-panel, .g-btn, .g-chip {
+  background: var(--g-bg);
+  border: 1px solid var(--g-edge);
+  box-shadow: inset 0 1px 0 var(--g-shine), var(--g-shadow);
+  backdrop-filter: blur(var(--g-blur)) saturate(1.5);
+  -webkit-backdrop-filter: blur(var(--g-blur)) saturate(1.5);
+}
+.g-panel { border-radius: 20px; padding: 18px; }
+.g-btn, .g-chip {
+  color: var(--text-primary); font-family: var(--font-bn); font-weight: 700; cursor: pointer;
+  transition: transform .2s cubic-bezier(.2, .9, .3, 1), background .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.g-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 18px; border-radius: 14px; font-size: .92rem; }
+.g-chip { display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 14px; border-radius: 999px; font-size: .82rem; }
+@media (hover: hover) { .g-btn:hover, .g-chip:hover { background: var(--g-bg-hover); } }
+.g-btn:active, .g-chip:active { transform: scale(.97); }
+.g-chip.on, .g-btn.on { background: var(--g-sel-bg); border-color: var(--g-sel-edge); box-shadow: inset 0 1px 0 var(--g-shine), 0 0 0 3px rgba(184, 134, 60, .14); }
+.g-btn--primary {
+  background: linear-gradient(180deg, var(--g-brass-hi), var(--g-brass-lo)); color: #2b1d09; border-color: rgba(255, 255, 255, .35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 -1px 0 rgba(0, 0, 0, .08), 0 10px 22px rgba(184, 134, 60, .30), 0 2px 5px rgba(184, 134, 60, .25);
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+@media (hover: hover) { .g-btn--primary:hover { background: linear-gradient(180deg, #e4b96e, #bf8d42); } }
+.g-btn--primary:active { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), 0 4px 10px rgba(184, 134, 60, .25); }
+.g-btn:disabled, .g-btn[disabled] { opacity: .5; filter: saturate(.7); pointer-events: none; }
+
+/* ---------- shared .btn family ---------- */
+.btn {
+  border-radius: 14px; font-weight: 700; letter-spacing: .005em;
+  transition: transform .2s cubic-bezier(.2, .9, .3, 1), box-shadow .2s ease, background .2s ease, border-color .2s ease, opacity .2s ease;
+}
+.btn:active { transform: scale(.97); }
+.btn:disabled { opacity: .55; filter: saturate(.7); }
+.btn-primary {
+  background: linear-gradient(180deg, var(--g-brass-hi), var(--g-brass-lo)); color: #2b1d09; border: 1px solid rgba(255, 255, 255, .35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 -1px 0 rgba(0, 0, 0, .08), 0 10px 22px rgba(184, 134, 60, .30), 0 2px 5px rgba(184, 134, 60, .25);
+}
+@media (hover: hover) { .btn-primary:hover { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6), 0 14px 28px rgba(184, 134, 60, .38), 0 3px 8px rgba(184, 134, 60, .3); } }
+.btn-primary:active { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), 0 4px 10px rgba(184, 134, 60, .25); }
+.btn-secondary {
+  background: var(--g-bg); color: var(--text-primary); border: 1px solid var(--g-edge);
+  box-shadow: inset 0 1px 0 var(--g-shine), var(--g-shadow);
+  backdrop-filter: blur(var(--g-blur)) saturate(1.5); -webkit-backdrop-filter: blur(var(--g-blur)) saturate(1.5);
+}
+@media (hover: hover) { .btn-secondary:hover { background: var(--g-bg-hover); } }
+.btn-ghost { background: transparent; border: 1px solid transparent; color: var(--text-secondary); }
+@media (hover: hover) { .btn-ghost:hover { background: var(--g-bg); border-color: var(--g-edge); } }
+.btn-danger {
+  background: linear-gradient(180deg, #c15d4b, #a6402f); color: #fff; border: 1px solid rgba(255, 255, 255, .22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 10px 22px rgba(166, 64, 47, .28);
+}
+.btn-success {
+  background: linear-gradient(180deg, #3c9a74, #2f7d5e); color: #fff; border: 1px solid rgba(255, 255, 255, .22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 10px 22px rgba(47, 125, 94, .28);
+}
+.icon-btn, .theme-toggle {
+  background: var(--g-bg); border: 1px solid var(--g-edge); box-shadow: inset 0 1px 0 var(--g-shine);
+  backdrop-filter: blur(var(--g-blur)) saturate(1.5); -webkit-backdrop-filter: blur(var(--g-blur)) saturate(1.5);
+}
+
+/* ---------- page-local button families (dashboard) ----------
+   `body[data-page]` raises specificity just enough to beat each
+   page's own inline <style> without !important. */
+body[data-page] .d-btn {
+  border-radius: 14px; background: var(--g-bg); border: 1px solid var(--g-edge);
+  box-shadow: inset 0 1px 0 var(--g-shine), var(--g-shadow);
+  backdrop-filter: blur(var(--g-blur)) saturate(1.5); -webkit-backdrop-filter: blur(var(--g-blur)) saturate(1.5);
+  transition: transform .2s cubic-bezier(.2, .9, .3, 1), background .2s ease;
+}
+body[data-page] .d-btn:active { background: var(--g-bg-hover); transform: scale(.97); }
+body[data-page] .d-btn-primary {
+  background: linear-gradient(180deg, var(--g-brass-hi), var(--g-brass-lo)); border: 1px solid rgba(255, 255, 255, .35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 10px 22px rgba(184, 134, 60, .30);
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+body[data-page] .d-btn-ok { border-color: rgba(47, 125, 94, .45); }
+body[data-page] .d-link, body[data-page] .d-chip {
+  background: var(--g-bg); border-color: var(--g-edge);
+  box-shadow: inset 0 1px 0 var(--g-shine), var(--g-shadow);
+  backdrop-filter: blur(var(--g-blur)) saturate(1.5); -webkit-backdrop-filter: blur(var(--g-blur)) saturate(1.5);
+}
+body[data-page] .d-link:active { background: var(--g-bg-hover); transform: scale(.97); }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn, .g-btn, .g-chip { transition: none; }
+}

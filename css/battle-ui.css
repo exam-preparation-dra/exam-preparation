@@ -203,3 +203,126 @@
   .battle-buzz{width:78px;height:78px;min-height:78px}
   .battle-buzz svg{width:27px;height:27px}
 }
+
+/* =========================================================
+   v4 — GLASS (battle lobby · history · live arena)
+   `body[data-page^="battle-"]` / `body.battle-page` lift
+   specificity just above each page's inline <style>, so the
+   inline layout rules stay and only the "skin" changes.
+   ========================================================= */
+body[data-page^="battle-"] .panel,
+body[data-page^="battle-"] .card-banner,
+body[data-page^="battle-"] .entry-btn,
+body[data-page^="battle-"] .lobby-timer,
+body[data-page^="battle-"] .history-card,
+body.battle-page .battle-question-card,
+body.battle-page .battle-level-block,
+body.battle-page .battle-team-panel,
+body.battle-page .battle-player-stat {
+  background: var(--g-bg); border-color: var(--g-edge);
+  box-shadow: inset 0 1px 0 var(--g-shine), var(--g-shadow);
+  backdrop-filter: blur(var(--g-blur)) saturate(1.5); -webkit-backdrop-filter: blur(var(--g-blur)) saturate(1.5);
+}
+/* team surfaces keep their coloured top edge — only the other three sides go glass */
+body[data-page^="battle-"] .team-card, body.battle-page .battle-team {
+  background: var(--g-bg);
+  border-left-color: var(--g-edge); border-right-color: var(--g-edge); border-bottom-color: var(--g-edge);
+  box-shadow: inset 0 1px 0 var(--g-shine), var(--g-shadow);
+  backdrop-filter: blur(var(--g-blur)) saturate(1.5); -webkit-backdrop-filter: blur(var(--g-blur)) saturate(1.5);
+}
+body[data-page^="battle-"] .topic-list { background: var(--g-bg); border-color: var(--g-edge); backdrop-filter: blur(var(--g-blur)); -webkit-backdrop-filter: blur(var(--g-blur)); }
+body[data-page^="battle-"] .member-row { background: var(--g-bg-hover); border-color: var(--g-edge); }
+@media (hover: hover) {
+  body[data-page^="battle-"] .entry-btn:hover { background: var(--g-bg-hover); border-color: var(--g-sel-edge); box-shadow: inset 0 1px 0 var(--g-shine), 0 14px 30px rgba(184, 134, 60, .16); }
+}
+body[data-page^="battle-"] .entry-btn:active { transform: scale(.98); }
+
+/* ---------- topic checklist rows (lobby "options") ---------- */
+body[data-page^="battle-"] .topic-row {
+  border: 1px solid transparent; border-radius: 12px; margin-bottom: 4px; background: transparent;
+  transition: background .2s ease, border-color .2s ease, transform .15s ease;
+}
+body[data-page^="battle-"] .topic-row:hover { background: var(--g-bg-hover); }
+body[data-page^="battle-"] .topic-row:active { transform: scale(.985); }
+body[data-page^="battle-"] .topic-row:has(input:checked) { background: var(--g-sel-bg); border-color: var(--g-sel-edge); }
+
+/* ---------- fields ---------- */
+body[data-page^="battle-"] .select, body[data-page^="battle-"] input {
+  background: var(--g-bg); border: 1px solid var(--g-edge); border-radius: 14px;
+  box-shadow: inset 0 1px 0 var(--g-shine);
+  backdrop-filter: blur(var(--g-blur)); -webkit-backdrop-filter: blur(var(--g-blur));
+}
+body[data-page^="battle-"] .select:focus, body[data-page^="battle-"] input:focus {
+  border-color: var(--g-sel-edge); box-shadow: inset 0 1px 0 var(--g-shine), 0 0 0 3px rgba(184, 134, 60, .16);
+}
+
+/* ---------- primary (brass) buttons ---------- */
+body[data-page^="battle-"] .primary-action,
+body[data-page^="battle-"] .card-banner a,
+body[data-page^="battle-"] .jb.p,
+body.battle-page .battle-new-match {
+  background: linear-gradient(180deg, var(--g-brass-hi), var(--g-brass-lo)); color: #2b1d09;
+  border: 1px solid rgba(255, 255, 255, .35); border-radius: 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 -1px 0 rgba(0, 0, 0, .08), 0 10px 22px rgba(184, 134, 60, .30);
+  transition: transform .2s cubic-bezier(.2, .9, .3, 1), box-shadow .2s ease;
+}
+body[data-page^="battle-"] .primary-action:active, body.battle-page .battle-new-match:active { transform: scale(.97); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), 0 4px 10px rgba(184, 134, 60, .25); }
+
+/* ---------- glass secondary buttons / chips ---------- */
+body[data-page^="battle-"] .secondary-action,
+body[data-page^="battle-"] .back-btn,
+body[data-page^="battle-"] .history-filter,
+body[data-page^="battle-"] .card-chip,
+body[data-page^="battle-"] .member-swap,
+body[data-page^="battle-"] .member-remove {
+  background: var(--g-bg); border: 1px solid var(--g-edge); color: var(--text-primary);
+  box-shadow: inset 0 1px 0 var(--g-shine), var(--g-shadow);
+  backdrop-filter: blur(var(--g-blur)) saturate(1.5); -webkit-backdrop-filter: blur(var(--g-blur)) saturate(1.5);
+  transition: transform .2s cubic-bezier(.2, .9, .3, 1), background .2s ease;
+}
+body[data-page^="battle-"] .secondary-action { border-radius: 14px; }
+body[data-page^="battle-"] .card-chip { border-radius: 999px; }
+@media (hover: hover) {
+  body[data-page^="battle-"] .secondary-action:hover, body[data-page^="battle-"] .back-btn:hover, body[data-page^="battle-"] .member-swap:hover { background: var(--g-bg-hover); }
+}
+body[data-page^="battle-"] .secondary-action:active, body[data-page^="battle-"] .back-btn:active { transform: scale(.96); }
+/* round glass back button */
+body[data-page^="battle-"] .back-btn { width: 40px; height: 40px; padding: 0; border-radius: 50%; display: inline-grid; place-items: center; flex-shrink: 0; }
+
+/* ---------- sub-bar under the student header (title + back + chip) ---------- */
+.bt-bar { display: flex; align-items: center; gap: 10px; margin: 16px 0 18px; }
+.bt-bar .battle-title { flex: 1; min-width: 0; }
+
+/* ---------- live arena ---------- */
+body.battle-page .battle-option {
+  background: var(--g-bg); border: 1px solid var(--g-edge); border-radius: 18px;
+  box-shadow: inset 0 1px 0 var(--g-shine), var(--g-shadow);
+  backdrop-filter: blur(var(--g-blur)) saturate(1.5); -webkit-backdrop-filter: blur(var(--g-blur)) saturate(1.5);
+}
+body.battle-page .battle-option:not(:disabled):hover { background: var(--g-bg-hover); border-color: var(--g-sel-edge); }
+body.battle-page .battle-option:not(:disabled):active { transform: scale(.985); }
+body.battle-page .battle-option-key {
+  background: var(--g-bg-hover); border: 1px solid var(--g-edge); border-radius: 50%; box-shadow: inset 0 1px 0 var(--g-shine);
+}
+body.battle-page .battle-option.correct {
+  background: color-mix(in srgb, var(--arena-correct) 18%, transparent); border-color: var(--arena-correct);
+  box-shadow: inset 0 1px 0 var(--g-shine), 0 0 0 3px color-mix(in srgb, var(--arena-correct) 16%, transparent);
+}
+body.battle-page .battle-option.wrong {
+  background: color-mix(in srgb, var(--arena-wrong) 18%, transparent); border-color: var(--arena-wrong);
+  box-shadow: inset 0 1px 0 var(--g-shine), 0 0 0 3px color-mix(in srgb, var(--arena-wrong) 16%, transparent);
+}
+body.battle-page .battle-timer, body.battle-page .battle-round {
+  background: var(--g-bg); border-color: var(--g-edge); box-shadow: inset 0 1px 0 var(--g-shine);
+  backdrop-filter: blur(var(--g-blur)); -webkit-backdrop-filter: blur(var(--g-blur));
+}
+body.battle-page .battle-timer.low { background: var(--arena-alert); border-color: var(--arena-alert); }
+body.battle-page .battle-buzz {
+  background: linear-gradient(180deg, var(--g-brass-hi), var(--g-brass-lo)); border: 1px solid rgba(255, 255, 255, .4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 12px 28px rgba(0, 0, 0, .22), 0 0 0 5px color-mix(in srgb, var(--color-accent) 14%, transparent);
+}
+body.battle-page .battle-buzz:disabled { background: var(--g-bg); border-color: var(--g-edge); box-shadow: inset 0 1px 0 var(--g-shine); backdrop-filter: blur(var(--g-blur)); -webkit-backdrop-filter: blur(var(--g-blur)); }
+body.battle-page .battle-toast { background: var(--g-bg-hover); border-color: var(--g-edge); backdrop-filter: blur(var(--g-blur)) saturate(1.5); -webkit-backdrop-filter: blur(var(--g-blur)) saturate(1.5); }
+body.battle-page .battle-progress-track { background: var(--g-bg); border: 1px solid var(--g-edge); }
+body.battle-page .battle-team-panel-head button { background: var(--g-bg); border: 1px solid var(--g-edge); border-radius: 999px; padding: 4px 10px; }
+[data-theme="dark"] body.battle-page .battle-question-card, [data-theme="dark"] body[data-page^="battle-"] .panel { background: rgba(32, 36, 44, .55); }

@@ -481,3 +481,58 @@
   .ex-nav-in.single { grid-template-columns: minmax(0, 340px); justify-content: center; }
   .ex-pop { right: calc((100vw - 820px) / 2 + 20px); }
 }
+
+/* =========================================================
+   v4 — GLASS OPTIONS & BUTTONS (exam + improvement test)
+   Uses the --g-* tokens from style.css, so light/dark follow
+   the theme automatically.
+   ========================================================= */
+.exam-page .ex-option {
+  background: var(--g-bg); border: 1px solid var(--g-edge); border-radius: 18px;
+  box-shadow: inset 0 1px 0 var(--g-shine), var(--g-shadow);
+  backdrop-filter: blur(var(--g-blur)) saturate(1.5); -webkit-backdrop-filter: blur(var(--g-blur)) saturate(1.5);
+}
+@media (hover: hover) {
+  .exam-page .ex-option:hover { background: var(--g-bg-hover); border-color: rgba(var(--ex-accent-rgb), .55); }
+}
+.exam-page .ex-option:active { transform: scale(.985); }
+.exam-page .ex-letter {
+  background: var(--g-bg-hover); border: 1px solid var(--g-edge); box-shadow: inset 0 1px 0 var(--g-shine);
+  color: var(--text-secondary);
+}
+.exam-page .ex-option.selected {
+  background: var(--g-sel-bg); border-color: var(--g-sel-edge);
+  box-shadow: inset 0 1px 0 var(--g-shine), 0 0 0 3px rgba(var(--ex-accent-rgb), .14), 0 10px 24px rgba(var(--ex-accent-rgb), .20);
+}
+.exam-page .ex-option.selected .ex-letter {
+  background: linear-gradient(180deg, var(--g-brass-hi), var(--g-brass-lo)); border-color: rgba(255, 255, 255, .35);
+  color: var(--ex-on-accent); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), 0 4px 10px rgba(var(--ex-accent-rgb), .35);
+}
+
+/* bottom nav → floating frosted bar */
+.exam-page .ex-nav {
+  background: var(--g-bg); border-top: 1px solid var(--g-edge); box-shadow: 0 -10px 30px rgba(0, 0, 0, .06);
+  backdrop-filter: blur(20px) saturate(1.6); -webkit-backdrop-filter: blur(20px) saturate(1.6);
+}
+.exam-page .ex-btn { border-radius: 16px; font-weight: 800; }
+.exam-page .ex-btn-primary {
+  background: linear-gradient(180deg, var(--g-brass-hi), var(--g-brass-lo)); border-color: rgba(255, 255, 255, .35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 -1px 0 rgba(0, 0, 0, .08), 0 10px 22px rgba(var(--ex-accent-rgb), .30);
+}
+.exam-page .ex-btn-ghost {
+  background: var(--g-bg); border-color: var(--g-edge); box-shadow: inset 0 1px 0 var(--g-shine), var(--g-shadow);
+  backdrop-filter: blur(var(--g-blur)) saturate(1.5); -webkit-backdrop-filter: blur(var(--g-blur)) saturate(1.5);
+}
+.exam-page .ex-btn-ghost:hover:not(:disabled) { background: var(--g-bg-hover); }
+.exam-page .ex-btn-danger {
+  background: linear-gradient(180deg, #c15d4b, #a6402f); border-color: rgba(255, 255, 255, .22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 10px 22px rgba(var(--ex-bad-rgb), .28);
+}
+.exam-page .ex-review { background: var(--g-bg); border-color: var(--g-edge); backdrop-filter: blur(var(--g-blur)); -webkit-backdrop-filter: blur(var(--g-blur)); }
+.exam-page .ex-sheet {
+  background: var(--g-bg-hover); backdrop-filter: blur(24px) saturate(1.6); -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  border-color: var(--g-edge);
+}
+@media (prefers-reduced-motion: reduce) { .exam-page .ex-option { animation: none; } }
+[data-theme="dark"] .exam-page .ex-sheet { background: rgba(32, 36, 44, .86); }
+[data-theme="dark"] .exam-page .ex-nav { background: rgba(23, 26, 32, .72); }
