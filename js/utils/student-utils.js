@@ -13,21 +13,29 @@ import {
 // referredBy: the STU-XXXX id of the friend whose referral link this student
 // joined through (from studentRequests.referredBy, see student-requests-utils.js).
 // null/omitted for admin-added students or students who joined without a link.
-export async function createStudent(name, className, referredBy = null) {
+// reserved (optional): { studentId, sequenceNumber, term, termSetAt } taken from an
+// approved join application — the student then gets exactly the id that was shown
+// to the applicant when they applied (no new counter number is used).
+export async function createStudent(name, className, referredBy = null, reserved = null) {
   const trimmedClass = (className || "").trim();
   if (!trimmedClass) throw new Error("ক্লাস দেওয়া বাধ্যতামূলক।");
 
-  const counterRef = doc(db, "counters", "studentCounter");
-  const newSequence = await runTransaction(db, async (tx) => {
-    const counterSnap = await tx.get(counterRef);
-    const last = counterSnap.exists() ? counterSnap.data().lastSequence : 0;
-    const next = last + 1;
-    tx.set(counterRef, { lastSequence: next }, { merge: true });
-    return next;
-  });
-
-  const studentId = `STU-${String(newSequence).padStart(4, "0")}`;
-  const docRef = await addDoc(collection(db, "students"), {
+  let studentId, newSequence;
+  if (reserved && reserved.studentId && Number.isInteger(reserved.sequenceNumber)) {
+    studentId = reserved.studentId;
+    newSequence = reserved.sequenceNumber;
+  } else {
+    const counterRef = doc(db, "counters", "studentCounter");
+    newSequence = await runTransaction(db, async (tx) => {
+      const counterSnap = await tx.get(counterRef);
+      const last = counterSnap.exists() ? counterSnap.data().lastSequence : 0;
+      const next = last + 1;
+      tx.set(counterRef, { lastSequence: next }, { merge: true });
+      return next;
+    });
+    studentId = `STU-${String(newSequence).padStart(4, "0")}`;
+  }
+  const data = {
     studentId,
     name,
     className: trimmedClass,
@@ -35,7 +43,9 @@ export async function createStudent(name, className, referredBy = null) {
     sequenceNumber: newSequence,
     referredBy: referredBy || null,
     createdAt: serverTimestamp()
-  });
+  };
+  if (reserved && reserved.term) { data.term = reserved.term; data.termSetAt = reserved.termSetAt || serverTimestamp(); }
+  const docRef = await addDoc(collection(db, "students"), data);
   return { docId: docRef.id, studentId, name, className: trimmedClass, referredBy: referredBy || null };
 }
 
