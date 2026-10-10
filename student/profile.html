@@ -375,6 +375,74 @@
   .pf-how { padding: 12px 14px; margin-bottom: 14px; border-radius: 14px; background: var(--surface-highlight); font-size: .76rem; font-weight: 700; line-height: 1.6; color: var(--text-secondary); }
   .pf-how b { color: var(--text-primary); }
   @media (prefers-reduced-motion: reduce) { .pf-stage.now .pf-sm, .pf-sm.big { animation: none; } }
+
+  /* =========================================================
+     v4 — nicer hero · segmented tabs · airy badge cards
+     (appended last so it wins over the earlier rules)
+     ========================================================= */
+
+  /* ---------- hero ---------- */
+  .pf { gap: 14px; }
+  .pf-hero { padding: 24px 18px 18px; border-radius: 28px; overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--color-accent) 24%, var(--surface-border));
+    background:
+      radial-gradient(110% 80% at 100% 0%, rgba(var(--color-accent-rgb), .22), transparent 60%),
+      radial-gradient(90% 70% at 0% 100%, rgba(var(--color-accent-rgb), .08), transparent 62%),
+      var(--surface);
+    box-shadow: 0 10px 30px rgba(var(--color-accent-rgb), .10), var(--shadow-soft); }
+  .pf-id { gap: 18px; }
+  .pf-avatar { width: 88px; height: 88px; border-radius: 50%; border: 0; font-size: 2rem;
+    box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px rgba(var(--color-accent-rgb), .6), 0 14px 28px rgba(var(--color-accent-rgb), .30); }
+  .pf-name { font-size: 1.5rem; letter-spacing: -.015em; }
+  .pf-sub { margin-top: 5px; font-size: .78rem; color: var(--text-muted); }
+  .pf-tags { gap: 8px; margin-top: 12px; }
+  .pf-title { padding: 6px 12px; font-size: .72rem;
+    background: linear-gradient(135deg, rgba(var(--color-accent-rgb), .20), rgba(var(--color-accent-rgb), .08));
+    border-color: rgba(var(--color-accent-rgb), .34); }
+  .pf-streak { padding: 6px 11px; }
+  .pf-level { margin-top: 22px; padding: 14px 14px 13px; border-radius: 18px; background: var(--surface-highlight); border: 1px solid var(--surface-border); }
+  .pf-level-row { margin-bottom: 9px; font-size: .74rem; }
+  .pf-bar { height: 10px; background: color-mix(in srgb, var(--text-primary) 8%, transparent); box-shadow: inset 0 1px 2px rgba(0,0,0,.10); }
+  .pf-bar i { box-shadow: 0 0 10px rgba(var(--color-accent-rgb), .45); }
+  .pf-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: 14px; padding: 4px 0; border-radius: 18px; background: var(--surface-highlight); border: 1px solid var(--surface-border); }
+  .pf-metric { padding: 12px 4px; background: transparent; border: 0; border-radius: 0; }
+  .pf-metric + .pf-metric { border-left: 1px solid var(--surface-border); }
+  .pf-metric b { font-size: 1.2rem; }
+  .pf-metric span { margin-top: 3px; font-size: .68rem; }
+  .pf-actions { margin-top: 14px; }
+  @media (max-width: 380px) { .pf-avatar { width: 72px; height: 72px; font-size: 1.7rem; } .pf-name { font-size: 1.3rem; } .pf-id { gap: 14px; } }
+
+  /* ---------- tabs: segmented pill ---------- */
+  .pf-tabs { padding: 4px; gap: 4px; border: 1px solid var(--surface-border); border-radius: 18px; background: var(--surface-highlight); }
+  .pf-tab { padding: 11px 4px; border-radius: 14px; }
+  .pf-tab.active { background: var(--surface-solid, var(--surface)); color: var(--color-accent); box-shadow: 0 3px 10px rgba(0,0,0,.10), inset 0 0 0 1px rgba(var(--color-accent-rgb), .18); }
+  .pf-tab.active::after { display: none; }
+
+  /* ---------- badges: room to breathe ---------- */
+  .pf-bhero { gap: 18px; padding: 20px; }
+  .pf-ring { width: 88px; height: 88px; background: conic-gradient(var(--color-accent) calc(var(--p) * 1%), var(--surface-edge) 0); box-shadow: 0 6px 18px rgba(var(--color-accent-rgb), .18); }
+  .pf-ring::before { inset: 9px; }
+  .pf-tally { gap: 7px; margin-top: 12px; }
+  .pf-chips { gap: 8px; margin-bottom: 14px; }
+  .pf-chip { padding: 8px 14px; }
+  .pf-gh { margin: 28px 4px 14px; font-size: .88rem; }
+  .pf-gh:first-child { margin-top: 6px; }
+  .pf-bgrid { gap: 14px; }
+  .pf-badge { gap: 6px; padding: 26px 12px 18px; min-height: 184px; justify-content: flex-start; border-radius: 24px;
+    border: 1px solid var(--surface-border); background: var(--surface); box-shadow: 0 2px 10px rgba(0,0,0,.05); }
+  .pf-badge.earned { border-color: color-mix(in srgb, var(--rc) 38%, var(--surface-border)); box-shadow: 0 10px 26px color-mix(in srgb, var(--rc) 16%, transparent); }
+  .pf-badge .pf-bico { margin-bottom: 12px; }
+  .pf-badge strong { display: flex; align-items: center; justify-content: center; min-height: 2.8em; padding: 0 2px; font-size: .78rem; line-height: 1.4; }
+  .pf-badge .rar { margin-top: 2px; padding: 3px 11px; }
+  .pf-badge .got { margin-top: 8px; padding: 3px 10px; border-radius: 99px; background: rgba(47,125,94,.12); }
+  .pf-badge .prog { margin-top: 10px; padding: 0 4px; }
+  .pf-badge .sec { margin-top: 8px; }
+  .pf-badge.locked { border-style: dashed; background: color-mix(in srgb, var(--surface-highlight) 70%, var(--surface)); box-shadow: none; }
+  .pf-lock { top: 12px; right: 12px; }
+  .pf-nrow { padding: 12px 0; gap: 14px; }
+  .pf-next { gap: 2px; }
+  .pf-slots, .pf-recent, .pf-wallet { gap: 10px; }
+  @media (max-width: 400px) { .pf-bgrid { gap: 12px; } .pf-badge { padding: 24px 8px 16px; min-height: 176px; } .pf-bhero { padding: 18px 16px; } }
 </style>
 <script src="../js/utils/nav-boot.js"></script>
 <link rel="stylesheet" href="../css/desktop.css">
