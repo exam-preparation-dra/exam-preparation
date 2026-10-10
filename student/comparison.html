@@ -4,11 +4,12 @@
 <script src="../js/utils/theme-boot.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>বিস্তারিত তুলনা — পরীক্ষা প্রস্তুতি</title>
+<title>তুলনা — পরীক্ষা প্রস্তুতি</title>
 <link rel="stylesheet" href="../css/style.css">
 <style>
-  body { overflow-x: hidden; background: var(--bg); }
+  body { overflow-x: hidden; }
   .app-shell { max-width: 650px; padding-bottom: 48px; margin: 0 auto; }
+  [hidden] { display: none !important; }
 
   /* ---------- entrance / reveal ---------- */
   .cx-rv { opacity: 0; transform: translateY(16px); transition: opacity .55s ease, transform .55s cubic-bezier(.2,.9,.3,1); transition-delay: calc(var(--i, 0) * 60ms); }
@@ -18,97 +19,138 @@
   .cx-strip { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 6px 2px 14px; }
   .cx-strip b { color: var(--color-accent); font-weight: 900; }
   .cx-strip span { font-size: .8rem; font-weight: 800; color: var(--text-secondary); }
-  .cx-pill { font-size: .72rem; font-weight: 800; color: var(--text-muted); background: var(--surface-edge); padding: 4px 11px; border-radius: 99px; }
+  .cx-pill { font-size: .72rem; font-weight: 800; color: var(--text-muted); background: var(--g-bg); border: 1px solid var(--g-edge); padding: 4px 11px; border-radius: 99px; }
 
-  /* ---------- head-to-head hero ---------- */
-  .cx-hero { position: relative; overflow: hidden; border-radius: var(--radius-lg, 22px); padding: 18px 16px 16px; color: #f3f1ea; background: #21262f; }
-  .cx-hero::before { content: ""; position: absolute; width: 260px; height: 260px; left: 50%; top: -120px; transform: translateX(-50%);
-    background: radial-gradient(closest-side, rgba(var(--color-accent-rgb), .28), transparent 70%); animation: cxGlow 4s ease-in-out infinite; pointer-events: none; }
-  .cx-hero > * { position: relative; }
-  .cx-hero-label { text-align: center; font-size: .72rem; font-weight: 800; letter-spacing: .06em; color: rgba(243,241,234,.6); }
-  .cx-duel { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 6px; margin-top: 12px; }
-  .cx-side { text-align: center; min-width: 0; }
-  .cx-av { width: 62px; height: 62px; margin: 0 auto 8px; border-radius: 50%; display: grid; place-items: center; font-weight: 900; font-size: 1.5rem; color: #fff; overflow: hidden;
-    border: 3px solid rgba(255,255,255,.18); box-shadow: 0 10px 24px rgba(0,0,0,.35); }
-  .cx-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .cx-side.me .cx-av { animation: cxSlideL .7s cubic-bezier(.2,1.1,.3,1) both; }
-  .cx-side.rv .cx-av { animation: cxSlideR .7s cubic-bezier(.2,1.1,.3,1) both; }
-  .cx-sname { font-size: .9rem; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .cx-sxp { font-family: var(--font-num); font-size: 1.55rem; font-weight: 900; line-height: 1.15; margin-top: 4px; }
-  .cx-side.me .cx-sxp { color: var(--color-accent); }
-  .cx-sxp small { font-size: .62rem; font-weight: 800; margin-left: 2px; color: rgba(243,241,234,.55); }
-  .cx-savg { font-size: .72rem; font-weight: 700; color: rgba(243,241,234,.65); margin-top: 2px; }
-  .cx-vs { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-weight: 900; font-size: .8rem; color: #21262f;
-    background: var(--color-accent); box-shadow: 0 0 0 6px rgba(var(--color-accent-rgb), .18); animation: cxVs 2.2s ease-in-out infinite; }
-  .cx-tug { display: flex; height: 10px; border-radius: 99px; overflow: hidden; margin-top: 16px; background: rgba(255,255,255,.1); }
-  .cx-tug i { display: block; height: 100%; width: 0; transition: width 1.1s cubic-bezier(.2,.9,.3,1) .2s; }
-  .cx-tug i:first-child { background: var(--color-accent); }
-  .cx-tug i:last-child { background: #6f8fb3; }
-  .cx-verdict { text-align: center; margin: 12px 0 0; font-size: .86rem; font-weight: 800; line-height: 1.5; }
-  .cx-verdict.up { color: #7fd1a8; } .cx-verdict.down { color: #f0a090; }
-
-  /* ---------- rival chips ---------- */
-  .cx-riv { display: flex; gap: 8px; overflow-x: auto; padding: 12px 2px 4px; scrollbar-width: none; }
-  .cx-riv::-webkit-scrollbar { display: none; }
-  .cx-chip { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 7px; padding: 5px 12px 5px 5px; border-radius: 99px; border: 1px solid var(--surface-border);
-    background: var(--surface-solid); color: var(--text-secondary); font: inherit; font-size: .78rem; font-weight: 800; cursor: pointer; transition: transform .2s, background .2s, border-color .2s; }
-  .cx-chip:active { transform: scale(.96); }
-  .cx-chip .dot { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: .72rem; font-weight: 900; color: #fff; overflow: hidden; }
-  .cx-chip .dot img { width: 100%; height: 100%; object-fit: cover; }
-  .cx-chip.on { background: var(--color-accent); border-color: var(--color-accent); color: #fff; box-shadow: 0 8px 18px rgba(var(--color-accent-rgb), .3); }
-
-  /* ---------- insight cards ---------- */
-  .cx-ins { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
-  .cx-in { background: var(--surface-solid); border: 1px solid var(--surface-border); border-radius: 16px; padding: 12px 10px; text-align: center; min-width: 0; }
-  .cx-in svg { color: var(--color-accent); }
-  .cx-in p { margin: 6px 0 0; font-size: .66rem; font-weight: 800; color: var(--text-muted); }
-  .cx-in b { display: block; margin-top: 3px; font-size: .84rem; font-weight: 900; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .cx-in em { display: block; font-style: normal; font-family: var(--font-num); font-size: .78rem; font-weight: 900; margin-top: 1px; }
-  .cx-in.good em { color: var(--color-success); } .cx-in.bad em { color: var(--color-danger); } .cx-in.acc em { color: var(--color-accent); }
-
-  /* ---------- radar ---------- */
-  .cx-card { background: var(--surface-solid); border: 1px solid var(--surface-border); border-radius: 20px; padding: 16px; margin-top: 14px; box-shadow: var(--shadow-soft); }
+  /* ---------- glass cards ---------- */
+  .cx-card { background: var(--g-bg); border: 1px solid var(--g-edge); border-radius: 22px; padding: 16px; margin-top: 14px;
+    box-shadow: inset 0 1px 0 var(--g-shine), var(--g-shadow); backdrop-filter: blur(var(--g-blur)) saturate(1.5); -webkit-backdrop-filter: blur(var(--g-blur)) saturate(1.5); }
   .cx-card h3 { margin: 0 0 4px; font-size: 1rem; font-weight: 900; display: flex; align-items: center; gap: 8px; }
   .cx-card h3 svg { color: var(--color-accent); }
-  .cx-sub { margin: 0 0 6px; font-size: .74rem; font-weight: 700; color: var(--text-muted); }
-  .cx-legend { display: flex; gap: 14px; justify-content: center; font-size: .74rem; font-weight: 800; color: var(--text-secondary); margin-top: 4px; }
-  .cx-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
-  .cx-radar { display: block; width: 100%; max-width: 340px; margin: 0 auto; overflow: visible; }
-  .cx-radar .ring { fill: none; stroke: var(--surface-border); stroke-width: 1; }
-  .cx-radar .axis { stroke: var(--surface-border); stroke-width: 1; }
-  .cx-radar .lbl { font-size: 9.5px; font-weight: 800; fill: var(--text-secondary); }
-  .cx-radar .shape { transform-box: view-box; transform-origin: 50% 50%; animation: cxRadar 1s cubic-bezier(.2,.9,.3,1) both; }
-  .cx-radar .shape.b { animation-delay: .25s; }
+  .cx-sub { margin: 0 0 10px; font-size: .74rem; font-weight: 700; color: var(--text-muted); }
+  .cx-no { width: 24px; height: 24px; border-radius: 50%; display: inline-grid; place-items: center; font-size: .78rem; font-weight: 900; color: #2b1d09;
+    background: linear-gradient(180deg, var(--g-brass-hi), var(--g-brass-lo)); box-shadow: inset 0 1px 0 rgba(255,255,255,.5); flex: 0 0 auto; }
   .cx-empty { text-align: center; font-size: .8rem; font-weight: 700; color: var(--text-muted); padding: 14px 0; }
 
-  /* ---------- tabs ---------- */
-  .cx-tabs { position: sticky; top: 8px; z-index: 5; margin: 18px 0 14px; }
-  .cx-seg { position: relative; display: flex; gap: 3px; padding: 3px; border-radius: 14px; background: var(--surface-edge); box-shadow: var(--shadow-soft); }
-  .cx-seg button { position: relative; z-index: 1; flex: 1; padding: 10px 4px; border: 0; border-radius: 11px; background: transparent; color: var(--text-secondary); font: inherit; font-size: .84rem; font-weight: 800; cursor: pointer; transition: color .25s; }
-  .cx-seg button.on { color: var(--text-primary); }
-  .cx-thumb { position: absolute; z-index: 0; top: 3px; bottom: 3px; left: 3px; width: calc((100% - 12px) / 3); border-radius: 11px; background: var(--surface-solid); box-shadow: var(--shadow-soft); transition: transform .35s cubic-bezier(.3,1.2,.4,1); }
+  /* ---------- step 1: count chips ---------- */
+  .cx-cnts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .cx-cnts .g-chip { justify-content: center; min-height: 44px; padding: 0 6px; font-size: .86rem; border-radius: 14px; }
+  .cx-cnts .g-chip:disabled { opacity: .4; pointer-events: none; }
+
+  /* ---------- step 2: person slots ---------- */
+  .cx-slots { display: grid; gap: 10px; }
+  .cx-slot { --c: var(--color-accent); position: relative; display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; min-height: 66px; text-align: left; font: inherit; color: var(--text-primary);
+    background: var(--g-bg); border: 1px solid var(--g-edge); border-left: 4px solid var(--c); border-radius: 18px; cursor: pointer;
+    box-shadow: inset 0 1px 0 var(--g-shine), var(--g-shadow); transition: transform .2s cubic-bezier(.2,.9,.3,1), background .2s ease; animation: cxFade .35s ease both; }
+  .cx-slot:active { transform: scale(.985); }
+  @media (hover: hover) { .cx-slot:hover { background: var(--g-bg-hover); } }
+  .cx-slot-n { position: absolute; top: 6px; right: 12px; font-family: var(--font-num); font-size: .66rem; font-weight: 900; color: var(--text-muted); }
+  .cx-slot-t { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 1px; }
+  .cx-slot-t b { font-size: .95rem; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cx-slot-t small { font-size: .7rem; font-weight: 700; color: var(--text-muted); }
+  .cx-slot-go { display: inline-flex; align-items: center; gap: 4px; font-size: .7rem; font-weight: 800; color: var(--text-secondary); padding: 6px 10px; border-radius: 99px; background: var(--g-bg-hover); border: 1px solid var(--g-edge); margin-top: 14px; flex: 0 0 auto; }
+  .cx-slot.empty { border-style: dashed; border-left-style: dashed; background: transparent; box-shadow: none; }
+  .cx-plus { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: var(--c); background: var(--g-bg); border: 1px dashed var(--c); flex: 0 0 auto; }
+
+  /* ---------- avatars ---------- */
+  .cx-av { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-weight: 900; font-size: 1rem; color: #fff; overflow: hidden; flex: 0 0 auto;
+    border: 2px solid rgba(255,255,255,.55); box-shadow: 0 4px 12px rgba(0,0,0,.18); }
+  .cx-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  /* ---------- step 3: mode cards ---------- */
+  .cx-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .cx-mode { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 14px 12px 12px; text-align: left; font: inherit; color: var(--text-primary); min-height: 112px;
+    background: var(--g-bg); border: 1px solid var(--g-edge); border-radius: 18px; cursor: pointer; box-shadow: inset 0 1px 0 var(--g-shine), var(--g-shadow);
+    transition: transform .2s cubic-bezier(.2,.9,.3,1), background .2s ease, border-color .2s ease, box-shadow .2s ease; }
+  .cx-mode:active { transform: scale(.975); }
+  .cx-mode-ic { width: 34px; height: 34px; border-radius: 12px; display: grid; place-items: center; color: var(--color-accent); background: var(--color-accent-soft); margin-bottom: 4px; }
+  .cx-mode b { font-size: .9rem; font-weight: 900; }
+  .cx-mode small { font-size: .7rem; font-weight: 700; color: var(--text-muted); line-height: 1.45; }
+  .cx-mode::after { content: ""; position: absolute; top: 12px; right: 12px; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--g-edge); background: var(--g-bg-hover); transition: all .2s ease; }
+  .cx-mode.on { background: var(--g-sel-bg); border-color: var(--g-sel-edge); box-shadow: inset 0 1px 0 var(--g-shine), 0 0 0 3px rgba(184,134,60,.14); }
+  .cx-mode.on::after { border-color: transparent; background: var(--color-accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232b1d09' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/12px no-repeat; }
+
+  /* ---------- selected-mode picker ---------- */
+  .cx-selwrap { margin-top: 14px; animation: cxFade .3s ease both; }
+  .cx-search { width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--g-edge); background: var(--g-bg); color: inherit; font: inherit; font-size: .86rem; font-weight: 700;
+    box-shadow: inset 0 1px 0 var(--g-shine); }
+  .cx-search:focus { outline: none; border-color: var(--g-sel-edge); box-shadow: inset 0 1px 0 var(--g-shine), 0 0 0 3px rgba(184,134,60,.16); }
+  .cx-selbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 10px 2px 6px; font-size: .76rem; font-weight: 800; color: var(--text-secondary); }
+  .cx-selbar button { font: inherit; font-size: .74rem; font-weight: 800; color: var(--color-danger); background: transparent; border: 0; padding: 4px 2px; cursor: pointer; }
+  .cx-selchips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .cx-sc { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 4px 4px 4px 10px; border-radius: 99px; font-size: .72rem; font-weight: 800; background: var(--g-sel-bg); border: 1px solid var(--g-sel-edge); }
+  .cx-sc i { font-style: normal; font-size: .6rem; font-weight: 900; color: var(--color-accent); }
+  .cx-sc span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
+  .cx-sc button { width: 20px; height: 20px; border-radius: 50%; border: 0; display: grid; place-items: center; background: var(--g-bg-hover); color: var(--text-secondary); cursor: pointer; padding: 0; }
+  .cx-tree { max-height: 340px; overflow-y: auto; border-radius: 16px; border: 1px solid var(--g-edge); background: var(--g-bg); padding: 6px; -webkit-overflow-scrolling: touch; }
+  .cx-tr { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 12px; border: 1px solid transparent; transition: background .2s ease, border-color .2s ease; }
+  .cx-tr.l2 { margin-left: 16px; } .cx-tr.l3 { margin-left: 32px; }
+  .cx-tr.on { background: var(--g-sel-bg); border-color: var(--g-sel-edge); }
+  .cx-tr.inh { opacity: .6; }
+  .cx-ck { width: 22px; height: 22px; border-radius: 7px; flex: 0 0 auto; display: grid; place-items: center; padding: 0; cursor: pointer; color: #2b1d09;
+    background: var(--g-bg-hover); border: 1.5px solid var(--g-edge); transition: all .18s ease; }
+  .cx-tr.on .cx-ck, .cx-tr.inh .cx-ck { background: linear-gradient(180deg, var(--g-brass-hi), var(--g-brass-lo)); border-color: transparent; }
+  .cx-tn { flex: 1; min-width: 0; text-align: left; padding: 9px 2px; font: inherit; font-size: .84rem; font-weight: 700; color: var(--text-primary); background: transparent; border: 0; cursor: pointer; }
+  .cx-tr.l1 .cx-tn { font-weight: 900; }
+  .cx-ex { width: 30px; height: 30px; flex: 0 0 auto; display: grid; place-items: center; padding: 0; border: 0; background: transparent; color: var(--text-muted); cursor: pointer; border-radius: 10px; }
+  .cx-ex svg { transition: transform .25s ease; } .cx-ex.open svg { transform: rotate(90deg); }
+
+  /* ---------- sticky CTA ---------- */
+  .cx-cta { position: sticky; bottom: calc(102px + env(safe-area-inset-bottom, 0px)); z-index: 6; margin-top: 16px; padding: 10px; border-radius: 22px; background: var(--g-bg-hover); border: 1px solid var(--g-edge);
+    box-shadow: inset 0 1px 0 var(--g-shine), 0 14px 34px rgba(0,0,0,.14); backdrop-filter: blur(20px) saturate(1.6); -webkit-backdrop-filter: blur(20px) saturate(1.6); }
+  @media (min-width: 900px) { .cx-cta { bottom: 12px; } }
+  .cx-hint { margin: 0 4px 8px; text-align: center; font-size: .74rem; font-weight: 800; color: var(--text-muted); }
+  .cx-go { width: 100%; min-height: 50px; font-size: 1rem; }
+
+  /* ---------- bottom sheet (person picker) ---------- */
+  .cx-ov { position: fixed; inset: 0; z-index: 400; display: flex; align-items: flex-end; justify-content: center; background: rgba(20,16,8,.45); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); animation: cxOv .2s ease both; }
+  .cx-sheet { width: 100%; max-width: 480px; max-height: 82vh; display: flex; flex-direction: column; gap: 10px; padding: 18px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+    background: var(--g-bg-hover); border: 1px solid var(--g-edge); border-bottom: 0; border-radius: 26px 26px 0 0; box-shadow: 0 -18px 50px rgba(0,0,0,.25);
+    backdrop-filter: blur(26px) saturate(1.6); -webkit-backdrop-filter: blur(26px) saturate(1.6); animation: cxSheet .3s cubic-bezier(.22,.9,.3,1) both; }
+  [data-theme="dark"] .cx-sheet { background: rgba(32,36,44,.88); }
+  @media (min-width: 600px) { .cx-ov { align-items: center; padding: 20px; } .cx-sheet { border-radius: 24px; border-bottom: 1px solid var(--g-edge); } }
+  .cx-sh-h { display: flex; align-items: center; justify-content: space-between; }
+  .cx-sh-h b { font-size: 1.02rem; font-weight: 900; }
+  .cx-x { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--g-edge); background: var(--g-bg); color: var(--text-secondary); cursor: pointer; padding: 0; }
+  .cx-plist { overflow-y: auto; display: grid; gap: 6px; padding: 2px; -webkit-overflow-scrolling: touch; }
+  .cx-pick { display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px 10px; text-align: left; font: inherit; color: var(--text-primary); border-radius: 16px; cursor: pointer;
+    background: var(--g-bg); border: 1px solid var(--g-edge); transition: background .2s ease, transform .15s ease; }
+  .cx-pick:active { transform: scale(.985); }
+  .cx-pick .t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .cx-pick .t b { font-size: .9rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cx-pick .t small { font-size: .68rem; font-weight: 700; color: var(--text-muted); }
+  .cx-pick .tag { font-size: .64rem; font-weight: 900; padding: 3px 9px; border-radius: 99px; color: var(--text-muted); background: var(--g-bg-hover); border: 1px solid var(--g-edge); }
+  .cx-pick.cur { background: var(--g-sel-bg); border-color: var(--g-sel-edge); }
+  .cx-pick.cur .tag { color: var(--color-accent); border-color: var(--g-sel-edge); }
+  .cx-pick:disabled { opacity: .45; pointer-events: none; }
+
+  /* ---------- result header ---------- */
+  .cx-rhead { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-top: 4px; border-radius: 20px; background: var(--g-bg); border: 1px solid var(--g-edge);
+    box-shadow: inset 0 1px 0 var(--g-shine), var(--g-shadow); backdrop-filter: blur(var(--g-blur)) saturate(1.5); -webkit-backdrop-filter: blur(var(--g-blur)) saturate(1.5); }
+  .cx-edit { min-height: 38px; padding: 0 14px 0 10px; font-size: .8rem; border-radius: 99px; flex: 0 0 auto; }
+  .cx-who { display: flex; flex: 1; min-width: 0; justify-content: center; }
+  .cx-who .cx-av { width: 34px; height: 34px; font-size: .84rem; margin-left: -9px; border-width: 2px; }
+  .cx-who .cx-av:first-child { margin-left: 0; }
+  .cx-modechip { flex: 0 0 auto; font-size: .7rem; font-weight: 900; padding: 5px 11px; border-radius: 99px; color: var(--color-accent); background: var(--g-sel-bg); border: 1px solid var(--g-sel-edge); }
 
   /* ---------- podium ---------- */
   .cx-pod { display: flex; align-items: flex-end; justify-content: center; gap: 8px; padding: 6px 4px 0; }
   .cx-pcol { flex: 1; max-width: 120px; text-align: center; min-width: 0; }
-  .cx-pcol .cx-av { width: 46px; height: 46px; font-size: 1.1rem; border-width: 2px; margin-bottom: 6px; }
+  .cx-pcol .cx-av { width: 46px; height: 46px; font-size: 1.1rem; margin: 0 auto 6px; }
   .cx-pcol.first .cx-av { width: 58px; height: 58px; font-size: 1.4rem; border-color: #d4a73c; }
   .cx-pn { font-size: .8rem; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .cx-pp { font-family: var(--font-num); font-size: .78rem; font-weight: 800; color: var(--color-accent); margin-bottom: 6px; }
-  .cx-block { border-radius: 14px 14px 0 0; display: grid; place-items: start center; padding-top: 8px; font-family: var(--font-num); font-weight: 900; font-size: 1.3rem; color: #fff;
-    height: 0; transition: height .9s cubic-bezier(.2,.9,.3,1) .25s; }
+  .cx-block { border-radius: 14px 14px 0 0; display: grid; place-items: start center; padding-top: 8px; font-family: var(--font-num); font-weight: 900; font-size: 1.3rem; color: #fff; height: 0; transition: height .9s cubic-bezier(.2,.9,.3,1) .25s; }
   .cx-pcol.first .cx-block { background: linear-gradient(180deg, #d4a73c, #a9801f); }
   .cx-pcol.second .cx-block { background: linear-gradient(180deg, #8d99a8, #667385); }
   .cx-pcol.third .cx-block { background: linear-gradient(180deg, #c27c45, #92572b); }
   .cx-crown { display: block; margin: 0 auto 2px; color: #d4a73c; animation: cxFloat 2.4s ease-in-out infinite; }
 
   /* ---------- race rows ---------- */
-  .cx-row { display: grid; grid-template-columns: 26px 38px 1fr; gap: 10px; align-items: center; padding: 11px 12px; border-radius: 16px; background: var(--surface-solid);
-    border: 1px solid var(--surface-border); margin-top: 8px; }
-  .cx-row.me { border-color: rgba(var(--color-accent-rgb), .45); background: linear-gradient(90deg, rgba(var(--color-accent-rgb), .08), var(--surface-solid)); }
+  .cx-row { display: grid; grid-template-columns: 26px 38px 1fr; gap: 10px; align-items: center; padding: 11px 12px; border-radius: 16px; background: var(--g-bg-hover); border: 1px solid var(--g-edge); margin-top: 8px; }
+  .cx-row.me { border-color: var(--g-sel-edge); background: var(--g-sel-bg); }
   .cx-rk { font-family: var(--font-num); font-weight: 900; font-size: .95rem; color: var(--text-muted); text-align: center; }
   .cx-rk.r1 { color: #c9961f; } .cx-rk.r2 { color: #7a8696; } .cx-rk.r3 { color: #b0693a; }
-  .cx-row .cx-av { width: 38px; height: 38px; font-size: .95rem; margin: 0; border-width: 2px; box-shadow: none; }
+  .cx-row .cx-av { width: 38px; height: 38px; font-size: .95rem; box-shadow: none; border-width: 2px; }
   .cx-rmain { min-width: 0; }
   .cx-rtop { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .cx-rname { font-size: .88rem; font-weight: 900; display: flex; align-items: center; gap: 6px; min-width: 0; }
@@ -116,51 +158,74 @@
   .cx-me { flex: 0 0 auto; font-size: .6rem; font-weight: 900; padding: 2px 7px; border-radius: 6px; color: var(--color-success); background: rgba(47,125,94,.14); }
   .cx-val { font-family: var(--font-num); font-weight: 900; font-size: .92rem; white-space: nowrap; }
   .cx-val small { font-size: .62rem; font-weight: 800; color: var(--text-muted); margin-left: 2px; }
-  .cx-track { height: 8px; border-radius: 99px; background: var(--surface-edge); margin-top: 7px; overflow: hidden; }
+  .cx-track { height: 8px; border-radius: 99px; background: var(--g-edge); margin-top: 7px; overflow: hidden; }
   .cx-bar { height: 100%; width: 0; border-radius: 99px; transition: width 1.1s cubic-bezier(.2,.9,.3,1); transition-delay: calc(var(--i, 0) * 70ms + 150ms); position: relative; overflow: hidden; }
   .cx-bar::after { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, transparent, rgba(255,255,255,.45), transparent); transform: translateX(-100%); animation: cxSweep 2.8s ease-in-out 1.4s infinite; }
   .cx-meta { display: flex; justify-content: space-between; gap: 8px; margin-top: 5px; font-size: .68rem; font-weight: 700; color: var(--text-muted); }
   .cx-delta { font-family: var(--font-num); font-weight: 900; }
   .cx-delta.up { color: var(--color-success); } .cx-delta.down { color: var(--color-danger); }
 
-  /* ---------- subject / topic blocks ---------- */
-  .cx-blk { background: var(--surface-solid); border: 1px solid var(--surface-border); border-radius: 20px; margin-top: 12px; overflow: hidden; box-shadow: var(--shadow-soft); }
-  .cx-bh { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 13px 14px; border-bottom: 1px solid var(--surface-edge); background: rgba(128,128,128,.03); }
+  /* ---------- metrics table ---------- */
+  .cx-tblwrap { overflow-x: auto; margin: 6px -4px 0; padding: 0 4px 4px; -webkit-overflow-scrolling: touch; }
+  .cx-tbl { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 100%; font-size: .78rem; }
+  .cx-tbl th, .cx-tbl td { padding: 9px 8px; text-align: center; white-space: nowrap; border-bottom: 1px solid var(--g-edge); }
+  .cx-tbl th:first-child, .cx-tbl td:first-child { text-align: left; position: sticky; left: 0; z-index: 1; background: var(--surface-solid); font-weight: 800; color: var(--text-secondary); padding-left: 4px; }
+  .cx-tbl thead th { font-size: .7rem; font-weight: 900; vertical-align: bottom; }
+  .cx-tbl thead .cx-av { width: 30px; height: 30px; font-size: .78rem; margin: 0 auto 4px; box-shadow: none; }
+  .cx-tbl td { font-family: var(--font-num); font-weight: 800; }
+  .cx-tbl td.best span { padding: 3px 9px; border-radius: 99px; color: #2b1d09; background: linear-gradient(180deg, var(--g-brass-hi), var(--g-brass-lo)); box-shadow: inset 0 1px 0 rgba(255,255,255,.45); }
+  .cx-tbl tr:last-child td { border-bottom: 0; }
+
+  /* ---------- radar ---------- */
+  .cx-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; font-size: .74rem; font-weight: 800; color: var(--text-secondary); margin-top: 4px; }
+  .cx-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+  .cx-radar { display: block; width: 100%; max-width: 340px; margin: 0 auto; overflow: visible; }
+  .cx-radar .ring { fill: none; stroke: var(--g-edge); stroke-width: 1; }
+  .cx-radar .axis { stroke: var(--g-edge); stroke-width: 1; }
+  .cx-radar .lbl { font-size: 9.5px; font-weight: 800; fill: var(--text-secondary); }
+  .cx-radar .shape { transform-box: view-box; transform-origin: 50% 50%; animation: cxRadar 1s cubic-bezier(.2,.9,.3,1) both; animation-delay: calc(var(--k, 0) * .15s); }
+
+  /* ---------- tabs ---------- */
+  .cx-tabs { position: sticky; top: 8px; z-index: 5; margin: 18px 0 14px; }
+  .cx-seg { position: relative; display: flex; gap: 3px; padding: 3px; border-radius: 16px; background: var(--g-bg); border: 1px solid var(--g-edge); box-shadow: inset 0 1px 0 var(--g-shine), var(--g-shadow);
+    backdrop-filter: blur(var(--g-blur)) saturate(1.5); -webkit-backdrop-filter: blur(var(--g-blur)) saturate(1.5); }
+  .cx-seg button { position: relative; z-index: 1; flex: 1; padding: 10px 4px; border: 0; border-radius: 13px; background: transparent; color: var(--text-secondary); font: inherit; font-size: .84rem; font-weight: 800; cursor: pointer; transition: color .25s; }
+  .cx-seg button.on { color: #2b1d09; }
+  .cx-thumb { position: absolute; z-index: 0; top: 3px; bottom: 3px; left: 3px; width: calc((100% - 12px) / 3); border-radius: 13px; background: linear-gradient(180deg, var(--g-brass-hi), var(--g-brass-lo));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 6px 14px rgba(184,134,60,.28); transition: transform .35s cubic-bezier(.3,1.2,.4,1); }
+
+  /* ---------- blocks ---------- */
+  .cx-blk { background: var(--g-bg); border: 1px solid var(--g-edge); border-radius: 20px; margin-top: 12px; overflow: hidden; box-shadow: inset 0 1px 0 var(--g-shine), var(--g-shadow); }
+  .cx-bh { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 13px 14px; border-bottom: 1px solid var(--g-edge); background: rgba(128,128,128,.04); }
   .cx-bt { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 900; font-size: .94rem; }
   .cx-bt svg { flex: 0 0 auto; color: var(--color-accent); }
   .cx-bt span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .cx-tag { flex: 0 0 auto; font-size: .68rem; font-weight: 900; padding: 4px 10px; border-radius: 99px; font-family: var(--font-num); }
-  .cx-tag.up { color: var(--color-success); background: rgba(47,125,94,.12); }
-  .cx-tag.down { color: var(--color-danger); background: rgba(166,64,47,.12); }
-  .cx-tag.eq { color: var(--text-muted); background: var(--surface-edge); }
+  .cx-lv { flex: 0 0 auto; font-size: .6rem; font-weight: 900; padding: 2px 8px; border-radius: 99px; color: var(--color-accent); background: var(--g-sel-bg); border: 1px solid var(--g-sel-edge); }
+  .cx-tag { flex: 0 0 auto; max-width: 46%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .66rem; font-weight: 900; padding: 4px 10px; border-radius: 99px; color: var(--color-success); background: rgba(47,125,94,.12); }
+  .cx-tag.eq { color: var(--text-muted); background: var(--g-bg-hover); }
   .cx-bb { padding: 4px 12px 12px; }
   .cx-mini { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; padding: 8px 4px; }
-  .cx-mini .cx-av { width: 30px; height: 30px; font-size: .78rem; margin: 0; border-width: 0; box-shadow: none; }
+  .cx-mini .cx-av { width: 30px; height: 30px; font-size: .78rem; border-width: 0; box-shadow: none; }
   .cx-mini.me .cx-rname { color: var(--color-accent); }
   .cx-mini .cx-track { margin-top: 5px; height: 7px; }
+  .cx-det { font-size: .64rem; font-weight: 700; color: var(--text-muted); margin-top: 3px; }
   .cx-win { color: #c9961f; flex: 0 0 auto; }
 
   /* ---------- topic tools ---------- */
   .cx-tools { display: flex; flex-direction: column; gap: 10px; }
-  .cx-search { width: 100%; padding: 11px 14px; border-radius: 14px; border: 1px solid var(--surface-border); background: var(--surface-solid); color: inherit; font: inherit; font-size: .86rem; font-weight: 700; }
-  .cx-search:focus { outline: 2px solid rgba(var(--color-accent-rgb), .45); }
   .cx-filters { display: flex; gap: 6px; flex-wrap: wrap; }
-  .cx-f { padding: 7px 14px; border-radius: 99px; border: 1px solid var(--surface-border); background: var(--surface-solid); color: var(--text-secondary); font: inherit; font-size: .76rem; font-weight: 800; cursor: pointer; transition: all .2s; }
-  .cx-f.on { background: var(--color-accent); border-color: var(--color-accent); color: #fff; }
 
-  @keyframes cxGlow { 0%,100% { opacity: .65 } 50% { opacity: 1 } }
-  @keyframes cxSlideL { from { transform: translateX(-40px) scale(.7); opacity: 0 } to { transform: none; opacity: 1 } }
-  @keyframes cxSlideR { from { transform: translateX(40px) scale(.7); opacity: 0 } to { transform: none; opacity: 1 } }
-  @keyframes cxVs { 0%,100% { transform: scale(1) } 50% { transform: scale(1.12) } }
   @keyframes cxRadar { from { transform: scale(0); opacity: 0 } to { transform: none; opacity: 1 } }
   @keyframes cxSweep { 0% { transform: translateX(-100%) } 55%,100% { transform: translateX(100%) } }
   @keyframes cxFloat { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-4px) } }
   @keyframes cxFade { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+  @keyframes cxOv { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes cxSheet { from { transform: translateY(40px); opacity: 0 } to { transform: none; opacity: 1 } }
   .cx-swap { animation: cxFade .35s ease both; }
 
   @media (prefers-reduced-motion: reduce) {
     .cx-rv { opacity: 1; transform: none; transition: none; }
-    .cx-bar, .cx-tug i, .cx-block { transition: none; }
+    .cx-bar, .cx-block { transition: none; }
     *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; }
   }
 </style>
@@ -176,94 +241,123 @@
 <script type="module">
 import { initTheme, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
 import { getActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
-import { normalizeBatch } from "../js/utils/batch-utils.js";
+import { normalizeBatch, filterSyllabusForBatch } from "../js/utils/batch-utils.js";
 import { getApprovedResults, getLeaderboardData } from "../js/utils/results-utils.js";
-import { getSubjects, getChapters, getTopics, buildNameMap } from "../js/utils/syllabus-utils.js";
+import { getSubjects, getChapters, getTopics, buildNameMap, getFullSyllabusTree } from "../js/utils/syllabus-utils.js";
 import { computeStudentSummary, mergeStatsForDisplay } from "../js/utils/comparison-utils.js";
 
 initTheme();
 const shell = document.getElementById("shell");
 const student = getActiveStudent();
-if (!student) window.location.href = "../index.html"; else renderPage();
 
 const REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-const PALETTE = ["#b8863c", "#4f7fb0", "#8a63b5", "#2f7d5e", "#c9772e", "#b24a63", "#2c8ea0"];
+const PALETTE = ["#b8863c", "#4f7fb0", "#8a63b5", "#2f7d5e", "#b24a63"];   // one colour per box
+const MAXP = 5;
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const bn = n => String(n).replace(/\d/g, d => "০১২৩৪৫৬৭৮৯"[d]);
 const fmt = n => Number(n || 0).toLocaleString("en-IN");
 const r1 = n => Math.round(n * 10) / 10;
+const firstOf = n => String(n || "").trim().split(" ")[0] || "—";
+const nmOf = o => o?.name_bn || o?.name_en || o?.id || "—";
 
 const I = {
   trophy: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0 0 12 0V2z"/>',
   crown: '<path d="M2 7l4.5 4L12 4l5.5 7L22 7l-2 12H4z"/>',
   layers: '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
+  book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/>',
   file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',
-  up: '<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',
-  down: '<path d="M3 7l6 6 4-4 8 8"/><path d="M14 17h7v-7"/>',
   rank: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/>',
-  radar: '<polygon points="12 2 21 9 18 20 6 20 3 9"/><polygon points="12 8 16 11 15 16 9 16 8 11"/>'
+  radar: '<polygon points="12 2 21 9 18 20 6 20 3 9"/><polygon points="12 8 16 11 15 16 9 16 8 11"/>',
+  table: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/>',
+  chev: '<path d="m9 6 6 6-6 6"/>',
+  back: '<path d="m15 18-6-6 6-6"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  swap: '<path d="M7 7h12l-3-3M17 17H5l3 3"/>',
+  sliders: '<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>'
 };
 const svg = (n, s = 18) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
 
-let S = null;   // page state
+/* ---------------- state ---------------- */
+let MYBATCH = "";
+let ROSTER = [], BY = {};
+let TREE = [], TREE_STATE = "idle";                 // idle | loading | ok | err
+const IDX = { chapSubj: {}, topChap: {}, topSubj: {}, sub: {}, chap: {}, top: {} };
+const ST = {                                         // setup state
+  count: 2,
+  slots: [null, null, null, null, null],
+  mode: "overall",                                   // overall | selected
+  sel: { subject: new Set(), chapter: new Set(), topic: new Set() },
+  q: "", open: new Set()
+};
+let R = null;                                        // result state
+const CACHE = { points: null, maps: null, res: {} };
+let $body = null, $setup = null, $result = null;
 
-/* ---------------- data ---------------- */
-async function renderPage() {
-  const myBatch = normalizeBatch(student.className) || "অজানা ব্যাচ";
+/* ---------------- boot ---------------- */
+async function boot() {
+  MYBATCH = normalizeBatch(student.className) || "অজানা ব্যাচ";
   shell.innerHTML = `${renderStudentHeader(student, "dashboard")}<div id="body" class="mt-4"><div class="spinner" style="margin:40px auto;"></div></div>`;
-  const body = document.getElementById("body");
+  $body = document.getElementById("body");
   try {
-    const allStudents = await getActiveStudents();
-    const batchStudents = allStudents.filter(s => (normalizeBatch(s.className) || "অজানা ব্যাচ") === myBatch);
-    if (batchStudents.length < 2) { renderState(body, "empty", "আপনার ব্যাচে তুলনার জন্য অন্য কোনো শিক্ষার্থী নেই।"); return; }
+    const all = await getActiveStudents();
+    ROSTER = all.filter(s => (normalizeBatch(s.className) || "অজানা ব্যাচ") === MYBATCH)
+      .sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "bn"));
+    if (!ROSTER.some(s => s.studentId === student.studentId)) ROSTER.unshift(student);
+    ROSTER.forEach(s => { BY[s.studentId] = s; });
+    if (ROSTER.length < 2) { renderState($body, "empty", "আপনার ব্যাচে তুলনার জন্য অন্য কোনো শিক্ষার্থী নেই।"); return; }
 
-    const leaderboardData = await getLeaderboardData(batchStudents);
-    const pointsMap = {};
-    leaderboardData.forEach(l => { pointsMap[l.studentId] = l.totalPoints || 0; });
-
-    const [subjects, chapters, topics] = await Promise.all([getSubjects(), getChapters(), getTopics()]);
-    const subjectMap = buildNameMap(subjects), chapterMap = buildNameMap(chapters), topicMap = buildNameMap(topics);
-
-    const summaries = await Promise.all(batchStudents.map(async s => {
-      const results = await getApprovedResults(s.studentId);
-      const summary = computeStudentSummary(s, results, subjectMap, chapterMap, topicMap);
-      summary.actualPoints = pointsMap[s.studentId] || 0;
-      summary.photoURL = s.photoURL || "";
-      return summary;
-    }));
-    if (summaries.every(s => !s.hasData)) { renderState(body, "empty", "তুলনার জন্য এখনো পর্যাপ্ত ফলাফল পাওয়া যায়নি।"); return; }
-
-    renderDetailedView(body, summaries, myBatch);
+    ST.slots[0] = student.studentId;                 // first box defaults to me (changeable)
+    $body.innerHTML = `<div id="cxSetup"></div><div id="cxResult" hidden></div>`;
+    $setup = document.getElementById("cxSetup");
+    $result = document.getElementById("cxResult");
+    renderSetup();
+    wireEvents();
   } catch (err) {
     console.error(err);
-    renderState(body, "error", "ডেটা লোড করতে সমস্যা হয়েছে। ইন্টারনেট সংযোগ চেক করুন।");
+    renderState($body, "error", "ডেটা লোড করতে সমস্যা হয়েছে। ইন্টারনেট সংযোগ চেক করুন।");
   }
 }
 
-/* ---------------- small builders ---------------- */
-const colorOf = (s, i) => s.studentId === student.studentId ? PALETTE[0] : PALETTE[(i % (PALETTE.length - 1)) + 1];
-const first = s => esc(String(s.name || "").split(" ")[0] || "—");
-const idxOf = s => S.order.findIndex(x => x.studentId === s.studentId);
-function avatar(s, size) {
-  const c = S.colors[s.studentId];
-  const st = size ? `style="width:${size}px;height:${size}px;font-size:${Math.round(size * .4)}px;background:${c}"` : `style="background:${c}"`;
-  return `<div class="cx-av" ${st}>${s.photoURL ? `<img src="${esc(s.photoURL)}" alt="">` : esc((s.name || "?").trim().charAt(0).toUpperCase())}</div>`;
+/* ---------------- syllabus tree (for "compare selected") ---------------- */
+let TREE_P = null;
+function ensureTree() {
+  if (TREE_P) return TREE_P;
+  TREE_STATE = "loading";
+  TREE_P = (async () => {
+    try {
+      TREE = filterSyllabusForBatch(await getFullSyllabusTree(), student.className) || [];
+      TREE.forEach(sj => {
+        IDX.sub[sj.id] = sj;
+        (sj.chapters || []).forEach(ch => {
+          IDX.chap[ch.id] = ch; IDX.chapSubj[ch.id] = sj.id;
+          (ch.topics || []).forEach(t => { IDX.top[t.id] = t; IDX.topChap[t.id] = ch.id; IDX.topSubj[t.id] = sj.id; });
+        });
+      });
+      TREE_STATE = "ok";
+    } catch (e) { console.error(e); TREE_STATE = "err"; }
+  })();
+  return TREE_P;
 }
 
-/* ---------------- animations ---------------- */
+/* ---------------- small builders ---------------- */
+function avHtml(s, color, size) {
+  const st = size ? `width:${size}px;height:${size}px;font-size:${Math.round(size * .4)}px;` : "";
+  return `<div class="cx-av" style="${st}background:${color}">${s.photoURL ? `<img src="${esc(s.photoURL)}" alt="">` : esc((s.name || "?").trim().charAt(0).toUpperCase())}</div>`;
+}
+const pAv = (p, size) => avHtml(p, p.color, size);
 function animateIn(root) {
-  // 1. scroll-reveal with stagger
   const rv = [...root.querySelectorAll(".cx-rv")];
   if (REDUCED || !("IntersectionObserver" in window)) rv.forEach(e => e.classList.add("in"));
   else {
     const io = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } }), { threshold: .12 });
     rv.forEach(e => io.observe(e));
   }
-  // 2. bars grow, podium rises, tug-of-war slides
   requestAnimationFrame(() => requestAnimationFrame(() => {
     root.querySelectorAll("[data-w]").forEach(e => { e.style.width = e.dataset.w + "%"; });
     root.querySelectorAll("[data-h]").forEach(e => { e.style.height = e.dataset.h + "px"; });
   }));
-  // 3. count-up numbers
   root.querySelectorAll("[data-count]").forEach(el => {
     const target = Number(el.dataset.count) || 0, dec = Number(el.dataset.dec || 0);
     const show = v => { el.textContent = dec ? v.toFixed(dec) : fmt(Math.round(v)); };
@@ -274,202 +368,437 @@ function animateIn(root) {
   });
 }
 
-/* ---------------- hero + radar (depend on chosen rival) ---------------- */
-function heroHtml() {
-  const me = S.me, rv = S.rival;
-  const mp = me.actualPoints || 0, rp = rv.actualPoints || 0, tot = mp + rp;
-  const share = tot > 0 ? Math.round((mp / tot) * 100) : 50;
-  const diff = mp - rp;
-  const verdict = diff > 0 ? `<p class="cx-verdict up">তুমি ${fmt(diff)} XP এগিয়ে আছো — ধরে রাখো!</p>`
-    : diff < 0 ? `<p class="cx-verdict down">তুমি ${fmt(-diff)} XP পিছিয়ে — ধরে ফেলার সুযোগ আছে!</p>`
-    : `<p class="cx-verdict">দুজনেই সমান সমান — পরের পরীক্ষাই ঠিক করবে।</p>`;
-  const side = (s, cls, label) => `
-    <div class="cx-side ${cls}">
-      ${avatar(s)}
-      <div class="cx-sname">${label}</div>
-      <div class="cx-sxp"><span data-count="${s.actualPoints || 0}">0</span><small>XP</small></div>
-      <div class="cx-savg">গড় ${s.hasData ? r1(s.avgPercentage) + "%" : "—"}</div>
-    </div>`;
-  return `
-    <div class="cx-hero cx-swap">
-      <div class="cx-hero-label">সামনাসামনি তুলনা</div>
-      <div class="cx-duel">
-        ${side(me, "me", "তুমি")}
-        <div class="cx-vs">VS</div>
-        ${side(rv, "rv", first(rv))}
-      </div>
-      <div class="cx-tug"><i data-w="${share}"></i><i style="flex:1"></i></div>
-      ${verdict}
-    </div>`;
+/* =========================================================
+   SETUP SCREEN
+   ========================================================= */
+function renderSetup() {
+  $setup.innerHTML = `
+    <div class="cx-strip"><span>ব্যাচ: <b>${esc(MYBATCH)}</b></span><span class="cx-pill">${bn(ROSTER.length)} জন শিক্ষার্থী</span></div>
+
+    <section class="cx-card" style="margin-top:0">
+      <h3><span class="cx-no">১</span> কতজনের মধ্যে তুলনা?</h3>
+      <p class="cx-sub">শুধু তোমার ব্যাচের শিক্ষার্থীদের মধ্যেই, সর্বোচ্চ ${bn(MAXP)} জন</p>
+      <div class="cx-cnts" id="cxCnts"></div>
+    </section>
+
+    <section class="cx-card">
+      <h3><span class="cx-no">২</span> কারা কারা?</h3>
+      <p class="cx-sub">বক্সে ট্যাপ করে শিক্ষার্থী বাছাই করো। প্রথম বক্সে তুমি আছো — চাইলে বদলাতে পারো।</p>
+      <div class="cx-slots" id="cxSlots"></div>
+    </section>
+
+    <section class="cx-card">
+      <h3><span class="cx-no">৩</span> কী নিয়ে তুলনা?</h3>
+      <div class="cx-modes" id="cxModes"></div>
+      <div id="cxSelWrap"></div>
+    </section>
+
+    <div class="cx-cta" id="cxCta"></div>`;
+  paintCnts(); paintSlots(); paintModes(); paintSelWrap(); paintCta();
 }
 
-function chipsHtml() {
-  return S.others.map(s => `
-    <button type="button" class="cx-chip ${s.studentId === S.rival.studentId ? "on" : ""}" data-rival="${esc(s.studentId)}">
-      <span class="dot" style="background:${S.colors[s.studentId]}">${s.photoURL ? `<img src="${esc(s.photoURL)}" alt="">` : esc((s.name || "?").trim().charAt(0).toUpperCase())}</span>${first(s)}
-    </button>`).join("");
+function paintCnts() {
+  const maxC = Math.min(MAXP, ROSTER.length);
+  let h = "";
+  for (let n = 2; n <= MAXP; n++) h += `<button type="button" class="g-chip ${ST.count === n ? "on" : ""}" data-count="${n}" ${n > maxC ? "disabled" : ""}>${bn(n)} জন</button>`;
+  document.getElementById("cxCnts").innerHTML = h;
 }
 
-function insightsHtml() {
-  const mine = S.chapters.map(r => ({ name: r.name, v: r[S.me.studentId] })).filter(r => r.v !== null && r.v !== undefined);
-  const best = mine.length ? mine.reduce((a, b) => b.v > a.v ? b : a) : null;
-  const worst = mine.length > 1 ? mine.reduce((a, b) => b.v < a.v ? b : a) : null;
-  const myIdx = idxOf(S.me);
-  const above = myIdx > 0 ? S.order[myIdx - 1] : null;
-  const rankLine = above ? `${fmt((above.actualPoints || 0) - (S.me.actualPoints || 0))} XP পিছনে` : "শীর্ষে আছো";
-  return `
-    <div class="cx-ins">
-      <div class="cx-in acc cx-rv" style="--i:0">${svg("rank", 20)}<p>তোমার র‍্যাঙ্ক</p><b>${myIdx + 1} / ${S.order.length}</b><em>${rankLine}</em></div>
-      <div class="cx-in good cx-rv" style="--i:1">${svg("up", 20)}<p>সবচেয়ে ভালো</p><b>${best ? esc(best.name) : "—"}</b><em>${best ? Math.round(best.v) + "%" : ""}</em></div>
-      <div class="cx-in bad cx-rv" style="--i:2">${svg("down", 20)}<p>আরও মনোযোগ</p><b>${worst ? esc(worst.name) : "—"}</b><em>${worst ? Math.round(worst.v) + "%" : ""}</em></div>
-    </div>`;
-}
-
-function radarHtml() {
-  const a = S.me.studentId, b = S.rival.studentId;
-  let axes = S.chapters.filter(r => r[a] !== null && r[a] !== undefined && r[b] !== null && r[b] !== undefined);
-  axes = axes.sort((x, y) => Math.abs(y[a] - y[b]) - Math.abs(x[a] - x[b])).slice(0, 6);
-  const head = `<h3>${svg("radar", 18)} শক্তি-দুর্বলতার রাডার</h3><p class="cx-sub">কোন বিষয়ে কে এগিয়ে (সঠিক উত্তরের %)</p>`;
-  if (axes.length < 3) {
-    return `<div class="cx-card cx-rv">${head}<div class="cx-empty">রাডারের জন্য দুজনেরই অন্তত ৩টি একই বিষয়ের ডেটা লাগবে।</div></div>`;
+function paintSlots() {
+  let h = "";
+  for (let i = 0; i < ST.count; i++) {
+    const id = ST.slots[i], s = id ? BY[id] : null, col = PALETTE[i];
+    if (s) {
+      const me = s.studentId === student.studentId;
+      h += `<button type="button" class="cx-slot" data-slot="${i}" style="--c:${col};animation-delay:${i * 40}ms">
+        <span class="cx-slot-n">${bn(i + 1)}</span>${avHtml(s, col, 42)}
+        <span class="cx-slot-t"><b>${esc(s.name || "—")}</b><small>${me ? (i === 0 ? "তুমি · ডিফল্ট" : "তুমি") : esc(s.studentId || "")}</small></span>
+        <span class="cx-slot-go">${svg("swap", 14)} বদলাও</span></button>`;
+    } else {
+      h += `<button type="button" class="cx-slot empty" data-slot="${i}" style="--c:${col};animation-delay:${i * 40}ms">
+        <span class="cx-slot-n">${bn(i + 1)}</span><span class="cx-plus">${svg("plus", 18)}</span>
+        <span class="cx-slot-t"><b>শিক্ষার্থী বাছাই করো</b><small>তোমার ব্যাচ থেকে</small></span></button>`;
+    }
   }
-  const n = axes.length, cx = 150, cy = 150, R = 92;
-  const pt = (i, v) => { const ang = -Math.PI / 2 + (i * 2 * Math.PI) / n; const r = (R * Math.max(0, Math.min(100, v))) / 100; return [cx + r * Math.cos(ang), cy + r * Math.sin(ang)]; };
-  const poly = id => axes.map((row, i) => pt(i, row[id]).map(x => x.toFixed(1)).join(",")).join(" ");
-  const rings = [25, 50, 75, 100].map(p => `<polygon class="ring" points="${axes.map((_, i) => pt(i, p).map(x => x.toFixed(1)).join(",")).join(" ")}"/>`).join("");
-  const spokes = axes.map((_, i) => { const [x, y] = pt(i, 100); return `<line class="axis" x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"/>`; }).join("");
-  const labels = axes.map((row, i) => {
-    const ang = -Math.PI / 2 + (i * 2 * Math.PI) / n; const x = cx + (R + 16) * Math.cos(ang), y = cy + (R + 16) * Math.sin(ang);
-    const anchor = Math.abs(Math.cos(ang)) < .25 ? "middle" : (Math.cos(ang) > 0 ? "start" : "end");
-    const nm = row.name.length > 12 ? row.name.slice(0, 11) + "…" : row.name;
-    return `<text class="lbl" x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${anchor}" dominant-baseline="middle">${esc(nm)}</text>`;
-  }).join("");
-  const dots = (id, col) => axes.map((row, i) => { const [x, y] = pt(i, row[id]); return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.2" fill="${col}"/>`; }).join("");
-  const cMe = S.colors[a], cRv = S.colors[b];
-  return `
-    <div class="cx-card cx-rv cx-swap">
-      ${head}
-      <svg class="cx-radar" viewBox="-30 0 360 300" role="img" aria-label="রাডার চার্ট">
-        ${rings}${spokes}
-        <g class="shape b"><polygon points="${poly(b)}" fill="${cRv}" fill-opacity=".18" stroke="${cRv}" stroke-width="2.2" stroke-linejoin="round"/>${dots(b, cRv)}</g>
-        <g class="shape"><polygon points="${poly(a)}" fill="${cMe}" fill-opacity=".24" stroke="${cMe}" stroke-width="2.4" stroke-linejoin="round"/>${dots(a, cMe)}</g>
-        ${labels}
-      </svg>
-      <div class="cx-legend"><span><i style="background:${cMe}"></i>তুমি</span><span><i style="background:${cRv}"></i>${first(S.rival)}</span></div>
-    </div>`;
+  document.getElementById("cxSlots").innerHTML = h;
 }
 
-/* ---------------- tab: overall ---------------- */
-function overallHtml() {
-  const o = S.order, top = o.slice(0, 3);
-  const maxPts = Math.max(1, ...o.map(s => s.actualPoints || 0));
+function paintModes() {
+  const m = (k, ic, t, sub) => `<button type="button" class="cx-mode ${ST.mode === k ? "on" : ""}" data-mode="${k}"><span class="cx-mode-ic">${svg(ic, 18)}</span><b>${t}</b><small>${sub}</small></button>`;
+  document.getElementById("cxModes").innerHTML =
+    m("overall", "rank", "ওভারঅল তুলনা", "সব পরীক্ষা মিলিয়ে XP, গড় ও দক্ষতা") +
+    m("selected", "sliders", "বাছাই করা তুলনা", "নির্দিষ্ট বিষয় / চ্যাপ্টার / টপিক");
+}
+
+/* ----- selected-mode picker ----- */
+function selCount() { return ST.sel.subject.size + ST.sel.chapter.size + ST.sel.topic.size; }
+function paintSelWrap() {
+  const w = document.getElementById("cxSelWrap");
+  if (ST.mode !== "selected") { w.innerHTML = ""; return; }
+  w.innerHTML = `<div class="cx-selwrap">
+      <input class="cx-search" id="cxSelSearch" type="search" placeholder="বিষয়, চ্যাপ্টার বা টপিক খুঁজুন…" value="${esc(ST.q)}" autocomplete="off">
+      <div class="cx-selbar"><span id="cxSelCount"></span><button type="button" id="cxSelClear">সব মুছো</button></div>
+      <div class="cx-selchips" id="cxSelChips"></div>
+      <div class="cx-tree" id="cxSelList"></div></div>`;
+  paintSel();
+  ensureTree().then(paintSel);
+}
+function paintSel() {
+  const cnt = document.getElementById("cxSelCount");
+  if (!cnt) return;
+  cnt.textContent = selCount() ? `${bn(selCount())}টি নির্বাচিত` : "১ বা একাধিক অংশ বাছাই করো";
+  document.getElementById("cxSelClear").style.visibility = selCount() ? "visible" : "hidden";
+  const chip = (lvl, label, id, name) => `<span class="cx-sc"><i>${label}</i><span>${esc(name)}</span><button type="button" data-unsel="${lvl}:${esc(id)}" aria-label="বাদ দাও">${svg("x", 11)}</button></span>`;
+  let c = "";
+  ST.sel.subject.forEach(id => { c += chip("subject", "বিষয়", id, nmOf(IDX.sub[id])); });
+  ST.sel.chapter.forEach(id => { c += chip("chapter", "চ্যাপ্টার", id, nmOf(IDX.chap[id])); });
+  ST.sel.topic.forEach(id => { c += chip("topic", "টপিক", id, nmOf(IDX.top[id])); });
+  document.getElementById("cxSelChips").innerHTML = c;
+  paintSelList();
+  paintCta();
+}
+function paintSelList() {
+  const el = document.getElementById("cxSelList");
+  if (!el) return;
+  if (TREE_STATE === "loading" || TREE_STATE === "idle") { el.innerHTML = `<div class="spinner" style="margin:24px auto"></div>`; return; }
+  if (TREE_STATE === "err") { el.innerHTML = `<div class="cx-empty">সিলেবাস লোড করা যায়নি। পেজ রিফ্রেশ করো।</div>`; return; }
+  if (!TREE.length) { el.innerHTML = `<div class="cx-empty">তোমার ব্যাচের জন্য কোনো সিলেবাস পাওয়া যায়নি।</div>`; return; }
+  const q = ST.q.trim().toLowerCase();
+  const hit = o => nmOf(o).toLowerCase().includes(q);
+  const inh = (lvl, id) => lvl === "chapter" ? ST.sel.subject.has(IDX.chapSubj[id])
+    : lvl === "topic" ? (ST.sel.subject.has(IDX.topSubj[id]) || ST.sel.chapter.has(IDX.topChap[id])) : false;
+  const row = (lvl, o, cls, expandable, open) => {
+    const on = ST.sel[lvl].has(o.id), ih = inh(lvl, o.id), key = `${lvl}:${esc(o.id)}`;
+    return `<div class="cx-tr ${cls} ${on ? "on" : ""} ${ih ? "inh" : ""}">
+      <button type="button" class="cx-ck" role="checkbox" aria-checked="${on || ih}" data-sel="${key}" ${ih ? "disabled" : ""}>${on || ih ? svg("check", 14) : ""}</button>
+      <button type="button" class="cx-tn" data-sel="${key}" ${ih ? "disabled" : ""}>${esc(nmOf(o))}</button>
+      ${expandable ? `<button type="button" class="cx-ex ${open ? "open" : ""}" data-open="${lvl}:${esc(o.id)}" aria-label="খোলো / বন্ধ করো">${svg("chev", 16)}</button>` : ""}</div>`;
+  };
+  let out = "";
+  TREE.forEach(sj => {
+    const sjHit = !q || hit(sj);
+    const chs = (sj.chapters || []).map(ch => {
+      const chHit = sjHit || hit(ch);
+      const tps = chHit ? (ch.topics || []) : (ch.topics || []).filter(hit);
+      return { ch, tps, show: chHit || tps.length > 0 };
+    }).filter(x => x.show);
+    if (q && !sjHit && !chs.length) return;
+    const sOpen = q ? true : ST.open.has("subject:" + sj.id);
+    out += row("subject", sj, "l1", (sj.chapters || []).length > 0, sOpen);
+    if (!sOpen) return;
+    chs.forEach(({ ch, tps }) => {
+      const cOpen = q ? true : ST.open.has("chapter:" + ch.id);
+      out += row("chapter", ch, "l2", (ch.topics || []).length > 0, cOpen);
+      if (cOpen) tps.forEach(t => { out += row("topic", t, "l3", false, false); });
+    });
+  });
+  el.innerHTML = out || `<div class="cx-empty">কিছু পাওয়া যায়নি।</div>`;
+}
+function toggleSel(lvl, id) {
+  const S = ST.sel;
+  if (S[lvl].has(id)) { S[lvl].delete(id); return; }
+  S[lvl].add(id);
+  // keep the selection "flat": picking a parent drops its already-picked children
+  if (lvl === "subject") {
+    [...S.chapter].forEach(c => { if (IDX.chapSubj[c] === id) S.chapter.delete(c); });
+    [...S.topic].forEach(t => { if (IDX.topSubj[t] === id) S.topic.delete(t); });
+  } else if (lvl === "chapter") {
+    [...S.topic].forEach(t => { if (IDX.topChap[t] === id) S.topic.delete(t); });
+  }
+}
+
+/* ----- CTA ----- */
+function validate() {
+  const ids = ST.slots.slice(0, ST.count);
+  if (ids.some(x => !x)) return "সবগুলো বক্সে শিক্ষার্থী বাছাই করো";
+  if (new Set(ids).size !== ids.length) return "একই শিক্ষার্থীকে দুইবার বাছাই করা যাবে না";
+  if (ST.mode === "selected" && selCount() === 0) return "কমপক্ষে ১টি বিষয় / চ্যাপ্টার / টপিক বাছাই করো";
+  return "";
+}
+function paintCta() {
+  const el = document.getElementById("cxCta");
+  if (!el) return;
+  const hint = validate();
+  el.innerHTML = `${hint ? `<p class="cx-hint">${hint}</p>` : ""}<button type="button" class="g-btn g-btn--primary cx-go" id="cxGo" ${hint ? "disabled" : ""}>তুলনা করো ${svg("chev", 18)}</button>`;
+}
+
+/* ----- person picker (bottom sheet) ----- */
+function openPicker(i) {
+  const used = new Set(ST.slots.slice(0, ST.count).filter((x, k) => x && k !== i));
+  const cur = ST.slots[i];
+  const ov = document.createElement("div");
+  ov.className = "cx-ov";
+  ov.innerHTML = `<div class="cx-sheet" role="dialog" aria-modal="true" aria-label="শিক্ষার্থী বাছাই">
+      <div class="cx-sh-h"><b>বক্স ${bn(i + 1)} — শিক্ষার্থী বাছাই</b><button type="button" class="cx-x" data-close aria-label="বন্ধ করো">${svg("x", 16)}</button></div>
+      <input class="cx-search" id="cxPq" type="search" placeholder="নাম বা আইডি খুঁজুন…" autocomplete="off">
+      <div class="cx-plist" id="cxPl"></div></div>`;
+  document.body.appendChild(ov);
+  document.documentElement.style.overflow = "hidden";
+  const list = ov.querySelector("#cxPl"), inp = ov.querySelector("#cxPq");
+  const paint = () => {
+    const q = inp.value.trim().toLowerCase();
+    const rows = ROSTER.filter(s => !q || String(s.name || "").toLowerCase().includes(q) || String(s.studentId || "").toLowerCase().includes(q));
+    list.innerHTML = rows.length ? rows.map((s, k) => {
+      const isUsed = used.has(s.studentId), isCur = s.studentId === cur, me = s.studentId === student.studentId;
+      return `<button type="button" class="cx-pick ${isCur ? "cur" : ""}" data-pick="${esc(s.studentId)}" ${isUsed ? "disabled" : ""}>
+        ${avHtml(s, PALETTE[i], 38)}<span class="t"><b>${esc(s.name || "—")}</b><small>${esc(s.studentId || "")}${me ? " · তুমি" : ""}</small></span>
+        ${isUsed ? `<span class="tag">অন্য বক্সে আছে</span>` : isCur ? `<span class="tag">বাছাই করা</span>` : ""}</button>`;
+    }).join("") : `<div class="cx-empty">কোনো শিক্ষার্থী পাওয়া যায়নি।</div>`;
+  };
+  paint();
+  const close = () => { ov.remove(); document.documentElement.style.overflow = ""; document.removeEventListener("keydown", onKey); };
+  const onKey = e => { if (e.key === "Escape") close(); };
+  document.addEventListener("keydown", onKey);
+  inp.addEventListener("input", paint);
+  ov.addEventListener("click", e => {
+    if (e.target === ov || e.target.closest("[data-close]")) { close(); return; }
+    const p = e.target.closest("[data-pick]");
+    if (p && !p.disabled) { ST.slots[i] = p.dataset.pick; close(); paintSlots(); paintCta(); }
+  });
+}
+
+/* =========================================================
+   RESULT SCREEN
+   ========================================================= */
+async function runCompare() {
+  const why = validate();
+  if (why) return;
+  const ids = ST.slots.slice(0, ST.count);
+  $setup.hidden = true; $result.hidden = false;
+  $result.innerHTML = `<div class="spinner" style="margin:60px auto;"></div>`;
+  window.scrollTo({ top: 0 });
+  history.pushState({ cx: "r" }, "");
+  try {
+    if (!CACHE.points) {
+      const lb = await getLeaderboardData(ROSTER);       // same XP source as the leaderboard
+      CACHE.points = {}; lb.forEach(l => { CACHE.points[l.studentId] = l.totalPoints || 0; });
+    }
+    if (!CACHE.maps) {
+      const [sb, ch, tp] = await Promise.all([getSubjects(), getChapters(), getTopics()]);
+      CACHE.maps = { sub: buildNameMap(sb), chap: buildNameMap(ch), top: buildNameMap(tp) };
+    }
+    if (ST.mode === "selected") await ensureTree();
+    const people = await Promise.all(ids.map(async (id, i) => {
+      const s = BY[id];
+      if (!CACHE.res[id]) CACHE.res[id] = await getApprovedResults(id);
+      const sum = computeStudentSummary(s, CACHE.res[id], CACHE.maps.sub, CACHE.maps.chap, CACHE.maps.top);
+      sum.actualPoints = CACHE.points[id] || 0;
+      sum.photoURL = s.photoURL || "";
+      sum.color = PALETTE[i];
+      sum.isMe = id === student.studentId;
+      return sum;
+    }));
+    const cnt = {}; people.forEach(p => { const f = firstOf(p.name); cnt[f] = (cnt[f] || 0) + 1; });
+    people.forEach(p => { p.label = cnt[firstOf(p.name)] > 1 ? String(p.name).trim() : firstOf(p.name); });
+
+    R = {
+      people, mode: ST.mode, tab: "subject", filter: "all", q: "",
+      rows: {
+        subject: mergeStatsForDisplay(people, "subjectStats", "subjectId"),
+        chapter: mergeStatsForDisplay(people, "chapterStats", "chapterId"),
+        topic: mergeStatsForDisplay(people, "topicStats", "topicId")
+      },
+      items: null
+    };
+    if (ST.mode === "selected") R.items = buildItems();
+    paintResult();
+  } catch (err) {
+    console.error(err);
+    renderState($result, "error", "ডেটা লোড করতে সমস্যা হয়েছে। ইন্টারনেট সংযোগ চেক করুন।");
+  }
+}
+function goSetup() { if (history.state && history.state.cx === "r") history.back(); else showSetup(); }
+function showSetup() { $result.hidden = true; $setup.hidden = false; window.scrollTo({ top: 0 }); }
+
+/* ----- data helpers ----- */
+const KEY = { subject: "subjectId", chapter: "chapterId", topic: "topicId" };
+const LIST = { subject: "subjectStats", chapter: "chapterStats", topic: "topicStats" };
+const statOf = (p, lvl, id) => (p[LIST[lvl]] || []).find(x => x[KEY[lvl]] === id) || null;
+const has = v => v !== null && v !== undefined;
+
+function buildItems() {                                   // selected parts, in syllabus order
+  const items = [];
+  const add = (lvl, o) => {
+    const vals = {}, det = {};
+    R.people.forEach(p => {
+      const st = statOf(p, lvl, o.id);
+      vals[p.studentId] = st && has(st.accuracy) ? st.accuracy : null;
+      det[p.studentId] = st ? { c: st.correct || 0, w: st.wrong || 0 } : null;
+    });
+    items.push({ lvl, id: o.id, name: nmOf(o), vals, det });
+  };
+  TREE.forEach(sj => {
+    if (ST.sel.subject.has(sj.id)) { add("subject", sj); return; }
+    (sj.chapters || []).forEach(ch => {
+      if (ST.sel.chapter.has(ch.id)) { add("chapter", ch); return; }
+      (ch.topics || []).forEach(t => { if (ST.sel.topic.has(t.id)) add("topic", t); });
+    });
+  });
+  return items;
+}
+function combined(p) {                                    // accuracy over every selected part
+  let c = 0, w = 0;
+  R.items.forEach(it => { const d = it.det[p.studentId]; if (d) { c += d.c; w += d.w; } });
+  return { c, w, acc: c + w > 0 ? (c / (c + w)) * 100 : null };
+}
+
+/* ----- pieces ----- */
+function headHtml() {
+  const who = R.people.map(p => pAv(p)).join("");
+  const mode = R.mode === "overall" ? "ওভারঅল" : `বাছাই · ${bn(R.items.length)}টি`;
+  return `<div class="cx-rhead cx-rv">
+    <button type="button" class="g-btn cx-edit" id="cxEdit">${svg("back", 16)} বদলাও</button>
+    <div class="cx-who">${who}</div><span class="cx-modechip">${mode}</span></div>`;
+}
+
+function rankRowsHtml(list, valueOf, opts) {              // generic race rows (XP or %)
+  const max = Math.max(1, ...list.map(x => valueOf(x) || 0));
+  const ref = R.people.find(p => p.isMe) || R.people[0];
+  return list.map((p, i) => {
+    const v = valueOf(p);
+    const meta = opts.meta(p, ref);
+    return `<div class="cx-row ${p.isMe ? "me" : ""} cx-rv" style="--i:${Math.min(i, 8)}">
+      <div class="cx-rk ${i < 3 && has(v) ? "r" + (i + 1) : ""}">${bn(i + 1)}</div>${pAv(p)}
+      <div class="cx-rmain">
+        <div class="cx-rtop"><div class="cx-rname"><span class="t">${esc(p.label)}</span>${p.isMe ? '<span class="cx-me">তুমি</span>' : ""}</div>
+          <div class="cx-val">${has(v) ? `<span data-count="${v}" ${opts.dec ? `data-dec="${opts.dec}"` : ""}>0</span><small>${opts.unit}</small>` : "<small>—</small>"}</div></div>
+        <div class="cx-track"><div class="cx-bar" style="--i:${i};background:${p.color}" data-w="${has(v) ? Math.max(3, Math.round((v / max) * 100)) : 0}"></div></div>
+        <div class="cx-meta">${meta}</div>
+      </div></div>`;
+  }).join("");
+}
+
+function overallRankHtml() {
+  const ord = [...R.people].sort((a, b) => (b.actualPoints || 0) - (a.actualPoints || 0));
+  const top = ord.slice(0, 3);
   const slot = (s, cls, h, place) => !s ? "" : `
     <div class="cx-pcol ${cls}">
       ${cls === "first" ? `<svg class="cx-crown" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${I.crown}</svg>` : ""}
-      ${avatar(s)}
-      <div class="cx-pn">${s.studentId === student.studentId ? "তুমি" : first(s)}</div>
-      <div class="cx-pp">${fmt(s.actualPoints)} XP</div>
-      <div class="cx-block" data-h="${h}">${place}</div>
-    </div>`;
-  const podium = `<div class="cx-card cx-rv"><h3>${svg("trophy", 18)} ওভারঅল পডিয়াম</h3><p class="cx-sub">মোট XP অনুযায়ী ব্যাচের সেরা ${top.length} জন</p>
-    <div class="cx-pod">${slot(top[1], "second", 74, "২")}${slot(top[0], "first", 104, "১")}${slot(top[2], "third", 54, "৩")}</div></div>`;
-
-  const rows = o.map((s, i) => {
-    const isMe = s.studentId === student.studentId;
-    const pts = s.actualPoints || 0;
-    const d = pts - (S.me.actualPoints || 0);
-    const meta = isMe ? `<span>তোমার অবস্থান</span><span class="cx-delta">${s.examsTaken || 0} টি পরীক্ষা</span>`
-      : `<span>তোমার তুলনায়</span><span class="cx-delta ${d > 0 ? "down" : d < 0 ? "up" : ""}">${d === 0 ? "সমান" : (d > 0 ? "+" : "−") + fmt(Math.abs(d)) + " XP"}</span>`;
-    return `
-      <div class="cx-row ${isMe ? "me" : ""} cx-rv" style="--i:${Math.min(i, 8)}">
-        <div class="cx-rk ${i < 3 ? "r" + (i + 1) : ""}">${i + 1}</div>
-        ${avatar(s)}
-        <div class="cx-rmain">
-          <div class="cx-rtop">
-            <div class="cx-rname"><span class="t">${first(s)}</span>${isMe ? '<span class="cx-me">তুমি</span>' : ""}</div>
-            <div class="cx-val"><span data-count="${pts}">0</span><small>XP</small></div>
-          </div>
-          <div class="cx-track"><div class="cx-bar" style="--i:${i};background:${S.colors[s.studentId]}" data-w="${Math.max(3, Math.round((pts / maxPts) * 100))}"></div></div>
-          <div class="cx-meta">${meta}<span>গড় ${s.hasData ? r1(s.avgPercentage) + "%" : "—"}</span></div>
-        </div>
-      </div>`;
-  }).join("");
-  return podium + rows;
+      ${pAv(s)}<div class="cx-pn">${esc(s.label)}</div><div class="cx-pp">${fmt(s.actualPoints)} XP</div>
+      <div class="cx-block" data-h="${h}">${place}</div></div>`;
+  const podium = ord.length >= 3 ? `<div class="cx-pod">${slot(top[1], "second", 74, "২")}${slot(top[0], "first", 104, "১")}${slot(top[2], "third", 54, "৩")}</div>` : "";
+  const rows = rankRowsHtml(ord, p => p.actualPoints || 0, {
+    unit: "XP",
+    meta: (p, ref) => {
+      const d = (p.actualPoints || 0) - (ref.actualPoints || 0);
+      const right = p.studentId === ref.studentId ? `<span class="cx-delta">${bn(p.examsTaken || 0)} টি পরীক্ষা</span>`
+        : `<span class="cx-delta ${ref.isMe ? (d > 0 ? "down" : d < 0 ? "up" : "") : ""}">${d === 0 ? "সমান" : (d > 0 ? "+" : "−") + fmt(Math.abs(d)) + " XP"}</span>`;
+      const left = p.studentId === ref.studentId ? `<span>${ref.isMe ? "তোমার অবস্থান" : "রেফারেন্স"}</span>` : `<span>${ref.isMe ? "তোমার তুলনায়" : esc(ref.label) + "-এর তুলনায়"}</span>`;
+      return `${left}${right}<span>গড় ${p.hasData ? r1(p.avgPercentage) + "%" : "—"}</span>`;
+    }
+  });
+  return `<div class="cx-card cx-rv"><h3>${svg("trophy", 18)} ওভারঅল র‍্যাঙ্কিং</h3><p class="cx-sub">মোট XP অনুযায়ী</p>${podium}${rows}</div>`;
 }
 
-/* ---------------- tabs: subject / topic blocks ---------------- */
-function blockHtml(row, iconName, idx) {
-  const sorted = [...S.summaries].sort((a, b) => {
-    const A = row[a.studentId] ?? -1, B = row[b.studentId] ?? -1;
+function selectedCombinedHtml() {
+  const list = R.people.map(p => ({ p, ...combined(p) })).sort((a, b) => (b.acc ?? -1) - (a.acc ?? -1));
+  const rows = list.map(({ p, c, w, acc }, i) => `
+    <div class="cx-row ${p.isMe ? "me" : ""} cx-rv" style="--i:${Math.min(i, 8)}">
+      <div class="cx-rk ${i < 3 && has(acc) ? "r" + (i + 1) : ""}">${bn(i + 1)}</div>${pAv(p)}
+      <div class="cx-rmain">
+        <div class="cx-rtop"><div class="cx-rname"><span class="t">${esc(p.label)}</span>${p.isMe ? '<span class="cx-me">তুমি</span>' : ""}</div>
+          <div class="cx-val">${has(acc) ? `<span data-count="${acc}" data-dec="1">0</span><small>%</small>` : "<small>—</small>"}</div></div>
+        <div class="cx-track"><div class="cx-bar" style="--i:${i};background:${p.color}" data-w="${has(acc) ? Math.max(2, Math.round(acc)) : 0}"></div></div>
+        <div class="cx-meta"><span>${has(acc) ? `সঠিক ${bn(c)} · ভুল ${bn(w)}` : "এই অংশে এখনো কোনো উত্তর নেই"}</span></div>
+      </div></div>`).join("");
+  return `<div class="cx-card cx-rv"><h3>${svg("trophy", 18)} বাছাই করা অংশে ফলাফল</h3><p class="cx-sub">${bn(R.items.length)}টি নির্বাচিত অংশ মিলিয়ে সঠিক উত্তরের হার</p>${rows}</div>`;
+}
+
+function metricsHtml() {
+  const P = R.people;
+  const M = [
+    ["মোট XP", p => p.actualPoints || 0, v => fmt(v), true],
+    ["গড় নম্বর", p => p.hasData ? r1(p.avgPercentage) : null, v => v + "%", true],
+    ["নির্ভুলতা", p => p.hasData && has(p.avgAccuracy) ? r1(p.avgAccuracy) : null, v => v + "%", true],
+    ["পরীক্ষা দিয়েছে", p => p.examsTaken || 0, v => bn(v) + " টি", true],
+    ["সঠিক উত্তর", p => p.hasData ? p.totalCorrect || 0 : null, v => fmt(v), true],
+    ["ভুল উত্তর", p => p.hasData ? p.totalWrong || 0 : null, v => fmt(v), false],
+    ["সেরা পরীক্ষা", p => p.bestExam ? r1(p.bestExam.percentage ?? 0) : null, v => v + "%", true],
+    ["ধারাবাহিকতা", p => p.hasData && has(p.consistencyStdDev) ? p.consistencyStdDev : null, v => "±" + v, false],
+    ["উন্নতির হার", p => p.hasData && has(p.improvementRate) ? p.improvementRate : null, v => (v > 0 ? "+" : "") + v + "%", true]
+  ];
+  const head = `<tr><th></th>${P.map(p => `<th>${pAv(p)}<span style="color:${p.color}">${esc(p.label)}</span></th>`).join("")}</tr>`;
+  const body = M.map(([label, get, show, higher]) => {
+    const vals = P.map(get);
+    const valid = vals.filter(has);
+    const mx = Math.max(...valid), mn = Math.min(...valid);
+    const bestV = valid.length > 1 && mx !== mn ? (higher ? mx : mn) : null;   // no highlight when everyone ties
+    return `<tr><td>${label}</td>${vals.map(v => `<td class="${has(v) && bestV !== null && v === bestV ? "best" : ""}"><span>${has(v) ? show(v) : "—"}</span></td>`).join("")}</tr>`;
+  }).join("");
+  return `<div class="cx-card cx-rv"><h3>${svg("table", 18)} পাশাপাশি পরিসংখ্যান</h3><p class="cx-sub">সোনালি চিহ্ন = যে এগিয়ে (ভুল উত্তর ও ধারাবাহিকতায় কম মানই ভালো)</p>
+    <div class="cx-tblwrap"><table class="cx-tbl"><thead>${head}</thead><tbody>${body}</tbody></table></div></div>`;
+}
+
+function radarHtml(axesAll, subtitle) {
+  const P = R.people;
+  const head = `<h3>${svg("radar", 18)} শক্তি-দুর্বলতার রাডার</h3><p class="cx-sub">${subtitle}</p>`;
+  const spread = a => { const v = P.map(p => a.vals[p.studentId]); return Math.max(...v) - Math.min(...v); };
+  const axes = axesAll.filter(a => P.every(p => has(a.vals[p.studentId]))).sort((x, y) => spread(y) - spread(x)).slice(0, 6);
+  if (axes.length < 3) return `<div class="cx-card cx-rv">${head}<div class="cx-empty">রাডারের জন্য সবারই অন্তত ৩টি একই অংশের ডেটা লাগবে।</div></div>`;
+  const n = axes.length, cx = 150, cy = 150, RR = 92;
+  const pt = (i, v) => { const ang = -Math.PI / 2 + (i * 2 * Math.PI) / n; const r = (RR * Math.max(0, Math.min(100, v))) / 100; return [cx + r * Math.cos(ang), cy + r * Math.sin(ang)]; };
+  const poly = id => axes.map((a, i) => pt(i, a.vals[id]).map(x => x.toFixed(1)).join(",")).join(" ");
+  const rings = [25, 50, 75, 100].map(pc => `<polygon class="ring" points="${axes.map((_, i) => pt(i, pc).map(x => x.toFixed(1)).join(",")).join(" ")}"/>`).join("");
+  const spokes = axes.map((_, i) => { const [x, y] = pt(i, 100); return `<line class="axis" x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"/>`; }).join("");
+  const labels = axes.map((a, i) => {
+    const ang = -Math.PI / 2 + (i * 2 * Math.PI) / n; const x = cx + (RR + 16) * Math.cos(ang), y = cy + (RR + 16) * Math.sin(ang);
+    const anchor = Math.abs(Math.cos(ang)) < .25 ? "middle" : (Math.cos(ang) > 0 ? "start" : "end");
+    const nm = a.name.length > 12 ? a.name.slice(0, 11) + "…" : a.name;
+    return `<text class="lbl" x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${anchor}" dominant-baseline="middle">${esc(nm)}</text>`;
+  }).join("");
+  const shapes = [...P].reverse().map((p, k) => {
+    const dots = axes.map((a, i) => { const [x, y] = pt(i, a.vals[p.studentId]); return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" fill="${p.color}"/>`; }).join("");
+    return `<g class="shape" style="--k:${k}"><polygon points="${poly(p.studentId)}" fill="${p.color}" fill-opacity=".14" stroke="${p.color}" stroke-width="2.2" stroke-linejoin="round"/>${dots}</g>`;
+  }).join("");
+  return `<div class="cx-card cx-rv cx-swap">${head}
+    <svg class="cx-radar" viewBox="-30 0 360 300" role="img" aria-label="রাডার চার্ট">${rings}${spokes}${shapes}${labels}</svg>
+    <div class="cx-legend">${P.map(p => `<span><i style="background:${p.color}"></i>${esc(p.label)}</span>`).join("")}</div></div>`;
+}
+
+function blockHtml(title, iconName, lvlLabel, vals, det, idx) {
+  const P = [...R.people].sort((a, b) => {
+    const A = vals[a.studentId] ?? -1, B = vals[b.studentId] ?? -1;
     return B !== A ? B - A : (b.actualPoints || 0) - (a.actualPoints || 0);
   });
-  const myV = row[S.me.studentId], rvV = row[S.rival.studentId];
-  let tag = "";
-  if (myV !== null && myV !== undefined && rvV !== null && rvV !== undefined) {
-    const d = r1(myV - rvV);
-    tag = d > 0 ? `<span class="cx-tag up">+${d}% ${first(S.rival)}-এর চেয়ে</span>` : d < 0 ? `<span class="cx-tag down">${d}% ${first(S.rival)}-এর চেয়ে</span>` : `<span class="cx-tag eq">${first(S.rival)}-এর সমান</span>`;
-  }
-  const rows = sorted.map((s, i) => {
-    const v = row[s.studentId], has = v !== null && v !== undefined;
-    const isMe = s.studentId === student.studentId;
-    return `
-      <div class="cx-mini ${isMe ? "me" : ""}">
-        ${avatar(s)}
-        <div class="cx-rmain">
-          <div class="cx-rname"><span class="t">${isMe ? "তুমি" : first(s)}</span>${has && i === 0 ? `<svg class="cx-win" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-label="সেরা">${I.crown}</svg>` : ""}</div>
-          <div class="cx-track"><div class="cx-bar" style="--i:${i};background:${S.colors[s.studentId]}" data-w="${has ? Math.max(2, Math.round(v)) : 0}"></div></div>
-        </div>
-        <div class="cx-val">${has ? Math.round(v) + "<small>%</small>" : "<small>—</small>"}</div>
-      </div>`;
+  const lead = P.find(p => has(vals[p.studentId]));
+  const tied = lead && P.filter(p => has(vals[p.studentId]) && vals[p.studentId] === vals[lead.studentId]).length > 1;
+  const tag = !lead ? "" : tied ? `<span class="cx-tag eq">সমান সমান</span>` : `<span class="cx-tag">সেরা: ${esc(lead.label)}</span>`;
+  const rows = P.map((p, i) => {
+    const v = vals[p.studentId], ok = has(v), d = det && det[p.studentId];
+    return `<div class="cx-mini ${p.isMe ? "me" : ""}">${pAv(p)}
+      <div class="cx-rmain">
+        <div class="cx-rname"><span class="t">${p.isMe ? "তুমি" : esc(p.label)}</span>${ok && i === 0 && !tied ? `<svg class="cx-win" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-label="সেরা">${I.crown}</svg>` : ""}</div>
+        <div class="cx-track"><div class="cx-bar" style="--i:${i};background:${p.color}" data-w="${ok ? Math.max(2, Math.round(v)) : 0}"></div></div>
+        ${d ? `<div class="cx-det">সঠিক ${bn(d.c)} · ভুল ${bn(d.w)}</div>` : ""}
+      </div>
+      <div class="cx-val">${ok ? Math.round(v) + "<small>%</small>" : "<small>—</small>"}</div></div>`;
   }).join("");
-  return `
-    <div class="cx-blk cx-rv" style="--i:${Math.min(idx, 5)}">
-      <div class="cx-bh"><div class="cx-bt">${svg(iconName, 17)}<span>${esc(row.name)}</span></div>${tag}</div>
-      <div class="cx-bb">${rows}</div>
-    </div>`;
+  return `<div class="cx-blk cx-rv" style="--i:${Math.min(idx, 5)}">
+    <div class="cx-bh"><div class="cx-bt">${svg(iconName, 17)}<span>${esc(title)}</span>${lvlLabel ? `<span class="cx-lv">${lvlLabel}</span>` : ""}</div>${tag}</div>
+    <div class="cx-bb">${rows}</div></div>`;
 }
 
-function subjectHtml() {
-  return S.chapters.length ? S.chapters.map((r, i) => blockHtml(r, "layers", i)).join("") : `<div class="cx-empty">পর্যাপ্ত ডেটা নেই।</div>`;
-}
-
-function topicListHtml() {
-  const a = S.me.studentId, b = S.rival.studentId, q = S.q.trim().toLowerCase();
-  const list = S.topics.filter(t => S.summaries.some(s => t[s.studentId] !== null && t[s.studentId] !== undefined))
-    .filter(t => !q || t.name.toLowerCase().includes(q))
-    .filter(t => {
-      if (S.filter === "all") return true;
-      const x = t[a], y = t[b];
-      if (x === null || x === undefined || y === null || y === undefined) return false;
-      return S.filter === "ahead" ? x > y : x < y;
-    });
-  return list.length ? list.map((t, i) => blockHtml(t, "file", i)).join("") : `<div class="cx-empty">কোনো টপিক পাওয়া যায়নি।</div>`;
-}
-
-function topicHtml() {
-  const f = (k, l) => `<button type="button" class="cx-f ${S.filter === k ? "on" : ""}" data-filter="${k}">${l}</button>`;
-  return `
-    <div class="cx-tools cx-rv">
-      <input class="cx-search" id="cxSearch" type="search" placeholder="টপিক খুঁজুন…" value="${esc(S.q)}" autocomplete="off">
-      <div class="cx-filters">${f("all", "সব টপিক")}${f("ahead", "আমি এগিয়ে")}${f("behind", "আমি পিছিয়ে")}</div>
-    </div>
-    <div id="cxTopicList">${topicListHtml()}</div>`;
-}
-
-/* ---------------- page assembly + events ---------------- */
+/* ----- overall: tabs ----- */
+const TAB_DEF = { subject: ["বিষয়", "layers"], chapter: ["চ্যাপ্টার", "book"], topic: ["টপিক", "file"] };
 function tabsHtml() {
-  const tab = (k, l) => `<button type="button" class="${S.tab === k ? "on" : ""}" data-tab="${k}">${l}</button>`;
-  const idx = ["overall", "subject", "topic"].indexOf(S.tab);
-  return `<div class="cx-seg"><div class="cx-thumb" style="transform:translateX(${idx * 100}%)"></div>${tab("overall", "ওভারঅল")}${tab("subject", "বিষয়")}${tab("topic", "টপিক")}</div>`;
+  const keys = Object.keys(TAB_DEF), idx = keys.indexOf(R.tab);
+  return `<div class="cx-seg"><div class="cx-thumb" style="transform:translateX(${idx * 100}%)"></div>${keys.map(k => `<button type="button" class="${R.tab === k ? "on" : ""}" data-tab="${k}">${TAB_DEF[k][0]}</button>`).join("")}</div>`;
 }
-function tabBodyHtml() { return S.tab === "overall" ? overallHtml() : S.tab === "subject" ? subjectHtml() : topicHtml(); }
-
-function paintTop() {
-  document.getElementById("cxHero").innerHTML = heroHtml();
-  document.getElementById("cxChips").innerHTML = chipsHtml();
-  document.getElementById("cxRadar").innerHTML = radarHtml();
-  document.getElementById("cxIns").innerHTML = insightsHtml();
-  animateIn(document.getElementById("cxTop"));
+function listHtml() {
+  const P = R.people, q = R.q.trim().toLowerCase();
+  let rows = R.rows[R.tab].filter(r => P.some(p => has(r[p.studentId])));
+  if (R.tab === "topic") {
+    rows = rows.filter(r => !q || r.name.toLowerCase().includes(q));
+    if (R.filter === "common") rows = rows.filter(r => P.every(p => has(r[p.studentId])));
+  }
+  const icon = TAB_DEF[R.tab][1];
+  return rows.length ? rows.map((r, i) => blockHtml(r.name, icon, "", r, null, i)).join("") : `<div class="cx-empty">কিছু পাওয়া যায়নি।</div>`;
+}
+function tabBodyHtml() {
+  if (R.tab !== "topic") return listHtml();
+  const f = (k, l) => `<button type="button" class="g-chip ${R.filter === k ? "on" : ""}" data-filter="${k}">${l}</button>`;
+  return `<div class="cx-tools cx-rv"><input class="cx-search" id="cxSearchR" type="search" placeholder="টপিক খুঁজুন…" value="${esc(R.q)}" autocomplete="off">
+    <div class="cx-filters">${f("all", "সব টপিক")}${f("common", "সবার ডেটা আছে")}</div></div><div id="cxTopicList">${listHtml()}</div>`;
 }
 function paintTab() {
   document.getElementById("cxTabs").innerHTML = tabsHtml();
@@ -478,52 +807,76 @@ function paintTab() {
   animateIn(el);
 }
 
-function renderDetailedView(body, summaries, batchName) {
-  const order = [...summaries].sort((a, b) => (b.actualPoints || 0) - (a.actualPoints || 0));
-  const me = summaries.find(s => s.studentId === student.studentId) || order[0];
-  const others = order.filter(s => s.studentId !== me.studentId);
-  const myIdx = order.findIndex(s => s.studentId === me.studentId);
-  const defaultRival = (myIdx > 0 ? order[myIdx - 1] : order.find(s => s.studentId !== me.studentId)) || others[0];
-
-  S = {
-    summaries, order, me, others, rival: defaultRival,
-    chapters: mergeStatsForDisplay(summaries, "chapterStats", "chapterId"),
-    topics: mergeStatsForDisplay(summaries, "topicStats", "topicId"),
-    colors: Object.fromEntries(order.map((s, i) => [s.studentId, colorOf(s, i)])),
-    tab: "overall", filter: "all", q: ""
-  };
-
-  body.innerHTML = `
-    <div class="cx-strip cx-rv"><span>ব্যাচ: <b>${esc(batchName)}</b></span><span class="cx-pill">${summaries.length} জন প্রতিযোগী</span></div>
-    <div id="cxTop">
-      <div id="cxHero"></div>
-      <div class="cx-riv" id="cxChips" aria-label="রাইভাল বেছে নাও"></div>
-      <div id="cxIns"></div>
-      <div id="cxRadar"></div>
-    </div>
-    <div class="cx-tabs" id="cxTabs"></div>
-    <div id="cxTabBody"></div>`;
-
-  paintTop();
-  paintTab();
-  requestAnimationFrame(() => body.querySelector(".cx-strip")?.classList.add("in"));
-
-  body.addEventListener("click", e => {
-    const chip = e.target.closest("[data-rival]");
-    if (chip) { S.rival = S.summaries.find(s => s.studentId === chip.dataset.rival) || S.rival; paintTop(); if (S.tab !== "overall") paintTab(); return; }
-    const tab = e.target.closest("[data-tab]");
-    if (tab && tab.dataset.tab !== S.tab) { S.tab = tab.dataset.tab; paintTab(); return; }
-    const f = e.target.closest("[data-filter]");
-    if (f) { S.filter = f.dataset.filter; paintTab(); const s = document.getElementById("cxSearch"); if (s) s.focus(); }
-  });
-  body.addEventListener("input", e => {
-    if (e.target.id !== "cxSearch") return;
-    S.q = e.target.value;
-    const list = document.getElementById("cxTopicList");
-    list.innerHTML = topicListHtml();
-    animateIn(list);
-  });
+/* ----- assemble ----- */
+function paintResult() {
+  const empty = R.mode === "overall" && R.people.every(p => !p.hasData);
+  let html = headHtml();
+  if (R.mode === "overall") {
+    html += overallRankHtml();
+    if (empty) html += `<div class="cx-card cx-rv"><div class="cx-empty">তুলনার জন্য এখনো পর্যাপ্ত ফলাফল পাওয়া যায়নি।</div></div>`;
+    else {
+      html += metricsHtml();
+      html += radarHtml(R.rows.chapter.map(r => ({ name: r.name, vals: r })), "কোন চ্যাপ্টারে কে এগিয়ে (সঠিক উত্তরের %)");
+      html += `<div class="cx-tabs" id="cxTabs"></div><div id="cxTabBody"></div>`;
+    }
+  } else {
+    html += selectedCombinedHtml();
+    html += radarHtml(R.items.map(it => ({ name: it.name, vals: it.vals })), "নির্বাচিত অংশের মধ্যে কে কোথায় এগিয়ে (সঠিক উত্তরের %)");
+    const L = { subject: ["বিষয়", "layers"], chapter: ["চ্যাপ্টার", "book"], topic: ["টপিক", "file"] };
+    html += R.items.map((it, i) => blockHtml(it.name, L[it.lvl][1], L[it.lvl][0], it.vals, it.det, i)).join("");
+  }
+  $result.innerHTML = html;
+  if (document.getElementById("cxTabs")) paintTab();
+  animateIn($result);
+  window.scrollTo({ top: 0 });
 }
+
+/* =========================================================
+   EVENTS
+   ========================================================= */
+function wireEvents() {
+  $body.addEventListener("click", async e => {
+    const t = e.target;
+    let el;
+    if ((el = t.closest("[data-count]"))) {
+      if (el.disabled) return;
+      ST.count = Number(el.dataset.count); paintCnts(); paintSlots(); paintCta(); return;
+    }
+    if ((el = t.closest("[data-slot]"))) { openPicker(Number(el.dataset.slot)); return; }
+    if ((el = t.closest("[data-mode]"))) {
+      if (ST.mode === el.dataset.mode) return;
+      ST.mode = el.dataset.mode; paintModes(); paintSelWrap(); paintCta(); return;
+    }
+    if ((el = t.closest("[data-sel]"))) {
+      if (el.disabled) return;
+      const v = el.dataset.sel, k = v.indexOf(":");
+      toggleSel(v.slice(0, k), v.slice(k + 1)); paintSel(); return;
+    }
+    if ((el = t.closest("[data-unsel]"))) {
+      const v = el.dataset.unsel, k = v.indexOf(":");
+      ST.sel[v.slice(0, k)].delete(v.slice(k + 1)); paintSel(); return;
+    }
+    if ((el = t.closest("[data-open]"))) {
+      const v = el.dataset.open; ST.open.has(v) ? ST.open.delete(v) : ST.open.add(v); paintSelList(); return;
+    }
+    if (t.closest("#cxSelClear")) { ST.sel.subject.clear(); ST.sel.chapter.clear(); ST.sel.topic.clear(); paintSel(); return; }
+    if (t.closest("#cxGo")) { runCompare(); return; }
+    if (t.closest("#cxEdit")) { goSetup(); return; }
+    if ((el = t.closest("[data-tab]"))) { if (el.dataset.tab !== R.tab) { R.tab = el.dataset.tab; paintTab(); } return; }
+    if ((el = t.closest("[data-filter]"))) { R.filter = el.dataset.filter; paintTab(); document.getElementById("cxSearchR")?.focus(); return; }
+  });
+  $body.addEventListener("input", e => {
+    if (e.target.id === "cxSelSearch") { ST.q = e.target.value; paintSelList(); }
+    else if (e.target.id === "cxSearchR") {
+      R.q = e.target.value;
+      const list = document.getElementById("cxTopicList");
+      list.innerHTML = listHtml(); animateIn(list);
+    }
+  });
+  window.addEventListener("popstate", () => { if ($result && !$result.hidden) showSetup(); });
+}
+
+if (!student) window.location.href = "../index.html"; else boot();
 </script>
 </body>
 </html>

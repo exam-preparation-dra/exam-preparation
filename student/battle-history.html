@@ -14,9 +14,9 @@ body{overflow-x:hidden}.history-page{max-width:760px;margin:0 auto;padding:18px 
 <script src="../js/utils/desktop-layout.js" defer></script>
 </head>
 <body data-page="battle-history">
-<div class="history-page" id="app"><div class="empty">Battle history লোড হচ্ছে...</div></div>
+<div class="history-page"><div id="hdrMount"></div><div id="app"><div class="empty">Battle history লোড হচ্ছে...</div></div></div>
 <script type="module">
-import { initTheme } from "../js/utils/ui-utils.js";
+import { initTheme, renderStudentHeader } from "../js/utils/ui-utils.js";
 import { getActiveStudent } from "../js/utils/student-utils.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
@@ -24,6 +24,7 @@ import { getStudentBattleXP, deleteMatch } from "../js/utils/battle-utils.js?v=r
 initTheme();
 const app=document.getElementById("app");
 const student=getActiveStudent();
+if(student?.studentId) document.getElementById("hdrMount").innerHTML=renderStudentHeader(student,"dashboard");
 const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
 const ms=v=>typeof v?.toMillis==="function"?v.toMillis():Number(v)||0;
 const dateFmt=v=>v?new Date(ms(v)).toLocaleString("bn-BD",{day:"numeric",month:"short",year:"numeric",hour:"numeric",minute:"2-digit"}):"—";
