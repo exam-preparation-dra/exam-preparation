@@ -27,34 +27,11 @@ import { initTheme, toggleTheme, openThemeSheet, getThemeSettings, saveThemeSett
 export { initTheme, toggleTheme, openThemeSheet, getThemeSettings, saveThemeSettings, themeStatusText };
 
 // ---------- Toast ----------
-let toastTimer = null;
+import "../popup.js";
 
 export function showToast(message, type = "default") {
-  let el = document.getElementById("app-toast");
-
-  if (!el) {
-    el = document.createElement("div");
-    el.id = "app-toast";
-    document.body.appendChild(el);
-  }
-
-  el.className =
-    `toast ${
-      type === "error"
-        ? "toast-error"
-        : type === "success"
-          ? "toast-success"
-          : ""
-    }`;
-
-  el.textContent = message;
-  el.style.display = "block";
-
-  clearTimeout(toastTimer);
-
-  toastTimer = setTimeout(() => {
-    el.style.display = "none";
-  }, 3200);
+  // Themed toast lives in popup.js (shared by every page, EN/বাংলা aware).
+  AppPopup.toast(message, type);
 }
 
 // ---------- Firebase error → Bengali-friendly message ----------
@@ -2278,7 +2255,7 @@ export function renderStudentHeader(
     const logoutBtn = document.getElementById("hdrLogoutBtn");
     if (logoutBtn) {
       logoutBtn.onclick = async () => {
-        if (!confirm("লগআউট করবে?")) return;
+        if (!await AppPopup.confirm("লগআউট করবে?")) return;
         try { const m = await import("./student-auth.js"); await m.studentLogout(); }
         catch (e) { localStorage.removeItem("activeStudent"); }
         window.location.href = "../index.html";

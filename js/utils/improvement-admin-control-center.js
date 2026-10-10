@@ -336,12 +336,17 @@ async function handleBuild(request) {
 }
 
 async function handleDeleteExam(request) {
-  const ok = window.confirm(
-    `"${studentName(request)}" এর "${areaName(request)}" Improvement Exam সরাবে?\n\n` +
-    "Exam ও প্রশ্ন সরে যাবে এবং এটি আর অ্যাডমিন তালিকায় দেখা যাবে না।\n" +
-    "শিক্ষার্থীর আগে সম্পন্ন করা ফলাফল, ইতিহাস ও XP থাকবে।\n\n" +
-    "সবকিছু একেবারে মুছতে চাইলে \"Permanent Delete\" ব্যবহার করো।"
-  );
+  const ok = await AppPopup.confirm({
+    bn: `"${studentName(request)}" এর "${areaName(request)}" Improvement Exam সরাবে?\n\n` +
+      "Exam ও প্রশ্ন সরে যাবে এবং এটি আর অ্যাডমিন তালিকায় দেখা যাবে না।\n" +
+      "শিক্ষার্থীর আগে সম্পন্ন করা ফলাফল, ইতিহাস ও XP থাকবে।\n\n" +
+      "সবকিছু একেবারে মুছতে চাইলে \"Permanent Delete\" ব্যবহার করো।",
+    en: `Remove the "${areaName(request)}" Improvement Exam for "${studentName(request)}"?\n\n` +
+      "The exam and its questions will be removed and won't show in the admin list anymore.\n" +
+      "The student's completed results, history and XP are kept.\n\n" +
+      "Use \"Permanent Delete\" to wipe everything."
+  }, { danger: true, okText: { bn: "সরাও", en: "Remove" } });
+
   if (!ok) return;
 
   state.busyId = request.id; render();
@@ -363,14 +368,21 @@ async function handlePermanentDelete(request) {
   try { counts = await countImprovementTestAttempts(request.improvementTestId); }
   catch (error) { console.warn("Attempt count skipped:", error); }
 
-  const ok = window.confirm(
-    `"${studentName(request)}" এর "${areaName(request)}" Improvement Exam চিরতরে মুছে ফেলবে?\n\n` +
-    "• Exam ও প্রশ্ন মুছে যাবে\n" +
-    `• ${counts.completed}টি সম্পন্ন ফলাফল মুছে যাবে (${counts.students} জন শিক্ষার্থী) এবং তাদের ইতিহাস থেকেও সরে যাবে\n` +
-    "• ওই ফলাফল থেকে পাওয়া XP-ও চলে যাবে\n" +
-    `• ${counts.inProgress}টি চলমান চেষ্টা বাদ যাবে\n\n` +
-    "এটি আর ফেরানো যাবে না।"
-  );
+  const ok = await AppPopup.confirm({
+    bn: `"${studentName(request)}" এর "${areaName(request)}" Improvement Exam চিরতরে মুছে ফেলবে?\n\n` +
+      "• Exam ও প্রশ্ন মুছে যাবে\n" +
+      `• ${counts.completed}টি সম্পন্ন ফলাফল মুছে যাবে (${counts.students} জন শিক্ষার্থী) এবং তাদের ইতিহাস থেকেও সরে যাবে\n` +
+      "• ওই ফলাফল থেকে পাওয়া XP-ও চলে যাবে\n" +
+      `• ${counts.inProgress}টি চলমান চেষ্টা বাদ যাবে\n\n` +
+      "এটি আর ফেরানো যাবে না।",
+    en: `Permanently delete the "${areaName(request)}" Improvement Exam for "${studentName(request)}"?\n\n` +
+      "• The exam and its questions will be deleted\n" +
+      `• ${counts.completed} completed result(s) (${counts.students} student(s)) will be deleted and removed from their history\n` +
+      "• XP earned from those results will be lost too\n" +
+      `• ${counts.inProgress} in-progress attempt(s) will be dropped\n\n` +
+      "This can't be undone."
+  }, { danger: true });
+
   if (!ok) { state.busyId = null; render(); return; }
 
   try {
@@ -385,7 +397,7 @@ async function handlePermanentDelete(request) {
 }
 
 async function handleDismiss(request) {
-  if (!window.confirm("এই Improvement Request মুছে ফেলবে? এটি আর তালিকায় দেখা যাবে না।")) return;
+  if (!await AppPopup.confirm("এই Improvement Request মুছে ফেলবে? এটি আর তালিকায় দেখা যাবে না।")) return;
   state.busyId = request.id; render();
   try {
     await dismissImprovementRequest(request.id);
@@ -401,7 +413,7 @@ async function handleDismiss(request) {
 async function handleGenerateAll() {
   const btn = document.getElementById("iacGenerateAllBtn");
   if (!btn) return;
-  if (!window.confirm("সব সক্রিয় শিক্ষার্থীর eligible Request থেকে Exam তৈরি, Publish ও Assign হবে। যাদের Exam আছে তাদের আবার হবে না। চালাবে?")) return;
+  if (!await AppPopup.confirm({ bn: "সব সক্রিয় শিক্ষার্থীর eligible Request থেকে Exam তৈরি, Publish ও Assign হবে। যাদের Exam আছে তাদের আবার হবে না। চালাবে?", en: "This will create, publish and assign exams from every eligible request of all active students. Students who already have an exam are skipped. Run it?" })) return;
 
   btn.disabled = true;
   btn.textContent = "চলছে…";

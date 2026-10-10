@@ -192,12 +192,14 @@ export function setStoredApiKey(key) {
   return trimmed;
 }
 
-export function promptForApiKey(forceAsk = false) {
+export async function promptForApiKey(forceAsk = false) {
   const existing = getStoredApiKey();
   if (existing && !forceAsk) return existing;
-  const key = window.prompt(
-    "তোমার Gemini API key দাও (Google AI Studio থেকে ফ্রি নেওয়া যায়) — এটা শুধু এই ব্রাউজারে সেভ থাকবে, সার্ভার/রিপোতে যাবে না:",
-    existing || ""
+  const key = await AppPopup.prompt(
+    { bn: "তোমার Gemini API key দাও (Google AI Studio থেকে ফ্রি নেওয়া যায়) — এটা শুধু এই ব্রাউজারে সেভ থাকবে, সার্ভার/রিপোতে যাবে না:",
+      en: "Enter your Gemini API key (free from Google AI Studio) — it's only saved in this browser, never sent to a server or repo:" },
+    existing || "",
+    { title: { bn: "API Key", en: "API key" }, placeholder: "AIza…" }
   );
   if (key && key.trim()) {
     localStorage.setItem(GEMINI_KEY_STORAGE, key.trim());

@@ -42,7 +42,7 @@ async function refresh() {
         if (resolvedTestId) location.href = `./exam.html?improvementTestId=${encodeURIComponent(resolvedTestId)}`;
       },
       onDetails: (_id, request) => {
-        window.alert(getImprovementExplanation(request));
+        AppPopup.alert(getImprovementExplanation(request));
       }
     });
   }

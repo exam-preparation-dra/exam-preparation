@@ -305,34 +305,34 @@ export async function mountImprovementControlCenter(root) {
 
       if (action === "review") {
         await reviewImprovementRequest(requestId);
-        alert("Request পর্যালোচনা হিসেবে সংরক্ষণ হয়েছে।");
+        AppPopup.alert("Request পর্যালোচনা হিসেবে সংরক্ষণ হয়েছে।", { type: "success" });
       }
 
       if (action === "create") {
         const result = await createImprovementTestFromRequest(requestId, { questionCount: 10 });
-        alert(`${result.questionCount}টি প্রশ্ন দিয়ে Draft Test তৈরি হয়েছে।`);
+        AppPopup.alert({ bn: `${result.questionCount}টি প্রশ্ন দিয়ে Draft Test তৈরি হয়েছে।`, en: `Draft Test created with ${result.questionCount} questions.` }, { type: "success" });
       }
 
       if (action === "publish") {
         await publishImprovementTest(button.dataset.test);
-        alert("Test প্রকাশ করা হয়েছে।");
+        AppPopup.alert("Test প্রকাশ করা হয়েছে।", { type: "success" });
       }
 
       if (action === "assign") {
         const request = await getRequest(requestId);
         await assignImprovementTest(button.dataset.test, request.studentId);
-        alert("Test শিক্ষার্থীকে বরাদ্দ করা হয়েছে।");
+        AppPopup.alert("Test শিক্ষার্থীকে বরাদ্দ করা হয়েছে।", { type: "success" });
       }
 
       if (action === "dismiss") {
         await dismissImprovementRequest(requestId, "Admin review");
-        alert("Request বাতিল করা হয়েছে।");
+        AppPopup.alert("Request বাতিল করা হয়েছে।", { type: "success" });
       }
 
       await mountImprovementControlCenter(host);
     } catch (error) {
       console.error(error);
-      alert(error.message || "কাজটি সম্পন্ন করা যায়নি।");
+      AppPopup.alert(error.message || "কাজটি সম্পন্ন করা যায়নি।", { type: "error" });
       button.disabled = false;
     }
   });

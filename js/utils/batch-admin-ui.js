@@ -38,10 +38,10 @@ export function openBatchPicker({ exam, students }) {
     overlay.querySelector("#bpSave").addEventListener("click", async (ev) => {
       const v = overlay.querySelector("#bpSel").value;
       if (!v) return;
-      if (v === "all" && !confirm("এই পরীক্ষা সব ব্যাচের জন্য থাকবে এবং সবার marks-এ যোগ হবে। নিশ্চিত?")) return;
+      if (v === "all" && !await AppPopup.confirm("এই পরীক্ষা সব ব্যাচের জন্য থাকবে এবং সবার marks-এ যোগ হবে। নিশ্চিত?")) return;
       ev.target.disabled = true;
       try { await setExamTargetBatch(exam.id, v); done(v); }
-      catch (err) { ev.target.disabled = false; alert(err.message || "সেভ করা যায়নি।"); }
+      catch (err) { ev.target.disabled = false; AppPopup.alert(err.message || "সেভ করা যায়নি।", { type: "error" }); }
     });
   });
 }
