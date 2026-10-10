@@ -25,7 +25,8 @@ export async function buildStudentXP({
   officialResults = [],
   studentId,
   referralCount = 0,
-  challengeBonusXP = 0
+  challengeBonusXP = 0,
+  student = null            // pass the student so the missed-exam penalty is included
 } = {}) {
   const practices = await getCompletedImprovementPractices(studentId);
 
@@ -44,6 +45,7 @@ export async function buildStudentXP({
   return computeStudentXP(officialResults, {
     referralCount,
     challengeBonusXP,
-    improvementPracticeResults
+    improvementPracticeResults,
+    student
   });
 }

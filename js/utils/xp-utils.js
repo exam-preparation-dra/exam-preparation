@@ -83,6 +83,38 @@ function tms(ts) {
   return Number.isFinite(t) ? t : 0;
 }
 
+
+// ---------- missed-exam penalty ----------
+// Exams whose 7-day window (+24h approval grace) is over and that the student
+// never took. Single source of truth: computeStudentXP() (leaderboard, dashboard,
+// profile, store, history) AND the penalty popup both call this.
+// explain = true -> { missed, why } where `why` says, for every loaded exam,
+// whether it counted and, if not, the reason (used by debugPenalty()).
+export function getMissedExams(student, takenIds, now = Date.now(), explain = false) {
+  const missed = [], why = [];
+  if (!student || !student.studentId) return explain ? { missed, why: [{ counted: false, reason: "student missing" }] } : missed;
+  const taken = takenIds instanceof Set ? takenIds : new Set(takenIds || []);
+  const joinedMs = tms(student.createdAt);
+  if (explain && _xpExams.size === 0) why.push({ counted: false, reason: "no exams loaded (ensureXPExams failed or no published exams)" });
+  _xpExams.forEach(exam => {
+    const note = (counted, reason) => { if (explain) why.push({ examId: exam?.id, name: exam?.name, counted, reason }); };
+    if (!exam) return;
+    if (["draft", "archived"].includes(exam.status)) return note(false, "exam status is " + exam.status);
+    const w = getExamWindow(exam);
+    if (!w) return note(false, "exam has no examDate");
+    if (w.startMs < EXAM_BONUS.launchMs) return note(false, "exam started before the 1 Oct 2026 launch");
+    if (now < w.endMs + EXAM_BONUS.penaltyGraceMs) return note(false, "window not over yet (ends " + new Date(w.endMs).toLocaleString() + " + 24h grace)");
+    if (taken.has(exam.id)) return note(false, "student took this exam");
+    if (joinedMs && joinedMs > w.startMs) return note(false, "student joined after the exam started");
+    if (!examMatchesBatch(exam, student.className)) return note(false, "exam is not for batch " + student.className + " (targetBatch: " + JSON.stringify(exam.targetBatch ?? exam.targetBatches ?? null) + ")");
+    const allowed = exam.allowedStudents || [];
+    if (allowed.length > 0 && !allowed.includes(student.studentId)) return note(false, "student not in allowedStudents");
+    missed.push({ examId: exam.id, examName: exam.name || "পরীক্ষা", endMs: w.endMs });
+    note(true, "missed -> -" + EXAM_BONUS.missPenalty + " XP");
+  });
+  return explain ? { missed, why } : missed;
+}
+
 export const XP_RULES = {
   participationBase: 20,
   participationPerQuestion: 2,
@@ -384,30 +416,14 @@ export function computeStudentXP(results, { referralCount = 0, challengeBonusXP 
 
   // Missed-exam penalty: -missPenalty once per exam whose 7-day window is over
   // (plus a 24h grace for result approval) and that this student never took.
-  let missedXP = 0, missedExams = [];
-  if (student && student.studentId) {
-    const taken = new Set(sorted.map(r => r.examId));
-    const joinedMs = tms(student.createdAt);
-    const now = Date.now();
-    _xpExams.forEach(exam => {
-      if (!exam || ["draft", "archived"].includes(exam.status)) return;
-      const w = getExamWindow(exam);
-      if (!w || w.startMs < EXAM_BONUS.launchMs) return;
-      if (now < w.endMs + EXAM_BONUS.penaltyGraceMs) return;
-      if (taken.has(exam.id)) return;
-      if (joinedMs && joinedMs > w.startMs) return;
-      // Only exams of the student's own batch (or shared ones) can be "missed".
-      if (!examMatchesBatch(exam, student.className)) return;
-      const allowed = exam.allowedStudents || [];
-      if (allowed.length > 0 && !allowed.includes(student.studentId)) return;
-      missedXP += EXAM_BONUS.missPenalty;
-      missedExams.push({ examId: exam.id, examName: exam.name || "পরীক্ষা" });
-    });
-  }
+  const missedExams = getMissedExams(student, new Set(sorted.map(r => r.examId)));
+  const missedXP = missedExams.length * EXAM_BONUS.missPenalty;
   breakdown.missed = missedXP;
 
   const examXP = exams.reduce((a, e) => a + e.xp, 0);
-  const totalXP = Math.max(0, examXP + referralXP + challengeXP + improvementPracticeXP + battleXPRounded - missedXP);
+  const xpBeforePenalty = examXP + referralXP + challengeXP + improvementPracticeXP + battleXPRounded;
+  const totalXP = Math.max(0, xpBeforePenalty - missedXP);
+  const missedApplied = Math.min(missedXP, Math.max(0, xpBeforePenalty));   // total XP never goes below 0
   const avgPercentage = sorted.length ? Math.round((pctSum / sorted.length) * 10) / 10 : 0;
 
   // Lifetime XP (totalXP, above) never shrinks -- it's what drives level and
@@ -417,7 +433,7 @@ export function computeStudentXP(results, { referralCount = 0, challengeBonusXP 
   const spendableXP = Math.max(0, totalXP - spentXPRounded);
 
   return {
-    totalXP, examXP, missedXP, missedExams, referralXP, referralCount: refCount, challengeXP, improvementPracticeXP, battleXP: battleXPRounded,
+    totalXP, examXP, missedXP, missedApplied, missedExams, referralXP, referralCount: refCount, challengeXP, improvementPracticeXP, battleXP: battleXPRounded,
     spentXP: spentXPRounded, spendableXP,
     breakdown, exams: exams.reverse(),   // newest first
     examsTaken: sorted.length, perfectExams, avgPercentage,

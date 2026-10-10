@@ -2317,6 +2317,15 @@ export function renderStudentHeader(
 
   });
 
+  // Missed-exam penalty popup: one-time animated notice per missed exam, shown on
+  // whichever student page opens first (the XP itself is already updated everywhere).
+  if (student && student.studentId) {
+    setTimeout(() => {
+      import("./missed-penalty-alert.js")
+        .then(m => m.checkMissedPenalty(student))
+        .catch(e => console.warn("penalty alert", e));
+    }, 1200);
+  }
 
   return html;
          }
