@@ -14,8 +14,9 @@
    penalty was or wasn't applied to the logged-in student.
    No emoji — every icon is inline SVG.
    ========================================================= */
-import { getMissedExams, getXPExams, EXAM_BONUS } from "./xp-utils.js";
-import { ensureXPExams, getApprovedResults } from "./results-utils.js";
+import { getMissedExams, getXPExams, getExamWindow, getEarlyBonus, EXAM_BONUS } from "./xp-utils.js";
+import { isExamForStudent } from "./batch-utils.js";
+import { ensureXPExams, getApprovedResults, getStudentResultStatusMap } from "./results-utils.js";
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const bn = n => Number(n).toLocaleString("bn-BD");
@@ -167,6 +168,87 @@ export function showMissedPenaltyAlert({ student, exams }) {
   wrap.querySelector(".mpa-x").onclick = close;
   wrap.querySelector(".mpa-ok").onclick = close;
   wrap.addEventListener("click", e => { if (e.target === wrap) close(); });
+}
+
+
+/* =========================================================
+   Bell (notification panel) cards for the exam-XP system.
+   getExamXpNotifications(student) -> items in the same shape the bell already
+   uses ({ key, type, createdAt, ... }). ui-utils.js merges them with friend
+   requests / challenges / messages and renders them.
+     xp-pending  exam still not taken: today's bonus, days left, red warning in the
+                 last 2 days (new card each day, so the red badge comes back daily)
+     xp-penalty  exam missed: "-500 XP" (lives 7 days like every notification)
+   ========================================================= */
+const NX = { sid: "", at: 0, items: [] };
+export async function getExamXpNotifications(student, force = false) {
+  if (!student?.studentId) return [];
+  if (!force && NX.sid === student.studentId && Date.now() - NX.at < 60000) return NX.items;
+  await ensureXPExams();
+  let taken;
+  try { taken = new Set(Object.keys(await getStudentResultStatusMap(student.studentId))); }   // includes results still waiting for approval
+  catch { taken = new Set((await getApprovedResults(student.studentId)).map(r => r.examId)); }
+  const now = Date.now(), items = [];
+  const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
+
+  getMissedExams(student, taken, now).forEach(m => items.push({
+    key: `xp-penalty:${m.examId}`, type: "xp-penalty", examId: m.examId, examName: m.examName,
+    amount: EXAM_BONUS.missPenalty, createdAt: new Date(m.endMs + EXAM_BONUS.penaltyGraceMs)
+  }));
+
+  getXPExams().forEach(exam => {
+    if (!exam || exam.status !== "published" || taken.has(exam.id)) return;
+    const w = getExamWindow(exam);
+    if (!w || w.startMs < EXAM_BONUS.launchMs || now < w.startMs || now >= w.endMs) return;
+    if (!isExamForStudent(exam, student)) return;
+    const eb = getEarlyBonus(exam, now);
+    const daysLeft = Math.max(1, Math.ceil((w.endMs - now) / 86400000));
+    items.push({
+      key: `xp-pending:${exam.id}:${eb ? eb.day : 0}`, type: "xp-pending", examId: exam.id, examName: exam.name || "পরীক্ষা",
+      bonus: eb ? eb.bonus : 0, daysLeft, urgent: daysLeft <= 2, penalty: EXAM_BONUS.missPenalty,
+      createdAt: new Date(Math.max(w.startMs, dayStart.getTime()))
+    });
+  });
+  NX.sid = student.studentId; NX.at = now; NX.items = items;
+  return items;
+}
+
+let notifStylesDone = false;
+export function injectXpNotifStyles() {
+  if (notifStylesDone || document.getElementById("mpaNotifStyles")) return;
+  notifStylesDone = true;
+  const st = document.createElement("style");
+  st.id = "mpaNotifStyles";
+  st.textContent = `
+    .gn-xp .global-notification-icon { color: var(--color-accent,#b8863c); }
+    .gn-xp.bad { border-color: color-mix(in srgb, var(--color-danger,#a6402f) 45%, transparent); background: color-mix(in srgb, var(--color-danger,#a6402f) 7%, var(--surface-solid,#fff)); }
+    .gn-xp.bad .global-notification-icon, .gn-xp.bad .gn-cheer-from { color: var(--color-danger,#a6402f); }
+    .gn-xp.bad .gn-cheer-tag { color: #fff; background: var(--color-danger,#a6402f); }
+    .gn-xp-go { flex: 1; display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 0 12px; border-radius: 11px; font-size: 12px; font-weight: 900; text-decoration: none; color: #2b1d09;
+      background: linear-gradient(180deg, #dcae62, #b8863c); border: 1px solid rgba(255,255,255,.35); box-shadow: inset 0 1px 0 rgba(255,255,255,.5); }
+    .gn-xp.bad .gn-xp-go { color: #fff; background: var(--color-danger,#a6402f); }
+  `;
+  document.head.appendChild(st);
+}
+
+/** HTML of one bell card (called by ui-utils.js). `esc`, `clock`, `age` come from there. */
+export function xpNotificationHtml(item, { esc: e, clock, age, trashIcon }) {
+  injectXpNotifStyles();
+  const ico = n => svg(n, 18);
+  const time = `<div class="gn-cheer-time"><b>${clock(item.createdAt)}</b><span>${age(item.createdAt)}</span></div>`;
+  if (item.type === "xp-penalty") {
+    return `<div class="global-notification-item gn-cheer gn-xp bad" data-notification-key="${e(item.key)}">
+      <div class="gn-cheer-top"><div class="global-notification-icon">${ico("alert")}</div><strong class="gn-cheer-from">XP কাটা হয়েছে</strong><span class="gn-cheer-tag">−${bn(item.amount)} XP</span></div>
+      <p class="gn-cheer-text">“${e(item.examName)}” পরীক্ষাটি ${bn(EXAM_BONUS.windowDays)} দিনের মধ্যে দেওয়া হয়নি, তাই ${bn(item.amount)} XP কাটা হয়েছে। লিডারবোর্ডসহ সব পেজে এটা আপডেট হয়ে গেছে।</p>
+      ${time}
+      <div class="global-notification-actions"><a class="gn-xp-go" href="../student/leaderboard.html">লিডারবোর্ড দেখো</a><button type="button" class="global-notif-hide" data-key="${e(item.key)}">${trashIcon} মুছুন</button></div></div>`;
+  }
+  const warn = item.urgent ? `<br><b style="color:var(--color-danger,#a6402f)">শেষ ${bn(item.daysLeft)} দিন! পরীক্ষা না দিলে ${bn(item.penalty)} XP কাটা যাবে।</b>` : "";
+  return `<div class="global-notification-item gn-cheer gn-xp ${item.urgent ? "bad" : ""}" data-notification-key="${e(item.key)}">
+    <div class="gn-cheer-top"><div class="global-notification-icon">${ico(item.urgent ? "alert" : "bolt")}</div><strong class="gn-cheer-from">পরীক্ষা বাকি আছে</strong><span class="gn-cheer-tag">${bn(item.daysLeft)} দিন বাকি</span></div>
+    <p class="gn-cheer-text">“${e(item.examName)}” এখনও দেওয়া হয়নি।${item.bonus ? ` আজ দিলে <b>+${bn(item.bonus)} XP</b> এক্সট্রা বোনাস পাবে।` : ""}${warn}</p>
+    ${time}
+    <div class="global-notification-actions"><a class="gn-xp-go" href="../student/exam.html?examId=${encodeURIComponent(item.examId)}">এখনই পরীক্ষা দাও</a><button type="button" class="global-notif-hide" data-key="${e(item.key)}">${trashIcon} মুছুন</button></div></div>`;
 }
 
 /* ---------------- console helper ---------------- */

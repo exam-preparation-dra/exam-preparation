@@ -927,6 +927,12 @@ async function renderGlobalNotifications(student) {
     const hidden =
       getHiddenNotificationKeys();
 
+    // exam-XP cards: pending exam (bonus / warning) + missed-exam penalty
+    let xpItems = [], xpMod = null;
+    try { xpMod = await import("./missed-penalty-alert.js"); xpItems = await xpMod.getExamXpNotifications(student); }
+    catch (e) { console.warn("xp notifications", e); }
+    const xpCardHtml = item => xpMod ? xpMod.xpNotificationHtml(item, { esc: escapeNotification, clock: notificationClock, age: notificationAge, trashIcon: NOTIF_TRASH_ICON }) : "";
+
     const myChatId = student.studentId;
     const chatItems = [
       ...(chatNotif.rooms || []).filter(r => Number(r.unread?.[myChatId]) > 0).map(r => {
@@ -947,6 +953,7 @@ async function renderGlobalNotifications(student) {
     ];
 
     const allItems = [
+      ...xpItems,
       ...chatItems,
       ...cheerItems,
       ...requests.map(
@@ -1105,6 +1112,9 @@ async function renderGlobalNotifications(student) {
       items
         .map(item => {
 
+          if (item.type === "xp-pending" || item.type === "xp-penalty") {
+            return xpCardHtml(item);
+          }
           if (item.type === "chat" || item.type === "chatinvite") {
             const invite = item.type === "chatinvite";
             return `
