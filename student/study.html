@@ -9,44 +9,18 @@
   <link rel="manifest" href="../manifest.webmanifest">
   <link rel="stylesheet" href="../css/style.css">
   <style>
-    .sx { width:100%; max-width:1120px; margin:0 auto; padding:4px 0 28px; }
-    /* ---- banner slot (real banner image/slider will replace this later) ---- */
-    .sx-banner { position:relative; overflow:hidden; border-radius:var(--radius-lg,20px); min-height:168px; padding:22px 20px; display:flex; flex-direction:column; justify-content:flex-end; gap:6px;
-      border:1px solid var(--surface-border);
-      background:radial-gradient(120% 140% at 100% 0%, rgba(var(--color-accent-rgb),.28), transparent 60%),
-                 linear-gradient(135deg, rgba(var(--color-accent-rgb),.10), rgba(var(--color-accent-rgb),.02)), var(--surface-solid); }
-    .sx-banner::after { content:""; position:absolute; inset:0; background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.10) 50%,transparent 70%); transform:translateX(-100%); animation:sxShine 3.6s ease-in-out infinite; pointer-events:none; }
-    @keyframes sxShine { 60%,100% { transform:translateX(100%); } }
-    .sx-badge { align-self:flex-start; display:inline-flex; align-items:center; gap:6px; padding:5px 10px; border-radius:999px; font-size:.68rem; font-weight:800; letter-spacing:.04em;
-      color:var(--color-accent); background:rgba(var(--color-accent-rgb),.14); border:1px solid rgba(var(--color-accent-rgb),.3); }
-    .sx-badge i { width:7px; height:7px; border-radius:50%; background:var(--color-accent); animation:sxPulse 1.6s ease-in-out infinite; }
-    @keyframes sxPulse { 50% { opacity:.35; transform:scale(.7); } }
-    .sx-banner h1 { margin-top:8px; font-size:clamp(1.45rem,4.6vw,2.1rem); line-height:1.25; letter-spacing:-.02em; font-weight:900; color:var(--text-primary); }
-    .sx-banner p { max-width:560px; font-size:.86rem; line-height:1.7; color:var(--text-secondary); }
-    .sx-banner-hint { position:absolute; top:14px; right:16px; font-size:.64rem; font-weight:700; color:var(--text-muted); letter-spacing:.05em; text-transform:uppercase; }
-    .sx-head { display:flex; align-items:center; justify-content:space-between; margin:26px 2px 12px; }
-    .sx-head h2 { font-size:.98rem; font-weight:850; color:var(--text-primary); }
-    .sx-head span { font-size:.72rem; font-weight:700; color:var(--text-muted); }
-    /* ---- live card (current notes & suggestions) ---- */
-    .sx-live { display:flex; align-items:center; gap:14px; padding:16px; border-radius:var(--radius-lg,18px); text-decoration:none; color:var(--text-primary);
-      border:1px solid rgba(var(--color-accent-rgb),.38); background:linear-gradient(135deg, rgba(var(--color-accent-rgb),.14), rgba(var(--color-accent-rgb),.04)), var(--surface-solid); }
-    .sx-live .sx-ico { background:rgba(var(--color-accent-rgb),.2); }
-    .sx-live strong { display:block; font-size:.95rem; font-weight:850; }
-    .sx-live small { display:block; margin-top:3px; font-size:.74rem; line-height:1.55; color:var(--text-secondary); }
-    .sx-go { margin-left:auto; flex:none; font-size:.74rem; font-weight:800; color:var(--color-accent); }
-    /* ---- coming-soon grid ---- */
-    .sx-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-    .sx-card { position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:12px; min-width:0; padding:16px 14px 14px; text-align:left; font:inherit; cursor:pointer;
-      border:1px dashed var(--surface-border); border-radius:var(--radius-lg,18px); background:var(--surface); color:var(--text-primary); }
-    .sx-ico { flex:none; display:grid; place-items:center; width:44px; height:44px; border-radius:14px; color:var(--color-accent); background:var(--color-accent-soft); }
-    .sx-copy { display:flex; flex-direction:column; gap:4px; min-width:0; }
-    .sx-copy strong { font-size:.9rem; line-height:1.4; font-weight:850; }
-    .sx-copy small { font-size:.72rem; line-height:1.55; font-weight:600; color:var(--text-muted); }
-    .sx-tag { position:absolute; top:12px; right:12px; padding:3px 8px; border-radius:999px; font-size:.62rem; font-weight:800; color:var(--text-muted); background:var(--surface-highlight); border:1px solid var(--surface-border); }
-    .sx-note { margin-top:16px; padding:13px 14px; border-radius:var(--radius-md,14px); font-size:.76rem; line-height:1.75; color:var(--text-secondary); background:var(--surface); border:1px solid var(--surface-border); }
-    @media (min-width:700px) { .sx-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; } .sx-banner { min-height:210px; padding:30px 32px; } }
-    @media (min-width:1100px) { .sx-card { padding:20px 18px 18px; } }
-    @media (prefers-reduced-motion:reduce) { .sx-banner::after, .sx-badge i { animation:none; } }
+    .ud { min-height:62vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:32px 20px; }
+    .ud-ico { position:relative; display:grid; place-items:center; width:96px; height:96px; border-radius:28px; color:var(--color-accent);
+      background:linear-gradient(145deg, rgba(var(--color-accent-rgb),.22), rgba(var(--color-accent-rgb),.06));
+      border:1px solid rgba(var(--color-accent-rgb),.32); box-shadow:0 14px 34px rgba(var(--color-accent-rgb),.18); animation:udFloat 3.4s ease-in-out infinite; }
+    @keyframes udFloat { 50% { transform:translateY(-7px); } }
+    .ud-badge { display:inline-flex; align-items:center; gap:7px; margin-top:26px; padding:6px 13px; border-radius:999px; font-size:.7rem; font-weight:800; letter-spacing:.05em;
+      color:var(--color-accent); background:rgba(var(--color-accent-rgb),.13); border:1px solid rgba(var(--color-accent-rgb),.3); }
+    .ud-badge i { width:7px; height:7px; border-radius:50%; background:var(--color-accent); animation:udPulse 1.6s ease-in-out infinite; }
+    @keyframes udPulse { 50% { opacity:.3; transform:scale(.7); } }
+    .ud h1 { margin-top:14px; font-size:clamp(1.5rem,5vw,2.1rem); line-height:1.3; font-weight:900; letter-spacing:-.02em; color:var(--text-primary); }
+    .ud p { margin-top:8px; max-width:360px; font-size:.88rem; line-height:1.75; color:var(--text-secondary); }
+    @media (prefers-reduced-motion:reduce) { .ud-ico, .ud-badge i { animation:none; } }
   </style>
   <script src="../js/utils/nav-boot.js"></script>
   <link rel="stylesheet" href="../css/desktop.css">
@@ -55,44 +29,20 @@
 </head>
 <body data-page="study">
   <div class="app-shell app-shell--wide" id="shell">
-    <div class="state-block"><div class="spinner"></div><p>স্টাডি সেকশন লোড হচ্ছে…</p></div>
+    <div class="state-block"><div class="spinner"></div><p>লোড হচ্ছে…</p></div>
   </div>
   <script type="module">
-    import { initTheme, renderStudentHeader, showToast } from "../js/utils/ui-utils.js";
+    import { initTheme, renderStudentHeader } from "../js/utils/ui-utils.js";
     import { getActiveStudent, refreshActiveStudent } from "../js/utils/student-utils.js";
 
     initTheme();
     const shell = document.getElementById("shell");
     let student = getActiveStudent();
 
-    const page = () => `
-      <main class="sx">
-        <section class="sx-banner" aria-label="স্টাডি সেকশন ব্যানার">
-          <span class="sx-banner-hint">Banner · আসছে</span>
-          <span class="sx-badge"><i></i>Under Development</span>
-          <h1>স্টাডি সেকশন</h1>
-          <p>নোটস, ক্লাস ডিটেইলস, লেকচার — পড়াশোনার সবকিছু এক জায়গায়। পুরো সেকশনটা তৈরি হচ্ছে, খুব শীঘ্রই চালু হবে।</p>
-        </section>
-
-        <div class="sx-head"><h2>এখন যা পাবে</h2></div>
-        <a class="sx-live" href="./study-materials.html">
-          <span class="sx-ico"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8z"/><path d="M14 3v5h5"/><path d="M8.5 13h7M8.5 16.5h5"/></svg></span>
-          <span><strong>নোটস ও Suggestions</strong><small>তোমার ব্যাচের প্রকাশিত নোটস ও পরীক্ষার গুরুত্বপূর্ণ প্রশ্ন</small></span>
-          <span class="sx-go">খোলো ›</span>
-        </a>
-
-        <div class="sx-head"><h2>আসছে শীঘ্রই</h2><span>প্রস্তুত হচ্ছে</span></div>
-        <section class="sx-grid" aria-label="আসন্ন সেকশন"><button type="button" class="sx-card" data-soon="ক্লাস ডিটেইলস"><span class="sx-ico"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M7.5 9h5M7.5 12h8"/></svg></span><span class="sx-copy"><strong>ক্লাস ডিটেইলস</strong><small>ক্লাসের রুটিন, শিক্ষক, বিষয় ও আপডেট</small></span><span class="sx-tag">শীঘ্রই</span></button><button type="button" class="sx-card" data-soon="নোটস লাইব্রেরি"><span class="sx-ico"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8z"/><path d="M14 3v5h5"/><path d="M8.5 13h7M8.5 16.5h5"/></svg></span><span class="sx-copy"><strong>নোটস লাইব্রেরি</strong><small>বিষয় ও অধ্যায় অনুযায়ী সাজানো নোটস</small></span><span class="sx-tag">শীঘ্রই</span></button><button type="button" class="sx-card" data-soon="লেকচার ও ভিডিও"><span class="sx-ico"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10.5 9.5 4 2.5-4 2.5z"/></svg></span><span class="sx-copy"><strong>লেকচার ও ভিডিও</strong><small>রেকর্ডেড ক্লাস ও ব্যাখ্যামূলক ভিডিও</small></span><span class="sx-tag">শীঘ্রই</span></button><button type="button" class="sx-card" data-soon="Suggestions"><span class="sx-ico"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/></svg></span><span class="sx-copy"><strong>Suggestions</strong><small>পরীক্ষার গুরুত্বপূর্ণ প্রশ্নের তালিকা</small></span><span class="sx-tag">শীঘ্রই</span></button><button type="button" class="sx-card" data-soon="সিলেবাস ট্র্যাকার"><span class="sx-ico"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M8.5 8h7M8.5 11.5h5"/></svg></span><span class="sx-copy"><strong>সিলেবাস ট্র্যাকার</strong><small>কোন অধ্যায় শেষ, কোনটা বাকি</small></span><span class="sx-tag">শীঘ্রই</span></button><button type="button" class="sx-card" data-soon="হোমওয়ার্ক ও অ্যাসাইনমেন্ট"><span class="sx-ico"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11.5l2 2 4-4.5"/><rect x="4" y="4" width="16" height="17" rx="2.5"/><path d="M9 2.5h6v3H9z"/></svg></span><span class="sx-copy"><strong>হোমওয়ার্ক ও অ্যাসাইনমেন্ট</strong><small>জমা দেওয়ার তারিখ ও ফিডব্যাক</small></span><span class="sx-tag">শীঘ্রই</span></button></section>
-
-        <p class="sx-note">এই সেকশনের নতুন কনটেন্ট ধাপে ধাপে যোগ হবে। কোনো কিছু যোগ হলেই এখানে দেখতে পাবে।</p>
-      </main>`;
-
     async function start() {
       if (!student) { window.location.href = "../index.html"; return; }
       try { const fresh = await refreshActiveStudent(student.docId); if (fresh) student = fresh; } catch {}
-      shell.innerHTML = `${renderStudentHeader(student, "study")}${page()}`;
-      shell.querySelectorAll("[data-soon]").forEach(b =>
-        b.addEventListener("click", () => showToast(`${b.dataset.soon} — শীঘ্রই আসছে`, "default")));
+      shell.innerHTML = renderStudentHeader(student, "study") + `<section class="ud"><div class="ud-ico"><svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9.5 12 4.5l10 5-10 5-10-5z"/><path d="M6 12v4.5c0 1.4 2.7 3 6 3s6-1.6 6-3V12"/><path d="M22 9.5v6"/></svg></div><span class="ud-badge"><i></i>UNDER DEVELOPMENT</span><h1>স্টাডি সেকশন</h1><p>এই সেকশনটা তৈরি হচ্ছে। খুব শীঘ্রই এখানে সব কিছু পাবে।</p></section>`;
     }
     start();
   </script>
