@@ -135,6 +135,55 @@
   .lx-wk { display:block; font-size:.62rem; font-weight:700; color:var(--color-success); margin-top:1px; }
   .lx-flash { animation:lxFlash 1.4s ease-out; }
   @keyframes lxFlash { 0%,35% { box-shadow:0 0 0 2px var(--color-accent); } 100% { box-shadow:0 0 0 2px transparent; } }
+
+  /* ===== Leaderboard v3: simple + easy to read ===== */
+  .lx { gap:14px; }
+  .lx-seg { padding:4px; border-radius:16px; border:1px solid var(--surface-border); background:var(--surface-highlight); }
+  .lx-seg button { padding:10px 4px; border-radius:12px; font-size:.82rem; }
+  .lx-seg button.on { color:var(--color-accent); box-shadow:0 3px 10px rgba(0,0,0,.10), inset 0 0 0 1px rgba(var(--color-accent-rgb),.18); }
+
+  /* hero: bright, two clear numbers, one plain sentence */
+  .lx-hero { display:block; color:var(--text-primary); padding:18px 16px 16px; border-radius:24px;
+    border:1px solid color-mix(in srgb, var(--color-accent) 24%, var(--surface-border));
+    background:radial-gradient(110% 90% at 100% 0%, rgba(var(--color-accent-rgb),.20), transparent 60%), var(--surface); box-shadow:0 10px 28px rgba(var(--color-accent-rgb),.10); }
+  .lx-h-label { color:var(--text-secondary); font-size:.8rem; }
+  .lx-h-main { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+  .lx-h-box { display:flex; flex-direction:column; gap:3px; padding:12px 14px; border-radius:16px; background:var(--surface-highlight); border:1px solid var(--surface-border); }
+  .lx-h-box .k { font-size:.72rem; font-weight:700; color:var(--text-muted); }
+  .lx-h-box .v { font-family:var(--font-num); font-size:2rem; line-height:1.1; font-weight:800; letter-spacing:-.02em; color:var(--color-accent); }
+  .lx-h-box .s { font-size:.7rem; font-weight:700; color:var(--text-muted); }
+  .lx-h-chips { margin-top:12px; }
+  .lx-h-chip { background:var(--surface-highlight); border:1px solid var(--surface-border); color:var(--text-secondary); }
+  .lx-h-chip.up { background:rgba(47,125,94,.14); border-color:rgba(47,125,94,.35); color:var(--color-success); }
+  .lx-h-chip.down { background:rgba(166,64,47,.12); border-color:rgba(166,64,47,.32); color:var(--color-danger); }
+  .lx-h-foot { margin-top:12px; padding:11px 13px; border-top:0; border-radius:14px; background:rgba(var(--color-accent-rgb),.10); color:var(--text-primary); font-size:.84rem; font-weight:700; }
+  .lx-h-foot b { color:var(--color-accent); }
+
+  /* filters: two labelled rows, nothing mixed together */
+  .lx-fbox { display:flex; flex-direction:column; gap:10px; padding:12px; border-radius:18px; background:var(--surface); border:1px solid var(--surface-border); }
+  .lx-frow { display:flex; flex-direction:column; gap:6px; }
+  .lx-frow > span { font-size:.72rem; font-weight:800; color:var(--text-muted); padding-left:2px; }
+  .lx-seg2 { background:var(--surface-highlight); }
+  .lx-fbox .lx-sel { width:100%; }
+
+  /* ranking list: one line per student */
+  .lx-list2 { display:flex; flex-direction:column; gap:8px; }
+  .lx-r { display:flex; align-items:center; gap:12px; padding:12px; border-radius:18px; cursor:pointer; background:var(--surface); border:1px solid var(--surface-border); }
+  .lx-r.me { background:rgba(var(--color-accent-rgb),.10); border-color:rgba(var(--color-accent-rgb),.45); }
+  .lx-r-rk { flex:none; width:30px; height:30px; border-radius:50%; display:grid; place-items:center; font-family:var(--font-num); font-weight:800; font-size:.84rem; color:var(--text-secondary); background:var(--surface-highlight); }
+  .lx-r.m1 .lx-r-rk { background:#d9a93f; color:#fff; box-shadow:0 3px 10px rgba(217,169,63,.45); }
+  .lx-r.m2 .lx-r-rk { background:#9aa2ae; color:#fff; box-shadow:0 3px 10px rgba(154,162,174,.4); }
+  .lx-r.m3 .lx-r-rk { background:#b27547; color:#fff; box-shadow:0 3px 10px rgba(178,117,71,.4); }
+  .lx-r.m1 { background:linear-gradient(90deg, rgba(217,169,63,.12), transparent 70%), var(--surface); border-color:rgba(217,169,63,.4); }
+  .lx-r-mid { flex:1; min-width:0; }
+  .lx-r-nm { font-size:.92rem; font-weight:800; line-height:1.3; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .lx-r-sub { margin-top:2px; font-size:.7rem; font-weight:600; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .lx-r-val { flex:none; text-align:right; display:flex; align-items:baseline; gap:3px; }
+  .lx-r-val b { font-family:var(--font-num); font-size:1.08rem; font-weight:800; color:var(--text-primary); }
+  .lx-r-val small { font-size:.64rem; font-weight:700; color:var(--text-muted); }
+  .lx-r-val .lx-mv { margin-left:2px; }
+  .lx-search .lx-inp { padding:12px 14px; border-radius:14px; }
+  .lx-jump { border-radius:14px; }
 </style>
 <script src="../js/utils/nav-boot.js"></script>
 <link rel="stylesheet" href="../css/desktop.css">
@@ -289,42 +338,31 @@ function renderHero() {
   const R = 34, C = 2 * Math.PI * R;
   const wk = weeklyXP(me()), mv = S.movement[me()], streak = num(S.extras[me()]?.streak);
 
+  const total = S.rows.length;
   let foot;
   if (!rank) foot = "পরীক্ষা দিলেই তুমি র‍্যাঙ্কিংয়ে চলে আসবে।";
   else if (rank === 1) {
     const nx = S.rows[1];
-    foot = nx ? `তুমিই শীর্ষে — দ্বিতীয়জনের চেয়ে <b>${fmt(num(r.totalPoints) - num(nx.totalPoints))}</b> XP এগিয়ে।` : "তুমিই এখন শীর্ষে।";
+    foot = nx ? `তুমিই <b>১ নম্বরে</b>! দ্বিতীয়জনের চেয়ে <b>${fmt(num(r.totalPoints) - num(nx.totalPoints))}</b> XP এগিয়ে আছো।` : "তুমিই এখন ১ নম্বরে!";
   } else {
     const up = S.rows[rank - 2], gap = num(up.totalPoints) - num(r.totalPoints);
-    foot = gap > 0 ? `<b>#${rank - 1}</b>-এ উঠতে আর <b>${fmt(gap)}</b> XP দরকার — ${esc(up.name)}-কে ছাড়াতে হবে।` : `${esc(up.name)}-এর সাথে পয়েন্ট সমান — একটা পরীক্ষাই র‍্যাঙ্ক বদলে দেবে।`;
+    foot = gap > 0 ? `এক ধাপ উপরে (<b>#${rank - 1}</b>) যেতে আর <b>${fmt(gap)}</b> XP লাগবে।` : `${esc(up.name)}-এর সাথে পয়েন্ট সমান — আরেকটা পরীক্ষা দিলেই এগিয়ে যাবে।`;
   }
   const chips = [
-    wk > 0 ? `<span class="lx-h-chip up">এই সপ্তাহে +<b>${fmt(wk)}</b> XP</span>` : "",
-    mv > 0 ? `<span class="lx-h-chip up">${I.up}<b>${mv}</b> ধাপ উপরে</span>` : mv < 0 ? `<span class="lx-h-chip down">${I.down}<b>${Math.abs(mv)}</b> ধাপ নিচে</span>` : "",
-    streak >= 2 ? `<span class="lx-h-chip"><b>${streak}</b> সপ্তাহের স্ট্রিক</span>` : ""
+    wk > 0 ? `<span class="lx-h-chip up">এই সপ্তাহে <b>+${fmt(wk)}</b> XP</span>` : "",
+    mv > 0 ? `<span class="lx-h-chip up">${I.up}<b>${mv}</b> ধাপ উপরে উঠেছো</span>` : mv < 0 ? `<span class="lx-h-chip down">${I.down}<b>${Math.abs(mv)}</b> ধাপ নেমেছো</span>` : "",
+    streak >= 2 ? `<span class="lx-h-chip"><b>${streak}</b> সপ্তাহ টানা</span>` : ""
   ].join("");
 
   document.getElementById("lxHero").innerHTML = `<section class="lx-hero" aria-label="তোমার র‍্যাঙ্ক">
-    <div>
-      <p class="lx-h-label">${avatar(student, 22)}<span>${esc(student.name)}</span></p>
-      <p class="lx-h-rank">${rank ? "#" + rank : "—"}</p>
-      <p class="lx-h-xp"><b>${fmt(r?.totalPoints)}</b> XP${S.rows.length ? ` · ${S.rows.length} জনের মধ্যে` : ""}</p>
-      ${chips ? `<div class="lx-h-chips">${chips}</div>` : ""}
+    <p class="lx-h-label">${avatar(student, 26)}<span>${esc(student.name)}</span></p>
+    <div class="lx-h-main">
+      <div class="lx-h-box"><span class="k">তোমার র‍্যাঙ্ক</span><b class="v">${rank ? "#" + rank : "—"}</b>${total ? `<span class="s">${total} জনের মধ্যে</span>` : ""}</div>
+      <div class="lx-h-box"><span class="k">মোট XP</span><b class="v">${fmt(r?.totalPoints)}</b><span class="s">সর্বমোট</span></div>
     </div>
-    <div class="lx-h-seal" role="img" aria-label="শীর্ষের ${pct}%">
-      <svg class="ring" viewBox="0 0 80 80" aria-hidden="true">
-        <circle cx="40" cy="40" r="${R}" fill="none" stroke="rgba(243,241,234,0.12)" stroke-width="7"/>
-        <circle class="lx-h-ring" id="lxRing" cx="40" cy="40" r="${R}" fill="none" stroke="#b8863c" stroke-width="7" stroke-linecap="round"
-          stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${C.toFixed(2)}" data-c="${C.toFixed(2)}" data-pct="${pct}"/>
-      </svg>
-      <div class="lx-h-seal-c"><b>${pct}%</b><span>শীর্ষের</span></div>
-    </div>
+    ${chips ? `<div class="lx-h-chips">${chips}</div>` : ""}
     <p class="lx-h-foot">${foot}</p>
   </section>`;
-  const ring = document.getElementById("lxRing");
-  if (ring) requestAnimationFrame(() => requestAnimationFrame(() => {
-    ring.style.strokeDashoffset = (Number(ring.dataset.c) * (1 - Number(ring.dataset.pct) / 100)).toFixed(2);
-  }));
 }
 
 function renderTabs() {
@@ -391,7 +429,7 @@ function awardsHtml() {
     ex && { t: "বেশি পরীক্ষা", ic: ICO.doc, ...ex, txt: `${ex.v}টি পরীক্ষা` }
   ].filter(Boolean);
   if (!tiles.length) return "";
-  return `<div class="lx-title">এই সপ্তাহের সেরা</div>
+  return `<div class="lx-title" style="margin-top:6px">এই সপ্তাহের সেরা</div>
     <div class="lx-awards" style="grid-template-columns:repeat(${tiles.length}, minmax(0,1fr))">${tiles.map(x => `
       <div class="lx-award" data-act="go" data-id="${esc(x.r.studentId)}">
         <span class="t">${x.ic}${x.t}</span>${avatar(x.r, 34)}
@@ -401,7 +439,7 @@ function awardsHtml() {
 function rivalHtml() {
   const rid = S.rivalId;
   if (!rid) {
-    return S.friendIds.length ? `<button class="lx-rival empty" data-act="tab" data-id="friends">${I.swords} রাইভাল বানাও — বন্ধুদের তালিকা থেকে</button>` : "";
+    return "";
   }
   const rv = S.rows.find(r => r.studentId === rid), mine = S.rows.find(r => r.studentId === me());
   if (!rv) return "";
@@ -420,57 +458,37 @@ function rankListHtml() {
   const q = normQ(S.rq);
   const idx = new Map(all.map((r, i) => [r.studentId, i]));
   const rows = q ? all.filter(r => normQ(r.name).includes(q) || normQ(r.studentId).includes(q)) : all;
-  if (all.length === 0) return `<div class="lx-card lx-empty">কেউ নেই</div>`;
-  if (rows.length === 0) return `<div class="lx-card lx-empty">পাওয়া যায়নি</div>`;
+  if (all.length === 0) return `<div class="lx-card lx-empty">এখানে এখনো কেউ নেই</div>`;
+  if (rows.length === 0) return `<div class="lx-card lx-empty">এই নামে কাউকে পাওয়া যায়নি</div>`;
 
-  const showPodium = !q && all.length >= 3;
-  const topVal = Math.max(1, ...all.map(val));
-  let out = "";
-
-  if (showPodium) {
-    const order = [1, 0, 2];
-    out += `<div class="lx-podium">${order.map(i => {
-      const r = all[i], mine = r.studentId === me();
-      return `<div class="lx-pod p${i + 1} ${mine ? "me" : ""}" ${mine ? 'id="lxMe"' : ""} data-act="go" data-id="${esc(r.studentId)}">
-        <div class="lx-pod-av">${avatar(r, i === 0 ? 58 : 48)}<span class="lx-pod-n">${i + 1}</span></div>
-        <div class="lx-pod-nm">${esc(r.name)}</div>
-        <div class="lx-pod-v">${fmt(val(r))}<small>XP</small></div>
-        <div class="lx-pod-bar"></div></div>`;
-    }).join("")}</div>`;
-  }
-
-  const list = showPodium ? rows.slice(3) : rows;
-  if (list.length) {
-    out += `<div class="lx-card">${list.map(r => {
-      const i = idx.get(r.studentId), mine = r.studentId === me();
-      const w = weeklyXP(r.studentId);
-      const pct = Math.max(2, Math.round(val(r) / topVal * 100));
-      const meta = [batchOf(r), r.examsTaken ? `${r.examsTaken}টি পরীক্ষা` : "", r.examsTaken ? `গড় ${Math.round(num(r.avgPercentage))}%` : ""].filter(Boolean).join(" · ");
-      return `<div class="lx-row ${mine ? "me" : ""}" ${mine ? 'id="lxMe"' : ""} data-act="go" data-id="${esc(r.studentId)}">
-        <span class="lx-rk">${i + 1}</span>${avatar(r, 36)}
-        <div class="lx-mid"><div class="lx-nm">${esc(r.name)}${mine ? `<span class="lx-tag">তুমি</span>` : ""}</div>
-          <div class="lx-sub">${esc(meta)}</div>
-          <div class="lx-bar"><i style="width:${pct}%"></i></div></div>
-        <div class="lx-val">${fmt(val(r))}<small>XP</small>${S.period === "all" ? mvChip(S.movement[r.studentId]) : ""}
-          ${S.period === "all" && w > 0 ? `<span class="lx-wk">+${fmt(w)} এই সপ্তাহে</span>` : ""}</div></div>`;
-    }).join("")}</div>`;
-  }
-  return out;
+  const medal = i => i < 3 ? ` m${i + 1}` : "";
+  return `<div class="lx-list2">${rows.map(r => {
+    const i = idx.get(r.studentId), mine = r.studentId === me();
+    const parts = [S.scope === "batch" ? "" : batchOf(r), r.examsTaken ? `${r.examsTaken}টি পরীক্ষা` : "পরীক্ষা দেয়নি", r.examsTaken ? `গড় ${Math.round(num(r.avgPercentage))}%` : ""].filter(Boolean).join(" · ");
+    return `<div class="lx-r${medal(i)} ${mine ? "me" : ""}" ${mine ? 'id="lxMe"' : ""} data-act="go" data-id="${esc(r.studentId)}">
+      <span class="lx-r-rk">${i + 1}</span>
+      ${avatar(r, 40)}
+      <div class="lx-r-mid"><div class="lx-r-nm">${esc(r.name)}${mine ? `<span class="lx-tag">তুমি</span>` : ""}</div><div class="lx-r-sub">${esc(parts)}</div></div>
+      <div class="lx-r-val"><b>${fmt(val(r))}</b><small>XP</small>${S.period === "all" ? mvChip(S.movement[r.studentId]) : ""}</div>
+    </div>`;
+  }).join("")}</div>`;
 }
 const normQ = v => String(v ?? "").trim().toLocaleLowerCase();
 
 function viewRank() {
   const batches = [...new Set(S.rows.map(batchOf))].filter(b => b !== NO_BATCH).sort();
-  const chip = (group, k, t) => `<button class="lx-chip ${S[group] === k ? "on" : ""}" data-act="${group}" data-id="${k}">${t}</button>`;
-  return `<div style="display:flex;flex-direction:column;gap:10px">
-    ${rivalHtml()}
-    ${awardsHtml()}
-    <div class="lx-filters">${chip("scope", "overall", "সবাই")}${chip("scope", "batch", "ব্যাচ")}${chip("scope", "friends", "বন্ধুরা")}
-      <span style="flex:1"></span>${chip("period", "all", "সর্বমোট")}${chip("period", "week", "এই সপ্তাহ")}</div>
-    ${S.scope === "batch" ? `<select class="lx-sel" data-sel="batch">${batches.map(b => `<option value="${esc(b)}" ${S.batch === b ? "selected" : ""}>${esc(b)}</option>`).join("")}</select>` : ""}
+  const seg = (group, items) => `<div class="lx-seg lx-seg2">${items.map(([k, tx]) => `<button class="${S[group] === k ? "on" : ""}" data-act="${group}" data-id="${k}">${tx}</button>`).join("")}</div>`;
+  return `<div style="display:flex;flex-direction:column;gap:12px">
+    <div class="lx-fbox">
+      <div class="lx-frow"><span>কাদের দেখবে</span>${seg("scope", [["overall", "সবাই"], ["batch", "আমার ব্যাচ"], ["friends", "বন্ধুরা"]])}</div>
+      <div class="lx-frow"><span>কোন সময়ের</span>${seg("period", [["all", "সর্বমোট"], ["week", "এই সপ্তাহ"]])}</div>
+      ${S.scope === "batch" ? `<select class="lx-sel" data-sel="batch">${batches.map(b => `<option value="${esc(b)}" ${S.batch === b ? "selected" : ""}>${esc(b)}</option>`).join("")}</select>` : ""}
+    </div>
     <div class="lx-search"><input class="lx-inp" id="lxSearch" type="search" placeholder="নাম দিয়ে খোঁজো" value="${esc(S.rq)}" autocomplete="off">
       <button class="lx-jump" type="button" data-act="jump">${ICO.target}আমি</button></div>
-    <div id="lxList" style="display:flex;flex-direction:column;gap:10px">${rankListHtml()}</div>
+    <div id="lxList">${rankListHtml()}</div>
+    ${rivalHtml()}
+    ${awardsHtml()}
   </div>`;
 }
 
