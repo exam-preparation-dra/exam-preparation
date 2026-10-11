@@ -7,92 +7,344 @@
 <title>স্টাডি সেকশন — অ্যাডমিন</title>
 <link rel="stylesheet" href="../css/style.css">
 <style>
-  body { margin:0; background:var(--bg-app); color:var(--text-primary); font-family:var(--font-bn); }
-  .ax { width:100%; max-width:1100px; margin:0 auto; padding:18px 14px 56px; }
-  .ax-top { display:flex; align-items:center; gap:12px; }
-  .ax-back { display:inline-flex; align-items:center; gap:6px; padding:9px 12px; border:1px solid var(--surface-border); border-radius:12px; background:var(--surface-solid); color:var(--text-secondary); font:inherit; font-size:.8rem; font-weight:800; text-decoration:none; }
-  .ax-top h1 { font-size:1.3rem; line-height:1.3; font-weight:900; letter-spacing:-.02em; }
-  .ax-top p { margin-top:2px; font-size:.78rem; color:var(--text-muted); }
-  .ax-hero { position:relative; overflow:hidden; margin-top:18px; padding:22px 20px; border-radius:20px; border:1px solid var(--surface-border);
-    background:radial-gradient(120% 140% at 100% 0%, rgba(var(--color-accent-rgb),.26), transparent 60%), var(--surface-solid); }
-  .ax-badge { display:inline-flex; align-items:center; gap:6px; padding:5px 10px; border-radius:999px; font-size:.68rem; font-weight:800; letter-spacing:.04em; color:var(--color-accent); background:rgba(var(--color-accent-rgb),.14); border:1px solid rgba(var(--color-accent-rgb),.3); }
-  .ax-badge i { width:7px; height:7px; border-radius:50%; background:var(--color-accent); animation:axPulse 1.6s ease-in-out infinite; }
-  @keyframes axPulse { 50% { opacity:.35; transform:scale(.7); } }
-  .ax-hero h2 { margin-top:10px; font-size:1.2rem; font-weight:900; }
-  .ax-hero p { margin-top:6px; max-width:620px; font-size:.82rem; line-height:1.75; color:var(--text-secondary); }
-  .ax-stats { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
-  .ax-stat { padding:9px 13px; border-radius:12px; background:var(--surface-highlight); border:1px solid var(--surface-border); font-size:.74rem; font-weight:700; color:var(--text-secondary); }
-  .ax-stat b { margin-right:5px; font-family:var(--font-num); font-size:1rem; color:var(--text-primary); }
-  .ax-sec { display:flex; align-items:center; justify-content:space-between; margin:26px 2px 12px; }
-  .ax-sec h3 { font-size:.95rem; font-weight:850; }
-  .ax-sec span { font-size:.72rem; font-weight:700; color:var(--text-muted); }
-  .ax-live { display:flex; align-items:center; gap:14px; padding:16px; border-radius:18px; text-decoration:none; color:var(--text-primary); border:1px solid rgba(var(--color-accent-rgb),.38); background:linear-gradient(135deg, rgba(var(--color-accent-rgb),.14), rgba(var(--color-accent-rgb),.04)), var(--surface-solid); }
-  .ax-live strong { display:block; font-size:.95rem; font-weight:850; }
-  .ax-live small { display:block; margin-top:3px; font-size:.74rem; line-height:1.55; color:var(--text-secondary); }
-  .ax-go { margin-left:auto; flex:none; font-size:.74rem; font-weight:800; color:var(--color-accent); }
-  .ax-ico { flex:none; display:grid; place-items:center; width:44px; height:44px; border-radius:14px; color:var(--color-accent); background:var(--color-accent-soft); }
-  .ax-live .ax-ico { background:rgba(var(--color-accent-rgb),.2); }
-  .ax-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-  .ax-card { position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:12px; min-width:0; padding:16px 14px; text-align:left; font:inherit; cursor:pointer; color:var(--text-primary); border:1px dashed var(--surface-border); border-radius:18px; background:var(--surface); }
-  .ax-copy { display:flex; flex-direction:column; gap:4px; min-width:0; }
-  .ax-copy strong { font-size:.9rem; line-height:1.4; font-weight:850; }
-  .ax-copy small { font-size:.72rem; line-height:1.55; font-weight:600; color:var(--text-muted); }
-  .ax-tag { position:absolute; top:12px; right:12px; padding:3px 8px; border-radius:999px; font-size:.62rem; font-weight:800; color:var(--text-muted); background:var(--surface-highlight); border:1px solid var(--surface-border); }
-  .ax-toast { position:fixed; left:50%; bottom:calc(24px + env(safe-area-inset-bottom)); transform:translate(-50%,20px); opacity:0; padding:10px 16px; border-radius:999px; background:var(--text-primary); color:var(--bg-app); font-size:.78rem; font-weight:800; transition:.25s; pointer-events:none; z-index:60; }
-  .ax-toast.show { opacity:1; transform:translate(-50%,0); }
-  @media (min-width:760px) { .ax { padding:28px 28px 64px; } .ax-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; } .ax-hero { padding:30px 32px; } }
-  @media (prefers-reduced-motion:reduce) { .ax-badge i { animation:none; } }
+  @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration:.001ms!important; transition-duration:.001ms!important; } }
+  body { margin:0; background:var(--bg-app, var(--bg)); color:var(--text-primary); font-family:var(--font-bn); }
+  .wrap { width:100%; max-width:760px; margin:0 auto; padding:16px 14px 60px; }
+  .top { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+  .back { flex:none; width:40px; height:40px; display:grid; place-items:center; border:1px solid var(--surface-border); border-radius:12px; background:var(--surface-solid); color:var(--text-primary); text-decoration:none; }
+  .top h1 { font-size:1.3rem; font-weight:900; line-height:1.25; }
+  .top p { font-size:.76rem; font-weight:600; color:var(--text-muted); }
+
+  .card { background:var(--surface); border:1px solid var(--surface-border); border-radius:18px; padding:16px; margin-bottom:14px; }
+  .step { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .step i { flex:none; width:26px; height:26px; border-radius:50%; display:grid; place-items:center; background:var(--color-accent); color:#211a0d; font-style:normal; font-weight:900; font-size:.8rem; font-family:var(--font-num); }
+  .step b { font-size:.98rem; font-weight:900; }
+  .step span { margin-left:auto; font-size:.7rem; font-weight:700; color:var(--text-muted); }
+
+  .seg { display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:4px; border-radius:13px; background:rgba(128,128,128,.1); margin-bottom:14px; }
+  .seg button { min-height:40px; border:none; border-radius:10px; background:transparent; color:var(--text-secondary); font:inherit; font-weight:800; font-size:.86rem; cursor:pointer; }
+  .seg button.on { background:var(--surface-solid); color:var(--color-accent); box-shadow:0 1px 4px rgba(0,0,0,.1); }
+
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { min-height:40px; padding:0 15px; border-radius:999px; border:1.5px solid var(--surface-border); background:var(--surface-solid); color:var(--text-secondary); font:inherit; font-size:.84rem; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:7px; transition:.15s; }
+  .chip .n { font-family:var(--font-num); font-size:.7rem; font-weight:700; color:var(--text-muted); }
+  .chip.on { border-color:var(--color-accent); background:var(--color-accent-soft); color:var(--color-accent); }
+  .chip.on::before { content:"✓"; font-weight:900; }
+  .hint { margin-top:10px; font-size:.74rem; font-weight:600; color:var(--text-muted); line-height:1.6; }
+
+  .field { margin-bottom:12px; }
+  .field:last-child { margin-bottom:0; }
+  .field label { display:block; margin-bottom:6px; font-size:.78rem; font-weight:800; color:var(--text-secondary); }
+  .inp { width:100%; box-sizing:border-box; min-height:46px; padding:11px 13px; background:rgba(128,128,128,.05); border:1px solid var(--surface-border); border-radius:12px; color:var(--text-primary); font:inherit; font-size:.9rem; font-weight:700; outline:none; }
+  .inp:focus { border-color:var(--color-accent); box-shadow:0 0 0 3px rgba(var(--color-accent-rgb),.15); }
+  .inp:disabled { opacity:.5; }
+  textarea.inp { min-height:70px; resize:vertical; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  @media(max-width:480px){ .grid2 { grid-template-columns:1fr; } }
+
+  .linkbox { display:flex; gap:8px; }
+  .linkbox .inp { flex:1; min-width:0; }
+  .status { margin-top:9px; padding:10px 12px; border-radius:12px; font-size:.8rem; font-weight:800; line-height:1.55; border:1px solid var(--surface-border); }
+  .status.ok { background:rgba(47,125,94,.12); border-color:rgba(47,125,94,.35); color:var(--color-success); }
+  .status.err { background:rgba(239,68,68,.1); border-color:rgba(239,68,68,.35); color:#dc2626; }
+  .status[hidden], .preview-wrap[hidden] { display:none; }
+  .preview-wrap { margin-top:12px; border:1px solid var(--surface-border); border-radius:14px; overflow:hidden; background:#fff; }
+  .preview-wrap iframe { display:block; width:100%; height:340px; border:0; }
+  .howto { margin-top:12px; padding:12px 14px; border-radius:14px; background:var(--surface-highlight); border:1px dashed var(--surface-border); font-size:.76rem; font-weight:600; color:var(--text-secondary); line-height:1.8; }
+  .howto b { color:var(--text-primary); }
+
+  .row { display:flex; align-items:center; gap:10px; }
+  .switch { display:flex; align-items:center; gap:10px; font-size:.86rem; font-weight:800; cursor:pointer; }
+  .switch input { width:20px; height:20px; accent-color:var(--color-accent); }
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:46px; padding:0 18px; border-radius:12px; border:1px solid var(--surface-border); background:var(--surface-solid); color:var(--text-primary); font:inherit; font-size:.88rem; font-weight:800; cursor:pointer; text-decoration:none; }
+  .btn:active { transform:scale(.97); }
+  .btn.pri { background:var(--color-accent); border-color:transparent; color:#211a0d; }
+  .btn.full { width:100%; }
+  .btn.sm { min-height:36px; padding:0 12px; font-size:.76rem; border-radius:10px; }
+  .btn.danger { color:#ef4444; border-color:rgba(239,68,68,.35); }
+  .btn[disabled] { opacity:.5; pointer-events:none; }
+
+  .sec-t { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:22px 0 10px; }
+  .sec-t h2 { font-size:1.02rem; font-weight:900; }
+  .cnt { padding:3px 10px; border-radius:999px; background:var(--surface-highlight); border:1px solid var(--surface-border); font-family:var(--font-num); font-size:.74rem; font-weight:800; color:var(--text-secondary); }
+  .item { padding:14px; border:1px solid var(--surface-border); border-radius:16px; background:var(--surface); margin-bottom:10px; }
+  .item h3 { font-size:.95rem; font-weight:850; line-height:1.45; overflow-wrap:anywhere; }
+  .path { margin-top:3px; font-size:.76rem; font-weight:700; color:var(--text-muted); line-height:1.5; }
+  .tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:9px; }
+  .tag { padding:3px 10px; border-radius:999px; background:var(--color-accent-soft); color:var(--color-accent); font-size:.7rem; font-weight:800; }
+  .tag.off { background:rgba(128,128,128,.14); color:var(--text-muted); }
+  .tag.sug { background:rgba(107,78,150,.15); color:#6b4e96; }
+  .acts { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .muted { font-size:.8rem; font-weight:600; color:var(--text-muted); }
+  .empty { text-align:center; padding:22px 10px; border:1px dashed var(--surface-border); border-radius:14px; }
 </style>
+<script src="../js/popup.js"></script>
 </head>
 <body>
-<main class="ax">
-  <div class="ax-top">
-    <a class="ax-back" href="./dashboard.html">← Admin</a>
-    <div><h1>স্টাডি সেকশন</h1><p>স্টুডেন্টদের স্টাডি সেকশনের সব কনটেন্ট এখান থেকে নিয়ন্ত্রণ হবে</p></div>
+<main class="wrap">
+  <div class="top">
+    <a class="back" href="./dashboard.html" aria-label="ফিরে যাও"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></a>
+    <div><h1>স্টাডি সেকশন</h1><p>Google Drive-এর লিংক দিয়ে নোটস দাও — শুধু বেছে নেওয়া ব্যাচ দেখবে</p></div>
   </div>
 
-  <section class="ax-hero">
-    <span class="ax-badge"><i></i>Under Development</span>
-    <h2>পুরো স্টাডি সেকশন তৈরি হচ্ছে</h2>
-    <p>ব্যানার, ক্লাস ডিটেইলস, নোটস, লেকচার ও অ্যাসাইনমেন্ট — সবকিছু ব্যাচ অনুযায়ী এখান থেকে যোগ ও সম্পাদনা করা যাবে। নিচের মডিউলগুলো ধাপে ধাপে চালু হবে।</p>
-    <div class="ax-stats" id="stats"></div>
-  </section>
+  <form id="form" class="card" autocomplete="off" novalidate>
+    <div class="seg" role="tablist" aria-label="ধরন">
+      <button type="button" class="on" data-type="notes">📘 নোটস</button>
+      <button type="button" data-type="suggestion">🎯 সাজেশন</button>
+    </div>
 
-  <div class="ax-sec"><h3>এখন চালু</h3></div>
-  <a class="ax-live" href="./study-materials.html">
-    <span class="ax-ico"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8z"/><path d="M14 3v5h5"/><path d="M8.5 13h7M8.5 16.5h5"/></svg></span>
-    <span><strong>নোটস ও Suggestions ম্যানেজার</strong><small>ব্যাচ → বিষয় → অধ্যায় → PDF যোগ, প্রকাশ ও মুছে ফেলা</small></span>
-    <span class="ax-go">খোলো ›</span>
-  </a>
+    <!-- 1. batch -->
+    <div class="step"><i>১</i><b>কোন ব্যাচ পাবে?</b><span id="batchSel">কিছু বাছা হয়নি</span></div>
+    <div class="chips" id="batchChips"><span class="muted">ব্যাচ লোড হচ্ছে…</span></div>
+    <p class="hint">শুধু যে ব্যাচ বাছবে, সেই ব্যাচের শিক্ষার্থীরাই এই নোট দেখতে পাবে। একসাথে একাধিক ব্যাচও বাছা যায়।</p>
 
-  <div class="ax-sec"><h3>আসছে শীঘ্রই</h3><span>প্রস্তুত হচ্ছে</span></div>
-  <section class="ax-grid"><button type="button" class="ax-card" data-soon="Banner ম্যানেজার"><span class="ax-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="10" rx="2.5"/><path d="M7 19h10"/><path d="m8 12 2.5-2.5L13 12l2-2 1 1"/></svg></span><span class="ax-copy"><strong>Banner ম্যানেজার</strong><small>স্টাডি সেকশনের ব্যানার আপলোড ও সাজানো</small></span><span class="ax-tag">শীঘ্রই</span></button><button type="button" class="ax-card" data-soon="ক্লাস ডিটেইলস"><span class="ax-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M7.5 9h5M7.5 12h8"/></svg></span><span class="ax-copy"><strong>ক্লাস ডিটেইলস</strong><small>ক্লাসের রুটিন, শিক্ষক ও বিষয়ের তথ্য</small></span><span class="ax-tag">শীঘ্রই</span></button><button type="button" class="ax-card" data-soon="নোটস লাইব্রেরি"><span class="ax-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V8z"/><path d="M14 3v5h5"/><path d="M8.5 13h7M8.5 16.5h5"/></svg></span><span class="ax-copy"><strong>নোটস লাইব্রেরি</strong><small>বিষয় ও অধ্যায় অনুযায়ী নোটস ম্যানেজ</small></span><span class="ax-tag">শীঘ্রই</span></button><button type="button" class="ax-card" data-soon="লেকচার ও ভিডিও"><span class="ax-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10.5 9.5 4 2.5-4 2.5z"/></svg></span><span class="ax-copy"><strong>লেকচার ও ভিডিও</strong><small>রেকর্ডেড ক্লাস ও ভিডিও লিংক</small></span><span class="ax-tag">শীঘ্রই</span></button><button type="button" class="ax-card" data-soon="সিলেবাস ট্র্যাকার"><span class="ax-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M8.5 8h7M8.5 11.5h5"/></svg></span><span class="ax-copy"><strong>সিলেবাস ট্র্যাকার</strong><small>ব্যাচ অনুযায়ী অধ্যায়ের অগ্রগতি</small></span><span class="ax-tag">শীঘ্রই</span></button><button type="button" class="ax-card" data-soon="হোমওয়ার্ক ও অ্যাসাইনমেন্ট"><span class="ax-ico"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11.5l2 2 4-4.5"/><rect x="4" y="4" width="16" height="17" rx="2.5"/><path d="M9 2.5h6v3H9z"/></svg></span><span class="ax-copy"><strong>হোমওয়ার্ক ও অ্যাসাইনমেন্ট</strong><small>দেওয়া, জমা ও ফিডব্যাক</small></span><span class="ax-tag">শীঘ্রই</span></button></section>
+    <hr style="border:none;border-top:1px dashed var(--surface-border);margin:18px 0">
+
+    <!-- 2. syllabus -->
+    <div class="step"><i>২</i><b>কোন বিষয়ের নোট?</b><span>সিলেবাস থেকে</span></div>
+    <div class="field"><label for="subject">বিষয়</label><select id="subject" class="inp"><option value="">বিষয় বেছে নাও</option></select></div>
+    <div class="grid2">
+      <div class="field"><label for="chapter">অধ্যায়</label><select id="chapter" class="inp" disabled><option value="">আগে বিষয় বাছো</option></select></div>
+      <div class="field"><label for="topic">টপিক <small style="font-weight:600;color:var(--text-muted)">(ঐচ্ছিক)</small></label><select id="topic" class="inp" disabled><option value="">পুরো অধ্যায়</option></select></div>
+    </div>
+    <div class="field"><label for="title">নোটের নাম</label><input id="title" class="inp" maxlength="120" placeholder="অধ্যায়/টপিক বাছলে নাম নিজে বসে যাবে"></div>
+    <div class="field" id="yearWrap" hidden><label for="year">সাজেশনের বছর</label><input id="year" class="inp" type="number" inputmode="numeric"></div>
+
+    <hr style="border:none;border-top:1px dashed var(--surface-border);margin:18px 0">
+
+    <!-- 3. link -->
+    <div class="step"><i>৩</i><b>Google Drive লিংক</b><span>PDF</span></div>
+    <div class="field">
+      <div class="linkbox">
+        <input id="link" class="inp" type="url" inputmode="url" placeholder="https://drive.google.com/file/d/…" aria-label="Google Drive লিংক">
+        <button type="button" class="btn" id="pasteBtn" aria-label="ক্লিপবোর্ড থেকে পেস্ট">পেস্ট</button>
+      </div>
+      <div id="linkStatus" class="status" hidden role="status"></div>
+      <div class="preview-wrap" id="previewWrap" hidden><iframe id="previewFrame" title="প্রিভিউ" loading="lazy" referrerpolicy="no-referrer"></iframe></div>
+      <div class="howto">
+        <b>লিংক কীভাবে নেবে?</b><br>
+        ১. Drive-এ PDF-এর উপর ট্যাপ করে <b>Share</b> চাপো<br>
+        ২. <b>General access → Anyone with the link → Viewer</b> করো<br>
+        ৩. <b>Copy link</b> করে এখানে পেস্ট করো<br>
+        শুধু নিজের তৈরি বা যে ফাইল শেয়ার করার অনুমতি আছে, সেটাই দাও।
+      </div>
+    </div>
+    <div class="field"><label for="desc">ছোট বিবরণ <small style="font-weight:600;color:var(--text-muted)">(ঐচ্ছিক)</small></label><textarea id="desc" class="inp" maxlength="240" placeholder="যেমন: হাতে লেখা নোট, পরীক্ষার আগে পড়ার জন্য"></textarea></div>
+
+    <div class="row" style="justify-content:space-between;margin-top:6px">
+      <label class="switch"><input type="checkbox" id="published" checked> এখনই প্রকাশ করো</label>
+    </div>
+    <button type="submit" class="btn pri full" id="saveBtn" style="margin-top:14px">নোট সেভ করো</button>
+  </form>
+
+  <div class="sec-t"><h2>সেভ করা নোট</h2><span class="cnt" id="count">0</span></div>
+  <div class="chips" id="filterChips" style="margin-bottom:12px"></div>
+  <div id="items"><div class="muted empty">লোড হচ্ছে…</div></div>
 </main>
-<div class="ax-toast" id="toast" role="status"></div>
+
 <script type="module">
-  import { requireAdmin } from "../js/utils/auth.js";
-  import { db } from "../js/firebase/firebase-config.js";
-  import "../js/utils/rubber-press.js";
-  import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { db } from "../js/firebase/firebase-config.js";
+import { requireAdmin } from "../js/utils/auth.js";
+import { showToast, friendlyError } from "../js/utils/ui-utils.js";
+import { getActiveStudents } from "../js/utils/student-utils.js";
+import { getSubjects, getChapters, getTopics } from "../js/utils/syllabus-utils.js";
+import { batchChoices, normalizeBatch, sameBatch } from "../js/utils/batch-utils.js";
+import { parseDriveLink, drivePreviewUrl, driveOpenUrl, materialLinks } from "../js/utils/drive-utils.js";
+import { collection, addDoc, getDocs, query, orderBy, deleteDoc, doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-  const toast = document.getElementById("toast");
-  let tt;
-  document.querySelectorAll("[data-soon]").forEach(b => b.addEventListener("click", () => {
-    toast.textContent = b.dataset.soon + " — শীঘ্রই আসছে";
-    toast.classList.add("show"); clearTimeout(tt); tt = setTimeout(() => toast.classList.remove("show"), 1800);
-  }));
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const nameOf = (x) => x?.name_bn || x?.name_en || "";
+const thisYear = new Date().getFullYear();
 
-  requireAdmin(async () => {
-    try {
-      const snap = await getDocs(collection(db, "studyMaterials"));
-      const all = snap.docs.map(d => d.data());
-      const notes = all.filter(x => (x.type || "notes") === "notes").length;
-      const sugg = all.filter(x => x.type === "suggestion").length;
-      const live = all.filter(x => x.published !== false).length;
-      document.getElementById("stats").innerHTML =
-        `<span class="ax-stat"><b>${notes}</b>নোটস</span><span class="ax-stat"><b>${sugg}</b>Suggestions</span><span class="ax-stat"><b>${live}</b>প্রকাশিত</span>`;
-    } catch (e) { console.warn("study stats", e); }
+const S = { type: "notes", batches: new Set(), all: false, drive: null, subjects: [], chapters: [], topics: [], items: [], filter: "", students: [], busy: false };
+let titleTouched = false;
+
+requireAdmin(async () => {
+  $("year").value = thisYear; $("year").min = thisYear;
+  try {
+    const [students, subjects] = await Promise.all([getActiveStudents(), getSubjects(true)]);
+    S.students = students; S.subjects = subjects;
+    drawBatches();
+    $("subject").innerHTML = `<option value="">বিষয় বেছে নাও</option>` + subjects.map(s => `<option value="${esc(s.id)}">${esc(nameOf(s))}</option>`).join("");
+    if (!subjects.length) showToast("সিলেবাসে কোনো বিষয় নেই — আগে সিলেবাস পেজে বিষয় যোগ করো।", "error");
+  } catch (e) { console.error(e); showToast(friendlyError(e), "error"); }
+  await loadItems();
+});
+
+/* ---------- type ---------- */
+document.querySelectorAll(".seg button").forEach(b => b.onclick = () => {
+  S.type = b.dataset.type;
+  document.querySelectorAll(".seg button").forEach(x => x.classList.toggle("on", x === b));
+  $("yearWrap").hidden = S.type !== "suggestion";
+});
+
+/* ---------- 1. batches ---------- */
+function drawBatches() {
+  const list = batchChoices(S.students).filter(b => S.students.some(s => sameBatch(s.className, b)));
+  const cnt = (b) => S.students.filter(s => sameBatch(s.className, b)).length;
+  $("batchChips").innerHTML = `<button type="button" class="chip ${S.all ? "on" : ""}" data-b="__all">সব ব্যাচ <span class="n">${S.students.length} জন</span></button>` +
+    list.map(b => `<button type="button" class="chip ${S.batches.has(b) && !S.all ? "on" : ""}" data-b="${esc(b)}">${esc(b)} <span class="n">${cnt(b)} জন</span></button>`).join("");
+  $("batchChips").querySelectorAll(".chip").forEach(c => c.onclick = () => {
+    const b = c.dataset.b;
+    if (b === "__all") { S.all = !S.all; S.batches.clear(); }
+    else { S.all = false; S.batches.has(b) ? S.batches.delete(b) : S.batches.add(b); }
+    drawBatches();
   });
+  $("batchSel").textContent = S.all ? "সব ব্যাচ" : S.batches.size ? [...S.batches].join(", ") : "কিছু বাছা হয়নি";
+}
+
+/* ---------- 2. subject → chapter → topic ---------- */
+$("subject").onchange = async () => {
+  const id = $("subject").value;
+  S.chapters = []; S.topics = [];
+  $("topic").innerHTML = `<option value="">পুরো অধ্যায়</option>`; $("topic").disabled = true;
+  if (!id) { $("chapter").innerHTML = `<option value="">আগে বিষয় বাছো</option>`; $("chapter").disabled = true; return; }
+  $("chapter").disabled = true; $("chapter").innerHTML = `<option>লোড হচ্ছে…</option>`;
+  try {
+    S.chapters = await getChapters(id, true);
+    $("chapter").innerHTML = `<option value="">অধ্যায় বেছে নাও</option>` + S.chapters.map(c => `<option value="${esc(c.id)}">${esc(nameOf(c))}</option>`).join("");
+    $("chapter").disabled = false;
+    if (!S.chapters.length) $("chapter").innerHTML = `<option value="">এই বিষয়ে কোনো অধ্যায় নেই</option>`;
+  } catch (e) { showToast(friendlyError(e), "error"); }
+  autoTitle();
+};
+$("chapter").onchange = async () => {
+  const id = $("chapter").value;
+  S.topics = [];
+  $("topic").innerHTML = `<option value="">পুরো অধ্যায়</option>`; $("topic").disabled = true;
+  autoTitle();
+  if (!id) return;
+  try {
+    S.topics = await getTopics(id, true);
+    $("topic").innerHTML = `<option value="">পুরো অধ্যায়</option>` + S.topics.map(t => `<option value="${esc(t.id)}">${esc(nameOf(t))}</option>`).join("");
+    $("topic").disabled = !S.topics.length;
+  } catch (e) { showToast(friendlyError(e), "error"); }
+};
+$("topic").onchange = autoTitle;
+$("title").addEventListener("input", () => { titleTouched = $("title").value.trim() !== ""; });
+function autoTitle() {
+  if (titleTouched) return;
+  const t = S.topics.find(x => x.id === $("topic").value), c = S.chapters.find(x => x.id === $("chapter").value);
+  $("title").value = nameOf(t) || nameOf(c) || "";
+}
+
+/* ---------- 3. link ---------- */
+function checkLink() {
+  const v = $("link").value.trim();
+  const st = $("linkStatus"), wrap = $("previewWrap"), frame = $("previewFrame");
+  S.drive = null;
+  if (!v) { st.hidden = true; wrap.hidden = true; frame.src = "about:blank"; return; }
+  const p = parseDriveLink(v);
+  st.hidden = false;
+  if (!p) {
+    st.className = "status err";
+    st.textContent = /\/folders\//.test(v) ? "এটা ফোল্ডারের লিংক। ফোল্ডার নয়, নির্দিষ্ট PDF ফাইলের লিংক দাও।" : "এটা সঠিক Google Drive ফাইলের লিংক মনে হচ্ছে না।";
+    wrap.hidden = true; frame.src = "about:blank"; return;
+  }
+  S.drive = p;
+  st.className = "status ok";
+  st.textContent = "লিংক ঠিক আছে ✓ — নিচের প্রিভিউতে PDF দেখা গেলে শেয়ারিং ঠিক আছে। না দেখা গেলে Drive-এ গিয়ে 'Anyone with the link' করো।";
+  wrap.hidden = false;
+  const url = drivePreviewUrl(p);
+  if (frame.src !== url) frame.src = url;
+}
+$("link").addEventListener("input", checkLink);
+$("link").addEventListener("change", checkLink);
+$("pasteBtn").onclick = async () => {
+  try { $("link").value = (await navigator.clipboard.readText()).trim(); checkLink(); }
+  catch { showToast("পেস্ট করা যায়নি — বক্সে চেপে ধরে পেস্ট করো।", "error"); }
+};
+
+/* ---------- save ---------- */
+$("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (S.busy) return;
+  const batches = S.all ? ["all"] : [...S.batches].map(normalizeBatch);
+  if (!batches.length) return showToast("আগে কোন ব্যাচ পাবে সেটা বাছো।", "error");
+  const subject = S.subjects.find(s => s.id === $("subject").value);
+  const chapter = S.chapters.find(c => c.id === $("chapter").value);
+  const topic = S.topics.find(t => t.id === $("topic").value);
+  if (!subject) return showToast("বিষয় বাছো।", "error");
+  if (!chapter) return showToast("অধ্যায় বাছো।", "error");
+  if (!S.drive) return showToast("সঠিক Google Drive ফাইলের লিংক দাও।", "error");
+  const title = $("title").value.trim() || nameOf(topic) || nameOf(chapter);
+
+  const data = {
+    type: S.type, batches, batch: batches[0] === "all" ? "all" : batches[0],
+    subjectId: subject.id, subject: nameOf(subject),
+    chapterId: chapter.id, chapter: nameOf(chapter),
+    topicId: topic?.id || null, topic: topic ? nameOf(topic) : "",
+    title, description: $("desc").value.trim(),
+    driveId: S.drive.id, driveKind: S.drive.kind, link: $("link").value.trim(),
+    published: $("published").checked, createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+  };
+  if (S.type === "suggestion") data.year = Number($("year").value) || thisYear;
+
+  S.busy = true; $("saveBtn").disabled = true;
+  try {
+    await addDoc(collection(db, "studyMaterials"), data);
+    showToast("নোট সেভ হয়েছে ✓", "success");
+    // keep batch + subject so the next note of the same chapter is quick; clear the rest
+    $("link").value = ""; $("desc").value = ""; $("title").value = ""; titleTouched = false;
+    checkLink();
+    await loadItems();
+  } catch (err) { console.error(err); showToast(friendlyError(err), "error"); }
+  finally { S.busy = false; $("saveBtn").disabled = false; }
+});
+
+/* ---------- saved list ---------- */
+const batchLabel = (x) => {
+  const l = (x.batches && x.batches.length) ? x.batches : (x.batch ? [x.batch] : []);
+  return l.includes("all") ? "সব ব্যাচ" : l.join(", ");
+};
+async function loadItems() {
+  try {
+    const snap = await getDocs(query(collection(db, "studyMaterials"), orderBy("createdAt", "desc")));
+    S.items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (e) {
+    console.error(e);
+    $("items").innerHTML = `<div class="muted empty">লোড করা যায়নি। Firestore rules-এ studyMaterials-এর নিয়ম আছে কিনা দেখো।</div>`; return;
+  }
+  drawItems();
+}
+function drawItems() {
+  const labels = [...new Set(S.items.map(batchLabel).filter(Boolean))];
+  $("filterChips").innerHTML = labels.length > 1
+    ? [`<button type="button" class="chip ${S.filter === "" ? "on" : ""}" data-f="">সব</button>`, ...labels.map(l => `<button type="button" class="chip ${S.filter === l ? "on" : ""}" data-f="${esc(l)}">${esc(l)}</button>`)].join("") : "";
+  $("filterChips").querySelectorAll(".chip").forEach(c => c.onclick = () => { S.filter = c.dataset.f; drawItems(); });
+  const list = S.items.filter(x => !S.filter || batchLabel(x) === S.filter);
+  $("count").textContent = list.length;
+  if (!list.length) { $("items").innerHTML = `<div class="muted empty">এখনো কোনো নোট নেই।</div>`; return; }
+  $("items").innerHTML = list.map(x => {
+    const links = materialLinks(x);
+    const path = [x.subject, x.chapter, x.topic].filter(Boolean).map(esc).join(" › ");
+    return `<article class="item">
+      <h3>${esc(x.title || x.chapter || "নোট")}</h3>
+      <p class="path">${path || "বিষয় উল্লেখ নেই"}</p>
+      <div class="tags">
+        <span class="tag">${esc(batchLabel(x) || "ব্যাচ নেই")}</span>
+        ${x.type === "suggestion" ? `<span class="tag sug">সাজেশন ${esc(x.year || "")}</span>` : ""}
+        <span class="tag ${x.published === false ? "off" : ""}">${x.published === false ? "লুকানো" : "প্রকাশিত"}</span>
+      </div>
+      <div class="acts">
+        <button class="btn sm" data-pub="${esc(x.id)}">${x.published === false ? "প্রকাশ করো" : "লুকাও"}</button>
+        ${links.open ? `<a class="btn sm" href="${esc(links.open)}" target="_blank" rel="noopener noreferrer">Drive-এ খোলো</a>` : ""}
+        <button class="btn sm danger" data-del="${esc(x.id)}">মুছো</button>
+      </div>
+    </article>`;
+  }).join("");
+  $("items").querySelectorAll("[data-pub]").forEach(b => b.onclick = async () => {
+    const x = S.items.find(i => i.id === b.dataset.pub); if (!x) return;
+    try { await updateDoc(doc(db, "studyMaterials", x.id), { published: x.published === false, updatedAt: serverTimestamp() }); await loadItems(); }
+    catch (e) { showToast(friendlyError(e), "error"); }
+  });
+  $("items").querySelectorAll("[data-del]").forEach(b => b.onclick = async () => {
+    if (!await AppPopup.confirm("এই নোট মুছে ফেলবে? (Drive-এর ফাইল মুছবে না)")) return;
+    try { await deleteDoc(doc(db, "studyMaterials", b.dataset.del)); await loadItems(); showToast("মুছে ফেলা হয়েছে", "success"); }
+    catch (e) { showToast(friendlyError(e), "error"); }
+  });
+}
 </script>
 </body>
 </html>
