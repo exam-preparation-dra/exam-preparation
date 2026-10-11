@@ -4,7 +4,7 @@
 import { db } from "../firebase/firebase-config.js";
 import { collection, doc, getDoc, getDocs, query, where, onSnapshot, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { getActiveStudents, buildReferralCountMap } from "./student-utils.js";
-import { computeStudentXP, compareRank, setXPExams } from "./xp-utils.js";
+import { computeStudentXP, compareRank, setXPExams, setAttendanceAwards } from "./xp-utils.js";
 import { sameBatch, normalizeBatch } from "./batch-utils.js";
 
 // ---------- SMART AUTO APPROVAL LOGIC (Error Proof) ----------
@@ -86,6 +86,10 @@ export async function ensureXPExams(force = false) {
     _xpExamsPromise = getDocs(query(collection(db, "exams"), where("status", "in", ["upcoming", "published", "active", "completed"])))
       .then(snap => { setXPExams(snap.docs.map(d => ({ id: d.id, ...d.data() }))); _xpExamsAt = Date.now(); })
       .catch(e => console.warn("ensureXPExams failed", e))
+      // monthly attendance award (1000 XP) — small collection, one doc per month
+      .then(() => getDocs(collection(db, "attendanceAwards"))
+        .then(s => setAttendanceAwards(s.docs.map(d => d.data())))
+        .catch(e => console.warn("attendanceAwards load failed", e)))
       .finally(() => { _xpExamsPromise = null; });
   }
   await _xpExamsPromise;
@@ -186,7 +190,7 @@ function buildStatsByStudent(results, studentsList, challengeBonusMap = {}, impr
       improvementPracticeResults: improvementResultsMap[sid] || [],
       battleXP: battleXPMap[sid] || 0
     });
-    if (!hadEntry.has(sid) && !stats[sid].missedXP) delete stats[sid];
+    if (!hadEntry.has(sid) && !stats[sid].missedXP && !stats[sid].attendanceXP) delete stats[sid];
   }
   return stats;
 }

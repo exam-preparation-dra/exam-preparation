@@ -64,6 +64,22 @@ let _xpExams = new Map();
 export function setXPExams(list) { _xpExams = new Map((list || []).map(e => [e.id, e])); }
 export function getXPExams() { return [..._xpExams.values()]; }
 
+/* Monthly attendance award (attendance-utils.js): the admin side writes one
+   `attendanceAwards/{YYYY-MM}` doc per finished month listing the winners.
+   results-utils.js (ensureXPExams) loads them here, so every page shows the
+   same number. studentId -> total attendance XP. */
+export const ATTENDANCE_MONTHLY_XP = 1000;
+let _attXP = new Map();
+export function setAttendanceAwards(awards) {
+  const m = new Map();
+  (awards || []).forEach(a => {
+    const xp = Number(a?.xp) || ATTENDANCE_MONTHLY_XP;
+    (a?.winners || []).forEach(w => { if (w?.studentId) m.set(w.studentId, (m.get(w.studentId) || 0) + xp); });
+  });
+  _attXP = m;
+}
+export function getAttendanceXP(studentId) { return _attXP.get(studentId) || 0; }
+
 // { startMs, endMs } of the 7-day window in which an exam can be taken.
 export function getExamWindow(exam) {
   const examMs = tms(exam?.examDate), pubMs = tms(exam?.publishDate);
@@ -169,6 +185,7 @@ export const XP_CATEGORIES = [
   { key: "challenge",     label: "চ্যালেঞ্জ বোনাস",         hint: "বন্ধুর সাথে challenge জিতলে/হারলে বোনাস XP" },
   { key: "improvementPractice", label: "উন্নতি প্র্যাকটিস", hint: "দুর্বল জায়গা ঠিক করার প্র্যাকটিসে XP" },
   { key: "battle", label: "ব্যাটল মোড", hint: "ব্যাটল ম্যাচ জিতলে/MVP হলে XP" },
+  { key: "attendance", label: "মাসের সেরা অ্যাটেনডেন্স", hint: "মাসে সবচেয়ে বেশি উপস্থিতি হলে 1000 XP" },
   { key: "missed", label: "পরীক্ষা মিস পেনাল্টি", hint: "৭ দিনে পরীক্ষা না দিলে -500 XP" }
 ];
 
@@ -367,7 +384,7 @@ export function computeImprovementPracticeTotalXP(practiceResults = []) {
 
 // ---------- whole student ----------
 // results: this student's counted (approved / auto-approved) results, any order.
-export function computeStudentXP(results, { referralCount = 0, challengeBonusXP = 0, improvementPracticeResults = [], battleXP = 0, spentXP = 0, student = null } = {}) {
+export function computeStudentXP(results, { referralCount = 0, challengeBonusXP = 0, improvementPracticeResults = [], battleXP = 0, spentXP = 0, student = null, attendanceXP: attendanceXPOverride = null } = {}) {
   const sorted = [...(results || [])].sort((a, b) => toMillis(a.submittedAt) - toMillis(b.submittedAt));
 
   const weeksAttended = new Set(sorted.map(r => weekIndex(toMillis(r.submittedAt))));
@@ -423,6 +440,9 @@ export function computeStudentXP(results, { referralCount = 0, challengeBonusXP 
   const battleXPRounded = Math.max(0, Math.round(num(battleXP)));
   breakdown.battle = battleXPRounded;
 
+  const attendanceXP = Math.max(0, Math.round(attendanceXPOverride == null ? (student?.studentId ? getAttendanceXP(student.studentId) : 0) : num(attendanceXPOverride)));
+  breakdown.attendance = attendanceXP;
+
   Object.keys(breakdown).forEach(k => { breakdown[k] = Math.round(breakdown[k]); });
 
   // Missed-exam penalty: -missPenalty once per exam whose 7-day window is over
@@ -432,7 +452,7 @@ export function computeStudentXP(results, { referralCount = 0, challengeBonusXP 
   breakdown.missed = missedXP;
 
   const examXP = exams.reduce((a, e) => a + e.xp, 0);
-  const xpBeforePenalty = examXP + referralXP + challengeXP + improvementPracticeXP + battleXPRounded;
+  const xpBeforePenalty = examXP + referralXP + challengeXP + improvementPracticeXP + battleXPRounded + attendanceXP;
   const totalXP = Math.max(0, xpBeforePenalty - missedXP);
   const missedApplied = Math.min(missedXP, Math.max(0, xpBeforePenalty));   // total XP never goes below 0
   const avgPercentage = sorted.length ? Math.round((pctSum / sorted.length) * 10) / 10 : 0;
@@ -444,7 +464,7 @@ export function computeStudentXP(results, { referralCount = 0, challengeBonusXP 
   const spendableXP = Math.max(0, totalXP - spentXPRounded);
 
   return {
-    totalXP, examXP, missedXP, missedApplied, missedExams, referralXP, referralCount: refCount, challengeXP, improvementPracticeXP, battleXP: battleXPRounded,
+    totalXP, examXP, missedXP, missedApplied, missedExams, referralXP, referralCount: refCount, challengeXP, improvementPracticeXP, battleXP: battleXPRounded, attendanceXP,
     spentXP: spentXPRounded, spendableXP,
     breakdown, exams: exams.reverse(),   // newest first
     examsTaken: sorted.length, perfectExams, avgPercentage,

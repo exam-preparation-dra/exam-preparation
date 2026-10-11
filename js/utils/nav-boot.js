@@ -30,7 +30,7 @@
     { key: "profile",     href: "./profile.html",     label: "প্রোফাইল",     icon: svg('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>') }
   ];
   // Pages that highlight another tab (same as the key they pass to renderStudentHeader).
-  var ALIAS = { chat: "leaderboard", comparison: "dashboard", "study-materials": "study" };
+  var ALIAS = { attendance: "dashboard", chat: "leaderboard", comparison: "dashboard", "study-materials": "study" };
   var W_ON = 2.6; // flex weight of the selected tab (others are 1) — keep in sync with style.css
 
   var file = (location.pathname.split("/").pop() || "").replace(/\.html$/, "");
