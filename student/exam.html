@@ -32,14 +32,15 @@ import { getExamById, getExamSnapshot, isExamAvailableNow } from "../js/utils/re
 import { getSubjects, getChapters, buildNameMap } from "../js/utils/syllabus-utils.js";
 import {
   peekInProgressAttempt, getOrStartAttempt, saveLocalAttempt,
-  syncToFirestoreDebounced, extendAttemptTime, useHintOnAttempt, submitAttempt, getExistingResult
+  syncToFirestoreDebounced, extendAttemptTime, useHintOnAttempt, useFiftyOnAttempt, setAttemptXPBoost, submitAttempt, getExistingResult
 } from "../js/utils/attempt-utils.js";
 import { formatHms } from "../js/utils/grading-utils.js";
 import {
   initExamPage, bindThemeButtons, setEligibleData, introHtml, runShellHtml, questionHtml, hintZoneHtml,
   setQuestionCounter, setProgress, fillPalette, submitMessage
 } from "../js/utils/exam-ui.js";
-import { STORE_ITEMS, MAX_CARDS_PER_ATTEMPT, MAX_HINT_CARDS_PER_ATTEMPT, getStoreInventory, useStoreItem } from "../js/utils/store-utils.js?v=roomcard1";
+import { STORE_ITEMS, MAX_CARDS_PER_ATTEMPT, MAX_HINT_CARDS_PER_ATTEMPT, MAX_FIFTY_CARDS_PER_ATTEMPT, getStoreInventory, useStoreItem } from "../js/utils/store-utils.js?v=cards2";
+import { DOUBLE_XP } from "../js/utils/xp-utils.js";
 import { DIALOGUE_BANK, MINUTE_WARN_LINES } from "../js/utils/voice-dialogue.js";
 
 initTheme();
@@ -64,6 +65,10 @@ let cardAvailable = 0;
 let cardQty = 1;
 const HINT_CARD = STORE_ITEMS.find(i => i.id === "hint_card") || null;
 let hintCardAvailable = 0;
+const FIFTY_CARD = STORE_ITEMS.find(i => i.id === "fifty_fifty_card") || null;
+const DOUBLE_CARD = STORE_ITEMS.find(i => i.id === "double_xp_card") || null;
+let fiftyCardAvailable = 0;
+const DX_CHIP = `<div class="ex-dx-chip">⚡ ডাবল XP চালু আছে</div>`;
 
 if (!student) {
   window.location.href = "../index.html";
@@ -113,6 +118,7 @@ async function boot() {
       attemptState.questionTimes = attemptState.questionTimes || {};
       attemptState.markedForReview = attemptState.markedForReview || {};
       attemptState.hintsUsed = attemptState.hintsUsed || {};
+      attemptState.fiftyUsed = attemptState.fiftyUsed || {};
       renderExamShell();
       startTimer();
       return;
@@ -181,16 +187,49 @@ async function renderIntro() {
   });
   bindThemeButtons(shell);
 
+  setupDoubleXpOption();
   document.getElementById("startBtn").addEventListener("click", async () => {
     const btn = document.getElementById("startBtn");
     btn.disabled = true; btn.textContent = "শুরু করা হচ্ছে...";
+    const dxOn = !!document.getElementById("dxToggle")?.checked;
     attemptState = await getOrStartAttempt(examId, student.studentId, exam.durationMinutes);
+    if (dxOn && DOUBLE_CARD) {
+      // the card is only spent now, at the moment the exam really starts
+      try {
+        await useStoreItem(student.studentId, DOUBLE_CARD.id, 1, { examId, examTitle: exam.name });
+        attemptState.xpBoost = DOUBLE_XP.multiplier;
+        saveLocalAttempt(examId, student.studentId, attemptState);
+        await setAttemptXPBoost(examId, student.studentId, DOUBLE_XP.multiplier);
+        showToast("ডাবল XP কার্ড চালু হয়েছে ⚡", "success");
+      } catch {
+        showToast("ডাবল XP কার্ড চালু করা যায়নি — সাধারণভাবে পরীক্ষা চলছে।", "error");
+      }
+    }
     attemptState.questionTimes = attemptState.questionTimes || {};
     attemptState.markedForReview = attemptState.markedForReview || {};
     attemptState.hintsUsed = attemptState.hintsUsed || {};
+      attemptState.fiftyUsed = attemptState.fiftyUsed || {};
     renderExamShell();
     startTimer();
   });
+}
+
+// "ডাবল XP কার্ড চালু করো" switch on the pre-exam screen (only shown if the student owns one).
+async function setupDoubleXpOption() {
+  if (!DOUBLE_CARD) return;
+  const startBtn = document.getElementById("startBtn");
+  if (!startBtn) return;
+  let have = 0;
+  try { have = (await getStoreInventory(student.studentId))[DOUBLE_CARD.id]?.available || 0; } catch {}
+  const btn = document.getElementById("startBtn");
+  if (have <= 0 || !btn || document.getElementById("dxBox")) return;
+  btn.insertAdjacentHTML("beforebegin", `
+    <label class="ex-dx" id="dxBox">
+      <span class="ex-dx-ico"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></span>
+      <span class="ex-dx-copy"><b>ডাবল XP কার্ড চালু করো</b><small>তোমার কাছে আছে ${have}টি · এই পরীক্ষার XP দ্বিগুণ হবে (বাড়তি XP সর্বোচ্চ +${DOUBLE_XP.maxBonus})। পরীক্ষা শুরুর পর আর চালু করা যাবে না।</small></span>
+      <input type="checkbox" id="dxToggle"><span class="ex-dx-switch" aria-hidden="true"></span>
+    </label>`);
+  document.getElementById("dxToggle").addEventListener("change", e => document.getElementById("dxBox").classList.toggle("on", e.target.checked));
 }
 
 function renderExamShell() {
@@ -214,6 +253,9 @@ function renderExamShell() {
   document.getElementById("cancelHintBtn").addEventListener("click", closeHintModal);
   document.getElementById("confirmHintBtn").addEventListener("click", confirmUseHint);
   document.getElementById("hintModal").addEventListener("click", e => { if (e.target === e.currentTarget) closeHintModal(); });
+  document.getElementById("cancelFiftyBtn").addEventListener("click", closeFiftyModal);
+  document.getElementById("confirmFiftyBtn").addEventListener("click", confirmUseFifty);
+  document.getElementById("fiftyModal").addEventListener("click", e => { if (e.target === e.currentTarget) closeFiftyModal(); });
   // tap on the dimmed backdrop closes a sheet
   document.getElementById("paletteOverlay").addEventListener("click", e => { if (e.target === e.currentTarget) closePalette(); });
   document.getElementById("submitModal").addEventListener("click", e => { if (e.target === e.currentTarget) closeSubmitModal(); });
@@ -235,7 +277,8 @@ async function refreshCardBadge() {
     const inv = await getStoreInventory(student.studentId);
     cardAvailable = inv[TIME_CARD.id]?.available || 0;
     hintCardAvailable = HINT_CARD ? (inv[HINT_CARD.id]?.available || 0) : 0;
-  } catch { cardAvailable = 0; hintCardAvailable = 0; }
+    fiftyCardAvailable = FIFTY_CARD ? (inv[FIFTY_CARD.id]?.available || 0) : 0;
+  } catch { cardAvailable = 0; hintCardAvailable = 0; fiftyCardAvailable = 0; }
   const badge = document.getElementById("cardBadge");
   if (badge) {
     badge.textContent = cardAvailable;
@@ -324,7 +367,7 @@ async function confirmUseCard() {
 }
 
 function buildHintData(q) {
-  if (!HINT_CARD || !q) return { enabled: false };
+  if (!HINT_CARD || !q) return { enabled: false, fifty: buildFiftyData(q) };
   const used = !!attemptState.hintsUsed[q.questionId];
   const leftThisAttempt = Math.max(0, MAX_HINT_CARDS_PER_ATTEMPT - (attemptState.hintCardsUsedCount || 0));
   let subtitle;
@@ -338,8 +381,71 @@ function buildHintData(q) {
     subtitle,
     correctLetter: q.correctAnswer,
     correctText: q.options_bn?.[q.correctAnswer] ?? "",
-    explanation: q.explanation_bn || ""
+    explanation: q.explanation_bn || "",
+    fifty: buildFiftyData(q)
   };
+}
+
+/* ---------- 50-50 card: removes 2 wrong options of the current question ---------- */
+function fiftyCandidates(q) {
+  // wrong options that exist and are not what the student already picked
+  return ["A", "B", "C", "D"].filter(l =>
+    l !== q.correctAnswer && String(q.options_bn?.[l] ?? "") !== "" && l !== attemptState.answers[q.questionId]);
+}
+
+function buildFiftyData(q) {
+  if (!FIFTY_CARD || !q || !q.correctAnswer) return { enabled: false };
+  if (attemptState.fiftyUsed?.[q.questionId]?.length) return { enabled: true, used: true };
+  if (attemptState.hintsUsed?.[q.questionId]) return { enabled: false };   // hint already showed the answer
+  const left = Math.max(0, MAX_FIFTY_CARDS_PER_ATTEMPT - (attemptState.fiftyCardsUsedCount || 0));
+  let subtitle;
+  if (fiftyCardAvailable <= 0) subtitle = "তোমার কাছে কোনো ৫০-৫০ কার্ড নেই — স্টোর থেকে কিনে নাও।";
+  else if (left <= 0) subtitle = `এই পরীক্ষায় সর্বোচ্চ ${MAX_FIFTY_CARDS_PER_ATTEMPT}টি ব্যবহার করা হয়ে গেছে`;
+  else subtitle = `তোমার কাছে আছে ${fiftyCardAvailable}টি · এই পরীক্ষায় বাকি আছে ${left}টি`;
+  return { enabled: true, used: false, canUse: fiftyCardAvailable > 0 && left > 0 && fiftyCandidates(q).length >= 2, subtitle };
+}
+
+function openFiftyModal() {
+  const q = snapshot.questions[attemptState.currentIndex];
+  if (!FIFTY_CARD || !q || attemptState.fiftyUsed[q.questionId]) return;
+  if (fiftyCardAvailable <= 0) { showToast("তোমার কাছে কোনো ৫০-৫০ কার্ড নেই। স্টোর থেকে কিনে রাখো।", "error"); return; }
+  if ((attemptState.fiftyCardsUsedCount || 0) >= MAX_FIFTY_CARDS_PER_ATTEMPT) {
+    showToast(`এই পরীক্ষায় সর্বোচ্চ ${MAX_FIFTY_CARDS_PER_ATTEMPT}টি ৫০-৫০ কার্ড ব্যবহার করা যাবে।`, "error"); return;
+  }
+  if (fiftyCandidates(q).length < 2) { showToast("এই প্রশ্নে ৫০-৫০ কার্ড কাজ করবে না।", "error"); return; }
+  document.getElementById("fiftyModalText").textContent = "এই প্রশ্নের ২টি ভুল অপশন বাদ যাবে, এবং ১টি কার্ড খরচ হবে।";
+  document.getElementById("fiftyModal").classList.remove("hidden");
+}
+function closeFiftyModal() { document.getElementById("fiftyModal").classList.add("hidden"); }
+
+let usingFifty = false;
+async function confirmUseFifty() {
+  if (usingFifty) return;
+  const q = snapshot.questions[attemptState.currentIndex];
+  const pool = q ? fiftyCandidates(q) : [];
+  if (!q || pool.length < 2 || attemptState.fiftyUsed[q.questionId]) { closeFiftyModal(); return; }
+  usingFifty = true;
+  const btn = document.getElementById("confirmFiftyBtn");
+  btn.disabled = true;
+  try {
+    await useStoreItem(student.studentId, FIFTY_CARD.id, 1, { examId, examTitle: exam.name });
+    // pick two wrong options at random (kept for the rest of the attempt, so refresh/resume shows the same ones)
+    const picks = pool.sort(() => Math.random() - 0.5).slice(0, 2).sort();
+    attemptState.fiftyUsed[q.questionId] = picks;
+    attemptState.fiftyCardsUsedCount = (attemptState.fiftyCardsUsedCount || 0) + 1;
+    fiftyCardAvailable = Math.max(0, fiftyCardAvailable - 1);
+    saveLocalAttempt(examId, student.studentId, attemptState);
+    await useFiftyOnAttempt(examId, student.studentId, attemptState.fiftyUsed, attemptState.fiftyCardsUsedCount);
+    closeFiftyModal();
+    renderQuestion();
+    showToast("২টি ভুল অপশন বাদ গেছে!", "success");
+  } catch (err) {
+    const map = { NOTHING_TO_USE: "তোমার কাছে ৫০-৫০ কার্ড নেই।" };
+    showToast(map[err.message] || "কার্ড ব্যবহার করা যায়নি, আবার চেষ্টা করো।", "error");
+  } finally {
+    usingFifty = false;
+    btn.disabled = false;
+  }
 }
 
 function renderHintZone() {
@@ -354,6 +460,8 @@ function renderHintZone() {
 function bindHintBtn() {
   const btn = document.getElementById("useHintBtn");
   if (btn) btn.addEventListener("click", openHintModal);
+  const fbtn = document.getElementById("useFiftyBtn");
+  if (fbtn) fbtn.addEventListener("click", openFiftyModal);
 }
 
 function openHintModal() {
@@ -429,13 +537,14 @@ function renderQuestion() {
   void body.offsetWidth;
   body.classList.add("q-enter");
 
-  body.innerHTML = questionHtml({
+  body.innerHTML = (attemptState.xpBoost > 1 ? DX_CHIP : "") + questionHtml({
     questionBn: q.question_bn ?? q.question_en ?? "",
     questionEn: q.question_en,
     imageUrl: q.imageUrl,
     options: ["A", "B", "C", "D"].map(letter => ({ letter, text: q.options_bn?.[letter] ?? "" })),
     selected, isMarked,
-    hint: buildHintData(q)
+    hint: buildHintData(q),
+    eliminated: attemptState.fiftyUsed?.[q.questionId] || []
   });
 
   body.querySelectorAll(".ex-option").forEach(btn => {
@@ -676,7 +785,8 @@ async function doSubmit(isAutoSubmit) {
       examId, studentId: student.studentId, examName: exam.name,
       snapshotQuestions: snapshot.questions, answers: attemptState.answers,
       questionTimes: attemptState.questionTimes, markedForReview: attemptState.markedForReview,
-      startedAtMillis: attemptState.startedAtMillis
+      startedAtMillis: attemptState.startedAtMillis,
+      xpBoost: attemptState.xpBoost || 1
     });
     examInProgress = false; window.removeEventListener("beforeunload", leaveGuard);
     window.location.href = `../student/result.html?resultId=${result.resultId}&justSubmitted=1`;

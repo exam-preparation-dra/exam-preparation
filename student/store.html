@@ -60,6 +60,8 @@
   }
   .store-ticket[data-kind="hint"] { --wc-a: #a77a2c; --wc-b: #4d3611; }
   .store-ticket[data-kind="battle"] { --wc-a: #6d3f78; --wc-b: #2b1834; }
+  .store-ticket[data-kind="fifty"] { --wc-a: #1f6f66; --wc-b: #0d2e32; }
+  .store-ticket[data-kind="double"] { --wc-a: #3f7d3a; --wc-b: #15301a; }
   .store-face {
     position: relative; overflow: hidden; isolation: isolate; color: #f6f3ea; padding: 16px 18px 18px;
     background: linear-gradient(145deg, var(--wc-a), var(--wc-b));
@@ -253,11 +255,11 @@ import { isExamForStudent } from "../js/utils/batch-utils.js";
 import { getApprovedResults, getUpcomingExams, getStudentResultStatusMap, getExamSnapshotsMap } from "../js/utils/results-utils.js";
 import { getSubjects, buildNameMap } from "../js/utils/syllabus-utils.js";
 import { computeSubjectStats, buildQuestionRecords, computeTimeManagementStats } from "../js/utils/analytics-utils.js";
-import { computeStudentXP } from "../js/utils/xp-utils.js";
+import { computeStudentXP, DOUBLE_XP } from "../js/utils/xp-utils.js";
 import { resolveCompletedChallenges, getChallengeBonusXP } from "../js/utils/challenge-utils.js";
 import { getCompletedImprovementAttempts } from "../js/utils/improvement-xp-integration.js";
 import { getStudentBattleXP } from "../js/utils/battle-utils.js?v=roomcard1";
-import { STORE_ITEMS, MAX_CARDS_PER_ATTEMPT, MAX_HINT_CARDS_PER_ATTEMPT, getSpentXP, getStoreInventory, getAvailableBattleRoomCardCount, purchaseCart, getPurchaseHistory, getUsageHistory } from "../js/utils/store-utils.js?v=roomcard1";
+import { STORE_ITEMS, MAX_CARDS_PER_ATTEMPT, MAX_HINT_CARDS_PER_ATTEMPT, MAX_FIFTY_CARDS_PER_ATTEMPT, getSpentXP, getStoreInventory, getAvailableBattleRoomCardCount, purchaseCart, getPurchaseHistory, getUsageHistory } from "../js/utils/store-utils.js?v=cards2";
 import { initTheme, showToast, formatDate, formatTime } from "../js/utils/ui-utils.js";
 
 initTheme();
@@ -292,7 +294,9 @@ function renderBalance(xp) {
 const ICONS = {
   time: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   hint: '<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.45.9 1.15.9 1.9V16h5.4v-.3c0-.75.3-1.45.9-1.9A6 6 0 0 0 12 3z"/>',
-  battle: '<path d="M13 2 4 11l3 3 9-9V2z"/><path d="m11 13 6 6"/><path d="m20 16-4 4"/>'
+  battle: '<path d="M13 2 4 11l3 3 9-9V2z"/><path d="m11 13 6 6"/><path d="m20 16-4 4"/>',
+  fifty: '<circle cx="12" cy="12" r="9"/><path d="M12 3v18M12 3a9 9 0 0 1 0 18z"/>',
+  double: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>'
 };
 const icon = (k) => `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[k]}</svg>`;
 const STAR = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6 6.6.8-4.8 4.5 1.2 6.5-5.9-3.2-5.9 3.2 1.2-6.5-4.8-4.5 6.6-.8z"/></svg>`;
@@ -431,6 +435,24 @@ function cardInfo(item) {
       ["মেয়াদ", `কেনার পর ${fmt(item.validityDays)} দিন (২ মাস) পর্যন্ত ব্যবহার করা যাবে — তারপর কার্ড মেয়াদোত্তীর্ণ হয়ে যাবে।`]
     ]
   };
+  if (item.fiftyGranted) return {
+    kind: "fifty", big: "২", unit: "টি ভুল অপশন বাদ",
+    what: "MCQ-তে আটকে গেলে ২টি ভুল অপশন বাদ দিয়ে বাকি ২টির মধ্যে থেকে বেছে নিতে পারবে।",
+    facts: [
+      ["কোথায় ব্যবহার হবে", "পরীক্ষা চলার সময়, প্রশ্নের নিচে “৫০-৫০ কার্ড ব্যবহার করো” বাটনে ট্যাপ করে।"],
+      ["কী পাবে", "১টি কার্ডে ১টি প্রশ্নের ২টি ভুল অপশন বাদ যাবে। উত্তর বলে দেওয়া হবে না — সঠিক উত্তর বাকি ২টির একটি।"],
+      ["সীমা", `এক পরীক্ষায় সর্বোচ্চ ${fmt(MAX_FIFTY_CARDS_PER_ATTEMPT)}টি ৫০-৫০ কার্ড ব্যবহার করা যাবে, প্রতি প্রশ্নে ১টি। আগে থেকে কিনে রাখতে হবে।`]
+    ]
+  };
+  if (item.xpMultiplier) return {
+    kind: "double", big: `${fmt(item.xpMultiplier)}×`, unit: "XP",
+    what: "পরীক্ষা শুরুর আগে চালু করলে সেই পরীক্ষায় অর্জিত XP দ্বিগুণ হবে।",
+    facts: [
+      ["কোথায় ব্যবহার হবে", "পরীক্ষার “শুরুর আগে” পেজে, “ডাবল XP কার্ড চালু করো” সুইচ অন করে পরীক্ষা শুরু করার সময়।"],
+      ["কী পাবে", `ওই পরীক্ষার নিজস্ব XP দ্বিগুণ হবে। বাড়তি XP সর্বোচ্চ +${fmt(DOUBLE_XP.maxBonus)}। দ্রুত পরীক্ষা বোনাস দ্বিগুণ হয় না।`],
+      ["সীমা", "এক পরীক্ষায় ১টি কার্ড। পরীক্ষা শুরু হয়ে গেলে আর চালু করা যাবে না।"]
+    ]
+  };
   if (item.hintsGranted) return {
     kind: "hint", big: fmt(item.hintsGranted), unit: "টি প্রশ্নের উত্তর",
     what: "পরীক্ষায় আটকে গেলে যেকোনো একটি প্রশ্নের সঠিক উত্তর ও ব্যাখ্যা দেখে নিতে পারবে।",
@@ -536,7 +558,10 @@ function renderHistory(rows) {
   }
   el.innerHTML = rows.map(r => {
     if (r.kind === "use") {
-      const usedLabel = r.hintsGranted ? `${fmt(r.hintsGranted)}টি উত্তর দেখা হয়েছে` : `+${fmtDuration(r.secondsGranted)}`;
+      const usedLabel = r.hintsGranted ? `${fmt(r.hintsGranted)}টি উত্তর দেখা হয়েছে`
+        : r.fiftyGranted ? `${fmt(r.fiftyGranted)}টি প্রশ্নে ২টি অপশন বাদ`
+        : r.xpMultiplier ? `XP ${fmt(r.xpMultiplier)}× চালু`
+        : `+${fmtDuration(r.secondsGranted)}`;
       return `
       <div class="card store-history-row">
         <div>

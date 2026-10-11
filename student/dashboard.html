@@ -79,6 +79,8 @@
   .wc-time { --wc-a: #2d5a7b; --wc-b: #15283b; }
   .wc-hint { --wc-a: #a77a2c; --wc-b: #4d3611; }
   .wc-battle { --wc-a: #6d3f78; --wc-b: #2b1834; }
+  .wc-fifty { --wc-a: #1f6f66; --wc-b: #0d2e32; }
+  .wc-double { --wc-a: #3f7d3a; --wc-b: #15301a; }
   .wc-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .wc-name { display: flex; align-items: center; gap: 9px; font-size: .86rem; font-weight: 800; letter-spacing: .01em; }
   .wc-ico { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: rgba(255,255,255,.16); }
@@ -94,6 +96,23 @@
     .d-wallet-rail { display: grid; grid-template-columns: repeat(3, 1fr); overflow: visible; margin: 0; padding: 4px 0 6px; }
     .wc { flex: none; max-width: none; }
   }
+
+
+  /* ---------- wallet: compact override (3 small cards in one row, no swipe) ---------- */
+  .d-wallet-rail { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; overflow: visible; margin: 0; padding: 2px 0 4px; scroll-snap-type: none; }
+  .wc { flex: none; max-width: none; min-height: 0; padding: 12px 11px 11px; gap: 10px; justify-content: flex-start; border-radius: 16px; box-shadow: 0 1px 0 rgba(255,255,255,.14) inset, 0 6px 16px rgba(15,20,30,.18); }
+  .wc::before { width: 110px; height: 110px; right: -34px; top: -40px; }
+  .wc::after { display: none; }
+  .wc-top { justify-content: flex-start; }
+  .wc-chip, .wc-foot { display: none; }
+  .wc-name { gap: 7px; font-size: .72rem; line-height: 1.25; }
+  .wc-ico { flex: none; width: 24px; height: 24px; border-radius: 8px; }
+  .wc-ico svg { width: 14px; height: 14px; }
+  .wc-bal { margin-top: 0; gap: 4px; align-items: center; }
+  .wc-bal b { font-size: 1.65rem; }
+  .wc-bal small { font-size: .68rem; }
+  .wc-add { margin-left: auto; flex: none; min-width: 22px; height: 22px; padding: 0 7px; border-radius: 99px; display: inline-grid; place-items: center; font-size: .68rem; font-weight: 800; color: #1b1b1b; background: rgba(255,255,255,.88); }
+  @media (min-width: 640px) { .wc { padding: 14px 14px 13px; } .wc-name { font-size: .8rem; } .wc-bal b { font-size: 1.9rem; } }
 
   /* ---------- quick links ---------- */
   .d-links { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
@@ -341,7 +360,7 @@ import { getStudentBattleXP } from "../js/utils/battle-utils.js?v=roomcard1";
 import { openInviteSheet, makeInviteQr, inviteLink, copyInvite, whatsappInvite, shareInvite } from "../js/utils/invite-sheet.js";
 import { mountInstallCard } from "../js/utils/pwa-install.js";
 import { mountExamClaim } from "../js/utils/exam-claim-ui.js";
-import { STORE_ITEMS, getStoreInventory, getSpentXP, getAvailableBattleRoomCardCount } from "../js/utils/store-utils.js?v=roomcard1";
+import { STORE_ITEMS, getStoreInventory, getSpentXP, getAvailableBattleRoomCardCount } from "../js/utils/store-utils.js?v=cards2";
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -402,6 +421,8 @@ const ic = {
   clockc: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   bulb: '<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.45.9 1.15.9 1.9V16h5.4v-.3c0-.75.3-1.45.9-1.9A6 6 0 0 0 12 3z"/>',
   swords: '<path d="M13 2 4 11l3 3 9-9V2z"/><path d="m11 13 6 6"/><path d="m20 16-4 4"/>',
+  half: '<circle cx="12" cy="12" r="9"/><path d="M12 3v18M12 3a9 9 0 0 1 0 18z"/>',
+  bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
   qr: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3M21 14v.01M14 21h.01M17.5 21H21v-3.5"/>',
   expand: '<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>',
   chev: '<path d="m9 6 6 6-6 6"/>',
@@ -460,9 +481,11 @@ async function loadWallet() {
     const tiles = [
       { id: "time_extend_card", icon: "clockc", label: "টাইম কার্ড", count: inv.time_extend_card?.available || 0, note: "প্রতি কার্ডে +১ মিনিট" },
       { id: "hint_card", icon: "bulb", label: "হিন্ট কার্ড", count: inv.hint_card?.available || 0, note: "১ কার্ড = ১ প্রশ্নের উত্তর" },
-      { id: "battle_room_card", icon: "swords", label: "ব্যাটল কার্ড", count: battleCount, note: "১ কার্ড = ১টি ব্যাটল" }
+      { id: "battle_room_card", icon: "swords", label: "ব্যাটল কার্ড", count: battleCount, note: "১ কার্ড = ১টি ব্যাটল" },
+      { id: "fifty_fifty_card", icon: "half", label: "৫০-৫০ কার্ড", count: inv.fifty_fifty_card?.available || 0, note: "২টি ভুল অপশন বাদ" },
+      { id: "double_xp_card", icon: "bolt", label: "ডাবল XP কার্ড", count: inv.double_xp_card?.available || 0, note: "পরের পরীক্ষায় XP দ্বিগুণ" }
     ];
-    const kind = { time_extend_card: "time", hint_card: "hint", battle_room_card: "battle" };
+    const kind = { time_extend_card: "time", hint_card: "hint", battle_room_card: "battle", fifty_fifty_card: "fifty", double_xp_card: "double" };
     el.innerHTML = `
       <section aria-label="আমার কার্ড">
         <div class="d-wallet-head">
@@ -471,12 +494,12 @@ async function loadWallet() {
         </div>
         <div class="d-wallet-rail">
           ${tiles.map(t => `
-            <a href="../student/store.html?item=${t.id}" class="wc wc-${kind[t.id]} ${t.count === 0 ? "empty" : ""}">
+            <a href="../student/store.html?item=${t.id}" class="wc wc-${kind[t.id]} ${t.count === 0 ? "empty" : ""}" title="${t.note}">
               <span class="wc-top">
                 <span class="wc-name"><span class="wc-ico">${svg(t.icon, 17)}</span>${t.label}</span>
                 <span class="wc-chip" aria-hidden="true"></span>
               </span>
-              <span class="wc-bal"><b>${fmt(t.count)}</b><small>টি বাকি</small></span>
+              <span class="wc-bal"><b>${fmt(t.count)}</b><small>টি</small><span class="wc-add" aria-hidden="true">${t.count === 0 ? "কিনুন" : "+"}</span></span>
               <span class="wc-foot"><span>${t.note}</span><span class="wc-plus">${t.count === 0 ? "কিনে নাও" : "+ আরও"}</span></span>
             </a>`).join("")}
         </div>
