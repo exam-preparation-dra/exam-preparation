@@ -72,6 +72,9 @@ export async function peekInProgressAttempt(examId, studentId) {
         cardsUsedCount: data.cardsUsedCount || 0,
         hintsUsed: data.hintsUsed || {},
         hintCardsUsedCount: data.hintCardsUsedCount || 0,
+        fiftyUsed: data.fiftyUsed || {},
+        fiftyCardsUsedCount: data.fiftyCardsUsedCount || 0,
+        xpBoost: data.xpBoost || 1,
         status: "in-progress"
       };
       saveLocalAttempt(examId, studentId, restored);
@@ -92,7 +95,7 @@ export async function getOrStartAttempt(examId, studentId, durationMinutes) {
 
   const startedAtMillis = Date.now();
   const endAtMillis = startedAtMillis + durationMinutes * 60 * 1000;
-  const fresh = { examId, studentId, answers: {}, currentIndex: 0, questionTimes: {}, markedForReview: {}, startedAtMillis, endAtMillis, cardsUsedCount: 0, hintsUsed: {}, hintCardsUsedCount: 0, status: "in-progress" };
+  const fresh = { examId, studentId, answers: {}, currentIndex: 0, questionTimes: {}, markedForReview: {}, startedAtMillis, endAtMillis, cardsUsedCount: 0, hintsUsed: {}, hintCardsUsedCount: 0, fiftyUsed: {}, fiftyCardsUsedCount: 0, xpBoost: 1, status: "in-progress" };
   saveLocalAttempt(examId, studentId, fresh);
 
   try {
@@ -100,7 +103,7 @@ export async function getOrStartAttempt(examId, studentId, durationMinutes) {
       examId, studentId, durationMinutes,
       startedAtMillis, endAtMillis,
       answers: {}, currentIndex: 0, questionTimes: {}, markedForReview: {}, cardsUsedCount: 0,
-      hintsUsed: {}, hintCardsUsedCount: 0,
+      hintsUsed: {}, hintCardsUsedCount: 0, fiftyUsed: {}, fiftyCardsUsedCount: 0, xpBoost: 1,
       status: "in-progress",
       lastSyncedAt: serverTimestamp()
     });
@@ -157,8 +160,32 @@ export async function useHintOnAttempt(examId, studentId, hintsUsed, hintCardsUs
   }
 }
 
+// ---------- 50-50 Card used on a question: which options were removed.
+// Written immediately (not debounced) for the same reason as hints above. ----------
+export async function useFiftyOnAttempt(examId, studentId, fiftyUsed, fiftyCardsUsedCount) {
+  try {
+    await updateDoc(doc(db, "attempts", attemptDocId(examId, studentId)), {
+      fiftyUsed, fiftyCardsUsedCount, lastSyncedAt: serverTimestamp()
+    });
+  } catch {
+    // Offline — the local copy (saved by the caller) is enough to resume from.
+  }
+}
+
+// ---------- Double XP Card switched on for this attempt (only possible
+// right when the exam starts). submitAttempt() copies it onto the result. ----------
+export async function setAttemptXPBoost(examId, studentId, xpBoost) {
+  try {
+    await updateDoc(doc(db, "attempts", attemptDocId(examId, studentId)), {
+      xpBoost, lastSyncedAt: serverTimestamp()
+    });
+  } catch {
+    // Offline — the local copy (saved by the caller) is enough to carry on.
+  }
+}
+
 // ---------- Final submission: grade, write pending result, lock the attempt ----------
-export async function submitAttempt({ examId, studentId, examName, snapshotQuestions, answers, startedAtMillis, questionTimes, markedForReview }) {
+export async function submitAttempt({ examId, studentId, examName, snapshotQuestions, answers, startedAtMillis, questionTimes, markedForReview, xpBoost = 1 }) {
   const submittedAtMillis = Date.now();
   const grade = gradeAttempt({ snapshotQuestions, answers, startedAtMillis, submittedAtMillis });
   const id = attemptDocId(examId, studentId);
@@ -185,6 +212,8 @@ export async function submitAttempt({ examId, studentId, examName, snapshotQuest
     // Captured automatically at submission from now on — previously tracked
     // during the attempt but dropped here, so it never reached `results`.
     markedForReview: markedForReview || {},
+    // Double XP Card (1 = none). xp-utils.js reads this when computing XP.
+    xpBoost: Number(xpBoost) > 1 ? Number(xpBoost) : 1,
     status: "pending",
     approvedAt: null
   });

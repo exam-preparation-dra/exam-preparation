@@ -140,6 +140,7 @@ const ICON = {
   star: `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
   card: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>`,
   bulb: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.45.9 1.15.9 1.9V16h5.4v-.3c0-.75.3-1.45.9-1.9A6 6 0 0 0 12 3z"/></svg>`,
+  half: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M12 3a9 9 0 0 1 0 18z"/></svg>`,
   clock: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>`,
   users: `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
   chev: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>`,
@@ -274,6 +275,7 @@ export function runShellHtml({ name, photoURL, total, showCardBtn = false, showE
 
     ${showCardBtn ? cardModalHtml() : ""}
     ${hintModalHtml()}
+    ${fiftyModalHtml()}
   `;
 }
 
@@ -326,6 +328,22 @@ function hintModalHtml() {
     </div>`;
 }
 
+/* ---------- "use a 50-50 card" confirm sheet ---------- */
+function fiftyModalHtml() {
+  return `
+    <div id="fiftyModal" class="ex-overlay hidden">
+      <div class="ex-sheet ex-confirm">
+        <div class="ex-confirm-icon ok">${ICON.half}</div>
+        <p class="ex-sheet-title">৫০-৫০ কার্ড ব্যবহার করবে?</p>
+        <p class="msg" id="fiftyModalText"></p>
+        <div class="ex-confirm-actions">
+          <button class="ex-btn ex-btn-ghost" id="cancelFiftyBtn" type="button">বাতিল</button>
+          <button class="ex-btn ex-btn-primary" id="confirmFiftyBtn" type="button">হ্যাঁ, বাদ দাও</button>
+        </div>
+      </div>
+    </div>`;
+}
+
 /* ---------- hint zone shown under a question's options ----------
    hint: {
      enabled          -- false if there's no hint_card item in the catalog at all
@@ -334,7 +352,7 @@ function hintModalHtml() {
      subtitle         -- pre-composed availability text (exam.html knows the counts)
      correctLetter, correctText, explanation -- only needed once used
    } ---------- */
-export function hintZoneHtml(hint) {
+function hintBlockHtml(hint) {
   if (!hint || !hint.enabled) return "";
   if (hint.used) {
     return `
@@ -356,10 +374,32 @@ export function hintZoneHtml(hint) {
     </button>`;
 }
 
+/* 50-50 button (or the "2 options removed" note). f: { enabled, used, canUse, subtitle } */
+function fiftyBlockHtml(f) {
+  if (!f || !f.enabled) return "";
+  if (f.used) {
+    return `<div class="ex-fifty-note">${ICON.half}<span>৫০-৫০ কার্ড ব্যবহার হয়েছে — ২টি ভুল অপশন বাদ</span></div>`;
+  }
+  return `
+    <button type="button" id="useFiftyBtn" class="ex-hint-cta ex-fifty-cta" ${f.canUse ? "" : "disabled"}>
+      <span class="ex-hint-cta-icon">${ICON.half}</span>
+      <span class="ex-hint-cta-text">
+        <span class="ex-hint-cta-title">৫০-৫০ কার্ড ব্যবহার করো</span>
+        <span class="ex-hint-cta-sub">${esc(f.subtitle ?? "")}</span>
+      </span>
+    </button>`;
+}
+
+// The zone under the options = hint card block + 50-50 card block.
+// hint.fifty (optional) carries the 50-50 state, see buildFiftyData() in exam.html.
+export function hintZoneHtml(hint) {
+  return hintBlockHtml(hint) + fiftyBlockHtml(hint?.fifty);
+}
+
 /* ---------- one question ---------- */
 // questionBn / questionEn / option text are admin-authored (may contain math or
 // HTML) and are inserted as-is, exactly like before.
-export function questionHtml({ questionBn, questionEn, imageUrl, options, selected, isMarked, hint = null }) {
+export function questionHtml({ questionBn, questionEn, imageUrl, options, selected, isMarked, hint = null, eliminated = [] }) {
   const image = imageUrl ? `
     <div class="ex-figure">
       <img src="${esc(imageUrl)}" draggable="false" oncontextmenu="return false;" onerror="this.style.display='none';">
@@ -373,7 +413,7 @@ export function questionHtml({ questionBn, questionEn, imageUrl, options, select
 
     <div class="ex-options">
       ${options.map(o => `
-        <button type="button" class="ex-option ${selected === o.letter ? "selected" : ""}" data-letter="${esc(o.letter)}">
+        <button type="button" class="ex-option ${selected === o.letter ? "selected" : ""} ${eliminated.includes(o.letter) ? "eliminated" : ""}" data-letter="${esc(o.letter)}" ${eliminated.includes(o.letter) ? 'disabled aria-disabled="true"' : ""}>
           <span class="ex-letter">${esc(o.letter)}</span>
           <span class="ex-option-text">${o.text ?? ""}</span>
         </button>`).join("")}

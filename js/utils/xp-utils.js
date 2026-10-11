@@ -51,6 +51,11 @@ export const EXAM_BONUS = {
   missPenalty: 500,
   penaltyGraceMs: 24 * 60 * 60 * 1000        // results may wait up to 24h for approval
 };
+/* Double XP Card (XP store): activated BEFORE an exam starts, it multiplies that
+   exam's own XP (the early-bird bonus is not doubled). The extra XP is capped
+   at maxBonus so one lucky exam can't wreck the leaderboard. The multiplier is
+   stored on the result doc as `xpBoost` (written by attempt-utils.js). */
+export const DOUBLE_XP = { multiplier: 2, maxBonus: 750 };
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 // Exams are loaded once by results-utils.js (ensureXPExams) and kept here so
@@ -159,6 +164,7 @@ export const XP_CATEGORIES = [
   { key: "improvement",   label: "উন্নতি বোনাস",           hint: "নিজের গড়ের চেয়ে ভালো করলে" },
   { key: "streak",        label: "সাপ্তাহিক ধারাবাহিকতা",   hint: "টানা সপ্তাহে পরীক্ষা দিলে" },
   { key: "early",         label: "দ্রুত পরীক্ষা বোনাস",     hint: "পরীক্ষা প্রকাশের প্রথম দিনে সর্বোচ্চ বোনাস" },
+  { key: "doubleXP",      label: "ডাবল XP কার্ড",           hint: "ডাবল XP কার্ড চালু থাকলে বাড়তি XP (সর্বোচ্চ +750)" },
   { key: "referral",      label: "বন্ধু রেফার",             hint: "প্রতি বন্ধুতে 250 XP" },
   { key: "challenge",     label: "চ্যালেঞ্জ বোনাস",         hint: "বন্ধুর সাথে challenge জিতলে/হারলে বোনাস XP" },
   { key: "improvementPractice", label: "উন্নতি প্র্যাকটিস", hint: "দুর্বল জায়গা ঠিক করার প্র্যাকটিসে XP" },
@@ -386,7 +392,12 @@ export function computeStudentXP(results, { referralCount = 0, challengeBonusXP 
     // Early-bird bonus: depends on which day of the exam's 7-day window it was submitted.
     const eb = r.examId && _xpExams.has(r.examId) ? getEarlyBonus(_xpExams.get(r.examId), ms) : null;
     parts.early = eb ? eb.bonus : 0;
-    const xp = baseXP + parts.early;
+    // Double XP Card: extra = (multiplier-1) x the exam's own XP, capped.
+    const boost = num(r.xpBoost);
+    parts.doubleXP = boost > 1
+      ? Math.min(DOUBLE_XP.maxBonus, Math.round(baseXP * (Math.min(boost, DOUBLE_XP.multiplier) - 1)))
+      : 0;
+    const xp = baseXP + parts.early + parts.doubleXP;
     Object.entries(parts).forEach(([k, v]) => { breakdown[k] += v; });
 
     const pct = num(r.percentage);

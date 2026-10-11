@@ -66,6 +66,24 @@ export const STORE_ITEMS = [
                           // (see renderItems()/renderHistory() in store.html)
     priceXP: 300,
     maxPerOrder: 10
+  },
+  {
+    id: "fifty_fifty_card",
+    name: "৫০-৫০ কার্ড",
+    tagline: "১টি কার্ড = ২টি ভুল অপশন বাদ",
+    description: "পরীক্ষা চলাকালীন যেকোনো MCQ প্রশ্নে ব্যবহার করলে ২টি ভুল অপশন বাদ যাবে — বাকি ২টির মধ্যে একটি সঠিক উত্তর। উত্তর সরাসরি বলে দেয় না, শুধু সুযোগ বাড়ায়।",
+    fiftyGranted: 1,      // marks this item as a "50-50 card" for the store UI + exam.html
+    priceXP: 250,
+    maxPerOrder: 10
+  },
+  {
+    id: "double_xp_card",
+    name: "ডাবল XP কার্ড",
+    tagline: "পরের পরীক্ষায় XP দ্বিগুণ",
+    description: "পরীক্ষা শুরুর আগে চালু করলে সেই পরীক্ষার XP দ্বিগুণ হবে (বাড়তি XP-র সর্বোচ্চ সীমা আছে)। পরীক্ষা শুরু হয়ে গেলে আর চালু করা যায় না।",
+    xpMultiplier: 2,      // marks this item as a "double XP card"; the real rule lives in xp-utils.js (DOUBLE_XP)
+    priceXP: 500,
+    maxPerOrder: 5
   }
   // আরও item এখানে যোগ হবে — বাকি সব কোড (cart/checkout/inventory) নতুন
   // item-এর জন্য নিজে থেকেই কাজ করবে, আলাদা করে কিছু বদলাতে হবে না।
@@ -80,6 +98,9 @@ export const MAX_CARDS_PER_ATTEMPT = 10;
 
 /** How many Hint Cards a student may use inside a single exam attempt (separate cap — one per question, not shared with MAX_CARDS_PER_ATTEMPT above). */
 export const MAX_HINT_CARDS_PER_ATTEMPT = 5;
+
+/** How many 50-50 Cards a student may use inside a single exam attempt (one per question). */
+export const MAX_FIFTY_CARDS_PER_ATTEMPT = 5;
 
 /** Total XP this student has ever spent in the store (all items combined). */
 export async function getSpentXP(studentId) {
@@ -215,7 +236,7 @@ export async function useStoreItem(studentId, itemId, qty = 1, examMeta = null) 
     if (available < qty) throw new Error("NOTHING_TO_USE");
     items[itemId] = { ...row, used: Number(row.used || 0) + qty };
     tx.update(invRef, { items, updatedAt: Date.now() });
-    return { secondsGranted: (item.secondsGranted || 0) * qty, hintsGranted: (item.hintsGranted || 0) * qty, qtyUsed: qty };
+    return { secondsGranted: (item.secondsGranted || 0) * qty, hintsGranted: (item.hintsGranted || 0) * qty, fiftyGranted: (item.fiftyGranted || 0) * qty, xpMultiplier: item.xpMultiplier || 0, qtyUsed: qty };
   });
 
   addDoc(collection(db, "storeCardUsage"), {
@@ -225,6 +246,8 @@ export async function useStoreItem(studentId, itemId, qty = 1, examMeta = null) 
     qty,
     secondsGranted: result.secondsGranted,
     hintsGranted: result.hintsGranted,
+    fiftyGranted: result.fiftyGranted || 0,
+    xpMultiplier: result.xpMultiplier || 0,
     examId: examMeta?.examId || null,
     examTitle: examMeta?.examTitle || null,
     createdAtMs: Date.now()
