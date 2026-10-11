@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<script src="../js/utils/theme-boot.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>অ্যাটেনডেন্স — পরীক্ষা প্রস্তুতি</title>
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#b8863c">
+<link rel="icon" type="image/png" href="../icons/favicon.png">
+<link rel="apple-touch-icon" href="../icons/apple-touch-icon.png">
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  .a-sec { margin-top: 18px; }
+  .a-h { font-size: 0.98rem; font-weight: 800; color: var(--text-primary); margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .a-sub { font-size: 0.76rem; font-weight: 600; color: var(--text-muted); }
+  .a-card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius-lg); padding: 14px; }
+
+  .a-hero { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: center; }
+  .a-ring { position: relative; width: 104px; height: 104px; }
+  .a-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .a-ring-c { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .a-ring-c b { font-family: var(--font-num); font-size: 1.7rem; line-height: 1; font-weight: 800; color: var(--color-accent); }
+  .a-ring-c span { font-size: 0.64rem; font-weight: 700; color: var(--text-muted); margin-top: 2px; }
+  .a-stats { display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; }
+  .a-stats div + div { border-left: 1px solid var(--surface-border); }
+  .a-stats b { display: block; font-family: var(--font-num); font-size: 1.3rem; font-weight: 800; }
+  .a-stats span { font-size: 0.68rem; font-weight: 700; color: var(--text-muted); }
+  .a-batch { font-size: 0.78rem; font-weight: 800; color: var(--color-accent); margin-bottom: 8px; }
+  .a-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 46px; margin-top: 12px; border-radius: var(--radius-md); border: none; background: var(--color-accent); color: #211a0d; font: inherit; font-weight: 800; font-size: 0.9rem; cursor: pointer; }
+  .a-btn:active { filter: brightness(.95); }
+
+  .a-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .a-chips::-webkit-scrollbar { display: none; }
+  .a-chip { flex: none; padding: 6px 13px; border-radius: 999px; border: 1px solid var(--surface-border); background: var(--surface-solid); color: var(--text-secondary); font: inherit; font-size: 0.78rem; font-weight: 800; cursor: pointer; }
+  .a-chip.on { background: var(--color-accent); border-color: transparent; color: #211a0d; }
+
+  .a-row { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--surface-border); }
+  .a-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .a-row:first-child { padding-top: 0; }
+  .a-dot { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 0.9rem; }
+  .a-dot.p { background: rgba(47,125,94,.16); color: var(--color-success); }
+  .a-dot.x { background: rgba(166,64,47,.14); color: var(--color-danger); }
+  .a-row-main { flex: 1; min-width: 0; }
+  .a-row-main strong { display: block; font-size: 0.9rem; font-weight: 800; }
+  .a-row-main span { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); }
+  .a-tag { font-size: 0.66rem; font-weight: 800; padding: 3px 9px; border-radius: 999px; background: var(--color-accent-soft); color: var(--color-accent); white-space: nowrap; }
+  .a-tag.exam { background: rgba(107,78,150,.15); color: #6b4e96; }
+  .a-state { font-size: 0.76rem; font-weight: 800; }
+  .a-state.p { color: var(--color-success); } .a-state.x { color: var(--color-danger); }
+
+  .a-reward { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: var(--radius-md); background: var(--color-accent-soft); border: 1px solid rgba(var(--color-accent-rgb), .3); margin-bottom: 10px; font-size: 0.78rem; font-weight: 700; color: var(--text-primary); line-height: 1.5; }
+  .a-reward b { font-family: var(--font-num); color: var(--color-accent); }
+  .a-rank { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
+  .a-pos { width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-num); font-size: .76rem; font-weight: 700; color: #fff; background: var(--text-muted); flex: none; }
+  .a-pos.p1 { background: var(--color-accent); } .a-pos.p2 { background: #8f9aa0; } .a-pos.p3 { background: #a5673f; }
+  .a-rank-name { flex: 1; min-width: 0; font-size: .88rem; font-weight: 700; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .a-rank-me { background: var(--color-accent-soft); margin: 0 -10px; padding: 8px 10px; border-radius: var(--radius-md); }
+  .a-rank-me .a-rank-name { color: var(--text-primary); font-weight: 800; }
+  .a-rank-val { font-family: var(--font-num); font-weight: 700; font-size: .84rem; white-space: nowrap; }
+  .a-empty { text-align: center; padding: 8px 0; }
+  .a-last { padding-bottom: 24px; }
+</style>
+<script src="../js/utils/nav-boot.js"></script>
+<link rel="stylesheet" href="../css/desktop.css">
+<script src="../js/utils/desktop-layout.js" defer></script>
+<script src="../js/popup.js"></script>
+</head>
+<body data-page="attendance">
+<div class="app-shell" id="shell">
+  <div class="state-block"><div class="spinner"></div></div>
+</div>
+
+<script type="module">
+import { initTheme, renderStudentHeader, renderState } from "../js/utils/ui-utils.js";
+import { getActiveStudent, refreshActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
+import { normalizeBatch } from "../js/utils/batch-utils.js";
+import { openAttendanceSheet } from "../js/utils/attendance-sheet.js";
+import {
+  getBatchDays, getStudentAttendance, getMonthAttendance, getAwards,
+  computeAttendanceStats, rankMonth, monthOf, dateStr, fmtDate, fmtMonth, bn, DAY_TYPES, ATTENDANCE_MONTHLY_XP
+} from "../js/utils/attendance-utils.js";
+
+initTheme();
+const shell = document.getElementById("shell");
+let student = getActiveStudent();
+if (!student) window.location.href = "../index.html";
+else refreshActiveStudent(student.docId).then(f => { if (f) student = f; render(); });
+
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const $ = (id) => document.getElementById(id);
+const qrIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3M21 14v.01M14 21h.01M17.5 21H21v-3.5"/></svg>';
+
+let state = { days: [], recs: [], awards: [], filter: "all" };
+
+async function render() {
+  const batch = normalizeBatch(student.className);
+  shell.innerHTML = `
+    ${renderStudentHeader(student, "attendance")}
+    <div class="a-sec">
+      <h1 style="font-size:1.4rem;font-weight:800;line-height:1.3;">অ্যাটেনডেন্স</h1>
+      <p class="a-sub">${batch ? esc(batch) + " · " : ""}ক্লাস ও পরীক্ষায় তোমার উপস্থিতি</p>
+    </div>
+    <div id="sumSec" class="a-sec"><div class="skeleton" style="height:150px;border-radius:20px;"></div></div>
+    <div id="monthSec" class="a-sec"></div>
+    <div id="histSec" class="a-sec a-last"></div>`;
+  try {
+    const [days, recs, awards] = await Promise.all([
+      getBatchDays(student.className), getStudentAttendance(student.studentId), getAwards().catch(() => [])
+    ]);
+    state.days = days; state.recs = recs; state.awards = awards;
+    drawSummary(); drawHistory();
+    drawMonth().catch(e => console.error(e));
+  } catch (e) {
+    console.error(e);
+    renderState($("sumSec"), "error", "অ্যাটেনডেন্স লোড করা যায়নি। ইন্টারনেট দেখে আবার চেষ্টা করো।");
+  }
+}
+
+function drawSummary() {
+  const st = computeAttendanceStats(state.days, state.recs);
+  const R = 46, C = 2 * Math.PI * R;
+  const pct = st.pct ?? 0;
+  $("sumSec").innerHTML = `
+    <div class="a-card">
+      <div class="a-hero">
+        <div class="a-ring" role="img" aria-label="উপস্থিতি ${bn(pct)}%">
+          <svg viewBox="0 0 110 110" aria-hidden="true">
+            <circle cx="55" cy="55" r="${R}" fill="none" stroke="var(--surface-edge)" stroke-width="9"/>
+            <circle id="aRing" cx="55" cy="55" r="${R}" fill="none" stroke="var(--color-accent)" stroke-width="9" stroke-linecap="round"
+              stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${C.toFixed(2)}" style="transition:stroke-dashoffset 1.1s cubic-bezier(.22,1,.36,1)" data-c="${C.toFixed(2)}" data-pct="${pct}"/>
+          </svg>
+          <div class="a-ring-c"><b>${st.pct == null ? "—" : bn(st.pct) + "%"}</b><span>উপস্থিতি</span></div>
+        </div>
+        <div>
+          <p class="a-batch">${esc(normalizeBatch(student.className) || "ব্যাচ নেই")}</p>
+          <div class="a-stats">
+            <div><b>${bn(st.total)}</b><span>মোট দিন</span></div>
+            <div><b style="color:var(--color-success)">${bn(st.present)}</b><span>উপস্থিত</span></div>
+            <div><b style="color:var(--color-danger)">${bn(st.absent)}</b><span>অনুপস্থিত</span></div>
+          </div>
+        </div>
+      </div>
+      <p class="a-sub" style="margin-top:12px;">অ্যাডমিন যত দিন ক্লাস/পরীক্ষা সেট করেছেন সেটাই ১০০%। ${st.total ? "" : "এখনো কোনো দিন সেট হয়নি।"}</p>
+      <button type="button" class="a-btn" id="aQrBtn">${qrIcon} আমার অ্যাটেনডেন্স QR</button>
+    </div>`;
+  $("aQrBtn").onclick = () => openAttendanceSheet(student, { historyHref: null });
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const r = $("aRing"); if (r) r.style.strokeDashoffset = (Number(r.dataset.c) * (1 - Number(r.dataset.pct) / 100)).toFixed(2);
+  }));
+}
+
+function drawHistory() {
+  const all = computeAttendanceStats(state.days, state.recs);
+  const months = [...new Set(all.rows.map(r => monthOf(r.date)))];
+  if (state.filter !== "all" && !months.includes(state.filter)) state.filter = "all";
+  const st = state.filter === "all" ? all : computeAttendanceStats(state.days, state.recs, { month: state.filter });
+  $("histSec").innerHTML = `
+    <p class="a-h"><span>হিস্ট্রি</span>${st.pct != null ? `<span class="a-sub">${bn(st.present)}/${bn(st.total)} · ${bn(st.pct)}%</span>` : ""}</p>
+    ${months.length > 1 ? `<div class="a-chips" style="margin-bottom:10px;">
+      <button type="button" class="a-chip ${state.filter === "all" ? "on" : ""}" data-m="all">সব</button>
+      ${months.map(m => `<button type="button" class="a-chip ${state.filter === m ? "on" : ""}" data-m="${m}">${fmtMonth(m)}</button>`).join("")}
+    </div>` : ""}
+    <div class="a-card">
+      ${st.rows.length ? st.rows.map(r => `
+        <div class="a-row">
+          <span class="a-dot ${r.present ? "p" : "x"}" aria-hidden="true">${r.present ? "✓" : "✕"}</span>
+          <div class="a-row-main"><strong>${fmtDate(r.date, { weekday: "long", day: "numeric", month: "long" })}</strong>${r.note ? `<span>${esc(r.note)}</span>` : ""}</div>
+          <span class="a-tag ${r.type === "exam" ? "exam" : ""}">${DAY_TYPES[r.type] || "ক্লাস"}</span>
+          <span class="a-state ${r.present ? "p" : "x"}">${r.present ? "উপস্থিত" : "অনুপস্থিত"}</span>
+        </div>`).join("") : `<p class="a-sub a-empty">এখনো কোনো ক্লাস বা পরীক্ষার দিন নেই।</p>`}
+    </div>`;
+  $("histSec").querySelectorAll("[data-m]").forEach(b => b.onclick = () => { state.filter = b.dataset.m; drawHistory(); });
+}
+
+async function drawMonth() {
+  const el = $("monthSec");
+  const month = monthOf(dateStr());
+  const [recs, students] = await Promise.all([getMonthAttendance(month), getActiveStudents()]);
+  const myBatch = normalizeBatch(student.className);
+  const ranked = rankMonth(month, students, state.days.map(d => ({ ...d, batch: myBatch })), recs.filter(r => normalizeBatch(r.batch) === myBatch))
+    .filter(r => r.batch === myBatch);
+  const myWins = state.awards.filter(a => (a.winners || []).some(w => w.studentId === student.studentId));
+  const medal = (i) => i === 0 ? "p1" : i === 1 ? "p2" : i === 2 ? "p3" : "";
+  const myIdx = ranked.findIndex(r => r.studentId === student.studentId);
+  const shown = ranked.slice(0, 3);
+  if (myIdx > 2) shown.push(ranked[myIdx]);
+  el.innerHTML = `
+    <p class="a-h"><span>${fmtMonth(month)} — মাসের সেরা</span></p>
+    <div class="a-card">
+      <div class="a-reward"><span aria-hidden="true">🏆</span><span>মাস শেষে তোমার ব্যাচে সবচেয়ে বেশি উপস্থিত যে, সে পাবে <b>+${bn(ATTENDANCE_MONTHLY_XP)} XP</b>।${myWins.length ? ` তুমি এ পর্যন্ত <b>${bn(myWins.length)}</b> বার পেয়েছো।` : ""}</span></div>
+      ${shown.length ? shown.map(r => {
+        const i = ranked.indexOf(r), me = r.studentId === student.studentId;
+        return `<div class="a-rank ${me ? "a-rank-me" : ""}"><span class="a-pos ${medal(i)}">${bn(i + 1)}</span><span class="a-rank-name">${esc(r.name)}${me ? " (তুমি)" : ""}</span><span class="a-rank-val">${bn(r.present)}/${bn(r.total)} · ${bn(r.pct)}%</span></div>`;
+      }).join("") : `<p class="a-sub a-empty">এই মাসে এখনো কারো উপস্থিতি জমা হয়নি।</p>`}
+    </div>`;
+}
+</script>
+</body>
+</html>

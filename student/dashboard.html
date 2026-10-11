@@ -40,80 +40,6 @@
     padding: 14px;
   }
 
-  /* ---------- "cards running low" reminder ---------- */
-  .d-card-reminder {
-    display: flex; align-items: center; gap: 12px; padding: 14px;
-    background: var(--color-accent-soft); border: 1px solid rgba(var(--color-accent-rgb), 0.3);
-    border-radius: var(--radius-lg); text-decoration: none; color: inherit; position: relative;
-  }
-  .d-card-reminder-icon { flex-shrink: 0; width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--surface); color: var(--color-accent); }
-  .d-card-reminder-text { flex: 1; min-width: 0; }
-  .d-card-reminder-title { font-weight: 800; font-size: 0.88rem; color: var(--text-primary); }
-  .d-card-reminder-sub { font-size: 0.76rem; font-weight: 600; color: var(--text-muted); margin-top: 2px; }
-  .d-card-reminder-close {
-    position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; border-radius: 50%;
-    display: grid; place-items: center; color: var(--text-muted); background: transparent; border: none;
-  }
-
-  /* ---------- my cards (wallet): physical-card look, swipe on phone ---------- */
-  .d-wallet-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
-  .d-wallet-head .d-h { margin: 0; }
-  .d-wallet-buy { display: inline-flex; align-items: center; gap: 4px; font-size: 0.78rem; font-weight: 800; color: var(--color-accent); text-decoration: none; padding: 4px 2px; }
-  .d-wallet-rail {
-    display: flex; gap: 12px; overflow-x: auto; margin: 0 -16px; padding: 4px 16px 10px;
-    scroll-snap-type: x mandatory; scroll-padding: 0 16px; -webkit-overflow-scrolling: touch; scrollbar-width: none;
-  }
-  .d-wallet-rail::-webkit-scrollbar { display: none; }
-  .wc {
-    --wc-a: #24425f; --wc-b: #16283d;
-    position: relative; overflow: hidden; flex: 0 0 74%; max-width: 280px; min-height: 148px; scroll-snap-align: start;
-    display: flex; flex-direction: column; justify-content: space-between; padding: 14px 16px 12px;
-    border-radius: 20px; color: #f6f3ea; text-decoration: none; isolation: isolate;
-    background: linear-gradient(145deg, var(--wc-a), var(--wc-b));
-    box-shadow: 0 1px 0 rgba(255,255,255,.14) inset, 0 10px 24px rgba(15, 20, 30, .22);
-    transition: transform .18s ease, box-shadow .2s ease;
-  }
-  .wc::before { content: ""; position: absolute; z-index: -1; right: -46px; top: -54px; width: 170px; height: 170px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.2), rgba(255,255,255,0) 68%); }
-  .wc::after { content: ""; position: absolute; z-index: -1; left: -30px; bottom: -70px; width: 190px; height: 190px; border-radius: 50%; border: 26px solid rgba(255,255,255,.05); }
-  .wc:active { transform: scale(.98); }
-  .wc-time { --wc-a: #2d5a7b; --wc-b: #15283b; }
-  .wc-hint { --wc-a: #a77a2c; --wc-b: #4d3611; }
-  .wc-battle { --wc-a: #6d3f78; --wc-b: #2b1834; }
-  .wc-fifty { --wc-a: #1f6f66; --wc-b: #0d2e32; }
-  .wc-double { --wc-a: #3f7d3a; --wc-b: #15301a; }
-  .wc-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  .wc-name { display: flex; align-items: center; gap: 9px; font-size: .86rem; font-weight: 800; letter-spacing: .01em; }
-  .wc-ico { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: rgba(255,255,255,.16); }
-  .wc-chip { width: 30px; height: 22px; border-radius: 6px; background: linear-gradient(135deg, rgba(255,255,255,.55), rgba(255,255,255,.18)); opacity: .75; }
-  .wc-bal { display: flex; align-items: baseline; gap: 7px; margin-top: 10px; }
-  .wc-bal b { font-family: var(--font-num); font-size: 2.6rem; font-weight: 800; line-height: 1; letter-spacing: -.02em; }
-  .wc-bal small { font-size: .78rem; font-weight: 700; opacity: .75; }
-  .wc-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; padding-top: 9px; border-top: 1px solid rgba(255,255,255,.16); font-size: .72rem; font-weight: 700; color: rgba(246,243,234,.82); }
-  .wc-plus { flex-shrink: 0; height: 24px; padding: 0 10px; border-radius: 99px; display: inline-flex; align-items: center; font-size: .72rem; font-weight: 800; color: #1b1b1b; background: rgba(255,255,255,.88); }
-  .wc.empty { filter: saturate(.55) brightness(.9); }
-  .wc.empty .wc-bal b { opacity: .55; }
-  @media (min-width: 640px) {
-    .d-wallet-rail { display: grid; grid-template-columns: repeat(3, 1fr); overflow: visible; margin: 0; padding: 4px 0 6px; }
-    .wc { flex: none; max-width: none; }
-  }
-
-
-  /* ---------- wallet: compact override (3 small cards in one row, no swipe) ---------- */
-  .d-wallet-rail { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; overflow: visible; margin: 0; padding: 2px 0 4px; scroll-snap-type: none; }
-  .wc { flex: none; max-width: none; min-height: 0; padding: 12px 11px 11px; gap: 10px; justify-content: flex-start; border-radius: 16px; box-shadow: 0 1px 0 rgba(255,255,255,.14) inset, 0 6px 16px rgba(15,20,30,.18); }
-  .wc::before { width: 110px; height: 110px; right: -34px; top: -40px; }
-  .wc::after { display: none; }
-  .wc-top { justify-content: flex-start; }
-  .wc-chip, .wc-foot { display: none; }
-  .wc-name { gap: 7px; font-size: .72rem; line-height: 1.25; }
-  .wc-ico { flex: none; width: 24px; height: 24px; border-radius: 8px; }
-  .wc-ico svg { width: 14px; height: 14px; }
-  .wc-bal { margin-top: 0; gap: 4px; align-items: center; }
-  .wc-bal b { font-size: 1.65rem; }
-  .wc-bal small { font-size: .68rem; }
-  .wc-add { margin-left: auto; flex: none; min-width: 22px; height: 22px; padding: 0 7px; border-radius: 99px; display: inline-grid; place-items: center; font-size: .68rem; font-weight: 800; color: #1b1b1b; background: rgba(255,255,255,.88); }
-  @media (min-width: 640px) { .wc { padding: 14px 14px 13px; } .wc-name { font-size: .8rem; } .wc-bal b { font-size: 1.9rem; } }
-
   /* ---------- quick links ---------- */
   .d-links { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
   .d-link {
@@ -189,59 +115,27 @@
   .d-btn-ok { color: var(--color-success); border-color: rgba(47,125,94,0.4); }
   .d-note { text-align: center; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-top: 10px; }
 
-  /* ---------- referral (compact: QR + progress + share dropdown) ---------- */
-  .d-ref { padding: 14px; }
-  .d-ref-row { display: flex; gap: 14px; align-items: center; }
-  .d-ref-qr {
-    position: relative; flex: none; width: 96px; height: 96px; padding: 7px; border-radius: 18px; cursor: pointer;
+  /* ---------- attendance (front and centre: the QR the admin scans) ---------- */
+  .d-att { display: flex; align-items: center; gap: 14px; padding: 14px; }
+  .d-att-qr {
+    position: relative; flex: none; width: 112px; height: 112px; padding: 8px; border-radius: 18px; cursor: pointer;
     background: #fff; border: 1px solid var(--surface-border); display: grid; place-items: center;
     transition: transform .15s ease, border-color .15s ease;
   }
-  .d-ref-qr:active { transform: scale(.96); border-color: var(--color-accent); }
-  .d-ref-qr img { display: block; width: 100%; height: 100%; }
-  .d-ref-qr .spinner { margin: 0; }
-  .d-ref-qr-zoom { position: absolute; right: -6px; bottom: -6px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--color-accent); color: #211a0d; border: 2px solid var(--surface); }
-  .d-ref-main { flex: 1; min-width: 0; }
-  .d-ref-title { font-size: 0.95rem; font-weight: 800; line-height: 1.35; }
-  .d-ref-title b { font-family: var(--font-num); color: var(--color-accent); }
-  .d-ref-sub { font-size: 0.73rem; font-weight: 600; color: var(--text-muted); margin-top: 2px; line-height: 1.45; }
-  .d-ref-sub b { color: var(--text-secondary); font-family: var(--font-num); }
-  .d-ref-bar { height: 6px; border-radius: 6px; background: var(--surface-edge); overflow: hidden; margin-top: 9px; }
-  .d-ref-bar i { display: block; height: 100%; border-radius: 6px; background: var(--color-accent); transition: width 1s cubic-bezier(0.22, 1, 0.36, 1); }
-  .d-ref-actions { position: relative; display: flex; gap: 8px; margin-top: 12px; }
-  .d-rbtn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 38px; padding: 0 13px; border-radius: 12px;
-    font: inherit; font-size: 0.8rem; font-weight: 800; cursor: pointer; border: 1px solid var(--surface-border);
-    background: var(--surface-solid); color: var(--text-primary); transition: background var(--transition);
-  }
-  .d-rbtn:active { background: var(--surface-highlight); }
-  .d-rbtn.pri { background: var(--color-accent); color: #211a0d; border-color: transparent; flex: 1; }
-  .d-rbtn svg { flex: none; }
-  .d-rbtn .d-caret { transition: transform .18s ease; }
-  .d-rbtn[aria-expanded="true"] .d-caret { transform: rotate(180deg); }
-  .d-menu {
-    position: absolute; right: 0; top: calc(100% + 8px); z-index: 25; min-width: 220px; padding: 6px;
-    background: var(--surface-solid); border: 1px solid var(--surface-border); border-radius: 16px;
-    box-shadow: 0 16px 38px rgba(20,18,10,0.2); transform-origin: top right;
-  }
-  .d-menu[hidden] { display: none; }
-  .d-menu:not([hidden]) { animation: dMenuIn .16s cubic-bezier(.22,1,.36,1); }
-  @keyframes dMenuIn { from { opacity: 0; transform: translateY(-6px) scale(.97); } to { opacity: 1; transform: none; } }
-  .d-menu button {
-    display: flex; align-items: center; gap: 11px; width: 100%; min-height: 44px; padding: 8px 10px; border: 0; border-radius: 11px; text-align: left;
-    background: none; color: var(--text-primary); font: inherit; font-size: 0.86rem; font-weight: 700; cursor: pointer;
-  }
-  .d-menu button:active { background: var(--color-accent-soft); }
-  .d-menu button i { width: 30px; height: 30px; border-radius: 9px; flex: none; display: grid; place-items: center; background: var(--color-accent-soft); color: var(--color-accent); }
-  .d-ref-how { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--surface-border); font-size: 0.7rem; font-weight: 700; color: var(--text-secondary); }
-  .d-ref-how span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
-  .d-ref-how em { font-style: normal; width: 18px; height: 18px; border-radius: 50%; display: inline-grid; place-items: center; background: var(--color-accent-soft); color: var(--color-accent); font-family: var(--font-num); font-size: 0.66rem; font-weight: 800; }
-  .d-ref-how svg { color: var(--text-muted); flex: none; }
-  .d-ref-joined { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: 0.74rem; font-weight: 700; color: var(--text-secondary); }
-  .d-ref-av { display: flex; }
-  .d-ref-av i { width: 26px; height: 26px; border-radius: 50%; margin-left: -8px; display: grid; place-items: center; font-style: normal; font-size: 0.7rem; font-weight: 800; background: #21262f; color: var(--color-accent); border: 2px solid var(--surface); }
-  .d-ref-av i:first-child { margin-left: 0; }
-  @media (max-width: 359px) { .d-ref-qr { width: 80px; height: 80px; } .d-ref-how { font-size: 0.64rem; } }
+  .d-att-qr:active { transform: scale(.96); border-color: var(--color-accent); }
+  .d-att-qr img { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+  .d-att-qr .spinner { margin: 0; }
+  .d-att-zoom { position: absolute; right: -6px; bottom: -6px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--color-accent); color: #211a0d; border: 2px solid var(--surface); }
+  .d-att-main { flex: 1; min-width: 0; }
+  .d-att-title { font-size: 0.95rem; font-weight: 800; line-height: 1.35; }
+  .d-att-sub { font-size: 0.73rem; font-weight: 600; color: var(--text-muted); margin-top: 2px; line-height: 1.45; }
+  .d-att-pct { display: flex; align-items: baseline; gap: 8px; margin-top: 10px; }
+  .d-att-pct b { font-family: var(--font-num); font-size: 1.7rem; font-weight: 800; line-height: 1; color: var(--color-accent); }
+  .d-att-pct span { font-size: 0.74rem; font-weight: 700; color: var(--text-secondary); }
+  .d-att-bar { height: 6px; border-radius: 6px; background: var(--surface-edge); overflow: hidden; margin-top: 8px; }
+  .d-att-bar i { display: block; height: 100%; width: 0; border-radius: 6px; background: var(--color-accent); transition: width 1s cubic-bezier(0.22, 1, 0.36, 1); }
+  .d-att-link { display: inline-flex; align-items: center; gap: 4px; margin-top: 10px; font-size: 0.78rem; font-weight: 800; color: var(--color-accent); text-decoration: none; }
+  @media (max-width: 359px) { .d-att-qr { width: 92px; height: 92px; } }
 
   /* ---------- XP breakdown ---------- */
   .d-stack { display: flex; height: 10px; border-radius: 6px; overflow: hidden; background: var(--surface-edge); }
@@ -352,15 +246,17 @@ import { subscribeToUpcomingExams, getApprovedResults, getStudentResultStatusMap
 import { getSubjects, getTopics, buildNameMap } from "../js/utils/syllabus-utils.js";
 import { computeOverallStats, computeSubjectStats, computeTopicStats } from "../js/utils/analytics-utils.js";
 import { generateMotivation } from "../js/utils/motivation-utils.js";
-import { computeStudentXP, computeMaxExamXP, getLevelInfo, XP_CATEGORIES, REFERRAL_XP, getEarlyBonus, EXAM_BONUS } from "../js/utils/xp-utils.js";
+import { computeStudentXP, computeMaxExamXP, getLevelInfo, XP_CATEGORIES, getEarlyBonus, EXAM_BONUS } from "../js/utils/xp-utils.js";
 import { showPendingExamAlert } from "../js/utils/pending-exam-alert.js";
 import { resolveCompletedChallenges, getChallengeBonusXP } from "../js/utils/challenge-utils.js";
 import { getCompletedImprovementAttempts } from "../js/utils/improvement-xp-integration.js";
 import { getStudentBattleXP } from "../js/utils/battle-utils.js?v=roomcard1";
-import { openInviteSheet, makeInviteQr, inviteLink, copyInvite, whatsappInvite, shareInvite } from "../js/utils/invite-sheet.js";
+import { openAttendanceSheet, attendanceQrImage } from "../js/utils/attendance-sheet.js";
+import { getBatchDays, getStudentAttendance, computeAttendanceStats, bn } from "../js/utils/attendance-utils.js";
+import { normalizeBatch } from "../js/utils/batch-utils.js";
 import { mountInstallCard } from "../js/utils/pwa-install.js";
 import { mountExamClaim } from "../js/utils/exam-claim-ui.js";
-import { STORE_ITEMS, getStoreInventory, getSpentXP, getAvailableBattleRoomCardCount } from "../js/utils/store-utils.js?v=cards2";
+import { getSpentXP } from "../js/utils/store-utils.js?v=cards2";
 
 initTheme();
 const shell = document.getElementById("shell");
@@ -448,8 +344,8 @@ async function render() {
     </div>
 
     <div id="timerSection" class="d-sec d-timer-wrap" hidden></div>
-    <div id="cardReminderSection" class="d-sec" hidden></div>
 
+    <div id="attendanceSection" class="d-sec"><div class="skeleton" style="height:140px;border-radius:20px;"></div></div>
     <div id="heroSection" class="d-sec"><div class="skeleton" style="height:230px;border-radius:24px;"></div></div>
     <div id="upcomingSection" class="d-sec" hidden></div>
     <div class="d-links d-sec">
@@ -459,85 +355,45 @@ async function render() {
       <a href="../student/store.html" class="d-link"><span class="d-link-ico">${svg("store")}</span>XP স্টোর</a>
     </div>
 
-    <div id="walletSection" class="d-sec"><div class="skeleton" style="height:128px;border-radius:16px;"></div></div>
-    <div id="referralSection" class="d-sec"><div class="skeleton" style="height:150px;border-radius:20px;"></div></div>
     <div id="recentSection" class="d-sec"></div>
     <div id="installSection" class="d-sec d-last"></div>
   `;
   mountInstallCard($("installSection"));
   loadUpcoming();
   loadMain();
-  loadWallet();
+  loadAttendance();
 }
 
-/* ---------------- my cards (balance right on the dashboard) ---------------- */
-async function loadWallet() {
-  const el = $("walletSection");
+/* ---------------- attendance (QR + percentage) ---------------- */
+async function loadAttendance() {
+  const el = $("attendanceSection");
+  const batch = normalizeBatch(student.className);
+  el.innerHTML = `
+    <div class="d-card d-att">
+      <button type="button" class="d-att-qr" id="attQr" aria-label="অ্যাটেনডেন্স QR বড় করে দেখো"><div class="spinner"></div></button>
+      <div class="d-att-main">
+        <p class="d-att-title">অ্যাটেনডেন্স QR</p>
+        <p class="d-att-sub">ক্লাস/পরীক্ষায় অ্যাডমিনকে স্ক্যান করাও${batch ? " · " + esc(batch) : ""}</p>
+        <div id="attStats"><p class="d-att-sub" style="margin-top:10px">উপস্থিতি লোড হচ্ছে…</p></div>
+        <a href="../student/attendance.html" class="d-att-link">হিস্ট্রি দেখো ${svg("chev", 12)}</a>
+      </div>
+    </div>`;
+  $("attQr").addEventListener("click", () => openAttendanceSheet(student));
+  attendanceQrImage(student, 360).then(url => {
+    const b = $("attQr"); if (!b) return;
+    b.innerHTML = url ? `<img src="${url}" alt="QR"><span class="d-att-zoom">${svg("expand", 12)}</span>` : `<span class="d-sub" style="text-align:center">QR নেই</span>`;
+  });
   try {
-    const [inv, battleCount] = await Promise.all([
-      getStoreInventory(student.studentId),
-      getAvailableBattleRoomCardCount(student.studentId).catch(() => 0)
-    ]);
-    const tiles = [
-      { id: "time_extend_card", icon: "clockc", label: "টাইম কার্ড", count: inv.time_extend_card?.available || 0, note: "প্রতি কার্ডে +১ মিনিট" },
-      { id: "hint_card", icon: "bulb", label: "হিন্ট কার্ড", count: inv.hint_card?.available || 0, note: "১ কার্ড = ১ প্রশ্নের উত্তর" },
-      { id: "battle_room_card", icon: "swords", label: "ব্যাটল কার্ড", count: battleCount, note: "১ কার্ড = ১টি ব্যাটল" },
-      { id: "fifty_fifty_card", icon: "half", label: "৫০-৫০ কার্ড", count: inv.fifty_fifty_card?.available || 0, note: "২টি ভুল অপশন বাদ" },
-      { id: "double_xp_card", icon: "bolt", label: "ডাবল XP কার্ড", count: inv.double_xp_card?.available || 0, note: "পরের পরীক্ষায় XP দ্বিগুণ" }
-    ];
-    const kind = { time_extend_card: "time", hint_card: "hint", battle_room_card: "battle", fifty_fifty_card: "fifty", double_xp_card: "double" };
-    el.innerHTML = `
-      <section aria-label="আমার কার্ড">
-        <div class="d-wallet-head">
-          <p class="d-h">${svg("store", 20)} আমার কার্ড</p>
-          <a href="../student/store.html" class="d-wallet-buy">স্টোরে যাও ›</a>
-        </div>
-        <div class="d-wallet-rail">
-          ${tiles.map(t => `
-            <a href="../student/store.html?item=${t.id}" class="wc wc-${kind[t.id]} ${t.count === 0 ? "empty" : ""}" title="${t.note}">
-              <span class="wc-top">
-                <span class="wc-name"><span class="wc-ico">${svg(t.icon, 17)}</span>${t.label}</span>
-                <span class="wc-chip" aria-hidden="true"></span>
-              </span>
-              <span class="wc-bal"><b>${fmt(t.count)}</b><small>টি</small><span class="wc-add" aria-hidden="true">${t.count === 0 ? "কিনুন" : "+"}</span></span>
-              <span class="wc-foot"><span>${t.note}</span><span class="wc-plus">${t.count === 0 ? "কিনে নাও" : "+ আরও"}</span></span>
-            </a>`).join("")}
-        </div>
-      </section>`;
-  } catch {
-    el.innerHTML = "";
-  }
-}
-
-/* ---------------- "টাইম কার্ড কমে যাচ্ছে" reminder (আর ব্যবহার হচ্ছে না — উপরের কার্ড ব্যালেন্স সেটা দেখায়) ---------------- */
-const CARD_REMINDER_DISMISS_KEY = `cardReminderDismissed_${student.studentId}`;
-async function loadCardReminder() {
-  const el = $("cardReminderSection");
-  if (sessionStorage.getItem(CARD_REMINDER_DISMISS_KEY)) return;
-  try {
-    const item = STORE_ITEMS.find(i => i.id === "time_extend_card") || STORE_ITEMS[0];
-    const inv = await getStoreInventory(student.studentId);
-    const available = inv[item.id]?.available || 0;
-    if (available > 1) return; // যথেষ্ট আছে — কিছু দেখানোর দরকার নেই
-
-    el.hidden = false;
-    el.innerHTML = `
-      <a href="../student/store.html" class="d-card-reminder">
-        <div class="d-card-reminder-icon">${svg("store")}</div>
-        <div class="d-card-reminder-text">
-          <div class="d-card-reminder-title">${available === 0 ? "তোমার কোনো টাইম কার্ড নেই" : "তোমার মাত্র ১টি টাইম কার্ড বাকি"}</div>
-          <div class="d-card-reminder-sub">পরীক্ষার সময় কাজে লাগবে — স্টোর থেকে আরও কিনে রাখো</div>
-        </div>
-        <button type="button" class="d-card-reminder-close" id="dismissCardReminder" aria-label="বন্ধ করো">✕</button>
-      </a>
-    `;
-    $("dismissCardReminder")?.addEventListener("click", (e) => {
-      e.preventDefault(); e.stopPropagation();
-      sessionStorage.setItem(CARD_REMINDER_DISMISS_KEY, "1");
-      el.hidden = true;
-    });
-  } catch {
-    // চুপচাপ বাদ দাও — এটা একটা nice-to-have রিমাইন্ডার, ড্যাশবোর্ড লোড আটকানোর দরকার নেই
+    const [days, recs] = await Promise.all([getBatchDays(student.className), getStudentAttendance(student.studentId)]);
+    const st = computeAttendanceStats(days, recs);
+    $("attStats").innerHTML = st.total
+      ? `<div class="d-att-pct"><b>${bn(st.pct)}%</b><span>${bn(st.present)}/${bn(st.total)} দিন উপস্থিত</span></div>
+         <div class="d-att-bar"><i data-w="${st.pct}"></i></div>`
+      : `<p class="d-att-sub" style="margin-top:10px">এখনো কোনো ক্লাস/পরীক্ষার দিন সেট হয়নি।</p>`;
+    animateBars();
+  } catch (e) {
+    console.error(e);
+    $("attStats").innerHTML = `<p class="d-att-sub" style="margin-top:10px">উপস্থিতি লোড করা যায়নি।</p>`;
   }
 }
 
@@ -737,14 +593,13 @@ async function loadMain() {
       resultById: Object.fromEntries(results.map(r => [r.id, r]))
     };
 
-    for (const fn of [renderHero, renderReferral, renderRecent]) {
+    for (const fn of [renderHero, renderRecent]) {
       try { fn(ctx); } catch (e) { console.error(fn.name, e); }
     }
     animateBars();
   } catch (err) {
     console.error(err);
     renderState($("heroSection"), "error", "তথ্য লোড করা যায়নি। ইন্টারনেট দেখে আবার চেষ্টা করো।");
-    $("referralSection").innerHTML = "";
   }
 }
 
@@ -796,79 +651,6 @@ function renderHero({ xp, rank, leaderboard, overall, results }) {
   countUp($("heroXp"), xp.totalXP, 1200);
 }
 
-/* ---------------- referral (compact) ---------------- */
-function renderReferral({ myRefs }) {
-  const count = myRefs.length;
-  const steps = [1, 3, 5, 10];
-  const next = steps.find(n => n > count);
-  const prev = [...steps].reverse().find(n => n <= count) || 0;
-  const pct = next ? Math.round(((count - prev) / (next - prev)) * 100) : 100;
-  const shown = myRefs.slice(0, 4);
-
-  const sub = count === 0
-    ? `প্রথম বন্ধু যুক্ত হলেই <b>+${REFERRAL_XP} XP</b> তোমার।`
-    : next
-      ? `এখন পর্যন্ত <b>${fmt(count * REFERRAL_XP)} XP</b> · আর <b>${next - count}</b> জন এলে মোট <b>${fmt(next * REFERRAL_XP)}</b>`
-      : `${count} জনে মোট <b>${fmt(count * REFERRAL_XP)} XP</b> — প্রতি নতুন বন্ধুতে আরও +${REFERRAL_XP}`;
-
-  $("referralSection").innerHTML = `
-    <p class="d-h">${svg("gift", 20)} বন্ধু আনো, XP জেতো</p>
-    <div class="d-card d-ref">
-      <div class="d-ref-row">
-        <button type="button" class="d-ref-qr" id="refQr" aria-label="QR বড় করে দেখো"><div class="spinner"></div></button>
-        <div class="d-ref-main">
-          <p class="d-ref-title">প্রতি বন্ধুতে <b>+${REFERRAL_XP} XP</b></p>
-          <p class="d-ref-sub">${sub}</p>
-          <div class="d-ref-bar"><i style="width:0" data-w="${pct}"></i></div>
-        </div>
-      </div>
-
-      <div class="d-ref-actions">
-        <button type="button" class="d-rbtn pri" id="refQrBtn">${svg("qr", 16)} QR দেখো</button>
-        <button type="button" class="d-rbtn" id="refMenuBtn" aria-haspopup="true" aria-expanded="false">শেয়ার ${svg("down", 14).replace("<svg", '<svg class="d-caret"')}</button>
-        <div class="d-menu" id="refMenu" role="menu" hidden>
-          <button type="button" role="menuitem" data-a="copy"><i>${svg("copy", 16)}</i>লিংক কপি করো</button>
-          <button type="button" role="menuitem" data-a="wa"><i>${svg("msg", 16)}</i>WhatsApp-এ পাঠাও</button>
-          <button type="button" role="menuitem" data-a="share"><i>${svg("share", 16)}</i>অন্য অ্যাপে শেয়ার</button>
-        </div>
-      </div>
-
-      <div class="d-ref-how" aria-label="কীভাবে কাজ করে">
-        <span><em>১</em>QR স্ক্যান</span>${svg("chev", 12)}
-        <span><em>২</em>আবেদন</span>${svg("chev", 12)}
-        <span><em>৩</em>অনুমোদন</span>${svg("chev", 12)}
-        <span><em>+</em>XP জমা</span>
-      </div>
-
-      ${count > 0 ? `<div class="d-ref-joined"><div class="d-ref-av">${shown.map(s => `<i>${esc(String(s.name || "?").charAt(0))}</i>`).join("")}</div><span>${count} জন তোমার মাধ্যমে যুক্ত</span></div>` : ""}
-    </div>`;
-
-  const open = () => openInviteSheet(student, { xpPerFriend: REFERRAL_XP });
-  $("refQr").addEventListener("click", open);
-  $("refQrBtn").addEventListener("click", open);
-  makeInviteQr(student, 320).then(url => {
-    const b = $("refQr"); if (!b) return;
-    b.innerHTML = url
-      ? `<img src="${url}" alt="QR"><span class="d-ref-qr-zoom">${svg("expand", 12)}</span>`
-      : `<span class="d-sub" style="text-align:center">QR নেই</span>`;
-  });
-
-  // share dropdown
-  const btn = $("refMenuBtn"), menu = $("refMenu");
-  const setMenu = (on) => { menu.hidden = !on; btn.setAttribute("aria-expanded", on ? "true" : "false"); };
-  btn.addEventListener("click", (e) => { e.stopPropagation(); setMenu(menu.hidden); });
-  menu.addEventListener("click", (e) => {
-    const a = e.target.closest("button[data-a]"); if (!a) return;
-    e.stopPropagation(); setMenu(false);
-    if (a.dataset.a === "copy") copyInvite(student);
-    else if (a.dataset.a === "wa") whatsappInvite(student);
-    else shareInvite(student);
-  });
-  document.addEventListener("click", () => { if (!menu.hidden) setMenu(false); });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !menu.hidden) setMenu(false); });
-}
-
-
 /* ---------------- recent exams with XP ---------------- */
 function renderRecent({ xp, resultById }) {
   const el = $("recentSection");
@@ -907,7 +689,7 @@ function animateBars() {
     const ring = $("sealRing");
     if (ring) ring.style.strokeDashoffset = (Number(ring.dataset.c) * (1 - Number(ring.dataset.pct) / 100)).toFixed(2);
     document.querySelectorAll(".d-trend i").forEach(b => { b.style.height = b.dataset.h + "%"; });
-    document.querySelectorAll(".d-ref-bar i").forEach(b => { b.style.width = b.dataset.w + "%"; });
+    document.querySelectorAll(".d-att-bar i").forEach(b => { b.style.width = b.dataset.w + "%"; });
     document.querySelectorAll(".d-bar i").forEach(b => { b.style.width = b.dataset.w + "%"; });
   }));
 }
