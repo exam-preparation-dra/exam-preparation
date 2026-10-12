@@ -7,172 +7,162 @@
 <title>অ্যাডভান্সড বিশ্লেষণ — পরীক্ষা প্রস্তুতি</title>
 <link rel="stylesheet" href="../css/style.css">
 <style>
-  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
+  @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration:.001ms!important; transition-duration:.001ms!important; } }
   body { overflow-x: hidden; background: var(--bg-app); }
-  .app-shell { max-width: 650px; padding-bottom: 40px; margin: 0 auto; }
+  svg { display: block; }
+  .app-shell { max-width: 680px; padding-bottom: 48px; margin: 0 auto; }
+  #body > * { animation: up .45s cubic-bezier(.22,1,.36,1) backwards; }
+  @keyframes up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius-lg); padding: 16px; }
+  .sec { margin: 28px 2px 12px; }
+  .sec h2 { font-size: 1.02rem; font-weight: 900; margin: 0; display: flex; align-items: center; gap: 9px; }
+  .sec h2 i { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 9px; color: var(--color-accent); background: rgba(var(--color-accent-rgb), .14); font-style: normal; }
+  .sec h2 i svg { width: 15px; height: 15px; }
+  .sec p { margin: 5px 0 0; font-size: .72rem; font-weight: 600; color: var(--text-muted); line-height: 1.5; }
+  .muted { color: var(--text-muted); }
+  .empty { padding: 18px 10px; text-align: center; font-size: .76rem; font-weight: 700; color: var(--text-muted); line-height: 1.6; }
+  .head { margin: 16px 2px 4px; }
+  .head small { font-size: .7rem; font-weight: 800; letter-spacing: .06em; color: var(--color-accent); text-transform: uppercase; }
+  .head h1 { margin: 4px 0 0; font-size: 1.35rem; font-weight: 900; line-height: 1.3; }
 
-  /* ===== Flat cards (no blur, no per-block duplicate rules) ===== */
-  .glass-card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 14px; }
+  /* coach */
+  .coach { padding: 18px; border-color: rgba(var(--color-accent-rgb), .3); background: linear-gradient(135deg, rgba(var(--color-accent-rgb), .12), transparent 60%), var(--surface); }
+  .coach-top { display: flex; align-items: center; gap: 12px; }
+  .coach-ic { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; color: var(--color-accent); background: rgba(var(--color-accent-rgb), .16); }
+  .coach-ic svg { width: 22px; height: 22px; }
+  .coach h3 { margin: 0; font-size: 1rem; font-weight: 900; }
+  .coach-top p { margin: 2px 0 0; font-size: .72rem; font-weight: 600; color: var(--text-muted); }
+  .rankchip { margin-left: auto; flex: none; text-align: right; }
+  .rankchip b { display: block; font-family: var(--font-num); font-size: 1.5rem; font-weight: 900; line-height: 1; color: var(--color-accent); }
+  .rankchip span { font-size: .62rem; font-weight: 700; color: var(--text-muted); }
+  .says { margin-top: 14px; display: grid; gap: 9px; }
+  .say { display: flex; gap: 11px; padding: 11px 12px; border-radius: 13px; background: var(--surface-highlight); border: 1px solid var(--surface-border); font-size: .8rem; font-weight: 600; line-height: 1.65; color: var(--text-secondary); }
+  .say i { flex: none; width: 4px; border-radius: 4px; background: var(--text-muted); }
+  .say.good i { background: var(--color-success); } .say.warn i { background: var(--color-accent); }
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-top: 12px; }
+  .kpi { padding: 12px 10px; border-radius: 14px; background: var(--surface); border: 1px solid var(--surface-border); text-align: center; }
+  .kpi small { display: block; font-size: .64rem; font-weight: 700; color: var(--text-muted); }
+  .kpi b { display: block; margin-top: 3px; font-family: var(--font-num); font-size: 1.2rem; font-weight: 900; }
 
-  .page-heading { margin: 16px 2px 18px; }
-  .page-heading h1 { margin: 4px 0 5px; font-size: 1.4rem; font-weight: 900; color: var(--text-primary); }
-  .page-heading .eyebrow { margin:0; color:var(--color-accent); font-size:.72rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; }
-  .page-subtitle { margin:0; color:var(--text-muted); font-size:.78rem; font-weight:650; line-height:1.5; }
+  /* ladder */
+  .lad { display: grid; gap: 0; }
+  .lad-h, .lad-r { display: grid; grid-template-columns: 1.6fr .8fr .8fr .8fr; gap: 6px; align-items: center; padding: 11px 6px; font-size: .74rem; }
+  .lad-h { padding-top: 0; font-size: .62rem; font-weight: 800; color: var(--text-muted); letter-spacing: .03em; border-bottom: 1px solid var(--surface-border); }
+  .lad-r + .lad-r { border-top: 1px solid var(--surface-border); }
+  .lad-r.me { background: rgba(var(--color-accent-rgb), .1); border-radius: 12px; border-top-color: transparent; }
+  .lad-r b { font-family: var(--font-num); font-weight: 800; font-size: .86rem; text-align: center; }
+  .lad-h span:not(:first-child) { text-align: center; }
+  .who { min-width: 0; display: flex; align-items: center; gap: 9px; }
+  .who i { flex: none; width: 24px; height: 24px; border-radius: 8px; display: grid; place-items: center; font-style: normal; font-family: var(--font-num); font-size: .7rem; font-weight: 800; background: var(--surface-highlight); color: var(--text-secondary); }
+  .who i.t { background: var(--color-accent); color: #1d1608; }
+  .who span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 800; }
+  .who small { display: block; font-size: .6rem; font-weight: 700; color: var(--text-muted); }
+  .gapnote { margin-top: 12px; padding: 11px 13px; border-radius: 13px; background: var(--surface-highlight); font-size: .76rem; font-weight: 600; line-height: 1.6; color: var(--text-secondary); }
+  .gapnote b { font-family: var(--font-num); color: var(--text-primary); }
 
-  .section-label { margin: 26px 2px 12px; padding: 0; display: flex; align-items: center; gap: 10px; }
-  .section-label > span:first-child { color:var(--color-accent); display:flex; }
-  .section-label strong { display:block; font-size:1.02rem; font-weight: 900; color: var(--text-primary); }
-  .section-label small { display:block; margin-top:3px; font-size:.68rem; color:var(--text-muted); font-weight:650; }
+  /* subject gap bars */
+  .gp { padding: 12px 0; }
+  .gp + .gp { border-top: 1px solid var(--surface-border); }
+  .gp-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-size: .82rem; font-weight: 800; }
+  .gp-h em { font-style: normal; font-family: var(--font-num); font-size: .72rem; font-weight: 800; }
+  .gp-h em.behind { color: var(--color-danger); } .gp-h em.ahead { color: var(--color-success); }
+  .gb { display: flex; align-items: center; gap: 9px; margin-top: 7px; font-size: .64rem; font-weight: 700; color: var(--text-muted); }
+  .gb span:first-child { width: 36px; flex: none; }
+  .gb div { flex: 1; height: 7px; border-radius: 7px; background: var(--surface-edge); overflow: hidden; }
+  .gb div i { display: block; height: 100%; border-radius: 7px; }
+  .gb b { width: 40px; text-align: right; font-family: var(--font-num); font-size: .72rem; color: var(--text-primary); }
 
-  /* ===== Entrance animation — cascading fade-up as content mounts ===== */
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-  #body > * { animation: fadeUp .5s cubic-bezier(.22,1,.36,1) backwards; }
-  #body > *:nth-child(1) { animation-delay: .02s; }
-  #body > *:nth-child(2) { animation-delay: .08s; }
-  #body > *:nth-child(3) { animation-delay: .14s; }
-  #body > *:nth-child(4) { animation-delay: .20s; }
-  #body > *:nth-child(5) { animation-delay: .26s; }
-  #body > *:nth-child(n+6) { animation-delay: .30s; }
+  /* trend */
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 10px; font-size: .66rem; font-weight: 700; color: var(--text-muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 14px; height: 0; border-top: 3px solid; border-radius: 3px; }
+  .seq { margin-top: 14px; }
+  .sq { display: flex; align-items: center; gap: 12px; padding: 11px 0; }
+  .sq + .sq { border-top: 1px solid var(--surface-border); }
+  .sq-n { flex: none; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; background: var(--surface-highlight); font-family: var(--font-num); font-size: .72rem; font-weight: 800; color: var(--text-secondary); }
+  .sq-m { flex: 1; min-width: 0; }
+  .sq-m b { display: block; font-size: .8rem; font-weight: 800; overflow-wrap: anywhere; }
+  .sq-m span { display: block; margin-top: 2px; font-size: .64rem; font-weight: 600; color: var(--text-muted); line-height: 1.5; }
+  .sq-s { text-align: right; flex: none; }
+  .sq-s b { display: block; font-family: var(--font-num); font-size: 1rem; font-weight: 900; }
+  .dl { font-family: var(--font-num); font-size: .66rem; font-weight: 800; }
+  .dl.up { color: var(--color-success); } .dl.down { color: var(--color-danger); } .dl.flat { color: var(--text-muted); }
 
-  /* ===== Summary strip ===== */
-  .summary-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; }
-  .summary-card { padding:14px 12px; border:1px solid var(--surface-border); background:var(--surface); border-radius:var(--radius-lg); }
-  .summary-icon { width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:var(--color-accent-soft);color:var(--color-accent);margin-bottom:8px; }
-  .summary-card small { display:block;color:var(--text-muted);font-size:.65rem;font-weight:750; }
-  .summary-card strong { display:block;margin-top:3px;color:var(--text-primary);font-size:1.15rem;font-family:var(--font-num);font-weight:900; }
+  /* missions */
+  .ms { display: grid; gap: 10px; }
+  .m { padding: 14px; border-radius: 16px; border: 1px solid var(--surface-border); background: var(--surface); }
+  .m-h { display: flex; align-items: center; gap: 11px; }
+  .m-ic { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; color: var(--color-accent); background: rgba(var(--color-accent-rgb), .13); }
+  .m-ic svg { width: 19px; height: 19px; }
+  .m-t { flex: 1; min-width: 0; }
+  .m-t b { display: block; font-size: .88rem; font-weight: 850; line-height: 1.4; overflow-wrap: anywhere; }
+  .m-t span { display: block; margin-top: 2px; font-size: .68rem; font-weight: 600; color: var(--text-muted); line-height: 1.5; }
+  .m-bar { height: 7px; border-radius: 7px; background: var(--surface-edge); overflow: hidden; margin-top: 12px; }
+  .m-bar i { display: block; height: 100%; border-radius: 7px; background: var(--color-accent); width: 0; transition: width 1s cubic-bezier(.22,1,.36,1); }
+  .m-nums { display: flex; justify-content: space-between; margin-top: 6px; font-size: .66rem; font-weight: 700; color: var(--text-muted); }
+  .m-nums b { font-family: var(--font-num); color: var(--text-primary); }
+  .m details { margin-top: 10px; }
+  .m summary, .dt summary { cursor: pointer; font-size: .72rem; font-weight: 800; color: var(--color-accent); list-style: none; }
+  .m summary::-webkit-details-marker, .dt summary::-webkit-details-marker { display: none; }
+  .m ol { margin: 8px 0 0; padding-left: 18px; font-size: .74rem; font-weight: 600; line-height: 1.75; color: var(--text-secondary); }
 
-  /* ===== Trend chart ===== */
-  .trend-wrap { padding:2px 0; }
-  .trend-chart { width:100%; height:auto; display:block; }
-  .trend-chart path { stroke-dasharray: 600; stroke-dashoffset: 600; animation: drawLine 1.1s cubic-bezier(.22,1,.36,1) forwards .1s; }
-  @keyframes drawLine { to { stroke-dashoffset: 0; } }
-  .trend-caption { display:flex;justify-content:space-between;align-items:center;color:var(--text-muted);font-size:.68rem;font-weight:700;margin-top:3px; }
-  .trend-caption strong { color:var(--color-accent);font-size:.9rem;font-family:var(--font-num); }
+  /* plan */
+  .pl { padding: 14px; border-radius: 16px; border: 1px solid var(--surface-border); background: var(--surface); }
+  .pl + .pl { margin-top: 10px; }
+  .pl-h { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .pl-h b { font-size: .86rem; font-weight: 850; line-height: 1.4; overflow-wrap: anywhere; }
+  .pl-h strong { flex: none; font-family: var(--font-num); font-size: 1.1rem; font-weight: 900; color: var(--color-danger); }
+  .when { display: inline-block; margin-top: 6px; padding: 3px 10px; border-radius: 99px; font-size: .66rem; font-weight: 800; background: rgba(var(--color-accent-rgb), .13); color: var(--color-accent); }
+  .when.late { background: rgba(214,80,60,.14); color: var(--color-danger); }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-top: 12px; }
+  .stp { padding: 9px 8px; border-radius: 11px; background: var(--surface-highlight); text-align: center; font-size: .64rem; font-weight: 700; line-height: 1.5; color: var(--text-secondary); }
+  .stp b { display: block; font-family: var(--font-num); font-size: .8rem; color: var(--color-accent); margin-bottom: 2px; }
+  .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .act { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 42px; border-radius: 12px; border: 1px solid var(--surface-border); background: var(--surface-solid); color: var(--text-primary); text-decoration: none; font-size: .76rem; font-weight: 800; }
+  .act.pri { background: var(--color-accent); border-color: transparent; color: #1d1608; }
+  .act svg { width: 16px; height: 16px; }
+  .how { display: grid; gap: 8px; }
+  .how div { display: flex; gap: 12px; padding: 12px; border-radius: 14px; background: var(--surface); border: 1px solid var(--surface-border); }
+  .how i { flex: none; width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; font-style: normal; font-family: var(--font-num); font-weight: 900; font-size: .8rem; color: #1d1608; background: var(--color-accent); }
+  .how b { display: block; font-size: .8rem; font-weight: 850; }
+  .how span { display: block; margin-top: 2px; font-size: .72rem; font-weight: 600; color: var(--text-secondary); line-height: 1.6; }
 
-  /* ===== Smart insights ===== */
-  .insight-grid { display:grid;gap:9px; }
-  .insight-box { display:flex;gap:11px;padding:14px;border-radius:var(--radius-lg);border:1px solid var(--surface-border);background:var(--surface); }
-  .insight-icon { width:34px;height:34px;flex:0 0 34px;border-radius:10px;display:flex;align-items:center;justify-content:center; }
-  .insight-box strong { color:var(--text-primary);font-size:.82rem;font-weight:900; }
-  .insight-box p { margin:4px 0 0;color:var(--text-secondary);font-size:.72rem;line-height:1.5;font-weight:600; }
-  .insight-danger .insight-icon { color:var(--color-danger);background:rgba(166,64,47,.1); }
-  .insight-warning .insight-icon { color:var(--color-accent);background:var(--color-accent-soft); }
-  .insight-success .insight-icon { color:var(--color-success);background:rgba(47,125,94,.1); }
-  .insight-neutral .insight-icon { color:var(--color-info);background:rgba(62,110,140,.1); }
+  /* quick challenge (game) */
+  .gm { position: relative; overflow: hidden; padding: 18px 16px; border-radius: var(--radius-lg); background: var(--surface); border: 1px solid var(--surface-border); }
+  .gm-top { display: flex; justify-content: space-between; align-items: center; font-size: .72rem; font-weight: 800; color: var(--text-muted); }
+  .gm-top b { font-family: var(--font-num); font-size: 1.05rem; color: var(--color-accent); }
+  .gm-time { height: 5px; border-radius: 5px; background: var(--surface-edge); overflow: hidden; margin: 12px 0 16px; }
+  .gm-time i { display: block; height: 100%; width: 100%; background: var(--color-accent); border-radius: 5px; }
+  .gm-q { min-height: 84px; display: grid; place-items: center; text-align: center; }
+  .gm-q b { display: block; font-size: 1.1rem; font-weight: 900; line-height: 1.4; }
+  .gm-q span { display: block; margin-top: 5px; font-size: .68rem; font-weight: 700; color: var(--text-muted); }
+  .gm-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .gm-btn { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 50px; border-radius: 13px; border: 1px solid; font: inherit; font-weight: 850; font-size: .86rem; cursor: pointer; }
+  .gm-btn svg { width: 17px; height: 17px; }
+  .gm-btn.s { color: var(--color-success); border-color: rgba(47,125,94,.45); background: rgba(47,125,94,.12); }
+  .gm-btn.w { color: var(--color-danger); border-color: rgba(214,80,60,.45); background: rgba(214,80,60,.1); }
+  .gm-res { text-align: center; }
+  .gm-res b { display: block; font-size: 1.15rem; font-weight: 900; }
+  .gm-res.ok b { color: var(--color-success); } .gm-res.no b { color: var(--color-danger); }
+  .gm-res p { margin: 6px 0 0; font-size: .76rem; font-weight: 600; color: var(--text-secondary); }
+  .gm-final b { display: block; text-align: center; font-family: var(--font-num); font-size: 2.3rem; font-weight: 900; color: var(--color-accent); }
+  .gm-final p { text-align: center; margin: 4px 0 0; font-size: .78rem; font-weight: 600; color: var(--text-secondary); line-height: 1.6; }
+  .gm-go { width: 100%; margin-top: 14px; min-height: 46px; border: 0; border-radius: 12px; background: var(--color-accent); color: #1d1608; font: inherit; font-weight: 850; cursor: pointer; }
 
-  /* ===== Donut charts for subjects (kept for potential future use) ===== */
-  .subject-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 12px; }
-  .subject-card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: var(--radius-lg); padding: 16px; text-align: center; display: flex; flex-direction: column; align-items: center; }
-  .circ-chart { display: block; margin: 0 auto; width: 64px; height: 64px; }
-  .circ-bg { fill: none; stroke: var(--surface-edge); stroke-width: 3.5; }
-  .circ-fill { fill: none; stroke-linecap: round; stroke-width: 3.5; animation: fillup 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
-  .circ-text { font-family: var(--font-num); font-size: 8.5px; font-weight: 900; fill: var(--text-primary); text-anchor: middle; dominant-baseline: central; }
-  @keyframes fillup { from { stroke-dasharray: 0, 100; } }
-
-  /* ===== Stat rows (subject / chapter / topic) ===== */
-  .stat-list { display:grid;gap:8px; }
-  .stat-row { display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;background:var(--surface);border:1px solid var(--surface-border);border-radius:var(--radius-lg); }
-  .stat-row.is-weak { border-color:rgba(166,64,47,.28);background:rgba(166,64,47,.04); }
-  .stat-main { min-width:0;flex:1; }
-  .stat-main strong { display:block;color:var(--text-primary);font-size:.82rem;font-weight:850;overflow-wrap:anywhere; }
-  .stat-main span { display:block;color:var(--text-muted);font-size:.65rem;font-weight:650;margin-top:4px; }
-  .stat-value { font-family:var(--font-num);font-size:1rem;white-space:nowrap; }
-  .stat-value.excellent { color:var(--color-success); } .stat-value.good{color:var(--color-accent)} .stat-value.mid{color:var(--color-accent)} .stat-value.weak{color:var(--color-danger)} .stat-value.muted{color:var(--text-muted)}
-  .bar { height:5px;background:var(--surface-edge);border-radius:99px;overflow:hidden;margin-top:8px; }
-  .bar i { display:block;height:100%;border-radius:99px;background:var(--color-accent); transition: width 1s cubic-bezier(.22,1,.36,1); }
-  .trend-up { color: var(--color-success); font-weight: 800; display: flex; align-items: center; gap: 2px; }
-  .trend-down { color: var(--color-danger); font-weight: 800; display: flex; align-items: center; gap: 2px; }
-  .trend-flat { color: var(--text-muted); font-weight: 800; display: flex; align-items: center; gap: 2px; }
-
-  /* ===== Time management ===== */
-  .time-list { margin-top:8px; }
-  .time-row { display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--surface-border);font-size:.73rem;font-weight:700;color:var(--text-secondary); }
-  .time-row:last-child { border-bottom: none; }
-  .time-row strong { color:var(--color-accent);font-family:var(--font-num);white-space:nowrap; }
-  .speed-box { display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;padding:11px;border-radius:var(--radius-md);background:var(--color-accent-soft);font-size:.66rem;color:var(--text-muted);font-weight:700; }
-  .speed-box b { color:var(--text-primary);font-family:var(--font-num); }
-
-  /* ===== Repeated wrong-option pattern ===== */
-  .pattern-card { padding:13px 14px;border:1px solid rgba(var(--color-accent-rgb),.25);background:var(--color-accent-soft);border-radius:var(--radius-lg); }
-  .pattern-card strong,.pattern-card span { display:block; }
-  .pattern-card strong { color:var(--text-primary);font-size:.76rem;line-height:1.45; }
-  .pattern-card span { color:var(--text-muted);font-size:.65rem;font-weight:700;margin-top:4px; }
-
-  /* ===== Marked-for-review ===== */
-  .review-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:8px; }
-  .review-grid div { padding:12px 8px;border-radius:var(--radius-md);background:var(--surface-highlight);text-align:center; }
-  .review-grid small { display:block;color:var(--text-muted);font-size:.6rem;font-weight:700; }
-  .review-grid strong { display:block;margin-top:4px;color:var(--text-primary);font-size:.95rem;font-family:var(--font-num); }
-
-  /* ===== Exam history ===== */
-  .history-list { display:grid;gap:8px; }
-  .history-row { display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 14px;background:var(--surface);border:1px solid var(--surface-border);border-radius:var(--radius-lg); }
-  .history-row strong,.history-row span { display:block; }
-  .history-row strong { color:var(--text-primary);font-size:.77rem;font-weight:850; }
-  .history-row span { color:var(--text-muted);font-size:.62rem;font-weight:650;margin-top:3px; }
-  .history-score { text-align:right; }
-  .history-score strong { color:var(--color-accent);font-size:.95rem;font-family:var(--font-num); }
-
-  .empty-mini { padding:18px 12px;text-align:center;color:var(--text-muted);font-size:.7rem;font-weight:700;line-height:1.5; }
-  .loading-card { min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-muted);font-size:.72rem;font-weight:700; }
-  .error-card { color:var(--color-danger);text-align:center;padding:28px 18px; }
-  .error-card p { color:var(--text-muted);font-size:.72rem;font-weight:650;line-height:1.5;margin-top:7px; }
-
-  /* =====================================================================
-     খেলা: টপিক স্প্রিন্ট (Topic Sprint) — a quick reflex game built from
-     the student's own topicStats. Guess "strong" or "weak" before the
-     timer bar runs out; reveal the real accuracy with a flip + streak combo.
-     ===================================================================== */
-  .game-card { position: relative; overflow: hidden; background: #21262f; border-radius: var(--radius-lg); padding: 18px 16px; color: #f3f1ea; }
-  .game-top { display:flex; justify-content:space-between; align-items:center; gap:10px; }
-  .game-score { font-family: var(--font-num); font-weight: 800; font-size: 1.05rem; color: var(--color-accent); }
-  .game-score span { font-size:.65rem; font-weight:700; color: rgba(243,241,234,.6); margin-left:4px; }
-  .game-streak { font-size:.7rem; font-weight:800; color: rgba(243,241,234,.75); display:flex; align-items:center; gap:4px; }
-  .game-streak b { color: var(--color-success); font-family: var(--font-num); }
-
-  .game-timer { height: 5px; border-radius: 99px; background: rgba(243,241,234,.14); overflow: hidden; margin: 14px 0 18px; }
-  .game-timer i { display:block; height:100%; background: var(--color-accent); border-radius: 99px; width: 100%; transition: width linear; }
-
-  .game-topic-wrap { min-height: 96px; display: flex; align-items: center; justify-content: center; text-align: center; }
-  .game-topic-card { animation: gameCardIn .32s cubic-bezier(.22,1,.36,1); }
-  @keyframes gameCardIn { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
-  .game-topic-name { font-size: 1.15rem; font-weight: 900; line-height: 1.4; }
-  .game-topic-meta { font-size: .68rem; font-weight: 700; color: rgba(243,241,234,.55); margin-top: 6px; }
-
-  .game-reveal { text-align:center; }
-  .game-reveal .verdict { font-size: 1.5rem; font-weight: 900; font-family: var(--font-num); }
-  .game-reveal.correct .verdict { color: var(--color-success); }
-  .game-reveal.wrong .verdict { color: var(--color-danger); }
-  .game-reveal p { margin-top: 6px; font-size: .78rem; font-weight: 700; color: rgba(243,241,234,.8); }
-  .game-shake { animation: gameShake .32s ease; }
-  @keyframes gameShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
-
-  .game-btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
-  .game-btn { min-height: 50px; border-radius: var(--radius-md); border: none; font: inherit; font-weight: 800; font-size: .88rem; cursor: pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition: transform .12s ease; -webkit-tap-highlight-color: transparent; }
-  .game-btn:active { transform: scale(.96); }
-  .game-btn-strong { background: rgba(47,125,94,.22); color: #a9d9bf; border: 1px solid rgba(47,125,94,.4); }
-  .game-btn-weak { background: rgba(166,64,47,.22); color: #e5b4a8; border: 1px solid rgba(166,64,47,.4); }
-  .game-btn:disabled { opacity: .5; cursor: default; }
-
-  .game-final { text-align: center; padding: 6px 0; }
-  .game-final .final-score { font-family: var(--font-num); font-size: 2.4rem; font-weight: 900; color: var(--color-accent); animation: gameCardIn .4s cubic-bezier(.22,1,.36,1); }
-  .game-final p { font-size: .82rem; font-weight: 700; color: rgba(243,241,234,.8); margin-top: 4px; }
-  .game-replay { margin-top: 16px; min-height: 46px; width: 100%; border-radius: var(--radius-md); border: none; background: var(--color-accent); color: #211a0d; font: inherit; font-weight: 800; font-size: .88rem; cursor: pointer; }
-  .game-locked { text-align: center; padding: 10px 4px; font-size: .82rem; font-weight: 700; color: rgba(243,241,234,.75); line-height: 1.6; }
-
-  .confetti-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-  .confetti-bit { position: absolute; top: -10px; width: 7px; height: 12px; border-radius: 2px; animation: confettiFall 1.1s ease-in forwards; }
-  @keyframes confettiFall { to { transform: translateY(160px) rotate(340deg); opacity: 0; } }
-
-  @media (max-width:480px) {
-    .summary-card { padding:12px 9px; }
-    .summary-card strong { font-size:1.02rem; }
-    .summary-icon { width:29px;height:29px; }
-    .stat-row { padding:12px; }
-    .speed-box { grid-template-columns:1fr; }
-    .history-row { align-items:flex-start; }
-    .game-btn-row { gap: 8px; }
-  }
+  /* detail lists */
+  .dt { margin-top: 12px; }
+  .dt > summary { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-radius: 14px; background: var(--surface); border: 1px solid var(--surface-border); color: var(--text-primary); font-size: .86rem; font-weight: 850; }
+  .dt > summary:after { content: ""; width: 8px; height: 8px; border-right: 2px solid var(--text-muted); border-bottom: 2px solid var(--text-muted); transform: rotate(45deg); transition: transform .2s; }
+  .dt[open] > summary:after { transform: rotate(-135deg); }
+  .dt-b { padding: 8px 4px 0; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 4px; }
+  .row + .row { border-top: 1px solid var(--surface-border); }
+  .row b { font-size: .78rem; font-weight: 800; overflow-wrap: anywhere; }
+  .row span { display: block; margin-top: 2px; font-size: .64rem; font-weight: 600; color: var(--text-muted); }
+  .row strong { flex: none; font-family: var(--font-num); font-size: .92rem; font-weight: 900; }
+  .good { color: var(--color-success); } .mid { color: var(--color-accent); } .weakc { color: var(--color-danger); }
+  .loading { min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--text-muted); font-size: .76rem; font-weight: 700; }
+  @media (max-width: 460px) { .steps { grid-template-columns: 1fr; } .lad-h, .lad-r { grid-template-columns: 1.5fr .7fr .7fr .7fr; font-size: .7rem; } }
 </style>
 <script src="../js/utils/nav-boot.js"></script>
 <link rel="stylesheet" href="../css/desktop.css">
@@ -183,562 +173,243 @@
 <div class="app-shell" id="shell">
   <div class="state-block"><div class="spinner"></div></div>
 </div>
-
 <script type="module">
 import { initTheme, renderState, renderStudentHeader } from "../js/utils/ui-utils.js";
-import { getActiveStudent } from "../js/utils/student-utils.js";
-import { getApprovedResults, getExamSnapshotsMap } from "../js/utils/results-utils.js";
+import { getActiveStudent, getActiveStudents } from "../js/utils/student-utils.js";
+import { getApprovedResults, getAllApprovedResults, getExamSnapshotsMap, buildLeaderboardRows } from "../js/utils/results-utils.js";
+import { getChallengeBonusMap } from "../js/utils/challenge-utils.js";
+import { getCompletedImprovementAttemptsByStudent } from "../js/utils/improvement-xp-integration.js";
+import { getBattleXPMap } from "../js/utils/battle-utils.js";
 import { getSubjects, getChapters, getTopics, buildNameMap } from "../js/utils/syllabus-utils.js";
+import { normalizeBatch, sameBatch } from "../js/utils/batch-utils.js";
 import {
-  computeOverallStats,
-  computeSubjectStats,
-  computeChapterStats,
-  computeTopicStats,
-  buildQuestionRecords,
-  computeTimeManagementStats,
-  computeWrongOptionPatterns,
-  computeMarkedForReviewStats,
-  computeTopicTrends,
-  getPerformanceLabel,
-  buildExamHistoryTimeline
+  computeSubjectStats, computeChapterStats, computeTopicStats, buildQuestionRecords,
+  computeTimeManagementStats, computeWrongOptionPatterns, computeMarkedForReviewStats, getPerformanceLabel
 } from "../js/utils/analytics-utils.js";
+import {
+  groupByStudent, summarize, findPeers, examSequence, momentum, subjectGaps, topicGaps, reviewPlan, buildMissions, coachLines
+} from "../js/utils/coach-utils.js";
 
 initTheme();
-
 const shell = document.getElementById("shell");
 const student = getActiveStudent();
+if (!student) window.location.href = "../index.html"; else renderPage();
 
-if (!student) {
-  window.location.href = "../index.html";
-} else {
-  renderPage();
-}
+const BN = "০১২৩৪৫৬৭৮৯";
+const bn = (v) => String(v ?? "").replace(/\d/g, d => BN[d]);
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const pc = (v) => v == null || Number.isNaN(Number(v)) ? "—" : bn(`${Number(v).toFixed(Number(v) % 1 ? 1 : 0)}%`);
+const tm = (v) => v == null ? "—" : bn(`${Math.round(v)} সে`);
+const cls = (v) => v == null ? "" : v >= 75 ? "good" : v >= 55 ? "mid" : "weakc";
+const fdate = (ms) => { try { return ms ? new Date(ms).toLocaleDateString("bn-BD", { day: "numeric", month: "short" }) : ""; } catch { return ""; } };
 
-function esc(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
+const P = {
+  coach: '<path d="M12 3 4 7v5c0 5 3.4 8.4 8 9 4.6-.6 8-4 8-9V7z"/><path d="m9 12 2 2 4-4"/>',
+  ladder: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  chart: '<polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/>',
+  flag: '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
+  book: '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M8 7h8"/>',
+  bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>',
+  list: '<path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+  up: '<path d="M12 19V5M5 12l7-7 7 7"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  flame: '<path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-4-1-6 1-9z"/>',
+  check: '<path d="m5 12.5 4.5 4.5L19 7.5"/>', x: '<path d="M6 6l12 12M18 6 6 18"/>',
+  note: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>'
+};
+const ic = (k, n = 16) => `<svg width="${n}" height="${n}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[k]}</svg>`;
+const sec = (k, t, sub = "") => `<div class="sec"><h2><i>${ic(k)}</i>${esc(t)}</h2>${sub ? `<p>${esc(sub)}</p>` : ""}</div>`;
+const MISSION_ICON = { topic: "target", rank: "flag", streak: "flame", habit: "clock" };
 
-function pct(value) {
-  return value === null || value === undefined || Number.isNaN(Number(value))
-    ? "—"
-    : `${Number(value).toFixed(Number(value) % 1 ? 1 : 0)}%`;
-}
-
-function formatDate(value) {
-  if (!value) return "—";
-  try {
-    const d = value?.toDate ? value.toDate() : new Date(value);
-    if (Number.isNaN(d.getTime())) return "—";
-    return d.toLocaleDateString("bn-BD", {
-      day: "numeric",
-      month: "short",
-      year: "numeric"
-    });
-  } catch {
-    return "—";
-  }
-}
-
-function formatTime(seconds) {
-  if (seconds === null || seconds === undefined || Number.isNaN(Number(seconds))) return "—";
-  const total = Math.max(0, Math.round(Number(seconds)));
-  const m = Math.floor(total / 60);
-  const s = total % 60;
-  return m > 0 ? `${m} মি ${s} সে` : `${s} সে`;
-}
-
-function accuracyClass(value) {
-  if (value === null || value === undefined) return "muted";
-  if (value >= 90) return "excellent";
-  if (value >= 75) return "good";
-  if (value >= 60) return "mid";
-  return "weak";
-}
-
-function icon(name) {
-  const common = 'width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
-  const paths = {
-    chart: `<svg ${common}><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>`,
-    target: `<svg ${common}><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>`,
-    book: `<svg ${common}><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v17H6.5A2.5 2.5 0 0 0 4 22z"/><path d="M4 5.5v16"/><path d="M8 7h8"/></svg>`,
-    topic: `<svg ${common}><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>`,
-    clock: `<svg ${common}><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/></svg>`,
-    warning: `<svg ${common}><path d="M12 3 2.5 20h19z"/><path d="M12 9v5M12 17h.01"/></svg>`,
-    check: `<svg ${common}><circle cx="12" cy="12" r="9"/><polyline points="8 12 11 15 16 9"/></svg>`,
-    trend: `<svg ${common}><polyline points="4 16 9 11 13 14 20 7"/><polyline points="15 7 20 7 20 12"/></svg>`,
-    game: `<svg ${common}><rect x="2" y="7" width="20" height="10" rx="5"/><line x1="7" y1="10" x2="7" y2="14"/><line x1="5" y1="12" x2="9" y2="12"/><circle cx="15" cy="10.5" r="1"/><circle cx="17.5" cy="13" r="1"/></svg>`
+function trendSvg(seq) {
+  const pts = seq.filter(s => s.my != null);
+  if (pts.length < 2) return `<div class="empty">ট্রেন্ড দেখাতে অন্তত ২টা পরীক্ষা লাগবে।</div>`;
+  const w = 520, h = 190, px = 30, py = 22;
+  const all = seq.flatMap(s => [s.my, s.topper, s.batchAvg]).filter(v => v != null);
+  const lo = Math.max(0, Math.floor((Math.min(...all) - 8) / 10) * 10), hi = Math.min(100, Math.ceil((Math.max(...all) + 5) / 10) * 10);
+  const X = (i) => px + i * (w - px * 2) / Math.max(1, seq.length - 1);
+  const Y = (v) => h - py - ((v - lo) / Math.max(1, hi - lo)) * (h - py * 2);
+  const line = (key, color, dash = "") => {
+    const d = seq.map((s, i) => s[key] == null ? null : [X(i), Y(s[key])]).reduce((a, p, i, arr) => p ? a + `${a && arr[i - 1] ? "L" : "M"}${p[0].toFixed(1)} ${p[1].toFixed(1)} ` : a, "");
+    return d ? `<path d="${d}" fill="none" stroke="${color}" stroke-width="${key === "my" ? 3.5 : 2.2}" stroke-linecap="round" stroke-linejoin="round" ${dash ? `stroke-dasharray="${dash}"` : ""}/>` : "";
   };
-  return paths[name] || paths.chart;
+  const grid = [lo, Math.round((lo + hi) / 2), hi].map(v => `<line x1="${px}" x2="${w - px}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--surface-border)" stroke-dasharray="3 5"/><text x="2" y="${Y(v) + 4}" font-size="10" fill="var(--text-muted)" font-family="var(--font-num)">${v}</text>`).join("");
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="পরীক্ষার ট্রেন্ড">${grid}${line("batchAvg", "var(--text-muted)", "5 5")}${line("topper", "var(--color-violet, #7257c9)", "")}${line("my", "var(--color-accent)")}
+    ${seq.map((s, i) => s.my == null ? "" : `<circle cx="${X(i).toFixed(1)}" cy="${Y(s.my).toFixed(1)}" r="4.5" fill="var(--surface)" stroke="var(--color-accent)" stroke-width="3"><title>${esc(s.name)}: ${s.my}%</title></circle>`).join("")}</svg>
+    <div class="legend"><span><i style="border-color:var(--color-accent)"></i>তুমি</span><span><i style="border-color:var(--color-violet,#7257c9)"></i>টপার</span><span><i style="border-color:var(--text-muted);border-top-style:dashed"></i>ব্যাচ গড়</span></div>`;
 }
 
-function sectionTitle(iconName, title, subtitle = "") {
-  return `
-    <div class="section-label">
-      <span class="section-icon">${icon(iconName)}</span>
-      <span>
-        <strong>${esc(title)}</strong>
-        ${subtitle ? `<small>${esc(subtitle)}</small>` : ""}
-      </span>
-    </div>
-  `;
-}
-
-function buildTrendSvg(trend) {
-  if (!Array.isArray(trend) || trend.length < 2) {
-    return `<div class="empty-mini">কমপক্ষে ২টি পরীক্ষার ফলাফল থাকলে অগ্রগতির ধারা দেখানো হবে।</div>`;
+/* ---------- quick challenge (uses the student's own topic accuracy) ---------- */
+const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+function initChallenge(topicStats) {
+  const el = document.getElementById("gm"); if (!el) return;
+  const pool = (topicStats || []).filter(t => t.accuracy != null && t.attempts > 0);
+  if (pool.length < 4) { el.innerHTML = `<div class="empty">আরও কয়েকটা টপিকে পরীক্ষা দিলে এই চ্যালেঞ্জ খুলবে।</div>`; return; }
+  const MS = 4500; let rounds = [], i = 0, score = 0, streak = 0, best = 0, timer = null, done = false;
+  const top = () => `<div class="gm-top"><span>স্কোর <b>${bn(score)}</b></span><span>কম্বো <b>${bn(streak)}</b></span></div><div class="gm-time"><i id="gmBar"></i></div>`;
+  const start = () => { rounds = shuffle(pool).slice(0, Math.min(8, pool.length)); i = 0; score = 0; streak = 0; best = 0; round(); };
+  function round() {
+    if (i >= rounds.length) return fin();
+    done = false; const t = rounds[i];
+    el.innerHTML = `${top()}<div class="gm-q"><div><b>${esc(t.name)}</b><span>${bn(t.attempts)} বার এসেছে</span></div></div>
+      <div class="gm-btns"><button class="gm-btn s" data-g="s">${ic("check")}শক্তি</button><button class="gm-btn w" data-g="w">${ic("x")}দুর্বলতা</button></div>`;
+    const bar = document.getElementById("gmBar");
+    requestAnimationFrame(() => { bar.style.transition = "none"; bar.style.width = "100%"; requestAnimationFrame(() => { bar.style.transition = `width ${MS}ms linear`; bar.style.width = "0%"; }); });
+    el.querySelectorAll("[data-g]").forEach(b => b.onclick = () => guess(b.dataset.g));
+    clearTimeout(timer); timer = setTimeout(() => guess(null), MS);
   }
-
-  const values = trend.map(t => Number(t.value)).filter(v => Number.isFinite(v));
-  if (values.length < 2) {
-    return `<div class="empty-mini">গ্রাফের জন্য পর্যাপ্ত শতাংশের তথ্য নেই।</div>`;
+  function guess(g) {
+    if (done) return; done = true; clearTimeout(timer);
+    const t = rounds[i], strong = Number(t.accuracy) >= 70, ok = g === (strong ? "s" : "w");
+    if (ok) { streak++; best = Math.max(best, streak); score += 10 + Math.min(streak - 1, 5) * 2; } else streak = 0;
+    el.innerHTML = `${top()}<div class="gm-q"><div class="gm-res ${ok ? "ok" : "no"}"><b>${ok ? "ঠিক ধরেছো" : "আসলে অন্যরকম"}</b><p>${esc(t.name)} — accuracy ${pc(t.accuracy)} (${strong ? "শক্তি" : "দুর্বলতা"})</p></div></div>`;
+    setTimeout(() => { i++; round(); }, 1100);
   }
-
-  const w = 520, h = 170, padX = 28, padY = 22;
-  const minV = Math.max(0, Math.min(...values, 0));
-  const maxV = Math.min(100, Math.max(...values, 100));
-  const range = Math.max(1, maxV - minV);
-  const points = trend.map((t, i) => {
-    const v = Number(t.value);
-    const safeV = Number.isFinite(v) ? v : minV;
-    const x = padX + (i * (w - padX * 2)) / Math.max(1, trend.length - 1);
-    const y = h - padY - ((safeV - minV) / range) * (h - padY * 2);
-    return { x, y, v: safeV, label: t.label || "পরীক্ষা" };
-  });
-
-  const d = points.map((p, i) => `${i ? "L" : "M"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
-
-  return `
-    <div class="trend-wrap">
-      <svg viewBox="0 0 ${w} ${h}" class="trend-chart" aria-label="পরীক্ষার ফলাফলের অগ্রগতি">
-        <line x1="${padX}" y1="${h-padY}" x2="${w-padX}" y2="${h-padY}" stroke="var(--surface-border)" />
-        <path d="${d}" fill="none" stroke="var(--color-accent)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-        ${points.map(p => `
-          <circle cx="${p.x}" cy="${p.y}" r="5" fill="var(--bg)" stroke="var(--color-accent)" stroke-width="3">
-            <title>${esc(p.label)}: ${p.v}%</title>
-          </circle>
-        `).join("")}
-      </svg>
-      <div class="trend-caption">
-        <span>পুরনো → নতুন</span>
-        <strong>${pct(values[values.length - 1])}</strong>
-      </div>
-    </div>
-  `;
-}
-
-// ===== খেলা: টপিক স্প্রিন্ট =====
-// Real topicStats power the game: each round asks the student to guess
-// whether their own accuracy on a topic is "strong" (>=70%) or "weak"
-// before a 4s timer runs out, then reveals the true number.
-function shuffle(arr) {
-  const a = arr.slice();
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
+  function fin() {
+    const msg = score >= 70 ? "নিজের দুর্বলতা সম্পর্কে তোমার ধারণা বেশ পরিষ্কার।" : score >= 40 ? "মোটামুটি ভালো। নিচের উন্নতির প্ল্যানটা একবার দেখে নাও।" : "নিজের টপিকগুলো আরেকবার দেখে নাও, পরের বার স্কোর বাড়বে।";
+    el.innerHTML = `<div class="gm-final"><b>${bn(score)}</b><p>সর্বোচ্চ কম্বো ${bn(best)}। ${msg}</p></div><button class="gm-go" id="gmGo">আবার খেলো</button>`;
+    document.getElementById("gmGo").onclick = start;
   }
-  return a;
-}
-
-function spawnConfetti(container, count) {
-  const colors = ["#b8863c", "#2f7d5e", "#6b4e96", "#a6402f", "#3e6e8c"];
-  const layer = document.createElement("div");
-  layer.className = "confetti-layer";
-  for (let i = 0; i < count; i++) {
-    const bit = document.createElement("i");
-    bit.className = "confetti-bit";
-    bit.style.left = `${Math.random() * 100}%`;
-    bit.style.background = colors[i % colors.length];
-    bit.style.animationDelay = `${Math.random() * 0.25}s`;
-    bit.style.transform = `rotate(${Math.random() * 60 - 30}deg)`;
-    layer.appendChild(bit);
-  }
-  container.appendChild(layer);
-  setTimeout(() => layer.remove(), 1500);
-}
-
-function initTopicGame(topicStats) {
-  const el = document.getElementById("topicGame");
-  if (!el) return;
-
-  const pool = (topicStats || []).filter(t => t.accuracy !== null && t.accuracy !== undefined && t.attempts > 0);
-  if (pool.length < 4) {
-    el.innerHTML = `<div class="game-locked">খেলাটা আনলক হতে আরও কিছু টপিকে পরীক্ষা দরকার। যত বেশি পরীক্ষা দেবে, তত বেশি টপিক নিয়ে খেলতে পারবে।</div>`;
-    return;
-  }
-
-  const ROUND_MS = 4000;
-  let rounds = [];
-  let idx = 0;
-  let score = 0;
-  let streak = 0;
-  let bestStreak = 0;
-  let timerHandle = null;
-  let answered = false;
-
-  function startRun() {
-    rounds = shuffle(pool).slice(0, Math.min(8, pool.length));
-    idx = 0; score = 0; streak = 0; bestStreak = 0;
-    renderRound();
-  }
-
-  function renderHeader() {
-    return `
-      <div class="game-top">
-        <div class="game-score">${score}<span>পয়েন্ট</span></div>
-        <div class="game-streak">🔥 <b>${streak}</b> কম্বো</div>
-      </div>
-      <div class="game-timer"><i id="gtBar"></i></div>
-    `;
-  }
-
-  function renderRound() {
-    if (idx >= rounds.length) return renderFinal();
-    answered = false;
-    const t = rounds[idx];
-    el.innerHTML = `
-      ${renderHeader()}
-      <div class="game-topic-wrap">
-        <div class="game-topic-card" id="gtCard">
-          <div class="game-topic-name">${(t.name || "টপিক").replace(/</g, "&lt;")}</div>
-          <div class="game-topic-meta">${t.attempts} বার এসেছে</div>
-        </div>
-      </div>
-      <div class="game-btn-row">
-        <button class="game-btn game-btn-strong" data-guess="strong">💪 শক্তিশালী</button>
-        <button class="game-btn game-btn-weak" data-guess="weak">📉 দুর্বলতা</button>
-      </div>
-    `;
-
-    const bar = document.getElementById("gtBar");
-    requestAnimationFrame(() => {
-      bar.style.transition = "none";
-      bar.style.width = "100%";
-      requestAnimationFrame(() => {
-        bar.style.transition = `width ${ROUND_MS}ms linear`;
-        bar.style.width = "0%";
-      });
-    });
-
-    el.querySelectorAll(".game-btn").forEach(btn => {
-      btn.addEventListener("click", () => handleGuess(btn.dataset.guess));
-    });
-
-    clearTimeout(timerHandle);
-    timerHandle = setTimeout(() => handleGuess(null), ROUND_MS);
-  }
-
-  function handleGuess(guess) {
-    if (answered) return;
-    answered = true;
-    clearTimeout(timerHandle);
-
-    const t = rounds[idx];
-    const isStrong = Number(t.accuracy) >= 70;
-    const correct = guess === (isStrong ? "strong" : "weak");
-
-    if (correct) {
-      streak += 1;
-      bestStreak = Math.max(bestStreak, streak);
-      score += 10 + Math.min(streak - 1, 5) * 2;
-    } else {
-      streak = 0;
-    }
-
-    el.innerHTML = `
-      ${renderHeader()}
-      <div class="game-topic-wrap">
-        <div class="game-reveal ${correct ? "correct" : "wrong"} ${correct ? "" : "game-shake"}">
-          <div class="verdict">${correct ? "✓ ঠিক ধরেছো!" : "✗ আসলে অন্যরকম"}</div>
-          <p>${(t.name || "টপিক").replace(/</g, "&lt;")} — accuracy ${Number(t.accuracy).toFixed(0)}% (${isStrong ? "শক্তিশালী" : "দুর্বলতা"})</p>
-        </div>
-      </div>
-    `;
-    if (correct && streak >= 3) spawnConfetti(el, 14);
-
-    setTimeout(() => { idx += 1; renderRound(); }, 1000);
-  }
-
-  function renderFinal() {
-    const msg = score >= 70 ? "চমৎকার! তোমার নিজের দুর্বলতা সম্পর্কে ধারণা বেশ পরিষ্কার।"
-      : score >= 40 ? "মোটামুটি ভালো — analytics-টা আরও একটু ঘেঁটে দেখো।"
-      : "নিজের subject breakdown আরেকবার দেখে নাও, তাহলে পরের বার স্কোর বাড়বে।";
-    el.innerHTML = `
-      <div class="game-final">
-        <div class="final-score">${score}</div>
-        <p>সর্বোচ্চ কম্বো: ${bestStreak} • ${msg}</p>
-        <button class="game-replay" id="gtReplay">আবার খেলো</button>
-      </div>
-    `;
-    if (score >= 70) spawnConfetti(el, 22);
-    document.getElementById("gtReplay").addEventListener("click", startRun);
-  }
-
-  startRun();
+  start();
 }
 
 async function renderPage() {
-  shell.innerHTML = `
-    ${renderStudentHeader(student, "analytics")}
-    <div class="page-heading">
-      <div>
-        <p class="eyebrow">Performance Analytics</p>
-        <h1>তোমার পারফরম্যান্স রিপোর্ট</h1>
-        <p class="page-subtitle">তোমার অনুমোদিত পরীক্ষার ফলাফল থেকেই এই বিশ্লেষণ তৈরি হচ্ছে।</p>
-      </div>
-    </div>
-    <div id="body"><div class="loading-card"><div class="spinner"></div><p>বিশ্লেষণ তৈরি হচ্ছে...</p></div></div>
-  `;
-
-
+  shell.innerHTML = `${renderStudentHeader(student, "analytics")}
+    <div class="head"><small>Personal Coach</small><h1>তোমার বিশ্লেষণ</h1></div>
+    <div id="body"><div class="loading"><div class="spinner"></div><p>তোমার ডেটা বিশ্লেষণ হচ্ছে…</p></div></div>`;
   const body = document.getElementById("body");
-
   try {
-    const results = await getApprovedResults(student.studentId);
-    const overall = computeOverallStats(results);
+    const mine = await getApprovedResults(student.studentId);
+    if (!mine.length) { renderState(body, "empty", "বিশ্লেষণের জন্য এখনো কোনো পরীক্ষার ফলাফল নেই। প্রথম পরীক্ষা দিলেই এখানে তোমার ব্যক্তিগত কোচিং শুরু হবে।"); return; }
 
-    if (!overall) {
-      renderState(body, "empty", "বিশ্লেষণের জন্য এখনো কোনো অনুমোদিত পরীক্ষার ফলাফল নেই।");
-      return;
-    }
-
-    const [subjects, chapters, topics] = await Promise.all([
-      getSubjects(),
-      getChapters(),
-      getTopics()
+    const batch = normalizeBatch(student.className);
+    const [students, allResults, ch, imp, bat, subjects, chapters, topics] = await Promise.all([
+      getActiveStudents(), getAllApprovedResults(),
+      getChallengeBonusMap().catch(() => ({})), getCompletedImprovementAttemptsByStudent().catch(() => ({})), getBattleXPMap().catch(() => ({})),
+      getSubjects(), getChapters(), getTopics()
     ]);
+    const rows = buildLeaderboardRows(allResults, students, ch, imp, bat);
+    const subjMap = buildNameMap(subjects), chapMap = buildNameMap(chapters), topMap = buildNameMap(topics);
+    const byStu = groupByStudent(allResults);
+    const peers = findPeers(rows, student.studentId, batch);
+    const mySummary = summarize(mine);
+    const batchIds = peers ? peers.list.map(r => r.studentId) : [student.studentId];
 
-    const subjectMap = buildNameMap(subjects);
-    const chapterMap = buildNameMap(chapters);
-    const topicMap = buildNameMap(topics);
+    const chaseId = peers?.iAmTopper ? peers?.topper?.studentId : (peers?.topper?.studentId || null);
+    const topperRes = chaseId ? byStu[chaseId] : null;
+    const aboveRes = peers?.above ? byStu[peers.above.studentId] : null;
+    const peerSummary = { topper: topperRes ? summarize(topperRes) : null, above: aboveRes ? summarize(aboveRes) : null };
 
-    const subjectStats = (computeSubjectStats(results, subjectMap) || [])
-      .sort((a, b) => (b.accuracy ?? -1) - (a.accuracy ?? -1));
+    const mySubj = computeSubjectStats(mine, subjMap);
+    const topSubj = topperRes ? computeSubjectStats(topperRes, subjMap) : [];
+    const subjGaps = subjectGaps(mySubj, topSubj);
+    const myTopics = computeTopicStats(mine, topMap);
+    const topTopics = topperRes ? computeTopicStats(topperRes, topMap) : [];
+    const tGaps = topicGaps(myTopics, topTopics);
+    const chapStats = computeChapterStats(mine, chapMap).sort((a, b) => (a.accuracy ?? 101) - (b.accuracy ?? 101));
 
-    const chapterStats = (computeChapterStats(results, chapterMap) || [])
-      .sort((a, b) => (b.accuracy ?? -1) - (a.accuracy ?? -1));
+    // per-question analysis (time, repeated mistakes) on recent exams
+    const recent = mine.slice(0, 15);
+    let snaps = {}; try { snaps = await getExamSnapshotsMap([...new Set(recent.map(r => r.examId).filter(Boolean))]); } catch {}
+    const recs = buildQuestionRecords(recent, snaps) || [];
+    const timeStats = computeTimeManagementStats(recs, subjMap, topMap);
+    const wrongPat = computeWrongOptionPatterns(recs) || [];
+    const reviewStats = computeMarkedForReviewStats(recs);
 
-    const topicStats = (computeTopicStats(results, topicMap) || [])
-      .sort((a, b) => (a.accuracy ?? 100) - (b.accuracy ?? 100));
+    const pcts = mine.map(r => Number(r.percentage));
+    const mom = momentum(pcts);
+    const seq = examSequence(mine, byStu, batchIds, chaseId, 8);
+    const weakTopic = myTopics.filter(t => t.attempts >= 2 && t.accuracy != null && t.accuracy < 65).sort((a, b) => a.accuracy - b.accuracy)[0] || null;
+    const ctx = { first: String(student.name || "").trim().split(/\s+/)[0], mySummary, mom, peers, peerSummary, subjGaps, weakTopic, topicStats: myTopics, wrongPatterns: wrongPat, rushing: !!timeStats?.speedAccuracy?.rushingLikely, pcts };
+    const lines = coachLines(ctx), missions = buildMissions(ctx), plan = reviewPlan(mine, myTopics);
+    const gapOf = (id) => tGaps.find(g => g.id === id);
 
-    // Per-question analytics need the existing exam snapshots.
-    const recentResults = results.slice(0, 15);
-    const examIds = [...new Set(recentResults.map(r => r.examId).filter(Boolean))];
-    let snapshotsMap = {};
-    if (examIds.length) {
-      try {
-        snapshotsMap = await getExamSnapshotsMap(examIds);
-      } catch (e) {
-        console.warn("Exam snapshots could not be loaded:", e);
-      }
-    }
-
-    const records = buildQuestionRecords(recentResults, snapshotsMap) || [];
-    const timeStats = computeTimeManagementStats(records, subjectMap, topicMap);
-    const wrongPatterns = computeWrongOptionPatterns(records) || [];
-    const reviewStats = computeMarkedForReviewStats(records);
-    const topicTrends = computeTopicTrends(results, topicMap) || [];
-    const timeline = buildExamHistoryTimeline(results) || [];
-
-    // Rule-based insights from analytics-utils.js — no AI/API is involved.
-    const insights = [];
-
-    if (timeStats?.speedAccuracy?.rushingLikely) {
-      const diff = Math.abs(
-        timeStats.speedAccuracy.fasterWrongRate - timeStats.speedAccuracy.slowerWrongRate
-      ).toFixed(1);
-      insights.push({
-        type: "danger",
-        title: "তাড়াহুড়োর প্রভাব দেখা যাচ্ছে",
-        text: `দ্রুত উত্তর দেওয়া অংশে ভুলের হার প্রায় ${diff} শতাংশ-পয়েন্ট বেশি। উত্তর দেওয়ার আগে একটু সময় নিয়ে যাচাই করো।`
-      });
-    }
-
-    if (wrongPatterns.length) {
-      const wp = wrongPatterns[0];
-      insights.push({
-        type: "warning",
-        title: "একই ভুলের পুনরাবৃত্তি",
-        text: `"${(wp.question_bn || "একটি প্রশ্ন").slice(0, 55)}${(wp.question_bn || "").length > 55 ? "..." : ""}" প্রশ্নে একই ভুল অপশন ${wp.repeatedCount} বার বেছে নেওয়া হয়েছে।`
-      });
-    }
-
-    if (reviewStats && reviewStats.markedCount >= 3) {
-      const good = reviewStats.unmarkedAccuracy !== null &&
-        reviewStats.accuracy > reviewStats.unmarkedAccuracy;
-      insights.push({
-        type: good ? "success" : "danger",
-        title: "মার্ক করে রাখা প্রশ্নের ফলাফল",
-        text: `মার্ক করা ${reviewStats.markedCount}টি উত্তর করা প্রশ্নে accuracy ${pct(reviewStats.accuracy)}। ${good ? "তোমার সন্দেহের জায়গা চিহ্নিত করার অভ্যাস কাজে দিচ্ছে।" : "যে প্রশ্নে সন্দেহ হয়, সেখানে উত্তর দেওয়ার আগে আরও যাচাই করা দরকার।"}`
-      });
-    }
-
-    if (!insights.length) {
-      insights.push({
-        type: "neutral",
-        title: "আরও ডেটা জমলে আরও ইনসাইট আসবে",
-        text: "বর্তমান ফলাফলে নির্দিষ্ট rule-based insight তৈরি করার মতো অতিরিক্ত pattern পাওয়া যায়নি।"
-      });
-    }
+    const meRow = peers?.mine;
+    const ladder = (() => {
+      if (!peers) return `<div class="empty">র‍্যাঙ্কের তথ্য পাওয়া যায়নি।</div>`;
+      const line = (r, sm, tag, me) => `<div class="lad-r ${me ? "me" : ""}"><div class="who"><i class="${tag === "T" ? "t" : ""}">${bn(r.rank)}</i><span>${esc(me ? "তুমি" : r.name)}<small>${esc(r.tag)}</small></span></div><b>${pc(sm?.avgPct)}</b><b>${pc(sm?.accuracy)}</b><b>${tm(sm?.avgTime)}</b></div>`;
+      const rk = (r) => peers.list.findIndex(x => x.studentId === r.studentId) + 1;
+      const out = [];
+      if (!peers.iAmTopper && peers.topper) out.push(line({ ...peers.topper, rank: rk(peers.topper), tag: "ব্যাচ টপার" }, peerSummary.topper, "T", false));
+      if (peers.above && peers.above.studentId !== peers.topper?.studentId) out.push(line({ ...peers.above, rank: rk(peers.above), tag: "তোমার ঠিক উপরে" }, peerSummary.above, "", false));
+      out.push(line({ ...meRow, rank: peers.rank, tag: `${bn(peers.total)} জনের মধ্যে` }, mySummary, "", true));
+      if (peers.iAmTopper && peers.topper) out.push(line({ ...peers.topper, rank: peers.rank + 1, tag: "তোমার ঠিক পিছনে" }, peerSummary.topper, "", false));
+      const tp = peers.topper && !peers.iAmTopper ? rows.find(r => r.studentId === peers.topper.studentId) : null;
+      const note = peers.iAmTopper ? `তুমি এখন ব্যাচের শীর্ষে${peers.topper && peerSummary.topper ? `। ${esc(peers.topper.name)} তোমার ${bn((mySummary.avgPct - peerSummary.topper.avgPct).toFixed(1))} পয়েন্ট পিছনে` : ""}।`
+        : `টপার থেকে তুমি <b>${bn(Math.max(0, (peerSummary.topper?.avgPct ?? 0) - mySummary.avgPct).toFixed(1))}</b> স্কোর-পয়েন্ট এবং <b>${bn(Math.max(0, (tp?.totalPoints ?? 0) - (meRow?.totalPoints ?? 0)))}</b> XP পিছনে${peers.above ? `; তোমার ঠিক উপরের জনের থেকে <b>${bn(Math.max(0, (peers.above.totalPoints ?? 0) - (meRow?.totalPoints ?? 0)))}</b> XP` : ""}।`;
+      return `<div class="lad"><div class="lad-h"><span>শিক্ষার্থী</span><span>গড় স্কোর</span><span>সঠিকতা</span><span>সময়/প্রশ্ন</span></div>${out.join("")}</div><div class="gapnote">${note}</div>`;
+    })();
 
     body.innerHTML = `
-      <div class="summary-grid">
-        <div class="summary-card">
-          <span class="summary-icon">${icon("chart")}</span>
-          <small>পরীক্ষা</small>
-          <strong>${overall.examsTaken}</strong>
-        </div>
-        <div class="summary-card">
-          <span class="summary-icon">${icon("target")}</span>
-          <small>গড় স্কোর</small>
-          <strong>${pct(overall.avgPercentage)}</strong>
-        </div>
-        <div class="summary-card">
-          <span class="summary-icon">${icon("check")}</span>
-          <small>সঠিকতার হার</small>
-          <strong>${pct(overall.avgAccuracy)}</strong>
-        </div>
+      <section class="card coach">
+        <div class="coach-top"><span class="coach-ic">${ic("coach", 22)}</span>
+          <div><h3>${esc(ctx.first || "তুমি")}, তোমার ডেটা কী বলছে</h3><p>${bn(mySummary.n)}টা পরীক্ষার ফলাফল থেকে</p></div>
+          ${peers ? `<div class="rankchip"><b>#${bn(peers.rank)}</b><span>${bn(peers.total)} জনের মধ্যে</span></div>` : ""}</div>
+        <div class="says">${lines.map(l => `<div class="say ${l.tone}"><i></i><span>${esc(bn(l.text))}</span></div>`).join("")}</div>
+      </section>
+      <div class="kpis">
+        <div class="kpi"><small>গড় স্কোর</small><b>${pc(mySummary.avgPct)}</b></div>
+        <div class="kpi"><small>সঠিকতা</small><b>${pc(mySummary.accuracy)}</b></div>
+        <div class="kpi"><small>ধারাবাহিকতা</small><b>${mySummary.n > 1 ? (mySummary.sd <= 8 ? "ভালো" : mySummary.sd <= 15 ? "মোটামুটি" : "ওঠানামা") : "—"}</b></div>
       </div>
 
-      ${sectionTitle("game", "খেলে দেখো: টপিক স্প্রিন্ট", "৪ সেকেন্ডে বলো — টপিকটা তোমার শক্তি না দুর্বলতা")}
-      <div class="game-card" id="topicGame"><div class="game-locked">লোড হচ্ছে...</div></div>
+      ${sec("ladder", "টপারদের সাথে তুলনা", "তোমার ব্যাচের টপার ও তোমার ঠিক উপরের জনের সাথে সরাসরি হিসাব")}
+      <div class="card">${ladder}</div>
 
-      ${sectionTitle("chart", "সার্বিক অগ্রগতির ধারা", "পুরনো পরীক্ষা থেকে সর্বশেষ পরীক্ষা")}
-      <div class="glass-card">${buildTrendSvg(overall.trend)}</div>
+      ${subjGaps.length && subjGaps.some(g => g.theirs != null) ? `${sec("bolt", peers?.iAmTopper ? "বিষয়ে রানার-আপের সাথে" : "বিষয়ে টপারের সাথে ফারাক", "কোথায় পিছিয়ে, কোথায় এগিয়ে — সঠিকতার হারে")}
+      <div class="card">${subjGaps.filter(g => g.theirs != null).map(g => `<div class="gp"><div class="gp-h"><span>${esc(g.name)}</span><em class="${g.gap > 0 ? "behind" : "ahead"}">${g.gap > 0 ? `${bn(g.gap)}% পিছনে` : g.gap < 0 ? `${bn(Math.abs(g.gap))}% এগিয়ে` : "সমান"}</em></div>
+        <div class="gb"><span>তুমি</span><div><i style="width:${g.mine}%;background:var(--color-accent)"></i></div><b>${pc(g.mine)}</b></div>
+        <div class="gb"><span>${peers?.iAmTopper ? "ও" : "টপার"}</span><div><i style="width:${g.theirs}%;background:var(--color-violet,#7257c9)"></i></div><b>${pc(g.theirs)}</b></div></div>`).join("")}</div>` : ""}
 
-      ${sectionTitle("target", "স্মার্ট পারফরম্যান্স ইনসাইটস", "তোমার ফলাফলের pattern থেকে rule-based বিশ্লেষণ")}
-      <div class="insight-grid">
-        ${insights.map(x => `
-          <div class="insight-box insight-${x.type}">
-            <div class="insight-icon">${icon(x.type === "danger" || x.type === "warning" ? "warning" : "check")}</div>
-            <div>
-              <strong>${esc(x.title)}</strong>
-              <p>${esc(x.text)}</p>
-            </div>
-          </div>
-        `).join("")}
+      ${sec("chart", "সাম্প্রতিক ট্রেন্ড ও পরীক্ষার ক্রম", "শেষ ৮টা পরীক্ষায় তুমি, টপার ও ব্যাচ গড়")}
+      <div class="card">${trendSvg(seq)}
+        <div class="seq">${[...seq].reverse().map((s, i) => `<div class="sq"><span class="sq-n">${bn(seq.length - i)}</span>
+          <div class="sq-m"><b>${esc(s.name)}</b><span>${fdate(s.at)}${s.batchAvg != null ? ` · ব্যাচ গড় ${pc(s.batchAvg)}` : ""}${s.topper != null ? ` · টপার ${pc(s.topper)}` : ""}${s.rank ? ` · র‍্যাঙ্ক ${bn(s.rank)}/${bn(s.takers)}` : ""}</span></div>
+          <div class="sq-s"><b>${pc(s.my)}</b>${s.delta != null ? `<span class="dl ${s.delta > 0 ? "up" : s.delta < 0 ? "down" : "flat"}">${s.delta > 0 ? "+" : ""}${bn(s.delta)}</span>` : ""}</div></div>`).join("")}</div>
       </div>
 
-      ${sectionTitle("book", "বিষয়ভিত্তিক দক্ষতা", "সকল অনুমোদিত পরীক্ষার subject breakdown")}
-      <div class="stat-list">
-        ${subjectStats.length ? subjectStats.map(s => `
-          <div class="stat-row">
-            <div class="stat-main">
-              <strong>${esc(s.name)}</strong>
-              <span>${s.attempts} বার • সঠিক ${s.correct} • ভুল ${s.wrong}</span>
-              <div class="bar"><i style="width:${Math.max(0, Math.min(100, Number(s.accuracy) || 0))}%"></i></div>
-            </div>
-            <strong class="stat-value ${accuracyClass(s.accuracy)}">${pct(s.accuracy)}</strong>
-          </div>
-        `).join("") : `<div class="empty-mini">ফলাফলে subjectBreakdown ডেটা নেই, তাই বিষয়ভিত্তিক হিসাব করা যাচ্ছে না।</div>`}
+      ${sec("flag", "তোমার মিশন", "তোমার নিজের ডেটা থেকে তৈরি, অগ্রগতিও আসল ফলাফল থেকে হিসাব হয়")}
+      <div class="ms">${missions.map(m => `<div class="m"><div class="m-h"><span class="m-ic">${ic(MISSION_ICON[m.kind] || "target", 19)}</span><div class="m-t"><b>${esc(m.title)}</b><span>${esc(bn(m.goal))}</span></div></div>
+        ${m.pct != null ? `<div class="m-bar"><i data-w="${m.pct}"></i></div><div class="m-nums"><span>এখন <b>${bn(m.now)}</b></span><span>লক্ষ্য <b>${bn(m.target)}</b></span></div>` : (m.now ? `<div class="m-nums"><span>এখন <b>${bn(m.now)}</b></span><span>লক্ষ্য <b>${bn(m.target)}</b></span></div>` : "")}
+        <details><summary>কীভাবে করবে</summary><ol>${m.how.map(h => `<li>${esc(h)}</li>`).join("")}</ol></details></div>`).join("")}</div>
+
+      ${sec("up", "উন্নতির প্ল্যান", "দুর্বল টপিক ধরে ধরে, কখন ঝালাই করবে তার হিসাবসহ")}
+      ${plan.length ? plan.map(t => { const g = gapOf(t.id); return `<div class="pl"><div class="pl-h"><div><b>${esc(t.name)}</b><br><span class="when ${t.tone === "late" ? "late" : ""}">${esc(bn(t.when))}</span></div><strong>${pc(t.accuracy)}</strong></div>
+        ${g ? `<p class="muted" style="margin:10px 0 0;font-size:.72rem;font-weight:600">টপার এখানে ${pc(g.theirs)} পাচ্ছে — তোমার থেকে ${bn(g.gap)}% বেশি।</p>` : ""}
+        <div class="steps"><div class="stp"><b>১</b>নোট পড়ে মূল পয়েন্ট লেখো</div><div class="stp"><b>২</b>ভুল প্রশ্নগুলো আবার করো</div><div class="stp"><b>৩</b>৩ দিন পর না দেখে ঝালাই</div></div>
+        <div class="acts"><a class="act pri" href="./study.html">${ic("note")}নোট দেখো</a><a class="act" href="./improvement.html">${ic("target")}প্র্যাকটিস</a></div></div>`; }).join("")
+        : `<div class="card"><div class="empty">এখন কোনো টপিক ৬৫% এর নিচে নেই। এই ধারা ধরে রাখো।</div></div>`}
+      ${tGaps.length ? `<div class="card" style="margin-top:12px"><div class="gp-h" style="margin-bottom:6px"><span>টপারের থেকে সবচেয়ে বেশি পিছিয়ে</span></div>${tGaps.slice(0, 5).map(g => `<div class="row"><div><b>${esc(g.name)}</b><span>তুমি ${pc(g.mine)} · টপার ${pc(g.theirs)}</span></div><strong class="weakc">-${bn(g.gap)}%</strong></div>`).join("")}</div>` : ""}
+
+      ${sec("bolt", "উন্নতির পদ্ধতি", "যা করলে সাধারণত দ্রুত ফল পাওয়া যায়")}
+      <div class="how">
+        <div><i>১</i><p style="margin:0"><b>ভুলের খাতা</b><span>প্রতি পরীক্ষার পর যে প্রশ্ন ভুল হয়েছে, কেন ভুল হলো এক লাইনে লেখো। একই কারণ বারবার এলে সেটাই তোমার আসল সমস্যা।</span></p></div>
+        <div><i>২</i><p style="margin:0"><b>ঝালাইয়ের ব্যবধান</b><span>নতুন পড়া ১ দিন, ৩ দিন ও ৭ দিন পর আবার দেখো। উপরের প্ল্যানে প্রতিটি টপিকের সময় দেওয়া আছে।</span></p></div>
+        <div><i>৩</i><p style="margin:0"><b>টপারের সাথে নয়, গতকালের তুমির সাথে</b><span>প্রতি পরীক্ষায় আগের স্কোরের চেয়ে ২-৩ নম্বর বাড়ানোর লক্ষ্য রাখো। ছোট ধাপ ধরে ব্যবধান কমবে।</span></p></div>
       </div>
 
-      ${sectionTitle("book", "অধ্যায়ভিত্তিক বিশ্লেষণ", "প্রতিটি অধ্যায়ে তোমার accuracy")}
-      <div class="stat-list">
-        ${chapterStats.length ? chapterStats.map(c => `
-          <div class="stat-row">
-            <div class="stat-main">
-              <strong>${esc(c.name)}</strong>
-              <span>${c.attempts} বার পরীক্ষা হয়েছে</span>
-            </div>
-            <strong class="stat-value ${accuracyClass(c.accuracy)}">${pct(c.accuracy)}</strong>
-          </div>
-        `).join("") : `<div class="empty-mini">ফলাফলে chapterBreakdown ডেটা নেই।</div>`}
-      </div>
+      ${sec("target", "ঝটপট চ্যালেঞ্জ", "৪ সেকেন্ডে বলো, টপিকটা তোমার শক্তি না দুর্বলতা")}
+      <div class="gm" id="gm"></div>
 
-      ${sectionTitle("topic", "টপিক বিশ্লেষণ ও দুর্বলতা", "কম accuracy-এর টপিক আগে দেখানো হয়েছে")}
-      <div class="stat-list">
-        ${topicStats.length ? topicStats.map(t => {
-          const perf = getPerformanceLabel(t);
-          const tr = topicTrends.find(x => x.topicId === t.topicId);
-          const trendText = tr?.direction === "up" ? `উন্নতি +${Math.abs(tr.diff)}%`
-            : tr?.direction === "down" ? `কমেছে ${Math.abs(tr.diff)}%`
-            : tr?.direction === "flat" ? "স্থিতিশীল"
-            : "আরও ডেটা প্রয়োজন";
-          return `
-            <div class="stat-row topic-row ${t.isWeak ? "is-weak" : ""}">
-              <div class="stat-main">
-                <strong>${esc(t.name)}</strong>
-                <span>${t.attempts} বার • ${esc(perf.label)} • ${esc(trendText)}</span>
-              </div>
-              <strong class="stat-value ${accuracyClass(t.accuracy)}">${pct(t.accuracy)}</strong>
-            </div>
-          `;
-        }).join("") : `<div class="empty-mini">ফলাফলে topicBreakdown ডেটা নেই।</div>`}
-      </div>
+      ${sec("list", "বিস্তারিত বিশ্লেষণ")}
+      <details class="dt"><summary>বিষয় ও অধ্যায়</summary><div class="dt-b">
+        ${mySubj.length ? mySubj.sort((a, b) => (a.accuracy ?? 101) - (b.accuracy ?? 101)).map(s => `<div class="row"><div><b>${esc(s.name)}</b><span>${bn(s.attempts)} বার · সঠিক ${bn(s.correct)} · ভুল ${bn(s.wrong)}</span></div><strong class="${cls(s.accuracy)}">${pc(s.accuracy)}</strong></div>`).join("") : `<div class="empty">বিষয়ের তথ্য নেই।</div>`}
+        ${chapStats.length ? `<div class="gp-h" style="margin:14px 4px 4px"><span>অধ্যায় (কম থেকে বেশি)</span></div>` + chapStats.map(c => `<div class="row"><div><b>${esc(c.name)}</b><span>${bn(c.attempts)} বার</span></div><strong class="${cls(c.accuracy)}">${pc(c.accuracy)}</strong></div>`).join("") : ""}</div></details>
+      <details class="dt"><summary>সব টপিক</summary><div class="dt-b">
+        ${[...myTopics].sort((a, b) => (a.accuracy ?? 101) - (b.accuracy ?? 101)).map(t => `<div class="row"><div><b>${esc(t.name)}</b><span>${bn(t.attempts)} বার · ${esc(getPerformanceLabel(t).label)}</span></div><strong class="${cls(t.accuracy)}">${pc(t.accuracy)}</strong></div>`).join("") || `<div class="empty">টপিকের তথ্য নেই।</div>`}</div></details>
+      <details class="dt"><summary>সময় ও অভ্যাস</summary><div class="dt-b">
+        ${timeStats ? `${timeStats.bySubject.slice(0, 5).map(x => `<div class="row"><div><b>${esc(x.name)}</b><span>প্রতি প্রশ্নে গড় সময়</span></div><strong>${tm(x.avgSeconds)}</strong></div>`).join("")}
+          ${timeStats.speedAccuracy ? `<div class="row"><div><b>দ্রুত অংশে ভুলের হার</b><span>ধীর অংশে ${pc(timeStats.speedAccuracy.slowerWrongRate)}</span></div><strong>${pc(timeStats.speedAccuracy.fasterWrongRate)}</strong></div>` : ""}` : `<div class="empty">সময়ের হিসাবের জন্য আরও কিছু পরীক্ষা লাগবে।</div>`}
+        ${reviewStats ? `<div class="row"><div><b>মার্ক করা প্রশ্ন</b><span>${bn(reviewStats.markedCount)}টি · মার্ক না করা ${pc(reviewStats.unmarkedAccuracy)}</span></div><strong>${pc(reviewStats.accuracy)}</strong></div>` : ""}</div></details>
+      <details class="dt"><summary>বারবার হওয়া ভুল</summary><div class="dt-b">
+        ${wrongPat.length ? wrongPat.slice(0, 5).map(w => `<div class="row"><div><b>${esc((w.question_bn || "প্রশ্ন").slice(0, 90))}</b><span>একই ভুল অপশন ${bn(w.repeatedCount)} বার</span></div></div>`).join("") : `<div class="empty">এখনো এমন ভুল পাওয়া যায়নি।</div>`}</div></details>`;
 
-      ${sectionTitle("clock", "সময় ব্যবস্থাপনা", "প্রশ্নে কত সময় লাগছে এবং দ্রুত উত্তর দিলে ভুল বাড়ছে কি না")}
-      <div class="glass-card">
-        ${timeStats ? `
-          <h3>বিষয় অনুযায়ী গড় সময়</h3>
-          <div class="time-list">
-            ${timeStats.bySubject.slice(0, 5).map(x => `
-              <div class="time-row"><span>${esc(x.name)}</span><strong>${formatTime(x.avgSeconds)} / প্রশ্ন</strong></div>
-            `).join("")}
-          </div>
-          ${timeStats.speedAccuracy ? `
-            <div class="speed-box">
-              <span>দ্রুত অংশের ভুলের হার: <b>${pct(timeStats.speedAccuracy.fasterWrongRate)}</b></span>
-              <span>ধীর অংশের ভুলের হার: <b>${pct(timeStats.speedAccuracy.slowerWrongRate)}</b></span>
-            </div>
-          ` : ""}
-        ` : `
-          <div class="empty-mini">কমপক্ষে ৫টি timed question দরকার। বর্তমানে পর্যাপ্ত time data নেই।</div>
-        `}
-      </div>
-
-      ${sectionTitle("warning", "বারবার হওয়া ভুল", "একই প্রশ্নে একই ভুল অপশন বারবার বেছে নেওয়া হলে এখানে আসে")}
-      <div class="stat-list">
-        ${wrongPatterns.length ? wrongPatterns.slice(0, 5).map(w => `
-          <div class="pattern-card">
-            <strong>${esc(w.question_bn || "প্রশ্ন")}</strong>
-            <span>একই ভুল অপশন ${w.repeatedCount} বার নির্বাচিত হয়েছে</span>
-          </div>
-        `).join("") : `<div class="empty-mini">এখনো এমন repeated wrong-option pattern পাওয়া যায়নি।</div>`}
-      </div>
-
-      ${sectionTitle("target", "মার্ক করে রাখা প্রশ্ন", "যে প্রশ্নগুলো তুমি uncertainty হিসেবে mark করেছিলে")}
-      <div class="glass-card">
-        ${reviewStats ? `
-          <div class="review-grid">
-            <div><small>মার্ক করা প্রশ্ন</small><strong>${reviewStats.markedCount}</strong></div>
-            <div><small>সঠিকতা</small><strong>${pct(reviewStats.accuracy)}</strong></div>
-            <div><small>মার্ক না করা accuracy</small><strong>${pct(reviewStats.unmarkedAccuracy)}</strong></div>
-          </div>
-        ` : `<div class="empty-mini">কোনো marked-for-review answered data পাওয়া যায়নি।</div>`}
-      </div>
-
-      ${sectionTitle("trend", "পরীক্ষার ইতিহাস", "সর্বশেষ ফলাফল আগে")}
-      <div class="history-list">
-        ${timeline.slice(0, 10).map(r => `
-          <div class="history-row">
-            <div>
-              <strong>${esc(r.examName)}</strong>
-              <span>${formatDate(r.submittedAt)}</span>
-            </div>
-            <div class="history-score">
-              <strong>${pct(r.percentage)}</strong>
-              <span>accuracy ${pct(r.accuracy)}</span>
-            </div>
-          </div>
-        `).join("")}
-      </div>
-    `;
-
-    initTopicGame(topicStats);
-
+    requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll(".m-bar i").forEach(b => { b.style.width = b.dataset.w + "%"; })));
+    initChallenge(myTopics);
   } catch (err) {
-    console.error("Analytics Error:", err);
-    body.innerHTML = `
-      <div class="glass-card error-card">
-        <strong>বিশ্লেষণ লোড করা যায়নি।</strong>
-        <p>ডেটা পড়ার সময় একটি সমস্যা হয়েছে। Browser console-এ আসল error দেখা যাবে।</p>
-      </div>
-    `;
+    console.error("Analytics error:", err);
+    body.innerHTML = `<div class="card"><div class="empty"><b style="color:var(--color-danger)">বিশ্লেষণ লোড করা যায়নি।</b><br>ইন্টারনেট দেখে আবার চেষ্টা করো।</div></div>`;
   }
 }
 </script>
