@@ -97,7 +97,6 @@
     .sv-body{position:relative;flex:1;min-height:0;background:var(--surface-highlight)}
     .sv-body iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
     .sv-load{position:absolute;inset:0;display:grid;place-items:center;padding:20px;text-align:center;color:var(--text-muted);font-size:.78rem;font-weight:600}
-    .sv-block{position:absolute;top:0;right:0;width:64px;height:56px;z-index:2}
     [hidden]{display:none!important}
   </style>
   <script src="../js/utils/nav-boot.js"></script>
@@ -114,9 +113,10 @@
     <div class="sv-box">
       <div class="sv-head">
         <div class="sv-t"><b id="svT"></b><span id="svS"></span></div>
+        <a class="ib" id="svOpen" target="_blank" rel="noopener noreferrer">নতুন ট্যাবে</a>
         <button class="ib" id="svX" aria-label="বন্ধ করো"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       </div>
-      <div class="sv-body"><div class="sv-load">লোড হচ্ছে…</div><div class="sv-block" aria-hidden="true"></div><iframe id="svF" title="নোট" allow="autoplay" referrerpolicy="no-referrer"></iframe></div>
+      <div class="sv-body"><div class="sv-load">লোড হচ্ছে… না এলে "নতুন ট্যাবে" চাপো</div><iframe id="svF" title="নোট" allow="autoplay" referrerpolicy="no-referrer"></iframe></div>
     </div>
   </div>
   <script type="module">
@@ -291,6 +291,7 @@
       if (!l.preview) return showToast("লিংক পাওয়া যায়নি।", "error");
       document.getElementById("svT").textContent = x.title || "নোট";
       document.getElementById("svS").textContent = [x.subject, x.chapter].filter(Boolean).join(" › ");
+      document.getElementById("svOpen").href = l.open;
       svF.src = l.preview; sv.classList.add("show"); document.body.style.overflow = "hidden";
     }
     function closeViewer() { sv.classList.remove("show"); svF.src = "about:blank"; document.body.style.overflow = ""; }
