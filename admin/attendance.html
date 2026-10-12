@@ -93,6 +93,10 @@
   .sc-frame { position: relative; z-index: 1; flex: 1; display: grid; place-items: center; pointer-events: none; }
   .sc-frame i { width: min(68vw, 290px); aspect-ratio: 1; border-radius: 26px; border: 3px solid rgba(255,255,255,.9); box-shadow: 0 0 0 999px rgba(0,0,0,.4); transition: border-color .15s; }
   .sc-frame.ok i { border-color: #34d399; } .sc-frame.warn i { border-color: #fbbf24; } .sc-frame.err i { border-color: #f87171; }
+  .sc-mid { flex: 1; display: flex; align-items: center; padding: 0 14px; }
+  .sc-mid .sc-res { width: 100%; min-height: 120px; }
+  .sc-big { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 76px; border-radius: 22px; background: var(--color-accent); color: #1d1608; font-weight: 900; font-size: 1.05rem; cursor: pointer; box-shadow: 0 10px 28px rgba(0,0,0,.4); }
+  .sc-big:active { transform: scale(.97); }
   .sc-bot { position: relative; z-index: 2; padding: 12px 14px calc(16px + env(safe-area-inset-bottom)); background: linear-gradient(transparent, #000c 40%); }
   .sc-res { min-height: 66px; padding: 12px 14px; border-radius: 16px; background: rgba(255,255,255,.14); backdrop-filter: blur(8px); display: flex; align-items: center; gap: 12px; }
   .sc-res.ok { background: rgba(16,185,129,.85); } .sc-res.warn { background: rgba(217,119,6,.88); } .sc-res.err { background: rgba(220,38,38,.88); }
@@ -182,18 +186,17 @@
 
 <!-- scanner -->
 <div class="sc" id="sc" hidden>
-  <video id="video" playsinline muted></video>
-  <div class="sc-msg" id="scMsg">ক্যামেরা চালু হচ্ছে…</div>
   <div class="sc-top">
     <button class="ib" id="scX" aria-label="বন্ধ করো"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     <h2 id="scTitle"></h2>
-    <span class="sc-cnt" id="scCnt">0</span>
+    <span class="sc-cnt" id="scCnt">০</span>
   </div>
-  <div class="sc-frame" id="scFrame"><i></i></div>
+  <div class="sc-mid">
+    <div class="sc-res" id="scRes"><div><b>স্ক্যান করতে নিচের বাটন চাপো</b><small>ফোনের নিজের ক্যামেরা খুলবে — শিক্ষার্থীর QR এর ছবি তোলো</small></div></div>
+  </div>
   <div class="sc-bot">
-    <div class="sc-res" id="scRes"><div><b>QR ক্যামেরার সামনে ধরো</b><small>একের পর এক স্ক্যান করো — নিজে থেকেই জমা হবে</small></div></div>
-    <label class="sc-photo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>ক্যামেরা অ্যাপে ছবি তুলে স্ক্যান<input type="file" id="photoIn" accept="image/*" capture="environment" hidden></label>
-    <div class="sc-man"><input id="manId" placeholder="QR না চললে আইডি লেখো (STU-0001)" autocapitalize="characters" autocomplete="off"><button id="manGo">জমা</button></div>
+    <label class="sc-big" id="scBig"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span id="scBigT">ক্যামেরা খুলে স্ক্যান করো</span><input type="file" id="photoIn" accept="image/*" capture="environment" hidden></label>
+    <div class="sc-man"><input id="manId" placeholder="অথবা আইডি লেখো (STU-0001)" autocapitalize="characters" autocomplete="off"><button id="manGo">জমা</button></div>
   </div>
 </div>
 
@@ -268,8 +271,7 @@ requireAdmin(async () => {
     drawChips(); drawDate(); drawRoll();
     [allDays] = await Promise.all([getAllDays(), loadDate()]);
     drawAll();
-    if (!("BarcodeDetector" in window)) loadJsQR().catch(() => {});      // warm the fallback decoder
-    finalizeMonths(students).then(made => {
+        finalizeMonths(students).then(made => {
       if (made.length) showToast(`${made.map(m => fmtMonth(m.month)).join(", ")} এর মাসের সেরা নির্ধারিত হয়েছে।`, "success");
     }).catch(() => {});
   } catch (e) { console.error(e); $("sub").textContent = "লোড হয়নি — পেজ রিলোড করো"; showToast(friendlyError(e), "error"); }
@@ -418,19 +420,15 @@ $("mNone").onclick = async () => {
 };
 async function refreshDays() { try { allDays = await getAllDays(); } catch {} drawDate(); drawRoll(); }
 
-/* ---------- scanner ---------- */
-const video = $("video");
-let stream = null, loopTimer = null, detector = null, jsQRLoaded = null, lastCode = "", lastAt = 0, scanBusy = false;
-const canvas = document.createElement("canvas");
-const ctx = canvas.getContext("2d", { willReadFrequently: true });
-let actx = null;
+/* ---------- scanner: the phone's own camera app (no live-camera permission needed) ---------- */
+let jsQRLoaded = null, lastCode = "", lastAt = 0, actx = null;
 
 function loadJsQR() {
   if (window.jsQR) return Promise.resolve();
   if (!jsQRLoaded) jsQRLoaded = new Promise((res, rej) => {
     const s = document.createElement("script");
     s.src = "https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js";
-    s.onload = res; s.onerror = () => { jsQRLoaded = null; rej(new Error("QR স্ক্যানার লোড হয়নি — ইন্টারনেট দেখো।")); };
+    s.onload = res; s.onerror = () => { jsQRLoaded = null; rej(new Error("QR ডিকোডার লোড হয়নি — ইন্টারনেট দেখো।")); };
     document.head.appendChild(s);
   });
   return jsQRLoaded;
@@ -446,63 +444,50 @@ function beep(ok) {
 }
 function res(kind, title, sub = "") {
   $("scRes").className = "sc-res " + kind;
-  $("scRes").innerHTML = `${kind === "ok" || kind === "warn" ? CHECK : CROSS}<div><b>${esc(title)}</b><small>${esc(sub)}</small></div>`;
-  $("scFrame").className = "sc-frame " + kind;
-  clearTimeout(res.t); res.t = setTimeout(() => $("scFrame").className = "sc-frame", 900);
+  $("scRes").innerHTML = `${kind === "ok" || kind === "warn" ? CHECK : kind === "err" ? CROSS : ""}<div><b>${esc(title)}</b><small>${esc(sub)}</small></div>`;
+  $("scBigT").textContent = sessionScans ? "পরের জনকে স্ক্যান করো" : "ক্যামেরা খুলে স্ক্যান করো";
 }
 function scTitle() { $("scTitle").innerHTML = `${esc(sel.batch)} · ${DAY_TYPES[effType()]}<small>${esc(fmtDate(sel.date, { day: "numeric", month: "short", year: "numeric" }))}</small>`; }
 
-async function openScan() {
+function openScan() {
   menu(false);
   if (!students.length) return showToast("ডেটা লোড হচ্ছে, একটু অপেক্ষা করো…", "error");
   sessionScans = 0; $("scCnt").textContent = "০"; scTitle();
+  res("", "স্ক্যান করতে নিচের বাটন চাপো", "ফোনের নিজের ক্যামেরা খুলবে — শিক্ষার্থীর QR এর ছবি তোলো");
   $("sc").hidden = false; document.body.style.overflow = "hidden";
-  $("sc").classList.remove("nocam"); $("scMsg").hidden = false; $("scMsg").textContent = "ক্যামেরা চালু হচ্ছে…";
-  try {
-    if (!navigator.mediaDevices?.getUserMedia) throw new Error("এই ব্রাউজারে ক্যামেরা পাওয়া যায়নি (HTTPS লাগে)। নিচে আইডি লিখে জমা দাও।");
-    if ("BarcodeDetector" in window) { try { detector = new BarcodeDetector({ formats: ["qr_code"] }); } catch { detector = null; } }
-    const pre = detector ? Promise.resolve() : loadJsQR();
-    const [s] = await Promise.all([navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 960 }, height: { ideal: 960 } }, audio: false }), pre]);
-    stream = s; video.srcObject = s; await video.play();
-    $("scMsg").hidden = true;
-    loopTimer = setInterval(scanFrame, 90);
-  } catch (e) {
-    console.error(e);
-    $("sc").classList.add("nocam");
-    $("scMsg").innerHTML = e?.name === "NotAllowedError"
-      ? `<div><b>ক্যামেরার অনুমতি পাওয়া যায়নি</b>ব্রাউজারের ঠিকানার পাশের তালা চিহ্ন → অনুমতি → ক্যামেরা → Allow করে পেজ রিলোড করো।<br><br>অথবা নিচের "ছবি তুলে স্ক্যান" বা আইডি লিখে জমা দাও।</div>`
-      : `<div><b>ক্যামেরা চালু হয়নি</b>${esc(e.message || "")}<br><br>নিচের "ছবি তুলে স্ক্যান" বা আইডি লিখে জমা দাও।</div>`;
-  }
+  $("photoIn").click();                       // open the camera straight away (still inside the tap)
+  loadJsQR().catch(() => {});                 // warm the fallback decoder
 }
-function closeScan() {
-  clearInterval(loopTimer); loopTimer = null;
-  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-  video.srcObject = null; $("sc").hidden = true; document.body.style.overflow = "";
-  drawRoll();
-}
-async function scanFrame() {
-  if (scanBusy || video.readyState < 2) return;
-  scanBusy = true;
-  try {
-    let text = "";
-    if (detector) text = (await detector.detect(video))[0]?.rawValue || "";
-    else if (window.jsQR) {
-      const w = 360, h = Math.round(w * (video.videoHeight / video.videoWidth)) || 360;
-      if (canvas.width !== w) { canvas.width = w; canvas.height = h; }
-      ctx.drawImage(video, 0, 0, w, h);
-      text = window.jsQR(ctx.getImageData(0, 0, w, h).data, w, h, { inversionAttempts: "dontInvert" })?.data || "";
+function closeScan() { $("sc").hidden = true; document.body.style.overflow = ""; drawRoll(); }
+
+async function decodePhoto(file) {
+  const bmp = await createImageBitmap(file);
+  let text = "";
+  if ("BarcodeDetector" in window) { try { text = (await new BarcodeDetector({ formats: ["qr_code"] }).detect(bmp))[0]?.rawValue || ""; } catch {} }
+  if (!text) {
+    await loadJsQR();
+    for (const w of [800, 1200, 500]) {
+      const k = Math.min(1, w / Math.max(bmp.width, bmp.height)), cw = Math.round(bmp.width * k), ch = Math.round(bmp.height * k);
+      const c = document.createElement("canvas"); c.width = cw; c.height = ch;
+      const cx = c.getContext("2d", { willReadFrequently: true }); cx.drawImage(bmp, 0, 0, cw, ch);
+      text = window.jsQR(cx.getImageData(0, 0, cw, ch).data, cw, ch, { inversionAttempts: "attemptBoth" })?.data || "";
+      if (text) break;
     }
-    if (text) handleCode(text);
-  } catch {} finally { scanBusy = false; }
+  }
+  bmp.close?.();
+  return text;
 }
-function handleCode(text) {
-  const id = parseAttendanceQr(text);
-  const key = id || text;
-  if (key === lastCode && Date.now() - lastAt < 2500) return;     // same QR still in front of the camera
-  lastCode = key; lastAt = Date.now();
-  if (!id) { beep(false); return res("err", "এটা অ্যাটেনডেন্স QR নয়"); }
-  record(id, "qr");
-}
+$("photoIn").onchange = async () => {
+  const f = $("photoIn").files[0]; $("photoIn").value = ""; if (!f) return;
+  res("", "পড়া হচ্ছে…");
+  try {
+    const text = await decodePhoto(f);
+    if (!text) { beep(false); return res("err", "ছবিতে QR পাওয়া যায়নি", "QR টা পুরো ফ্রেমে রেখে, আলো ঠিক রেখে আবার তোলো"); }
+    const id = parseAttendanceQr(text);
+    if (!id) { beep(false); return res("err", "এটা অ্যাটেনডেন্স QR নয়"); }
+    record(id, "qr");
+  } catch (e) { console.error(e); beep(false); res("err", "ছবি পড়া যায়নি", e.message || ""); }
+};
 function record(id, method) {
   const s = byId[id];
   if (!s) { beep(false); return res("err", `${id} — সক্রিয় শিক্ষার্থী নেই`); }
@@ -511,28 +496,9 @@ function record(id, method) {
   beep(true);
   if (fresh) { sessionScans++; $("scCnt").textContent = bn(sessionScans); }
   const other = !sameBatch(s.className, sel.batch);
-  res(fresh ? "ok" : "warn", `${s.name}${fresh ? "" : " — আগেই উপস্থিত"}`, `${normalizeBatch(s.className)} · ${s.studentId}${other ? " · অন্য ব্যাচ" : ""}`);
+  res(fresh ? "ok" : "warn", `${s.name}${fresh ? " — উপস্থিত" : " — আগেই উপস্থিত"}`, `${normalizeBatch(s.className)} · ${s.studentId}${other ? " · অন্য ব্যাচ" : ""}`);
 }
 $("fScan").onclick = openScan;
-$("photoIn").onchange = async () => {
-  const f = $("photoIn").files[0]; $("photoIn").value = ""; if (!f) return;
-  try {
-    const bmp = await createImageBitmap(f);
-    let text = "";
-    if ("BarcodeDetector" in window) { try { text = (await new BarcodeDetector({ formats: ["qr_code"] }).detect(bmp))[0]?.rawValue || ""; } catch {} }
-    if (!text) {
-      await loadJsQR();
-      for (const w of [900, 600, 1400]) {
-        const sc = Math.min(1, w / Math.max(bmp.width, bmp.height)), cw = Math.round(bmp.width * sc), ch = Math.round(bmp.height * sc);
-        const c = document.createElement("canvas"); c.width = cw; c.height = ch;
-        const cx = c.getContext("2d", { willReadFrequently: true }); cx.drawImage(bmp, 0, 0, cw, ch);
-        text = window.jsQR(cx.getImageData(0, 0, cw, ch).data, cw, ch)?.data || ""; if (text) break;
-      }
-    }
-    if (!text) return res("err", "ছবিতে QR পাওয়া যায়নি", "কাছ থেকে, আলো ঠিক রেখে আবার তোলো");
-    lastCode = ""; handleCode(text);
-  } catch (e) { console.error(e); res("err", "ছবি পড়া যায়নি"); }
-};
 $("scX").onclick = closeScan;
 $("manGo").onclick = () => {
   const id = parseAttendanceQr($("manId").value) || String($("manId").value).trim().toUpperCase();
@@ -540,7 +506,6 @@ $("manGo").onclick = () => {
   record(id, "manual"); $("manId").value = "";
 };
 $("manId").addEventListener("keydown", e => { if (e.key === "Enter") $("manGo").click(); });
-document.addEventListener("visibilitychange", () => { if (document.hidden && !$("sc").hidden) closeScan(); });
 
 /* ---------- panels ---------- */
 const openPn = (id) => { menu(false); $(id).hidden = false; document.body.style.overflow = "hidden"; document.body.classList.add("pn-open"); };
