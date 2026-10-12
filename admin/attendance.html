@@ -244,6 +244,13 @@ async function ensureDay(batch, date, type) {
   await setDoc(ref, { batch, date, month: monthOf(date), type: type === "exam" ? "exam" : "class", createdAt: serverTimestamp() });
 }
 
+// Opened from a student's QR link (?scan=STU-0001) with the phone's normal camera.
+// Keep the id for a few minutes so it also survives a login redirect.
+try {
+  const sc = new URLSearchParams(location.search).get("scan");
+  if (sc) { sessionStorage.setItem("epScanPending", JSON.stringify({ id: sc, t: Date.now() })); history.replaceState(null, "", location.pathname); }
+} catch {}
+
 initTheme();
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -271,7 +278,13 @@ requireAdmin(async () => {
     drawChips(); drawDate(); drawRoll();
     [allDays] = await Promise.all([getAllDays(), loadDate()]);
     drawAll();
-        finalizeMonths(students).then(made => {
+        try {
+      const pend = JSON.parse(sessionStorage.getItem("epScanPending") || "null");
+      sessionStorage.removeItem("epScanPending");
+      const id = pend && Date.now() - pend.t < 180000 ? parseAttendanceQr(pend.id) : null;
+      if (id) { sel.date = dateStr(); fromLink(id); }
+    } catch {}
+    finalizeMonths(students).then(made => {
       if (made.length) showToast(`${made.map(m => fmtMonth(m.month)).join(", ")} এর মাসের সেরা নির্ধারিত হয়েছে।`, "success");
     }).catch(() => {});
   } catch (e) { console.error(e); $("sub").textContent = "লোড হয়নি — পেজ রিলোড করো"; showToast(friendlyError(e), "error"); }
@@ -453,10 +466,16 @@ function openScan() {
   menu(false);
   if (!students.length) return showToast("ডেটা লোড হচ্ছে, একটু অপেক্ষা করো…", "error");
   sessionScans = 0; $("scCnt").textContent = "০"; scTitle();
-  res("", "স্ক্যান করতে নিচের বাটন চাপো", "ফোনের নিজের ক্যামেরা খুলবে — শিক্ষার্থীর QR এর ছবি তোলো");
+  res("", "স্ক্যান করতে নিচের বাটন চাপো", "ফোনের ক্যামেরা বা Google Lens দিয়ে QR দেখলেও হবে, অথবা এই বাটনে ছবি তোলো");
   $("sc").hidden = false; document.body.style.overflow = "hidden";
   $("photoIn").click();                       // open the camera straight away (still inside the tap)
   loadJsQR().catch(() => {});                 // warm the fallback decoder
+}
+function fromLink(id) {
+  sessionScans = 0; $("scCnt").textContent = "০"; scTitle();
+  $("sc").hidden = false; document.body.style.overflow = "hidden";
+  record(id, "qr");
+  $("scBigT").textContent = "ছবি তুলে স্ক্যান করো";
 }
 function closeScan() { $("sc").hidden = true; document.body.style.overflow = ""; drawRoll(); }
 
