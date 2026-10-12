@@ -214,10 +214,26 @@ import { requireAdmin } from "../js/utils/auth.js";
 import { getActiveStudents } from "../js/utils/student-utils.js";
 import { batchesFromStudents, normalizeBatch, sameBatch } from "../js/utils/batch-utils.js";
 import {
-  parseAttendanceQr, markPresentFast, unmarkPresent, saveBatchAttendance, setDay, removeDay, ensureDay,
+  parseAttendanceQr, unmarkPresent, saveBatchAttendance, setDay, removeDay, attDocId, dayDocId,
   getAllDays, getDateAttendance, getMonthAttendance, getAwards, finalizeMonths,
   dateStr, monthOf, fmtDate, fmtMonth, bn, DAY_TYPES, ATTENDANCE_MONTHLY_XP
 } from "../js/utils/attendance-utils.js";
+
+import { db } from "../js/firebase/firebase-config.js";
+import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+// single-write fast path (kept here so this page works with the older attendance-utils.js too)
+function markPresentFast(student, date, method = "manual") {
+  return setDoc(doc(db, "attendance", attDocId(date, student.studentId)), {
+    studentId: student.studentId, name: student.name || "", batch: normalizeBatch(student.className), date, month: monthOf(date),
+    method, markedAt: serverTimestamp()
+  });
+}
+async function ensureDay(batch, date, type) {
+  const ref = doc(db, "attendanceDays", dayDocId(batch, date));
+  if ((await getDoc(ref)).exists()) return;
+  await setDoc(ref, { batch, date, month: monthOf(date), type: type === "exam" ? "exam" : "class", createdAt: serverTimestamp() });
+}
 
 initTheme();
 const $ = (id) => document.getElementById(id);
