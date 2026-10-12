@@ -146,7 +146,7 @@ export async function getAwards() {
 }
 
 /* ---------------- Firestore: admin writes ---------------- */
-async function ensureDay(batch, date, type) {
+export async function ensureDay(batch, date, type) {
   const b = normalizeBatch(batch);
   const ref = doc(db, "attendanceDays", dayDocId(b, date));
   const snap = await getDoc(ref);
@@ -171,6 +171,15 @@ export async function markPresent(student, date, { type = "class", method = "qr"
     method, markedAt: serverTimestamp()
   });
   return { already: false, batch };
+}
+
+// Fast path for the admin page: one write, no read-before-write (caller already knows the state).
+export function markPresentFast(student, date, method = "manual") {
+  const batch = normalizeBatch(student.className);
+  return setDoc(doc(db, "attendance", attDocId(date, student.studentId)), {
+    studentId: student.studentId, name: student.name || "", batch, date, month: monthOf(date),
+    method, markedAt: serverTimestamp()
+  });
 }
 
 export async function unmarkPresent(studentId, date) {
