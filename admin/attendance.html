@@ -3,168 +3,210 @@
 <head>
 <script src="../js/utils/theme-boot.js"></script>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>অ্যাটেনডেন্স — অ্যাডমিন</title>
 <link rel="stylesheet" href="../css/style.css">
 <style>
   @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration:.001ms!important; transition-duration:.001ms!important; } }
   body { overflow-x: hidden; background: var(--bg); }
-  .app-shell { max-width: 560px; margin: 0 auto; padding-bottom: 60px; }
+  svg { display: block; }
+  .app-shell { max-width: 620px; margin: 0 auto; padding-bottom: 150px; }
   .top { display: flex; align-items: center; gap: 10px; margin: 14px 0 12px; }
-  .back { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--surface-border); background: var(--surface); color: var(--text-primary); display: grid; place-items: center; text-decoration: none; flex: none; }
-  .top h1 { font-size: 1.2rem; font-weight: 900; line-height: 1.2; }
-  .top p { font-size: .74rem; font-weight: 600; color: var(--text-muted); }
-
-  .card { background: var(--surface); border: 1px solid var(--surface-border); border-radius: 16px; padding: 14px; margin-bottom: 12px; }
-  .field { margin-bottom: 10px; }
-  .field label { display: block; font-size: .78rem; font-weight: 800; color: var(--text-secondary); margin-bottom: 5px; }
-  .inp { width: 100%; box-sizing: border-box; padding: 11px 12px; background: rgba(128,128,128,.05); border: 1px solid var(--surface-border); border-radius: 12px; color: var(--text-primary); font: inherit; font-size: .9rem; font-weight: 700; outline: none; min-height: 44px; }
-  .inp:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), .15); }
-  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 16px; border-radius: 12px; border: 1px solid var(--surface-border); background: var(--surface-solid); color: var(--text-primary); font: inherit; font-weight: 800; font-size: .86rem; cursor: pointer; }
-  .btn:active { transform: scale(.97); }
-  .btn.pri { background: var(--color-accent); border-color: transparent; color: #211a0d; }
-  .btn.danger { color: #ef4444; border-color: rgba(239,68,68,.35); }
-  .btn.full { width: 100%; }
-  .btn[disabled] { opacity: .5; pointer-events: none; }
-
-  .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 4px; border-radius: 14px; background: rgba(128,128,128,.08); margin-bottom: 12px; position: sticky; top: 0; z-index: 5; backdrop-filter: blur(8px); }
-  .tab { min-height: 40px; border: none; border-radius: 11px; background: transparent; color: var(--text-secondary); font: inherit; font-size: .78rem; font-weight: 800; cursor: pointer; }
-  .tab.on { background: var(--surface-solid); color: var(--color-accent); box-shadow: 0 1px 4px rgba(0,0,0,.08); }
-  .pane[hidden] { display: none; }
-
-  /* scanner */
-  .cam { position: relative; width: 100%; aspect-ratio: 1; max-height: 70vh; border-radius: 18px; overflow: hidden; background: #0e1116; }
-  .cam video { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .cam-frame { position: absolute; inset: 14%; border: 3px solid rgba(255,255,255,.85); border-radius: 22px; box-shadow: 0 0 0 999px rgba(0,0,0,.35); pointer-events: none; }
-  .cam-idle { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: #cfd3da; font-size: .85rem; font-weight: 700; text-align: center; padding: 20px; }
-  .flash { margin-top: 10px; padding: 12px 14px; border-radius: 14px; font-size: .88rem; font-weight: 800; display: flex; align-items: center; gap: 10px; border: 1px solid var(--surface-border); background: var(--surface); }
-  .flash.ok { background: rgba(47,125,94,.14); border-color: rgba(47,125,94,.4); color: var(--color-success); }
-  .flash.warn { background: rgba(217,119,6,.13); border-color: rgba(217,119,6,.4); color: #b45309; }
-  .flash.err { background: rgba(239,68,68,.1); border-color: rgba(239,68,68,.35); color: #dc2626; }
-  .flash small { display: block; font-weight: 700; opacity: .85; }
-  .count { display: flex; align-items: baseline; gap: 8px; }
-  .count b { font-family: var(--font-num); font-size: 1.8rem; font-weight: 900; color: var(--color-accent); }
-  .count span { font-size: .78rem; font-weight: 700; color: var(--text-muted); }
-
-  .li { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px dashed rgba(128,128,128,.2); }
-  .li:last-child { border-bottom: none; padding-bottom: 0; }
-  .li:first-child { padding-top: 0; }
-  .av { flex: none; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--color-accent-soft); color: var(--color-accent); font-weight: 900; }
-  .li-main { flex: 1; min-width: 0; }
-  .li-main b { display: block; font-size: .9rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .li-main span { font-size: .72rem; font-weight: 600; color: var(--text-muted); }
-  .tag { font-size: .66rem; font-weight: 800; padding: 3px 9px; border-radius: 999px; background: var(--color-accent-soft); color: var(--color-accent); white-space: nowrap; }
-  .tag.exam { background: rgba(107,78,150,.15); color: #6b4e96; }
-  .mini { min-height: 34px; padding: 0 12px; font-size: .76rem; border-radius: 10px; }
-
-  /* manual list: big tap rows */
-  .chk { display: flex; align-items: center; gap: 12px; padding: 10px 4px; border-bottom: 1px dashed rgba(128,128,128,.2); cursor: pointer; min-height: 52px; }
-  .chk:last-child { border-bottom: none; }
-  .chk input { position: absolute; opacity: 0; pointer-events: none; }
-  .box { flex: none; width: 26px; height: 26px; border-radius: 8px; border: 2px solid var(--surface-border); display: grid; place-items: center; color: transparent; font-weight: 900; transition: .15s; }
-  .chk input:checked + .box { background: var(--color-success); border-color: var(--color-success); color: #fff; }
-  .chk input:focus-visible + .box { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-  .sticky-save { position: sticky; bottom: 10px; z-index: 4; margin-top: 12px; }
-
-  .pbar { height: 6px; border-radius: 6px; background: var(--surface-edge); overflow: hidden; margin-top: 5px; }
-  .pbar i { display: block; height: 100%; background: var(--color-accent); border-radius: 6px; }
-  .pct { font-family: var(--font-num); font-weight: 900; font-size: .95rem; white-space: nowrap; }
+  .ib { flex: none; display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--surface-border); background: var(--surface-solid); color: var(--text-primary); text-decoration: none; cursor: pointer; font: inherit; }
+  .ib svg { width: 18px; height: 18px; }
+  .top h1 { font-size: 1.15rem; font-weight: 900; line-height: 1.2; }
+  .top p { font-size: .72rem; font-weight: 600; color: var(--text-muted); }
   .muted { font-size: .76rem; font-weight: 600; color: var(--text-muted); }
-  .empty { text-align: center; padding: 10px 0; }
-  .sec-t { font-size: .92rem; font-weight: 900; margin: 4px 0 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+
+  /* session bar */
+  .sess { position: sticky; top: 0; z-index: 20; margin: 0 -4px 12px; padding: 8px 4px 10px; background: var(--bg); }
+  .chips { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { flex: none; padding: 8px 14px; border-radius: 99px; border: 1px solid var(--surface-border); background: var(--surface-solid); color: var(--text-secondary); font: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; white-space: nowrap; }
+  .chip.on { background: rgba(var(--color-accent-rgb), .16); border-color: var(--color-accent); color: var(--color-accent); }
+  .bar2 { display: flex; align-items: center; gap: 8px; margin-top: 9px; }
+  .dt { flex: 1; min-width: 0; display: flex; align-items: center; border: 1px solid var(--surface-border); border-radius: 13px; background: var(--surface-solid); overflow: hidden; }
+  .dt button { flex: none; width: 40px; height: 42px; border: 0; background: transparent; color: var(--text-secondary); cursor: pointer; display: grid; place-items: center; }
+  .dt button svg { width: 17px; height: 17px; }
+  .dt button:disabled { opacity: .3; }
+  .dt label { position: relative; flex: 1; min-width: 0; text-align: center; font-weight: 800; font-size: .84rem; cursor: pointer; line-height: 1.2; padding: 4px 0; }
+  .dt label small { display: block; font-size: .66rem; font-weight: 700; color: var(--text-muted); }
+  .dt input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
+  .seg { flex: none; display: flex; padding: 3px; border-radius: 13px; background: var(--surface-highlight); border: 1px solid var(--surface-border); }
+  .seg button { padding: 0 12px; min-height: 36px; border: 0; border-radius: 10px; background: transparent; color: var(--text-muted); font: inherit; font-size: .78rem; font-weight: 800; cursor: pointer; }
+  .seg button.on { background: var(--surface-solid); color: var(--color-accent); box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+
+  /* progress */
+  .prog { padding: 14px; border-radius: 18px; border: 1px solid var(--surface-border); background: var(--surface-solid); }
+  .prog-top { display: flex; align-items: baseline; gap: 8px; }
+  .prog-top b { font-family: var(--font-num); font-size: 1.9rem; font-weight: 900; color: var(--color-accent); line-height: 1; }
+  .prog-top span { font-size: .8rem; font-weight: 700; color: var(--text-muted); }
+  .prog-top em { margin-left: auto; font-style: normal; font-size: .72rem; font-weight: 800; padding: 3px 10px; border-radius: 99px; background: rgba(var(--color-accent-rgb), .14); color: var(--color-accent); }
+  .prog-top em.off { background: var(--surface-highlight); color: var(--text-muted); }
+  .pbar { height: 7px; border-radius: 7px; background: var(--surface-highlight); overflow: hidden; margin-top: 10px; }
+  .pbar i { display: block; height: 100%; width: 0; border-radius: 7px; background: var(--color-accent); transition: width .25s; }
+  .tools { display: flex; gap: 8px; margin: 12px 0 8px; }
+  .search { flex: 1; min-width: 0; padding: 0 13px; min-height: 42px; border: 1px solid var(--surface-border); border-radius: 13px; background: var(--surface-solid); color: var(--text-primary); font: inherit; font-size: .86rem; font-weight: 600; outline: none; }
+  .search:focus { border-color: var(--color-accent); }
+
+  /* roll list */
+  .roll { border: 1px solid var(--surface-border); border-radius: 18px; background: var(--surface-solid); overflow: hidden; }
+  .row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 14px; min-height: 58px; border: 0; border-bottom: 1px solid var(--surface-border); background: transparent; color: var(--text-primary); font: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .row:last-child { border-bottom: 0; }
+  .row:active { background: var(--surface-highlight); }
+  .av { flex: none; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-highlight); color: var(--text-secondary); font-weight: 900; font-size: .9rem; }
+  .row .mn { flex: 1; min-width: 0; }
+  .row .mn b { display: block; font-size: .9rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .mn span { font-size: .72rem; font-weight: 700; color: var(--text-muted); }
+  .ck { flex: none; width: 30px; height: 30px; border-radius: 10px; border: 2px solid var(--surface-border); display: grid; place-items: center; color: transparent; transition: .12s; }
+  .ck svg { width: 16px; height: 16px; }
+  .row.on { background: rgba(47,125,94,.1); }
+  .row.on .av { background: rgba(47,125,94,.2); color: var(--color-success); }
+  .row.on .ck { background: var(--color-success); border-color: var(--color-success); color: #fff; }
+  .badge { flex: none; font-size: .62rem; font-weight: 800; padding: 2px 8px; border-radius: 99px; background: rgba(var(--color-accent-rgb), .15); color: var(--color-accent); }
+  .empty { text-align: center; padding: 30px 14px; color: var(--text-muted); font-size: .85rem; font-weight: 600; }
+
+  /* floating buttons */
+  .fabs { position: fixed; right: 16px; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 40; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
+  .fab { display: inline-flex; align-items: center; justify-content: center; gap: 9px; border: 0; cursor: pointer; font: inherit; font-weight: 900; box-shadow: 0 10px 28px rgba(0,0,0,.35); }
+  .fab:active { transform: scale(.95); }
+  .fab.main { height: 58px; padding: 0 22px; border-radius: 99px; background: var(--color-accent); color: #1d1608; font-size: .95rem; }
+  .fab.main svg { width: 24px; height: 24px; }
+  .fab.sm { width: 48px; height: 48px; border-radius: 50%; background: var(--surface-solid); color: var(--text-primary); border: 1px solid var(--surface-border); }
+  .fab.sm svg { width: 22px; height: 22px; }
+  .menu { position: fixed; right: 16px; bottom: calc(150px + env(safe-area-inset-bottom)); z-index: 41; min-width: 230px; padding: 6px; border-radius: 18px; background: var(--surface-solid); border: 1px solid var(--surface-border); box-shadow: 0 16px 40px rgba(0,0,0,.4); }
+  .menu button { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 0 12px; border: 0; border-radius: 12px; background: transparent; color: var(--text-primary); font: inherit; font-size: .86rem; font-weight: 800; text-align: left; cursor: pointer; }
+  .menu button:active { background: var(--surface-highlight); }
+  .menu button svg { width: 19px; height: 19px; color: var(--color-accent); flex: none; }
+  .menu button.dg svg, .menu button.dg { color: #ef4444; }
+  .scrim { position: fixed; inset: 0; z-index: 39; }
+  [hidden] { display: none !important; }
+
+  /* scanner overlay */
+  .sc { position: fixed; inset: 0; z-index: 100; background: #05070a; display: flex; flex-direction: column; color: #fff; }
+  .sc video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .sc-top { position: relative; z-index: 2; display: flex; align-items: center; gap: 10px; padding: calc(12px + env(safe-area-inset-top)) 14px 12px; background: linear-gradient(#000a, transparent); }
+  .sc-top .ib { background: rgba(255,255,255,.16); border-color: transparent; color: #fff; }
+  .sc-top h2 { flex: 1; min-width: 0; font-size: .95rem; font-weight: 900; color: #fff; line-height: 1.25; }
+  .sc-top h2 small { display: block; font-size: .7rem; font-weight: 700; opacity: .75; }
+  .sc-cnt { font-family: var(--font-num); font-weight: 900; font-size: 1.3rem; padding: 4px 14px; border-radius: 99px; background: rgba(255,255,255,.16); }
+  .sc-frame { position: relative; z-index: 1; flex: 1; display: grid; place-items: center; pointer-events: none; }
+  .sc-frame i { width: min(68vw, 290px); aspect-ratio: 1; border-radius: 26px; border: 3px solid rgba(255,255,255,.9); box-shadow: 0 0 0 999px rgba(0,0,0,.4); transition: border-color .15s; }
+  .sc-frame.ok i { border-color: #34d399; } .sc-frame.warn i { border-color: #fbbf24; } .sc-frame.err i { border-color: #f87171; }
+  .sc-bot { position: relative; z-index: 2; padding: 12px 14px calc(16px + env(safe-area-inset-bottom)); background: linear-gradient(transparent, #000c 40%); }
+  .sc-res { min-height: 66px; padding: 12px 14px; border-radius: 16px; background: rgba(255,255,255,.14); backdrop-filter: blur(8px); display: flex; align-items: center; gap: 12px; }
+  .sc-res.ok { background: rgba(16,185,129,.85); } .sc-res.warn { background: rgba(217,119,6,.88); } .sc-res.err { background: rgba(220,38,38,.88); }
+  .sc-res b { display: block; font-size: 1.02rem; font-weight: 900; }
+  .sc-res small { font-size: .74rem; font-weight: 700; opacity: .92; }
+  .sc-res svg { width: 28px; height: 28px; flex: none; }
+  .sc-man { display: flex; gap: 8px; margin-top: 10px; }
+  .sc-man input { flex: 1; min-width: 0; min-height: 46px; padding: 0 14px; border-radius: 13px; border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.12); color: #fff; font: inherit; font-weight: 800; letter-spacing: .04em; outline: none; }
+  .sc-man input::placeholder { color: rgba(255,255,255,.55); font-weight: 600; letter-spacing: 0; }
+  .sc-man button { min-height: 46px; padding: 0 18px; border: 0; border-radius: 13px; background: var(--color-accent); color: #1d1608; font: inherit; font-weight: 900; cursor: pointer; }
+  .sc-msg { position: absolute; inset: 0; z-index: 1; display: grid; place-items: center; padding: 30px; text-align: center; font-weight: 700; font-size: .88rem; color: #cfd3da; }
+
+  /* panels (days / report) */
+  .pn { position: fixed; inset: 0; z-index: 90; background: var(--bg); overflow-y: auto; }
+  .pn-in { max-width: 620px; margin: 0 auto; padding: 14px 16px 60px; }
+  .card { background: var(--surface-solid); border: 1px solid var(--surface-border); border-radius: 16px; padding: 14px; margin-bottom: 12px; }
+  .sec-t { font-size: .92rem; font-weight: 900; margin: 0 0 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .inp { width: 100%; box-sizing: border-box; padding: 0 12px; background: var(--surface-highlight); border: 1px solid var(--surface-border); border-radius: 12px; color: var(--text-primary); font: inherit; font-size: .88rem; font-weight: 700; outline: none; min-height: 44px; }
+  .inp:focus { border-color: var(--color-accent); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border-radius: 12px; border: 1px solid var(--surface-border); background: var(--surface-solid); color: var(--text-primary); font: inherit; font-weight: 800; font-size: .85rem; cursor: pointer; }
+  .btn.pri { background: var(--color-accent); border-color: transparent; color: #1d1608; }
+  .btn.dg { color: #ef4444; border-color: rgba(239,68,68,.35); }
+  .btn.mini { min-height: 34px; padding: 0 12px; font-size: .74rem; border-radius: 10px; }
+  .btn.full { width: 100%; }
+  .li { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px dashed var(--surface-border); }
+  .li:last-child { border-bottom: 0; }
+  .li-main { flex: 1; min-width: 0; }
+  .li-main b { display: block; font-size: .88rem; font-weight: 800; }
+  .li-main span { font-size: .72rem; font-weight: 600; color: var(--text-muted); }
+  .tag { font-size: .66rem; font-weight: 800; padding: 3px 9px; border-radius: 999px; background: rgba(var(--color-accent-rgb), .15); color: var(--color-accent); white-space: nowrap; }
+  .tag.exam { background: rgba(139,108,200,.2); color: #a78bdb; }
+  .pct { font-family: var(--font-num); font-weight: 900; font-size: .95rem; }
+  .pb2 { height: 6px; border-radius: 6px; background: var(--surface-highlight); overflow: hidden; margin-top: 5px; }
+  .pb2 i { display: block; height: 100%; background: var(--color-accent); }
+  .toast-ok { position: fixed; left: 50%; bottom: calc(100px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 120; padding: 10px 18px; border-radius: 99px; background: #111; color: #fff; font-size: .8rem; font-weight: 800; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
 </style>
 <script src="../js/popup.js"></script>
 </head>
 <body>
 <div class="app-shell">
   <div class="top">
-    <a class="back" href="../admin/dashboard.html" aria-label="ফিরে যাও"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></a>
+    <a class="ib" href="../admin/dashboard.html" aria-label="ফিরে যাও"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></a>
     <div><h1>অ্যাটেনডেন্স</h1><p id="sub">লোড হচ্ছে…</p></div>
   </div>
 
-  <!-- the date + kind every scan / manual save uses -->
-  <div class="card" id="sessionCard">
-    <div class="row2">
-      <div class="field" style="margin:0"><label for="sDate">তারিখ</label><input class="inp" type="date" id="sDate"></div>
-      <div class="field" style="margin:0"><label for="sType">ধরন</label>
-        <select class="inp" id="sType"><option value="class">ক্লাস</option><option value="exam">পরীক্ষা</option></select></div>
+  <div class="sess">
+    <div class="chips" id="chips"></div>
+    <div class="bar2">
+      <div class="dt">
+        <button id="dPrev" aria-label="আগের দিন"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <label><span id="dTxt"></span><small id="dSub"></small><input type="date" id="dIn"></label>
+        <button id="dNext" aria-label="পরের দিন"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+      </div>
+      <div class="seg" id="typeSeg"><button data-t="class">ক্লাস</button><button data-t="exam">পরীক্ষা</button></div>
     </div>
-    <p class="muted" style="margin-top:8px;">এই তারিখ ও ধরনেই স্ক্যান বা ম্যানুয়াল উপস্থিতি জমা হবে। দিনটি ওই ব্যাচের ১০০% হিসাবে আপনা-আপনি যুক্ত হবে।</p>
   </div>
 
-  <div class="tabs" role="tablist">
-    <button class="tab on" data-t="scan" role="tab">স্ক্যান</button>
-    <button class="tab" data-t="batch" role="tab">ব্যাচ লিস্ট</button>
-    <button class="tab" data-t="days" role="tab">দিন সেট</button>
-    <button class="tab" data-t="report" role="tab">রিপোর্ট</button>
+  <div class="prog">
+    <div class="prog-top"><b id="pN">0</b><span id="pOf">/ 0 উপস্থিত</span><em id="dayTag"></em></div>
+    <div class="pbar"><i id="pBar"></i></div>
   </div>
-
-  <!-- ============ SCAN ============ -->
-  <section class="pane" id="p-scan">
-    <div class="card">
-      <div class="cam" id="cam">
-        <video id="video" playsinline muted></video>
-        <div class="cam-frame" id="camFrame" hidden></div>
-        <div class="cam-idle" id="camIdle">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          <span>ক্যামেরা চালু করে শিক্ষার্থীর অ্যাটেনডেন্স QR স্ক্যান করো</span>
-          <button class="btn pri" id="camStart" type="button">স্ক্যান শুরু করো</button>
-        </div>
-      </div>
-      <button class="btn full" id="camStop" type="button" style="margin-top:10px" hidden>ক্যামেরা বন্ধ করো</button>
-      <div id="flash" class="flash" hidden></div>
-    </div>
-
-    <div class="card">
-      <div class="field" style="margin-bottom:8px"><label for="manId">QR না চললে — স্টুডেন্ট আইডি লিখো</label>
-        <div style="display:flex;gap:8px"><input class="inp" id="manId" placeholder="STU-0001" autocapitalize="characters" autocomplete="off"><button class="btn pri" id="manGo" type="button">জমা</button></div></div>
-    </div>
-
-    <div class="card">
-      <div class="sec-t"><span>আজকের স্ক্যান</span><span class="count"><b id="scanCount">0</b><span>জন</span></span></div>
-      <div id="scanList"><p class="muted empty">এখনো কেউ স্ক্যান হয়নি।</p></div>
-    </div>
-  </section>
-
-  <!-- ============ BATCH LIST ============ -->
-  <section class="pane" id="p-batch" hidden>
-    <div class="card">
-      <div class="field"><label for="bSel">ব্যাচ</label><select class="inp" id="bSel"></select></div>
-      <input class="inp" id="bSearch" placeholder="নাম বা আইডি খোঁজো…" style="margin-bottom:8px">
-      <div style="display:flex;gap:8px;margin-bottom:6px">
-        <button class="btn mini" id="bAll" type="button">সবাই উপস্থিত</button>
-        <button class="btn mini" id="bNone" type="button">সব মুছো</button>
-        <span class="muted" style="margin-left:auto;align-self:center" id="bCount"></span>
-      </div>
-      <div id="bList"></div>
-      <div class="sticky-save"><button class="btn pri full" id="bSave" type="button">উপস্থিতি সেভ করো</button></div>
-    </div>
-  </section>
-
-  <!-- ============ DAYS ============ -->
-  <section class="pane" id="p-days" hidden>
-    <div class="card">
-      <div class="field"><label for="dSel">ব্যাচ</label><select class="inp" id="dSel"></select></div>
-      <p class="muted" style="margin-bottom:10px">যে যে তারিখে এই ব্যাচের ক্লাস বা পরীক্ষা, সেগুলো এখানে সেট করো — এই দিনগুলোই ১০০% ধরে শতাংশ হিসাব হবে। উপরের "তারিখ ও ধরন" ব্যবহার হবে।</p>
-      <div class="field"><label for="dNote">নোট (ঐচ্ছিক)</label><input class="inp" id="dNote" maxlength="80" placeholder="যেমন: পদার্থবিজ্ঞান চ্যাপ্টার ৩"></div>
-      <button class="btn pri full" id="dAdd" type="button">এই দিনটি ব্যাচে যোগ করো</button>
-    </div>
-    <div class="card"><div id="dList"></div></div>
-  </section>
-
-  <!-- ============ REPORT ============ -->
-  <section class="pane" id="p-report" hidden>
-    <div class="card">
-      <div class="row2">
-        <div class="field" style="margin:0"><label for="rSel">ব্যাচ</label><select class="inp" id="rSel"></select></div>
-        <div class="field" style="margin:0"><label for="rMonth">মাস</label><input class="inp" type="month" id="rMonth"></div>
-      </div>
-    </div>
-    <div class="card"><div class="sec-t"><span id="rTitle">উপস্থিতির তালিকা</span></div><div id="rList"></div></div>
-    <div class="card"><div class="sec-t"><span>মাসের সেরা (+১০০০ XP)</span></div><div id="awardList"></div></div>
-  </section>
+  <div class="tools">
+    <input class="search" id="q" type="search" placeholder="নাম বা আইডি খোঁজো" autocomplete="off">
+    <div class="seg" id="fSeg"><button data-f="all" class="on">সব</button><button data-f="p">আছে</button><button data-f="a">নেই</button></div>
+  </div>
+  <div class="roll" id="roll"></div>
 </div>
+
+<!-- floating buttons -->
+<div class="scrim" id="scrim" hidden></div>
+<div class="menu" id="menu" hidden>
+  <button id="mAll"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 12.5 4 4L15 8M12 16.5l1 1L21 8"/></svg>সবাই উপস্থিত</button>
+  <button id="mDays"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>ক্লাস/পরীক্ষার দিন</button>
+  <button id="mRep"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>মাসিক রিপোর্ট</button>
+  <button id="mNone" class="dg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>এই ব্যাচের আজকের সব মুছো</button>
+</div>
+<div class="fabs">
+  <button class="fab sm" id="fMore" aria-label="আরও"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg></button>
+  <button class="fab main" id="fScan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M7 12h10"/></svg>স্ক্যান</button>
+</div>
+
+<!-- scanner -->
+<div class="sc" id="sc" hidden>
+  <video id="video" playsinline muted></video>
+  <div class="sc-msg" id="scMsg">ক্যামেরা চালু হচ্ছে…</div>
+  <div class="sc-top">
+    <button class="ib" id="scX" aria-label="বন্ধ করো"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <h2 id="scTitle"></h2>
+    <span class="sc-cnt" id="scCnt">0</span>
+  </div>
+  <div class="sc-frame" id="scFrame"><i></i></div>
+  <div class="sc-bot">
+    <div class="sc-res" id="scRes"><div><b>QR ক্যামেরার সামনে ধরো</b><small>একের পর এক স্ক্যান করো — নিজে থেকেই জমা হবে</small></div></div>
+    <div class="sc-man"><input id="manId" placeholder="QR না চললে আইডি লেখো (STU-0001)" autocapitalize="characters" autocomplete="off"><button id="manGo">জমা</button></div>
+  </div>
+</div>
+
+<!-- days / report panels -->
+<div class="pn" id="pnDays" hidden><div class="pn-in">
+  <div class="top"><button class="ib" data-close aria-label="বন্ধ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button><div><h1>ক্লাস / পরীক্ষার দিন</h1><p>এই দিনগুলোই ১০০% ধরে শতাংশ হয়</p></div></div>
+  <div class="card"><div class="sec-t"><span id="dBatch"></span></div>
+    <input class="inp" id="dNote" maxlength="80" placeholder="নোট (ঐচ্ছিক) — যেমন: পদার্থ চ্যাপ্টার ৩" style="margin-bottom:10px">
+    <button class="btn pri full" id="dAdd">নির্বাচিত দিন যোগ করো</button>
+    <p class="muted" style="margin-top:8px">উপস্থিতি নিলে দিন নিজে থেকেই যোগ হয়। এখানে আগে বা ছুটির দিন নিজে ঠিক করতে পারো।</p></div>
+  <div class="card"><div id="dList"></div></div>
+</div></div>
+
+<div class="pn" id="pnRep" hidden><div class="pn-in">
+  <div class="top"><button class="ib" data-close aria-label="বন্ধ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button><div><h1>মাসিক রিপোর্ট</h1><p id="rBatch"></p></div></div>
+  <div class="card"><div class="row2"><input class="inp" type="month" id="rMonth"><select class="inp" id="rSel"></select></div></div>
+  <div class="card"><div class="sec-t"><span id="rTitle">উপস্থিতির তালিকা</span></div><div id="rList"></div></div>
+  <div class="card"><div class="sec-t"><span>মাসের সেরা (+১০০০ XP)</span></div><div id="awardList"></div></div>
+</div></div>
 
 <script type="module">
 import { initTheme, showToast, friendlyError } from "../js/utils/ui-utils.js";
@@ -172,299 +214,346 @@ import { requireAdmin } from "../js/utils/auth.js";
 import { getActiveStudents } from "../js/utils/student-utils.js";
 import { batchesFromStudents, normalizeBatch, sameBatch } from "../js/utils/batch-utils.js";
 import {
-  parseAttendanceQr, markPresent, unmarkPresent, saveBatchAttendance, setDay, removeDay,
+  parseAttendanceQr, markPresentFast, unmarkPresent, saveBatchAttendance, setDay, removeDay, ensureDay,
   getAllDays, getDateAttendance, getMonthAttendance, getAwards, finalizeMonths,
-  computeAttendanceStats, rankMonth, dateStr, monthOf, fmtDate, fmtMonth, bn, DAY_TYPES, ATTENDANCE_MONTHLY_XP
+  dateStr, monthOf, fmtDate, fmtMonth, bn, DAY_TYPES, ATTENDANCE_MONTHLY_XP
 } from "../js/utils/attendance-utils.js";
 
 initTheme();
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>`;
+const CROSS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>`;
 
 let students = [], byId = {}, batches = [], allDays = [];
-let dateAtt = [];                 // attendance docs of the selected date (all batches)
-let scans = [];                   // this page session: {studentId,name,batch,time,already}
-const getDate = () => $("sDate").value || dateStr();
-const getType = () => $("sType").value;
+const sel = { batch: "", date: dateStr(), type: "class", f: "all", q: "" };
+let att = new Map();               // studentId -> method, for sel.date (all batches)
+let attSeq = 0;
+let sessionScans = 0;
+
+const inBatch = () => students.filter(s => sameBatch(s.className, sel.batch));
+const dayOf = (batch, date) => allDays.find(d => sameBatch(d.batch, batch) && d.date === date);
+const curDay = () => dayOf(sel.batch, sel.date);
+const effType = () => curDay()?.type || sel.type;
 
 requireAdmin(async () => {
-  $("sDate").value = dateStr();
-  $("sDate").max = dateStr();
-  $("rMonth").value = monthOf(dateStr());
   try {
-    students = await getActiveStudents();
+    students = (await getActiveStudents()).sort((a, b) => String(a.studentId).localeCompare(String(b.studentId), undefined, { numeric: true }));
     byId = Object.fromEntries(students.map(s => [s.studentId, s]));
     batches = batchesFromStudents(students);
-    const opts = batches.length ? batches.map(b => `<option value="${esc(b)}">${esc(b)} (${bn(students.filter(s => sameBatch(s.className, b)).length)} জন)</option>`).join("") : `<option value="">কোনো ব্যাচ নেই</option>`;
-    ["bSel", "dSel", "rSel"].forEach(id => { $(id).innerHTML = opts; });
+    sel.batch = batches[0] || "";
     $("sub").textContent = `${bn(students.length)} জন শিক্ষার্থী · ${bn(batches.length)} টি ব্যাচ`;
-    await reloadDays();
-    await reloadDate();
-    drawBatch(); drawDays(); drawReport();
-    // finished months get their 1000 XP winner(s) automatically
+    drawChips(); drawDate(); drawRoll();
+    [allDays] = await Promise.all([getAllDays(), loadDate()]);
+    drawAll();
+    if (!("BarcodeDetector" in window)) loadJsQR().catch(() => {});      // warm the fallback decoder
     finalizeMonths(students).then(made => {
       if (made.length) showToast(`${made.map(m => fmtMonth(m.month)).join(", ")} এর মাসের সেরা নির্ধারিত হয়েছে।`, "success");
-      drawReport();
-    }).catch(e => console.warn("finalizeMonths", e));
+    }).catch(() => {});
   } catch (e) { console.error(e); showToast(friendlyError(e), "error"); }
 });
 
-async function reloadDays() { allDays = await getAllDays(); }
-async function reloadDate() { dateAtt = await getDateAttendance(getDate()); }
+async function loadDate() {
+  const seq = ++attSeq, d = sel.date;
+  const rows = await getDateAttendance(d);
+  if (seq !== attSeq) return;
+  att = new Map(rows.map(r => [r.studentId, r.method || "manual"]));
+}
 
-/* ---------- tabs ---------- */
-document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
-  document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x === t));
-  document.querySelectorAll(".pane").forEach(p => { p.hidden = p.id !== "p-" + t.dataset.t; });
-  if (t.dataset.t !== "scan") stopCam();
-  if (t.dataset.t === "batch") drawBatch();
-  if (t.dataset.t === "days") drawDays();
-  if (t.dataset.t === "report") drawReport();
-});
-$("sDate").addEventListener("change", async () => {
-  if ($("sDate").value > dateStr()) { $("sDate").value = dateStr(); showToast("ভবিষ্যতের তারিখে উপস্থিতি নেওয়া যাবে না।", "error"); }
-  scans = []; drawScans();
-  await reloadDate(); drawBatch();
+/* ---------- drawing ---------- */
+const drawAll = () => { drawChips(); drawDate(); drawRoll(); };
+
+function drawChips() {
+  $("chips").innerHTML = batches.length ? batches.map(b => `<button class="chip ${sameBatch(b, sel.batch) ? "on" : ""}" data-b="${esc(b)}">${esc(b)}</button>`).join("") : `<span class="muted">কোনো ব্যাচ নেই</span>`;
+  $("chips").querySelectorAll("[data-b]").forEach(b => b.onclick = () => { sel.batch = b.dataset.b; drawAll(); });
+}
+function drawDate() {
+  const t = dateStr();
+  $("dIn").value = sel.date; $("dIn").max = t;
+  $("dTxt").textContent = sel.date === t ? "আজ" : fmtDate(sel.date, { weekday: "short", day: "numeric", month: "short" });
+  $("dSub").textContent = sel.date === t ? fmtDate(sel.date, { weekday: "long", day: "numeric", month: "short" }) : fmtDate(sel.date, { year: "numeric" });
+  $("dNext").disabled = sel.date >= t;
+  const ty = effType();
+  $("typeSeg").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.t === ty));
+}
+function drawRoll() {
+  const list = inBatch();
+  const present = list.filter(s => att.has(s.studentId)).length;
+  $("pN").textContent = bn(present);
+  $("pOf").textContent = `/ ${bn(list.length)} উপস্থিত`;
+  $("pBar").style.width = list.length ? Math.round(present / list.length * 100) + "%" : "0";
+  const d = curDay();
+  $("dayTag").className = d ? "" : "off";
+  $("dayTag").textContent = d ? `${DAY_TYPES[d.type] || "ক্লাস"} দিন ✓` : "দিন সেট নেই";
+  const q = sel.q.trim().toLowerCase();
+  const shown = list.filter(s => (sel.f === "all" || (sel.f === "p") === att.has(s.studentId)) &&
+    (!q || String(s.name || "").toLowerCase().includes(q) || s.studentId.toLowerCase().includes(q)));
+  $("roll").innerHTML = shown.length ? shown.map(s => {
+    const on = att.has(s.studentId);
+    return `<button class="row ${on ? "on" : ""}" data-id="${esc(s.studentId)}"><span class="av">${esc(String(s.name || "?").charAt(0))}</span>
+      <span class="mn"><b>${esc(s.name)}</b><span>${esc(s.studentId)}</span></span>
+      ${on && att.get(s.studentId) === "qr" ? `<span class="badge">QR</span>` : ""}<span class="ck">${CHECK}</span></button>`;
+  }).join("") : `<div class="empty">${list.length ? "কিছু পাওয়া যায়নি" : "এই ব্যাচে কোনো শিক্ষার্থী নেই"}</div>`;
+}
+// patch a single row (no full redraw) — keeps taps instant on long lists
+function patchRow(id) {
+  const el = $("roll").querySelector(`[data-id="${CSS.escape(id)}"]`);
+  const on = att.has(id);
+  if (el) {
+    el.classList.toggle("on", on);
+    el.querySelector(".badge")?.remove();
+    if (on && att.get(id) === "qr") el.querySelector(".ck").insertAdjacentHTML("beforebegin", `<span class="badge">QR</span>`);
+    if (sel.f !== "all") drawRoll();
+  }
+  const list = inBatch(), present = list.filter(s => att.has(s.studentId)).length;
+  $("pN").textContent = bn(present); $("pOf").textContent = `/ ${bn(list.length)} উপস্থিত`;
+  $("pBar").style.width = list.length ? Math.round(present / list.length * 100) + "%" : "0";
+}
+
+/* ---------- core: optimistic mark / unmark ---------- */
+function ensureDayLocal(batch, date) {
+  if (dayOf(batch, date)) return;
+  const b = normalizeBatch(batch);
+  allDays.push({ batch: b, date, month: monthOf(date), type: sel.type });
+  ensureDay(b, date, sel.type).catch(e => { console.warn("ensureDay", e); allDays = allDays.filter(d => !(d.batch === b && d.date === date)); });
+}
+function mark(s, method) {
+  const date = sel.date;
+  if (att.has(s.studentId)) return false;
+  att.set(s.studentId, method);
+  ensureDayLocal(s.className, date);
+  markPresentFast(s, date, method).catch(e => {
+    console.error(e); if (sel.date === date) { att.delete(s.studentId); patchRow(s.studentId); }
+    showToast("জমা হয়নি: " + (friendlyError(e) || s.name), "error");
+  });
+  return true;
+}
+function unmark(s) {
+  const date = sel.date, prev = att.get(s.studentId);
+  att.delete(s.studentId);
+  unmarkPresent(s.studentId, date).catch(e => {
+    console.error(e); if (sel.date === date) { att.set(s.studentId, prev); patchRow(s.studentId); }
+    showToast("বাতিল হয়নি", "error");
+  });
+}
+
+$("roll").addEventListener("click", (e) => {
+  const row = e.target.closest(".row"); if (!row) return;
+  const s = byId[row.dataset.id]; if (!s) return;
+  try { navigator.vibrate?.(15); } catch {}
+  att.has(s.studentId) ? unmark(s) : mark(s, "manual");
+  patchRow(s.studentId); drawDate(); $("dayTag").className = ""; $("dayTag").textContent = `${DAY_TYPES[effType()]} দিন ✓`;
 });
 
-/* ---------- scanning ---------- */
+/* ---------- session controls ---------- */
+const shiftDate = async (n) => {
+  const d = new Date(sel.date + "T00:00:00"); d.setDate(d.getDate() + n);
+  const v = dateStr(d); if (v > dateStr()) return;
+  sel.date = v; att = new Map(); drawAll(); await loadDate(); drawRoll();
+};
+$("dPrev").onclick = () => shiftDate(-1);
+$("dNext").onclick = () => shiftDate(1);
+$("dIn").onchange = async () => {
+  const v = $("dIn").value; if (!v) return;
+  if (v > dateStr()) { showToast("ভবিষ্যতের তারিখ নেওয়া যাবে না।", "error"); return drawDate(); }
+  sel.date = v; att = new Map(); drawAll(); await loadDate(); drawRoll();
+};
+$("typeSeg").onclick = async (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  sel.type = b.dataset.t;
+  const d = curDay();
+  if (d && d.type !== sel.type) {
+    d.type = sel.type;
+    setDay(sel.batch, sel.date, sel.type, d.note || "").catch(() => showToast("টাইপ বদলানো যায়নি", "error"));
+  }
+  drawDate(); drawRoll();
+};
+$("q").oninput = () => { sel.q = $("q").value; drawRoll(); };
+$("fSeg").onclick = (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  sel.f = b.dataset.f; $("fSeg").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); drawRoll();
+};
+
+/* ---------- floating menu ---------- */
+const menu = (open) => { $("menu").hidden = !open; $("scrim").hidden = !open; };
+$("fMore").onclick = () => menu($("menu").hidden);
+$("scrim").onclick = () => menu(false);
+$("mAll").onclick = async () => {
+  menu(false);
+  const list = inBatch(); if (!list.length) return;
+  list.forEach(s => { if (!att.has(s.studentId)) att.set(s.studentId, "manual"); });
+  drawRoll();
+  try { await saveBatchAttendance(sel.batch, sel.date, effType(), list, list.map(s => s.studentId)); await refreshDays(); showToast("সবাই উপস্থিত ✓", "success"); }
+  catch (e) { showToast(friendlyError(e), "error"); await loadDate(); drawRoll(); }
+};
+$("mNone").onclick = async () => {
+  menu(false);
+  const list = inBatch();
+  if (!await AppPopup.confirm(`${sel.batch} ব্যাচের ${fmtDate(sel.date)} এর সব উপস্থিতি মুছবে?`)) return;
+  list.forEach(s => att.delete(s.studentId)); drawRoll();
+  try { await saveBatchAttendance(sel.batch, sel.date, effType(), list, []); showToast("মুছে ফেলা হয়েছে", "success"); }
+  catch (e) { showToast(friendlyError(e), "error"); await loadDate(); drawRoll(); }
+};
+async function refreshDays() { try { allDays = await getAllDays(); } catch {} drawDate(); drawRoll(); }
+
+/* ---------- scanner ---------- */
 const video = $("video");
-let stream = null, loopTimer = null, detector = null, jsQRLoaded = null, busy = false, lastCode = "", lastAt = 0;
+let stream = null, loopTimer = null, detector = null, jsQRLoaded = null, lastCode = "", lastAt = 0, scanBusy = false;
 const canvas = document.createElement("canvas");
 const ctx = canvas.getContext("2d", { willReadFrequently: true });
+let actx = null;
 
-function setFlash(kind, title, sub = "") {
-  const f = $("flash");
-  f.hidden = false; f.className = "flash " + kind;
-  f.innerHTML = `<div>${esc(title)}${sub ? `<small>${esc(sub)}</small>` : ""}</div>`;
-}
-function beep(ok) {
-  try { navigator.vibrate?.(ok ? 60 : [80, 60, 80]); } catch {}
-  try {
-    const a = new (window.AudioContext || window.webkitAudioContext)();
-    const o = a.createOscillator(), g = a.createGain();
-    o.frequency.value = ok ? 880 : 220; g.gain.value = 0.08;
-    o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime + (ok ? 0.12 : 0.25));
-    setTimeout(() => a.close?.(), 400);
-  } catch {}
-}
 function loadJsQR() {
   if (window.jsQR) return Promise.resolve();
   if (!jsQRLoaded) jsQRLoaded = new Promise((res, rej) => {
     const s = document.createElement("script");
     s.src = "https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js";
-    s.onload = res; s.onerror = () => rej(new Error("QR স্ক্যানার লোড হয়নি — ইন্টারনেট দেখো।"));
+    s.onload = res; s.onerror = () => { jsQRLoaded = null; rej(new Error("QR স্ক্যানার লোড হয়নি — ইন্টারনেট দেখো।")); };
     document.head.appendChild(s);
   });
   return jsQRLoaded;
 }
-
-async function startCam() {
+function beep(ok) {
+  try { navigator.vibrate?.(ok ? 50 : [70, 50, 70]); } catch {}
   try {
-    if (!navigator.mediaDevices?.getUserMedia) throw new Error("এই ব্রাউজারে ক্যামেরা পাওয়া যায়নি (HTTPS লাগে)। নিচে আইডি লিখে জমা দিতে পারো।");
-    if ("BarcodeDetector" in window) {
-      try { detector = new BarcodeDetector({ formats: ["qr_code"] }); } catch { detector = null; }
-    }
-    if (!detector) await loadJsQR();
-    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 } }, audio: false });
-    video.srcObject = stream;
-    await video.play();
-    $("camIdle").hidden = true; $("camFrame").hidden = false; $("camStop").hidden = false;
-    loopTimer = setInterval(scanFrame, 220);
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.frequency.value = ok ? 880 : 220; g.gain.value = 0.07;
+    o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime + (ok ? 0.1 : 0.22));
+  } catch {}
+}
+function res(kind, title, sub = "") {
+  $("scRes").className = "sc-res " + kind;
+  $("scRes").innerHTML = `${kind === "ok" || kind === "warn" ? CHECK : CROSS}<div><b>${esc(title)}</b><small>${esc(sub)}</small></div>`;
+  $("scFrame").className = "sc-frame " + kind;
+  clearTimeout(res.t); res.t = setTimeout(() => $("scFrame").className = "sc-frame", 900);
+}
+function scTitle() { $("scTitle").innerHTML = `${esc(sel.batch)} · ${DAY_TYPES[effType()]}<small>${esc(fmtDate(sel.date, { day: "numeric", month: "short", year: "numeric" }))}</small>`; }
+
+async function openScan() {
+  menu(false);
+  sessionScans = 0; $("scCnt").textContent = "০"; scTitle();
+  $("sc").hidden = false; document.body.style.overflow = "hidden";
+  $("scMsg").hidden = false; $("scMsg").textContent = "ক্যামেরা চালু হচ্ছে…";
+  try {
+    if (!navigator.mediaDevices?.getUserMedia) throw new Error("এই ব্রাউজারে ক্যামেরা পাওয়া যায়নি (HTTPS লাগে)। নিচে আইডি লিখে জমা দাও।");
+    if ("BarcodeDetector" in window) { try { detector = new BarcodeDetector({ formats: ["qr_code"] }); } catch { detector = null; } }
+    const pre = detector ? Promise.resolve() : loadJsQR();
+    const [s] = await Promise.all([navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 960 }, height: { ideal: 960 } }, audio: false }), pre]);
+    stream = s; video.srcObject = s; await video.play();
+    $("scMsg").hidden = true;
+    loopTimer = setInterval(scanFrame, 90);
   } catch (e) {
     console.error(e);
-    stopCam();
-    setFlash("err", e?.name === "NotAllowedError" ? "ক্যামেরার অনুমতি দাওনি" : (e.message || "ক্যামেরা চালু করা যায়নি"), "ব্রাউজারের সেটিংসে ক্যামেরার অনুমতি দাও, অথবা আইডি লিখে জমা দাও।");
+    $("scMsg").textContent = e?.name === "NotAllowedError" ? "ক্যামেরার অনুমতি দাওনি। ব্রাউজার সেটিংসে অনুমতি দাও, অথবা নিচে আইডি লিখে জমা দাও।" : (e.message || "ক্যামেরা চালু করা যায়নি।");
   }
 }
-function stopCam() {
+function closeScan() {
   clearInterval(loopTimer); loopTimer = null;
   if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-  video.srcObject = null;
-  $("camIdle").hidden = false; $("camFrame").hidden = true; $("camStop").hidden = true;
+  video.srcObject = null; $("sc").hidden = true; document.body.style.overflow = "";
+  drawRoll();
 }
 async function scanFrame() {
-  if (busy || video.readyState < 2) return;
+  if (scanBusy || video.readyState < 2) return;
+  scanBusy = true;
   try {
     let text = "";
-    if (detector) {
-      const codes = await detector.detect(video);
-      text = codes[0]?.rawValue || "";
-    } else if (window.jsQR) {
-      const w = 480, h = Math.round(w * (video.videoHeight / video.videoWidth)) || 480;
-      canvas.width = w; canvas.height = h;
+    if (detector) text = (await detector.detect(video))[0]?.rawValue || "";
+    else if (window.jsQR) {
+      const w = 360, h = Math.round(w * (video.videoHeight / video.videoWidth)) || 360;
+      if (canvas.width !== w) { canvas.width = w; canvas.height = h; }
       ctx.drawImage(video, 0, 0, w, h);
-      const img = ctx.getImageData(0, 0, w, h);
-      text = window.jsQR(img.data, w, h, { inversionAttempts: "dontInvert" })?.data || "";
+      text = window.jsQR(ctx.getImageData(0, 0, w, h).data, w, h, { inversionAttempts: "dontInvert" })?.data || "";
     }
-    if (text) await handleCode(text);
-  } catch (e) { /* a bad frame — try the next one */ }
+    if (text) handleCode(text);
+  } catch {} finally { scanBusy = false; }
 }
-
-async function handleCode(text) {
+function handleCode(text) {
   const id = parseAttendanceQr(text);
-  if (!id) {
-    if (text === lastCode && Date.now() - lastAt < 3000) return;
-    lastCode = text; lastAt = Date.now(); beep(false);
-    return setFlash("err", "এটা অ্যাটেনডেন্স QR নয়");
-  }
-  if (id === lastCode && Date.now() - lastAt < 3500) return;     // same QR still in front of the camera
-  lastCode = id; lastAt = Date.now();
-  await record(id, "qr");
+  const key = id || text;
+  if (key === lastCode && Date.now() - lastAt < 2500) return;     // same QR still in front of the camera
+  lastCode = key; lastAt = Date.now();
+  if (!id) { beep(false); return res("err", "এটা অ্যাটেনডেন্স QR নয়"); }
+  record(id, "qr");
 }
-
-async function record(id, method) {
-  busy = true;
-  try {
-    const s = byId[id];
-    if (!s) { beep(false); return setFlash("err", `${id} — এই আইডির সক্রিয় শিক্ষার্থী নেই`); }
-    const date = getDate();
-    if (date > dateStr()) { beep(false); return setFlash("err", "ভবিষ্যতের তারিখে উপস্থিতি নেওয়া যাবে না"); }
-    const r = await markPresent(s, date, { type: getType(), method });
-    beep(true);
-    scans.unshift({ studentId: s.studentId, name: s.name, batch: r.batch, already: r.already, at: new Date() });
-    if (!r.already) { dateAtt.push({ studentId: s.studentId, date, batch: r.batch }); }
-    await reloadDays().catch(() => {});
-    setFlash(r.already ? "warn" : "ok", `${s.name} — ${r.already ? "আগেই উপস্থিত ছিল" : "উপস্থিত ✓"}`, `${r.batch} · ${s.studentId} · ${fmtDate(date)} (${DAY_TYPES[getType()]})`);
-    drawScans();
-  } catch (e) {
-    console.error(e); beep(false);
-    setFlash("err", friendlyError(e) || "জমা হয়নি");
-  } finally { busy = false; }
+function record(id, method) {
+  const s = byId[id];
+  if (!s) { beep(false); return res("err", `${id} — সক্রিয় শিক্ষার্থী নেই`); }
+  if (sel.date > dateStr()) { beep(false); return res("err", "ভবিষ্যতের তারিখ"); }
+  const fresh = mark(s, method);
+  beep(true);
+  if (fresh) { sessionScans++; $("scCnt").textContent = bn(sessionScans); }
+  const other = !sameBatch(s.className, sel.batch);
+  res(fresh ? "ok" : "warn", `${s.name}${fresh ? "" : " — আগেই উপস্থিত"}`, `${normalizeBatch(s.className)} · ${s.studentId}${other ? " · অন্য ব্যাচ" : ""}`);
 }
-
-function drawScans() {
-  const list = scans;
-  $("scanCount").textContent = bn(new Set(list.map(s => s.studentId)).size);
-  $("scanList").innerHTML = list.length ? list.slice(0, 40).map((s, i) => `
-    <div class="li">
-      <span class="av">${esc(String(s.name || "?").charAt(0))}</span>
-      <div class="li-main"><b>${esc(s.name)}</b><span>${esc(s.batch)} · ${esc(s.studentId)} · ${s.at.toLocaleTimeString("bn-BD", { hour: "numeric", minute: "2-digit" })}${s.already ? " · আগেই ছিল" : ""}</span></div>
-      <button class="btn mini danger" data-undo="${i}" type="button">বাতিল</button>
-    </div>`).join("") : `<p class="muted empty">এখনো কেউ স্ক্যান হয়নি।</p>`;
-  $("scanList").querySelectorAll("[data-undo]").forEach(b => b.onclick = async () => {
-    const s = scans[Number(b.dataset.undo)]; if (!s) return;
-    if (!await AppPopup.confirm(`${s.name} এর উপস্থিতি বাতিল করবে?`)) return;
-    try {
-      await unmarkPresent(s.studentId, getDate());
-      scans = scans.filter(x => x.studentId !== s.studentId);
-      dateAtt = dateAtt.filter(r => r.studentId !== s.studentId);
-      drawScans(); showToast("বাতিল হয়েছে", "success");
-    } catch (e) { showToast(friendlyError(e), "error"); }
-  });
-}
-
-$("camStart").onclick = startCam;
-$("camStop").onclick = stopCam;
-$("manGo").onclick = async () => {
-  const id = parseAttendanceQr($("manId").value);
-  if (!id) return setFlash("err", "আইডি ঠিক নেই (যেমন STU-0001)");
-  await record(id, "manual"); $("manId").value = "";
+$("fScan").onclick = openScan;
+$("scX").onclick = closeScan;
+$("manGo").onclick = () => {
+  const id = parseAttendanceQr($("manId").value) || String($("manId").value).trim().toUpperCase();
+  if (!/^STU-\d+$/.test(id)) return res("err", "আইডি ঠিক নেই", "যেমন: STU-0001");
+  record(id, "manual"); $("manId").value = "";
 };
 $("manId").addEventListener("keydown", e => { if (e.key === "Enter") $("manGo").click(); });
-document.addEventListener("visibilitychange", () => { if (document.hidden) stopCam(); });
+document.addEventListener("visibilitychange", () => { if (document.hidden && !$("sc").hidden) closeScan(); });
 
-/* ---------- batch list (manual) ---------- */
-let bPresent = new Set();
-function batchStudents() { return students.filter(s => sameBatch(s.className, $("bSel").value)); }
-function drawBatch() {
-  const list = batchStudents();
-  const dayIds = new Set(dateAtt.map(r => r.studentId));
-  // keep unsaved ticks when only the search text changed
-  if (!drawBatch.keep) bPresent = new Set(list.filter(s => dayIds.has(s.studentId)).map(s => s.studentId));
-  drawBatch.keep = false;
-  const q = $("bSearch").value.trim().toLowerCase();
-  const shown = list.filter(s => !q || String(s.name || "").toLowerCase().includes(q) || s.studentId.toLowerCase().includes(q));
-  $("bList").innerHTML = shown.length ? shown.map(s => `
-    <label class="chk">
-      <input type="checkbox" data-id="${esc(s.studentId)}" ${bPresent.has(s.studentId) ? "checked" : ""}>
-      <span class="box">✓</span>
-      <span class="av">${esc(String(s.name || "?").charAt(0))}</span>
-      <span class="li-main"><b>${esc(s.name)}</b><span>${esc(s.studentId)}</span></span>
-    </label>`).join("") : `<p class="muted empty">কোনো শিক্ষার্থী নেই।</p>`;
-  $("bCount").textContent = `${bn(bPresent.size)}/${bn(list.length)} উপস্থিত`;
-  $("bList").querySelectorAll("input").forEach(i => i.onchange = () => {
-    i.checked ? bPresent.add(i.dataset.id) : bPresent.delete(i.dataset.id);
-    $("bCount").textContent = `${bn(bPresent.size)}/${bn(list.length)} উপস্থিত`;
-  });
-}
-$("bSel").onchange = () => { drawBatch.keep = false; drawBatch(); };
-$("bSearch").oninput = () => { drawBatch.keep = true; drawBatch(); };
-$("bAll").onclick = () => { batchStudents().forEach(s => bPresent.add(s.studentId)); drawBatch.keep = true; drawBatch(); };
-$("bNone").onclick = () => { bPresent.clear(); drawBatch.keep = true; drawBatch(); };
-$("bSave").onclick = async () => {
-  const date = getDate();
-  if (date > dateStr()) return showToast("ভবিষ্যতের তারিখে উপস্থিতি নেওয়া যাবে না।", "error");
-  const list = batchStudents();
-  if (!list.length) return;
-  $("bSave").disabled = true;
-  try {
-    const n = await saveBatchAttendance($("bSel").value, date, getType(), list, [...bPresent]);
-    await reloadDate(); await reloadDays();
-    showToast(n ? `${bn(n)} টি পরিবর্তন সেভ হয়েছে` : "কোনো পরিবর্তন নেই", "success");
-  } catch (e) { console.error(e); showToast(friendlyError(e), "error"); }
-  finally { $("bSave").disabled = false; }
-};
+/* ---------- panels ---------- */
+const openPn = (id) => { menu(false); $(id).hidden = false; document.body.style.overflow = "hidden"; };
+document.querySelectorAll("[data-close]").forEach(b => b.onclick = () => { b.closest(".pn").hidden = true; document.body.style.overflow = ""; });
+document.addEventListener("keydown", e => { if (e.key === "Escape") { document.querySelectorAll(".pn").forEach(p => p.hidden = true); if (!$("sc").hidden) closeScan(); document.body.style.overflow = ""; } });
 
-/* ---------- days ---------- */
 function drawDays() {
-  const b = $("dSel").value;
+  const b = sel.batch;
+  $("dBatch").textContent = `${b} — ${fmtDate(sel.date, { weekday: "short", day: "numeric", month: "long" })} (${DAY_TYPES[sel.type]})`;
   const mine = allDays.filter(d => sameBatch(d.batch, b)).sort((x, y) => y.date.localeCompare(x.date));
-  $("dList").innerHTML = `<div class="sec-t"><span>${esc(b || "")} — ${bn(mine.length)} টি দিন</span></div>` + (mine.length ? mine.map(d => `
-    <div class="li">
-      <div class="li-main"><b>${fmtDate(d.date, { weekday: "short", day: "numeric", month: "long", year: "numeric" })}</b><span>${esc(d.note || "")}</span></div>
+  $("dList").innerHTML = `<div class="sec-t"><span>${bn(mine.length)} টি দিন সেট আছে</span></div>` + (mine.length ? mine.map(d => `
+    <div class="li"><div class="li-main"><b>${fmtDate(d.date, { weekday: "short", day: "numeric", month: "long", year: "numeric" })}</b><span>${esc(d.note || "")}</span></div>
       <span class="tag ${d.type === "exam" ? "exam" : ""}">${DAY_TYPES[d.type] || "ক্লাস"}</span>
-      <button class="btn mini danger" data-rm="${esc(d.date)}" type="button">মুছো</button>
-    </div>`).join("") : `<p class="muted empty">এই ব্যাচের কোনো দিন সেট নেই।</p>`);
+      <button class="btn mini dg" data-rm="${esc(d.date)}">মুছো</button></div>`).join("") : `<p class="muted">এই ব্যাচের কোনো দিন সেট নেই।</p>`);
   $("dList").querySelectorAll("[data-rm]").forEach(x => x.onclick = async () => {
-    if (!await AppPopup.confirm(`${fmtDate(x.dataset.rm)} দিনটি ব্যাচ থেকে সরাবে? (জমা হওয়া উপস্থিতি থাকবে, কিন্তু শতাংশে ধরা হবে না)`)) return;
-    try { await removeDay(b, x.dataset.rm); await reloadDays(); drawDays(); showToast("সরানো হয়েছে", "success"); }
+    if (!await AppPopup.confirm(`${fmtDate(x.dataset.rm)} দিনটি সরাবে? (জমা উপস্থিতি থাকবে, কিন্তু শতাংশে ধরা হবে না)`)) return;
+    try { await removeDay(b, x.dataset.rm); allDays = allDays.filter(d => !(sameBatch(d.batch, b) && d.date === x.dataset.rm)); drawDays(); drawDate(); drawRoll(); showToast("সরানো হয়েছে", "success"); }
     catch (e) { showToast(friendlyError(e), "error"); }
   });
 }
-$("dSel").onchange = drawDays;
+$("mDays").onclick = () => { drawDays(); openPn("pnDays"); };
 $("dAdd").onclick = async () => {
-  const b = $("dSel").value, date = getDate();
-  if (!b) return showToast("আগে ব্যাচ বেছে নাও।", "error");
   try {
-    await setDay(b, date, getType(), $("dNote").value.trim());
-    $("dNote").value = "";
-    await reloadDays(); drawDays();
-    showToast(`${fmtDate(date)} — ${DAY_TYPES[getType()]} যোগ হয়েছে`, "success");
+    await setDay(sel.batch, sel.date, sel.type, $("dNote").value.trim()); $("dNote").value = "";
+    allDays = await getAllDays(); drawDays(); drawDate(); drawRoll(); showToast("দিন যোগ হয়েছে", "success");
   } catch (e) { showToast(friendlyError(e), "error"); }
 };
 
-/* ---------- report ---------- */
 let reportSeq = 0;
 async function drawReport() {
   const seq = ++reportSeq;
   const b = $("rSel").value, month = $("rMonth").value || monthOf(dateStr());
   $("rTitle").textContent = `${b || ""} — ${fmtMonth(month)}`;
+  $("rList").innerHTML = `<div class="muted">লোড হচ্ছে…</div>`;
   try {
     const [recs, awards] = await Promise.all([getMonthAttendance(month), getAwards().catch(() => [])]);
     if (seq !== reportSeq) return;
     const days = allDays.filter(d => sameBatch(d.batch, b) && monthOf(d.date) === month);
-    const total = days.length;
-    const dates = new Set(days.map(d => d.date));
-    const presentBy = {};
+    const total = days.length, dates = new Set(days.map(d => d.date)), presentBy = {};
     recs.forEach(r => { if (dates.has(r.date)) (presentBy[r.studentId] ||= new Set()).add(r.date); });
     const rows = students.filter(s => sameBatch(s.className, b)).map(s => {
       const present = (presentBy[s.studentId] || new Set()).size;
       return { s, present, pct: total ? Math.round(present / total * 100) : 0 };
     }).sort((x, y) => y.pct - x.pct || y.present - x.present || String(x.s.name).localeCompare(String(y.s.name), "bn"));
-    $("rList").innerHTML = total ? `<p class="muted" style="margin-bottom:8px">এই মাসে ${bn(total)} দিন সেট করা আছে (১০০%)।</p>` + rows.map((r, i) => `
-      <div class="li"><span class="av">${bn(i + 1)}</span>
-        <div class="li-main"><b>${esc(r.s.name)}</b><span>${esc(r.s.studentId)} · ${bn(r.present)}/${bn(total)} দিন</span><div class="pbar"><i style="width:${r.pct}%"></i></div></div>
-        <span class="pct">${bn(r.pct)}%</span></div>`).join("")
-      : `<p class="muted empty">এই মাসে এই ব্যাচের কোনো দিন সেট নেই।</p>`;
+    $("rList").innerHTML = total ? `<p class="muted" style="margin-bottom:8px">এই মাসে ${bn(total)} দিন সেট (১০০%)।</p>` + rows.map((r, i) => `
+      <div class="li"><span class="av">${bn(i + 1)}</span><div class="li-main"><b>${esc(r.s.name)}</b><span>${esc(r.s.studentId)} · ${bn(r.present)}/${bn(total)} দিন</span><div class="pb2"><i style="width:${r.pct}%"></i></div></div><span class="pct">${bn(r.pct)}%</span></div>`).join("")
+      : `<p class="muted">এই মাসে এই ব্যাচের কোনো দিন সেট নেই।</p>`;
     $("awardList").innerHTML = awards.length ? awards.map(a => `
-      <div class="li"><div class="li-main"><b>${fmtMonth(a.month)}</b><span>${(a.winners || []).length ? (a.winners || []).map(w => `${esc(w.name)} (${esc(w.batch)} · ${bn(w.pct)}%)`).join(", ") : "কেউ উপযুক্ত ছিল না"}</span></div>
-        <span class="tag">+${bn(a.xp || ATTENDANCE_MONTHLY_XP)} XP</span></div>`).join("")
-      : `<p class="muted empty">মাস শেষ হলে এখানে সেরা শিক্ষার্থী দেখা যাবে। প্রতিটি ব্যাচের সেরা পাবে +${bn(ATTENDANCE_MONTHLY_XP)} XP।</p>`;
-  } catch (e) { console.error(e); $("rList").innerHTML = `<p class="muted empty">রিপোর্ট লোড হয়নি।</p>`; }
+      <div class="li"><div class="li-main"><b>${fmtMonth(a.month)}</b><span>${(a.winners || []).length ? a.winners.map(w => `${esc(w.name)} (${esc(w.batch)} · ${bn(w.pct)}%)`).join(", ") : "কেউ উপযুক্ত ছিল না"}</span></div><span class="tag">+${bn(a.xp || ATTENDANCE_MONTHLY_XP)} XP</span></div>`).join("")
+      : `<p class="muted">মাস শেষ হলে সেরা শিক্ষার্থী এখানে দেখা যাবে। প্রতি ব্যাচের সেরা পাবে +${bn(ATTENDANCE_MONTHLY_XP)} XP।</p>`;
+  } catch (e) { console.error(e); $("rList").innerHTML = `<p class="muted">রিপোর্ট লোড হয়নি।</p>`; }
 }
-$("rSel").onchange = drawReport;
-$("rMonth").onchange = drawReport;
+$("mRep").onclick = () => {
+  $("rSel").innerHTML = batches.map(b => `<option value="${esc(b)}" ${sameBatch(b, sel.batch) ? "selected" : ""}>${esc(b)}</option>`).join("");
+  $("rMonth").value = monthOf(sel.date); $("rBatch").textContent = "ব্যাচ ও মাস বেছে নাও";
+  openPn("pnRep"); drawReport();
+};
+$("rSel").onchange = drawReport; $("rMonth").onchange = drawReport;
 </script>
 </body>
 </html>
