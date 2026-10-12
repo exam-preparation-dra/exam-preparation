@@ -27,11 +27,25 @@ export const QR_PREFIX = "EPATT:";
 export const DAY_TYPES = { class: "ক্লাস", exam: "পরীক্ষা" };
 
 /* ---------------- pure helpers ---------------- */
-export const attendanceQrText = (student) => QR_PREFIX + String(student?.studentId || "").toUpperCase();
+// The QR holds a normal link, so the phone's own camera / Google Lens can open it:
+//   https://<site>/<repo>/admin/attendance.html?scan=STU-0001
+// (only a logged-in admin's browser actually marks attendance; anyone else just sees the login page)
+export function attendanceScanUrl(studentId) {
+  let base = "";
+  try {
+    const m = location.pathname.match(/^(.*)\/(?:student|admin|js)\//);
+    base = location.origin + (m ? m[1] : location.pathname.replace(/\/[^/]*$/, ""));
+  } catch {}
+  return `${base}/admin/attendance.html?scan=${String(studentId || "").toUpperCase()}`;
+}
+export const attendanceQrText = (student) => attendanceScanUrl(student?.studentId);
 
-// "EPATT:STU-0001" (or a bare "STU-0001" typed by hand) -> "STU-0001", else null
+// scan link, old "EPATT:STU-0001" QR, or a bare "STU-0001" typed by hand -> "STU-0001", else null
 export function parseAttendanceQr(text) {
-  const m = String(text || "").trim().match(/^(?:EPATT:)?\s*(STU-\d{1,6})\s*$/i);
+  const t = String(text || "").trim();
+  const u = t.match(/[?&]scan=(STU-\d{1,6})(?:&|#|$)/i);
+  if (u) return u[1].toUpperCase();
+  const m = t.match(/^(?:EPATT:)?\s*(STU-\d{1,6})\s*$/i);
   return m ? m[1].toUpperCase() : null;
 }
 
