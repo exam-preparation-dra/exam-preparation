@@ -1305,6 +1305,7 @@ function renderHeroShell() {
       const { openAvatarPicker } = await import("../js/utils/avatar-picker.js");
       openAvatarPicker({
         current: student.photoURL || "",
+        name: student.name || "",
         onPick: async (uri) => {
           await updateStudentPhoto(student.docId, uri);
           student = { ...student, photoURL: uri || null };
