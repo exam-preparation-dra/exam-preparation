@@ -443,6 +443,66 @@
   .pf-next { gap: 2px; }
   .pf-slots, .pf-recent, .pf-wallet { gap: 10px; }
   @media (max-width: 400px) { .pf-bgrid { gap: 12px; } .pf-badge { padding: 24px 8px 16px; min-height: 176px; } .pf-bhero { padding: 18px 16px; } }
+
+  /* ===== Badges v4: medal emblems, clean collection ===== */
+  .pf-bico { width: 68px; height: 68px; margin: 0 auto; border-radius: 0; background: none !important; border: 0; box-shadow: none !important; color: inherit; filter: none !important; opacity: 1 !important; animation: none; }
+  .pf-bico::after, .pf-bico::before { display: none !important; }
+  .pf-bico svg.bdg { display: block; width: 100%; height: 100%; stroke-width: 0; filter: drop-shadow(0 5px 7px rgba(0,0,0,.22)); overflow: visible; }
+  .pf-badge.locked .pf-bico svg.bdg { filter: drop-shadow(0 3px 4px rgba(0,0,0,.12)); opacity: .96; }
+  .pf-bico.sm { width: 48px; height: 48px; }
+  .pf-modal-card .pf-bico { width: 136px; height: 136px; margin: 0 auto 10px; }
+  .pf-pin { width: 36px; height: 36px; border: 0; background: none; border-radius: 0; }
+  .pf-pin svg { width: 100%; height: 100%; }
+  .pf-mini .pf-bico { width: 54px; height: 54px; }
+  .bsheen { animation: bSheen 4.2s ease-in-out infinite; }
+  @keyframes bSheen { 0%, 55% { transform: translateX(0) skewX(-22deg); } 100% { transform: translateX(140px) skewX(-22deg); } }
+  @media (prefers-reduced-motion: reduce) { .bsheen { animation: none; } }
+
+  /* summary */
+  .bc-sum { padding: 18px; }
+  .bc-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .bc-count { display: flex; align-items: baseline; gap: 2px; font-family: var(--font-num); white-space: nowrap; }
+  .bc-count b { font-size: 2rem; line-height: 1; font-weight: 800; color: var(--color-accent); letter-spacing: -.02em; }
+  .bc-count span { font-size: .95rem; font-weight: 700; color: var(--text-muted); }
+  .bc-bar { height: 10px; margin-top: 14px; border-radius: 99px; overflow: hidden; background: color-mix(in srgb, var(--text-primary) 8%, transparent); }
+  .bc-bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--color-accent), color-mix(in srgb, var(--color-accent) 60%, #fff)); box-shadow: 0 0 10px rgba(var(--color-accent-rgb), .4); }
+  .bc-tally { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+  .bc-tally span { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 3px; padding: 9px 10px; border-radius: 14px; background: var(--surface-highlight); border: 1px solid var(--surface-border); position: relative; padding-left: 22px; }
+  .bc-tally i { position: absolute; left: 9px; top: 14px; width: 8px; height: 8px; border-radius: 50%; background: var(--rc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--rc) 22%, transparent); }
+  .bc-tally b { font-family: var(--font-num); font-size: .98rem; font-weight: 800; color: var(--text-primary); }
+  .bc-tally small { font-size: .7rem; font-weight: 700; color: var(--text-muted); }
+  .bc-tally em { width: 100%; font-style: normal; font-size: .66rem; font-weight: 800; color: var(--text-secondary); }
+
+  /* filters */
+  .bc-seg { display: flex; gap: 4px; padding: 4px; border-radius: 16px; background: var(--surface-highlight); border: 1px solid var(--surface-border); }
+  .bc-seg button { flex: 1; padding: 10px 4px; border: 0; border-radius: 12px; background: none; color: var(--text-secondary); font: inherit; font-size: .82rem; font-weight: 800; cursor: pointer; }
+  .bc-seg button b { margin-left: 3px; font-family: var(--font-num); font-weight: 800; opacity: .8; }
+  .bc-seg button.on { background: var(--surface-solid, var(--surface)); color: var(--color-accent); box-shadow: 0 3px 10px rgba(0,0,0,.10), inset 0 0 0 1px rgba(var(--color-accent-rgb), .18); }
+  .bc-cats { display: flex; gap: 8px; overflow-x: auto; margin: 12px -4px 4px; padding: 2px 4px 6px; scrollbar-width: none; }
+  .bc-cats::-webkit-scrollbar { display: none; }
+  .bc-cats button { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 8px 13px; border-radius: 99px; border: 1px solid var(--surface-border); background: var(--surface); color: var(--text-secondary); font: inherit; font-size: .76rem; font-weight: 800; cursor: pointer; white-space: nowrap; }
+  .bc-cats button small { font-family: var(--font-num); font-size: .68rem; font-weight: 700; opacity: .7; }
+  .bc-cats button.on { background: var(--color-accent); border-color: transparent; color: #fff; }
+
+  /* grid of medals */
+  .pf-gh { margin: 22px 2px 10px; padding-bottom: 8px; border-bottom: 1px solid var(--surface-border); font-size: .9rem; }
+  .pf-gh:first-child { margin-top: 8px; }
+  .pf-bgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 6px; }
+  @media (min-width: 520px) { .pf-bgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .pf-badge { gap: 5px; min-height: 0; padding: 10px 4px 8px; border: 0; border-radius: 18px; background: transparent; box-shadow: none; justify-content: flex-start; }
+  .pf-badge.earned, .pf-badge.locked { border: 0; background: transparent; box-shadow: none; }
+  .pf-badge.earned { background: linear-gradient(180deg, color-mix(in srgb, var(--rc) 10%, transparent), transparent 70%); }
+  .pf-badge .pf-bico { margin: 0 auto 2px; }
+  .pf-badge strong { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.6em; padding: 0 2px; font-size: .74rem; font-weight: 800; line-height: 1.3; text-align: center; color: var(--text-primary); }
+  .pf-badge.locked strong { color: var(--text-secondary); }
+  .pf-badge .rar { margin: 0; padding: 2px 9px; font-size: .62rem; font-weight: 800; color: var(--rc); background: color-mix(in srgb, var(--rc) 13%, transparent); border: 0; }
+  .pf-badge .sec { font-size: .64rem; font-weight: 700; color: var(--text-muted); }
+  .pf-badge .prog { width: 100%; padding: 0 8px; margin: 2px 0 0; }
+  .pf-badge .prog .pf-bar { height: 5px; }
+  .pf-badge .prog small { display: block; margin-top: 4px; font-family: var(--font-num); font-size: .64rem; font-weight: 700; color: var(--text-muted); text-align: center; }
+  .pf-badge.earned.tier-legendary { animation: none; }
+  .pf-badge.earned.tier-legendary .pf-bico svg.bdg { filter: drop-shadow(0 0 10px rgba(217,154,31,.55)) drop-shadow(0 5px 7px rgba(0,0,0,.2)); }
+  .pf-nrow { padding: 12px 0; }
 </style>
 <script src="../js/utils/nav-boot.js"></script>
 <link rel="stylesheet" href="../css/desktop.css">
@@ -1480,7 +1540,82 @@ const inviteText = link => link;
 /* ---------- badges ---------- */
 let badgeFilter = null;   // null = choose a sensible default on first render
 
-function badgeIcon(b) { return badgeIconSvg(b.icon); }
+/* ---------- Badge emblems: a proper medal per rarity, glyph in the middle ----------
+   Shape tells the rarity at a glance:
+   সাধারণ = round · অসাধারণ = dotted round · বিরল = hexagon · এপিক = shield ·
+   কিংবদন্তি = gold star-burst · গোপন = diamond.
+   Locked badges are drawn in grey with a small padlock (secret ones show "?"). */
+const EMB = {
+  common:    { a: "#d3dae4", b: "#7d889a", rim: "#566073" },
+  uncommon:  { a: "#86d8ff", b: "#0b7fbf", rim: "#066092" },
+  rare:      { a: "#c9b8ff", b: "#6d3fe0", rim: "#4527a0" },
+  epic:      { a: "#ffa3d2", b: "#c81e7e", rim: "#8a1458" },
+  legendary: { a: "#ffeaa6", b: "#d58f0a", rim: "#a26a05" },
+  secret:    { a: "#86f2df", b: "#0c8f81", rim: "#0a5f56" }
+};
+const EMB_LOCK = { a: "#e3e6eb", b: "#a4acba", rim: "#8b94a3" };
+let embUid = 0;
+const polyPts = (n, r, rot = -90, r2 = null) => {
+  const pts = [];
+  const steps = r2 ? n * 2 : n;
+  for (let i = 0; i < steps; i++) {
+    const rr = r2 ? (i % 2 ? r2 : r) : r, a = (rot + (360 / steps) * i) * Math.PI / 180;
+    pts.push(`${(32 + rr * Math.cos(a)).toFixed(1)},${(32 + rr * Math.sin(a)).toFixed(1)}`);
+  }
+  return pts.join(" ");
+};
+function badgeIcon(b) {
+  const rk = rarityKey(b.rarity), earned = !!b.earned, secretLocked = isSecretLocked(b);
+  const c = earned ? EMB[rk] : EMB_LOCK;
+  const u = `e${++embUid}`;
+  const SHIELD = "M32 3.5L55.5 11.5V32C55.5 46.5 44.5 55.5 32 61C19.5 55.5 8.5 46.5 8.5 32V11.5Z";
+  let rim, face, clip, cy = 32;
+  switch (rk) {
+    case "uncommon":
+      rim = `<circle cx="32" cy="32" r="28" fill="${c.rim}"/><circle cx="32" cy="32" r="25.4" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.4" stroke-dasharray="1.6 3.2" stroke-linecap="round"/>`;
+      face = `<circle cx="32" cy="32" r="22.6" fill="url(#${u}g)"/>`; clip = `<circle cx="32" cy="32" r="22.6"/>`; break;
+    case "rare":
+      rim = `<polygon points="${polyPts(6, 30)}" fill="${c.rim}" stroke="${c.rim}" stroke-width="3" stroke-linejoin="round"/>`;
+      face = `<polygon points="${polyPts(6, 25)}" fill="url(#${u}g)" stroke="url(#${u}g)" stroke-width="2.4" stroke-linejoin="round"/>`; clip = `<polygon points="${polyPts(6, 25)}"/>`; break;
+    case "epic":
+      rim = `<path d="${SHIELD}" fill="${c.rim}" stroke="${c.rim}" stroke-width="2" stroke-linejoin="round"/>`;
+      face = `<g transform="translate(32 33) scale(.84) translate(-32 -32)"><path d="${SHIELD}" fill="url(#${u}g)"/></g>`;
+      clip = `<g transform="translate(32 33) scale(.84) translate(-32 -32)"><path d="${SHIELD}"/></g>`; cy = 31; break;
+    case "legendary":
+      rim = `<polygon points="${polyPts(12, 31, -90, 26.5)}" fill="${c.rim}" stroke="${c.rim}" stroke-width="1.6" stroke-linejoin="round"/>`;
+      face = `<circle cx="32" cy="32" r="22.4" fill="url(#${u}g)" stroke="#fff6cf" stroke-opacity=".8" stroke-width="1.4"/>`; clip = `<circle cx="32" cy="32" r="22.4"/>`; break;
+    case "secret":
+      rim = `<path d="M32 2L62 32L32 62L2 32Z" fill="${c.rim}" stroke="${c.rim}" stroke-width="3" stroke-linejoin="round"/>`;
+      face = `<g transform="translate(32 32) scale(.8) translate(-32 -32)"><path d="M32 2L62 32L32 62L2 32Z" fill="url(#${u}g)" stroke="url(#${u}g)" stroke-width="3" stroke-linejoin="round"/></g>`;
+      clip = `<g transform="translate(32 32) scale(.8) translate(-32 -32)"><path d="M32 2L62 32L32 62L2 32Z"/></g>`; break;
+    default:
+      rim = `<circle cx="32" cy="32" r="28" fill="${c.rim}"/>`;
+      face = `<circle cx="32" cy="32" r="24.4" fill="url(#${u}g)"/><circle cx="32" cy="32" r="20.6" fill="none" stroke="#fff" stroke-opacity=".38" stroke-width="1.2"/>`; clip = `<circle cx="32" cy="32" r="24.4"/>`;
+  }
+  const inner = secretLocked ? "" : badgeIconSvg(b.icon).replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "");
+  const s = 1.12, gx = 32 - 12 * s, gy = cy - 12 * s - 1;
+  const glyph = secretLocked
+    ? `<text x="32" y="${cy + 8.5}" text-anchor="middle" font-size="25" font-weight="900" font-family="system-ui,sans-serif" fill="#fff" fill-opacity=".92">?</text>`
+    : `<g transform="translate(${gx + .5} ${gy + .7}) scale(${s})" fill="none" stroke="#000" stroke-opacity=".26" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</g>` +
+      `<g transform="translate(${gx} ${gy}) scale(${s})" fill="none" stroke="#fff" stroke-opacity="${earned ? 1 : .9}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${inner}</g>`;
+  // milestone number (exam-10, battle-win-5, referral-3, battle-xp-10000 -> 10K ...)
+  const m = /-(\d+)$/.exec(b.id || "");
+  let pill = "";
+  if (m && !secretLocked) {
+    const n = +m[1], lab = n >= 1000 ? `${n / 1000}K` : String(n), w = Math.max(15, lab.length * 5.6 + 7);
+    pill = `<rect x="${32 - w / 2}" y="46.2" width="${w}" height="11.4" rx="5.7" fill="${c.rim}" stroke="#fff" stroke-opacity=".75" stroke-width=".9"/>` +
+      `<text x="32" y="54.7" text-anchor="middle" font-size="8.2" font-weight="800" font-family="system-ui,sans-serif" fill="#fff">${lab}</text>`;
+  }
+  const lock = !earned && !secretLocked
+    ? `<circle cx="51.5" cy="12.5" r="8" fill="#4b5563" stroke="#fff" stroke-width="1.2"/><g transform="translate(44.7 5.7) scale(.57)" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></g>` : "";
+  const sheen = earned ? `<g clip-path="url(#${u}c)"><rect class="bsheen" x="-24" y="-4" width="12" height="72" fill="#fff" opacity=".42" transform="skewX(-22)"/></g>` : "";
+  return `<svg class="bdg" viewBox="0 0 64 64" aria-hidden="true"><defs>` +
+    `<linearGradient id="${u}g" x1=".15" y1="0" x2=".85" y2="1"><stop offset="0" stop-color="${c.a}"/><stop offset="1" stop-color="${c.b}"/></linearGradient>` +
+    `<clipPath id="${u}c">${clip}</clipPath></defs>` +
+    rim + face +
+    `<ellipse cx="32" cy="${cy - 12}" rx="${rk === "legendary" ? 14 : 13}" ry="7" fill="#fff" opacity="${earned ? .24 : .3}"/>` +
+    glyph + sheen + pill + lock + `</svg>`;
+}
 
 const BADGE_GROUPS = [
   { id: "all", bn: "সব" }, { id: "battle", bn: "ব্যাটল" }, { id: "referral", bn: "রেফারেল" },
@@ -1499,14 +1634,14 @@ const LOCK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 
 function badgeCardHtml(x) {
   const r = rarityOf(x), rk = rarityKey(x.rarity);
+  const status = x.earned ? `<span class="rar">${r.bn}</span>`
+    : isSecretLocked(x) ? `<span class="sec">শর্ত অজানা</span>`
+    : x.progress ? `<div class="prog"><div class="pf-bar"><i style="width:${Math.min(100, x.progress.value / x.progress.max * 100)}%"></i></div><small>${x.progress.text}</small></div>`
+    : `<span class="rar">${r.bn}</span>`;
   return `<button type="button" class="pf-badge tier-${rk} ${x.earned ? "earned" : "locked"}" data-badge="${x.id}" style="--rc:${r.color}">
-    ${x.earned ? "" : `<span class="pf-lock">${LOCK_SVG}</span>`}
     <div class="pf-bico">${badgeIcon(x)}</div>
     <strong>${isSecretLocked(x) ? "গোপন ব্যাজ" : x.title}</strong>
-    <span class="rar">${r.bn}</span>
-    ${x.earned ? `<span class="got">অর্জিত</span>`
-      : isSecretLocked(x) ? `<span class="sec">শর্ত অজানা</span>`
-      : x.progress ? `<div class="prog"><div class="pf-bar"><i style="width:${Math.min(100, x.progress.value / x.progress.max * 100)}%"></i></div><small>${x.progress.text}</small></div>` : ""}
+    ${status}
   </button>`;
 }
 
@@ -1526,13 +1661,13 @@ function renderBadges(d) {
   const xpNow = Number(d.rank?.totalPoints || 0);
   host.innerHTML = `
     ${stageCollectionHtml(xpNow)}
-    <div class="pf-card pf-bhero">
-      <div class="pf-ring" style="--p:${pct}"><b>${pct}%</b></div>
-      <div style="flex:1;min-width:0">
-        <h2 class="pf-h">${viewMode ? "ব্যাজ সংগ্রহ" : "আমার ব্যাজ সংগ্রহ"}</h2>
-        <div class="pf-note">${got.length}টি অর্জিত, ${locked.length}টি বাকি</div>
-        <div class="pf-tally">${tally.map(t => `<span style="--rc:${RARITY[t.k].color}">${RARITY[t.k].bn} ${t.n}/${t.t}</span>`).join("")}</div>
+    <div class="pf-card bc-sum">
+      <div class="bc-top">
+        <div><h2 class="pf-h">${viewMode ? "ব্যাজ সংগ্রহ" : "আমার ব্যাজ সংগ্রহ"}</h2><div class="pf-note">${got.length}টি অর্জিত · ${locked.length}টি বাকি</div></div>
+        <div class="bc-count"><b>${got.length}</b><span>/${state.length}</span></div>
       </div>
+      <div class="bc-bar"><i style="width:${pct}%"></i></div>
+      <div class="bc-tally">${tally.map(t => `<span style="--rc:${RARITY[t.k].color}"><i></i><b>${t.n}</b><small>/${t.t}</small><em>${RARITY[t.k].bn}</em></span>`).join("")}</div>
     </div>
     ${next.length ? `<div class="pf-card">
       <div class="pf-head" style="margin-bottom:6px"><div><h2 class="pf-h">পরবর্তী অর্জন</h2><div class="pf-note">আর একটু এগোলেই</div></div></div>
@@ -1545,12 +1680,12 @@ function renderBadges(d) {
         </button>`).join("")}</div>
     </div>` : ""}
     <div class="pf-card">
-      <div class="pf-chips">${BADGE_GROUPS.map(g => `<button class="pf-chip ${badgeGroup === g.id ? "active" : ""}" data-g="${g.id}">${g.bn} ${gCount(g.id)}</button>`).join("")}</div>
-      <div class="pf-chips">
-        <button class="pf-chip ${badgeFilter === "earned" ? "active" : ""}" data-f="earned">অর্জিত ${got.length}</button>
-        <button class="pf-chip ${badgeFilter === "locked" ? "active" : ""}" data-f="locked">বাকি ${locked.length}</button>
-        <button class="pf-chip ${badgeFilter === "all" ? "active" : ""}" data-f="all">সব ${state.length}</button>
+      <div class="bc-seg">
+        <button class="${badgeFilter === "earned" ? "on" : ""}" data-f="earned">অর্জিত <b>${got.length}</b></button>
+        <button class="${badgeFilter === "locked" ? "on" : ""}" data-f="locked">বাকি <b>${locked.length}</b></button>
+        <button class="${badgeFilter === "all" ? "on" : ""}" data-f="all">সব <b>${state.length}</b></button>
       </div>
+      <div class="bc-cats">${BADGE_GROUPS.map(g => `<button class="${badgeGroup === g.id ? "on" : ""}" data-g="${g.id}">${g.bn}<small>${gCount(g.id)}</small></button>`).join("")}</div>
       <div id="pfBadgeGrid"></div>
     </div>`;
 
