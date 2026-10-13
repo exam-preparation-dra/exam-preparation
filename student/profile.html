@@ -503,6 +503,61 @@
   .pf-badge.earned.tier-legendary { animation: none; }
   .pf-badge.earned.tier-legendary .pf-bico svg.bdg { filter: drop-shadow(0 0 10px rgba(217,154,31,.55)) drop-shadow(0 5px 7px rgba(0,0,0,.2)); }
   .pf-nrow { padding: 12px 0; }
+
+  /* ===== Profile v5: ring avatar, calmer cards, coloured wallet ===== */
+  .pf-avwrap { position: relative; flex: none; width: 100px; height: 100px; padding: 5px; border-radius: 50%;
+    background: conic-gradient(var(--color-accent) calc(var(--p, 0) * 1%), color-mix(in srgb, var(--text-primary) 11%, transparent) 0);
+    box-shadow: 0 12px 26px rgba(var(--color-accent-rgb), .24); transition: background .6s ease; }
+  .pf-avwrap.pf-edit { cursor: pointer; }
+  .pf-avwrap .pf-avatar, .pf-hero.vw .pf-avwrap .pf-avatar { width: 100%; height: 100%; border: 0; border-radius: 50%; box-shadow: 0 0 0 3px var(--surface); font-size: 2rem; }
+  .pf-lvb { position: absolute; left: -3px; bottom: -3px; min-width: 32px; height: 32px; padding: 0 7px; border-radius: 99px; display: grid; place-items: center;
+    font-family: var(--font-num); font-size: .84rem; font-weight: 800; color: #fff; background: linear-gradient(135deg, var(--color-accent), #7c5a22);
+    border: 3px solid var(--surface); box-shadow: 0 4px 10px rgba(0,0,0,.25); }
+  .pf-avedit { position: absolute; right: -3px; bottom: -3px; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--surface-solid, var(--surface)); color: var(--text-primary); border: 3px solid var(--surface); box-shadow: 0 4px 10px rgba(0,0,0,.2); }
+  .pf-avedit svg { width: 13px; height: 13px; }
+  @media (max-width: 380px) { .pf-avwrap { width: 84px; height: 84px; padding: 4px; } .pf-lvb, .pf-avedit { min-width: 28px; height: 28px; } }
+
+  /* section headings get a small accent bar */
+  .pf-head .pf-h { display: flex; align-items: center; gap: 8px; }
+  .pf-head .pf-h::before { content: ""; flex: none; width: 4px; height: 16px; border-radius: 3px; background: var(--color-accent); }
+  .pf-head .pf-note { padding-left: 12px; }
+  .pf-card { border-radius: 24px; }
+
+  /* favourite badges */
+  .pf-slots { gap: 10px; }
+  .pf-mini { gap: 8px; padding: 14px 6px 12px; border-radius: 20px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--rc) 13%, var(--surface-highlight)), var(--surface-highlight)); }
+  .pf-slot { min-height: 124px; }
+  .pf-slot.empty { border-radius: 20px; min-height: 124px; font-size: 1.6rem; color: var(--text-muted); background: var(--surface-highlight); }
+  .pf-slot.empty:active { transform: scale(.97); }
+
+  /* wallet: coloured tiles (same palette as the dashboard) */
+  .pf-wallet { gap: 10px; }
+  .pf-wc { --wa: #2d5a7b; --wb: #15283b; position: relative; overflow: hidden; gap: 3px; padding: 12px 11px 11px; border-radius: 18px; color: #fff;
+    background: linear-gradient(150deg, var(--wa), var(--wb)); box-shadow: 0 8px 18px rgba(15,20,30,.18), inset 0 1px 0 rgba(255,255,255,.16); }
+  .pf-wc::before { content: ""; position: absolute; right: -26px; top: -30px; width: 90px; height: 90px; border-radius: 50%; background: rgba(255,255,255,.1); }
+  .pf-wc.k-hint { --wa: #a77a2c; --wb: #4d3611; } .pf-wc.k-battle { --wa: #6d3f78; --wb: #2b1834; }
+  .pf-wc.k-fifty { --wa: #1f6f66; --wb: #0d2e32; } .pf-wc.k-double { --wa: #3f7d3a; --wb: #15301a; }
+  .pf-wi { display: grid; place-items: center; width: 26px; height: 26px; margin-bottom: 4px; border-radius: 9px; background: rgba(255,255,255,.2); }
+  .pf-wi svg { width: 15px; height: 15px; }
+  .pf-wc b { font-size: 1.7rem; color: #fff; }
+  .pf-wc .pf-wn { font-size: .72rem; font-weight: 800; color: rgba(255,255,255,.95); line-height: 1.25; }
+  .pf-wc small { font-size: .62rem; font-weight: 700; color: rgba(255,255,255,.7); }
+  .pf-wc.zero { filter: saturate(.55); opacity: .82; }
+  .pf-wc.zero b { color: rgba(255,255,255,.65); }
+
+  /* invite card */
+  .pf-scan { background: radial-gradient(120% 80% at 50% 0%, rgba(var(--color-accent-rgb), .13), transparent 66%), var(--surface); }
+  .pf-qr { width: 192px; height: 192px; padding: 14px; border-radius: 28px; border: 2px solid rgba(var(--color-accent-rgb), .35); box-shadow: 0 16px 32px rgba(var(--color-accent-rgb), .16), 0 2px 6px rgba(0,0,0,.08); }
+  .pf-scan .pf-head .pf-h { justify-content: center; }
+  .pf-scan .pf-head .pf-note { padding-left: 0; }
+  .pf-scan-actions .pf-btn { padding: 12px 14px; border-radius: 14px; font-weight: 800; }
+
+  /* friends / settings rows */
+  .pf-row { border-radius: 16px; }
+  .pf-search { border-radius: 14px; }
+  .pf-search:focus-within { border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), .15); }
 </style>
 <script src="../js/utils/nav-boot.js"></script>
 <link rel="stylesheet" href="../css/desktop.css">
@@ -1340,7 +1395,11 @@ function renderHeroShell() {
     (student.photoURL ? `<img src="${esc(student.photoURL)}" alt="" onerror="this.remove()">` : "");
   $("pfHero").innerHTML = `
     <div class="pf-id">
-      <div class="pf-avatar${viewMode ? "" : " pf-edit"}">${av}${viewMode ? "" : `<button type="button" class="pf-avatar-edit" id="pfAvEdit" aria-label="প্রোফাইল ছবি বদলাও"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>বদলাও</button>`}</div>
+      <div class="pf-avwrap${viewMode ? "" : " pf-edit"}" id="pfAvWrap" style="--p:0">
+        <div class="pf-avatar">${av}</div>
+        ${viewMode ? "" : `<span class="pf-avedit" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>`}
+        <span class="pf-lvb" id="pfLvBadge" title="লেভেল">—</span>
+      </div>
       <div style="min-width:0">
         <h1 class="pf-name">${esc(student.name || "শিক্ষার্থী")}</h1>
         <div class="pf-sub">${esc(student.className || "শ্রেণি নির্ধারিত নয়")} · ${esc(student.studentId || "—")}</div>
@@ -1377,7 +1436,7 @@ function renderHeroShell() {
         }
       });
     };
-    $("pfHero").querySelector(".pf-avatar").addEventListener("click", openPicker);
+    $("pfHero").querySelector(".pf-avwrap").addEventListener("click", openPicker);
   }
 }
 
@@ -1390,6 +1449,8 @@ function fillHero(d) {
   $("pfTitle").innerHTML = `${ICON.star}<span>${title}</span><em class="pf-i">i</em>`;
   $("pfTitle").onclick = () => openStageModal(xp);
   $("pfLvText").textContent = `লেভেল ${lv.level}`;
+  const avw = $("pfAvWrap");
+  if (avw) { avw.style.setProperty("--p", Math.max(3, lv.percentage)); const lb = $("pfLvBadge"); if (lb) lb.textContent = lv.level; }
   $("pfLvNext").textContent = lv.isMax ? "সর্বোচ্চ লেভেল" : `পরের লেভেলে ${lv.xpNeeded.toLocaleString()} XP বাকি`;
   requestAnimationFrame(() => { $("pfLvFill").style.width = Math.max(3, lv.percentage) + "%"; });
   $("pfMRank").textContent = d.rank?.rank ? "#" + d.rank.rank : "—";
@@ -1440,7 +1501,7 @@ function renderStrength(d) {
 async function renderInvite() {
   const el = $("inviteSection");
   el.innerHTML = `
-    <div class="pf-head"><div><h2 class="pf-h">বন্ধুদের ইনভাইট করো</h2><div class="pf-note">QR স্ক্যান করলেই তোমার সাথে যুক্ত হবে</div></div></div>
+    <div class="pf-head"><div><h2 class="pf-h">বন্ধুদের ইনভাইট করো</h2><div class="pf-note">QR স্ক্যান করলেই তোমার সাথে যুক্ত হবে — রেফারেল ব্যাজও জেতো</div></div></div>
     <div class="pf-qr"><div class="spinner"></div></div>
     <div class="pf-scan-actions">
       <button class="pf-btn primary" id="shareProfileBtn" type="button">${ICON.share}প্রোফাইল শেয়ার</button>
@@ -1519,15 +1580,26 @@ async function renderCards() {
       getStoreInventory(student.studentId),
       getAvailableBattleRoomCardCount(student.studentId).catch(() => 0)
     ]);
+    const WI = {
+      time: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+      hint: '<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.45.9 1.15.9 1.9V16h5.4v-.3c0-.75.3-1.45.9-1.9A6 6 0 0 0 12 3z"/>',
+      battle: '<path d="M13 2 4 11l3 3 9-9V2z"/><path d="m11 13 6 6"/><path d="m20 16-4 4"/>',
+      fifty: '<circle cx="12" cy="12" r="9"/><path d="M12 3v18M12 3a9 9 0 0 1 0 18z"/>',
+      double: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>'
+    };
     const tiles = [
-      ["time_extend_card", "টাইম কার্ড", "+১ মিনিট", inv.time_extend_card?.available || 0],
-      ["hint_card", "হিন্ট কার্ড", "১টি উত্তর", inv.hint_card?.available || 0],
-      ["battle_room_card", "ব্যাটল কার্ড", "১টি ব্যাটল", battle || 0]
+      ["time_extend_card", "time", "টাইম কার্ড", "+১ মিনিট", inv.time_extend_card?.available || 0],
+      ["hint_card", "hint", "হিন্ট কার্ড", "১টি উত্তর", inv.hint_card?.available || 0],
+      ["battle_room_card", "battle", "ব্যাটল কার্ড", "১টি ব্যাটল", battle || 0],
+      ["fifty_fifty_card", "fifty", "৫০-৫০ কার্ড", "২টি অপশন বাদ", inv.fifty_fifty_card?.available || 0],
+      ["double_xp_card", "double", "ডাবল XP কার্ড", "XP দ্বিগুণ", inv.double_xp_card?.available || 0]
     ];
     el.innerHTML = `
       <div class="pf-head"><div><h2 class="pf-h">আমার কার্ড</h2><div class="pf-note">পরীক্ষা শেষে ফ্রি কার্ড পাবে</div></div>
         <a class="pf-btn sm" href="store.html">স্টোর ›</a></div>
-      <div class="pf-wallet">${tiles.map(t => `<a class="pf-wc ${t[3] ? "" : "zero"}" href="store.html?item=${t[0]}"><b>${t[3]}</b><span>${t[1]}</span><small>${t[2]}</small></a>`).join("")}</div>`;
+      <div class="pf-wallet">${tiles.map(x => `<a class="pf-wc k-${x[1]} ${x[4] ? "" : "zero"}" href="store.html?item=${x[0]}">
+        <span class="pf-wi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${WI[x[1]]}</svg></span>
+        <b>${x[4]}</b><span class="pf-wn">${x[2]}</span><small>${x[3]}</small></a>`).join("")}</div>`;
   } catch (err) {
     console.warn("cards failed", err);
     el.style.display = "none";
