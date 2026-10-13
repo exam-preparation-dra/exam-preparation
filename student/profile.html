@@ -558,6 +558,93 @@
   .pf-row { border-radius: 16px; }
   .pf-search { border-radius: 14px; }
   .pf-search:focus-within { border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), .15); }
+
+  /* =========================================================
+     Profile v6 — "student passport": cover, ID card, tile dock
+     ========================================================= */
+  .pf { gap: 16px; }
+
+  /* ---- hero = cover + identity card ---- */
+  .pf-hero { --cv: #b8863c; position: relative; padding: 0 0 18px; border-radius: 30px; overflow: hidden;
+    background: var(--surface); border: 1px solid color-mix(in srgb, var(--cv) 26%, var(--surface-border));
+    box-shadow: 0 18px 40px rgba(0,0,0,.12), 0 2px 0 rgba(255,255,255,.04) inset; }
+  .pf-cover { position: relative; height: 128px; overflow: hidden;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--cv) 78%, #000) 0%, var(--cv) 55%, color-mix(in srgb, var(--cv) 55%, #fff) 100%); }
+  .pf-cover::before, .pf-cover::after { content: ""; position: absolute; border-radius: 50%; filter: blur(2px); animation: pfBlob 9s ease-in-out infinite; }
+  .pf-cover::before { width: 190px; height: 190px; right: -50px; top: -80px; background: radial-gradient(circle, rgba(255,255,255,.38), transparent 68%); }
+  .pf-cover::after { width: 160px; height: 160px; left: -40px; bottom: -90px; background: radial-gradient(circle, rgba(0,0,0,.28), transparent 70%); animation-delay: -4s; }
+  @keyframes pfBlob { 50% { transform: translate(14px, 10px) scale(1.08); } }
+  .pf-cv-grid { position: absolute; inset: 0; opacity: .22; background-image: linear-gradient(rgba(255,255,255,.35) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.35) 1px, transparent 1px); background-size: 22px 22px; -webkit-mask-image: linear-gradient(180deg, #000, transparent 85%); mask-image: linear-gradient(180deg, #000, transparent 85%); }
+  .pf-cv-id { position: absolute; left: 16px; top: 14px; z-index: 1; padding: 5px 11px; border-radius: 99px; font-family: var(--font-num); font-size: .66rem; font-weight: 800; letter-spacing: .09em; color: #fff; background: rgba(0,0,0,.28); border: 1px solid rgba(255,255,255,.25); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  .pf-cv-share { position: absolute; right: 14px; top: 12px; z-index: 2; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; border: 1px solid rgba(255,255,255,.3); background: rgba(0,0,0,.28); color: #fff; cursor: pointer; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  .pf-hero.vw .pf-cover { height: 104px; }
+  .pf-id { position: relative; z-index: 1; display: flex; margin-top: -52px; padding: 0 18px; align-items: flex-end; gap: 16px; }
+  .pf-avwrap { background: conic-gradient(#fff calc(var(--p, 0) * 1%), rgba(255,255,255,.28) 0); box-shadow: 0 14px 28px rgba(0,0,0,.28); width: 104px; height: 104px; }
+  .pf-avwrap .pf-avatar, .pf-hero.vw .pf-avwrap .pf-avatar { box-shadow: 0 0 0 4px var(--surface); }
+  .pf-id { align-items: flex-start; }
+  .pf-id > div:last-child { padding-top: 58px; padding-bottom: 2px; }
+  .pf-hero.vw .pf-id > div:last-child { padding-top: 56px; }
+  @media (max-width: 380px) { .pf-id > div:last-child { padding-top: 50px; } }
+  .pf-sub { color: var(--text-secondary); }
+  .pf-name { font-size: 1.45rem; }
+  .pf-title { background: linear-gradient(135deg, color-mix(in srgb, var(--cv) 24%, transparent), color-mix(in srgb, var(--cv) 8%, transparent)); border-color: color-mix(in srgb, var(--cv) 45%, transparent); }
+  .pf-level { margin: 18px 18px 0; }
+  .pf-bar i { background: linear-gradient(90deg, var(--cv), color-mix(in srgb, var(--cv) 55%, #fff)); }
+  .pf-metrics { margin: 14px 18px 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0; background: none; border: 0; }
+  .pf-metric { position: relative; padding: 13px 6px 11px; border-radius: 18px; background: var(--surface-highlight); border: 1px solid var(--surface-border); overflow: hidden; }
+  .pf-metric + .pf-metric { border-left: 1px solid var(--surface-border); }
+  .pf-metric::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--cv); opacity: .85; }
+  .pf-metric b { color: var(--text-primary); }
+  .pf-actions { padding: 0 18px; }
+  @media (max-width: 380px) { .pf-avwrap { width: 88px; height: 88px; } .pf-id { margin-top: -44px; gap: 12px; } }
+
+  /* ---- tab dock: four tiles ---- */
+  .pf-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 0; border: 0; background: none; border-radius: 0; }
+  .pf-tab { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 4px 10px; border-radius: 18px; border: 1px solid var(--surface-border); background: var(--surface); color: var(--text-secondary); font-size: .72rem; font-weight: 800; box-shadow: none; transition: background .25s ease, color .25s ease, transform .2s ease, box-shadow .25s ease; }
+  .pf-ti { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 12px; background: var(--surface-highlight); }
+  .pf-ti svg { width: 18px; height: 18px; }
+  .pf-tab.active { color: #fff; border-color: transparent; background: linear-gradient(150deg, color-mix(in srgb, var(--color-accent) 92%, #fff), var(--color-accent) 55%, color-mix(in srgb, var(--color-accent) 70%, #000)); box-shadow: 0 10px 22px rgba(var(--color-accent-rgb), .32); transform: translateY(-2px); }
+  .pf-tab.active .pf-ti { background: rgba(255,255,255,.22); }
+  .pf-tab .pf-dot { top: 6px; right: 10px; }
+
+  /* ---- section cards ---- */
+  .pf-card { position: relative; border-radius: 26px; box-shadow: 0 8px 24px rgba(0,0,0,.07); }
+  .pf-card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 1px; border-radius: 26px 26px 0 0; background: linear-gradient(90deg, transparent, rgba(var(--color-accent-rgb), .45), transparent); pointer-events: none; }
+
+  /* streak */
+  .pf-streakcard { background: radial-gradient(90% 120% at 100% 0%, rgba(255,140,40,.16), transparent 60%), var(--surface); }
+  .pf-sk-n { display: flex; align-items: baseline; gap: 4px; padding: 6px 12px; border-radius: 14px; background: rgba(255,140,40,.14); border: 1px solid rgba(255,140,40,.35); color: #e8590c; }
+  .pf-sk-n b { font-family: var(--font-num); font-size: 1.4rem; font-weight: 800; line-height: 1; }
+  .pf-sk-n span { font-size: .68rem; font-weight: 800; }
+  .pf-weeks { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
+  .pf-wk { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .pf-wk i { width: 100%; aspect-ratio: 1; border-radius: 10px; background: var(--surface-highlight); border: 1px solid var(--surface-border); }
+  .pf-wk.on i { background: linear-gradient(150deg, #ffb347, #e8590c); border-color: transparent; box-shadow: 0 4px 10px rgba(232,89,12,.35); }
+  .pf-wk.cur i { outline: 2px solid rgba(var(--color-accent-rgb), .55); outline-offset: 2px; }
+  .pf-wk small { height: 10px; font-size: .58rem; font-weight: 800; color: var(--text-muted); }
+
+  /* showcase shelf */
+  .pf-shelf { background: radial-gradient(110% 90% at 50% 0%, rgba(var(--color-accent-rgb), .12), transparent 65%), var(--surface); }
+  .pf-shelf .pf-slots { padding-bottom: 12px; border-bottom: 5px solid color-mix(in srgb, var(--text-primary) 10%, transparent); border-radius: 0 0 6px 6px; }
+
+  /* friends preview */
+  .pf-fr { display: flex; gap: 12px; overflow-x: auto; padding: 2px 2px 4px; scrollbar-width: none; }
+  .pf-fr::-webkit-scrollbar { display: none; }
+  .pf-fr-i { flex: none; width: 56px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .pf-fr-i .cm-av { width: 52px; height: 52px; font-size: 1.1rem; box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px rgba(var(--color-accent-rgb), .4); }
+  .pf-fr-i span:last-child { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .68rem; font-weight: 700; color: var(--text-secondary); }
+  .pf-fr-i.more .cm-av { background: var(--surface-highlight); color: var(--text-secondary); box-shadow: 0 0 0 1px var(--surface-border); }
+  .pf-fr-empty { padding: 14px; border-radius: 16px; background: var(--surface-highlight); border: 1px dashed var(--surface-border); font-size: .78rem; font-weight: 700; line-height: 1.7; color: var(--text-secondary); }
+
+  /* ---- wide screens: identity card stays on the left ---- */
+  @media (min-width: 1024px) {
+    .pf { display: grid; grid-template-columns: minmax(320px, 380px) minmax(0, 1fr); column-gap: 24px; row-gap: 16px; align-items: start; }
+    .pf > .pf-hero { grid-column: 1; grid-row: 1 / span 2; position: sticky; top: 22px; }
+    .pf > .pf-tabs, .pf > .pf-pane { grid-column: 2; }
+    .pf-id { flex-direction: column; align-items: flex-start; gap: 12px; margin-top: -54px; }
+    .pf-id > div:last-child, .pf-hero.vw .pf-id > div:last-child { padding-top: 0; }
+    .pf-cover { height: 140px; }
+  }
 </style>
 <script src="../js/utils/nav-boot.js"></script>
 <link rel="stylesheet" href="../css/desktop.css">
@@ -1329,15 +1416,17 @@ function renderPage() {
       <section class="pf-hero" id="pfHero"></section>
 
       <nav class="pf-tabs" id="pfTabs">
-        <button class="pf-tab active" data-tab="tab-overview">${ICON.home}প্রোফাইল</button>
-        <button class="pf-tab" data-tab="tab-badges">${ICON.badge}ব্যাজ</button>
-        <button class="pf-tab" data-tab="tab-network">${ICON.users}বন্ধু<span class="pf-dot" id="pfReqDot"></span></button>
-        <button class="pf-tab" data-tab="tab-settings">সেটিংস</button>
+        <button class="pf-tab active" data-tab="tab-overview"><span class="pf-ti">${ICON.home}</span><span>প্রোফাইল</span></button>
+        <button class="pf-tab" data-tab="tab-badges"><span class="pf-ti">${ICON.badge}</span><span>ব্যাজ</span></button>
+        <button class="pf-tab" data-tab="tab-network"><span class="pf-ti">${ICON.users}</span><span>বন্ধু</span><span class="pf-dot" id="pfReqDot"></span></button>
+        <button class="pf-tab" data-tab="tab-settings"><span class="pf-ti"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></span><span>সেটিংস</span></button>
       </nav>
 
       <section id="tab-overview" class="tab-content pf-pane active">
-        <div class="pf-card" id="pinCard" style="display:none"></div>
+        <div class="pf-card pf-streakcard" id="streakCard" style="display:none"></div>
+        <div class="pf-card pf-shelf" id="pinCard" style="display:none"></div>
         <div class="pf-card" id="cardsSection"></div>
+        <div class="pf-card" id="friendsCard"></div>
         <div class="pf-card pf-scan" id="inviteSection"></div>
       </section>
 
@@ -1371,6 +1460,7 @@ function renderPage() {
     try { pinned = cleanPins((await getPrivacy(student.studentId)).pinnedBadges, d); } catch {}
     fillHero(d);
     renderPinCard(d);
+    renderStreakCard(d);
     renderBadges(d);
     showBadgeUnlocks(d.badges);
     publishMyActivity(student, {
@@ -1394,6 +1484,11 @@ function renderHeroShell() {
   const av = esc((student.name || "S").charAt(0).toUpperCase()) +
     (student.photoURL ? `<img src="${esc(student.photoURL)}" alt="" onerror="this.remove()">` : "");
   $("pfHero").innerHTML = `
+    <div class="pf-cover" aria-hidden="true">
+      <span class="pf-cv-id">STUDENT ID · ${esc(student.studentId || "—")}</span>
+      <span class="pf-cv-grid"></span>
+    </div>
+    ${viewMode ? "" : `<button type="button" class="pf-cv-share" id="pfCvShare" aria-label="প্রোফাইল শেয়ার করো">${ICON.share}</button>`}
     <div class="pf-id">
       <div class="pf-avwrap${viewMode ? "" : " pf-edit"}" id="pfAvWrap" style="--p:0">
         <div class="pf-avatar">${av}</div>
@@ -1420,6 +1515,7 @@ function renderHeroShell() {
     $("pfMRank").parentElement.style.display = "none";
   }
   if (!viewMode) {
+    $("pfCvShare")?.addEventListener("click", openShareChoice);
     const openPicker = async () => {
       const { openAvatarPicker } = await import("../js/utils/avatar-picker.js");
       openAvatarPicker({
@@ -1446,6 +1542,7 @@ function fillHero(d) {
   const lv = getLevelInfo(xp);
   mainSubject = subjectVisible ? (detectMainSubject(d.subjectStats)?.name || null) : null;
   const title = stageTitle(stageOf(xp), mainSubject);
+  try { $("pfHero").style.setProperty("--cv", STAGES[Math.min(lv.level, STAGES.length) - 1]?.color || "#b8863c"); } catch {}
   $("pfTitle").innerHTML = `${ICON.star}<span>${title}</span><em class="pf-i">i</em>`;
   $("pfTitle").onclick = () => openStageModal(xp);
   $("pfLvText").textContent = `লেভেল ${lv.level}`;
@@ -1512,6 +1609,39 @@ async function renderInvite() {
   const qr = await makeQr(referralLink(), 512);
   const box = el.querySelector(".pf-qr");
   if (box) box.innerHTML = qr ? `<img src="${qr}" alt="QR">` : `<div class="pf-note" style="text-align:center">QR তৈরি করা যায়নি।<br>লিংক কপি করে শেয়ার করো।</div>`;
+}
+
+/* ---------- overview: weekly streak (last 8 weeks) ---------- */
+function renderStreakCard(d) {
+  const host = $("streakCard"); if (!host) return;
+  const ms = r => { const x = r.submittedAt; const v = x?.toMillis ? x.toMillis() : (typeof x === "number" ? x : Date.parse(x)); return Number.isFinite(v) ? v : 0; };
+  const wk = tm => { const x = new Date(tm); return Math.floor((Date.UTC(x.getFullYear(), x.getMonth(), x.getDate()) / 86400000 + 3) / 7); };
+  const weeks = new Set((d.results || []).map(ms).filter(Boolean).map(wk));
+  const now = wk(Date.now());
+  const dots = [];
+  for (let i = 7; i >= 0; i--) dots.push({ on: weeks.has(now - i), cur: i === 0 });
+  const st = calcStreak(d.results);
+  const active = dots.filter(x => x.on).length;
+  host.style.display = "";
+  host.innerHTML = `
+    <div class="pf-head"><div><h2 class="pf-h">ধারাবাহিকতা</h2><div class="pf-note">${st > 0 ? `টানা <b>${st}</b> সপ্তাহ পরীক্ষা দিয়েছো` : "এই সপ্তাহে একটা পরীক্ষা দিলেই স্ট্রিক শুরু"}</div></div>
+      <div class="pf-sk-n"><b>${st}</b><span>সপ্তাহ</span></div></div>
+    <div class="pf-weeks">${dots.map((x, i) => `<span class="pf-wk ${x.on ? "on" : ""} ${x.cur ? "cur" : ""}"><i></i><small>${x.cur ? "এই" : i === 6 ? "গত" : ""}</small></span>`).join("")}</div>
+    <div class="pf-note" style="margin-top:10px">শেষ ৮ সপ্তাহে <b>${active}</b>টি সপ্তাহে সক্রিয় ছিলে</div>`;
+}
+
+/* ---------- overview: friends preview ---------- */
+function renderFriendsCard() {
+  const host = $("friendsCard"); if (!host) return;
+  const ids = new Set(friendIds || []);
+  const list = (allNetStudents || []).filter(s => ids.has(s.studentId));
+  const show = list.slice(0, 6);
+  host.innerHTML = `
+    <div class="pf-head"><div><h2 class="pf-h">বন্ধুরা</h2><div class="pf-note">${list.length ? `${list.length} জন বন্ধু` : "এখনো কেউ নেই"}</div></div>
+      <button class="pf-btn sm" type="button" id="friendsGo">${list.length ? "সব দেখো ›" : "বন্ধু খোঁজো ›"}</button></div>
+    ${show.length ? `<div class="pf-fr">${show.map(s => `<div class="pf-fr-i">${avatarHtml(s)}<span>${esc((s.name || "").split(" ")[0] || "")}</span></div>`).join("")}${list.length > show.length ? `<div class="pf-fr-i more"><span class="cm-av">+${list.length - show.length}</span><span>আরও</span></div>` : ""}</div>`
+      : `<div class="pf-fr-empty">QR দেখিয়ে বা তালিকা থেকে বন্ধু বানাও — একসাথে ব্যাটল ও চ্যালেঞ্জ করা যাবে।</div>`}`;
+  $("friendsGo")?.addEventListener("click", () => switchTab("tab-network"));
 }
 
 function renderPinCard(d) {
@@ -2008,6 +2138,7 @@ async function loadNetworkData() {
     renderReqsAndFriends();
     renderDirectoryFilters();
     renderDirectory();
+    renderFriendsCard();
   } catch (err) {
     console.warn("Network load failed", err);
     const el = $("reqAndFriendsSection");
@@ -2017,7 +2148,7 @@ async function loadNetworkData() {
 
 function refreshAfterFriendChange() {
   loadNetworkData();
-  loadData(true).then(d => { fillHero(d); renderBadges(d); }).catch(() => {});
+  loadData(true).then(d => { fillHero(d); renderBadges(d); renderStreakCard(d); }).catch(() => {});
 }
 
 function renderReqsAndFriends() {
