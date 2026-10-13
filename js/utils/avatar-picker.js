@@ -12,7 +12,7 @@
    ========================================================= */
 import { FACE_URIS } from "./avatar-faces.js";
 import {
-  SKINS, HAIR_COLORS, DRESS_COLORS, BACKGROUNDS, HAIRS, EYES, MOUTHS, DRESSES, GLASSES,
+  SKINS, HAIR_COLORS, DRESS_COLORS, BACKGROUNDS, EYE_COLORS, PATTERNS, HAIRS, EYES, MOUTHS, DRESSES, GLASSES,
   extrasFor, defaultConfig, normalizeConfig, avatarUri, parseAvatarConfig
 } from "./avatar-builder.js";
 
@@ -51,7 +51,7 @@ const CSS = `
 .avb-cats button{flex:none;padding:8px 13px;border-radius:99px;border:1px solid var(--surface-border,#ddd);background:var(--surface,#fff);color:var(--text-secondary,#666);font:inherit;font-size:.78rem;font-weight:800;cursor:pointer;white-space:nowrap}
 .avb-cats button.on{background:var(--color-accent,#b8863c);border-color:transparent;color:#fff}
 .avb-opts{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
-.avb-opts.col{grid-template-columns:repeat(5,1fr)}
+.avb-opts.col{grid-template-columns:repeat(6,1fr);gap:9px}
 .avb-o{position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:0;border:0;background:none;color:inherit;font:inherit;cursor:pointer}
 .avb-o .t{position:relative;width:100%;aspect-ratio:1;border-radius:20px;overflow:hidden;border:3px solid transparent;box-shadow:0 3px 10px rgba(0,0,0,.12);transition:transform .15s,border-color .15s}
 .avb-o .t img{display:block;width:100%;height:100%;pointer-events:none}
@@ -101,14 +101,17 @@ export function openAvatarPicker({
     { id: "h", label: "হেয়ারস্টাইল", type: "style", opts: g => HAIRS[g].map((l, v) => ({ v, l })) },
     { id: "hc", label: "চুলের রঙ", type: "color", opts: () => HAIR_COLORS.map((c, v) => ({ v, c })) },
     { id: "ey", label: "চোখের লুক", type: "style", opts: () => EYES.map((l, v) => ({ v, l })) },
+    { id: "ec", label: "চোখের রঙ", type: "color", opts: () => EYE_COLORS.map((c, v) => ({ v, c })) },
     { id: "mo", label: "এক্সপ্রেশন", type: "style", opts: () => MOUTHS.map((l, v) => ({ v, l })) },
     { id: "dr", label: "পোশাক", type: "style", opts: g => DRESSES[g].map((l, v) => ({ v, l })) },
     { id: "dc", label: "পোশাকের রঙ", type: "color", opts: () => DRESS_COLORS.map((c, v) => ({ v, c })) },
+    { id: "d2", label: "দ্বিতীয় রঙ", type: "color", opts: () => DRESS_COLORS.map((c, v) => ({ v, c })) },
+    { id: "pt", label: "প্যাটার্ন", type: "style", opts: () => PATTERNS.map((l, v) => ({ v, l })) },
     { id: "gl", label: "চশমা", type: "style", opts: () => GLASSES.map((l, v) => ({ v, l })) },
     { id: "ex", label: "এক্সট্রা", type: "style", opts: g => extrasFor(g).map(e => ({ v: e.id, l: e.label })) },
     { id: "sk", label: "স্কিন টোন", type: "color", opts: () => SKINS.map((c, v) => ({ v, c })) },
     { id: "bg", label: "ব্যাকগ্রাউন্ড", type: "color", opts: () => BACKGROUNDS.map((p, v) => ({ v, c: `linear-gradient(135deg,${p[0]},${p[1]})` })) },
-    { id: "ini", label: "নামের অক্ষর", type: "toggle" }
+    { id: "ini", label: "নাম", type: "toggle" }
   ];
 
   const root = document.createElement("div");
@@ -145,7 +148,7 @@ export function openAvatarPicker({
     if (c.type === "toggle") {
       box.className = "";
       box.innerHTML = `<button type="button" class="avb-tog ${cfg.ini ? "on" : ""}" data-toggle="ini">
-        <span style="flex:1"><b>পোশাকে নামের প্রথম অক্ষর</b><span class="d">${name ? `তোমার পোশাকে “${esc(Array.from(name.trim())[0] || "")}” লেখা থাকবে` : "পোশাকে নামের প্রথম অক্ষর দেখাবে"}</span></span>
+        <span style="flex:1"><b>পোশাকে পুরো নাম</b><span class="d">${name ? `তোমার পোশাকে “${esc(name.trim().replace(/\s+/g, " ").slice(0, 26))}” লেখা থাকবে` : "পোশাকে তোমার পুরো নাম লেখা থাকবে"}</span></span>
         <span class="avb-sw2"></span></button>`;
       return;
     }
