@@ -688,6 +688,36 @@
   .st-form.open { grid-template-rows: 1fr; }
   .st-form-in { overflow: hidden; display: flex; flex-direction: column; gap: 10px; padding: 0 10px; }
   .st-form.open .st-form-in { padding: 6px 10px 12px; }
+
+  /* ===== v8: cover button, referral section ===== */
+  .pf-cv-edit { right: 60px; top: 12px; bottom: auto; width: 38px; height: 38px; padding: 0; justify-content: center; border-radius: 50%; gap: 0; }
+  .pf-cv-id { max-width: calc(100% - 128px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rf-banner { display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: 20px; text-align: left; border: 1px solid rgba(var(--color-accent-rgb), .35);
+    background: radial-gradient(120% 140% at 100% 0%, rgba(var(--color-accent-rgb), .22), transparent 60%), var(--surface-highlight); }
+  .rf-ico { flex: none; width: 48px; height: 48px; border-radius: 16px; display: grid; place-items: center; color: #fff; background: linear-gradient(145deg, color-mix(in srgb, var(--color-accent) 85%, #fff), var(--color-accent) 60%, color-mix(in srgb, var(--color-accent) 70%, #000)); box-shadow: 0 8px 18px rgba(var(--color-accent-rgb), .35); }
+  .rf-ico svg { width: 24px; height: 24px; }
+  .rf-bt b { display: block; font-size: 1rem; font-weight: 900; color: var(--text-primary); }
+  .rf-bt b em { font-style: normal; font-family: var(--font-num); color: var(--color-accent); }
+  .rf-bt small { display: block; margin-top: 3px; font-size: .72rem; font-weight: 600; line-height: 1.6; color: var(--text-secondary); }
+  .rf-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; margin-top: 4px; }
+  .rf-st { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 11px 4px; border-radius: 16px; background: var(--surface-highlight); border: 1px solid var(--surface-border); }
+  .rf-st b { font-family: var(--font-num); font-size: 1.3rem; font-weight: 800; line-height: 1.2; color: var(--text-primary); }
+  .rf-st span { font-size: .68rem; font-weight: 800; color: var(--text-muted); }
+  .rf-st.ok b { color: var(--color-success); } .rf-st.wait b { color: #d98a1c; } .rf-st.xp b { color: var(--color-accent); }
+  .rf-lh { width: 100%; margin: 6px 2px 0; text-align: left; font-size: .76rem; font-weight: 800; color: var(--text-muted); }
+  #rfList { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+  .rf-row { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 16px; text-align: left; background: var(--surface-highlight); border: 1px solid var(--surface-border); }
+  .rf-av { flex: none; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-weight: 900; color: #fff; background: linear-gradient(135deg, var(--color-accent), #7c5a22); }
+  .rf-row.wait .rf-av { background: linear-gradient(135deg, #e6a53c, #b9741a); } .rf-row.no .rf-av { background: linear-gradient(135deg, #9aa2ae, #6b7280); }
+  .rf-nm { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .rf-nm b { font-size: .86rem; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rf-nm small { font-size: .68rem; font-weight: 700; color: var(--text-muted); }
+  .rf-chip { flex: none; padding: 5px 11px; border-radius: 99px; font-size: .7rem; font-weight: 900; }
+  .rf-chip.ok { color: var(--color-success); background: rgba(47,125,94,.14); border: 1px solid rgba(47,125,94,.35); }
+  .rf-chip.wait { color: #d98a1c; background: rgba(217,138,28,.14); border: 1px solid rgba(217,138,28,.38); }
+  .rf-chip.no { color: var(--color-danger); background: rgba(166,64,47,.12); border: 1px solid rgba(166,64,47,.32); }
+  .rf-row.ok { border-color: rgba(47,125,94,.3); }
+  .rf-empty { padding: 14px; border-radius: 16px; background: var(--surface-highlight); border: 1px dashed var(--surface-border); font-size: .78rem; font-weight: 700; line-height: 1.7; text-align: left; color: var(--text-secondary); }
 </style>
 <script src="../js/utils/nav-boot.js"></script>
 <link rel="stylesheet" href="../css/desktop.css">
@@ -837,9 +867,10 @@ let getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest,
 let getChallengeWinCount, sendChallenge;
 let normalizeBatch;
 let requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, savePinnedBadges, saveCoverTheme, friendlyStudentAuthError, validatePin;
-let applyCover, openCoverPicker;
+let applyCover, openCoverPicker, coverColors, patternCss;
 let coverTheme = null, stageColor = "#b8863c";
 let viewPrivacy = { records: true, subjects: true, badges: true, publicStats: false };
+let REFERRAL_XP = 250;
 let getLevelInfo, LEVEL_THRESHOLDS, STAGES, stageOf, detectMainSubject, stageTitle, publishMyActivity;
 let mainSubject = null, subjectVisible = true;   // auto-detected subject for the profile on screen
 let badgeGroup = "all";
@@ -871,9 +902,9 @@ const __ok = (await Promise.all([
   loadModule("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js", m => ({ doc, getDoc, collection, getDocs, query, where } = m)),
   loadModule("../js/utils/friend-utils.js?v=ref1", m => ({ getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival } = m)),
   loadModule("../js/utils/student-auth.js", m => ({ requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, savePinnedBadges, saveCoverTheme, friendlyStudentAuthError, validatePin } = m)),
-  loadModule("../js/utils/cover-picker.js", m => ({ applyCover, openCoverPicker } = m)),
+  loadModule("../js/utils/cover-picker.js", m => ({ applyCover, openCoverPicker, coverColors, patternCss } = m)),
   loadModule("../js/utils/challenge-utils.js", m => ({ getChallengeWinCount, sendChallenge } = m)),
-  loadModule("../js/utils/xp-utils.js", m => ({ getLevelInfo, LEVEL_THRESHOLDS } = m)),
+  loadModule("../js/utils/xp-utils.js", m => ({ getLevelInfo, LEVEL_THRESHOLDS, REFERRAL_XP } = m)),
   loadModule("../js/utils/batch-utils.js", m => ({ normalizeBatch } = m)),
   loadModule("../js/utils/stage-utils.js", m => ({ STAGES, stageOf, detectMainSubject, stageTitle } = m)),
   loadModule("../js/utils/activity-utils.js", m => ({ publishMyActivity } = m))
@@ -1570,7 +1601,7 @@ function renderHeroShell() {
       <span class="pf-cv-grid"></span>
     </div>
     ${viewMode ? "" : `<button type="button" class="pf-cv-share" id="pfCvShare" aria-label="প্রোফাইল শেয়ার করো">${ICON.share}</button>
-    <button type="button" class="pf-cv-edit" id="pfCvEdit"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="10" r="1.2" fill="currentColor"/><circle cx="12" cy="7.5" r="1.2" fill="currentColor"/><circle cx="16" cy="10" r="1.2" fill="currentColor"/><path d="M12 21c-1.5 0-2-1.6-1.2-2.6.9-1.1.4-2.4-1-2.4H8"/></svg>কভার</button>`}
+    <button type="button" class="pf-cv-edit" id="pfCvEdit" aria-label="কভারের রঙ বদলাও" title="কভারের রঙ বদলাও"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="10" r="1.2" fill="currentColor"/><circle cx="12" cy="7.5" r="1.2" fill="currentColor"/><circle cx="16" cy="10" r="1.2" fill="currentColor"/><path d="M12 21c-1.5 0-2-1.6-1.2-2.6.9-1.1.4-2.4-1-2.4H8"/></svg></button>`}
     <div class="pf-id">
       <div class="pf-avwrap${viewMode ? "" : " pf-edit"}" id="pfAvWrap" style="--p:0">
         <div class="pf-avatar">${av}</div>
@@ -1681,17 +1712,63 @@ function renderStrength(d) {
 async function renderInvite() {
   const el = $("inviteSection");
   el.innerHTML = `
-    <div class="pf-head"><div><h2 class="pf-h">বন্ধুদের ইনভাইট করো</h2><div class="pf-note">QR স্ক্যান করলেই তোমার সাথে যুক্ত হবে — রেফারেল ব্যাজও জেতো</div></div></div>
+    <div class="pf-head"><div><h2 class="pf-h">বন্ধুদের রেফার করো</h2><div class="pf-note">তোমার লিংক বা QR দিয়ে বন্ধুকে আনো, XP জেতো</div></div></div>
+    <div class="rf-banner">
+      <div class="rf-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12.5h18"/><path d="M12 8c-1.5-3.5-5.5-3.5-5.5-1S9 8 12 8zM12 8c1.5-3.5 5.5-3.5 5.5-1S15 8 12 8z"/></svg></div>
+      <div class="rf-bt"><b>প্রতি রেফারে <em>${fmtBn(REFERRAL_XP)} XP</em></b><small>বন্ধু তোমার লিংকে জয়েন করে অ্যাকাউন্ট চালু করলেই XP জমা হবে। না করা পর্যন্ত রেফারটা "অপেক্ষমাণ" থাকবে।</small></div>
+    </div>
     <div class="pf-qr"><div class="spinner"></div></div>
     <div class="pf-scan-actions">
       <button class="pf-btn primary" id="shareProfileBtn" type="button">${ICON.share}প্রোফাইল শেয়ার</button>
       <button class="pf-btn" id="copyLinkBtn" type="button">${ICON.link}লিংক কপি</button>
-    </div>`;
+    </div>
+    <div class="rf-stats" id="rfStats"></div>
+    <div class="rf-lh">রেফারেল স্ট্যাটাস</div>
+    <div id="rfList"><div class="spinner" style="margin:14px auto"></div></div>`;
   $("shareProfileBtn").addEventListener("click", openShareChoice);
   $("copyLinkBtn").addEventListener("click", async () => showToast(await copyText(referralLink()) ? "লিংক কপি হয়েছে" : "কপি করা যায়নি", "success"));
+  renderReferralStatus();
   const qr = await makeQr(referralLink(), 512);
   const box = el.querySelector(".pf-qr");
   if (box) box.innerHTML = qr ? `<img src="${qr}" alt="QR">` : `<div class="pf-note" style="text-align:center">QR তৈরি করা যায়নি।<br>লিংক কপি করে শেয়ার করো।</div>`;
+}
+
+const fmtBn = n => Number(n || 0).toLocaleString("bn-BD");
+/* Referral status: successful = the friend's account exists (admin approved, they are in);
+   pending = applied through my link, still waiting; rejected = application declined. */
+async function renderReferralStatus() {
+  const statsEl = $("rfStats"), listEl = $("rfList");
+  if (!statsEl || !listEl) return;
+  try {
+    const me = student.studentId;
+    const [students, snap] = await Promise.all([
+      getActiveStudents().catch(() => []),
+      getDocs(query(collection(db, "applicationStatus"), where("referredBy", "==", me))).catch(() => null)
+    ]);
+    const ms = x => { const v = x?.toMillis ? x.toMillis() : (typeof x === "number" ? x : Date.parse(x)); return Number.isFinite(v) ? v : 0; };
+    const ok = (students || []).filter(s => s.referredBy === me && s.studentId !== me)
+      .map(s => ({ name: s.name, at: ms(s.createdAt), st: "ok" }));
+    const okIds = new Set((students || []).filter(s => s.referredBy === me).map(s => s.studentId));
+    const apps = snap ? snap.docs.map(d => d.data()) : [];
+    const pend = apps.filter(a => a.status === "pending").map(a => ({ name: a.name, at: ms(a.createdAt), st: "wait" }));
+    const rej = apps.filter(a => a.status === "rejected").map(a => ({ name: a.name, at: ms(a.createdAt), st: "no" }));
+    const rows = [...pend, ...ok, ...rej].sort((a, b) => (b.at || 0) - (a.at || 0));
+    statsEl.innerHTML = `
+      <div class="rf-st ok"><b>${fmtBn(ok.length)}</b><span>সফল</span></div>
+      <div class="rf-st wait"><b>${fmtBn(pend.length)}</b><span>অপেক্ষমাণ</span></div>
+      <div class="rf-st xp"><b>${fmtBn(ok.length * REFERRAL_XP)}</b><span>অর্জিত XP</span></div>`;
+    const CH = { ok: ["সফল", `+${fmtBn(REFERRAL_XP)} XP`], wait: ["অপেক্ষমাণ", "অনুমোদনের অপেক্ষায়"], no: ["বাতিল", "আবেদন বাতিল"] };
+    const dt = m => m ? new Date(m).toLocaleDateString("bn-BD", { day: "numeric", month: "short" }) : "";
+    listEl.innerHTML = rows.length
+      ? rows.map(r => `<div class="rf-row ${r.st}"><span class="rf-av">${esc((r.name || "?").trim().charAt(0).toUpperCase())}</span>
+          <div class="rf-nm"><b>${esc(r.name || "নাম নেই")}</b><small>${dt(r.at)}${r.at ? " · " : ""}${CH[r.st][1]}</small></div>
+          <span class="rf-chip ${r.st}">${CH[r.st][0]}</span></div>`).join("")
+      : `<div class="rf-empty">এখনো কেউ তোমার লিংকে জয়েন করেনি। লিংক বা QR শেয়ার করে প্রথম ${fmtBn(REFERRAL_XP)} XP জিতে নাও!</div>`;
+  } catch (err) {
+    console.warn("referral status failed", err);
+    statsEl.innerHTML = "";
+    listEl.innerHTML = `<div class="rf-empty">স্ট্যাটাস লোড করা যায়নি।</div>`;
+  }
 }
 
 /* ---------- overview: weekly streak (last 8 weeks) ---------- */
@@ -2351,58 +2428,85 @@ function buildProfileCardHtml(d, qrUrl) {
   const got = d.badges.filter(b => b.earned);
   const streak = calcStreak(d.results);
   const shown = pinned.map(id => d.badges.find(b => b.id === id)).filter(Boolean);
-  const showList = shown.length ? shown : got.slice(0, 8);
+  const ORDER = ["legendary", "epic", "rare", "uncommon", "common", "secret"];
+  const best = [...got].sort((a, b) => ORDER.indexOf(rarityKey(a.rarity)) - ORDER.indexOf(rarityKey(b.rarity)));
+  const showList = (shown.length ? shown : best).slice(0, 6);
   const rankText = d.rank?.rank ? "#" + d.rank.rank : "—";
   const title = stageTitle(stageOf(xp), mainSubject);
   const initial = esc((student.name || "?").charAt(0).toUpperCase());
+  const sc = STAGES[Math.min(lv.level, STAGES.length) - 1]?.color || "#b8863c";
+  const cc = coverColors(coverTheme, sc), pat = patternCss(coverTheme?.p ?? 0);
   const A = "#b8863c", INK = "#21262f", MUTED = "#8d94a0", SOFT = "#5b6270", LINE = "#e5e2d9";
   const num = "'Space Grotesk','Inter',sans-serif";
-  const metric = (v, l) => `<div style="flex:1;padding:11px 4px;text-align:center;border-radius:14px;background:#fff;border:1px solid ${LINE};">
-      <div style="font-family:${num};font-size:16px;font-weight:800;color:${INK};line-height:1.3;">${v}</div>
+  const metric = (v, l) => `<div style="flex:1;padding:12px 4px 10px;text-align:center;border-radius:16px;background:#fff;border:1px solid ${LINE};border-top:3px solid ${A};">
+      <div style="font-family:${num};font-size:17px;font-weight:800;color:${INK};line-height:1.3;">${v}</div>
       <div style="margin-top:2px;font-size:10px;font-weight:700;color:${MUTED};line-height:1.3;">${l}</div></div>`;
+  // medals: same emblems as the profile, drawn flat (no shine) for the picture
+  const medal = b => {
+    const r = rarityOf(b);
+    const svg = badgeIcon(b).replace(/<g clip-path="url\(#e\d+c\)"><rect class="bsheen"[^>]*\/><\/g>/, "").replace('<svg class="bdg"', '<svg width="66" height="66" style="display:block;margin:0 auto"');
+    return `<div style="width:33.33%;box-sizing:border-box;padding:0 4px 12px;text-align:center;">
+      ${svg}
+      <div style="margin-top:6px;font-size:11px;font-weight:800;color:${INK};line-height:1.35;word-break:break-word;">${esc(b.title)}</div>
+      <div style="margin-top:3px;font-size:9.5px;font-weight:800;color:${r.color};line-height:1.3;">${r.bn}</div></div>`;
+  };
 
   return `
-  <div id="profileCardInner" style="width:400px;box-sizing:border-box;padding:16px;font-family:'Noto Sans Bengali','Inter',sans-serif;background:#f6f5f1;color:${INK};">
+  <div id="profileCardInner" style="width:400px;box-sizing:border-box;font-family:'Noto Sans Bengali','Inter',sans-serif;background:#f6f5f1;color:${INK};overflow:hidden;">
 
-    <div style="padding:20px;border-radius:24px;border:1px solid rgba(184,134,60,.28);background:linear-gradient(140deg,rgba(184,134,60,.16),#ffffff 64%);">
-      <div style="display:flex;gap:16px;align-items:center;">
-        <div style="position:relative;width:84px;height:84px;flex:none;border-radius:26px;overflow:hidden;background:linear-gradient(135deg,${A},#7c5a22);border:2px solid rgba(184,134,60,.45);">
-          <div id="cardAvatarFb" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:32px;font-weight:900;">${initial}</div>
-          ${student.photoURL ? `<img id="cardPhoto" src="${esc(student.photoURL)}" crossorigin="anonymous" style="position:absolute;left:0;top:0;width:84px;height:84px;object-fit:cover;display:block;">` : ""}
-        </div>
-        <div style="min-width:0;">
-          <div style="font-size:21px;font-weight:900;line-height:1.3;color:${INK};word-break:break-word;">${esc(student.name)}</div>
-          <div style="margin-top:3px;font-size:12px;font-weight:700;color:${SOFT};line-height:1.4;">${esc(student.className || "—")} · ${esc(student.studentId)}</div>
-          <div style="margin-top:8px;"><span style="display:inline-block;padding:4px 10px;border-radius:999px;background:rgba(184,134,60,.12);border:1px solid rgba(184,134,60,.25);color:${A};font-size:11px;font-weight:900;line-height:1.4;">★ ${title}</span>${streak > 0 ? `<span style="display:inline-block;margin-left:6px;padding:4px 10px;border-radius:999px;background:#fff;border:1px solid ${LINE};color:${SOFT};font-size:11px;font-weight:800;line-height:1.4;">${streak} সপ্তাহ ধারাবাহিক</span>` : ""}</div>
-        </div>
+    <div style="position:relative;height:150px;background:linear-gradient(135deg,${cc.a},${cc.b});overflow:hidden;">
+      <div style="position:absolute;left:0;top:0;right:0;bottom:0;background-image:${pat.img};background-size:${pat.size};opacity:.9;"></div>
+      <div style="position:absolute;right:-50px;top:-70px;width:200px;height:200px;border-radius:100px;background:rgba(255,255,255,.22);"></div>
+      <div style="position:absolute;left:18px;top:16px;padding:6px 12px;border-radius:99px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.3);color:#fff;font-family:${num};font-size:10px;font-weight:800;letter-spacing:.14em;line-height:1.4;">STUDENT ID · ${esc(student.studentId)}</div>
+    </div>
+
+    <div style="position:relative;margin-top:-52px;padding:0 20px;display:flex;gap:16px;align-items:flex-start;">
+      <div style="position:relative;box-sizing:border-box;width:104px;height:104px;flex:none;border-radius:52px;overflow:hidden;background:linear-gradient(135deg,${A},#7c5a22);border:4px solid #f6f5f1;box-shadow:0 0 0 3px #fff,0 8px 20px rgba(0,0,0,.22);">
+        <div id="cardAvatarFb" style="position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:38px;font-weight:900;">${initial}</div>
+        ${student.photoURL ? `<img id="cardPhoto" src="${esc(student.photoURL)}" crossorigin="anonymous" style="position:absolute;left:0;top:0;width:96px;height:96px;object-fit:cover;display:block;">` : ""}
       </div>
+      <div style="min-width:0;padding-top:60px;">
+        <div style="font-size:21px;font-weight:900;line-height:1.3;color:${INK};word-break:break-word;">${esc(student.name)}</div>
+        <div style="margin-top:2px;font-size:12px;font-weight:700;color:${SOFT};line-height:1.4;">${esc(student.className || "—")}</div>
+      </div>
+    </div>
 
-      <div style="margin-top:18px;">
-        <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;color:${SOFT};margin-bottom:6px;line-height:1.4;">
+    <div style="padding:12px 20px 0;display:flex;flex-wrap:wrap;gap:8px;">
+      <span style="display:inline-block;padding:5px 12px;border-radius:999px;background:rgba(184,134,60,.13);border:1px solid rgba(184,134,60,.3);color:#8a6222;font-size:11px;font-weight:900;line-height:1.4;">★ ${esc(title)}</span>
+      ${streak > 0 ? `<span style="display:inline-block;padding:5px 12px;border-radius:999px;background:#fff1e6;border:1px solid #ffd5b3;color:#c2570c;font-size:11px;font-weight:900;line-height:1.4;">${streak} সপ্তাহ টানা</span>` : ""}
+    </div>
+
+    <div style="padding:16px 20px 0;">
+      <div style="padding:14px 14px 13px;border-radius:18px;background:#fff;border:1px solid ${LINE};">
+        <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;color:${SOFT};margin-bottom:7px;line-height:1.4;">
           <span>লেভেল ${lv.level}</span><span>${lv.isMax ? "সর্বোচ্চ লেভেল" : lv.xpNeeded.toLocaleString() + " XP বাকি"}</span>
         </div>
-        <div style="height:8px;border-radius:99px;background:#efede4;overflow:hidden;"><div style="height:8px;width:${Math.max(3, lv.percentage)}%;border-radius:99px;background:linear-gradient(90deg,#d9a84e,${A});"></div></div>
+        <div style="height:9px;border-radius:99px;background:#efede4;overflow:hidden;"><div style="height:9px;width:${Math.max(3, lv.percentage)}%;border-radius:99px;background:linear-gradient(90deg,#e0b565,${A});"></div></div>
       </div>
-
-      <div style="display:flex;gap:8px;margin-top:16px;">
+      <div style="display:flex;gap:8px;margin-top:10px;">
         ${metric(rankText, "র‍্যাঙ্ক")}${metric(xp.toLocaleString(), "মোট XP")}${metric(`${got.length}/${d.badges.length || 0}`, "ব্যাজ")}
       </div>
     </div>
 
     ${showList.length ? `
-    <div style="margin-top:12px;padding:16px;border-radius:20px;background:#fff;border:1px solid ${LINE};">
-      <div style="font-size:13px;font-weight:900;color:${INK};margin-bottom:11px;line-height:1.4;">${shown.length ? "প্রিয় ব্যাজ" : "অর্জিত ব্যাজ"}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:7px;">
-        ${showList.map(b => `<span style="padding:6px 11px;border-radius:999px;background:rgba(184,134,60,.12);border:1px solid rgba(184,134,60,.28);color:#8a6222;font-size:11px;font-weight:800;line-height:1.4;">${esc(b.title)}</span>`).join("")}
-        ${!shown.length && got.length > 8 ? `<span style="padding:6px 11px;border-radius:999px;background:#efede4;color:${SOFT};font-size:11px;font-weight:800;line-height:1.4;">+${got.length - 8}</span>` : ""}
+    <div style="margin:14px 20px 0;padding:16px 10px 4px;border-radius:20px;background:#fff;border:1px solid ${LINE};">
+      <div style="padding:0 8px 12px;display:flex;justify-content:space-between;align-items:baseline;line-height:1.4;">
+        <span style="font-size:13px;font-weight:900;color:${INK};">${shown.length ? "প্রিয় ব্যাজ" : "সেরা ব্যাজ"}</span>
+        <span style="font-size:10.5px;font-weight:800;color:${MUTED};">মোট ${got.length}টি অর্জিত</span>
       </div>
+      <div style="display:flex;flex-wrap:wrap;">${showList.map(medal).join("")}</div>
     </div>` : ""}
 
-    <div id="cardCta" style="margin-top:12px;padding:20px 16px 18px;border-radius:20px;background:#fff;border:1px solid ${LINE};text-align:center;">
-      ${qrUrl ? `<img id="cardQr" src="${qrUrl}" width="168" height="168" style="width:168px;height:168px;display:block;margin:0 auto;">` : ""}
-      <div style="margin-top:${qrUrl ? 12 : 0}px;font-size:13px;font-weight:900;letter-spacing:.32em;text-indent:.32em;color:${A};line-height:1.4;">SCAN</div>
-      <div style="margin-top:4px;font-size:11px;font-weight:700;color:${MUTED};line-height:1.5;">স্ক্যান করে আমার বন্ধু হও</div>
+    <div id="cardCta" style="margin:14px 20px 0;padding:16px;border-radius:20px;background:#fff;border:1px solid ${LINE};display:flex;align-items:center;gap:16px;">
+      ${qrUrl ? `<img id="cardQr" src="${qrUrl}" width="118" height="118" style="width:118px;height:118px;display:block;flex:none;">` : ""}
+      <div style="min-width:0;">
+        <div style="font-size:15px;font-weight:900;color:${INK};line-height:1.4;">স্ক্যান করে আমার বন্ধু হও</div>
+        <div style="margin-top:4px;font-size:11px;font-weight:700;color:${SOFT};line-height:1.6;">তোমার জয়েনে আমি পাবো <b style="color:${A};">${Number(REFERRAL_XP).toLocaleString()} XP</b></div>
+        <div style="margin-top:9px;display:inline-block;padding:5px 12px;border-radius:99px;background:${A};color:#fff;font-size:10.5px;font-weight:900;letter-spacing:.2em;line-height:1.4;">SCAN</div>
+      </div>
     </div>
+
+    <div style="padding:14px 20px 18px;text-align:center;font-size:10px;font-weight:700;color:${MUTED};line-height:1.5;">পরীক্ষা প্রস্তুতি</div>
   </div>`;
 }
 
