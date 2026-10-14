@@ -645,6 +645,49 @@
     .pf-id > div:last-child, .pf-hero.vw .pf-id > div:last-child { padding-top: 0; }
     .pf-cover { height: 140px; }
   }
+
+  /* ===== v7: neutral borders, cover themes, settings list ===== */
+  .pf-hero, .pf-hero.vw { border: 1px solid var(--surface-border); }
+  .pf-cover { background: linear-gradient(135deg, color-mix(in srgb, var(--cv) 78%, #000) 0%, var(--cv) 52%, var(--cv2, color-mix(in srgb, var(--cv) 55%, #fff)) 100%); transition: background .4s ease; }
+  .pf-cv-grid { opacity: 1; -webkit-mask-image: linear-gradient(180deg, #000, transparent 88%); mask-image: linear-gradient(180deg, #000, transparent 88%); }
+  .pf-metric { border: 1px solid var(--surface-border); }
+  .pf-metric::before { background: var(--color-accent); }
+  .pf-bar i { background: linear-gradient(90deg, var(--color-accent), color-mix(in srgb, var(--color-accent) 55%, #fff)); }
+  .pf-title { border-color: rgba(var(--color-accent-rgb), .4); background: linear-gradient(135deg, rgba(var(--color-accent-rgb), .2), rgba(var(--color-accent-rgb), .07)); color: var(--color-accent); }
+  .pf-level { border: 1px solid var(--surface-border); }
+  .pf-cv-edit { position: absolute; right: 14px; bottom: 12px; z-index: 2; display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 99px; font: inherit; font-size: .72rem; font-weight: 800; color: #fff; cursor: pointer; border: 1px solid rgba(255,255,255,.3); background: rgba(0,0,0,.3); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  #pfAmbient + * , body > .app-shell { position: relative; z-index: 1; }
+
+  /* settings */
+  .st-label { margin: 18px 6px 8px; font-size: .72rem; font-weight: 800; letter-spacing: .04em; color: var(--text-muted); }
+  .st-label:first-child { margin-top: 4px; }
+  .st-card { padding: 6px; }
+  .st-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 10px; border: 0; border-radius: 16px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; position: relative; }
+  .st-row + .st-row { margin-top: 2px; }
+  .st-card > .st-row:not(:last-child)::after { content: ""; position: absolute; left: 62px; right: 10px; bottom: -1px; height: 1px; background: var(--surface-border); }
+  .st-ico { flex: none; display: grid; place-items: center; width: 38px; height: 38px; border-radius: 13px; color: var(--color-accent); background: rgba(var(--color-accent-rgb), .12); }
+  .st-ico svg { width: 19px; height: 19px; }
+  .st-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .st-tx b { font-size: .9rem; font-weight: 800; color: var(--text-primary); }
+  .st-tx small { font-size: .72rem; font-weight: 600; line-height: 1.45; color: var(--text-muted); }
+  .st-go { flex: none; font-size: 1.3rem; line-height: 1; color: var(--text-muted); transition: transform .25s ease; }
+  #stPin[aria-expanded="true"] .st-chev { transform: rotate(90deg); }
+  .st-hint { padding: 8px 12px 10px; font-size: .72rem; font-weight: 600; color: var(--text-muted); }
+  .st-row.danger .st-ico { color: var(--color-danger); background: rgba(166,64,47,.12); }
+  .st-row.danger .st-tx b { color: var(--color-danger); }
+  /* switches */
+  .st-card .pf-tg { display: flex; }
+  .st-card .pf-tg input { position: absolute; opacity: 0; pointer-events: none; }
+  .st-card .pf-tg i { flex: none; position: relative; width: 46px; height: 27px; border-radius: 99px; background: color-mix(in srgb, var(--text-primary) 22%, transparent); transition: background .2s; }
+  .st-card .pf-tg i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 21px; height: 21px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.3); transition: transform .25s cubic-bezier(.34,1.56,.64,1); }
+  .st-card .pf-tg input:checked + i { background: var(--color-accent); }
+  .st-card .pf-tg input:checked + i::after { left: 3px; transform: translateX(19px); }
+  .st-card .pf-tg { border-top: 0; padding: 12px 10px; justify-content: flex-start; font-size: inherit; font-weight: inherit; }
+  /* PIN form */
+  .st-form { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+  .st-form.open { grid-template-rows: 1fr; }
+  .st-form-in { overflow: hidden; display: flex; flex-direction: column; gap: 10px; padding: 0 10px; }
+  .st-form.open .st-form-in { padding: 6px 10px 12px; }
 </style>
 <script src="../js/utils/nav-boot.js"></script>
 <link rel="stylesheet" href="../css/desktop.css">
@@ -793,7 +836,9 @@ let doc, getDoc, collection, getDocs, query, where;
 let getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival;
 let getChallengeWinCount, sendChallenge;
 let normalizeBatch;
-let requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, savePinnedBadges, friendlyStudentAuthError, validatePin;
+let requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, savePinnedBadges, saveCoverTheme, friendlyStudentAuthError, validatePin;
+let applyCover, openCoverPicker;
+let coverTheme = null, stageColor = "#b8863c";
 let viewPrivacy = { records: true, subjects: true, badges: true, publicStats: false };
 let getLevelInfo, LEVEL_THRESHOLDS, STAGES, stageOf, detectMainSubject, stageTitle, publishMyActivity;
 let mainSubject = null, subjectVisible = true;   // auto-detected subject for the profile on screen
@@ -825,7 +870,8 @@ const __ok = (await Promise.all([
   loadModule("../js/firebase/firebase-config.js", m => ({ db } = m)),
   loadModule("https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js", m => ({ doc, getDoc, collection, getDocs, query, where } = m)),
   loadModule("../js/utils/friend-utils.js?v=ref1", m => ({ getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival } = m)),
-  loadModule("../js/utils/student-auth.js", m => ({ requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, savePinnedBadges, friendlyStudentAuthError, validatePin } = m)),
+  loadModule("../js/utils/student-auth.js", m => ({ requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, savePinnedBadges, saveCoverTheme, friendlyStudentAuthError, validatePin } = m)),
+  loadModule("../js/utils/cover-picker.js", m => ({ applyCover, openCoverPicker } = m)),
   loadModule("../js/utils/challenge-utils.js", m => ({ getChallengeWinCount, sendChallenge } = m)),
   loadModule("../js/utils/xp-utils.js", m => ({ getLevelInfo, LEVEL_THRESHOLDS } = m)),
   loadModule("../js/utils/batch-utils.js", m => ({ normalizeBatch } = m)),
@@ -1260,6 +1306,7 @@ async function renderViewPage() {
   try {
     const d = await loadData();
     pinned = canBadge ? cleanPins(viewPrivacy.pinnedBadges, d) : [];
+    coverTheme = viewPrivacy.coverTheme || null;
     fillHero(d);
     renderCompare(d, canBadge);
     if (canRec) renderRecords(d);
@@ -1350,29 +1397,48 @@ async function renderSettings() {
   if (!host) return;
   const p = await getPrivacy(student.studentId);
   const rows = [
-    ["records", "বন্ধুরা আমার রেকর্ড (স্কোর) দেখতে পাবে"],
-    ["subjects", "বন্ধুরা আমার বিষয়ভিত্তিক নির্ভুলতা দেখতে পাবে"],
-    ["badges", "বন্ধুরা আমার ব্যাজের বিস্তারিত দেখতে পাবে"],
-    ["publicStats", "বন্ধু না হলেও সবাই আমার র‍্যাঙ্ক ও পরীক্ষার সংখ্যা দেখতে পাবে"]
+    ["records", "আমার রেকর্ড (স্কোর)", "বন্ধুরা দেখতে পাবে", '<path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/>'],
+    ["subjects", "বিষয়ভিত্তিক নির্ভুলতা", "বন্ধুরা দেখতে পাবে", '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M8.5 8h7"/>'],
+    ["badges", "ব্যাজের বিস্তারিত", "বন্ধুরা দেখতে পাবে", '<circle cx="12" cy="9" r="6"/><path d="M8.5 14.5 7 22l5-3 5 3-1.5-7.5"/>'],
+    ["publicStats", "র‍্যাঙ্ক ও পরীক্ষার সংখ্যা", "বন্ধু না হলেও সবাই দেখতে পাবে", '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>']
   ];
   host.innerHTML = `
-    <div class="pf-card">
-      <div class="pf-head"><div><h2 class="pf-h">গোপনীয়তা</h2><div class="pf-note">অন্যরা তোমার প্রোফাইলে কী দেখবে</div></div></div>
-      ${rows.map(([k, t]) => `<label class="pf-tg"><span>${t}</span><input type="checkbox" data-k="${k}" ${p[k] ? "checked" : ""}><i></i></label>`).join("")}
-      <div class="pf-note" style="margin-top:8px">নাম, ক্লাস, লেভেল ও XP সবসময় দেখা যাবে।</div>
+    <div class="st-label">ব্যক্তিগতকরণ</div>
+    <div class="pf-card st-card">
+      <button class="st-row" id="stAvatar" type="button"><span class="st-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span><span class="st-tx"><b>প্রোফাইল ছবি ও অবতার</b><small>মেয়ে/ছেলে অবতার সাজাও অথবা রেডি ফেস বেছে নাও</small></span><span class="st-go">›</span></button>
+      <button class="st-row" id="stCover" type="button"><span class="st-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="10" r="1.2"/><circle cx="12" cy="7.5" r="1.2"/><circle cx="16" cy="10" r="1.2"/><path d="M12 21c-1.5 0-2-1.6-1.2-2.6.9-1.1.4-2.4-1-2.4H8"/></svg></span><span class="st-tx"><b>কভারের রঙ ও ডিজাইন</b><small>১৭টা রঙ, ৮টা ডিজাইন আর পেজের রঙের আভা</small></span><span class="st-go">›</span></button>
     </div>
-    <div class="pf-card">
-      <div class="pf-head"><div><h2 class="pf-h">PIN বদলাও</h2><div class="pf-note">ঠিক ৬ সংখ্যা</div></div></div>
-      <input class="pf-inp" id="pwOld" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="বর্তমান PIN" autocomplete="current-password">
-      <input class="pf-inp" id="pwNew" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="নতুন PIN" autocomplete="new-password">
-      <input class="pf-inp" id="pwNew2" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="নতুন PIN আবার লেখো" autocomplete="new-password">
-      <div id="pwMsg" style="color:var(--color-danger);font-size:.8rem;min-height:18px;margin-bottom:6px"></div>
-      <button class="pf-btn primary" id="pwSave" type="button">PIN বদলাও</button>
+
+    <div class="st-label">গোপনীয়তা — অন্যরা তোমার প্রোফাইলে কী দেখবে</div>
+    <div class="pf-card st-card">
+      ${rows.map(([k, t, d, ic]) => `<label class="pf-tg st-row"><span class="st-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ic}</svg></span><span class="st-tx"><b>${t}</b><small>${d}</small></span><input type="checkbox" data-k="${k}" ${p[k] ? "checked" : ""}><i></i></label>`).join("")}
+      <div class="st-hint">নাম, ক্লাস, লেভেল ও XP সবসময় দেখা যাবে।</div>
     </div>
-    <div class="pf-card">
-      <div class="pf-head"><div><h2 class="pf-h">লগআউট</h2><div class="pf-note">অন্য কেউ এই ডিভাইসে ঢুকতে চাইলে আগে লগআউট করো</div></div></div>
-      <button class="pf-btn danger" id="logoutBtn" type="button">লগআউট</button>
+
+    <div class="st-label">নিরাপত্তা</div>
+    <div class="pf-card st-card">
+      <button class="st-row" id="stPin" type="button" aria-expanded="false"><span class="st-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><span class="st-tx"><b>PIN বদলাও</b><small>ঠিক ৬ সংখ্যার PIN</small></span><span class="st-go st-chev">›</span></button>
+      <div class="st-form" id="pinForm"><div class="st-form-in">
+        <input class="pf-inp" id="pwOld" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="বর্তমান PIN" autocomplete="current-password">
+        <input class="pf-inp" id="pwNew" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="নতুন PIN" autocomplete="new-password">
+        <input class="pf-inp" id="pwNew2" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="নতুন PIN আবার লেখো" autocomplete="new-password">
+        <div id="pwMsg" style="color:var(--color-danger);font-size:.8rem;min-height:18px;margin-bottom:6px"></div>
+        <button class="pf-btn primary" id="pwSave" type="button">PIN বদলাও</button>
+      </div></div>
+    </div>
+
+    <div class="st-label">অ্যাকাউন্ট</div>
+    <div class="pf-card st-card">
+      <button class="st-row danger" id="logoutBtn" type="button"><span class="st-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span><span class="st-tx"><b>লগআউট</b><small>অন্য কেউ এই ডিভাইসে ঢুকতে চাইলে আগে লগআউট করো</small></span></button>
     </div>`;
+
+  $("stAvatar").addEventListener("click", () => $("pfAvWrap")?.click());
+  $("stCover").addEventListener("click", openCoverFlow);
+  $("stPin").addEventListener("click", () => {
+    const f = $("pinForm"), open = !f.classList.contains("open");
+    f.classList.toggle("open", open); $("stPin").setAttribute("aria-expanded", String(open));
+    if (open) setTimeout(() => $("pwOld")?.focus(), 250);
+  });
 
   host.querySelectorAll(".pf-tg input").forEach(cb => cb.addEventListener("change", async () => {
     const next = {};
@@ -1407,6 +1473,20 @@ async function renderSettings() {
     try { await studentLogout(); } catch (e) {}
     window.location.href = "../index.html";
   });
+}
+
+function openCoverFlow() {
+  const api = openCoverPicker({
+    theme: coverTheme, stageColor,
+    onPick: async (th) => {
+      await saveCoverTheme(student.studentId, th);
+      coverTheme = th;
+      try { localStorage.setItem("cvTheme:" + student.studentId, JSON.stringify(th)); } catch {}
+      applyCover($("pfHero"), th, stageColor);
+      showToast("কভার সেভ হয়েছে", "success");
+    }
+  });
+  api.onPreview(th => applyCover($("pfHero"), th, stageColor));
 }
 
 function renderPage() {
@@ -1452,12 +1532,13 @@ function renderPage() {
   $("dirSearch").addEventListener("input", e => { dirSearchTerm = e.target.value.trim().toLowerCase(); renderDirectory(); });
 
   renderHeroShell();
+  try { coverTheme = JSON.parse(localStorage.getItem("cvTheme:" + student.studentId) || "null"); applyCover($("pfHero"), coverTheme, stageColor); } catch {}
   renderInvite();
   renderCards();
   renderSettings();
   loadNetworkData();
   loadData().then(async d => {
-    try { pinned = cleanPins((await getPrivacy(student.studentId)).pinnedBadges, d); } catch {}
+    try { const pv = await getPrivacy(student.studentId); pinned = cleanPins(pv.pinnedBadges, d); coverTheme = pv.coverTheme || null; try { localStorage.setItem("cvTheme:" + student.studentId, JSON.stringify(coverTheme)); } catch {} } catch {}
     fillHero(d);
     renderPinCard(d);
     renderStreakCard(d);
@@ -1488,7 +1569,8 @@ function renderHeroShell() {
       <span class="pf-cv-id">STUDENT ID · ${esc(student.studentId || "—")}</span>
       <span class="pf-cv-grid"></span>
     </div>
-    ${viewMode ? "" : `<button type="button" class="pf-cv-share" id="pfCvShare" aria-label="প্রোফাইল শেয়ার করো">${ICON.share}</button>`}
+    ${viewMode ? "" : `<button type="button" class="pf-cv-share" id="pfCvShare" aria-label="প্রোফাইল শেয়ার করো">${ICON.share}</button>
+    <button type="button" class="pf-cv-edit" id="pfCvEdit"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="10" r="1.2" fill="currentColor"/><circle cx="12" cy="7.5" r="1.2" fill="currentColor"/><circle cx="16" cy="10" r="1.2" fill="currentColor"/><path d="M12 21c-1.5 0-2-1.6-1.2-2.6.9-1.1.4-2.4-1-2.4H8"/></svg>কভার</button>`}
     <div class="pf-id">
       <div class="pf-avwrap${viewMode ? "" : " pf-edit"}" id="pfAvWrap" style="--p:0">
         <div class="pf-avatar">${av}</div>
@@ -1516,6 +1598,7 @@ function renderHeroShell() {
   }
   if (!viewMode) {
     $("pfCvShare")?.addEventListener("click", openShareChoice);
+    $("pfCvEdit")?.addEventListener("click", openCoverFlow);
     const openPicker = async () => {
       const { openAvatarPicker } = await import("../js/utils/avatar-picker.js");
       openAvatarPicker({
@@ -1542,7 +1625,7 @@ function fillHero(d) {
   const lv = getLevelInfo(xp);
   mainSubject = subjectVisible ? (detectMainSubject(d.subjectStats)?.name || null) : null;
   const title = stageTitle(stageOf(xp), mainSubject);
-  try { $("pfHero").style.setProperty("--cv", STAGES[Math.min(lv.level, STAGES.length) - 1]?.color || "#b8863c"); } catch {}
+  try { stageColor = STAGES[Math.min(lv.level, STAGES.length) - 1]?.color || "#b8863c"; applyCover($("pfHero"), coverTheme, stageColor); } catch {}
   $("pfTitle").innerHTML = `${ICON.star}<span>${title}</span><em class="pf-i">i</em>`;
   $("pfTitle").onclick = () => openStageModal(xp);
   $("pfLvText").textContent = `লেভেল ${lv.level}`;
