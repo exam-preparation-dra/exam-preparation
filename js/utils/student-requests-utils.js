@@ -44,6 +44,8 @@ export async function submitStudentRequest(rawName, className, referredBy = null
     status: "pending",
     name: trimmedName,
     className: trimmedClass,
+    // public (no secret): lets the inviter see "pending / successful" for each referral
+    referredBy: referredBy || null,
     createdAt: serverTimestamp()
   });
   return ref.id;

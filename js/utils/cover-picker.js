@@ -55,16 +55,22 @@ const HEX = svgUri(`<svg xmlns='http://www.w3.org/2000/svg' width='28' height='4
 const WAVE = svgUri(`<svg xmlns='http://www.w3.org/2000/svg' width='120' height='26' viewBox='0 0 120 26'><path d='M0 13Q15 1 30 13T60 13T90 13T120 13' fill='none' stroke='white' stroke-opacity='.4' stroke-width='1.6'/></svg>`);
 const STAR = svgUri(`<svg xmlns='http://www.w3.org/2000/svg' width='90' height='90' viewBox='0 0 90 90'><g fill='white'><path fill-opacity='.7' d='M20 14l1.6 3.8 3.8 1.6-3.8 1.6L20 24.8l-1.6-3.8-3.8-1.6 3.8-1.6z'/><path fill-opacity='.45' d='M66 40l1.2 2.8 2.8 1.2-2.8 1.2L66 48l-1.2-2.8-2.8-1.2 2.8-1.2z'/><circle cx='48' cy='12' r='1.3' fill-opacity='.6'/><circle cx='12' cy='62' r='1.5' fill-opacity='.5'/><circle cx='74' cy='78' r='1.2' fill-opacity='.6'/><path fill-opacity='.4' d='M40 70l1 2.4 2.4 1-2.4 1-1 2.4-1-2.4-2.4-1 2.4-1z'/></g></svg>`);
 
+// pattern i -> { img, size }  (also used inline by the share card)
+export const PATTERN_CSS = [
+  { img: "linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px)", size: "22px 22px" },
+  { img: "radial-gradient(circle,rgba(255,255,255,.6) 1.6px,transparent 2.2px)", size: "18px 18px" },
+  { img: WAVE, size: "120px 26px" },
+  { img: "repeating-linear-gradient(135deg,rgba(255,255,255,.3) 0 2px,transparent 2px 14px)", size: "auto" },
+  { img: HEX, size: "28px 49px" },
+  { img: STAR, size: "90px 90px" },
+  { img: "repeating-radial-gradient(circle at 82% 18%,transparent 0 13px,rgba(255,255,255,.32) 13px 14.6px),repeating-radial-gradient(circle at 10% 100%,transparent 0 13px,rgba(255,255,255,.2) 13px 14.4px)", size: "auto" },
+  { img: "none", size: "auto" }
+];
+export const patternCss = i => PATTERN_CSS[Number.isInteger(i) && i >= 0 && i < PATTERN_CSS.length ? i : 0];
+
 const CSS = `
 .pf-cv-grid{background-repeat:repeat}
-.pf-cv-grid.pt0{background-image:linear-gradient(rgba(255,255,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.3) 1px,transparent 1px);background-size:22px 22px}
-.pf-cv-grid.pt1{background-image:radial-gradient(circle,rgba(255,255,255,.6) 1.6px,transparent 2.2px);background-size:18px 18px}
-.pf-cv-grid.pt2{background-image:${WAVE};background-size:120px 26px}
-.pf-cv-grid.pt3{background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.3) 0 2px,transparent 2px 14px)}
-.pf-cv-grid.pt4{background-image:${HEX};background-size:28px 49px}
-.pf-cv-grid.pt5{background-image:${STAR};background-size:90px 90px}
-.pf-cv-grid.pt6{background-image:repeating-radial-gradient(circle at 82% 18%,transparent 0 13px,rgba(255,255,255,.32) 13px 14.6px),repeating-radial-gradient(circle at 10% 100%,transparent 0 13px,rgba(255,255,255,.2) 13px 14.4px)}
-.pf-cv-grid.pt7{background-image:none}
+${PATTERN_CSS.map((p, i) => `.pf-cv-grid.pt${i}{background-image:${p.img};background-size:${p.size}}`).join("\n")}
 #pfAmbient{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0;transition:opacity .5s ease}
 #pfAmbient.on{opacity:1}
 .cvp{position:fixed;inset:0;z-index:10050;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55);animation:cvpIn .2s ease}
