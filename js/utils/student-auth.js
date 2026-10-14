@@ -136,6 +136,15 @@ export async function savePinnedBadges(studentId, ids) {
   }, { merge: true });
 }
 
+// Profile cover (colour + design). Same studentPrivacy doc (merge), so friends see it too.
+export async function saveCoverTheme(studentId, theme) {
+  const c = Number.isInteger(theme?.c) ? theme.c : 0, p = Number.isInteger(theme?.p) ? theme.p : 0;
+  await setDoc(doc(db, "studentPrivacy", studentId), {
+    coverTheme: { c, p, a: theme?.a ? 1 : 0 },
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+}
+
 /* ---------- FIRST-TIME DETECTION + "APPLY FOR SETUP CODE" ---------- */
 // Public, non-secret info used by the login screen to decide what to show:
 //  hasAccount=false            -> first time, student can apply for a setup code
