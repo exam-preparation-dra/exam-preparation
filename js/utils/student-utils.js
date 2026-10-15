@@ -6,6 +6,10 @@ import {
   collection, doc, getDocs, getDoc, query, where, orderBy,
   runTransaction, addDoc, serverTimestamp, updateDoc
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { expandAvatar } from "./avatar-builder.js";
+
+// Avatars are stored as a tiny reference; turn it into the full picture in memory.
+const withAvatar = s => (s && s.photoURL ? { ...s, photoURL: expandAvatar(s.photoURL, s.name || "") } : s);
 
 // ---------- Generate permanent Student ID (requirement #7) ----------
 // Uses a counter document + transaction so IDs never collide, even with
@@ -78,7 +82,7 @@ export async function getActiveStudents() {
   // ডাটাবেস থেকে আগে সবাইকে আনছি, তারপর জাভাস্ক্রিপ্ট দিয়ে ফিল্টার করছি (ইনডেক্স লাগবে না!)
   const q = query(collection(db, "students"), orderBy("sequenceNumber"));
   const snap = await getDocs(q);
-  const allStudents = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+  const allStudents = snap.docs.map(d => withAvatar({ docId: d.id, ...d.data() }));
   return allStudents.filter(s => s.isActive === true);
 }
 
@@ -91,7 +95,7 @@ export async function getActiveStudents() {
 export function getActiveStudent() {
   try {
     const raw = localStorage.getItem("activeStudent");
-    return raw ? JSON.parse(raw) : null;
+    return raw ? withAvatar(JSON.parse(raw)) : null;
   } catch {
     return null;
   }
@@ -115,7 +119,7 @@ export async function refreshActiveStudent(docId) {
   try {
     const snap = await getDoc(doc(db, "students", docId));
     if (!snap.exists()) return null;
-    const fresh = { docId: snap.id, ...snap.data() };
+    const fresh = withAvatar({ docId: snap.id, ...snap.data() });
     setActiveStudent(fresh);
     return fresh;
   } catch {

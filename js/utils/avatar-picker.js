@@ -13,7 +13,7 @@
 import { FACE_URIS } from "./avatar-faces.js";
 import {
   SKINS, HAIR_COLORS, DRESS_COLORS, BACKGROUNDS, EYE_COLORS, PATTERNS, HAIRS, EYES, MOUTHS, DRESSES, GLASSES,
-  extrasFor, defaultConfig, normalizeConfig, avatarUri, parseAvatarConfig
+  extrasFor, defaultConfig, normalizeConfig, avatarUri, avatarRef, parseAvatarConfig
 } from "./avatar-builder.js";
 
 const STYLE_ID = "avpk-style";
@@ -215,7 +215,7 @@ export function openAvatarPicker({
     if (t.dataset.face) return pick(FACE_URIS.find(f => f.id === t.dataset.face).uri);
     if (t.dataset.act === "rm") return pick(null);
     if (t.dataset.act === "close") return close();
-    if (t.dataset.act === "save") return pick(avatarUri(cfg, name, true));
+    if (t.dataset.act === "save") return pick(avatarRef(cfg));
     if (t.dataset.cat) { cat = t.dataset.cat; renderCats(); renderOptions(); return; }
     if (t.dataset.toggle) { cfg = { ...cfg, ini: cfg.ini ? 0 : 1 }; renderPreview(); renderOptions(); return; }
     if (t.dataset.g) {

@@ -335,6 +335,8 @@ function patternDefs(pt, c, d2) {
   }
 }
 
+const cfgString = c => KEYS.map(k => (k === "g" ? (c.g === "m" ? 1 : 0) : c[k])).join(".");
+
 /* ---------------- main ---------------- */
 export function buildAvatarSvg(cfgIn, { name = "", animate = true } = {}) {
   const c = normalizeConfig(cfgIn);
@@ -346,7 +348,7 @@ export function buildAvatarSvg(cfgIn, { name = "", animate = true } = {}) {
   const H = hair(c.g, c.h, hc);
   const B = body(c.g, c.dr, dcol, d2col, c.ini, name);
   const beard = c.ex === 7 ? `<path d='M32.6 46Q33 63 50 66.5Q67 63 67.4 46Q64 57 50 58Q36 57 32.6 46Z' fill='url(#hr)'/><path d='M40 60Q50 64 60 60' fill='none' stroke='${shade(hc, .3)}' stroke-width='.7' opacity='.35'/>` : "";
-  const cfgStr = KEYS.map(k => (k === "g" ? (c.g === "m" ? 1 : 0) : c[k])).join(".");
+  const cfgStr = cfgString(c);
   const head = c.g === "m"
     ? "M32.2 41Q32.2 22 50 22Q67.8 22 67.8 41Q67.6 53 62.4 59.6Q56.6 63.8 50 63.8Q43.4 63.8 37.6 59.6Q32.4 53 32.2 41Z"
     : "M32.8 41Q32.8 22 50 22Q67.2 22 67.2 41Q66.8 52.6 61 58.6Q55.6 63 50 63Q44.4 63 39 58.6Q33.2 52.6 32.8 41Z";
@@ -402,4 +404,29 @@ export function parseAvatarConfig(uri) {
     KEYS.forEach((k, i) => { if (i < v.length) o[k] = k === "g" ? (v[i] ? "m" : "f") : v[i]; });
     return normalizeConfig(o);
   } catch { return null; }
+}
+
+
+/* ---------------- tiny stored reference (keeps the students collection light) ----------------
+   Firestore keeps only ~110 characters per avatar. Every page then expands it into the full
+   animated picture in memory (student-utils.js does this once, centrally), using the student's
+   CURRENT name for the name tag — so a renamed student gets the new name on the dress.
+   A page that forgets to expand just shows an empty picture (the initial letter stays visible). */
+export function avatarRef(cfg) {
+  const c = normalizeConfig(cfg);
+  return "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C!--AV:" + cfgString(c) + "--%3E%3C/svg%3E";
+}
+export const isAvatarRef = u => typeof u === "string" && u.length < 400 && u.startsWith("data:image/svg+xml") && u.includes("AV:");
+
+const _expandCache = new Map();
+export function expandAvatar(u, name = "") {
+  if (!isAvatarRef(u)) return u;
+  const key = u + "|" + name;
+  let out = _expandCache.get(key);
+  if (!out) {
+    const cfg = parseAvatarConfig(u);
+    out = cfg ? avatarUri(cfg, name, true) : u;
+    _expandCache.set(key, out);
+  }
+  return out;
 }
