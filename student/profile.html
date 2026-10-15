@@ -718,6 +718,41 @@
   .rf-chip.no { color: var(--color-danger); background: rgba(166,64,47,.12); border: 1px solid rgba(166,64,47,.32); }
   .rf-row.ok { border-color: rgba(47,125,94,.3); }
   .rf-empty { padding: 14px; border-radius: 16px; background: var(--surface-highlight); border: 1px dashed var(--surface-border); font-size: .78rem; font-weight: 700; line-height: 1.7; text-align: left; color: var(--text-secondary); }
+
+  /* ===== v9: friends tab ===== */
+  #reqAndFriendsSection { display: flex; flex-direction: column; gap: 14px; margin-bottom: 14px; }
+  #reqAndFriendsSection .pf-card { margin-bottom: 0 !important; }
+  .fr-card { padding-bottom: 12px; }
+  .fr-count { flex: none; min-width: 30px; height: 30px; padding: 0 9px; border-radius: 99px; display: grid; place-items: center; font-family: var(--font-num); font-weight: 800; font-size: .85rem; color: #fff; background: linear-gradient(135deg, #f0803c, #d6453d); box-shadow: 0 4px 10px rgba(214,69,61,.35); }
+  .fr-req { border-color: rgba(240,128,60,.4); background: radial-gradient(100% 120% at 100% 0%, rgba(240,128,60,.12), transparent 60%), var(--surface); }
+  .fr-cap { height: 6px; margin: -2px 0 12px; border-radius: 99px; overflow: hidden; background: color-mix(in srgb, var(--text-primary) 8%, transparent); }
+  .fr-cap i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--color-accent), color-mix(in srgb, var(--color-accent) 55%, #fff)); }
+  .fr-row { display: flex; align-items: center; gap: 12px; padding: 10px 6px; }
+  .fr-row + .fr-row { border-top: 1px solid var(--surface-border); }
+  .fr-link { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; color: inherit; text-decoration: none; }
+  .fr-row .cm-av, .pf-fr-i .cm-av { opacity: 1 !important; transform: none !important; transition: none; }
+  .fr-row .cm-av { flex: none; width: 46px; height: 46px; font-size: 1.05rem; box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px rgba(var(--color-accent-rgb), .35); }
+  .fr-nm { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .fr-nm b { font-size: .9rem; font-weight: 800; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fr-nm small { font-size: .7rem; font-weight: 700; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fr-act { flex: none; display: flex; align-items: center; gap: 8px; }
+  .fr-btn { flex: none; padding: 8px 14px; border-radius: 12px; border: 1px solid var(--surface-border); background: var(--surface-highlight); color: var(--text-primary); font: inherit; font-size: .76rem; font-weight: 800; cursor: pointer; }
+  .fr-btn.ok { background: var(--color-accent); border-color: transparent; color: #fff; }
+  .fr-btn.add { color: var(--color-accent); border-color: rgba(var(--color-accent-rgb), .4); background: rgba(var(--color-accent-rgb), .1); }
+  .fr-btn.danger { color: var(--color-danger); border-color: rgba(166,64,47,.3); background: rgba(166,64,47,.08); }
+  .fr-btn.ghost { padding: 8px 11px; color: var(--text-muted); }
+  .fr-btn:disabled { opacity: .5; }
+  .fr-state { flex: none; padding: 6px 12px; border-radius: 99px; font-size: .7rem; font-weight: 900; }
+  .fr-state.ok { color: var(--color-success); background: rgba(47,125,94,.14); border: 1px solid rgba(47,125,94,.35); }
+  .fr-state.wait { color: #d98a1c; background: rgba(217,138,28,.14); border: 1px solid rgba(217,138,28,.38); }
+  .fr-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 22px 12px; text-align: center; border-radius: 18px; background: var(--surface-highlight); border: 1px dashed var(--surface-border); }
+  .fr-empty-ic { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 18px; color: var(--color-accent); background: rgba(var(--color-accent-rgb), .12); }
+  .fr-empty-ic svg { width: 26px; height: 26px; }
+  .fr-empty b { font-size: .92rem; font-weight: 900; }
+  .fr-empty small { font-size: .74rem; font-weight: 600; line-height: 1.6; color: var(--text-muted); }
+  .fr-chips { flex-wrap: nowrap; overflow-x: auto; margin: 0 -4px 6px; padding: 2px 4px 8px; scrollbar-width: none; }
+  .fr-chips::-webkit-scrollbar { display: none; }
+  .fr-chips .pf-chip { flex: none; white-space: nowrap; }
 </style>
 <script src="../js/utils/nav-boot.js"></script>
 <link rel="stylesheet" href="../css/desktop.css">
@@ -867,7 +902,7 @@ let getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest,
 let getChallengeWinCount, sendChallenge;
 let normalizeBatch;
 let requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, savePinnedBadges, saveCoverTheme, friendlyStudentAuthError, validatePin;
-let applyCover, openCoverPicker, coverColors, patternCss;
+let applyCover, openCoverPicker, coverColors, patternCss, expandAvatar;
 let coverTheme = null, stageColor = "#b8863c";
 let viewPrivacy = { records: true, subjects: true, badges: true, publicStats: false };
 let REFERRAL_XP = 250;
@@ -903,6 +938,7 @@ const __ok = (await Promise.all([
   loadModule("../js/utils/friend-utils.js?v=ref1", m => ({ getMyFriendIds, getIncomingRequests, getOutgoingRequests, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend, MAX_FRIENDS, getRival } = m)),
   loadModule("../js/utils/student-auth.js", m => ({ requireStudentSession, studentLogout, changeMyPassword, getPrivacy, savePrivacy, savePinnedBadges, saveCoverTheme, friendlyStudentAuthError, validatePin } = m)),
   loadModule("../js/utils/cover-picker.js", m => ({ applyCover, openCoverPicker, coverColors, patternCss } = m)),
+  loadModule("../js/utils/avatar-builder.js", m => ({ expandAvatar } = m)),
   loadModule("../js/utils/challenge-utils.js", m => ({ getChallengeWinCount, sendChallenge } = m)),
   loadModule("../js/utils/xp-utils.js", m => ({ getLevelInfo, LEVEL_THRESHOLDS, REFERRAL_XP } = m)),
   loadModule("../js/utils/batch-utils.js", m => ({ normalizeBatch } = m)),
@@ -1547,10 +1583,10 @@ function renderPage() {
 
       <section id="tab-network" class="tab-content pf-pane">
         <div id="reqAndFriendsSection"></div>
-        <div class="pf-card">
+        <div class="pf-card fr-card">
           <div class="pf-head"><div><h2 class="pf-h">শিক্ষার্থী তালিকা</h2><div class="pf-note">বন্ধু বানাতে খুঁজে নাও</div></div></div>
-          <div class="pf-chips" id="dirFilters"></div>
           <div class="pf-search">${ICON.search}<input type="text" id="dirSearch" placeholder="নাম দিয়ে খুঁজুন..."></div>
+          <div class="pf-chips fr-chips" id="dirFilters"></div>
           <div id="dirList"></div>
         </div>
       </section>
@@ -1637,7 +1673,9 @@ function renderHeroShell() {
         name: student.name || "",
         onPick: async (uri) => {
           await updateStudentPhoto(student.docId, uri);
-          student = { ...student, photoURL: uri || null };
+          const shown = uri ? expandAvatar(uri, student.name || "") : null;   // saved as a tiny reference; show the full picture
+          uri = shown;
+          student = { ...student, photoURL: shown };
           setActiveStudent(student);
           renderHeroShell(); loadData().then(fillHero).catch(() => {});
           const hav = document.querySelector(".hdr-avatar");
@@ -1733,7 +1771,7 @@ async function renderInvite() {
   if (box) box.innerHTML = qr ? `<img src="${qr}" alt="QR">` : `<div class="pf-note" style="text-align:center">QR তৈরি করা যায়নি।<br>লিংক কপি করে শেয়ার করো।</div>`;
 }
 
-const fmtBn = n => Number(n || 0).toLocaleString("bn-BD");
+const fmtBn = n => Number(n || 0).toLocaleString();   // same digits as the rest of the app
 /* Referral status: successful = the friend's account exists (admin approved, they are in);
    pending = applied through my link, still waiting; rejected = application declined. */
 async function renderReferralStatus() {
@@ -1758,7 +1796,7 @@ async function renderReferralStatus() {
       <div class="rf-st wait"><b>${fmtBn(pend.length)}</b><span>অপেক্ষমাণ</span></div>
       <div class="rf-st xp"><b>${fmtBn(ok.length * REFERRAL_XP)}</b><span>অর্জিত XP</span></div>`;
     const CH = { ok: ["সফল", `+${fmtBn(REFERRAL_XP)} XP`], wait: ["অপেক্ষমাণ", "অনুমোদনের অপেক্ষায়"], no: ["বাতিল", "আবেদন বাতিল"] };
-    const dt = m => m ? new Date(m).toLocaleDateString("bn-BD", { day: "numeric", month: "short" }) : "";
+    const dt = m => m ? new Date(m).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "";
     listEl.innerHTML = rows.length
       ? rows.map(r => `<div class="rf-row ${r.st}"><span class="rf-av">${esc((r.name || "?").trim().charAt(0).toUpperCase())}</span>
           <div class="rf-nm"><b>${esc(r.name || "নাম নেই")}</b><small>${dt(r.at)}${r.at ? " · " : ""}${CH[r.st][1]}</small></div>
@@ -1865,7 +1903,7 @@ function openPinPicker(d) {
 async function renderCards() {
   const el = $("cardsSection"); if (!el) return;
   try {
-    const { getStoreInventory, getAvailableBattleRoomCardCount } = await import("../js/utils/store-utils.js");
+    const { getStoreInventory, getAvailableBattleRoomCardCount } = await import("../js/utils/store-utils.js?v=cards2");
     const [inv, battle] = await Promise.all([
       getStoreInventory(student.studentId),
       getAvailableBattleRoomCardCount(student.studentId).catch(() => 0)
@@ -2316,28 +2354,32 @@ function renderReqsAndFriends() {
   const nameOf = {}, classOf = {};
   allNetStudents.forEach(s => { nameOf[s.studentId] = s.name; classOf[s.studentId] = s.className; });
 
+  const av = id => { const s = allNetStudents.find(x => x.studentId === id) || { name: nameOf[id] || id }; return avatarHtml(s); };
   let html = "";
   if (incomingReqs.length) {
-    html += `<div class="pf-card" style="margin-bottom:14px">
-      <div class="pf-head"><div><h2 class="pf-h">বন্ধুত্বের অনুরোধ</h2><div class="pf-note">${incomingReqs.length}টি অপেক্ষায়</div></div></div>
+    html += `<div class="pf-card fr-card fr-req">
+      <div class="pf-head"><div><h2 class="pf-h">বন্ধুত্বের অনুরোধ</h2><div class="pf-note">তোমার উত্তরের অপেক্ষায়</div></div><span class="fr-count">${incomingReqs.length}</span></div>
       ${incomingReqs.map(r => `
-        <div class="pf-row">
-          <div class="pf-rname">${esc(nameOf[r.fromStudentId] || r.fromStudentId)}${classOf[r.fromStudentId] ? `<small>${esc(classOf[r.fromStudentId])}</small>` : ""}
-            ${r.viaReferral ? `<br><span class="pf-tag">তোমার লিংকে যুক্ত হয়েছে</span>` : ""}</div>
-          <div style="display:flex;gap:6px;flex:none">
-            <button class="pf-btn sm req-reject" data-id="${r.id}" type="button">বাতিল</button>
-            <button class="pf-btn sm primary req-accept" data-id="${r.id}" type="button">গ্রহণ</button>
+        <div class="fr-row">
+          ${av(r.fromStudentId)}
+          <div class="fr-nm"><b>${esc(nameOf[r.fromStudentId] || r.fromStudentId)}</b><small>${esc(classOf[r.fromStudentId] || "")}${r.viaReferral ? `${classOf[r.fromStudentId] ? " · " : ""}তোমার লিংকে যুক্ত হয়েছে` : ""}</small></div>
+          <div class="fr-act">
+            <button class="fr-btn ghost req-reject" data-id="${r.id}" type="button" aria-label="বাতিল">✕</button>
+            <button class="fr-btn ok req-accept" data-id="${r.id}" type="button">গ্রহণ</button>
           </div>
         </div>`).join("")}
     </div>`;
   }
 
-  html += `<div class="pf-card" style="margin-bottom:14px">
-    <div class="pf-head"><div><h2 class="pf-h">আমার বন্ধুরা</h2><div class="pf-note">${friendIds.length} / ${MAX_FRIENDS}</div></div></div>
-    ${friendIds.length === 0 ? `<div class="pf-empty">এখনো কোনো বন্ধু যোগ হয়নি।</div>` : friendIds.map(fid => `
-      <div class="pf-row">
-        <div class="pf-rname"><a href="profile.html?sid=${esc(fid)}" style="color:inherit;text-decoration:none">${esc(nameOf[fid] || fid)}</a>${classOf[fid] ? `<small>${esc(classOf[fid])}</small>` : ""}</div>
-        <button class="pf-btn sm danger friend-remove" data-id="${fid}" type="button">সরাও</button>
+  const cap = Math.min(100, (friendIds.length / (MAX_FRIENDS || 1)) * 100);
+  html += `<div class="pf-card fr-card">
+    <div class="pf-head"><div><h2 class="pf-h">আমার বন্ধুরা</h2><div class="pf-note">${friendIds.length} জন · সর্বোচ্চ ${MAX_FRIENDS} জন</div></div></div>
+    <div class="fr-cap"><i style="width:${cap}%"></i></div>
+    ${friendIds.length === 0 ? `<div class="fr-empty"><span class="fr-empty-ic">${ICON.users}</span><b>এখনো কোনো বন্ধু নেই</b><small>নিচের তালিকা থেকে বন্ধু খুঁজে নাও, অথবা QR/লিংক শেয়ার করো।</small></div>` : friendIds.map(fid => `
+      <div class="fr-row">
+        <a class="fr-link" href="profile.html?sid=${esc(fid)}">${av(fid)}
+          <div class="fr-nm"><b>${esc(nameOf[fid] || fid)}</b><small>${esc(classOf[fid] || "")}</small></div></a>
+        <button class="fr-btn danger friend-remove" data-id="${fid}" type="button">সরাও</button>
       </div>`).join("")}
   </div>`;
 
@@ -2374,11 +2416,11 @@ function renderDirectory() {
     const isFriend = friendIds.includes(s.studentId);
     const inc = incomingReqs.find(r => r.fromStudentId === s.studentId);
     const out = outgoingReqs.find(r => r.toStudentId === s.studentId);
-    const act = isFriend ? `<span class="pf-state ok">বন্ধু</span>`
-      : inc ? `<button class="pf-btn sm primary req-accept" data-id="${inc.id}" type="button">গ্রহণ করো</button>`
-      : out ? `<span class="pf-state wait">অপেক্ষমাণ</span>`
-      : `<button class="pf-btn sm send-req" data-sid="${esc(s.studentId)}" type="button">+ যোগ করো</button>`;
-    return `<div class="pf-row"><div class="pf-rname"><a href="profile.html?sid=${esc(s.studentId)}" style="color:inherit;text-decoration:none">${esc(s.name)}</a><small>${esc(s.className || "N/A")}</small></div><div style="flex:none">${act}</div></div>`;
+    const act = isFriend ? `<span class="fr-state ok">বন্ধু</span>`
+      : inc ? `<button class="fr-btn ok req-accept" data-id="${inc.id}" type="button">গ্রহণ</button>`
+      : out ? `<span class="fr-state wait">অপেক্ষমাণ</span>`
+      : `<button class="fr-btn add send-req" data-sid="${esc(s.studentId)}" type="button">+ যোগ</button>`;
+    return `<div class="fr-row"><a class="fr-link" href="profile.html?sid=${esc(s.studentId)}">${avatarHtml(s)}<div class="fr-nm"><b>${esc(s.name)}</b><small>${esc(s.className || "N/A")}</small></div></a><div class="fr-act">${act}</div></div>`;
   }).join("");
 
   list.querySelectorAll(".req-accept").forEach(b => b.addEventListener("click", () => acceptReq(b.dataset.id)));
