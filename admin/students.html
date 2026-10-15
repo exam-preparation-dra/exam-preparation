@@ -121,6 +121,7 @@ import { sendReferralFriendRequest } from "../js/utils/friend-utils.js?v=ref1";
 import { getLeaderboardData } from "../js/utils/results-utils.js"; // Added Import for XP Calculation
 import { eraseStudentData } from "../js/utils/student-erase.js";
 import { FACE_URIS, isFaceUri } from "../js/utils/avatar-faces.js";
+import { expandAvatar } from "../js/utils/avatar-builder.js";
 import { db } from "../js/firebase/firebase-config.js";
 import { adminCreateStudentAccount, adminCreateStudentWithPin, validatePin, friendlyStudentAuthError } from "../js/utils/student-auth.js";
 import { collection, getDocs, orderBy, query, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
@@ -490,7 +491,7 @@ function renderFilteredList() {
     const stClass = safeText(s.className, "");
     
     const xp = window.__studentXPMap ? (window.__studentXPMap[stId] || 0) : 0;
-    const avatar = s.photoURL ? `<img src="${s.photoURL}" alt="" onerror="this.style.display='none'">` : initial;
+    const avatar = s.photoURL ? `<img src="${expandAvatar(s.photoURL, s.name || "")}" alt="" onerror="this.style.display='none'">` : initial;
 
     return `
       <div class="student-row" data-id="${docId}">
