@@ -1444,3 +1444,60 @@ body[data-page] .d-link:active { background: var(--g-bg-hover); transform: scale
 @media (prefers-reduced-motion: reduce) {
   #hdrNavPersist .hdr-nav-pill, #hdrNavPersist .hdr-nav-tab, #hdrNavPersist .hdr-nav-label, #hdrNavPersist .hdr-nav-ico svg { transition: none !important; }
 }
+
+
+/* =========================================================
+   PAGE LOADER v3 — skeleton screen + slim top progress bar
+   Replaces the old icon splash. Same trigger as before: whenever a page's
+   .app-shell holds nothing but a .state-block, so every student & admin page
+   gets it with no markup change. A fast load never flashes it (short delay),
+   and when real content arrives it fades in softly (js/utils/theme-boot.js
+   adds .pg-enter once). Keep this block LAST in the file.
+   ========================================================= */
+.app-shell > .state-block:only-child {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+  gap: 0; padding: calc(env(safe-area-inset-top, 0px) + 22px) 20px 0;
+  background: var(--bg-app);
+  overflow: hidden;
+  animation: ldIn .2s .1s both;
+}
+/* the page-shaped skeleton (header, hero card, list rows) */
+.app-shell > .state-block:only-child::before {
+  content: ""; display: block; flex: none;
+  width: min(100%, 440px); aspect-ratio: 360 / 560;
+  background: linear-gradient(100deg, rgba(128,128,128,.13) 38%, rgba(128,128,128,.25) 50%, rgba(128,128,128,.13) 62%) 100% 0 / 260% 100%;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 560'%3E%3Cg fill='%23000'%3E%3Ccircle cx='22' cy='22' r='22'/%3E%3Crect x='58' y='5' width='150' height='15' rx='7.5'/%3E%3Crect x='58' y='28' width='98' height='10' rx='5'/%3E%3Crect x='0' y='66' width='360' height='124' rx='22'/%3E%3Crect x='0' y='210' width='360' height='66' rx='18'/%3E%3Crect x='0' y='290' width='360' height='66' rx='18'/%3E%3Crect x='0' y='370' width='360' height='66' rx='18'/%3E%3Crect x='0' y='450' width='360' height='66' rx='18'/%3E%3C/g%3E%3C/svg%3E") top center / 100% 100% no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 560'%3E%3Cg fill='%23000'%3E%3Ccircle cx='22' cy='22' r='22'/%3E%3Crect x='58' y='5' width='150' height='15' rx='7.5'/%3E%3Crect x='58' y='28' width='98' height='10' rx='5'/%3E%3Crect x='0' y='66' width='360' height='124' rx='22'/%3E%3Crect x='0' y='210' width='360' height='66' rx='18'/%3E%3Crect x='0' y='290' width='360' height='66' rx='18'/%3E%3Crect x='0' y='370' width='360' height='66' rx='18'/%3E%3Crect x='0' y='450' width='360' height='66' rx='18'/%3E%3C/g%3E%3C/svg%3E") top center / 100% 100% no-repeat;
+  animation: ldShimmer 1.4s linear infinite;
+}
+/* slim accent progress bar pinned to the very top */
+.app-shell > .state-block:only-child::after {
+  content: ""; position: fixed; top: 0; left: 0; right: 0; width: auto; height: 3px; margin: 0; order: 0; border-radius: 0;
+  background: linear-gradient(90deg, transparent, var(--color-accent) 40%, var(--color-accent) 60%, transparent) 0 0 / 38% 100% no-repeat;
+  box-shadow: none;
+  animation: ldBar 1.25s cubic-bezier(.45,.05,.3,1) infinite;
+}
+/* spinner + text stay in the DOM for screen readers only */
+.app-shell > .state-block:only-child .spinner,
+.app-shell > .state-block:only-child p {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+  clip: rect(0 0 0 0); border: 0; background: none; box-shadow: none; animation: none; opacity: 0;
+}
+.app-shell > .state-block:only-child .spinner::after { display: none; }
+@keyframes ldShimmer { to { background-position: 0 0; } }
+@keyframes ldBar { 0% { background-position: -40% 0; } 100% { background-position: 140% 0; } }
+
+/* soft entrance for the real content (class added once by theme-boot.js) */
+.pg-enter > *:not(.state-block) { animation: pgIn .34s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes pgIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* small inline loaders (lists, panels, buttons) — calmer ring */
+.spinner { animation-duration: .9s; }
+.state-block:not(.app-shell > .state-block:only-child) { animation: ldIn .25s both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell > .state-block:only-child::before { animation: none; }
+  .app-shell > .state-block:only-child::after { animation-duration: 2.6s; }
+  .pg-enter > *:not(.state-block) { animation: none; }
+}
