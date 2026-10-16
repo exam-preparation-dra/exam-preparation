@@ -1496,6 +1496,7 @@ async function renderSettings() {
 
     <div class="st-label">অ্যাকাউন্ট</div>
     <div class="pf-card st-card">
+      <button class="st-row danger" id="delAccBtn" type="button"><span class="st-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></span><span class="st-tx"><b>অ্যাকাউন্ট ডিলিট</b><small>৭ দিনের মধ্যে বাতিল করা যাবে, তারপর সব মুছে যাবে</small></span><span class="st-go">›</span></button>
       <button class="st-row danger" id="logoutBtn" type="button"><span class="st-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg></span><span class="st-tx"><b>লগআউট</b><small>অন্য কেউ এই ডিভাইসে ঢুকতে চাইলে আগে লগআউট করো</small></span></button>
     </div>`;
 
@@ -1534,6 +1535,14 @@ async function renderSettings() {
     }
     btn.disabled = false;
   });
+
+  $("delAccBtn").addEventListener("click", async () => {
+    try {
+      const m = await import("../js/utils/student-delete.js");
+      if (await m.getDeletionRequest(student.studentId)) m.checkDeletion(student); else m.openDeleteFlow(student);
+    } catch (e) { showToast("লোড করা যায়নি", "error"); }
+  });
+  import("../js/utils/student-delete.js").then(m => m.checkDeletion(student)).catch(() => {});
 
   $("logoutBtn").addEventListener("click", async () => {
     if (!await AppPopup.confirm("লগআউট করবে?")) return;
