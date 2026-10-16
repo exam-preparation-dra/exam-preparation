@@ -8,136 +8,145 @@
 <link rel="stylesheet" href="../css/style.css">
 <style>
   @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration:.001ms!important; transition-duration:.001ms!important; } }
-  body { overflow-x: hidden; background: var(--bg); }
+  body { overflow-x: hidden; background: var(--bg-app); }
   svg { display: block; }
-  .app-shell { max-width: 620px; margin: 0 auto; padding-bottom: 150px; }
-  .top { display: flex; align-items: center; gap: 10px; margin: 14px 0 12px; }
-  .ib { flex: none; display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--surface-border); background: var(--surface-solid); color: var(--text-primary); text-decoration: none; cursor: pointer; font: inherit; }
-  .ib svg { width: 18px; height: 18px; }
-  .top h1 { font-size: 1.15rem; font-weight: 900; line-height: 1.2; }
-  .top p { font-size: .72rem; font-weight: 600; color: var(--text-muted); }
-  .muted { font-size: .76rem; font-weight: 600; color: var(--text-muted); }
+  [hidden] { display: none !important; }
+  .app-shell { max-width: 620px; margin: 0 auto; padding-bottom: 160px; }
+  .muted { font-size: .78rem; font-weight: 600; color: var(--text-muted); line-height: 1.5; }
 
-  /* session bar */
-  .sess { position: sticky; top: 0; z-index: 20; margin: 0 -4px 12px; padding: 8px 4px 10px; background: var(--bg); }
+  /* header */
+  .top { display: flex; align-items: center; gap: 12px; margin: 14px 0 12px; }
+  .ib { flex: none; display: inline-grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; border: 1px solid var(--surface-border); background: var(--surface-solid); color: var(--text-primary); text-decoration: none; cursor: pointer; font: inherit; }
+  .ib svg { width: 18px; height: 18px; }
+  .top h1 { font-size: 1.25rem; font-weight: 900; line-height: 1.2; margin: 0; }
+  .top p { font-size: .76rem; font-weight: 600; color: var(--text-muted); margin: 2px 0 0; }
+
+  /* session card: batch + date + type */
+  .a-sess { padding: 12px; border-radius: 20px; border: 1px solid var(--surface-border); background: var(--surface-solid); }
+  .a-lbl { display: block; margin: 0 2px 6px; font-size: .68rem; font-weight: 800; letter-spacing: .04em; color: var(--text-muted); }
   .chips { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
   .chips::-webkit-scrollbar { display: none; }
-  .chip { flex: none; padding: 8px 14px; border-radius: 99px; border: 1px solid var(--surface-border); background: var(--surface-solid); color: var(--text-secondary); font: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; white-space: nowrap; }
-  .chip.on { background: rgba(var(--color-accent-rgb), .16); border-color: var(--color-accent); color: var(--color-accent); }
-  .bar2 { display: flex; align-items: center; gap: 8px; margin-top: 9px; }
-  .dt { flex: 1; min-width: 0; display: flex; align-items: center; border: 1px solid var(--surface-border); border-radius: 13px; background: var(--surface-solid); overflow: hidden; }
-  .dt button { flex: none; width: 40px; height: 42px; border: 0; background: transparent; color: var(--text-secondary); cursor: pointer; display: grid; place-items: center; }
+  .chip { flex: none; padding: 8px 16px; border-radius: 99px; border: 1px solid var(--surface-border); background: var(--surface-highlight); color: var(--text-secondary); font: inherit; font-size: .82rem; font-weight: 800; cursor: pointer; white-space: nowrap; }
+  .chip.on { background: var(--color-accent); border-color: var(--color-accent); color: #1d1608; }
+  .a-bar { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+  .dt { flex: 1; min-width: 0; display: flex; align-items: center; border: 1px solid var(--surface-border); border-radius: 14px; background: var(--surface-highlight); overflow: hidden; }
+  .dt button { flex: none; width: 42px; height: 46px; border: 0; background: transparent; color: var(--text-secondary); cursor: pointer; display: grid; place-items: center; }
   .dt button svg { width: 17px; height: 17px; }
   .dt button:disabled { opacity: .3; }
-  .dt label { position: relative; flex: 1; min-width: 0; text-align: center; font-weight: 800; font-size: .84rem; cursor: pointer; line-height: 1.2; padding: 4px 0; }
-  .dt label small { display: block; font-size: .66rem; font-weight: 700; color: var(--text-muted); }
+  .dt label { position: relative; flex: 1; min-width: 0; text-align: center; font-weight: 800; font-size: .9rem; cursor: pointer; line-height: 1.25; padding: 4px 0; }
+  .dt label small { display: block; font-size: .68rem; font-weight: 700; color: var(--text-muted); }
   .dt input { position: absolute; inset: 0; opacity: 0; width: 100%; cursor: pointer; }
-  .seg { flex: none; display: flex; padding: 3px; border-radius: 13px; background: var(--surface-highlight); border: 1px solid var(--surface-border); }
-  .seg button { padding: 0 12px; min-height: 36px; border: 0; border-radius: 10px; background: transparent; color: var(--text-muted); font: inherit; font-size: .78rem; font-weight: 800; cursor: pointer; }
-  .seg button.on { background: var(--surface-solid); color: var(--color-accent); box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+  .seg { flex: none; display: flex; padding: 3px; border-radius: 14px; background: var(--surface-highlight); border: 1px solid var(--surface-border); }
+  .seg button { padding: 0 14px; min-height: 38px; border: 0; border-radius: 11px; background: transparent; color: var(--text-muted); font: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; white-space: nowrap; }
+  .seg button.on { background: var(--surface-solid); color: var(--color-accent); box-shadow: 0 1px 4px rgba(0,0,0,.18); }
 
-  /* progress */
-  .prog { padding: 14px; border-radius: 18px; border: 1px solid var(--surface-border); background: var(--surface-solid); }
-  .prog-top { display: flex; align-items: baseline; gap: 8px; }
-  .prog-top b { font-family: var(--font-num); font-size: 1.9rem; font-weight: 900; color: var(--color-accent); line-height: 1; }
-  .prog-top span { font-size: .8rem; font-weight: 700; color: var(--text-muted); }
-  .prog-top em { margin-left: auto; font-style: normal; font-size: .72rem; font-weight: 800; padding: 3px 10px; border-radius: 99px; background: rgba(var(--color-accent-rgb), .14); color: var(--color-accent); }
-  .prog-top em.off { background: var(--surface-highlight); color: var(--text-muted); }
-  .pbar { height: 7px; border-radius: 7px; background: var(--surface-highlight); overflow: hidden; margin-top: 10px; }
-  .pbar i { display: block; height: 100%; width: 0; border-radius: 7px; background: var(--color-accent); transition: width .25s; }
-  .tools { display: flex; gap: 8px; margin: 12px 0 8px; }
-  .search { flex: 1; min-width: 0; padding: 0 13px; min-height: 42px; border: 1px solid var(--surface-border); border-radius: 13px; background: var(--surface-solid); color: var(--text-primary); font: inherit; font-size: .86rem; font-weight: 600; outline: none; }
+  /* summary */
+  .a-sum { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+  .a-st { padding: 12px 10px; border-radius: 16px; border: 1px solid var(--surface-border); background: var(--surface-solid); text-align: center; }
+  .a-st b { display: block; font-family: var(--font-num); font-size: 1.7rem; font-weight: 900; line-height: 1.1; }
+  .a-st span { display: block; margin-top: 3px; font-size: .7rem; font-weight: 800; color: var(--text-muted); }
+  .a-st.ok b { color: var(--color-success, #2f7d5e); }
+  .a-st.no b { color: #d6455d; }
+  .a-st.pc b { color: var(--color-accent); }
+  .a-bar2 { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  .pbar { flex: 1; height: 8px; border-radius: 8px; background: var(--surface-highlight); overflow: hidden; }
+  .pbar i { display: block; height: 100%; width: 0; border-radius: 8px; background: var(--color-success, #2f7d5e); transition: width .25s; }
+  .a-day { flex: none; font-size: .72rem; font-weight: 800; padding: 4px 11px; border-radius: 99px; background: rgba(var(--color-accent-rgb), .15); color: var(--color-accent); }
+  .a-day.off { background: var(--surface-highlight); color: var(--text-muted); }
+
+  /* tools */
+  .tools { display: flex; gap: 8px; margin: 14px 0 10px; }
+  .search { flex: 1; min-width: 0; padding: 0 14px; min-height: 44px; border: 1px solid var(--surface-border); border-radius: 14px; background: var(--surface-solid); color: var(--text-primary); font: inherit; font-size: .88rem; font-weight: 600; outline: none; }
   .search:focus { border-color: var(--color-accent); }
+  .seg em { font-style: normal; margin-left: 4px; font-family: var(--font-num); font-size: .72rem; opacity: .75; }
 
   /* roll list */
-  .roll { border: 1px solid var(--surface-border); border-radius: 18px; background: var(--surface-solid); overflow: hidden; }
-  .row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 14px; min-height: 58px; border: 0; border-bottom: 1px solid var(--surface-border); background: transparent; color: var(--text-primary); font: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .roll { border: 1px solid var(--surface-border); border-radius: 20px; background: var(--surface-solid); overflow: hidden; }
+  .row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 14px; min-height: 64px; border: 0; border-bottom: 1px solid var(--surface-border); background: transparent; color: var(--text-primary); font: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .row:last-child { border-bottom: 0; }
   .row:active { background: var(--surface-highlight); }
-  .av { flex: none; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-highlight); color: var(--text-secondary); font-weight: 900; font-size: .9rem; }
+  .av { flex: none; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-highlight); color: var(--text-secondary); font-weight: 900; font-size: .95rem; }
   .row .mn { flex: 1; min-width: 0; }
-  .row .mn b { display: block; font-size: .9rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .row .mn span { font-size: .72rem; font-weight: 700; color: var(--text-muted); }
-  .ck { flex: none; width: 30px; height: 30px; border-radius: 10px; border: 2px solid var(--surface-border); display: grid; place-items: center; color: transparent; transition: .12s; }
-  .ck svg { width: 16px; height: 16px; }
-  .row.on { background: rgba(47,125,94,.1); }
-  .row.on .av { background: rgba(47,125,94,.2); color: var(--color-success); }
-  .row.on .ck { background: var(--color-success); border-color: var(--color-success); color: #fff; }
-  .badge { flex: none; font-size: .62rem; font-weight: 800; padding: 2px 8px; border-radius: 99px; background: rgba(var(--color-accent-rgb), .15); color: var(--color-accent); }
-  .empty { text-align: center; padding: 30px 14px; color: var(--text-muted); font-size: .85rem; font-weight: 600; }
+  .row .mn b { display: block; font-size: .95rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .mn span { font-size: .74rem; font-weight: 700; color: var(--text-muted); }
+  .pill { flex: none; display: inline-flex; align-items: center; gap: 5px; min-width: 86px; justify-content: center; height: 34px; padding: 0 12px; border-radius: 99px; border: 1.5px solid var(--surface-border); color: var(--text-muted); font-size: .76rem; font-weight: 800; transition: .12s; }
+  .pill svg { width: 14px; height: 14px; display: none; }
+  .row.on { background: rgba(47,125,94,.08); }
+  .row.on .av { background: rgba(47,125,94,.2); color: var(--color-success, #2f7d5e); }
+  .row.on .pill { background: var(--color-success, #2f7d5e); border-color: var(--color-success, #2f7d5e); color: #fff; }
+  .row.on .pill svg { display: block; }
+  .via { flex: none; font-size: .62rem; font-weight: 800; padding: 2px 8px; border-radius: 99px; background: rgba(var(--color-accent-rgb), .15); color: var(--color-accent); }
+  .empty { text-align: center; padding: 34px 14px; color: var(--text-muted); font-size: .88rem; font-weight: 600; }
 
   /* floating buttons */
   .fabs { position: fixed; right: 16px; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 40; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
-  .fab { display: inline-flex; align-items: center; justify-content: center; gap: 9px; border: 0; cursor: pointer; font: inherit; font-weight: 900; box-shadow: 0 10px 28px rgba(0,0,0,.35); }
+  .fab { display: inline-flex; align-items: center; justify-content: center; gap: 9px; border: 0; cursor: pointer; font: inherit; font-weight: 900; box-shadow: 0 10px 28px rgba(0,0,0,.3); }
   .fab:active { transform: scale(.95); }
-  .fab.main { height: 58px; padding: 0 22px; border-radius: 99px; background: var(--color-accent); color: #1d1608; font-size: .95rem; }
+  .fab.main { height: 58px; padding: 0 24px; border-radius: 99px; background: var(--color-accent); color: #1d1608; font-size: .95rem; }
   .fab.main svg { width: 24px; height: 24px; }
   .fab.sm { width: 48px; height: 48px; border-radius: 50%; background: var(--surface-solid); color: var(--text-primary); border: 1px solid var(--surface-border); }
   .fab.sm svg { width: 22px; height: 22px; }
-  .menu { position: fixed; right: 16px; bottom: calc(150px + env(safe-area-inset-bottom)); z-index: 41; min-width: 230px; padding: 6px; border-radius: 18px; background: var(--surface-solid); border: 1px solid var(--surface-border); box-shadow: 0 16px 40px rgba(0,0,0,.4); }
-  .menu button { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 0 12px; border: 0; border-radius: 12px; background: transparent; color: var(--text-primary); font: inherit; font-size: .86rem; font-weight: 800; text-align: left; cursor: pointer; }
+  .menu { position: fixed; right: 16px; bottom: calc(150px + env(safe-area-inset-bottom)); z-index: 41; min-width: 240px; padding: 6px; border-radius: 18px; background: var(--surface-solid); border: 1px solid var(--surface-border); box-shadow: 0 16px 40px rgba(0,0,0,.3); }
+  .menu button { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 0 12px; border: 0; border-radius: 12px; background: transparent; color: var(--text-primary); font: inherit; font-size: .88rem; font-weight: 800; text-align: left; cursor: pointer; }
   .menu button:active { background: var(--surface-highlight); }
   .menu button svg { width: 19px; height: 19px; color: var(--color-accent); flex: none; }
-  .menu button.dg svg, .menu button.dg { color: #ef4444; }
+  .menu button.dg, .menu button.dg svg { color: #e0475b; }
   .scrim { position: fixed; inset: 0; z-index: 39; }
-  [hidden] { display: none !important; }
 
   /* scanner overlay */
   .sc { position: fixed; inset: 0; z-index: 100; background: #05070a; display: flex; flex-direction: column; color: #fff; }
-  .sc video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-  .sc-top { position: relative; z-index: 2; display: flex; align-items: center; gap: 10px; padding: calc(12px + env(safe-area-inset-top)) 14px 12px; background: linear-gradient(#000a, transparent); }
+  .sc-top { position: relative; z-index: 2; display: flex; align-items: center; gap: 10px; padding: calc(12px + env(safe-area-inset-top)) 14px 12px; }
   .sc-top .ib { background: rgba(255,255,255,.16); border-color: transparent; color: #fff; }
-  .sc-top h2 { flex: 1; min-width: 0; font-size: .95rem; font-weight: 900; color: #fff; line-height: 1.25; }
-  .sc-top h2 small { display: block; font-size: .7rem; font-weight: 700; opacity: .75; }
+  .sc-top h2 { flex: 1; min-width: 0; font-size: 1rem; font-weight: 900; color: #fff; line-height: 1.25; margin: 0; }
+  .sc-top h2 small { display: block; font-size: .72rem; font-weight: 700; opacity: .75; }
   .sc-cnt { font-family: var(--font-num); font-weight: 900; font-size: 1.3rem; padding: 4px 14px; border-radius: 99px; background: rgba(255,255,255,.16); }
-  .sc-frame { position: relative; z-index: 1; flex: 1; display: grid; place-items: center; pointer-events: none; }
-  .sc-frame i { width: min(68vw, 290px); aspect-ratio: 1; border-radius: 26px; border: 3px solid rgba(255,255,255,.9); box-shadow: 0 0 0 999px rgba(0,0,0,.4); transition: border-color .15s; }
-  .sc-frame.ok i { border-color: #34d399; } .sc-frame.warn i { border-color: #fbbf24; } .sc-frame.err i { border-color: #f87171; }
   .sc-mid { flex: 1; display: flex; align-items: center; padding: 0 14px; }
-  .sc-mid .sc-res { width: 100%; min-height: 120px; }
+  .sc-mid .sc-res { width: 100%; min-height: 130px; }
   .sc-big { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 76px; border-radius: 22px; background: var(--color-accent); color: #1d1608; font-weight: 900; font-size: 1.05rem; cursor: pointer; box-shadow: 0 10px 28px rgba(0,0,0,.4); }
   .sc-big:active { transform: scale(.97); }
-  .sc-bot { position: relative; z-index: 2; padding: 12px 14px calc(16px + env(safe-area-inset-bottom)); background: linear-gradient(transparent, #000c 40%); }
-  .sc-res { min-height: 66px; padding: 12px 14px; border-radius: 16px; background: rgba(255,255,255,.14); backdrop-filter: blur(8px); display: flex; align-items: center; gap: 12px; }
-  .sc-res.ok { background: rgba(16,185,129,.85); } .sc-res.warn { background: rgba(217,119,6,.88); } .sc-res.err { background: rgba(220,38,38,.88); }
-  .sc-res b { display: block; font-size: 1.02rem; font-weight: 900; }
-  .sc-res small { font-size: .74rem; font-weight: 700; opacity: .92; }
+  .sc-bot { position: relative; z-index: 2; padding: 12px 14px calc(16px + env(safe-area-inset-bottom)); }
+  .sc-res { min-height: 66px; padding: 14px 16px; border-radius: 18px; background: rgba(255,255,255,.12); display: flex; align-items: center; gap: 12px; }
+  .sc-res.ok { background: rgba(16,185,129,.88); } .sc-res.warn { background: rgba(217,119,6,.9); } .sc-res.err { background: rgba(220,38,38,.9); }
+  .sc-res b { display: block; font-size: 1.05rem; font-weight: 900; }
+  .sc-res small { font-size: .76rem; font-weight: 700; opacity: .92; }
   .sc-res svg { width: 28px; height: 28px; flex: none; }
   .sc-man { display: flex; gap: 8px; margin-top: 10px; }
-  .sc-man input { flex: 1; min-width: 0; min-height: 46px; padding: 0 14px; border-radius: 13px; border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.12); color: #fff; font: inherit; font-weight: 800; letter-spacing: .04em; outline: none; }
+  .sc-man input { flex: 1; min-width: 0; min-height: 48px; padding: 0 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.12); color: #fff; font: inherit; font-weight: 800; letter-spacing: .04em; outline: none; }
   .sc-man input::placeholder { color: rgba(255,255,255,.55); font-weight: 600; letter-spacing: 0; }
-  .sc-man button { min-height: 46px; padding: 0 18px; border: 0; border-radius: 13px; background: var(--color-accent); color: #1d1608; font: inherit; font-weight: 900; cursor: pointer; }
-  .sc-msg { position: absolute; inset: 0; z-index: 1; display: grid; place-items: center; padding: 30px; text-align: center; font-weight: 700; font-size: .88rem; color: #cfd3da; }
+  .sc-man button { min-height: 48px; padding: 0 20px; border: 0; border-radius: 14px; background: #fff; color: #111; font: inherit; font-weight: 900; cursor: pointer; }
 
-  /* panels (days / report) */
-  .pn { position: fixed; inset: 0; z-index: 90; background: var(--surface-highlight, #1a1d23); overflow-y: auto; overscroll-behavior: contain; }
+  /* full-screen panels (days / report) */
+  .pn { position: fixed; inset: 0; z-index: 90; background: var(--bg-app); overflow-y: auto; overscroll-behavior: contain; }
   body.pn-open .fabs, body.pn-open .menu, body.pn-open .scrim { display: none !important; }
-  .sc.nocam .sc-frame { visibility: hidden; }
-  .sc-photo { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; margin-top: 8px; border-radius: 13px; border: 1px dashed rgba(255,255,255,.4); color: #fff; font-weight: 800; font-size: .84rem; cursor: pointer; }
-  .sc-msg { align-content: center; }
-  .sc-msg b { display: block; margin-bottom: 8px; color: #fff; font-size: .95rem; }
-  .pn-in { max-width: 620px; margin: 0 auto; padding: 14px 16px 60px; }
-  .card { background: var(--surface-solid); border: 1px solid var(--surface-border); border-radius: 16px; padding: 14px; margin-bottom: 12px; }
-  .sec-t { font-size: .92rem; font-weight: 900; margin: 0 0 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-  .inp { width: 100%; box-sizing: border-box; padding: 0 12px; background: var(--surface-highlight); border: 1px solid var(--surface-border); border-radius: 12px; color: var(--text-primary); font: inherit; font-size: .88rem; font-weight: 700; outline: none; min-height: 44px; }
+  .pn-in { max-width: 620px; margin: 0 auto; padding: 4px 16px 60px; }
+  .a-card { background: var(--surface-solid); border: 1px solid var(--surface-border); border-radius: 18px; padding: 14px; margin-bottom: 12px; }
+  .a-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 0 0 10px; font-size: .95rem; font-weight: 900; }
+  .a-h small { font-size: .74rem; font-weight: 700; color: var(--text-muted); }
+  .inp { display: block; width: 100%; box-sizing: border-box; min-height: 46px; padding: 0 13px; background: var(--surface-highlight); border: 1px solid var(--surface-border); border-radius: 13px; color: var(--text-primary); font: inherit; font-size: .9rem; font-weight: 700; outline: none; }
   .inp:focus { border-color: var(--color-accent); }
-  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border-radius: 12px; border: 1px solid var(--surface-border); background: var(--surface-solid); color: var(--text-primary); font: inherit; font-weight: 800; font-size: .85rem; cursor: pointer; }
-  .btn.pri { background: var(--color-accent); border-color: transparent; color: #1d1608; }
-  .btn.dg { color: #ef4444; border-color: rgba(239,68,68,.35); }
-  .btn.mini { min-height: 34px; padding: 0 12px; font-size: .74rem; border-radius: 10px; }
-  .btn.full { width: 100%; }
-  .li { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px dashed var(--surface-border); }
-  .li:last-child { border-bottom: 0; }
-  .li-main { flex: 1; min-width: 0; }
-  .li-main b { display: block; font-size: .88rem; font-weight: 800; }
-  .li-main span { font-size: .72rem; font-weight: 600; color: var(--text-muted); }
-  .tag { font-size: .66rem; font-weight: 800; padding: 3px 9px; border-radius: 999px; background: rgba(var(--color-accent-rgb), .15); color: var(--color-accent); white-space: nowrap; }
-  .tag.exam { background: rgba(139,108,200,.2); color: #a78bdb; }
-  .pct { font-family: var(--font-num); font-weight: 900; font-size: .95rem; }
-  .pb2 { height: 6px; border-radius: 6px; background: var(--surface-highlight); overflow: hidden; margin-top: 5px; }
-  .pb2 i { display: block; height: 100%; background: var(--color-accent); }
-  .toast-ok { position: fixed; left: 50%; bottom: calc(100px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 120; padding: 10px 18px; border-radius: 99px; background: #111; color: #fff; font-size: .8rem; font-weight: 800; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+  .a-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .a-btn { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; padding: 0 16px; border-radius: 14px; border: 0; background: var(--color-accent); color: #1d1608; font: inherit; font-weight: 900; font-size: .92rem; cursor: pointer; }
+  .a-btn:active { transform: scale(.98); }
+
+  /* list items inside panels */
+  .a-li { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--surface-border); }
+  .a-li:last-child { border-bottom: 0; padding-bottom: 0; }
+  .a-li:first-child { padding-top: 0; }
+  .a-date { flex: none; width: 46px; padding: 5px 0; border-radius: 12px; text-align: center; background: var(--surface-highlight); line-height: 1.1; }
+  .a-date b { display: block; font-family: var(--font-num); font-size: 1.1rem; font-weight: 900; }
+  .a-date span { font-size: .64rem; font-weight: 800; color: var(--text-muted); }
+  .a-main { flex: 1; min-width: 0; }
+  .a-main b { display: block; font-size: .9rem; font-weight: 800; }
+  .a-main span { display: block; font-size: .74rem; font-weight: 600; color: var(--text-muted); }
+  .a-tag { flex: none; font-size: .68rem; font-weight: 800; padding: 4px 10px; border-radius: 99px; background: rgba(var(--color-accent-rgb), .15); color: var(--color-accent); white-space: nowrap; }
+  .a-tag.exam { background: rgba(139,108,200,.18); color: #8b6cc8; }
+  .a-x { flex: none; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 11px; border: 1px solid rgba(224,71,91,.35); background: transparent; color: #e0475b; cursor: pointer; }
+  .a-x svg { width: 17px; height: 17px; }
+  .a-rank { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-highlight); font-family: var(--font-num); font-weight: 900; font-size: .8rem; }
+  .a-rank.t1 { background: #f3c64a; color: #4a3500; }
+  .a-pct { flex: none; font-family: var(--font-num); font-weight: 900; font-size: 1rem; min-width: 46px; text-align: right; }
+  .pb2 { height: 6px; border-radius: 6px; background: var(--surface-highlight); overflow: hidden; margin-top: 6px; }
+  .pb2 i { display: block; height: 100%; background: var(--color-success, #2f7d5e); }
 </style>
 <script src="../js/popup.js"></script>
 </head>
@@ -148,9 +157,10 @@
     <div><h1>অ্যাটেনডেন্স</h1><p id="sub">লোড হচ্ছে…</p></div>
   </div>
 
-  <div class="sess">
+  <div class="a-sess">
+    <span class="a-lbl">ব্যাচ</span>
     <div class="chips" id="chips"></div>
-    <div class="bar2">
+    <div class="a-bar">
       <div class="dt">
         <button id="dPrev" aria-label="আগের দিন"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
         <label><span id="dTxt"></span><small id="dSub"></small><input type="date" id="dIn"></label>
@@ -160,13 +170,16 @@
     </div>
   </div>
 
-  <div class="prog">
-    <div class="prog-top"><b id="pN">0</b><span id="pOf">/ 0 উপস্থিত</span><em id="dayTag"></em></div>
-    <div class="pbar"><i id="pBar"></i></div>
+  <div class="a-sum">
+    <div class="a-st ok"><b id="pN">০</b><span>উপস্থিত</span></div>
+    <div class="a-st no"><b id="pAbs">০</b><span>অনুপস্থিত</span></div>
+    <div class="a-st pc"><b id="pPct">০%</b><span>হার</span></div>
   </div>
+  <div class="a-bar2"><div class="pbar"><i id="pBar"></i></div><span class="a-day off" id="dayTag"></span></div>
+
   <div class="tools">
     <input class="search" id="q" type="search" placeholder="নাম বা আইডি খোঁজো" autocomplete="off">
-    <div class="seg" id="fSeg"><button data-f="all" class="on">সব</button><button data-f="p">আছে</button><button data-f="a">নেই</button></div>
+    <div class="seg" id="fSeg"><button data-f="all" class="on">সব<em id="cAll"></em></button><button data-f="p">আছে<em id="cP"></em></button><button data-f="a">নেই<em id="cA"></em></button></div>
   </div>
   <div class="roll" id="roll"></div>
 </div>
@@ -203,18 +216,18 @@
 <!-- days / report panels -->
 <div class="pn" id="pnDays" hidden><div class="pn-in">
   <div class="top"><button class="ib" data-close aria-label="বন্ধ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button><div><h1>ক্লাস / পরীক্ষার দিন</h1><p>এই দিনগুলোই ১০০% ধরে শতাংশ হয়</p></div></div>
-  <div class="card"><div class="sec-t"><span id="dBatch"></span></div>
+  <div class="a-card"><div class="a-h"><span id="dBatch"></span></div>
     <input class="inp" id="dNote" maxlength="80" placeholder="নোট (ঐচ্ছিক) — যেমন: পদার্থ চ্যাপ্টার ৩" style="margin-bottom:10px">
-    <button class="btn pri full" id="dAdd">নির্বাচিত দিন যোগ করো</button>
+    <button class="a-btn" id="dAdd">নির্বাচিত দিন যোগ করো</button>
     <p class="muted" style="margin-top:8px">উপস্থিতি নিলে দিন নিজে থেকেই যোগ হয়। এখানে আগে বা ছুটির দিন নিজে ঠিক করতে পারো।</p></div>
-  <div class="card"><div id="dList"></div></div>
+  <div class="a-card"><div id="dList"></div></div>
 </div></div>
 
 <div class="pn" id="pnRep" hidden><div class="pn-in">
   <div class="top"><button class="ib" data-close aria-label="বন্ধ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button><div><h1>মাসিক রিপোর্ট</h1><p id="rBatch"></p></div></div>
-  <div class="card"><div class="row2"><input class="inp" type="month" id="rMonth"><select class="inp" id="rSel"></select></div></div>
-  <div class="card"><div class="sec-t"><span id="rTitle">উপস্থিতির তালিকা</span></div><div id="rList"></div></div>
-  <div class="card"><div class="sec-t"><span>মাসের সেরা (+১০০০ XP)</span></div><div id="awardList"></div></div>
+  <div class="a-card"><div class="a-2"><input class="inp" type="month" id="rMonth"><select class="inp" id="rSel"></select></div></div>
+  <div class="a-card"><div class="a-h"><span id="rTitle">উপস্থিতির তালিকা</span></div><div id="rList"></div></div>
+  <div class="a-card"><div class="a-h"><span>মাসের সেরা (+১০০০ XP)</span></div><div id="awardList"></div></div>
 </div></div>
 
 <script type="module">
@@ -313,14 +326,19 @@ function drawDate() {
   const ty = effType();
   $("typeSeg").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.t === ty));
 }
+function updStats() {
+  const list = inBatch();
+  const present = list.filter(s => att.has(s.studentId)).length, absent = list.length - present;
+  const pct = list.length ? Math.round(present / list.length * 100) : 0;
+  $("pN").textContent = bn(present); $("pAbs").textContent = bn(absent); $("pPct").textContent = bn(pct) + "%";
+  $("pBar").style.width = pct + "%";
+  $("cAll").textContent = bn(list.length); $("cP").textContent = bn(present); $("cA").textContent = bn(absent);
+}
 function drawRoll() {
   const list = inBatch();
-  const present = list.filter(s => att.has(s.studentId)).length;
-  $("pN").textContent = bn(present);
-  $("pOf").textContent = `/ ${bn(list.length)} উপস্থিত`;
-  $("pBar").style.width = list.length ? Math.round(present / list.length * 100) + "%" : "0";
+  updStats();
   const d = curDay();
-  $("dayTag").className = d ? "" : "off";
+  $("dayTag").className = d ? "a-day" : "a-day off";
   $("dayTag").textContent = d ? `${DAY_TYPES[d.type] || "ক্লাস"} দিন ✓` : "দিন সেট নেই";
   const q = sel.q.trim().toLowerCase();
   const shown = list.filter(s => (sel.f === "all" || (sel.f === "p") === att.has(s.studentId)) &&
@@ -329,7 +347,7 @@ function drawRoll() {
     const on = att.has(s.studentId);
     return `<button class="row ${on ? "on" : ""}" data-id="${esc(s.studentId)}"><span class="av">${esc(String(s.name || "?").charAt(0))}</span>
       <span class="mn"><b>${esc(s.name)}</b><span>${esc(s.studentId)}</span></span>
-      ${on && att.get(s.studentId) === "qr" ? `<span class="badge">QR</span>` : ""}<span class="ck">${CHECK}</span></button>`;
+      ${on && att.get(s.studentId) === "qr" ? `<span class="via">QR</span>` : ""}<span class="pill">${CHECK}<span>${on ? "উপস্থিত" : "অনুপস্থিত"}</span></span></button>`;
   }).join("") : `<div class="empty">${list.length ? "কিছু পাওয়া যায়নি" : "এই ব্যাচে কোনো শিক্ষার্থী নেই"}</div>`;
 }
 // patch a single row (no full redraw) — keeps taps instant on long lists
@@ -338,13 +356,12 @@ function patchRow(id) {
   const on = att.has(id);
   if (el) {
     el.classList.toggle("on", on);
-    el.querySelector(".badge")?.remove();
-    if (on && att.get(id) === "qr") el.querySelector(".ck").insertAdjacentHTML("beforebegin", `<span class="badge">QR</span>`);
+    el.querySelector(".via")?.remove();
+    if (on && att.get(id) === "qr") el.querySelector(".pill").insertAdjacentHTML("beforebegin", `<span class="via">QR</span>`);
+    el.querySelector(".pill > span").textContent = on ? "উপস্থিত" : "অনুপস্থিত";
     if (sel.f !== "all") drawRoll();
   }
-  const list = inBatch(), present = list.filter(s => att.has(s.studentId)).length;
-  $("pN").textContent = bn(present); $("pOf").textContent = `/ ${bn(list.length)} উপস্থিত`;
-  $("pBar").style.width = list.length ? Math.round(present / list.length * 100) + "%" : "0";
+  updStats();
 }
 
 /* ---------- core: optimistic mark / unmark ---------- */
@@ -379,7 +396,7 @@ $("roll").addEventListener("click", (e) => {
   const s = byId[row.dataset.id]; if (!s) return;
   try { navigator.vibrate?.(15); } catch {}
   att.has(s.studentId) ? unmark(s) : mark(s, "manual");
-  patchRow(s.studentId); drawDate(); $("dayTag").className = ""; $("dayTag").textContent = `${DAY_TYPES[effType()]} দিন ✓`;
+  patchRow(s.studentId); drawDate(); $("dayTag").className = "a-day"; $("dayTag").textContent = `${DAY_TYPES[effType()]} দিন ✓`;
 });
 
 /* ---------- session controls ---------- */
@@ -536,10 +553,11 @@ function drawDays() {
   const b = sel.batch;
   $("dBatch").textContent = `${b} — ${fmtDate(sel.date, { weekday: "short", day: "numeric", month: "long" })} (${DAY_TYPES[sel.type]})`;
   const mine = allDays.filter(d => sameBatch(d.batch, b)).sort((x, y) => y.date.localeCompare(x.date));
-  $("dList").innerHTML = `<div class="sec-t"><span>${bn(mine.length)} টি দিন সেট আছে</span></div>` + (mine.length ? mine.map(d => `
-    <div class="li"><div class="li-main"><b>${fmtDate(d.date, { weekday: "short", day: "numeric", month: "long", year: "numeric" })}</b><span>${esc(d.note || "")}</span></div>
-      <span class="tag ${d.type === "exam" ? "exam" : ""}">${DAY_TYPES[d.type] || "ক্লাস"}</span>
-      <button class="btn mini dg" data-rm="${esc(d.date)}">মুছো</button></div>`).join("") : `<p class="muted">এই ব্যাচের কোনো দিন সেট নেই।</p>`);
+  $("dList").innerHTML = `<div class="a-h"><span>${bn(mine.length)} টি দিন সেট আছে</span></div>` + (mine.length ? mine.map(d => `
+    <div class="a-li"><div class="a-date"><b>${bn(Number(d.date.slice(8, 10)))}</b><span>${fmtDate(d.date, { month: "short" })}</span></div>
+      <div class="a-main"><b>${fmtDate(d.date, { weekday: "long", year: "numeric" })}</b><span>${esc(d.note || "—")}</span></div>
+      <span class="a-tag ${d.type === "exam" ? "exam" : ""}">${DAY_TYPES[d.type] || "ক্লাস"}</span>
+      <button class="a-x" data-rm="${esc(d.date)}" aria-label="মুছো"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button></div>`).join("") : `<p class="muted">এই ব্যাচের কোনো দিন সেট নেই।</p>`);
   $("dList").querySelectorAll("[data-rm]").forEach(x => x.onclick = async () => {
     if (!await AppPopup.confirm(`${fmtDate(x.dataset.rm)} দিনটি সরাবে? (জমা উপস্থিতি থাকবে, কিন্তু শতাংশে ধরা হবে না)`)) return;
     try { await removeDay(b, x.dataset.rm); allDays = allDays.filter(d => !(sameBatch(d.batch, b) && d.date === x.dataset.rm)); drawDays(); drawDate(); drawRoll(); showToast("সরানো হয়েছে", "success"); }
@@ -571,10 +589,10 @@ async function drawReport() {
       return { s, present, pct: total ? Math.round(present / total * 100) : 0 };
     }).sort((x, y) => y.pct - x.pct || y.present - x.present || String(x.s.name).localeCompare(String(y.s.name), "bn"));
     $("rList").innerHTML = total ? `<p class="muted" style="margin-bottom:8px">এই মাসে ${bn(total)} দিন সেট (১০০%)।</p>` + rows.map((r, i) => `
-      <div class="li"><span class="av">${bn(i + 1)}</span><div class="li-main"><b>${esc(r.s.name)}</b><span>${esc(r.s.studentId)} · ${bn(r.present)}/${bn(total)} দিন</span><div class="pb2"><i style="width:${r.pct}%"></i></div></div><span class="pct">${bn(r.pct)}%</span></div>`).join("")
+      <div class="a-li"><span class="a-rank ${i === 0 && r.pct ? "t1" : ""}">${bn(i + 1)}</span><div class="a-main"><b>${esc(r.s.name)}</b><span>${esc(r.s.studentId)} · ${bn(r.present)}/${bn(total)} দিন</span><div class="pb2"><i style="width:${r.pct}%"></i></div></div><span class="a-pct">${bn(r.pct)}%</span></div>`).join("")
       : `<p class="muted">এই মাসে এই ব্যাচের কোনো দিন সেট নেই।</p>`;
     $("awardList").innerHTML = awards.length ? awards.map(a => `
-      <div class="li"><div class="li-main"><b>${fmtMonth(a.month)}</b><span>${(a.winners || []).length ? a.winners.map(w => `${esc(w.name)} (${esc(w.batch)} · ${bn(w.pct)}%)`).join(", ") : "কেউ উপযুক্ত ছিল না"}</span></div><span class="tag">+${bn(a.xp || ATTENDANCE_MONTHLY_XP)} XP</span></div>`).join("")
+      <div class="a-li"><div class="a-main"><b>${fmtMonth(a.month)}</b><span>${(a.winners || []).length ? a.winners.map(w => `${esc(w.name)} (${esc(w.batch)} · ${bn(w.pct)}%)`).join(", ") : "কেউ উপযুক্ত ছিল না"}</span></div><span class="a-tag">+${bn(a.xp || ATTENDANCE_MONTHLY_XP)} XP</span></div>`).join("")
       : `<p class="muted">মাস শেষ হলে সেরা শিক্ষার্থী এখানে দেখা যাবে। প্রতি ব্যাচের সেরা পাবে +${bn(ATTENDANCE_MONTHLY_XP)} XP।</p>`;
   } catch (e) { console.error(e); $("rList").innerHTML = `<p class="muted">রিপোর্ট লোড হয়নি।</p>`; }
 }
