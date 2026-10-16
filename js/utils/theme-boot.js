@@ -72,3 +72,24 @@
     try { window.dispatchEvent(new CustomEvent("themechange", { detail: { theme: resolve() } })); } catch (er) {}
   });
 })();
+
+
+/* ---------- Page loader hand-off ----------
+   When a page swaps its loading skeleton (.app-shell > .state-block) for real
+   content, fade the content in once. Styles live in css/style.css (.pg-enter). */
+(function () {
+  function init() {
+    var shell = document.querySelector(".app-shell");
+    if (!shell || !window.MutationObserver) return;
+    var only = function () { return shell.children.length === 1 && shell.firstElementChild.classList.contains("state-block"); };
+    if (!only()) return;
+    var mo = new MutationObserver(function () {
+      if (only()) return;
+      mo.disconnect();
+      shell.classList.add("pg-enter");
+      setTimeout(function () { shell.classList.remove("pg-enter"); }, 500);
+    });
+    mo.observe(shell, { childList: true });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+})();
