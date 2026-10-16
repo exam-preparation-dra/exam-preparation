@@ -2242,9 +2242,19 @@ export function renderStudentHeader(
           </a>
           <button type="button" class="hdr-menu-item" id="hdrQrBtn" role="menuitem">
             <span class="hdr-menu-ico hdr-menu-ico--accent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3M21 14v.01M14 21h.01M17.5 21H21v-3.5"/></svg></span>
+            <span class="hdr-menu-txt"><span>অ্যাটেনডেন্স QR</span><small>ক্লাসে অ্যাডমিনকে স্ক্যান করাও</small></span>
+            <svg class="hdr-menu-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+          </button>
+          <button type="button" class="hdr-menu-item" id="hdrInviteBtn" role="menuitem">
+            <span class="hdr-menu-ico hdr-menu-ico--accent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3M21 14v.01M14 21h.01M17.5 21H21v-3.5"/></svg></span>
             <span class="hdr-menu-txt"><span>ইনভাইট QR</span><small>বন্ধু স্ক্যান করলেই XP</small></span>
             <svg class="hdr-menu-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
           </button>
+          <a href="../student/attendance.html" class="hdr-menu-item ${activeKey === "attendance" ? "active" : ""}" role="menuitem">
+            <span class="hdr-menu-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16.5" rx="2.5"/><path d="M3 9.5h18M8 2.8v3.4M16 2.8v3.4"/><path d="m9 15 2 2 4-4"/></svg></span>
+            <span class="hdr-menu-txt"><span>অ্যাটেনডেন্স হিস্ট্রি</span><small>উপস্থিতির শতাংশ</small></span>
+            <svg class="hdr-menu-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+          </a>
         </div>
 
         <div class="hdr-menu-group">
@@ -2342,9 +2352,19 @@ export function renderStudentHeader(
       document.addEventListener("keydown", e => { if (e.key === "Escape") setMenu(false); });
     }
 
-    // ---------- Invite QR (opens the shared bottom sheet) ----------
+    // ---------- Attendance QR (opens the student's own QR sheet) ----------
     const qrBtn = document.getElementById("hdrQrBtn");
     if (qrBtn) qrBtn.onclick = async () => {
+      if (menu) { menu.classList.remove("open"); userBtn?.setAttribute("aria-expanded", "false"); }
+      try {
+        const m = await import("./attendance-sheet.js");
+        m.openAttendanceSheet(student);
+      } catch (e) { console.error(e); showToast("QR খোলা যায়নি", "error"); }
+    };
+
+    // ---------- Invite QR (opens the shared bottom sheet) ----------
+    const inviteBtn = document.getElementById("hdrInviteBtn");
+    if (inviteBtn) inviteBtn.onclick = async () => {
       if (menu) { menu.classList.remove("open"); userBtn?.setAttribute("aria-expanded", "false"); }
       try {
         const m = await import("./invite-sheet.js");
