@@ -120,6 +120,7 @@ import { getPendingRequests, deleteStudentRequest, publishApplicationResult } fr
 import { sendReferralFriendRequest } from "../js/utils/friend-utils.js?v=ref1";
 import { getLeaderboardData } from "../js/utils/results-utils.js"; // Added Import for XP Calculation
 import { eraseStudentData } from "../js/utils/student-erase.js";
+import { adminPurge, GRACE_DAYS } from "../js/utils/student-delete.js";
 import { FACE_URIS, isFaceUri } from "../js/utils/avatar-faces.js";
 import { expandAvatar } from "../js/utils/avatar-builder.js";
 import { db } from "../js/firebase/firebase-config.js";
@@ -253,6 +254,7 @@ requireAdmin(() => {
 
     <!-- Setup-code requests from students -->
     <div id="setupReqBox"></div>
+    <div id="delReqBox"></div>
 
     <!-- Search & Filter Section -->
     <div class="search-filter-container">
@@ -424,6 +426,44 @@ function safeText(str, fallback = "") {
   return String(str).trim() || fallback;
 }
 
+/* ---- student-requested account deletions (7-day undo window) ---- */
+async function loadDeleteRequests() {
+  const box = document.getElementById("delReqBox");
+  if (!box) return;
+  let rows = [];
+  try { rows = (await getDocs(collection(db, "deletionRequests"))).docs.map(d => ({ id: d.id, ...d.data() })); }
+  catch (e) { box.innerHTML = ""; return; }
+  if (!rows.length) { box.innerHTML = ""; return; }
+  const ms = (t) => t && t.toMillis ? t.toMillis() : 0;
+  rows.sort((a, b) => ms(a.purgeAfter) - ms(b.purgeAfter));
+  const fmtD = (t) => new Date(ms(t)).toLocaleDateString("bn-BD", { day: "numeric", month: "short", year: "numeric" });
+  box.innerHTML = `<div class="glass-float-card" style="padding:14px; margin-bottom:16px; border:1px solid rgba(239,68,68,.35);">
+    <p style="font-weight:900; font-size:.95rem; color:#ef4444; margin-bottom:10px;">ডিলিট রিকোয়েস্ট (${rows.length})</p>
+    ${rows.map(r => { const due = ms(r.purgeAfter) <= Date.now(); return `
+      <div style="display:flex; align-items:center; gap:10px; padding:10px 0; border-top:1px solid var(--surface-border);">
+        <div style="flex:1; min-width:0;"><b style="display:block; font-size:.9rem;">${safeText(r.name)}</b>
+          <span style="font-size:.74rem; font-weight:700; color:var(--text-muted);">${safeText(r.id)} · ${due ? "মেয়াদ শেষ — মুছতে পারো" : fmtD(r.purgeAfter) + " এ মুছবে"}</span></div>
+        <button class="btn-glass" data-delkeep="${safeText(r.id)}" style="padding:8px 12px; font-size:.76rem;">বাতিল</button>
+        <button class="btn-glass rq-reject" data-delnow="${safeText(r.id)}" data-name="${safeText(r.name)}" style="padding:8px 12px; font-size:.76rem;">${due ? "মুছো" : "এখনই"}</button>
+      </div>`; }).join("")}
+    <p style="font-size:.7rem; font-weight:600; color:var(--text-muted); margin-top:8px;">শিক্ষার্থী ${GRACE_DAYS} দিন পর নিজেই মুছতে পারে। না ফিরলে এখান থেকে মুছো।</p></div>`;
+  box.querySelectorAll("[data-delkeep]").forEach(b => b.onclick = async () => {
+    if (!await AppPopup.confirm("এই ডিলিট রিকোয়েস্ট বাতিল করবে? অ্যাকাউন্ট থেকে যাবে।")) return;
+    try { await deleteDoc(doc(db, "deletionRequests", b.dataset.delkeep)); loadDeleteRequests(); } catch (e) { showToast(friendlyError(e), "error"); }
+  });
+  box.querySelectorAll("[data-delnow]").forEach(b => b.onclick = async () => {
+    const sid = b.dataset.delnow;
+    if (!await AppPopup.confirm(`"${b.dataset.name}" (${sid}) এর সব তথ্য স্থায়ীভাবে মুছবে? ফেরত আনা যাবে না।`)) return;
+    try {
+      const st = allAdminStudentsList.find(x => x.studentId === sid);
+      const rep = await adminPurge(sid, st ? st.docId || st.id : null);
+      const warn = rep.failed.length ? ` (কিছু ধাপ হয়নি: ${[...new Set(rep.failed)].join(", ")})` : "";
+      showToast(`মুছে ফেলা হয়েছে।${warn} Firebase Console > Authentication থেকে ${sid.toLowerCase()}@students.exam-prep.local ইউজারটিও মুছে দিন।`, rep.failed.length ? "error" : "success");
+      loadStudents();
+    } catch (e) { showToast(friendlyError(e), "error"); }
+  });
+}
+
 async function loadStudents() {
   const listEl = document.getElementById("studentList");
   try {
@@ -438,6 +478,7 @@ async function loadStudents() {
     
     await loadAuthStates();
     loadSetupRequests();
+    loadDeleteRequests();
     updateBatchFilterDropdown();
     renderFilteredList();
   } catch (err) {
