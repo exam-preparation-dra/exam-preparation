@@ -31,7 +31,7 @@
   "use strict";
   if (window.AppPopup && window.AppPopup.__ready) return;
 
-  var DEFAULT_LANG = "bn";
+  var DEFAULT_LANG = "en";
 
   /* ---------------- language ---------------- */
   function getLang() {
