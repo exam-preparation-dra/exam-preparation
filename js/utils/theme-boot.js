@@ -93,3 +93,21 @@
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();
+
+
+/* ---------- Language (EN default / বাংলা) ----------
+   Loads js/i18n/en.js (dictionary, English mode only) and js/i18n/engine.js
+   synchronously, so text is translated before first paint. */
+(function () {
+  try {
+    var me = document.currentScript;
+    if (!me || !me.src || window.__i18nLoading) return;
+    window.__i18nLoading = true;
+    var base = me.src.replace(/utils\/theme-boot\.js.*$/, "");
+    var l = null; try { l = localStorage.getItem("appLang") || localStorage.getItem("legalLang"); } catch (e) {}
+    var html = "";
+    if (l !== "bn") html += '<script src="' + base + 'i18n/en.js"><\/script><script src="' + base + 'i18n/en-student.js"><\/script><script src="' + base + 'i18n/en-admin.js"><\/script>';
+    html += '<script src="' + base + 'i18n/engine.js"><\/script>';
+    document.write(html);
+  } catch (e) {}
+})();

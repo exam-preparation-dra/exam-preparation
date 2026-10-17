@@ -2272,6 +2272,11 @@ export function renderStudentHeader(
             <span class="hdr-menu-txt"><span>পরীক্ষার টাইমার</span></span>
             <button class="hdr-switch" id="examTimerToggle" type="button" role="switch" aria-checked="true" aria-label="পরীক্ষার টাইমার দেখাও বা লুকাও"><span></span></button>
           </div>
+          <div class="hdr-menu-item hdr-menu-row">
+            <span class="hdr-menu-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></span>
+            <span class="hdr-menu-txt"><span data-i18n-skip>Language</span></span>
+            <span data-lang-slot></span>
+          </div>
         </div>
 
         <div class="hdr-menu-group">
